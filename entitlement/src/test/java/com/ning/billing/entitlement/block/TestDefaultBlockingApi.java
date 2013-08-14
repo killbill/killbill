@@ -52,7 +52,7 @@ public class TestDefaultBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
             }
         });
 
-        final BlockingState blockingState = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.ACCOUNT, "BLOCKED", "myService", true, true, true, internalCallContext.getCreatedDate(), null);
+        final BlockingState blockingState = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.ACCOUNT, "BLOCKED", "myService", true, true, true, clock.getUTCNow(), internalCallContext.getCreatedDate(), null);
         blockingInternalApi.setBlockingState(blockingState, internalCallContext);
 
         // Verify the blocking state was applied

@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,22 +45,31 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
     @SqlQuery
     public abstract BlockingStateModelDao getBlockingStateForService(@Bind("blockableId") UUID blockableId,
                                                                      @Bind("service") String serviceName,
+                                                                     @Bind("effectiveDate") Date effectiveDate,
                                                                      @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingState(@Bind("blockableId") UUID blockableId,
+                                                                 @Bind("effectiveDate") Date effectiveDate,
                                                                  @BindBean final InternalTenantContext context);
 
 
     @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingHistoryForService(@Bind("blockableId") UUID blockableId,
                                                                              @Bind("service") String serviceName,
+                                                                             @Bind("effectiveDate") Date effectiveDate,
                                                                              @BindBean final InternalTenantContext context);
 
 
     @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingHistory(@Bind("blockableId") UUID blockableId,
+                                                                   @Bind("effectiveDate") Date effectiveDate,
                                                                    @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public abstract List<BlockingStateModelDao> getBlockingAll(@Bind("blockableId") UUID blockableId,
+                                                                   @BindBean final InternalTenantContext context);
+
 
     public class BlockingHistorySqlMapper extends MapperBase implements ResultSetMapper<BlockingStateModelDao> {
 
@@ -74,6 +84,7 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
             final boolean blockChange;
             final boolean blockEntitlement;
             final boolean blockBilling;
+            final DateTime effectiveDate;
             final DateTime createdDate;
             final BlockingStateType type;
 
@@ -85,8 +96,9 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
             blockChange = r.getBoolean("block_change");
             blockEntitlement = r.getBoolean("block_entitlement");
             blockBilling = r.getBoolean("block_billing");
+            effectiveDate = getDateTime(r, "effective_date");
             createdDate = getDateTime(r, "created_date");
-            return new BlockingStateModelDao(id, blockableId, type, stateName, service, blockChange, blockEntitlement, blockBilling, createdDate, createdDate);
+            return new BlockingStateModelDao(id, blockableId, type, stateName, service, blockChange, blockEntitlement, blockBilling, effectiveDate, createdDate, createdDate);
         }
     }
 }

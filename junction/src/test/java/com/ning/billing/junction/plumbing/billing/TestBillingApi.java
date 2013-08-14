@@ -183,8 +183,8 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final Account account = createAccount(32);
 
         final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, BlockingStateType.BUNDLE,  DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, BlockingStateType.BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2), null));
+        blockingStates.add(new DefaultBlockingState(bunId, BlockingStateType.BUNDLE,  DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1)));
+        blockingStates.add(new DefaultBlockingState(bunId, BlockingStateType.BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2)));
 
         ((MockBlockingStateDao) blockingStateDao).setBlockingStates(bunId, blockingStates);
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext);

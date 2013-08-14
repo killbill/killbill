@@ -66,6 +66,15 @@ public interface BlockingStateDao {
     public List<BlockingState> getBlockingHistory(UUID blockableId, InternalTenantContext context);
 
     /**
+     * Return all the events (past and future) across all services
+     *
+     * @param blockableId
+     * @param context
+     * @return
+     */
+    public List<BlockingState> getBlockingAll(UUID blockableId, InternalTenantContext context);
+
+    /**
      * Sets a new state for a specific service
      *
      * @param state

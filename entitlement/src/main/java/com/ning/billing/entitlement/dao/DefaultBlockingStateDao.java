@@ -43,10 +43,12 @@ import com.google.common.collect.Collections2;
 public class DefaultBlockingStateDao implements BlockingStateDao {
 
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
+    private final Clock clock;
 
     @Inject
     public DefaultBlockingStateDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
+        this.clock = clock;
     }
 
     @Override
@@ -54,7 +56,7 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
         return transactionalSqlDao.execute(  new EntitySqlDaoTransactionWrapper<BlockingState>() {
             @Override
             public BlockingState inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final BlockingStateModelDao model = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingStateForService(blockableId, serviceName, context);
+                final BlockingStateModelDao model = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingStateForService(blockableId, serviceName, clock.getUTCNow().toDate(), context);
                 return BlockingStateModelDao.toBlockingState(model);
 
             }
@@ -66,7 +68,7 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
         return transactionalSqlDao.execute(  new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final  List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingState(blockableId, context);
+                final  List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingState(blockableId, clock.getUTCNow().toDate(), context);
                 return new ArrayList<BlockingState>(Collections2.transform(models, new Function<BlockingStateModelDao, BlockingState>() {
                     @Override
                     public BlockingState apply(@Nullable final BlockingStateModelDao src) {
@@ -82,7 +84,7 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingHistoryForService(blockableId, serviceName, context);
+                final List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingHistoryForService(blockableId, serviceName, clock.getUTCNow().toDate(), context);
                 return new ArrayList<BlockingState>(Collections2.transform(models, new Function<BlockingStateModelDao, BlockingState>() {
                     @Override
                     public BlockingState apply(@Nullable final BlockingStateModelDao src) {
@@ -98,7 +100,23 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingHistory(blockableId, context);
+                final List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingHistory(blockableId, clock.getUTCNow().toDate(), context);
+                return new ArrayList<BlockingState>(Collections2.transform(models, new Function<BlockingStateModelDao, BlockingState>() {
+                    @Override
+                    public BlockingState apply(@Nullable final BlockingStateModelDao src) {
+                        return BlockingStateModelDao.toBlockingState(src);
+                    }
+                }));
+            }
+        });
+    }
+
+    @Override
+    public List<BlockingState> getBlockingAll(final UUID blockableId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
+            @Override
+            public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingAll(blockableId, context);
                 return new ArrayList<BlockingState>(Collections2.transform(models, new Function<BlockingStateModelDao, BlockingState>() {
                     @Override
                     public BlockingState apply(@Nullable final BlockingStateModelDao src) {

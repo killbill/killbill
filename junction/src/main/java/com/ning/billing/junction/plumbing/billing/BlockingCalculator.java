@@ -93,8 +93,8 @@ public class BlockingCalculator {
         final SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
 
         for (final UUID bundleId : bundleMap.keySet()) {
-            final List<BlockingState> blockingEvents = blockingApi.getBlockingHistory(bundleId, context);
-            blockingEvents.addAll(blockingApi.getBlockingHistory(account.getId(),context));
+            final List<BlockingState> blockingEvents = blockingApi.getBlockingAll(bundleId, context);
+            blockingEvents.addAll(blockingApi.getBlockingAll(account.getId(),context));
             final List<DisabledDuration> blockingDurations = createBlockingDurations(blockingEvents);
 
             for (final SubscriptionBase subscription : bundleMap.get(bundleId)) {
@@ -265,13 +265,13 @@ public class BlockingCalculator {
                 first = e;
             } else if (first != null && !e.isBlockBilling()) {
                 // End of the interval
-                result.add(new DisabledDuration(first.getTimestamp(), e.getTimestamp()));
+                result.add(new DisabledDuration(first.getEffectiveDate(), e.getEffectiveDate()));
                 first = null;
             }
         }
 
         if (first != null) { // found a transition to disabled with no terminating event
-            result.add(new DisabledDuration(first.getTimestamp(), null));
+            result.add(new DisabledDuration(first.getEffectiveDate(), null));
         }
 
         return result;

@@ -66,7 +66,7 @@ public class ApplicatorMockJunctionModule extends AbstractModule {
                 }
 
                 @Override
-                public DateTime getTimestamp() {
+                public DateTime getEffectiveDate() {
                     return null;
                 }
 
@@ -139,6 +139,16 @@ public class ApplicatorMockJunctionModule extends AbstractModule {
 
         @Override
         public List<BlockingState> getBlockingHistory(final UUID overdueableId, final InternalTenantContext context) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<BlockingState> getBlockingAll(final Blockable overdueable, final InternalTenantContext context) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<BlockingState> getBlockingAll(final UUID overdueableId, final InternalTenantContext context) {
             throw new UnsupportedOperationException();
         }
 

@@ -38,6 +38,8 @@ public class MockBlockingStateDao implements BlockingStateDao {
 
     private final Map<UUID, List<BlockingState>> blockingStates = new HashMap<UUID, List<BlockingState>>();
 
+    // TODO This mock class should also check that events are past or present except for getBlockingAll
+
     @Override
     public BlockingState getBlockingStateForService(final UUID blockableId, final String serviceName, final InternalTenantContext context) {
         final List<BlockingState> states = getBlockingHistory(blockableId, context);
@@ -63,7 +65,7 @@ public class MockBlockingStateDao implements BlockingStateDao {
         final Map<String, BlockingState> tmp  = new HashMap<String, BlockingState>();
         for (BlockingState cur : blockingStatesForId) {
             final BlockingState curStateForService = tmp.get(cur.getService());
-            if (curStateForService == null || curStateForService.getCreatedDate().compareTo(cur.getCreatedDate()) < 0) {
+            if (curStateForService == null || curStateForService.getEffectiveDate().compareTo(cur.getEffectiveDate()) < 0) {
                 tmp.put(cur.getService(), cur);
             }
         }
@@ -90,6 +92,13 @@ public class MockBlockingStateDao implements BlockingStateDao {
     @Override
     public List<BlockingState> getBlockingHistory(final UUID overdueableId, final InternalTenantContext context) {
         final List<BlockingState> states = blockingStates.get(overdueableId);
+        // Note! The returned list cannot be immutable!
+        return states == null ? new ArrayList<BlockingState>() : states;
+    }
+
+    @Override
+    public List<BlockingState> getBlockingAll(final UUID blockableId, final InternalTenantContext context) {
+        final List<BlockingState> states = blockingStates.get(blockableId);
         // Note! The returned list cannot be immutable!
         return states == null ? new ArrayList<BlockingState>() : states;
     }

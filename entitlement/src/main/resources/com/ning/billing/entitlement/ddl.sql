@@ -11,6 +11,7 @@ CREATE TABLE blocking_states (
     block_change bool NOT NULL,
     block_entitlement bool NOT NULL,
     block_billing bool NOT NULL,
+    effective_date datetime NOT NULL,
     created_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,

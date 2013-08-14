@@ -37,11 +37,13 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
     private final Boolean blockChange;
     private final Boolean blockEntitlement;
     private final Boolean blockBilling;
+    private final DateTime effectiveDate;
 
     public BlockingStateModelDao(final UUID id, final UUID blockableId, final BlockingStateType blockingStateType, final String state, final String service, final Boolean blockChange, final Boolean blockEntitlement,
-                                 final Boolean blockBilling, final DateTime createDate, final DateTime updateDate) {
+                                 final Boolean blockBilling, final DateTime effectiveDate, final DateTime createDate, final DateTime updateDate) {
         super(id, createDate, updateDate);
         this.blockableId = blockableId;
+        this.effectiveDate = effectiveDate;
         this.type = blockingStateType;
         this.state = state;
         this.service = service;
@@ -52,7 +54,7 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
 
     public BlockingStateModelDao(final BlockingState src, InternalCallContext context) {
         this(src.getId(), src.getBlockedId(), src.getType(), src.getStateName(), src.getService(), src.isBlockChange(),
-             src.isBlockEntitlement(), src.isBlockBilling(), context.getCreatedDate(), context.getUpdatedDate());
+             src.isBlockEntitlement(), src.isBlockBilling(), src.getEffectiveDate(), context.getCreatedDate(), context.getUpdatedDate());
     }
 
     public UUID getBlockableId() {
@@ -83,12 +85,16 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
         return type;
     }
 
+    public DateTime getEffectiveDate() {
+        return effectiveDate;
+    }
+
     public static BlockingState toBlockingState(BlockingStateModelDao src) {
         if (src == null) {
             return null;
         }
         return new DefaultBlockingState(src.getId(), src.getBlockableId(), src.getType(), src.getState(), src.getService(), src.getBlockChange(), src.getBlockEntitlement(), src.getBlockBilling(),
-                                 src.getCreatedDate(), src.getUpdatedDate());
+                                 src.getEffectiveDate(), src.getCreatedDate(), src.getUpdatedDate());
     }
 
     @Override

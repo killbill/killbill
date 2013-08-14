@@ -173,7 +173,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
 
     @Test(groups = "slow")
-    public void testBlockUnblock() {
+    public void testPauseUnpause() {
 
         try {
 
@@ -194,7 +194,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
             // Block all entitlement in the bundle
             clock.addDays(5);
-            entitlementApi.block(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
+            entitlementApi.pause(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
 
             // Verify blocking state
             final Entitlement baseEntitlement2 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
@@ -205,7 +205,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
             // Check we can't block in a blocked state
             try {
-                entitlementApi.block(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
+                entitlementApi.pause(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
                 Assert.fail("Should not have succeeded to block in a blocked state");
             } catch (EntitlementApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_ALREADY_BLOCKED.getCode());
@@ -223,14 +223,14 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
                 final PlanPhaseSpecifier spec3 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
                 final Entitlement telescopicEntitlement3 = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, callContext);
             } catch (EntitlementApiException e) {
-                assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
+                assertEquals(e.getCode(), ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode());
             }
 
             clock.addDays(3);
-            entitlementApi.unblock(baseEntitlement.getBundleId(), new LocalDate(), callContext);
+            entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(), callContext);
 
             // Verify call is idempotent
-            entitlementApi.unblock(baseEntitlement.getBundleId(), new LocalDate(), callContext);
+            entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(), callContext);
 
             // Verify blocking state
             final Entitlement baseEntitlement3 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);

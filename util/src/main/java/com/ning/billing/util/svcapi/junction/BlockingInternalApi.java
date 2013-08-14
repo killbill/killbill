@@ -38,6 +38,10 @@ public interface BlockingInternalApi {
 
     public List<BlockingState> getBlockingHistory(UUID overdueableId, InternalTenantContext context);
 
+    public List<BlockingState> getBlockingAll(Blockable overdueable, InternalTenantContext context);
+
+    public List<BlockingState> getBlockingAll(UUID overdueableId, InternalTenantContext context);
+
     public void setBlockingState(BlockingState state, InternalCallContext context);
 
 }

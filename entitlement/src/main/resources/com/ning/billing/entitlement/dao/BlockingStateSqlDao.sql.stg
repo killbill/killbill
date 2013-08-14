@@ -11,6 +11,7 @@ tableFields(prefix) ::= <<
 , <prefix>block_change
 , <prefix>block_entitlement
 , <prefix>block_billing
+, <prefix>effective_date
 , <prefix>created_date
 >>
 
@@ -23,6 +24,7 @@ tableValues() ::= <<
 , :blockChange
 , :blockEntitlement
 , :blockBilling
+, :effectiveDate
 , :createdDate
 >>
 
@@ -34,6 +36,7 @@ from
 <tableName()>
 where blockable_id = :blockableId
 and service = :service
+and effective_date \<= :effectiveDate
 <AND_CHECK_TENANT()>
 -- We want the current state, hence the order desc and limit 1
 order by record_id desc
@@ -51,6 +54,7 @@ getBlockingState() ::= <<
          , service
          from blocking_states
          where blockable_id = :blockableId
+         and effective_date \<= :effectiveDate
          <AND_CHECK_TENANT()>
          group by service
  ) tmp
@@ -66,12 +70,25 @@ from
 <tableName()>
 where blockable_id = :blockableId
 and service = :service
+and effective_date \<= :effectiveDate
 <AND_CHECK_TENANT()>
 order by record_id asc
 ;
 >>
 
 getBlockingHistory() ::= <<
+select
+<allTableFields()>
+from
+<tableName()>
+where blockable_id = :blockableId
+and effective_date \<= :effectiveDate
+<AND_CHECK_TENANT()>
+order by record_id asc
+;
+>>
+
+getBlockingAll) ::= <<
 select
 <allTableFields()>
 from

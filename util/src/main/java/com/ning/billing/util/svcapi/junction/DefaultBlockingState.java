@@ -38,13 +38,13 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     private final boolean blockChange;
     private final boolean blockEntitlement;
     private final boolean blockBilling;
-    private final DateTime timestamp;
+    private final DateTime effectiveDate;
     private final BlockingStateType type;
 
     public static BlockingState getClearState(final BlockingStateType type, final Clock clock) {
         if (clearState == null) {
             // STEPH_ENT should we not always have a service name?
-            clearState = new DefaultBlockingState(null, null, type, CLEAR_STATE_NAME, null, false, false, false, clock.getUTCNow(), clock.getUTCNow());
+            clearState = new DefaultBlockingState(null, type, CLEAR_STATE_NAME, null, false, false, false, clock.getUTCNow());
         }
         return clearState;
     }
@@ -58,6 +58,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
                                 final boolean blockChange,
                                 final boolean blockEntitlement,
                                 final boolean blockBilling,
+                                final DateTime effectiveDate,
                                 final DateTime createDate,
                                 final DateTime updatedDate) {
         super(id, createDate, updatedDate);
@@ -68,8 +69,10 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         this.blockChange = blockChange;
         this.blockEntitlement = blockEntitlement;
         this.blockBilling = blockBilling;
-        this.timestamp = createDate;
+        this.effectiveDate = effectiveDate;
     }
+
+
     public DefaultBlockingState(final UUID blockingId,
                                 final BlockingStateType type,
                                  final String stateName,
@@ -77,7 +80,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
                                  final boolean blockChange,
                                  final boolean blockEntitlement,
                                  final boolean blockBilling,
-                                 final DateTime createDate) {
+                                 final DateTime effectiveDate) {
         this(UUID.randomUUID(),
              blockingId,
              type,
@@ -86,8 +89,9 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
              blockChange,
              blockEntitlement,
              blockBilling,
-             createDate,
-             createDate);
+             effectiveDate,
+             null,
+             null);
     }
 
     @Override
@@ -112,8 +116,8 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     * @see com.ning.billing.junction.api.blocking.BlockingState#getTimestamp()
     */
     @Override
-    public DateTime getTimestamp() {
-        return timestamp;
+    public DateTime getEffectiveDate() {
+        return effectiveDate;
     }
 
     @Override
@@ -150,8 +154,8 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
      */
     @Override
     public int compareTo(final BlockingState arg0) {
-        if (timestamp.compareTo(arg0.getTimestamp()) != 0) {
-            return timestamp.compareTo(arg0.getTimestamp());
+        if (effectiveDate.compareTo(arg0.getEffectiveDate()) != 0) {
+            return effectiveDate.compareTo(arg0.getEffectiveDate());
         } else {
             return hashCode() - arg0.hashCode();
         }
@@ -167,7 +171,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         result = prime * result + ((blockingId == null) ? 0 : blockingId.hashCode());
         result = prime * result + ((service == null) ? 0 : service.hashCode());
         result = prime * result + ((stateName == null) ? 0 : stateName.hashCode());
-        result = prime * result + ((timestamp == null) ? 0 : timestamp.hashCode());
+        result = prime * result + ((effectiveDate == null) ? 0 : effectiveDate.hashCode());
         return result;
     }
 
@@ -213,11 +217,11 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         } else if (!stateName.equals(other.stateName)) {
             return false;
         }
-        if (timestamp == null) {
-            if (other.timestamp != null) {
+        if (effectiveDate == null) {
+            if (other.effectiveDate != null) {
                 return false;
             }
-        } else if (timestamp.compareTo(other.timestamp) != 0) {
+        } else if (effectiveDate.compareTo(other.effectiveDate) != 0) {
             return false;
         }
         return true;
@@ -247,6 +251,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     public String toString() {
         return "BlockingState [blockingId=" + blockingId + ", stateName=" + stateName + ", service="
                 + service + ", blockChange=" + blockChange + ", blockEntitlement=" + blockEntitlement
-                + ", blockBilling=" + blockBilling + ", timestamp=" + timestamp + "]";
+                + ", blockBilling=" + blockBilling + ", effectiveDate=" + effectiveDate + "]";
     }
 }
