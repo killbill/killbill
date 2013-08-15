@@ -43,6 +43,7 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
         installBlockingStateDao();
         installBlockingApi();
         installEntitlementApi();
+        installSubscriptionApi();
         installBlockingChecker();
     }
 

@@ -44,17 +44,17 @@ import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 public class DefaultEntitlement extends EntityBase implements Entitlement {
 
-    private final EntitlementDateHelper dateHelper;
-    private final SubscriptionBase subscriptionBase;
-    private final InternalCallContextFactory internalCallContextFactory;
-    private final Clock clock;
-    private final EntitlementState state;
-    private final BlockingState entitlementBlockingState;
-    private final BlockingChecker checker;
-    private final UUID accountId;
-    private final String externalKey;
-    private final DateTimeZone accountTimeZone;
-    private final BlockingStateDao blockingStateDao;
+    protected final EntitlementDateHelper dateHelper;
+    protected final SubscriptionBase subscriptionBase;
+    protected final InternalCallContextFactory internalCallContextFactory;
+    protected final Clock clock;
+    protected final EntitlementState state;
+    protected final BlockingState entitlementBlockingState;
+    protected final BlockingChecker checker;
+    protected final UUID accountId;
+    protected final String externalKey;
+    protected final DateTimeZone accountTimeZone;
+    protected final BlockingStateDao blockingStateDao;
 
     public DefaultEntitlement(final EntitlementDateHelper dateHelper, final SubscriptionBase subscriptionBase, final UUID accountId,
                               final String externalKey, final EntitlementState state, final BlockingState entitlementBlockingState, final DateTimeZone accountTimeZone,
@@ -75,9 +75,51 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         this.blockingStateDao = blockingStateDao;
     }
 
+    public DefaultEntitlement(final DefaultEntitlement in) {
+        this(in.getDateHelper(),
+             in.getSubscriptionBase(),
+             in.getAccountId(),
+             in.getExternalKey(),
+             in.getState(),
+             in.getEntitlementBlockingState(),
+             in.getAccountTimeZone(),
+             in.getInternalCallContextFactory(),
+             in.getBlockingStateDao(),
+             in.getClock(),
+             in.getChecker());
+    }
+
     // STEPH_ENT should be remove but beatrix tests need to be changed
     public SubscriptionBase getSubscriptionBase() {
         return subscriptionBase;
+    }
+
+    public EntitlementDateHelper getDateHelper() {
+        return dateHelper;
+    }
+
+    public InternalCallContextFactory getInternalCallContextFactory() {
+        return internalCallContextFactory;
+    }
+
+    public Clock getClock() {
+        return clock;
+    }
+
+    public BlockingState getEntitlementBlockingState() {
+        return entitlementBlockingState;
+    }
+
+    public BlockingChecker getChecker() {
+        return checker;
+    }
+
+    public DateTimeZone getAccountTimeZone() {
+        return accountTimeZone;
+    }
+
+    public BlockingStateDao getBlockingStateDao() {
+        return blockingStateDao;
     }
 
     @Override

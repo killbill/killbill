@@ -59,7 +59,7 @@ public class TestSubscriptionJsonNoEvents extends JaxrsTestSuiteNoDB {
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final SubscriptionJsonNoEvents subscriptionJsonNoEvents = new SubscriptionJsonNoEvents(accountId, bundleId, entitlementId, externalKey, startDate, productName,
                                                                                                productCategory, billingPeriod, priceList, cancelDate, auditLogs, chargedThroughDate,
-                                                                                               billingStartDate, billingEndDate, new Integer(1), "OK");
+                                                                                               billingStartDate, billingEndDate, new Integer(1));
 
         Assert.assertEquals(subscriptionJsonNoEvents.getEntitlementId(), entitlementId);
         Assert.assertEquals(subscriptionJsonNoEvents.getBundleId(), bundleId);

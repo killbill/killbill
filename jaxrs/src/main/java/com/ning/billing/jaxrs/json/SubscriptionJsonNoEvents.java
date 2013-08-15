@@ -20,7 +20,6 @@ public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
     private final LocalDate billingStartDate;
     private final LocalDate billingEndDate;
     private final Integer bcd;
-    private final String billingState;
     //private final Map<String, String> currentStatesForServices;
 
 
@@ -38,14 +37,12 @@ public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
                                     @JsonProperty("chargedThroughDate") @Nullable final LocalDate chargedThroughDate,
                                     @JsonProperty("billingStartDate") @Nullable final LocalDate billingStartDate,
                                     @JsonProperty("billingEndDate") @Nullable final LocalDate billingEndDate,
-                                    @JsonProperty("bcd") @Nullable final Integer bcd,
-                                    @JsonProperty("billingState") @Nullable final String billingState) {
+                                    @JsonProperty("bcd") @Nullable final Integer bcd) {
         super(accountId, bundleId, entitlementId, externalKey, startDate, productName, productCategory, billingPeriod, priceList, cancelledDate, auditLogs);
         this.chargedThroughDate = chargedThroughDate;
         this.billingStartDate = billingStartDate;
         this.billingEndDate = billingEndDate;
         this.bcd = bcd;
-        this.billingState = billingState;
     }
 
     public SubscriptionJsonNoEvents(final Subscription s,
@@ -64,8 +61,7 @@ public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
              s.getChargedThroughDate() != null ? s.getChargedThroughDate() : null,
              s.getBillingStartDate(),
              s.getBillingEndDate(),
-             s.getBCD(),
-             s.getBillingState() != null ? s.getBillingState().name() : null);
+             s.getBCD());
     }
 
     public LocalDate getChargedThroughDate() {
@@ -84,7 +80,4 @@ public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
         return bcd;
     }
 
-    public String getBillingState() {
-        return billingState;
-    }
 }

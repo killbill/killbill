@@ -88,7 +88,7 @@ order by record_id asc
 ;
 >>
 
-getBlockingAll) ::= <<
+getBlockingAll() ::= <<
 select
 <allTableFields()>
 from
