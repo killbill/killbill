@@ -43,7 +43,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
+import com.ning.billing.subscription.api.user.EntitlementStatusDryRun.DryRunChangeReason;
 
 public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
 
@@ -333,7 +333,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
             final String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            final List<SubscriptionStatusDryRun> aoStatus = subscriptionInternalApi.getDryRunChangePlanStatus(baseSubscription.getId(),
+            final List<EntitlementStatusDryRun> aoStatus = subscriptionInternalApi.getDryRunChangePlanStatus(baseSubscription.getId(),
                                                                                                      newBaseProduct, now, internalCallContext);
             assertEquals(aoStatus.size(), 1);
             assertEquals(aoStatus.get(0).getId(), aoSubscription.getId());
@@ -396,7 +396,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
             final String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            final List<SubscriptionStatusDryRun> aoStatus = subscriptionInternalApi.getDryRunChangePlanStatus(baseSubscription.getId(),
+            final List<EntitlementStatusDryRun> aoStatus = subscriptionInternalApi.getDryRunChangePlanStatus(baseSubscription.getId(),
                                                                                                      newBaseProduct, now, internalCallContext);
             assertEquals(aoStatus.size(), 1);
             assertEquals(aoStatus.get(0).getId(), aoSubscription.getId());

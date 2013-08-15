@@ -45,7 +45,6 @@ import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -54,7 +53,6 @@ import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
-import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -115,8 +113,10 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(), callContext);
             final BlockingState currentBaseState =  blockingStateDao.getBlockingStateForService(baseSubscription.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
 
+            final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
+
             // Check if there is a BP and if it is active
-            final EntitlementState baseEntitlementState = getStateForEntitlement(baseSubscription, currentBaseState, contextWithValidAccountRecordId);
+            final EntitlementState baseEntitlementState = getStateForEntitlement(baseSubscription, currentBaseState, account.getTimeZone(), contextWithValidAccountRecordId);
             if (baseSubscription.getCategory() != ProductCategory.BASE ||
                 baseEntitlementState != EntitlementState.ACTIVE) {
                 throw new EntitlementApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, baseSubscription.getBundleId());
@@ -128,11 +128,10 @@ public class DefaultEntitlementApi implements EntitlementApi {
                 throw new EntitlementApiException(new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, BlockingChecker.ACTION_CHANGE, BlockingChecker.TYPE_SUBSCRIPTION, baseSubscription.getId().toString()));
             }
 
-            final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
 
             final DateTime requestedDate = dateHelper.fromNowAndReferenceTime(baseSubscription.getStartDate(), contextWithValidAccountRecordId);
             final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(baseSubscription.getBundleId(), planPhaseSpecifier, requestedDate, context);
-            return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), getStateForEntitlement(subscription, currentBaseState, context), null, account.getTimeZone(),
+            return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), getStateForEntitlement(subscription, currentBaseState, account.getTimeZone(), context), null, account.getTimeZone(),
                                           internalCallContextFactory, blockingStateDao, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
@@ -153,7 +152,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
             final BlockingState currentState =  blockingStateDao.getBlockingStateForService(subscription.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
 
-            return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), getStateForEntitlement(subscription, currentState, context), currentState, account.getTimeZone(),
+            return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), getStateForEntitlement(subscription, currentState, account.getTimeZone(), context), currentState, account.getTimeZone(),
                                           internalCallContextFactory, blockingStateDao, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
@@ -210,7 +209,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
                     final BlockingState currentState =  blockingStateDao.getBlockingStateForService(input.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
 
                     return new DefaultEntitlement(dateHelper, input, accountId, externalKey,
-                                                  getStateForEntitlement(input, currentState, context),
+                                                  getStateForEntitlement(input, currentState, account.getTimeZone(), context),
                                                   currentState,
                                                   account.getTimeZone(),
                                                   internalCallContextFactory, blockingStateDao, clock, checker);
@@ -221,10 +220,13 @@ public class DefaultEntitlementApi implements EntitlementApi {
         }
     }
 
-    private EntitlementState getStateForEntitlement(final SubscriptionBase subscriptionBase, final BlockingState currentState, final InternalTenantContext context) {
+
+    private EntitlementState getStateForEntitlement(final SubscriptionBase subscriptionBase, final BlockingState currentState, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
 
         // Current state for the ENTITLEMENT_SERVICE_NAME is set to cancelled
-        if (currentState != null && currentState.getStateName().equals(ENT_STATE_CANCELLED)) {
+        if (currentState != null &&
+            currentState.getStateName().equals(ENT_STATE_CANCELLED) &&
+                dateHelper.isBeforeOrEqualsNow(currentState.getEffectiveDate(), accountTimeZone)) {
             return EntitlementState.CANCELLED;
         }
 

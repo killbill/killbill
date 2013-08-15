@@ -20,7 +20,7 @@ import java.util.UUID;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 
-public class DefaultSubscriptionStatusDryRun implements SubscriptionStatusDryRun {
+public class DefaultSubscriptionStatusDryRun implements EntitlementStatusDryRun {
 
     private final UUID id;
     private final String productName;

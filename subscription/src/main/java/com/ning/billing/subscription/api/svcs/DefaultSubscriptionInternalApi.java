@@ -39,20 +39,19 @@ import com.ning.billing.clock.Clock;
 import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionApiBase;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseApiService;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionStatusDryRun;
-import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.user.EntitlementStatusDryRun;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
-import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
-import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
-import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun;
-import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
+import com.ning.billing.subscription.api.user.SubscriptionBuilder;
+import com.ning.billing.subscription.api.user.EntitlementStatusDryRun.DryRunChangeReason;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
@@ -99,7 +98,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             final PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
-                                                          spec.getProductName(), spec.getBillingPeriod().toString(), realPriceList));
+                                                              spec.getProductName(), spec.getBillingPeriod().toString(), realPriceList));
             }
 
             final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(bundleId, context);
@@ -142,7 +141,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     break;
                 default:
                     throw new SubscriptionBaseError(String.format("Can't create subscription of type %s",
-                                                              plan.getProduct().getCategory().toString()));
+                                                                  plan.getProduct().getCategory().toString()));
             }
 
             return apiService.createPlan(new SubscriptionBuilder()
@@ -178,15 +177,21 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
+    public List<SubscriptionBaseBundle> getBundlesForKey(final String bundleKey, final InternalTenantContext context) {
+        final List<SubscriptionBaseBundle> result = dao.getSubscriptionBundlesForKey(bundleKey, context);
+        return result;
+    }
+
+    @Override
     public List<SubscriptionBase> getSubscriptionsForBundle(UUID bundleId,
-                                                        InternalTenantContext context) {
+                                                            InternalTenantContext context) {
         final List<SubscriptionBase> internalSubscriptions = dao.getSubscriptions(bundleId, context);
         return createSubscriptionsForApiUse(internalSubscriptions);
     }
 
     @Override
     public SubscriptionBase getBaseSubscription(UUID bundleId,
-                                            InternalTenantContext context) throws SubscriptionBaseApiException {
+                                                InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBase result = dao.getBaseSubscription(bundleId, context);
         if (result == null) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
@@ -197,7 +202,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     @Override
 
     public SubscriptionBase getSubscriptionFromId(UUID id,
-                                              InternalTenantContext context) throws SubscriptionBaseApiException {
+                                                  InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBase result = dao.getSubscriptionFromId(id, context);
         if (result == null) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, id);
@@ -260,7 +265,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName, final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException {
+    public List<EntitlementStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName, final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBase subscription = dao.getSubscriptionFromId(subscriptionId, context);
         if (subscription == null) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, subscriptionId);
@@ -269,7 +274,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_DRY_RUN_NOT_BP);
         }
 
-        final List<SubscriptionStatusDryRun> result = new LinkedList<SubscriptionStatusDryRun>();
+        final List<EntitlementStatusDryRun> result = new LinkedList<EntitlementStatusDryRun>();
 
         final List<SubscriptionBase> bundleSubscriptions = dao.getSubscriptions(subscription.getBundleId(), context);
         for (final SubscriptionBase cur : bundleSubscriptions) {
@@ -291,7 +296,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             } else {
                 reason = DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN;
             }
-            final SubscriptionStatusDryRun status = new DefaultSubscriptionStatusDryRun(cur.getId(),
+            final EntitlementStatusDryRun status = new DefaultSubscriptionStatusDryRun(cur.getId(),
                                                                                         cur.getCurrentPlan().getProduct().getName(),
                                                                                         cur.getCurrentPhase().getPhaseType(),
                                                                                         cur.getCurrentPlan().getBillingPeriod(),

@@ -25,8 +25,8 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.user.EntitlementStatusDryRun;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -47,6 +47,8 @@ public interface SubscriptionBaseInternalApi {
 
     public List<SubscriptionBaseBundle> getBundlesForAccount(final UUID accountId, final InternalTenantContext context);
 
+    public List<SubscriptionBaseBundle> getBundlesForKey(final String bundleKey, final InternalTenantContext context);
+
     public List<SubscriptionBase> getSubscriptionsForBundle(final UUID bundleId, final InternalTenantContext context);
 
     public SubscriptionBase getBaseSubscription(final UUID bundleId, final InternalTenantContext context) throws SubscriptionBaseApiException;
@@ -65,6 +67,6 @@ public interface SubscriptionBaseInternalApi {
 
     public DateTime getNextBillingDate(final UUID accountId, final InternalTenantContext context);
 
-    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName,
+    public List<EntitlementStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName,
                                                                     final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
 }

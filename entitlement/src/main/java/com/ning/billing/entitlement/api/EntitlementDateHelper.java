@@ -9,7 +9,6 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 
 public class EntitlementDateHelper {
 
@@ -21,52 +20,53 @@ public class EntitlementDateHelper {
         this.clock = clock;
     }
 
-    /**
-     * Returns a DateTime that is equals or beforeNow and whose LocalDate using the account timeZone is the one provided
-     * <p/>
-     * Relies on the subscriptionStartDate for the reference time
-     *
-     * @param requestedDate
-     * @param referenceDateTime
-     * @param callContext
-     * @return
-     * @throws EntitlementApiException
-     */
+
     public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final InternalCallContext callContext) throws EntitlementApiException {
         try {
-            /*
-            final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
-            final DateAndTimeZoneContext timeZoneContext = new DateAndTimeZoneContext(subscriptionStartDate, account.getTimeZone(), clock);
-            final DateTime computedTime = timeZoneContext.computeUTCDateTimeFromLocalDate(requestedDate);
-
-            return computedTime;
-            */
 
             final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
-            final LocalDate localDateNowInAccountTimezone = new LocalDate(requestedDate, account.getTimeZone());
-
-            // Datetime from local date in account timezone and with given reference time
-            final DateTime t1 = localDateNowInAccountTimezone.toDateTime(referenceDateTime.toLocalTime(), account.getTimeZone());
-            // Datetime converted back in UTC
-            final DateTime t2 = new DateTime(t1, DateTimeZone.UTC);
-            return t2;
-
+            return fromLocalDateAndReferenceTime(requestedDate, referenceDateTime, account.getTimeZone());
         } catch (AccountApiException e) {
             throw new EntitlementApiException(e);
         }
     }
 
+    public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final DateTimeZone accountTimeZone) throws EntitlementApiException {
+        final LocalDate localDateNowInAccountTimezone = new LocalDate(requestedDate, accountTimeZone);
+
+        // Datetime from local date in account timezone and with given reference time
+        final DateTime t1 = localDateNowInAccountTimezone.toDateTime(referenceDateTime.toLocalTime(), accountTimeZone);
+        // Datetime converted back in UTC
+        final DateTime t2 = new DateTime(t1, DateTimeZone.UTC);
+        return t2;
+
+    }
+
+
     public DateTime fromNowAndReferenceTime(final DateTime referenceDateTime, final InternalCallContext callContext) throws EntitlementApiException {
         try {
             final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
-            final LocalDate localDateNowInAccountTimezone = new LocalDate(clock.getUTCNow(), account.getTimeZone());
-            // Datetime from local date in account timezone and with given reference time
-            final DateTime t1 = localDateNowInAccountTimezone.toDateTime(referenceDateTime.toLocalTime(), account.getTimeZone());
-            // Datetime converted back in UTC
-            final DateTime t2 = new DateTime(t1, DateTimeZone.UTC);
-            return t2;
+            return fromNowAndReferenceTime(referenceDateTime, account.getTimeZone());
         } catch (AccountApiException e) {
             throw new EntitlementApiException(e);
         }
+    }
+
+    public DateTime fromNowAndReferenceTime(final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
+        final LocalDate localDateNowInAccountTimezone = new LocalDate(clock.getUTCNow(), accountTimeZone);
+        // Datetime from local date in account timezone and with given reference time
+        final DateTime t1 = localDateNowInAccountTimezone.toDateTime(referenceDateTime.toLocalTime(), accountTimeZone);
+        // Datetime converted back in UTC
+        final DateTime t2 = new DateTime(t1, DateTimeZone.UTC);
+        return t2;
+    }
+
+    // STEPH_ENT test
+    public boolean isBeforeOrEqualsNow(final DateTime inputDate, final DateTimeZone accountTimeZone) {
+
+        final LocalDate localDateNowInAccountTimezone = new LocalDate(clock.getUTCNow(), accountTimeZone);
+        final LocalDate targetDateInAccountTimezone = new LocalDate(inputDate, accountTimeZone);
+
+        return targetDateInAccountTimezone.compareTo(localDateNowInAccountTimezone) <= 0;
     }
 }
