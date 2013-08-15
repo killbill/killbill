@@ -485,7 +485,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, callContext);
+                    final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
+                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, effectiveDate, callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (EntitlementApiException e) {
@@ -510,7 +511,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final Entitlement entitlement = entitlementApi.addEntitlement(basePlanId, spec, callContext);
+                    final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
+                    final Entitlement entitlement = entitlementApi.addEntitlement(basePlanId, spec, effectiveDate, callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (EntitlementApiException e) {

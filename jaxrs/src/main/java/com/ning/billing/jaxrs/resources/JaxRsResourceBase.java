@@ -191,11 +191,26 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return Response.status(Response.Status.OK).build();
     }
 
-    protected LocalDate toLocalDate(final UUID accountId, final DateTime inputDate, final TenantContext context) throws AccountApiException {
-        if (inputDate == null) {
-            return null;
+    protected LocalDate toLocalDate(final UUID accountId, final DateTime inputDate, final TenantContext context)  {
+        Account account = null;
+        try {
+            account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
+        } catch (AccountApiException e) {
+            log.info("Failed to retrieve account for id " + accountId );
         }
-        final Account account = accountUserApi.getAccountById(accountId, context);
-        return new LocalDate(inputDate, account.getTimeZone());
+
+        if (account == null && inputDate == null) {
+            // We have no inputDate and so accountTimeZone so we default to LocalDate as seen in UTC
+            return new LocalDate();
+        } else if (account == null && inputDate != null) {
+            // We were given a date but can't get timezone, default in UTC
+            return new LocalDate(inputDate);
+        } else if (account != null && inputDate == null) {
+            // We have no inputDate but for accountTimeZone so default to LocalDate as seen in account timezone
+            return new LocalDate(account.getTimeZone());
+        } else {
+            // Precise LocalDate as requested
+            return new LocalDate(inputDate, account.getTimeZone());
+        }
     }
 }

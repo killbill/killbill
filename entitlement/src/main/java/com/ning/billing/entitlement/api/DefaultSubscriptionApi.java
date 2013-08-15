@@ -90,6 +90,20 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
     }
 
     @Override
+    public List<SubscriptionBundle> getSubscriptionBundlesForExternalKey(final String externalKey, final TenantContext context) throws SubscriptionApiException {
+
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForKey(externalKey, internalContext);
+
+        final  List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>(bundles.size());
+        for (SubscriptionBaseBundle cur : bundles) {
+            final SubscriptionBundle bundle = getSubscriptionBundleForAccountIdAndExternalKey(cur.getAccountId(), cur.getExternalKey(), context);
+            result.add(bundle);
+        }
+        return result;
+    }
+
+    @Override
     public List<SubscriptionBundle> getSubscriptionBundlesForAccountId(final UUID accountId, final TenantContext context) throws SubscriptionApiException {
         try {
 

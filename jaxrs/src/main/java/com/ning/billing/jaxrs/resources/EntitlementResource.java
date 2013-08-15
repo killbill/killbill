@@ -50,6 +50,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.Entitlement;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
@@ -115,7 +116,7 @@ public class EntitlementResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createEntitlement(final EntitlementJsonNoEvents entitlement,
-                                      //@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                      @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                       @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                       @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -123,7 +124,7 @@ public class EntitlementResource extends JaxRsResourceBase {
                                       @HeaderParam(HDR_COMMENT) final String comment,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-
+        final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
         final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
             public Entitlement doOperation(final CallContext ctx) throws InterruptedException, TimeoutException, EntitlementApiException {
@@ -135,10 +136,11 @@ public class EntitlementResource extends JaxRsResourceBase {
 
 
                 final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
+                final LocalDate inputLocalDate = toLocalDate(accountId, inputDate, callContext);
                 final UUID bundleId = entitlement.getBundleId() != null ? UUID.fromString(entitlement.getBundleId()) : null;
                 return (entitlement.getProductCategory().equals(ProductCategory.ADD_ON.toString())) ?
-                       entitlementApi.addEntitlement(bundleId, spec, callContext) :
-                       entitlementApi.createBaseEntitlement(accountId, spec, entitlement.getExternalKey(), callContext);
+                       entitlementApi.addEntitlement(bundleId, spec, inputLocalDate, callContext) :
+                       entitlementApi.createBaseEntitlement(accountId, spec, entitlement.getExternalKey(), inputLocalDate, callContext);
             }
 
             @Override
@@ -185,12 +187,16 @@ public class EntitlementResource extends JaxRsResourceBase {
 
                 final Entitlement current = entitlementApi.getEntitlementForId(uuid, callContext);
                 final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), inputDate, callContext);
+                final Entitlement newEntitlement;
                 if (policyString == null) {
-                    isImmediateOp = current.changePlan(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, ctx);
+                    newEntitlement = current.changePlan(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, ctx);
                 } else {
                     final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
-                    isImmediateOp = current.changePlanOverrideBillingPolicy(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, policy, ctx);
+                    newEntitlement  = current.changePlanOverrideBillingPolicy(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, policy, ctx);
                 }
+                isImmediateOp = newEntitlement.getProduct().getName().equals(entitlement.getProductName()) &&
+                                newEntitlement.getPlan().getBillingPeriod() == BillingPeriod.valueOf(entitlement.getBillingPeriod()) &&
+                                newEntitlement.getPriceList().getName().equals(entitlement.getPriceList());
                 return Response.status(Status.OK).build();
             }
 
@@ -256,12 +262,14 @@ public class EntitlementResource extends JaxRsResourceBase {
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
                 final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), inputDate, callContext);
 
+                final Entitlement newEntitlement;
                 if (policyString == null) {
-                    isImmediateOp = current.cancelEntitlementWithDate(inputLocalDate, ctx);
+                    newEntitlement = current.cancelEntitlementWithDate(inputLocalDate, ctx);
                 } else {
                     final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
-                    isImmediateOp = current.cancelEntitlementWithDateOverrideBillingPolicy(inputLocalDate, policy, ctx);
+                    newEntitlement = current.cancelEntitlementWithDateOverrideBillingPolicy(inputLocalDate, policy, ctx);
                 }
+                isImmediateOp = newEntitlement.getState() == EntitlementState.ACTIVE;
                 return Response.status(Status.OK).build();
             }
 

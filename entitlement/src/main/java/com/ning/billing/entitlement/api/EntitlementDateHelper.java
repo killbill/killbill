@@ -21,29 +21,6 @@ public class EntitlementDateHelper {
         this.clock = clock;
     }
 
-
-    public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
-        try {
-
-            final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
-            return fromLocalDateAndReferenceTime(requestedDate, referenceDateTime, account.getTimeZone());
-        } catch (AccountApiException e) {
-            throw new EntitlementApiException(e);
-        }
-    }
-
-    public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final DateTimeZone accountTimeZone) throws EntitlementApiException {
-        final LocalDate localDateNowInAccountTimezone = new LocalDate(requestedDate, accountTimeZone);
-
-        // Datetime from local date in account timezone and with given reference time
-        final DateTime t1 = localDateNowInAccountTimezone.toDateTime(referenceDateTime.toLocalTime(), accountTimeZone);
-        // Datetime converted back in UTC
-        final DateTime t2 = new DateTime(t1, DateTimeZone.UTC);
-        return t2;
-
-    }
-
-
     public DateTime fromNowAndReferenceTime(final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
         try {
             final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
@@ -55,12 +32,29 @@ public class EntitlementDateHelper {
 
     public DateTime fromNowAndReferenceTime(final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
         final LocalDate localDateNowInAccountTimezone = new LocalDate(clock.getUTCNow(), accountTimeZone);
+        return fromLocalDateAndReferenceTime(localDateNowInAccountTimezone, referenceDateTime, accountTimeZone);
+    }
+
+    public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
+        try {
+
+            final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
+            return fromLocalDateAndReferenceTime(requestedDate, referenceDateTime, account.getTimeZone());
+        } catch (AccountApiException e) {
+            throw new EntitlementApiException(e);
+        }
+    }
+
+    public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
+        final LocalDate localDateNowInAccountTimezone = new LocalDate(requestedDate, accountTimeZone);
         // Datetime from local date in account timezone and with given reference time
         final DateTime t1 = localDateNowInAccountTimezone.toDateTime(referenceDateTime.toLocalTime(), accountTimeZone);
         // Datetime converted back in UTC
         final DateTime t2 = new DateTime(t1, DateTimeZone.UTC);
         return t2;
     }
+
+
 
     // STEPH_ENT test
     public boolean isBeforeOrEqualsNow(final DateTime inputDate, final DateTimeZone accountTimeZone) {

@@ -87,13 +87,16 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
 
     @Override
-    public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final LocalDate effectiveDate, final CallContext callContext) throws EntitlementApiException {
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         try {
             final Account account = accountApi.getAccountById(accountId, contextWithValidAccountRecordId);
             final SubscriptionBaseBundle bundle = subscriptionInternalApi.createBundleForAccount(accountId, externalKey, contextWithValidAccountRecordId);
-            final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(bundle.getId(), planPhaseSpecifier, clock.getUTCNow(), contextWithValidAccountRecordId);
-            return new DefaultEntitlement(dateHelper, subscription, accountId, bundle.getExternalKey(), EntitlementState.ACTIVE, null, account.getTimeZone(),
+
+            final DateTime referenceTime = clock.getUTCNow();
+            final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, referenceTime, contextWithValidAccountRecordId);
+            final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(bundle.getId(), planPhaseSpecifier, requestedDate, contextWithValidAccountRecordId);
+            return new DefaultEntitlement(dateHelper, subscription, accountId, bundle.getExternalKey(), EntitlementState.ACTIVE, null, account.getTimeZone(), this,
                                           internalCallContextFactory, blockingStateDao, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
@@ -103,7 +106,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
     }
 
     @Override
-    public Entitlement addEntitlement(final UUID bundleId, final PlanPhaseSpecifier planPhaseSpecifier, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement addEntitlement(final UUID bundleId, final PlanPhaseSpecifier planPhaseSpecifier, final LocalDate effectiveDate, final CallContext callContext) throws EntitlementApiException {
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(callContext);
         try {
             final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, context);
@@ -129,10 +132,10 @@ public class DefaultEntitlementApi implements EntitlementApi {
             }
 
 
-            final DateTime requestedDate = dateHelper.fromNowAndReferenceTime(baseSubscription.getStartDate(), contextWithValidAccountRecordId);
+            final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);
             final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(baseSubscription.getBundleId(), planPhaseSpecifier, requestedDate, context);
             return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), getStateForEntitlement(subscription, currentBaseState, account.getTimeZone(), context), null, account.getTimeZone(),
-                                          internalCallContextFactory, blockingStateDao, clock, checker);
+                                          this, internalCallContextFactory, blockingStateDao, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (BlockingApiException e) {
@@ -169,7 +172,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final BlockingState currentState =  blockingStateDao.getBlockingStateForService(subscription.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
 
             return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), getStateForEntitlement(subscription, currentState, account.getTimeZone(), context), currentState, account.getTimeZone(),
-                                          internalCallContextFactory, blockingStateDao, clock, checker);
+                                          this, internalCallContextFactory, blockingStateDao, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (AccountApiException e) {
@@ -217,6 +220,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
         try {
             final Account account = accountApi.getAccountById(accountId, context);
             final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundleId, context);
+            final EntitlementApi thisEntitlementApi = this;
             return ImmutableList.<Entitlement>copyOf(Collections2.transform(subscriptions, new Function<SubscriptionBase, Entitlement>() {
                 @Nullable
                 @Override
@@ -228,6 +232,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
                                                   getStateForEntitlement(input, currentState, account.getTimeZone(), context),
                                                   currentState,
                                                   account.getTimeZone(),
+                                                  thisEntitlementApi,
                                                   internalCallContextFactory, blockingStateDao, clock, checker);
                 }
             }));
