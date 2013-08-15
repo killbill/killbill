@@ -104,7 +104,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
             // Create entitlement and check each field
             final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), callContext);
 
-            final boolean isCancelled = entitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.EOT, callContext);
+            final boolean isCancelled = entitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, callContext);
             assertTrue(isCancelled);
 
             final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
@@ -142,7 +142,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
 
             final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-            final boolean isCancelled = entitlement2.cancelEntitlementWithPolicy(EntitlementActionPolicy.EOT, callContext);
+            final boolean isCancelled = entitlement2.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, callContext);
             assertFalse(isCancelled);
 
             final Entitlement entitlement3 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);

@@ -143,6 +143,22 @@ public class DefaultEntitlementApi implements EntitlementApi {
     }
 
     @Override
+    public List<EntitlementAOStatusDryRun> getDryRunStatusForChange(final UUID bundleId, final String targetProductName, final LocalDate effectiveDate, final TenantContext context) throws EntitlementApiException {
+
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        try {
+            final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, internalContext);
+            final SubscriptionBase baseSubscription  = subscriptionInternalApi.getBaseSubscription(bundleId, internalContext);
+
+            final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(bundle.getAccountId(), context);
+            final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);
+            return subscriptionInternalApi.getDryRunChangePlanStatus(baseSubscription.getId(), targetProductName, requestedDate, contextWithValidAccountRecordId);
+        } catch (SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
+    }
+
+    @Override
     public Entitlement getEntitlementForId(final UUID uuid, final TenantContext tenantContext) throws EntitlementApiException {
         final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(tenantContext);
         try {

@@ -24,8 +24,8 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.entitlement.api.EntitlementAOStatusDryRun;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.EntitlementStatusDryRun;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -67,6 +67,6 @@ public interface SubscriptionBaseInternalApi {
 
     public DateTime getNextBillingDate(final UUID accountId, final InternalTenantContext context);
 
-    public List<EntitlementStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName,
-                                                                    final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
+    public List<EntitlementAOStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName,
+                                                                   final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
 }

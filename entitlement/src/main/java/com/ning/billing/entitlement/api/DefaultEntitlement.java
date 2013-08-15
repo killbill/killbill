@@ -39,6 +39,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.entity.EntityBase;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
@@ -269,10 +270,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     private LocalDate getLocalDateFromEntitlementPolicy(final EntitlementActionPolicy entitlementPolicy) {
         final LocalDate cancellationDate;
         switch (entitlementPolicy) {
-            case IMM:
+            case IMMEDIATE:
                 cancellationDate = new LocalDate(clock.getUTCNow(), accountTimeZone);
                 break;
-            case EOT:
+            case END_OF_TERM:
                 cancellationDate = subscriptionBase.getChargedThroughDate() != null ? new LocalDate(subscriptionBase.getChargedThroughDate(), accountTimeZone) : new LocalDate(clock.getUTCNow(), accountTimeZone);
                 break;
             default:

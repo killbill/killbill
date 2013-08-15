@@ -13,14 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.subscription.api.user;
 
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.entitlement.api.EntitlementAOStatusDryRun;
 
-public class DefaultSubscriptionStatusDryRun implements EntitlementStatusDryRun {
+public class DefaultSubscriptionStatusDryRun implements EntitlementAOStatusDryRun {
 
     private final UUID id;
     private final String productName;

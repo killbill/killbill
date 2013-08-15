@@ -8,6 +8,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 public class EntitlementDateHelper {
@@ -21,7 +22,7 @@ public class EntitlementDateHelper {
     }
 
 
-    public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final InternalCallContext callContext) throws EntitlementApiException {
+    public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
         try {
 
             final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
@@ -43,7 +44,7 @@ public class EntitlementDateHelper {
     }
 
 
-    public DateTime fromNowAndReferenceTime(final DateTime referenceDateTime, final InternalCallContext callContext) throws EntitlementApiException {
+    public DateTime fromNowAndReferenceTime(final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
         try {
             final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
             return fromNowAndReferenceTime(referenceDateTime, account.getTimeZone());
