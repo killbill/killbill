@@ -42,7 +42,7 @@ public class IniRealmProvider implements Provider<IniRealm> {
         try {
             return new IniRealm(securityConfig.getShiroResourcePath());
         } catch (ConfigurationException e) {
-            log.warn(e.getLocalizedMessage());
+            log.warn("Unable to configure RBAC", e);
             return new IniRealm();
         }
     }
