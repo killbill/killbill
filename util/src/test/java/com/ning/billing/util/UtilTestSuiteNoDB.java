@@ -41,6 +41,7 @@ import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.glue.TestUtilModuleNoDB;
+import com.ning.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -64,6 +65,8 @@ public class UtilTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected AuditUserApi auditUserApi;
     @Inject
     protected SecurityApi securityApi;
+    @Inject
+    protected KillBillJndiLdapRealm killBillJndiLdapRealm;
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {

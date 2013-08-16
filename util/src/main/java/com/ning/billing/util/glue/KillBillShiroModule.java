@@ -23,6 +23,7 @@ import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.session.mgt.SessionManager;
 
 import com.ning.billing.util.security.shiro.dao.JDBCSessionDao;
+import com.ning.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
@@ -30,8 +31,15 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
 // See com.ning.billing.server.modules.KillBillShiroWebModule for Kill Bill server.
 public class KillBillShiroModule extends ShiroModule {
 
+    public static final String KILLBILL_LDAP_PROPERTY = "killbill.server.ldap";
+
     protected void configureShiro() {
         bindRealm().toProvider(IniRealmProvider.class).asEagerSingleton();
+
+        final boolean ldapEnabled = Boolean.parseBoolean(System.getProperty(KILLBILL_LDAP_PROPERTY, "false"));
+        if (ldapEnabled) {
+            bindRealm().to(KillBillJndiLdapRealm.class).asEagerSingleton();
+        }
     }
 
     @Override

@@ -27,7 +27,9 @@ import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.util.glue.EhCacheManagerProvider;
 import com.ning.billing.util.glue.IniRealmProvider;
 import com.ning.billing.util.glue.JDBCSessionDaoProvider;
+import com.ning.billing.util.glue.KillBillShiroModule;
 import com.ning.billing.util.security.shiro.dao.JDBCSessionDao;
+import com.ning.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
@@ -42,6 +44,11 @@ public class KillBillShiroWebModule extends ShiroWebModule {
     @Override
     protected void configureShiroWeb() {
         bindRealm().toProvider(IniRealmProvider.class).asEagerSingleton();
+
+        final boolean ldapEnabled = Boolean.parseBoolean(System.getProperty(KillBillShiroModule.KILLBILL_LDAP_PROPERTY, "false"));
+        if (ldapEnabled) {
+            bindRealm().to(KillBillJndiLdapRealm.class).asEagerSingleton();
+        }
 
         // Magic provider to configure the cache manager
         bind(CacheManager.class).toProvider(EhCacheManagerProvider.class).asEagerSingleton();
