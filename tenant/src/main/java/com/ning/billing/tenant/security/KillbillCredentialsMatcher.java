@@ -22,9 +22,11 @@ import org.apache.shiro.crypto.hash.Sha512Hash;
 
 public class KillbillCredentialsMatcher {
 
+    public static final String KILLBILL_TENANT_HASH_ITERATIONS_PROPERTY = "killbill.server.multitenant.hash_iterations";
+
     // See http://www.stormpath.com/blog/strong-password-hashing-apache-shiro and https://issues.apache.org/jira/browse/SHIRO-290
     public static final String HASH_ALGORITHM_NAME = Sha512Hash.ALGORITHM_NAME;
-    public static final int HASH_ITERATIONS = 500000;
+    public static final Integer HASH_ITERATIONS = Integer.parseInt(System.getProperty(KILLBILL_TENANT_HASH_ITERATIONS_PROPERTY, "200000"));
 
     private KillbillCredentialsMatcher() {}
 
