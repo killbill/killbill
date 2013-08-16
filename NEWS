@@ -1,3 +1,10 @@
+0.5.0
+    Initial implementation of RBAC
+    Remove analytics plugin from defaultbundles package
+    Switch to killbill-commons for locker and db testing helper
+    Lower the default number of hash iterations for the apiSecret to 200,000 down from 500,000
+     - you can override it via -Dkillbill.server.multitenant.hash_iterations
+
 0.4.0
     Search APIs
     Log errors during lifecycle
