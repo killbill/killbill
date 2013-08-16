@@ -7,7 +7,6 @@ import org.joda.time.LocalDate;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
@@ -51,13 +50,31 @@ public class EntitlementDateHelper {
         final DateTime t1 = localDateNowInAccountTimezone.toDateTime(referenceDateTime.toLocalTime(), accountTimeZone);
         // Datetime converted back in UTC
         final DateTime t2 = new DateTime(t1, DateTimeZone.UTC);
-        return t2;
+
+        //
+        // Ok, in the case of a LocalDate of today we expect any chnage to be immediate, so we check that DateTime returned is not in the future
+        // (which means that reference time might not be honored, but this is not very important).
+        //
+        return adjustDateTimeToNotBeInFutureIfLocaDateIsToday(t2);
     }
 
+    private final DateTime adjustDateTimeToNotBeInFutureIfLocaDateIsToday(final DateTime input) {
+        // If the LocalDate is TODAY but after adding the reference time we end up in the future, we correct it to be NOW,
+        // so change occurs immediately
+        if (isBeforeOrEqualsToday(input, DateTimeZone.UTC) && input.compareTo(clock.getUTCNow()) > 0) {
+            return clock.getUTCNow();
+        } else {
+            return input;
+        }
+    }
 
-
-    // STEPH_ENT test
-    public boolean isBeforeOrEqualsNow(final DateTime inputDate, final DateTimeZone accountTimeZone) {
+    /**
+     *
+     * @param inputDate       the fully qualified DateTime
+     * @param accountTimeZone the acount timezone
+     * @return true if the inputDate, once converted into a LocalDate using account timezone is less or equals than today
+     */
+    public boolean isBeforeOrEqualsToday(final DateTime inputDate, final DateTimeZone accountTimeZone) {
 
         final LocalDate localDateNowInAccountTimezone = new LocalDate(clock.getUTCNow(), accountTimeZone);
         final LocalDate targetDateInAccountTimezone = new LocalDate(inputDate, accountTimeZone);

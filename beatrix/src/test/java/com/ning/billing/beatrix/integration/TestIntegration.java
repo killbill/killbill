@@ -67,7 +67,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // ADD ADD_ON ON THE SAME DAY
         //
-        addAOEntitlementAndCheckForCompletion(bpSubscription.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
         Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
         paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), PaymentStatus.SUCCESS, invoice.getId(), Currency.USD));
 
@@ -404,11 +404,11 @@ public class TestIntegration extends TestIntegrationBase {
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(3));
         clock.addDays(3);
 
-        final DefaultEntitlement aoEntitlement1 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
+        final DefaultEntitlement aoEntitlement1 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
                                                                                         NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
 
-        final DefaultEntitlement aoEntitlement2 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getId(), "Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
+        final DefaultEntitlement aoEntitlement2 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
                                                                                         NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
 

@@ -27,6 +27,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 import com.ning.billing.beatrix.integration.TestIntegrationBase;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.overdue.config.OverdueConfig;
@@ -42,7 +43,7 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
 
 
     protected Account account;
-    protected SubscriptionBaseBundle bundle;
+    protected SubscriptionBundle bundle;
     protected String productName;
     protected BillingPeriod term;
 
@@ -74,17 +75,17 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         try {
             // This will test the overdue notification queue: when we move the clock, the overdue system
             // should get notified to refresh its state.
-            // Calling explicitly refresh here (overdueApi.refreshOverdueStateFor(bundle)) would not fully
+            // Calling explicitly refresh here (overdueApi.refreshOverdueStateFor(account)) would not fully
             // test overdue.
             // Since we're relying on the notification queue, we may need to wait a bit (hence await()).
             await().atMost(10, SECONDS).until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
-                    return expected.equals(blockingApi.getBlockingStateForService(bundle, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName());
+                    return expected.equals(blockingApi.getBlockingStateForService(account, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName());
                 }
             });
         } catch (Exception e) {
-            Assert.assertEquals(blockingApi.getBlockingStateForService(bundle, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName(), expected, "Got exception: " + e.toString());
+            Assert.assertEquals(blockingApi.getBlockingStateForService(account, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName(), expected, "Got exception: " + e.toString());
         }
     }
 }

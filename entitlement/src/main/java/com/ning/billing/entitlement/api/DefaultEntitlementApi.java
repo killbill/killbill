@@ -247,7 +247,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
         // Current state for the ENTITLEMENT_SERVICE_NAME is set to cancelled
         if (currentState != null &&
             currentState.getStateName().equals(ENT_STATE_CANCELLED) &&
-                dateHelper.isBeforeOrEqualsNow(currentState.getEffectiveDate(), accountTimeZone)) {
+                dateHelper.isBeforeOrEqualsToday(currentState.getEffectiveDate(), accountTimeZone)) {
             return EntitlementState.CANCELLED;
         }
 

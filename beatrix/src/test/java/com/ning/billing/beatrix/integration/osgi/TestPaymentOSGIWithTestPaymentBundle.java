@@ -163,8 +163,8 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
             paymentPluginApi.setPaymentRuntimeExceptionOnNextCalls(expectedRuntimeException);
         }
 
-        final DefaultEntitlement aoEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY,
-                                                                                            expectedEvents.toArray(new NextEvent[expectedEvents.size()]));
+        final DefaultEntitlement aoEntitlement = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
+                                                                                       expectedEvents.toArray(new NextEvent[expectedEvents.size()]));
 
 
         Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));

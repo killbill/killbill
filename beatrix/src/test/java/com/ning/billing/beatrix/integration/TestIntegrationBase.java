@@ -64,6 +64,7 @@ import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.entitlement.api.Entitlement;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
+import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -160,6 +161,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected EntitlementApi entitlementApi;
+
+    @Inject
+    protected SubscriptionApi subscriptionApi;
 
     @Named(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME)
     @Inject
@@ -497,7 +501,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }, events);
     }
 
-    protected DefaultEntitlement addAOEntitlementAndCheckForCompletion(final UUID basePlanId,
+    protected DefaultEntitlement addAOEntitlementAndCheckForCompletion(final UUID bundleId,
                                                                        final String productName,
                                                                        final ProductCategory productCategory,
                                                                        final BillingPeriod billingPeriod,
@@ -512,7 +516,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
                     final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
-                    final Entitlement entitlement = entitlementApi.addEntitlement(basePlanId, spec, effectiveDate, callContext);
+                    final Entitlement entitlement = entitlementApi.addEntitlement(bundleId, spec, effectiveDate, callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (EntitlementApiException e) {
@@ -529,16 +533,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                         final BillingPeriod billingPeriod,
                                                                         final BillingActionPolicy billingPolicy,
                                                                         final NextEvent... events) {
-        return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
+         return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
             @Override
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
-                    final Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+                    Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     if (billingPolicy == null) {
-                        refreshedEntitlement.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), callContext);
                     } else {
-                        refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), billingPolicy, callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), billingPolicy, callContext);
                     }
                     return refreshedEntitlement;
                 } catch (EntitlementApiException e) {
@@ -557,9 +561,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
-                    final Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-                    refreshedEntitlement.cancelEntitlementWithDate(requestedDate.toLocalDate(), callContext);
-                    return refreshedEntitlement;
+                    Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+                    refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithDate(requestedDate.toLocalDate(), callContext);
+                    return  refreshedEntitlement;
                 } catch (EntitlementApiException e) {
                     fail(e.getMessage());
                     return null;

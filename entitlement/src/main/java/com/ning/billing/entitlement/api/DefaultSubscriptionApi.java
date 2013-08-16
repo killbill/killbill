@@ -6,7 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
@@ -15,6 +18,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.common.base.Function;
@@ -33,12 +37,13 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
-    public DefaultSubscriptionApi(final SubscriptionBaseInternalApi subscriptionInternalApi, final EntitlementApi entitlementApi, final BlockingChecker checker, final BlockingStateDao blockingStateDao, final EntitlementDateHelper dateHelper, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
+    @Inject
+    public DefaultSubscriptionApi(final SubscriptionBaseInternalApi subscriptionInternalApi, final EntitlementApi entitlementApi, final BlockingChecker checker, final BlockingStateDao blockingStateDao, final AccountInternalApi accountApi, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
         this.subscriptionInternalApi = subscriptionInternalApi;
         this.entitlementApi = entitlementApi;
         this.checker = checker;
         this.blockingStateDao = blockingStateDao;
-        this.dateHelper = dateHelper;
+        this.dateHelper = new EntitlementDateHelper(accountApi, clock);;
         this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
     }

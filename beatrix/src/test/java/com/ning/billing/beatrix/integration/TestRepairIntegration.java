@@ -82,8 +82,8 @@ public class TestRepairIntegration extends TestIntegrationBase {
         Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
         clock.addDeltaFromReality(it.toDurationMillis());
 
-        final DefaultEntitlement aoEntitlement1 = addAOEntitlementAndCheckForCompletion(bpEntitlement.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        final DefaultEntitlement aoEntitlement2 = addAOEntitlementAndCheckForCompletion(bpEntitlement.getId(), "Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        final DefaultEntitlement aoEntitlement1 = addAOEntitlementAndCheckForCompletion(bpEntitlement.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        final DefaultEntitlement aoEntitlement2 = addAOEntitlementAndCheckForCompletion(bpEntitlement.getBundleId(), "Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
         // MOVE CLOCK A LITTLE BIT MORE -- EITHER STAY IN TRIAL OR GET OUT
         final int duration = inTrial ? 3 : 35;

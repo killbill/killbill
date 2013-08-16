@@ -70,6 +70,7 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
@@ -102,6 +103,7 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
