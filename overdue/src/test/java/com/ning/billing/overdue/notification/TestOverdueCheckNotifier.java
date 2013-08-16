@@ -95,7 +95,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void test() throws Exception {
         final UUID subscriptionId = new UUID(0L, 1L);
-        final Blockable blockable = Mockito.mock(SubscriptionBase.class);
+        final Account blockable = Mockito.mock(Account.class);
         Mockito.when(blockable.getId()).thenReturn(subscriptionId);
         final DateTime now = clock.getUTCNow();
         final DateTime readyTime = now.plusMillis(2000);

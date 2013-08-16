@@ -33,7 +33,6 @@ import com.ning.billing.overdue.config.DefaultOverdueStateSet;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
@@ -53,7 +52,7 @@ public class OverdueWrapperFactory {
     @Inject
     public OverdueWrapperFactory(final BlockingInternalApi api, final Clock clock,
                                  final BillingStateCalculator billingStateCalculator,
-                                 final OverdueStateApplicator<SubscriptionBaseBundle> overdueStateApplicatorBundle,
+                                 final OverdueStateApplicator overdueStateApplicatorBundle,
                                  final AccountUserApi accountUserApi) {
         this.billingStateCalculator = billingStateCalculator;
         this.overdueStateApplicator = overdueStateApplicatorBundle;
@@ -69,7 +68,7 @@ public class OverdueWrapperFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Blockable> OverdueWrapper createOverdueWrapperFor(final UUID id, final InternalTenantContext context) throws OverdueException {
+    public OverdueWrapper createOverdueWrapperFor(final UUID id, final InternalTenantContext context) throws OverdueException {
 
         try {
             Account account = accountUserApi.getAccountById(id, context.toTenantContext());

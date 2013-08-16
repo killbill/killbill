@@ -26,6 +26,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.notificationq.api.NotificationEventWithMetadata;
 import com.ning.billing.notificationq.api.NotificationQueue;
@@ -62,9 +63,9 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
 
     @Test(groups = "slow")
     public void testShouldntInsertMultipleNotificationsPerOverdueable() throws Exception {
-        final UUID subscriptionId = UUID.randomUUID();
-        final Blockable overdueable = Mockito.mock(SubscriptionBase.class);
-        Mockito.when(overdueable.getId()).thenReturn(subscriptionId);
+        final UUID accountId = UUID.randomUUID();
+        final Blockable overdueable = Mockito.mock(Account.class);
+        Mockito.when(overdueable.getId()).thenReturn(accountId);
 
         insertOverdueCheckAndVerifyQueueContent(overdueable, 10, 10);
         insertOverdueCheckAndVerifyQueueContent(overdueable, 5, 5);
@@ -72,7 +73,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
 
         // Check we don't conflict with other overdueables
         final UUID bundleId = UUID.randomUUID();
-        final Blockable otherOverdueable = Mockito.mock(SubscriptionBaseBundle.class);
+        final Blockable otherOverdueable = Mockito.mock(Account.class);
         Mockito.when(otherOverdueable.getId()).thenReturn(bundleId);
 
         insertOverdueCheckAndVerifyQueueContent(otherOverdueable, 10, 10);

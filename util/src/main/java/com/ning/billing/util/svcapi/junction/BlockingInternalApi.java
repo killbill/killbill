@@ -19,6 +19,7 @@ package com.ning.billing.util.svcapi.junction;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -26,21 +27,21 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface BlockingInternalApi {
 
-    public BlockingState getBlockingStateForService(Blockable overdueable, String serviceName, InternalTenantContext context);
+    public BlockingState getBlockingStateForService(Blockable blockable, String serviceName, InternalTenantContext context);
 
-    public BlockingState getBlockingStateForService(UUID overdueableId, String serviceName, InternalTenantContext context);
+    public BlockingState getBlockingStateForService(UUID blockableId, String serviceName, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingHistoryForService(Blockable overdueable, String serviceName, InternalTenantContext context);
+    public List<BlockingState> getBlockingHistoryForService(Blockable blockable, String serviceName, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingHistoryForService(UUID overdueableId, String serviceName, InternalTenantContext context);
+    public List<BlockingState> getBlockingHistoryForService(UUID blockableId, String serviceName, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingHistory(Blockable overdueable, InternalTenantContext context);
+    public List<BlockingState> getBlockingHistory(Blockable blockable, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingHistory(UUID overdueableId, InternalTenantContext context);
+    public List<BlockingState> getBlockingHistory(UUID blockableId, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingAll(Blockable overdueable, InternalTenantContext context);
+    public List<BlockingState> getBlockingAll(Blockable blockable, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingAll(UUID overdueableId, InternalTenantContext context);
+    public List<BlockingState> getBlockingAll(UUID blockableId, InternalTenantContext context);
 
     public void setBlockingState(BlockingState state, InternalCallContext context);
 

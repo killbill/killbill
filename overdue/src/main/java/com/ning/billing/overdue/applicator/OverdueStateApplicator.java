@@ -34,7 +34,6 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.Entitlement;
@@ -65,7 +64,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.samskivert.mustache.MustacheException;
 
-public class OverdueStateApplicator<T extends Blockable> {
+public class OverdueStateApplicator {
 
     private static final Logger log = LoggerFactory.getLogger(OverdueStateApplicator.class);
 

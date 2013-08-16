@@ -115,6 +115,11 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
+    public BlockingState getBlockingState() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public DateTime getCreatedDate() {
         throw new UnsupportedOperationException();
     }
@@ -147,11 +152,6 @@ public class MockSubscription implements SubscriptionBase {
     @Override
     public Plan getCurrentPlan() {
         return plan;
-    }
-
-    @Override
-    public BlockingState getBlockingState() {
-        return sub.getBlockingState();
     }
 
     @Override

@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
@@ -84,7 +83,7 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
         return wrapper.refresh(createInternalCallContext(blockable, context));
     }
 
-    private <T extends Blockable> InternalCallContext createInternalCallContext(final Account blockable, final CallContext context) {
+    private InternalCallContext createInternalCallContext(final Account blockable, final CallContext context) {
         return internalCallContextFactory.createInternalCallContext(blockable.getId(), ObjectType.ACCOUNT, context);
     }
 

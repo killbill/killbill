@@ -74,7 +74,7 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected OverdueCheckPoster poster;
     @Inject
-    protected OverdueStateApplicator<SubscriptionBaseBundle> applicator;
+    protected OverdueStateApplicator applicator;
     @Inject
     protected OverdueUserApi overdueApi;
     @Inject
