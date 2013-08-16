@@ -224,3 +224,13 @@ DROP TABLE IF EXISTS notifications;
       search_key2 int(11) unsigned default null,
       PRIMARY KEY(record_id)
   );
+
+create table sessions (
+  record_id int(11) unsigned not null auto_increment
+, start_timestamp datetime not null
+, last_access_time datetime default null
+, timeout int(11)
+, host varchar(100) default null
+, session_data mediumblob default null
+, primary key(record_id)
+);

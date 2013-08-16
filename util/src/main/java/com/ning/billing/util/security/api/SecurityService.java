@@ -14,15 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.util.security;
+package com.ning.billing.util.security.api;
 
-import org.apache.shiro.aop.AnnotationResolver;
-import org.apache.shiro.authz.aop.AuthorizingAnnotationHandler;
-import org.apache.shiro.authz.aop.AuthorizingAnnotationMethodInterceptor;
+import com.ning.billing.lifecycle.KillbillService;
 
-public class PermissionAnnotationMethodInterceptor extends AuthorizingAnnotationMethodInterceptor {
-
-    public PermissionAnnotationMethodInterceptor(final AuthorizingAnnotationHandler handler, final AnnotationResolver resolver) {
-        super(handler, resolver);
-    }
+public interface SecurityService extends KillbillService {
 }

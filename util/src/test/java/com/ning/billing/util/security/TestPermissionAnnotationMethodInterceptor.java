@@ -18,29 +18,25 @@ package com.ning.billing.util.security;
 
 import javax.inject.Singleton;
 
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthenticatedException;
-import org.apache.shiro.config.Ini;
-import org.apache.shiro.config.IniSecurityManagerFactory;
-import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.subject.Subject;
-import org.apache.shiro.util.Factory;
+import org.mockito.Mockito;
+import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.security.Permission;
 import com.ning.billing.security.RequiresPermissions;
 import com.ning.billing.util.UtilTestSuiteNoDB;
+import com.ning.billing.util.glue.KillBillShiroAopModule;
+import com.ning.billing.util.glue.KillBillShiroModule;
 import com.ning.billing.util.glue.SecurityModule;
 
-import com.google.inject.Binder;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Module;
 import com.google.inject.Stage;
+import net.sf.ehcache.CacheManager;
 
 public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB {
 
@@ -75,7 +71,18 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
 
         // Now, verify the interception works
         configureShiro();
-        final Injector injector = Guice.createInjector(Stage.PRODUCTION, new SecurityModule());
+        // Shutdown the cache manager to avoid duplicate exceptions
+        CacheManager.getInstance().shutdown();
+        final Injector injector = Guice.createInjector(Stage.PRODUCTION,
+                                                       new KillBillShiroModule(),
+                                                       new KillBillShiroAopModule(),
+                                                       new SecurityModule(),
+                                                       new AbstractModule() {
+                                                           @Override
+                                                           protected void configure() {
+                                                               bind(IDBI.class).toInstance(Mockito.mock(IDBI.class));
+                                                           }
+                                                       });
         final AopTester aopedTester = injector.getInstance(AopTester.class);
         verifyAopedTester(aopedTester);
     }
@@ -92,12 +99,17 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
 
         // Now, verify the interception works
         configureShiro();
+        // Shutdown the cache manager to avoid duplicate exceptions
+        CacheManager.getInstance().shutdown();
         final Injector injector = Guice.createInjector(Stage.PRODUCTION,
+                                                       new KillBillShiroModule(),
+                                                       new KillBillShiroAopModule(),
                                                        new SecurityModule(),
-                                                       new Module() {
+                                                       new AbstractModule() {
                                                            @Override
-                                                           public void configure(final Binder binder) {
-                                                               binder.bind(IAopTester.class).to(AopTesterImpl.class).asEagerSingleton();
+                                                           public void configure() {
+                                                               bind(IDBI.class).toInstance(Mockito.mock(IDBI.class));
+                                                               bind(IAopTester.class).to(AopTesterImpl.class).asEagerSingleton();
                                                            }
                                                        });
         final IAopTester aopedTester = injector.getInstance(IAopTester.class);

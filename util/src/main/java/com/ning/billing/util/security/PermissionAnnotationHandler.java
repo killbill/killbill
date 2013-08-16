@@ -21,6 +21,8 @@ package com.ning.billing.util.security;
 
 import java.lang.annotation.Annotation;
 
+import javax.inject.Inject;
+
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.aop.AuthorizingAnnotationHandler;
 
@@ -36,11 +38,12 @@ import com.google.common.collect.ImmutableList;
 public class PermissionAnnotationHandler extends AuthorizingAnnotationHandler {
 
     private final TenantContext context = new DefaultTenantContext(null);
-    private final SecurityApi securityApi;
 
-    public PermissionAnnotationHandler(final SecurityApi securityApi) {
+    @Inject
+    SecurityApi securityApi;
+
+    public PermissionAnnotationHandler() {
         super(RequiresPermissions.class);
-        this.securityApi = securityApi;
     }
 
     public void assertAuthorized(final Annotation annotation) throws AuthorizationException {

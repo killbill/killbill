@@ -19,6 +19,7 @@ package com.ning.billing.server.listeners;
 import java.lang.management.ManagementFactory;
 
 import javax.management.MBeanServer;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
 import org.slf4j.Logger;
@@ -53,8 +54,8 @@ public class KillbillGuiceListener extends SetupServer {
     private BusService killbillBusService;
     private KillbillEventHandler killbilleventHandler;
 
-    protected Module getModule() {
-        return new KillbillServerModule();
+    protected Module getModule(final ServletContext servletContext) {
+        return new KillbillServerModule(servletContext);
     }
 
     private void registerMBeansForCache(final CacheManager cacheManager) {
@@ -74,7 +75,7 @@ public class KillbillGuiceListener extends SetupServer {
                 .addJMXExport(KillbillHealthcheck.class)
                 .addJMXExport(NotificationQueueService.class)
                 .addJMXExport(PersistentBus.class)
-                .addModule(getModule())
+                .addModule(getModule(event.getServletContext()))
                         // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
                         // things like static resources, favicon, etc. are 404'ed)
                 .setJerseyUriPattern("(" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*")

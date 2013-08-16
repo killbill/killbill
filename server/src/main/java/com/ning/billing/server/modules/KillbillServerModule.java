@@ -16,6 +16,7 @@
 
 package com.ning.billing.server.modules;
 
+import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
@@ -62,6 +63,8 @@ import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
+import com.ning.billing.util.glue.KillBillShiroAopModule;
+import com.ning.billing.util.glue.KillBillShiroModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.RecordIdModule;
@@ -71,6 +74,12 @@ import com.ning.billing.util.glue.TagStoreModule;
 import com.google.inject.AbstractModule;
 
 public class KillbillServerModule extends AbstractModule {
+
+    protected final ServletContext servletContext;
+
+    public KillbillServerModule(final ServletContext servletContext) {
+        this.servletContext = servletContext;
+    }
 
     @Override
     protected void configure() {
@@ -147,6 +156,8 @@ public class KillbillServerModule extends AbstractModule {
         install(new DefaultOSGIModule(configSource));
         install(new UsageModule(configSource));
         install(new RecordIdModule());
+        install(new KillBillShiroWebModule(servletContext));
+        install(new KillBillShiroAopModule());
         install(new SecurityModule());
 
         installClock();

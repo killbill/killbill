@@ -19,16 +19,12 @@ package com.ning.billing.jaxrs;
 import java.io.IOException;
 import java.net.URL;
 import java.util.EventListener;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import javax.inject.Inject;
 import javax.servlet.Servlet;
-
-import com.ning.billing.DBTestingHelper;
-import com.ning.billing.commons.embeddeddb.EmbeddedDB;
-import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
+import javax.servlet.ServletContext;
 
 import org.apache.shiro.web.env.EnvironmentLoaderListener;
 import org.apache.shiro.web.servlet.ShiroFilter;
@@ -36,13 +32,13 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
+import com.ning.billing.DBTestingHelper;
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.KillbillConfigSource;
 import com.ning.billing.account.glue.DefaultAccountModule;
@@ -50,7 +46,8 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
+import com.ning.billing.commons.embeddeddb.EmbeddedDB;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
@@ -61,7 +58,9 @@ import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
+import com.ning.billing.server.modules.KillBillShiroWebModule;
 import com.ning.billing.server.modules.KillbillServerModule;
+import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.tenant.glue.TenantModule;
 import com.ning.billing.usage.glue.UsageModule;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
@@ -75,6 +74,8 @@ import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.ExportModule;
+import com.ning.billing.util.glue.KillBillShiroAopModule;
+import com.ning.billing.util.glue.KillBillShiroModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.RecordIdModule;
@@ -129,17 +130,17 @@ public class TestJaxrsBase extends KillbillClient {
 
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {
 
-        private final TestKillbillServerModule module;
+        private final EmbeddedDB helper;
 
 
         public TestKillbillGuiceListener(final EmbeddedDB helper) {
             super();
-            this.module = new TestKillbillServerModule(helper);
+            this.helper = helper;
         }
 
         @Override
-        protected Module getModule() {
-            return module;
+        protected Module getModule(final ServletContext servletContext) {
+            return new TestKillbillServerModule(helper, servletContext);
         }
 
     }
@@ -160,8 +161,8 @@ public class TestJaxrsBase extends KillbillClient {
 
         private final EmbeddedDB helper;
 
-        public TestKillbillServerModule(final EmbeddedDB helper) {
-            super();
+        public TestKillbillServerModule(final EmbeddedDB helper, final ServletContext servletContext) {
+            super(servletContext);
             this.helper = helper;
         }
 
@@ -227,6 +228,8 @@ public class TestJaxrsBase extends KillbillClient {
             install(new UsageModule(configSource));
             install(new RecordIdModule());
             installClock();
+            install(new KillBillShiroWebModule(servletContext));
+            install(new KillBillShiroAopModule());
             install(new SecurityModule());
         }
     }
@@ -297,8 +300,7 @@ public class TestJaxrsBase extends KillbillClient {
             @Override
             public Iterator<EventListener> iterator() {
                 // Note! This needs to be in sync with web.xml
-                return ImmutableList.<EventListener>of(listener,
-                                                       new EnvironmentLoaderListener()).iterator();
+                return ImmutableList.<EventListener>of(listener).iterator();
             }
         };
     }

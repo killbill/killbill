@@ -30,7 +30,7 @@
         <filter-class>org.apache.shiro.web.servlet.ShiroFilter</filter-class>
     </filter>
     <filter-mapping>
-        <!-- The Shitor filter-mapping should come first -->
+        <!-- The Shiro filter-mapping should come first -->
         <filter-name>ShiroFilter</filter-name>
         <url-pattern>/*</url-pattern>
         <dispatcher>REQUEST</dispatcher>

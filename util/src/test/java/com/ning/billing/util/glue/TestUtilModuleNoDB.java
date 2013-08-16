@@ -16,7 +16,6 @@
 
 package com.ning.billing.util.glue;
 
-import org.apache.shiro.guice.aop.ShiroAopModule;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
@@ -52,6 +51,8 @@ public class TestUtilModuleNoDB extends TestUtilModule {
 
         installAuditMock();
 
+        install(new KillBillShiroModule());
+        install(new KillBillShiroAopModule());
         install(new SecurityModule());
     }
 }

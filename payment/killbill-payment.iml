@@ -58,7 +58,9 @@
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.shiro:shiro-core:1.2.2" level="project" />
     <orderEntry type="library" name="Maven: commons-beanutils:commons-beanutils:1.8.3" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.shiro:shiro-ehcache:1.2.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.shiro:shiro-guice:1.2.2" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:jcl-over-slf4j:1.7.5" level="project" />
     <orderEntry type="module" module-name="killbill-invoice" scope="TEST" production-on-test="" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-invoice:test-jar:tests:0.4.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="killbill-junction" scope="TEST" production-on-test="" />

@@ -56,7 +56,9 @@
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.shiro:shiro-core:1.2.2" level="project" />
     <orderEntry type="library" name="Maven: commons-beanutils:commons-beanutils:1.8.3" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.shiro:shiro-ehcache:1.2.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.shiro:shiro-guice:1.2.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: org.slf4j:jcl-over-slf4j:1.7.5" level="project" />
     <orderEntry type="module" module-name="killbill-beatrix" />
     <orderEntry type="module" module-name="killbill-catalog" />
     <orderEntry type="module" module-name="killbill-entitlement" />
@@ -107,7 +109,6 @@
     <orderEntry type="library" name="Maven: commons-lang:commons-lang:2.6" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.0.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.0.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.slf4j:jcl-over-slf4j:1.7.5" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:jul-to-slf4j:1.7.5" level="project" />
     <orderEntry type="library" name="Maven: com.ning.jetty:ning-service-skeleton-eventtracker:0.1.7" level="project" />
     <orderEntry type="library" name="Maven: com.ning.jetty:ning-service-skeleton-utils:0.1.7" level="project" />

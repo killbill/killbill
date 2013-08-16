@@ -176,8 +176,12 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     //
 
     protected void loginAsAdmin() {
-        this.username = "tester";
-        this.password = "tester";
+        loginAs("tester", "tester");
+    }
+
+    protected void loginAs(final String username, final String password) {
+        this.username = username;
+        this.password = password;
     }
 
     protected void logout() {
@@ -1032,7 +1036,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return executeAndWait(builder, timeoutSec, false);
     }
 
-    private Response executeAndWait(final BoundRequestBuilder builder, final int timeoutSec, final boolean addContextHeader) {
+    protected Response executeAndWait(final BoundRequestBuilder builder, final int timeoutSec, final boolean addContextHeader) {
 
         if (addContextHeader) {
             builder.addHeader(JaxrsResource.HDR_CREATED_BY, createdBy);
@@ -1071,7 +1075,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), uri);
     }
 
-    private BoundRequestBuilder getBuilderWithHeaderAndQuery(final String verb, final String url, final Map<String, String> queryParams) {
+    protected BoundRequestBuilder getBuilderWithHeaderAndQuery(final String verb, final String url, final Map<String, String> queryParams) {
         BoundRequestBuilder builder = null;
         if (verb.equals("GET")) {
             builder = httpClient.prepareGet(url);
