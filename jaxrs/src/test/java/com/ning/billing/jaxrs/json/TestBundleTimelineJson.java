@@ -30,7 +30,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 import com.ning.billing.util.audit.AuditLog;
@@ -73,10 +72,8 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final String externalKey = UUID.randomUUID().toString();
 
 
-        // STEPH_ENT once DefaultSubscription exists...
-        final Subscription subscription = null;
-        final EntitlementJsonWithEvents entitlementJsonWithEvents = new EntitlementJsonWithEvents(subscription, ImmutableList.<SubscriptionEvent>of(), ImmutableList.<AuditLog>of(), ImmutableMap.<UUID, List<AuditLog>>of());
-        return new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<EntitlementJsonWithEvents>of(entitlementJsonWithEvents), null);
+        final SubscriptionJsonWithEvents entitlementJsonWithEvents = new SubscriptionJsonWithEvents(accountId, bundleId, entitlementId, externalKey, ImmutableList.<SubscriptionEvent>of(), ImmutableList.<AuditLog>of(), ImmutableMap.<UUID, List<AuditLog>>of());
+        return new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<SubscriptionJsonWithEvents>of(entitlementJsonWithEvents), null);
     }
 
     private InvoiceJsonSimple createInvoice() {

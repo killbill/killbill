@@ -191,7 +191,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 if (tr.getTransitionType() == SubscriptionBaseTransitionType.CREATE ||
                     tr.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER) {
                     final SubscriptionEvent billingEvent = toSubscriptionEvent(tr, SubscriptionEventType.START_BILLING, accountTimeZone);
-                    insertSubscriptionEvent(event, result);
+                    insertSubscriptionEvent(billingEvent, result);
                 }
             }
         }
@@ -245,14 +245,11 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                          if (event.getSubscriptionEventType().ordinal() < cur.getSubscriptionEventType().ordinal()) {
                              // Same EffectiveDate, CreatedDate and ID, but event type is lower -- as described in enum
                              break;
-                         } else {
-                            // If we are here : Same EffectiveDate, CreatedDate and ID, but event type is greater (or equal),
-                            // then we look for next entry and restart the process
-                            index++;
                          }
                     }
                 }
             }
+            index++;
         }
         result.add(index, event);
     }

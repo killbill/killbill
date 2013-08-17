@@ -19,27 +19,15 @@ package com.ning.billing.jaxrs.json;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.jaxrs.json.EntitlementJsonWithEvents.SubscriptionReadEventJson;
-import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
+import com.ning.billing.jaxrs.json.SubscriptionJsonWithEvents.SubscriptionReadEventJson;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
-import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.clock.DefaultClock;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
@@ -54,9 +42,9 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
 
         SubscriptionReadEventJson event = new SubscriptionReadEventJson(someUUID, BillingPeriod.NO_BILLING_PERIOD.toString(), new LocalDate(), new LocalDate(), "product", "priceList", "eventType", "phase", null);
-        final EntitlementJsonWithEvents subscription = new EntitlementJsonWithEvents(someUUID, someUUID, someUUID, externalKey, ImmutableList.<SubscriptionReadEventJson>of(event), null, null, auditLogs);
+        final SubscriptionJsonWithEvents subscription = new SubscriptionJsonWithEvents(someUUID, someUUID, someUUID, externalKey, ImmutableList.<SubscriptionReadEventJson>of(event), null, null, auditLogs);
 
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<EntitlementJsonWithEvents>of(subscription), auditLogs);
+        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<SubscriptionJsonWithEvents>of(subscription), auditLogs);
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
         Assert.assertEquals(bundleJsonWithSubscriptions.getExternalKey(), externalKey);
         Assert.assertEquals(bundleJsonWithSubscriptions.getSubscriptions().size(), 1);

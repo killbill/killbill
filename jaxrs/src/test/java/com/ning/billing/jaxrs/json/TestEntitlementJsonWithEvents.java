@@ -29,7 +29,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
-import com.ning.billing.jaxrs.json.EntitlementJsonWithEvents.SubscriptionReadEventJson;
+import com.ning.billing.jaxrs.json.SubscriptionJsonWithEvents.SubscriptionReadEventJson;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 
 import com.google.common.collect.ImmutableList;
@@ -48,7 +48,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final EntitlementJsonWithEvents.SubscriptionReadEventJson newEvent = new EntitlementJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
+        final SubscriptionJsonWithEvents.SubscriptionReadEventJson newEvent = new SubscriptionJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
                                                                                                                                      BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                                                                                      requestedDate.toLocalDate(),
                                                                                                                                      effectiveDate.toLocalDate(),
@@ -58,12 +58,12 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                                                                      PhaseType.DISCOUNT.toString(),
                                                                                                                                      auditLogs);
         final SubscriptionEvent event = null;
-        final EntitlementJsonWithEvents entitlementJsonWithEvents = new EntitlementJsonWithEvents(accountId, bundleId, entitlementId, externalKey, ImmutableList.<SubscriptionReadEventJson>of(newEvent), null, null, auditLogs);
+        final SubscriptionJsonWithEvents entitlementJsonWithEvents = new SubscriptionJsonWithEvents(accountId, bundleId, entitlementId, externalKey, ImmutableList.<SubscriptionReadEventJson>of(newEvent), null, null, auditLogs);
 
 
         final String asJson = mapper.writeValueAsString(entitlementJsonWithEvents);
 
-        final EntitlementJsonWithEvents fromJson = mapper.readValue(asJson, EntitlementJsonWithEvents.class);
+        final SubscriptionJsonWithEvents fromJson = mapper.readValue(asJson, SubscriptionJsonWithEvents.class);
         Assert.assertEquals(fromJson, entitlementJsonWithEvents);
     }
 }

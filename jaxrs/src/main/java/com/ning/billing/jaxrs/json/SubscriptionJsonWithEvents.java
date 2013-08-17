@@ -36,7 +36,7 @@ import com.ning.billing.util.audit.AuditLog;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
+public class SubscriptionJsonWithEvents extends EntitlementJsonSimple {
 
     private final List<SubscriptionReadEventJson> events;
 
@@ -266,14 +266,14 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
     }
 
     @JsonCreator
-    public EntitlementJsonWithEvents(@JsonProperty("accountId") @Nullable final String accountId,
-                                     @JsonProperty("bundleId") @Nullable final String bundleId,
-                                     @JsonProperty("entitlementId") @Nullable final String entitlementId,
-                                     @JsonProperty("externalKey") @Nullable final String externalKey,
-                                     @JsonProperty("events") @Nullable final List<SubscriptionReadEventJson> events,
-                                     @JsonProperty("newEvents") @Nullable final List<SubscriptionNewEventJson> newEvents,
-                                     @JsonProperty("deletedEvents") @Nullable final List<SubscriptionDeletedEventJson> deletedEvents,
-                                     @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+    public SubscriptionJsonWithEvents(@JsonProperty("accountId") @Nullable final String accountId,
+                                      @JsonProperty("bundleId") @Nullable final String bundleId,
+                                      @JsonProperty("entitlementId") @Nullable final String entitlementId,
+                                      @JsonProperty("externalKey") @Nullable final String externalKey,
+                                      @JsonProperty("events") @Nullable final List<SubscriptionReadEventJson> events,
+                                      @JsonProperty("newEvents") @Nullable final List<SubscriptionNewEventJson> newEvents,
+                                      @JsonProperty("deletedEvents") @Nullable final List<SubscriptionDeletedEventJson> deletedEvents,
+                                      @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(accountId, bundleId, entitlementId, externalKey, auditLogs);
         this.events = events;
         this.deletedEvents = deletedEvents;
@@ -281,10 +281,14 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
     }
 
 
-    public EntitlementJsonWithEvents(final Subscription input,
-                                     final List<SubscriptionEvent> subscriptionEvents,
-                                     final List<AuditLog> bundleAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
-        super(input.getAccountId().toString(), input.getBundleId().toString(), input.getId().toString(), input.getExternalKey(), toAuditLogJson(bundleAuditLogs));
+    public SubscriptionJsonWithEvents(final UUID accountId,
+                                      final UUID bundleId,
+                                      final UUID subscriptionId,
+                                      final String externalKey,
+
+                                      final List<SubscriptionEvent> subscriptionEvents,
+                                      final List<AuditLog> bundleAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
+        super(accountId.toString(), bundleId.toString(), subscriptionId.toString(), externalKey, toAuditLogJson(bundleAuditLogs));
 
         this.events = new LinkedList<SubscriptionReadEventJson>();
         for (SubscriptionEvent cur : subscriptionEvents) {
@@ -323,7 +327,7 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("EntitlementJsonWithEvents");
+        sb.append("SubscriptionJsonWithEvents");
         sb.append("{events=").append(events);
         sb.append(", deletedEvents=").append(deletedEvents);
         sb.append(", newEvents=").append(newEvents);
@@ -340,7 +344,7 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
             return false;
         }
 
-        final EntitlementJsonWithEvents that = (EntitlementJsonWithEvents) o;
+        final SubscriptionJsonWithEvents that = (SubscriptionJsonWithEvents) o;
 
         if (deletedEvents != null ? !deletedEvents.equals(that.deletedEvents) : that.deletedEvents != null) {
             return false;

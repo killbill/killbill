@@ -33,7 +33,7 @@ public class BundleJsonNoSubscriptions extends BundleJsonSimple {
     public BundleJsonNoSubscriptions(@JsonProperty("bundleId") final String bundleId,
                                      @JsonProperty("accountId") final String accountId,
                                      @JsonProperty("externalKey") final String externalKey,
-                                     @JsonProperty("subscriptions") @Nullable final List<EntitlementJsonWithEvents> subscriptions,
+                                     @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions,
                                      @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(bundleId, externalKey, auditLogs);
         this.accountId = accountId;

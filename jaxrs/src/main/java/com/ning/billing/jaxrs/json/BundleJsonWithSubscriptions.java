@@ -26,8 +26,6 @@ import javax.annotation.Nullable;
 import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
-import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -38,37 +36,40 @@ import com.google.common.collect.ImmutableList;
 
 public class BundleJsonWithSubscriptions extends BundleJsonSimple {
 
-    private final List<EntitlementJsonWithEvents> subscriptions;
+    private final List<SubscriptionJsonWithEvents> subscriptions;
 
     @JsonCreator
     public BundleJsonWithSubscriptions(@JsonProperty("bundleId") @Nullable final String bundleId,
                                        @JsonProperty("externalKey") @Nullable final String externalKey,
-                                       @JsonProperty("subscriptions") @Nullable final List<EntitlementJsonWithEvents> subscriptions,
+                                       @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions,
                                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(bundleId, externalKey, auditLogs);
         this.subscriptions = subscriptions;
     }
 
     @JsonProperty("subscriptions")
-    public List<EntitlementJsonWithEvents> getSubscriptions() {
+    public List<SubscriptionJsonWithEvents> getSubscriptions() {
         return subscriptions;
     }
 
     public BundleJsonWithSubscriptions(final SubscriptionBundle bundle, final List<AuditLog> auditLogs,
                                        final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
         super(bundle.getId(), bundle.getExternalKey(), auditLogs);
-        this.subscriptions = new LinkedList<EntitlementJsonWithEvents>();
+        this.subscriptions = new LinkedList<SubscriptionJsonWithEvents>();
         for (final Subscription cur : bundle.getSubscriptions()) {
 
-            final ImmutableList<SubscriptionEvent> events =  ImmutableList.<SubscriptionEvent>copyOf(Collections2.filter(bundle.getTimeline().getSubscriptionEvents(), new Predicate<SubscriptionEvent>() {
+            final ImmutableList<SubscriptionEvent> events = ImmutableList.<SubscriptionEvent>copyOf(Collections2.filter(bundle.getTimeline().getSubscriptionEvents(), new Predicate<SubscriptionEvent>() {
                 @Override
                 public boolean apply(@Nullable final SubscriptionEvent input) {
                     return input.getEntitlementId().equals(cur.getId());
                 }
             }));
-            this.subscriptions.add(new EntitlementJsonWithEvents(cur,
-                                                                 events,
-                                                                 subscriptionsAuditLogs.get(cur.getId()), subscriptionEventsAuditLogs));
+            this.subscriptions.add(new SubscriptionJsonWithEvents(cur.getAccountId(),
+                                                                  cur.getBundleId(),
+                                                                  cur.getId(),
+                                                                  cur.getExternalKey(),
+                                                                  events,
+                                                                  subscriptionsAuditLogs.get(cur.getId()), subscriptionEventsAuditLogs));
         }
     }
 
