@@ -98,78 +98,91 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         for (BlockingState bs : allBlockingStates) {
             final LocalDate bsEffectiveDate = new LocalDate(bs.getEffectiveDate(), accountTimeZone);
 
-            // In the beginning there was nothing...
-            final Map<UUID, Boolean> isBlockedBillingMap = new HashMap<UUID, Boolean>();
-            final Map<UUID, Boolean> isBlockedEntitlementMap = new HashMap<UUID, Boolean>();
-            for (UUID uuid : allEntitlementUUIDs) {
-                isBlockedBillingMap.put(uuid, Boolean.TRUE);
-                isBlockedEntitlementMap.put(uuid, Boolean.TRUE);
-            }
 
             final List<SubscriptionEvent> newEvents = new ArrayList<SubscriptionEvent>();
-            int index = insertFromBlockingEvent(accountTimeZone, allEntitlementUUIDs, result, bs, bsEffectiveDate, isBlockedBillingMap, isBlockedEntitlementMap, newEvents);
+            int index = insertFromBlockingEvent(accountTimeZone, allEntitlementUUIDs, result, bs, bsEffectiveDate, newEvents);
             result.addAll(index, newEvents);
         }
         return result;
     }
 
-    private int insertFromBlockingEvent(final DateTimeZone accountTimeZone, final Set<UUID> allEntitlementUUIDs, final LinkedList<SubscriptionEvent> result, final BlockingState bs, final LocalDate bsEffectiveDate, final Map<UUID, Boolean> blockedBillingMap, final Map<UUID, Boolean> blockedEntitlementMap, final List<SubscriptionEvent> newEvents) {
+    private int insertFromBlockingEvent(final DateTimeZone accountTimeZone, final Set<UUID> allEntitlementUUIDs, final LinkedList<SubscriptionEvent> result, final BlockingState bs, final LocalDate bsEffectiveDate, final List<SubscriptionEvent> newEvents) {
+
+
+        // In the beginning there was nothing...
+        final Map<UUID, Boolean> blockedEntitlementMap = new HashMap<UUID, Boolean>();
+        final Map<UUID, Boolean> blockedBillingMap = new HashMap<UUID, Boolean>();
+        for (UUID uuid : allEntitlementUUIDs) {
+            blockedEntitlementMap.put(uuid, Boolean.TRUE);
+            blockedBillingMap.put(uuid, Boolean.TRUE);
+        }
+
         int index = -1;
         final Iterator<SubscriptionEvent> it = result.iterator();
+        DefaultSubscriptionEvent cur = null;
         while (it.hasNext()) {
-            final DefaultSubscriptionEvent cur = (DefaultSubscriptionEvent) it.next();
+            cur = (DefaultSubscriptionEvent) it.next();
             index++;
 
-            switch (cur.getSubscriptionEventType()) {
-                case START_ENTITLEMENT:
-                    blockedEntitlementMap.put(cur.getEntitlementId(), Boolean.FALSE);
-                    break;
-                case START_BILLING:
-                    blockedBillingMap.put(cur.getEntitlementId(), Boolean.FALSE);
-                    break;
-                case PAUSE_ENTITLEMENT:
-                case STOP_ENTITLEMENT:
-                    blockedEntitlementMap.put(cur.getEntitlementId(), Boolean.TRUE);
-                    break;
-                case PAUSE_BILLING:
-                case STOP_BILLING:
-                    blockedBillingMap.put(cur.getEntitlementId(), Boolean.TRUE);
-                    break;
-            }
-
             final int compEffectiveDate = bsEffectiveDate.compareTo(cur.getEffectiveDate());
-            if (compEffectiveDate < 0 ||
-                (compEffectiveDate == 0 && bs.getCreatedDate().compareTo(cur.getCreatedDate()) <= 0)) {
+            final boolean shouldContinue = (compEffectiveDate > 0 ||
+                                            (compEffectiveDate == 0 && bs.getCreatedDate().compareTo(cur.getCreatedDate()) >= 0));
+
+            if (shouldContinue) {
+                switch (cur.getSubscriptionEventType()) {
+                    case START_ENTITLEMENT:
+                        blockedEntitlementMap.put(cur.getEntitlementId(), Boolean.FALSE);
+                        break;
+                    case START_BILLING:
+                        blockedBillingMap.put(cur.getEntitlementId(), Boolean.FALSE);
+                        break;
+                    case PAUSE_ENTITLEMENT:
+                    case STOP_ENTITLEMENT:
+                        blockedEntitlementMap.put(cur.getEntitlementId(), Boolean.TRUE);
+                        break;
+                    case PAUSE_BILLING:
+                    case STOP_BILLING:
+                        blockedBillingMap.put(cur.getEntitlementId(), Boolean.TRUE);
+                        break;
+                }
+            } else {
+                break;
+            }
+        }
+
+
+        final DefaultSubscriptionEvent next = it.hasNext() ? (DefaultSubscriptionEvent) it.next() : null;
+
+        final List<UUID> targetEntitlementIds = bs.getType() == BlockingStateType.SUBSCRIPTION ? ImmutableList.<UUID>of(bs.getBlockedId()) :
+                                                ImmutableList.<UUID>copyOf(allEntitlementUUIDs);
+        for (UUID target : targetEntitlementIds) {
+
+            // If the blocking state is ENT_STATE_CANCELLED there is nothing else to look at, just insert the event
+            if (bs.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED)) {
+                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.STOP_ENTITLEMENT, accountTimeZone));
                 continue;
             }
 
-            final DefaultSubscriptionEvent next = it.hasNext() ? (DefaultSubscriptionEvent) it.next() : null;
+            // If not, figure out from the existing state, what that new event should be
+            final Boolean isResumeEntitlement = (blockedEntitlementMap.get(target) && !bs.isBlockEntitlement());
+            final Boolean isPauseEntitlement = (!blockedEntitlementMap.get(target) && bs.isBlockEntitlement());
+            final Boolean isResumeBilling = (blockedBillingMap.get(target) && !bs.isBlockBilling());
+            final Boolean isPauseBilling = (!blockedBillingMap.get(target) && bs.isBlockBilling());
+            final Boolean isServiceStateChange = !(isResumeEntitlement || isPauseEntitlement || isResumeBilling || isPauseBilling);
 
-            final List<UUID> targetEntitlementIds = bs.getType() == BlockingStateType.SUBSCRIPTION ? ImmutableList.<UUID>of(bs.getId()) :
-                                                    ImmutableList.<UUID>copyOf(allEntitlementUUIDs);
-            for (UUID target : targetEntitlementIds) {
-
-                final Boolean isResumeEntitlement = (blockedEntitlementMap.get(bs.getId()) && !bs.isBlockEntitlement());
-                final Boolean isPauseEntitlement = (!blockedEntitlementMap.get(bs.getId()) && bs.isBlockEntitlement());
-                final Boolean isResumeBilling = (blockedBillingMap.get(bs.getId()) && !bs.isBlockBilling());
-                final Boolean isPauseBilling = (!blockedBillingMap.get(bs.getId()) && bs.isBlockBilling());
-                final Boolean isServiceStateChange = !(isResumeEntitlement || isPauseEntitlement || isResumeBilling || isPauseBilling);
-
-                if (isResumeEntitlement) {
-                    newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.RESUME_ENTITLEMENT, accountTimeZone));
-                } else if (isPauseEntitlement) {
-                    newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.PAUSE_ENTITLEMENT, accountTimeZone));
-                }
-                if (isResumeBilling) {
-                    newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.RESUME_BILLING, accountTimeZone));
-                } else if (isPauseBilling) {
-                    newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.PAUSE_BILLING, accountTimeZone));
-                }
-                if (isServiceStateChange) {
-                    newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.SERVICE_STATE_CHANGE, accountTimeZone));
-                }
+            if (isResumeEntitlement) {
+                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.RESUME_ENTITLEMENT, accountTimeZone));
+            } else if (isPauseEntitlement) {
+                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.PAUSE_ENTITLEMENT, accountTimeZone));
             }
-            break;
+            if (isResumeBilling) {
+                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.RESUME_BILLING, accountTimeZone));
+            } else if (isPauseBilling) {
+                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.PAUSE_BILLING, accountTimeZone));
+            }
+            if (isServiceStateChange) {
+                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.SERVICE_STATE_CHANGE, accountTimeZone));
+            }
         }
         return index;
     }
@@ -242,10 +255,10 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                         // Same EffectiveDate and CreatedDate but order by ID
                         break;
                     } else if (compUUID == 0) {
-                         if (event.getSubscriptionEventType().ordinal() < cur.getSubscriptionEventType().ordinal()) {
-                             // Same EffectiveDate, CreatedDate and ID, but event type is lower -- as described in enum
-                             break;
-                         }
+                        if (event.getSubscriptionEventType().ordinal() < cur.getSubscriptionEventType().ordinal()) {
+                            // Same EffectiveDate, CreatedDate and ID, but event type is lower -- as described in enum
+                            break;
+                        }
                     }
                 }
             }
@@ -264,16 +277,16 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                             in.isBlockBilling(),
                                             in.getService(),
                                             in.getStateName(),
-                                            prev.getNextProduct(),
-                                            prev.getNextPlan(),
-                                            prev.getNextPhase(),
-                                            prev.getNextPriceList(),
-                                            prev.getNextBillingPeriod(),
-                                            next.getPrevProduct(),
-                                            next.getPrevPlan(),
-                                            next.getPrevPhase(),
-                                            next.getPrevPriceList(),
-                                            next.getPrevBillingPeriod(),
+                                            prev != null ? prev.getNextProduct() : null,
+                                            prev != null ? prev.getNextPlan() : null,
+                                            prev != null ? prev.getNextPhase() : null,
+                                            prev != null ? prev.getNextPriceList() : null,
+                                            prev != null ? prev.getNextBillingPeriod() : null,
+                                            next != null ? next.getPrevProduct() : null,
+                                            next != null ? next.getPrevPlan() : null,
+                                            next != null ? next.getPrevPhase() : null,
+                                            next != null ? next.getPrevPriceList() : null,
+                                            next != null ? next.getPrevBillingPeriod() : null,
                                             in.getCreatedDate());
     }
 
@@ -375,7 +388,6 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         private final PriceList nextPriceList;
         private final BillingPeriod nextBillingPeriod;
         private final DateTime createdDate;
-
 
 
         private DefaultSubscriptionEvent(final UUID id,
