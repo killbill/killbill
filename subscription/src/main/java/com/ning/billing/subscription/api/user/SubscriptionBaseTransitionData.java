@@ -53,6 +53,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     private final Boolean isFromDisk;
     private final Integer remainingEventsForUserOperation;
     private final UUID userToken;
+    private final DateTime createdDate;
 
     public SubscriptionBaseTransitionData(final UUID eventId,
                                           final UUID subscriptionId,
@@ -74,6 +75,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
                                           final PlanPhase nextPhase,
                                           final PriceList nextPriceList,
                                           final Long totalOrdering,
+                                          final DateTime createdDate,
                                           final UUID userToken,
                                           final Boolean isFromDisk) {
         this.eventId = eventId;
@@ -98,6 +100,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         this.nextEventCreatedDate = nextEventCreatedDate;
         this.isFromDisk = isFromDisk;
         this.userToken = userToken;
+        this.createdDate = createdDate;
         this.remainingEventsForUserOperation = 0;
     }
 
@@ -131,8 +134,10 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         this.isFromDisk = input.isFromDisk();
         this.userToken = input.getUserToken();
         this.remainingEventsForUserOperation = remainingEventsForUserOperation;
+        this.createdDate = input.getCreatedDate();
     }
 
+    @Override
     public UUID getId() {
         return eventId;
     }
@@ -229,6 +234,10 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
             default:
                 throw new SubscriptionBaseError("Unexpected event type " + eventType);
         }
+    }
+    @Override
+    public DateTime getCreatedDate() {
+        return createdDate;
     }
 
     @Override

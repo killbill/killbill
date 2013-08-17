@@ -635,7 +635,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     previousPriceList,
                     nextEventId, nextCreatedDate,
                     nextState, nextPlan, nextPhase,
-                    nextPriceList, cur.getTotalOrdering(), nextUserToken,
+                    nextPriceList, cur.getTotalOrdering(),
+                    cur.getCreatedDate(),
+                    nextUserToken,
                     isFromDisk);
 
             transitions.add(transition);

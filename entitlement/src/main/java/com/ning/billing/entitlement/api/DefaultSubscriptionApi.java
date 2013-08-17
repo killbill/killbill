@@ -1,15 +1,18 @@
 package com.ning.billing.entitlement.api;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
+
+import org.joda.time.DateTimeZone;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
@@ -23,9 +26,10 @@ import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimaps;
 
 public class DefaultSubscriptionApi implements SubscriptionApi  {
 
@@ -36,11 +40,13 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
     private final EntitlementDateHelper dateHelper;
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final AccountInternalApi accountApi;
 
     @Inject
     public DefaultSubscriptionApi(final SubscriptionBaseInternalApi subscriptionInternalApi, final EntitlementApi entitlementApi, final BlockingChecker checker, final BlockingStateDao blockingStateDao, final AccountInternalApi accountApi, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
         this.subscriptionInternalApi = subscriptionInternalApi;
         this.entitlementApi = entitlementApi;
+        this.accountApi = accountApi;
         this.checker = checker;
         this.blockingStateDao = blockingStateDao;
         this.dateHelper = new EntitlementDateHelper(accountApi, clock);;
@@ -68,10 +74,12 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
             if (entitlements.isEmpty()) {
                 throw new SubscriptionApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_ID, bundleId);
             }
-            return getSubscriptionBundleFromEntitlement(bundleId, entitlements, context);
+            return getSubscriptionBundleFromEntitlements(bundleId, entitlements, context);
         } catch (EntitlementApiException e) {
             throw new SubscriptionApiException(e);
         } catch (SubscriptionBaseApiException e) {
+            throw new SubscriptionApiException(e);
+        } catch (AccountApiException e) {
             throw new SubscriptionApiException(e);
         }
     }
@@ -86,10 +94,12 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
             if (entitlements.isEmpty()) {
                 throw new SubscriptionApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, externalKey);
             }
-            return getSubscriptionBundleFromEntitlement(entitlements.get(0).getBundleId(), entitlements, context);
+            return getSubscriptionBundleFromEntitlements(entitlements.get(0).getBundleId(), entitlements, context);
         } catch (EntitlementApiException e) {
             throw new SubscriptionApiException(e);
         } catch (SubscriptionBaseApiException e) {
+            throw new SubscriptionApiException(e);
+        } catch (AccountApiException e) {
             throw new SubscriptionApiException(e);
         }
     }
@@ -125,13 +135,15 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
             final List<SubscriptionBundle> result  = new ArrayList<SubscriptionBundle>(perBundleEntitlements.keySet().size());
             for (UUID bundleId : perBundleEntitlements.keySet()) {
                 final List<Entitlement> e = perBundleEntitlements.get(bundleId);
-                final SubscriptionBundle b = getSubscriptionBundleFromEntitlement(bundleId, e, context);
+                final SubscriptionBundle b = getSubscriptionBundleFromEntitlements(bundleId, e, context);
                 result.add(b);
             }
             return result;
         } catch (EntitlementApiException e) {
             throw new SubscriptionApiException(e);
         } catch (SubscriptionBaseApiException e) {
+            throw new SubscriptionApiException(e);
+        } catch (AccountApiException e) {
             throw new SubscriptionApiException(e);
         }
     }
@@ -143,7 +155,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
         return result;
     }
 
-    private SubscriptionBundle getSubscriptionBundleFromEntitlement(final UUID bundleId, final List<Entitlement> entitlements, final TenantContext context) throws SubscriptionBaseApiException {
+    private SubscriptionBundle getSubscriptionBundleFromEntitlements(final UUID bundleId, final List<Entitlement> entitlements, final TenantContext context) throws SubscriptionBaseApiException, AccountApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
         final SubscriptionBaseBundle baseBundle = subscriptionInternalApi.getBundleFromId(bundleId, internalTenantContext);
         final List<Subscription> subscriptions = new ArrayList<Subscription>();
@@ -153,8 +165,19 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
                 return fromEntitlement(input, internalTenantContext);
             }
         }));
-        // STEPH_ENT account timeline
-        final DefaultSubscriptionBundle bundle = new DefaultSubscriptionBundle(bundleId, baseBundle.getAccountId(), baseBundle.getExternalKey(), subscriptions, null, baseBundle.getCreatedDate(), baseBundle.getUpdatedDate());
+
+        final Account account = accountApi.getAccountById(baseBundle.getAccountId(), internalTenantContext);
+        final DateTimeZone accountTimeZone = account.getTimeZone();
+
+        final List<BlockingState> allBlockingStates = new ArrayList<BlockingState>();
+        allBlockingStates.addAll(blockingStateDao.getBlockingAll(account.getId(), internalTenantContext));
+        allBlockingStates.addAll(blockingStateDao.getBlockingAll(bundleId, internalTenantContext));
+        for (Entitlement cur : entitlements) {
+            allBlockingStates.addAll(blockingStateDao.getBlockingAll(cur.getId(), internalTenantContext));
+        }
+
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, account.getId(), bundleId, baseBundle.getExternalKey(), entitlements, allBlockingStates);
+        final DefaultSubscriptionBundle bundle = new DefaultSubscriptionBundle(bundleId, baseBundle.getAccountId(), baseBundle.getExternalKey(), subscriptions, timeline, baseBundle.getCreatedDate(), baseBundle.getUpdatedDate());
         return bundle;
     }
 }

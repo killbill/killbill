@@ -28,6 +28,8 @@ import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 
 public interface SubscriptionBaseTransition {
 
+    public UUID getId();
+
     public UUID getSubscriptionId();
 
     public UUID getBundleId();
@@ -61,4 +63,6 @@ public interface SubscriptionBaseTransition {
     public DateTime getEffectiveTransitionTime();
 
     public SubscriptionBaseTransitionType getTransitionType();
+
+    public DateTime getCreatedDate();
 }
