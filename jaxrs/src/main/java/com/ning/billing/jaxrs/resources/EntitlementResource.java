@@ -49,6 +49,7 @@ import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.Entitlement;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.api.EntitlementApi;
@@ -95,8 +96,9 @@ public class EntitlementResource extends JaxRsResourceBase {
                                final AuditUserApi auditUserApi,
                                final EntitlementApi entitlementApi,
                                final AccountUserApi accountUserApi,
+                               final Clock clock,
                                final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
         this.killbillHandler = killbillHandler;
         this.entitlementApi = entitlementApi;
     }

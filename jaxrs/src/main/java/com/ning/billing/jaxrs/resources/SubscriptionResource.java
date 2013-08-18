@@ -12,6 +12,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.entitlement.api.SubscriptionApiException;
@@ -36,8 +37,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                 final AuditUserApi auditUserApi,
                                 final AccountUserApi accountUserApi,
                                 final SubscriptionApi subscriptionApi,
+                                final Clock clock,
                                 final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
         this.subscriptionApi = subscriptionApi;
     }
 

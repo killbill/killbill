@@ -43,6 +43,7 @@ import org.joda.time.LocalDate;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.api.Subscription;
@@ -86,8 +87,9 @@ public class BundleResource extends JaxRsResourceBase {
                           final AccountUserApi accountUserApi,
                           final SubscriptionApi subscriptionApi,
                           final EntitlementApi entitlementApi,
+                          final Clock clock,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
         this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;
     }

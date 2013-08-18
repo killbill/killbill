@@ -28,6 +28,7 @@ import javax.ws.rs.core.Response.Status;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -54,8 +55,9 @@ public class RefundResource extends JaxRsResourceBase {
                           final CustomFieldUserApi customFieldUserApi,
                           final AuditUserApi auditUserApi,
                           final AccountUserApi accountUserApi,
+                          final Clock clock,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
         this.paymentApi = paymentApi;
     }
 

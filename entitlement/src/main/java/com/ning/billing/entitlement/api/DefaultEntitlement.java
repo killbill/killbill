@@ -290,7 +290,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public void uncancel(final CallContext context) throws EntitlementApiException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        // STEPH_ENT
     }
 
 

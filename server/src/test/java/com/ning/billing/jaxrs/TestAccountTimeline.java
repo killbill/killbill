@@ -22,6 +22,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -34,6 +35,7 @@ import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
 import com.ning.billing.jaxrs.json.RefundJson;
+import com.ning.billing.jaxrs.json.SubscriptionJsonWithEvents.SubscriptionReadEventJson;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.ChangeType;
 
@@ -53,7 +55,14 @@ public class TestAccountTimeline extends TestJaxrsBase {
         Assert.assertEquals(timeline.getInvoices().size(), 2);
         Assert.assertEquals(timeline.getBundles().size(), 1);
         Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
-        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);
+        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 3);
+        final List<SubscriptionReadEventJson> events = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents();
+        Assert.assertEquals(events.get(0).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(events.get(0).getEventType(), "START_ENTITLEMENT");
+        Assert.assertEquals(events.get(1).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(events.get(1).getEventType(), "START_BILLING");
+        Assert.assertEquals(events.get(2).getEffectiveDate(), new LocalDate(2012, 5, 25));
+        Assert.assertEquals(events.get(2).getEventType(), "PHASE");
     }
 
 
@@ -206,7 +215,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
             // Verify bundles
             Assert.assertEquals(timeline.getBundles().size(), 1);
             Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
-            Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);
+            Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 3);
 
             // Verify audits
             final List<AuditLogJson> bundleAuditLogs = timeline.getBundles().get(0).getAuditLogs();

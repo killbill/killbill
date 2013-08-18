@@ -2,6 +2,7 @@ package com.ning.billing.entitlement.api;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -124,7 +125,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
 
             final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(accountId, context);
             if (entitlements.isEmpty()) {
-                throw new SubscriptionApiException(ErrorCode.SUB_GET_INVALID_ACCOUNT_ID, accountId);
+                return Collections.emptyList();
             }
 
             final ListMultimap<UUID, Entitlement> perBundleEntitlements = LinkedListMultimap.create();

@@ -32,6 +32,7 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Listing;
 import com.ning.billing.catalog.api.StaticCatalog;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.jaxrs.json.CatalogJsonSimple;
 import com.ning.billing.jaxrs.json.PlanDetailJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -60,8 +61,9 @@ public class CatalogResource extends JaxRsResourceBase {
                            final CustomFieldUserApi customFieldUserApi,
                            final AuditUserApi auditUserApi,
                            final AccountUserApi accountUserApi,
+                           final Clock clock,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
         this.catalogService = catalogService;
     }
 

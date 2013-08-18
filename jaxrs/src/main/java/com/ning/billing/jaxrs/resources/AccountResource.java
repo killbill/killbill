@@ -47,6 +47,7 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MutableAccountData;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.entitlement.api.SubscriptionApiException;
@@ -126,8 +127,9 @@ public class AccountResource extends JaxRsResourceBase {
                            final AuditUserApi auditUserApi,
                            final CustomFieldUserApi customFieldUserApi,
                            final SubscriptionApi subscriptionApi,
+                           final Clock clock,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, clock, context);
         this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;
         this.invoiceApi = invoiceApi;

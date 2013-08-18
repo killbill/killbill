@@ -91,7 +91,6 @@ public class InvoiceResource extends JaxRsResourceBase {
     private final InvoiceUserApi invoiceApi;
     private final PaymentApi paymentApi;
     private final InvoiceNotifier invoiceNotifier;
-    private final Clock clock;
 
     @Inject
     public InvoiceResource(final AccountUserApi accountUserApi,
@@ -102,13 +101,12 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,
-                           final AuditUserApi auditUserApi,                           
+                           final AuditUserApi auditUserApi,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.invoiceNotifier = invoiceNotifier;
-        this.clock = clock;
     }
 
     @GET

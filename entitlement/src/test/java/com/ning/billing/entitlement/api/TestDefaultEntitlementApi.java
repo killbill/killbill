@@ -227,10 +227,10 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             }
 
             clock.addDays(3);
-            entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(), callContext);
+            entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
 
             // Verify call is idempotent
-            entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(), callContext);
+            entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
 
             // Verify blocking state
             final Entitlement baseEntitlement3 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);

@@ -38,6 +38,7 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -69,6 +70,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final AuditUserApi auditUserApi;
     protected final AccountUserApi accountUserApi;
     protected final Context context;
+    protected final Clock clock;
 
     protected final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTimeParser();
 
@@ -77,12 +79,14 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                              final CustomFieldUserApi customFieldUserApi,
                              final AuditUserApi auditUserApi,
                              final AccountUserApi accountUserApi,
+                             final Clock clock,
                              final Context context) {
         this.uriBuilder = uriBuilder;
         this.tagUserApi = tagUserApi;
         this.customFieldUserApi = customFieldUserApi;
         this.auditUserApi = auditUserApi;
         this.accountUserApi = accountUserApi;
+        this.clock = clock;
         this.context = context;
     }
 
@@ -201,13 +205,13 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
         if (account == null && inputDate == null) {
             // We have no inputDate and so accountTimeZone so we default to LocalDate as seen in UTC
-            return new LocalDate();
+            return new LocalDate(clock.getUTCNow());
         } else if (account == null && inputDate != null) {
             // We were given a date but can't get timezone, default in UTC
             return new LocalDate(inputDate);
         } else if (account != null && inputDate == null) {
             // We have no inputDate but for accountTimeZone so default to LocalDate as seen in account timezone
-            return new LocalDate(account.getTimeZone());
+            return new LocalDate(clock.getUTCNow(), account.getTimeZone());
         } else {
             // Precise LocalDate as requested
             return new LocalDate(inputDate, account.getTimeZone());

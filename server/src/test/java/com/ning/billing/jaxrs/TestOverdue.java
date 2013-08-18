@@ -42,19 +42,19 @@ public class TestOverdue extends TestJaxrsBase {
         final String bundleId = invoices.get(1).getItems().get(0).getBundleId();
 
         // We're still clear - see the configuration
-        Assert.assertTrue(getOverdueStateForBundle(bundleId).isClearState());
+        Assert.assertTrue(getOverdueStateForAccount(accountJson.getAccountId()).isClearState());
 
         clock.addDays(30);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(getOverdueStateForBundle(bundleId).getName(), "OD1");
+        Assert.assertEquals(getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD1");
 
         clock.addDays(10);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(getOverdueStateForBundle(bundleId).getName(), "OD2");
+        Assert.assertEquals(getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD2");
 
         clock.addDays(10);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(getOverdueStateForBundle(bundleId).getName(), "OD3");
+        Assert.assertEquals(getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD3");
 
         // Post external payments
         for (final InvoiceJsonSimple invoice : getInvoicesForAccount(accountJson.getAccountId())) {
@@ -67,6 +67,6 @@ public class TestOverdue extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Verify we're in clear state
-        Assert.assertTrue(getOverdueStateForBundle(bundleId).isClearState());
+        Assert.assertTrue(getOverdueStateForAccount(accountJson.getAccountId()).isClearState());
     }
 }
