@@ -45,6 +45,10 @@ public class KillBillShiroAopModule extends ShiroAopModule {
     protected void configureInterceptors(final AnnotationResolver resolver) {
         super.configureInterceptors(resolver);
 
+        if (!KillBillShiroModule.isRBACEnabled()) {
+            return;
+        }
+
         final PermissionAnnotationHandler permissionAnnotationHandler = new PermissionAnnotationHandler();
         // Inject the Security API
         requestInjection(permissionAnnotationHandler);

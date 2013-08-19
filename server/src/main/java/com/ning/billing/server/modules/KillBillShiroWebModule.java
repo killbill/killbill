@@ -33,9 +33,9 @@ import com.ning.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
+// For Kill Bill server only.
+// See com.ning.billing.util.glue.KillBillShiroModule for Kill Bill library.
 public class KillBillShiroWebModule extends ShiroWebModule {
-
-    public static final String KILLBILL_RBAC_PROPERTY = "killbill.server.rbac";
 
     public KillBillShiroWebModule(final ServletContext servletContext) {
         super(servletContext);
@@ -45,16 +45,14 @@ public class KillBillShiroWebModule extends ShiroWebModule {
     protected void configureShiroWeb() {
         bindRealm().toProvider(IniRealmProvider.class).asEagerSingleton();
 
-        final boolean ldapEnabled = Boolean.parseBoolean(System.getProperty(KillBillShiroModule.KILLBILL_LDAP_PROPERTY, "false"));
-        if (ldapEnabled) {
+        if (KillBillShiroModule.isLDAPEnabled()) {
             bindRealm().to(KillBillJndiLdapRealm.class).asEagerSingleton();
         }
 
         // Magic provider to configure the cache manager
         bind(CacheManager.class).toProvider(EhCacheManagerProvider.class).asEagerSingleton();
 
-        final boolean rbacEnabled = Boolean.parseBoolean(System.getProperty(KILLBILL_RBAC_PROPERTY, "true"));
-        if (rbacEnabled) {
+        if (KillBillShiroModule.isRBACEnabled()) {
             addFilterChain(JaxrsResource.PREFIX + "/**", AUTHC_BASIC);
         }
     }

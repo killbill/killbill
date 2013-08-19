@@ -32,12 +32,20 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
 public class KillBillShiroModule extends ShiroModule {
 
     public static final String KILLBILL_LDAP_PROPERTY = "killbill.server.ldap";
+    public static final String KILLBILL_RBAC_PROPERTY = "killbill.server.rbac";
+
+    public static boolean isLDAPEnabled() {
+        return Boolean.parseBoolean(System.getProperty(KILLBILL_LDAP_PROPERTY, "false"));
+    }
+
+    public static boolean isRBACEnabled() {
+        return Boolean.parseBoolean(System.getProperty(KILLBILL_RBAC_PROPERTY, "true"));
+    }
 
     protected void configureShiro() {
         bindRealm().toProvider(IniRealmProvider.class).asEagerSingleton();
 
-        final boolean ldapEnabled = Boolean.parseBoolean(System.getProperty(KILLBILL_LDAP_PROPERTY, "false"));
-        if (ldapEnabled) {
+        if (isLDAPEnabled()) {
             bindRealm().to(KillBillJndiLdapRealm.class).asEagerSingleton();
         }
     }
