@@ -76,9 +76,6 @@ public class SubscriptionChecker {
     }
 
     private List<SubscriptionBaseTransition> getSubscriptionEvents(final SubscriptionBase subscription) {
-        // STEPH_ENT
         return subscription.getAllTransitions();
     }
-
-
 }

@@ -41,10 +41,9 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     private final DateTime effectiveDate;
     private final BlockingStateType type;
 
-    public static BlockingState getClearState(final BlockingStateType type, final Clock clock) {
+    public static BlockingState getClearState(final BlockingStateType type, final String serviceName, final Clock clock) {
         if (clearState == null) {
-            // STEPH_ENT should we not always have a service name?
-            clearState = new DefaultBlockingState(null, type, CLEAR_STATE_NAME, null, false, false, false, clock.getUTCNow());
+            clearState = new DefaultBlockingState(null, type, CLEAR_STATE_NAME, serviceName, false, false, false, clock.getUTCNow());
         }
         return clearState;
     }
