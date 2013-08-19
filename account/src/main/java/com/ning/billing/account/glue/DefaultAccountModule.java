@@ -26,7 +26,6 @@ import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.DefaultAccountDao;
 import com.ning.billing.glue.AccountModule;
-import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 import com.google.inject.AbstractModule;
@@ -48,8 +47,6 @@ public class DefaultAccountModule extends AbstractModule implements AccountModul
 
     @Override
     public void installAccountUserApi() {
-        // STEPH_ENT should eliminate the RealImplementation if not nedded
-        bind(AccountUserApi.class).annotatedWith(RealImplementation.class).to(DefaultAccountUserApi.class).asEagerSingleton();
         bind(AccountUserApi.class).to(DefaultAccountUserApi.class).asEagerSingleton();
     }
 

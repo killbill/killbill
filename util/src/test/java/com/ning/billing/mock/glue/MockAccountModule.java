@@ -13,13 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.mock.glue;
 
 import org.mockito.Mockito;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.glue.AccountModule;
-import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 import com.google.inject.AbstractModule;
@@ -35,8 +35,6 @@ public class MockAccountModule extends AbstractModule implements AccountModule {
 
     @Override
     public void installAccountUserApi() {
-        // STEPH_ENT RealImplementation for accountUserApi
-        bind(AccountUserApi.class).annotatedWith(RealImplementation.class).toInstance(Mockito.mock(AccountUserApi.class));
         bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
     }
 

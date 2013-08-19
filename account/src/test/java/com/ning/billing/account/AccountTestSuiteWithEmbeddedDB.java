@@ -25,12 +25,11 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.glue.TestAccountModuleWithEmbeddedDB;
 import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
@@ -44,7 +43,6 @@ public abstract class AccountTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected AccountDao accountDao;
     @Inject
-    @RealImplementation
     protected AccountUserApi accountUserApi;
     @Inject
     protected AuditDao auditDao;
