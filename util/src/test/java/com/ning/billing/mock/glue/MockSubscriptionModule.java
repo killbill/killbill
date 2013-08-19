@@ -51,6 +51,7 @@ public class MockSubscriptionModule extends AbstractModule implements Subscripti
         installSubscriptionMigrationApi();
         installSubscriptionInternalApi();
         installSubscriptionTimelineApi();
+        installSubscriptionTransferApi();
     }
 
     @Override

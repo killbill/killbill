@@ -271,7 +271,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
             // Atomically cancel all subscription on old account and create new bundle, subscriptions, events for new account
             dao.transfer(sourceAccountId, destAccountId, bundleMigrationData, transferCancelDataList, fromInternalCallContext, toInternalCallContext);
 
-            return bundle;
+            return bundleMigrationData.getData();
         } catch (SubscriptionBaseRepairException e) {
             throw new SubscriptionBaseTransferApiException(e);
         }

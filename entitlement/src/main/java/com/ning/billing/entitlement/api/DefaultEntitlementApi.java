@@ -46,6 +46,8 @@ import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.block.BlockingChecker.BlockingAggregator;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionBaseTransferApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.CallContext;
@@ -70,6 +72,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
     public static final String ENT_STATE_CANCELLED = "ENT_CANCELLED";
 
     private final SubscriptionBaseInternalApi subscriptionInternalApi;
+    private final SubscriptionBaseTransferApi subscriptionTransferApi;
     private final AccountInternalApi accountApi;
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -79,10 +82,11 @@ public class DefaultEntitlementApi implements EntitlementApi {
     private final PersistentBus eventBus;
 
     @Inject
-    public DefaultEntitlementApi(PersistentBus eventBus, final InternalCallContextFactory internalCallContextFactory, final SubscriptionBaseInternalApi subscriptionInternalApi, final AccountInternalApi accountApi, final BlockingStateDao blockingStateDao, final Clock clock, final BlockingChecker checker) {
+    public DefaultEntitlementApi(final PersistentBus eventBus, final InternalCallContextFactory internalCallContextFactory, final SubscriptionBaseTransferApi subscriptionTransferApi, final SubscriptionBaseInternalApi subscriptionInternalApi, final AccountInternalApi accountApi, final BlockingStateDao blockingStateDao, final Clock clock, final BlockingChecker checker) {
         this.eventBus = eventBus;
         this.internalCallContextFactory = internalCallContextFactory;
         this.subscriptionInternalApi = subscriptionInternalApi;
+        this.subscriptionTransferApi = subscriptionTransferApi;
         this.accountApi = accountApi;
         this.clock = clock;
         this.checker = checker;
@@ -122,9 +126,9 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final BlockingState currentBaseState = blockingStateDao.getBlockingStateForService(baseSubscription.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
 
             final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
-
+            final LocalDate baseEntitlementEffectiveEndDate = getEffectiveEndDate(bundle.getAccountId(), baseSubscription, account.getTimeZone(), contextWithValidAccountRecordId);
             // Check if there is a BP and if it is active
-            final EntitlementState baseEntitlementState = getStateForEntitlement(baseSubscription, currentBaseState, account.getTimeZone(), contextWithValidAccountRecordId);
+            final EntitlementState baseEntitlementState = getStateForEntitlement(baseEntitlementEffectiveEndDate, baseSubscription, account.getTimeZone(), contextWithValidAccountRecordId);
             if (baseSubscription.getCategory() != ProductCategory.BASE ||
                 baseEntitlementState != EntitlementState.ACTIVE) {
                 throw new EntitlementApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, baseSubscription.getBundleId());
@@ -139,7 +143,8 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);
             final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(baseSubscription.getBundleId(), planPhaseSpecifier, requestedDate, context);
-            return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), getStateForEntitlement(subscription, currentBaseState, account.getTimeZone(), context), null, account.getTimeZone(),
+
+            return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), baseEntitlementState, null, account.getTimeZone(),
                                           this, internalCallContextFactory, blockingStateDao, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
@@ -176,7 +181,12 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
             final BlockingState currentState = blockingStateDao.getBlockingStateForService(subscription.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
 
-            return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), getStateForEntitlement(subscription, currentState, account.getTimeZone(), context), currentState, account.getTimeZone(),
+
+            final LocalDate entitlementEffectiveEndDate = getEffectiveEndDate(bundle.getAccountId(), subscription, account.getTimeZone(), context);
+            final EntitlementState entitlementState = getStateForEntitlement(entitlementEffectiveEndDate, subscription, account.getTimeZone(), context);
+
+
+            return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), entitlementState, entitlementEffectiveEndDate, account.getTimeZone(),
                                           this, internalCallContextFactory, blockingStateDao, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
@@ -231,11 +241,12 @@ public class DefaultEntitlementApi implements EntitlementApi {
                 @Override
                 public Entitlement apply(@Nullable final SubscriptionBase input) {
 
-                    final BlockingState currentState = blockingStateDao.getBlockingStateForService(input.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
+                    final LocalDate effectiveEndDate = getEffectiveEndDate(accountId, input, account.getTimeZone(), context);
+                    final EntitlementState entitlementState = getStateForEntitlement(effectiveEndDate, input, account.getTimeZone(), context);
 
                     return new DefaultEntitlement(dateHelper, input, accountId, externalKey,
-                                                  getStateForEntitlement(input, currentState, account.getTimeZone(), context),
-                                                  currentState,
+                                                  entitlementState,
+                                                  effectiveEndDate,
                                                   account.getTimeZone(),
                                                   thisEntitlementApi,
                                                   internalCallContextFactory, blockingStateDao, clock, checker);
@@ -247,12 +258,34 @@ public class DefaultEntitlementApi implements EntitlementApi {
     }
 
 
-    private EntitlementState getStateForEntitlement(final SubscriptionBase subscriptionBase, final BlockingState currentState, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
+    private LocalDate getEffectiveEndDate(final UUID accountId, final SubscriptionBase subscriptionBase, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
+
+        LocalDate result = null;
+
+        final BlockingState subEntitlementState = blockingStateDao.getBlockingStateForService(subscriptionBase.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
+        if (subEntitlementState != null && subEntitlementState.getStateName().equals(ENT_STATE_CANCELLED)) {
+            result = new LocalDate(subEntitlementState.getEffectiveDate(), accountTimeZone);
+        }
+
+        final BlockingState bundleEntitlementState = blockingStateDao.getBlockingStateForService(subscriptionBase.getBundleId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
+        if (bundleEntitlementState != null && bundleEntitlementState .getStateName().equals(ENT_STATE_CANCELLED)) {
+            final LocalDate localDate = new LocalDate(bundleEntitlementState.getEffectiveDate(), accountTimeZone);
+            result = result == null || result.compareTo(localDate) < 0 ? localDate : result;
+        }
+
+        final BlockingState accountEntitlementState = blockingStateDao.getBlockingStateForService(accountId, EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
+        if (accountEntitlementState != null && accountEntitlementState .getStateName().equals(ENT_STATE_CANCELLED)) {
+            final LocalDate localDate = new LocalDate(accountEntitlementState.getEffectiveDate(), accountTimeZone);
+            result = result == null || result.compareTo(localDate) < 0 ? localDate : result;
+        }
+        return result;
+    }
+
+    private EntitlementState getStateForEntitlement(final LocalDate entitlementEndDate, final SubscriptionBase subscriptionBase, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
 
         // Current state for the ENTITLEMENT_SERVICE_NAME is set to cancelled
-        if (currentState != null &&
-            currentState.getStateName().equals(ENT_STATE_CANCELLED) &&
-            dateHelper.isBeforeOrEqualsToday(currentState.getEffectiveDate(), accountTimeZone)) {
+        if (entitlementEndDate != null &&
+            entitlementEndDate.compareTo(new LocalDate(clock.getUTCNow(), accountTimeZone)) <= 0) {
             return EntitlementState.CANCELLED;
         }
 
@@ -355,13 +388,38 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
     @Override
     public UUID transferEntitlements(final UUID sourceAccountId, final UUID destAccountId, final String externalKey, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
-        return null;
+        return transferEntitlementsOverrideBillingPolicy(sourceAccountId, destAccountId, externalKey, effectiveDate, BillingActionPolicy.IMMEDIATE, context);
     }
 
     @Override
     public UUID transferEntitlementsOverrideBillingPolicy(final UUID sourceAccountId, final UUID destAccountId, final String externalKey, final LocalDate effectiveDate, final BillingActionPolicy billingPolicy, final CallContext context) throws EntitlementApiException {
-        return null;
+        final boolean cancelImm;
+        switch (billingPolicy) {
+            case IMMEDIATE:
+                cancelImm = true;
+                break;
+            case END_OF_TERM:
+                cancelImm = false;
+                break;
+            default:
+                throw new RuntimeException("Unexpected billing policy " + billingPolicy);
+        }
+
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(sourceAccountId, context);
+        try {
+            final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleForAccountAndKey(sourceAccountId, externalKey, contextWithValidAccountRecordId);
+            final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), contextWithValidAccountRecordId);
+
+            final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);
+            final SubscriptionBaseBundle newBundle = subscriptionTransferApi.transferBundle(sourceAccountId, destAccountId, externalKey, requestedDate, true, cancelImm, context);
+
+            blockingStateDao.setBlockingState(new DefaultBlockingState(bundle.getId(), BlockingStateType.BUNDLE, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, requestedDate), clock, contextWithValidAccountRecordId);
+
+            return newBundle.getId();
+        } catch (SubscriptionBaseTransferApiException e) {
+            throw new EntitlementApiException(e);
+        } catch (SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
     }
-
-
 }

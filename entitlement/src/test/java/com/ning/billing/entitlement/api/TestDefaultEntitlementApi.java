@@ -3,7 +3,9 @@ package com.ning.billing.entitlement.api;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
+import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -11,6 +13,8 @@ import org.testng.annotations.Test;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.api.TestApiListener.NextEvent;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
@@ -19,8 +23,11 @@ import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 
+import com.google.common.io.BaseEncoding;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 
 public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedDB {
@@ -252,4 +259,57 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             Assert.fail("Test failed " + e.getMessage());
         }
     }
-}
+
+
+
+    @Test(groups = "slow")
+    public void testTransferBundle() {
+
+        try {
+
+            final LocalDate initialDate = new LocalDate(2013, 8, 7);
+            clock.setDay(initialDate);
+
+            final Account accountSrc = accountApi.createAccount(getAccountData(7), callContext);
+
+            final Account accountDesc = accountApi.createAccount(getAccountData(15), callContext);
+
+            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+            // Create entitlement
+            final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(accountSrc.getId(), spec, accountSrc.getExternalKey(), initialDate, callContext);
+
+            final DateTime ctd = clock.getUTCNow().plusDays(30).plusMonths(1);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            clock.addDays(32);
+            // Set manually since no invoice
+            subscriptionInternalApi.setChargedThroughDate(baseEntitlement.getId(), ctd, internalCallContext);
+            assertTrue(testListener.isCompleted(5000));
+
+            // Transfer bundle to dest acccount
+            final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), accountSrc.getTimeZone());
+            testListener.pushExpectedEvent(NextEvent.TRANSFER);
+            final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(accountSrc.getId(), accountDesc.getId(), baseEntitlement.getExternalKey(), effectiveDate, BillingActionPolicy.END_OF_TERM, callContext);
+            assertTrue(testListener.isCompleted(5000));
+
+            final Entitlement oldBaseEntitlement = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(accountSrc.getId(), accountSrc.getExternalKey(), callContext).get(0);
+            assertEquals(oldBaseEntitlement.getEffectiveEndDate(), effectiveDate);
+            assertEquals(oldBaseEntitlement.getState(), EntitlementState.CANCELLED);
+
+            final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForBundle(newBundleId, callContext);
+            assertEquals(entitlements.size(), 1);
+
+            final Entitlement newBaseEntitlement = entitlements.get(0);
+            assertEquals(newBaseEntitlement.getState(), EntitlementState.ACTIVE);
+            assertEquals(newBaseEntitlement.getEffectiveStartDate(), effectiveDate);
+            assertEquals(newBaseEntitlement.getEffectiveEndDate(), null);
+
+        } catch (AccountApiException e) {
+            Assert.fail("Test failed " + e.getMessage());
+        } catch (EntitlementApiException e) {
+            Assert.fail("Test failed " + e.getMessage());
+        }
+    }
+
+
+        }

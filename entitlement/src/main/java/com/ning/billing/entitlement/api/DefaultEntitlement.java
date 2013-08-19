@@ -49,7 +49,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     protected final InternalCallContextFactory internalCallContextFactory;
     protected final Clock clock;
     protected final EntitlementState state;
-    protected final BlockingState entitlementBlockingState;
+    protected final LocalDate effectiveEndDate;
     protected final BlockingChecker checker;
     protected final UUID accountId;
     protected final String externalKey;
@@ -58,7 +58,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     protected final BlockingStateDao blockingStateDao;
 
     public DefaultEntitlement(final EntitlementDateHelper dateHelper, final SubscriptionBase subscriptionBase, final UUID accountId,
-                              final String externalKey, final EntitlementState state, final BlockingState entitlementBlockingState, final DateTimeZone accountTimeZone,
+                              final String externalKey, final EntitlementState state, final LocalDate effectiveEndDate, final DateTimeZone accountTimeZone,
                               final EntitlementApi entitlementApi, final InternalCallContextFactory internalCallContextFactory,
                               final BlockingStateDao blockingStateDao,
                               final Clock clock, final BlockingChecker checker) {
@@ -68,8 +68,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         this.accountId = accountId;
         this.externalKey = externalKey;
         this.state = state;
+        this.effectiveEndDate = effectiveEndDate;
         this.entitlementApi = entitlementApi;
-        this.entitlementBlockingState = entitlementBlockingState;
         this.accountTimeZone = accountTimeZone;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
@@ -83,7 +83,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
              in.getAccountId(),
              in.getExternalKey(),
              in.getState(),
-             in.getEntitlementBlockingState(),
+             in.getEffectiveEndDate(),
              in.getAccountTimeZone(),
              in.getEntitlementApi(),
              in.getInternalCallContextFactory(),
@@ -91,7 +91,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
              in.getClock(), in.getChecker());
     }
 
-    // STEPH_ENT should be remove but beatrix tests need to be changed
     public SubscriptionBase getSubscriptionBase() {
         return subscriptionBase;
     }
@@ -110,10 +109,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     public Clock getClock() {
         return clock;
-    }
-
-    public BlockingState getEntitlementBlockingState() {
-        return entitlementBlockingState;
     }
 
     public BlockingChecker getChecker() {
@@ -165,17 +160,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public LocalDate getEffectiveEndDate() {
-        if (entitlementBlockingState != null && entitlementBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED)) {
-            return new LocalDate(entitlementBlockingState.getEffectiveDate(), accountTimeZone);
-        }
-        return null;
-        //return subscriptionBase.getEndDate() != null ? new LocalDate(subscriptionBase.getEndDate(), accountTimeZone) : null;
-    }
-
-    @Override
-    public LocalDate getRequestedEndDate() {
-        // STEPH_ENT
-        return null; //subscriptionBase.;
+        return effectiveEndDate;
     }
 
     @Override
@@ -333,15 +318,4 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             throw new EntitlementApiException(e);
         }
     }
-
-    @Override
-    public Entitlement block(final String serviceName, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public Entitlement unblock(final String serviceName, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
 }
