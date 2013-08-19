@@ -302,7 +302,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected DefaultSubscriptionBase subscriptionDataFromSubscription(final SubscriptionBase sub) {
-        // STEPH_ENT
         return (DefaultSubscriptionBase) sub;
     }
 

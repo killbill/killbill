@@ -110,24 +110,16 @@ public class AuditChecker {
 
     // Pass the call context used to create the bundle
     public void checkBundleCreated(final UUID bundleId, final CallContext context) {
-        // STEPH_ENT implement bundle timeline
-        /*
-
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         Assert.assertEquals(auditLogsForBundles.getBundlesAuditLogs().keySet().size(), 1);
         checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getBundlesAuditLogs().get(bundleId).get(0), bundleId, BundleSqlDao.class, false, false);
-        */
     }
 
     // Pass the call context used to update the bundle
     public void checkBundleUpdated(final UUID bundleId, final CallContext context) {
-        // STEPH_ENT implement bundle timeline
-        /*
-
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         Assert.assertEquals(auditLogsForBundles.getBundlesAuditLogs().keySet().size(), 1);
         checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.getBundlesAuditLogs().get(bundleId).get(auditLogsForBundles.getBundlesAuditLogs().get(bundleId).size() - 1), bundleId, BundleSqlDao.class, false, false);
-*/
     }
 
     /**
@@ -136,26 +128,19 @@ public class AuditChecker {
 
     // Pass the call context used to create the subscription
     public void checkSubscriptionCreated(final UUID bundleId, final UUID subscriptionId, final CallContext context) {
-        // STEPH_ENT implement bundle timeline
-        /*
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
-
         Assert.assertEquals(auditLogsForBundles.getSubscriptionsAuditLogs().keySet().size(), 1);
         checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getSubscriptionsAuditLogs().get(subscriptionId).get(0), subscriptionId, SubscriptionSqlDao.class, false, true);
-        */
     }
 
     // Pass the call context used to update the subscription
     public void checkSubscriptionUpdated(final UUID bundleId, final UUID subscriptionId, final CallContext context) {
-        // STEPH_ENT implement bundle timeline
-        /*
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
 
         Assert.assertEquals(auditLogsForBundles.getSubscriptionsAuditLogs().keySet().size(), 1);
         Assert.assertEquals(auditLogsForBundles.getSubscriptionsAuditLogs().get(subscriptionId).size(), 2);
         checkAuditLog(ChangeType.INSERT, auditLogsForBundles.getSubscriptionsAuditLogs().get(subscriptionId).get(0));
         checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.getSubscriptionsAuditLogs().get(subscriptionId).get(1), subscriptionId, SubscriptionSqlDao.class, false, false);
-*/
     }
 
     /**
@@ -164,25 +149,17 @@ public class AuditChecker {
 
     // Pass the call context used to create the subscription event
     public void checkSubscriptionEventCreated(final UUID bundleId, final UUID subscriptionEventId, final CallContext context) {
-        // STEPH_ENT implement bundle timeline
-        /*
-
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(0), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
-    */
     }
 
 
 
     // Pass the call context used to update the subscription event
     public void checkSubscriptionEventUpdated(final UUID bundleId, final UUID subscriptionEventId, final CallContext context) {
-        // STEPH_ENT implement bundle timeline
-        /*
-
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         checkAuditLog(ChangeType.INSERT, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(0));
         checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(1), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
-*/
     }
 
 

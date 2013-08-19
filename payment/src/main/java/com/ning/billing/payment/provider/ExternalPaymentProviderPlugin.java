@@ -97,6 +97,11 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     @Override
+    public List<PaymentMethodPlugin> searchPaymentMethods(final String s, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {
     }
 }

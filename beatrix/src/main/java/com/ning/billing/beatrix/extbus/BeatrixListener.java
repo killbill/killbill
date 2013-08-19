@@ -155,7 +155,7 @@ public class
                     eventBusType = ExtBusEventType.BUNDLE_RESUME;
                 }
                 break;
-            
+
             case INVOICE_CREATION:
                 InvoiceCreationInternalEvent realEventInv = (InvoiceCreationInternalEvent) event;
                 objectType = ObjectType.INVOICE;
