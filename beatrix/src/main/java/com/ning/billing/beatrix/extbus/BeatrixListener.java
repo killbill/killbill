@@ -31,6 +31,7 @@ import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.bus.api.BusEvent;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
+import com.ning.billing.entitlement.EntitlementTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -45,6 +46,7 @@ import com.ning.billing.util.events.ControlTagCreationInternalEvent;
 import com.ning.billing.util.events.ControlTagDeletionInternalEvent;
 import com.ning.billing.util.events.CustomFieldCreationEvent;
 import com.ning.billing.util.events.CustomFieldDeletionEvent;
+import com.ning.billing.util.events.EntitlementInternalEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.events.OverdueChangeInternalEvent;
@@ -143,6 +145,17 @@ public class
                 }
                 break;
 
+            case ENTITLEMENT_TRANSITION:
+                EntitlementInternalEvent realEventET = (EntitlementInternalEvent) event;
+                objectType = ObjectType.BUNDLE;
+                objectId = realEventET.getBundleId();
+                if (realEventET.getTransitionType() == EntitlementTransitionType.BLOCK_BUNDLE) {
+                    eventBusType = ExtBusEventType.BUNDLE_PAUSE;
+                } else if (realEventET.getTransitionType() == EntitlementTransitionType.UNBLOCK_BUNDLE) {
+                    eventBusType = ExtBusEventType.BUNDLE_RESUME;
+                }
+                break;
+            
             case INVOICE_CREATION:
                 InvoiceCreationInternalEvent realEventInv = (InvoiceCreationInternalEvent) event;
                 objectType = ObjectType.INVOICE;

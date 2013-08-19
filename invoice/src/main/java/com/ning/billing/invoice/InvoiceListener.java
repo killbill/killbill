@@ -28,6 +28,7 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.events.EffectiveEntitlementInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.RepairSubscriptionInternalEvent;
 
@@ -70,6 +71,17 @@ public class InvoiceListener {
             }
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             dispatcher.processSubscription(event, context);
+        } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    @Subscribe
+    public void handleEntitlementTransition(final EffectiveEntitlementInternalEvent event) {
+
+        try {
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+            dispatcher.processAccount(event.getAccountId(), event.getEffectiveTransitionTime(), false, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
         }

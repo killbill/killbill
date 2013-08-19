@@ -32,7 +32,7 @@
     <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.3.3-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.0" level="project" />
     <orderEntry type="module" module-name="killbill-internal-api" />
-    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.2.5" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.3.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.skife.config:config-magic:0.14" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
     <orderEntry type="module" module-name="killbill-util" />
@@ -47,7 +47,7 @@
     <orderEntry type="library" name="Maven: org.jdbi:jdbi:2.39.1" level="project" />
     <orderEntry type="library" name="Maven: com.yammer.metrics:metrics-core:2.1.2" level="project" />
     <orderEntry type="library" name="Maven: org.weakref:jmxutils:1.12" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-notification:0.2.5" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-notification:0.3.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.samskivert:jmustache:1.5" level="project" />
     <orderEntry type="library" name="Maven: net.sf.ehcache:ehcache-core:2.6.2" level="project" />
     <orderEntry type="library" name="Maven: org.antlr:stringtemplate:3.2.1" level="project" />

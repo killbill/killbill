@@ -23,6 +23,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -35,6 +36,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.payment.api.PaymentStatus;
@@ -191,7 +193,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
-        changeEntitlementAndCheckForCompletion(baseEntitlement, "Assault-Rifle", BillingPeriod.MONTHLY, null , NextEvent.CHANGE, NextEvent.INVOICE);
+        changeEntitlementAndCheckForCompletion(baseEntitlement, "Assault-Rifle", BillingPeriod.MONTHLY, null, NextEvent.CHANGE, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
 
@@ -450,7 +452,7 @@ public class TestIntegration extends TestIntegrationBase {
 
 
     @Test(groups = "slow")
-    public void testWithRecreatePlan() throws Exception {
+    public void testWithPauseResume() throws Exception {
         final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         final int billingDay = 2;
 
@@ -475,11 +477,11 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // VERIFY CTD HAS BEEN SET
         //
+        busHandler.reset();
         DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) baseEntitlement.getSubscriptionBase();
         final DateTime startDate = subscription.getCurrentPhaseStart();
         final BigDecimal rate = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
-        final int invoiceItemCount = 1;
-        verifyTestResult(accountId, subscription.getId(), startDate, null, rate, clock.getUTCNow(), invoiceItemCount);
+        verifyTestResult(accountId, subscription.getId(), startDate, null, rate, clock.getUTCNow(), 1);
 
         //
         // MOVE TIME TO AFTER TRIAL AND EXPECT BOTH EVENTS :  NextEvent.PHASE NextEvent.INVOICE
@@ -490,31 +492,37 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertTrue(busHandler.isCompleted(DELAY));
 
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+
+        // PAUSE THE ENTITLEMENT
         DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
-        entitlement.cancelEntitlementWithDate(clock.getUTCNow().toLocalDate(), callContext);
-        subscription = (DefaultSubscriptionBase) baseEntitlement.getSubscriptionBase();
-
-        // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
-        busHandler.pushExpectedEvent(NextEvent.CANCEL);
-        DateTime endDate = subscription.getChargedThroughDate();
-        final Interval it = new Interval(clock.getUTCNow(), endDate);
-        clock.addDeltaFromReality(it.toDurationMillis());
+        busHandler.pushExpectedEvent(NextEvent.PAUSE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE_ADJUSTMENT);
+        entitlementApi.pause(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), callContext);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        productName = "Assault-Rifle";
-        term = BillingPeriod.MONTHLY;
-        planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 4), new LocalDate(2012, 4, 2), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-233.83")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 4), new LocalDate(2012, 3, 4), InvoiceItemType.CBA_ADJ, new BigDecimal("233.83")));
 
-        // STEPH_ENT we should use new API pause/resume billing
-        /*
-        busHandler.pushExpectedEvent(NextEvent.RE_CREATE);
+
+        entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        Assert.assertEquals(entitlement.getState(), EntitlementState.BLOCKED);
+
+        // MOVE CLOCK FORWARD ADN CHECK THERE IS NO NEW INVOICE
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+
+        busHandler.pushExpectedEvent(NextEvent.RESUME);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        subscription.recreate(new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), endDate, callContext);
+        entitlementApi.resume(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), callContext);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        assertListenerStatus();
-        */
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 5), new LocalDate(2012, 5, 2), InvoiceItemType.RECURRING, new BigDecimal("224.96")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 5), new LocalDate(2012, 4, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("-224.96")));
+
     }
 
     @Test(groups = "slow")

@@ -24,6 +24,7 @@ import java.util.concurrent.Callable;
 import javax.inject.Inject;
 
 import com.ning.billing.util.events.CustomFieldEvent;
+import com.ning.billing.util.events.EffectiveEntitlementInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
@@ -88,7 +89,7 @@ public class TestApiListener {
         REPAIR_BUNDLE,
         TAG,
         TAG_DEFINITION,
-        CUSTOM_FIELD
+        CUSTOM_FIELD,
     }
 
     public void setNonExpectedMode() {
@@ -103,6 +104,22 @@ public class TestApiListener {
         assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
         notifyIfStackEmpty();
     }
+
+
+    @Subscribe
+    public void handleEntitlementEvents(final EffectiveEntitlementInternalEvent eventEffective) {
+
+        log.info(String.format("Got entitlement event %s", eventEffective.toString()));
+        switch (eventEffective.getTransitionType()) {
+            case BLOCK_BUNDLE:
+                assertEqualsNicely(NextEvent.PAUSE);
+                break;
+            case UNBLOCK_BUNDLE:
+                assertEqualsNicely(NextEvent.RESUME);
+                break;
+        }
+    }
+
 
     @Subscribe
     public void handleSubscriptionEvents(final EffectiveSubscriptionInternalEvent eventEffective) {

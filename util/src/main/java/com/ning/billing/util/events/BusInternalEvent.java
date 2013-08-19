@@ -25,6 +25,7 @@ public interface BusInternalEvent extends BusEvent {
         ACCOUNT_CREATE,
         ACCOUNT_CHANGE,
         SUBSCRIPTION_TRANSITION,
+        ENTITLEMENT_TRANSITION,
         BUNDLE_REPAIR,
         INVOICE_EMPTY,
         INVOICE_CREATION,

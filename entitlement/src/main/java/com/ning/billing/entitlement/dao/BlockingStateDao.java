@@ -75,11 +75,11 @@ public interface BlockingStateDao {
     public List<BlockingState> getBlockingAll(UUID blockableId, InternalTenantContext context);
 
     /**
-     * Sets a new state for a specific service
+     * Sets a new state for a specific service.
      *
      * @param state
      * @param clock
      * @param context
      */
-    void setBlockingState(BlockingState state, Clock clock, InternalCallContext context);
+    public void setBlockingState(BlockingState state, Clock clock, InternalCallContext context);
 }
