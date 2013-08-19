@@ -3,7 +3,7 @@ KILLBILL_ROOT_PACKAGE = "com/ning/billing"
 DDL_SQL_FILE = "ddl.sql"
 
 ddl = ""
-["account", "beatrix", "entitlement", "invoice", "junction", "payment", "tenant", "usage", "util"].each do |kmodule|
+["account", "beatrix", "entitlement", "invoice", "payment", "subscription", "tenant", "usage", "util"].each do |kmodule|
   ddl_file = "#{kmodule}/#{RESOURCES_DIR}/#{KILLBILL_ROOT_PACKAGE}/#{kmodule}/#{DDL_SQL_FILE}"
   ddl << (%x[/usr/bin/curl -skSfL "https://raw.github.com/killbill/killbill/master/#{ddl_file}"])
 end
