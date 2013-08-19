@@ -27,8 +27,8 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.notificationq.api.NotificationEventWithMetadata;
 import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
@@ -63,7 +63,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
     }
 
     @Override
-    public void insertOverdueCheckNotification(final Blockable overdueable, final DateTime futureNotificationTime, final InternalCallContext context) {
+    public void insertOverdueCheckNotification(final Account account, final DateTime futureNotificationTime, final InternalCallContext context) {
         final NotificationQueue checkOverdueQueue;
         try {
             checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
@@ -75,7 +75,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                     boolean shouldInsertNewNotification = true;
 
                     // Check if we already have notifications for that key
-                    final Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> futureNotifications = getFutureNotificationsForAccountAndOverdueableInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue, overdueable, context);
+                    final Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> futureNotifications = getFutureNotificationsForAccountAndOverdueableInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue, account, context);
                     if (futureNotifications.size() > 0) {
                         // Results are ordered by effective date asc
                         final DateTime earliestExistingNotificationDate = futureNotifications.iterator().next().getEffectiveDate();
@@ -102,11 +102,11 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                     }
 
                     if (shouldInsertNewNotification) {
-                        log.debug("Queuing overdue check notification. Overdueable id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
-                        final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(overdueable.getId());
+                        log.debug("Queuing overdue check notification. Account id: {}, timestamp: {}", account.getId().toString(), futureNotificationTime.toString());
+                        final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(account.getId());
                         checkOverdueQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), futureNotificationTime, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
                     } else {
-                        log.debug("Skipping queuing overdue check notification. Overdueable id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
+                        log.debug("Skipping queuing overdue check notification. Account id: {}, timestamp: {}", account.getId().toString(), futureNotificationTime.toString());
                     }
 
                     return null;
@@ -118,7 +118,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
     }
 
     @Override
-    public void clearNotificationsFor(final Blockable overdueable, final InternalCallContext context) {
+    public void clearNotificationsFor(final Account account, final InternalCallContext context) {
         try {
             final NotificationQueue checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
                                                                                                       DefaultOverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE);
@@ -126,7 +126,9 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
 
                 @Override
                 public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                    final Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> futureNotifications = getFutureNotificationsForAccountAndOverdueableInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue, overdueable, context);
+                    final Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> futureNotifications = getFutureNotificationsForAccountAndOverdueableInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue, account
+
+                            , context);
                     for (final NotificationEventWithMetadata<OverdueCheckNotificationKey> notification : futureNotifications) {
                         checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), notification.getRecordId());
                     }
@@ -142,7 +144,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
     @VisibleForTesting
     Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> getFutureNotificationsForAccountAndOverdueableInTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
                                                                                                                                        final NotificationQueue checkOverdueQueue,
-                                                                                                                                       final Blockable overdueable,
+                                                                                                                                       final Account account,
                                                                                                                                        final InternalCallContext context) {
 
         final List<NotificationEventWithMetadata<OverdueCheckNotificationKey>> notifications = checkOverdueQueue.getFutureNotificationFromTransactionForSearchKey1(OverdueCheckNotificationKey.class, context.getAccountRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
@@ -151,7 +153,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
             @Override
             public boolean apply(@Nullable final NotificationEventWithMetadata<OverdueCheckNotificationKey> input) {
                 final OverdueCheckNotificationKey notificationKey = input.getEvent();
-                return (overdueable.getId().equals(notificationKey.getUuidKey()));
+                return (account.getId().equals(notificationKey.getUuidKey()));
             }
         });
 

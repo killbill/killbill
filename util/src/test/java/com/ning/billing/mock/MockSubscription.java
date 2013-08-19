@@ -115,11 +115,6 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public BlockingState getBlockingState() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public DateTime getCreatedDate() {
         throw new UnsupportedOperationException();
     }

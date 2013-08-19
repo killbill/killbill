@@ -321,11 +321,6 @@ public class MockAccountBuilder {
             }
 
             @Override
-            public BlockingState getBlockingState() {
-                return  null; // STEPH_ENT do we need it ? DefaultBlockingState.getClearState(BlockingStateType.ACCOUNT, );
-            }
-
-            @Override
             public MutableAccountData toMutableAccountData() {
                 throw new UnsupportedOperationException();
             }

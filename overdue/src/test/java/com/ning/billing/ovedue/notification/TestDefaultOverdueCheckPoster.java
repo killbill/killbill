@@ -64,7 +64,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
     @Test(groups = "slow")
     public void testShouldntInsertMultipleNotificationsPerOverdueable() throws Exception {
         final UUID accountId = UUID.randomUUID();
-        final Blockable overdueable = Mockito.mock(Account.class);
+        final Account overdueable = Mockito.mock(Account.class);
         Mockito.when(overdueable.getId()).thenReturn(accountId);
 
         insertOverdueCheckAndVerifyQueueContent(overdueable, 10, 10);
@@ -73,7 +73,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
 
         // Check we don't conflict with other overdueables
         final UUID bundleId = UUID.randomUUID();
-        final Blockable otherOverdueable = Mockito.mock(Account.class);
+        final Account otherOverdueable = Mockito.mock(Account.class);
         Mockito.when(otherOverdueable.getId()).thenReturn(bundleId);
 
         insertOverdueCheckAndVerifyQueueContent(otherOverdueable, 10, 10);
@@ -84,7 +84,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         Assert.assertEquals(overdueQueue.getFutureNotificationForSearchKey1(OverdueCheckNotificationKey.class, internalCallContext.getAccountRecordId()).size(), 2);
     }
 
-    private void insertOverdueCheckAndVerifyQueueContent(final Blockable overdueable, final int nbDaysInFuture, final int expectedNbDaysInFuture) throws IOException {
+    private void insertOverdueCheckAndVerifyQueueContent(final Account overdueable, final int nbDaysInFuture, final int expectedNbDaysInFuture) throws IOException {
         final DateTime futureNotificationTime = testReferenceTime.plusDays(nbDaysInFuture);
         poster.insertOverdueCheckNotification(overdueable, futureNotificationTime, internalCallContext);
 
@@ -96,7 +96,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         Assert.assertEquals(nm.getEffectiveDate(), testReferenceTime.plusDays(expectedNbDaysInFuture));
     }
 
-    private Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> getNotificationsForOverdueable(final Blockable overdueable) {
+    private Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> getNotificationsForOverdueable(final Account overdueable) {
         return entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>>>() {
             @Override
             public Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {

@@ -66,9 +66,9 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         ((MockBlockingStateDao) blockingStateDao).clear();
     }
 
+
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.BUNDLE,"state", "test-service", bC, bE, bB, clock.getUTCNow());
-        Mockito.when(bundle.getBlockingState()).thenReturn(bundleState);
         blockingStateDao.setBlockingState(bundleState, clock, internalCallContext);
     }
 
@@ -79,7 +79,6 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
     private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        Mockito.when(subscription.getBlockingState()).thenReturn(subscriptionState);
         blockingStateDao.setBlockingState(subscriptionState, clock, internalCallContext);
     }
 

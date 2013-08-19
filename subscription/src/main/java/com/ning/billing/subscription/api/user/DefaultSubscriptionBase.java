@@ -244,11 +244,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public BlockingState getBlockingState() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public SubscriptionBaseTransition getPendingTransition() {
         if (transitions == null) {
             return null;

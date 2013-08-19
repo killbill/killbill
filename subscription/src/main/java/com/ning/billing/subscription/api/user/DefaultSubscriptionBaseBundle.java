@@ -57,11 +57,6 @@ public class DefaultSubscriptionBaseBundle extends EntityBase implements Subscri
     }
 
     @Override
-    public BlockingState getBlockingState() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("DefaultSubscriptionBaseBundle");
