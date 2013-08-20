@@ -55,11 +55,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final EntitlementJsonNoEvents entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName, ProductCategory.BASE.toString(), term.toString(), true);
-        /*
-        STEPH_ENT
-        Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
-        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toLocalDate(), new LocalDate("2012-04-25"));
-*/
+
         String uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getEntitlementId();
 
         // Retrieves with GET
@@ -111,7 +107,6 @@ public class TestEntitlement extends TestJaxrsBase {
         baseJson = response.getResponseBody();
         objFromJson = mapper.readValue(baseJson, EntitlementJsonNoEvents.class);
         assertNotNull(objFromJson.getCancelledDate());
-        // STEPH_ENT entitlement was cancelled today but billing is EOT-- would be nice to have a test to try also EOT cancellation
         assertTrue(objFromJson.getCancelledDate().compareTo(new LocalDate(clock.getUTCNow())) == 0);
 
         // Uncancel
@@ -149,11 +144,6 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.ANNUAL;
 
         final EntitlementJsonNoEvents entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), "99999", productName, ProductCategory.BASE.toString(), term.toString(), true);
-        /*
-        STEPH_ENT
-        Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
-        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toLocalDate(), new LocalDate("2012-04-25"));
-*/
         final String uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJsonNoEvents.getEntitlementId();
 
         // Retrieves with GET

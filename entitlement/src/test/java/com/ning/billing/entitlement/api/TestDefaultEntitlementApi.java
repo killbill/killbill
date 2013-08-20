@@ -252,7 +252,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
                 assertEquals(cur.getState(), EntitlementState.ACTIVE);
             }
 
-            // STEPH_ENT wait for semantics to clarify and write the tests
         } catch (AccountApiException e) {
             Assert.fail("Test failed " + e.getMessage());
         } catch (EntitlementApiException e) {

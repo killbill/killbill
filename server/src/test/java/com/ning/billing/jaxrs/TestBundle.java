@@ -120,17 +120,13 @@ public class TestBundle extends TestJaxrsBase {
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
-        final EntitlementJsonNoEvents subscriptionJson = createEntitlement(accountJson.getAccountId(), "93199", productName, ProductCategory.BASE.toString(), term.toString(), true);
+        final EntitlementJsonNoEvents entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), "93199", productName, ProductCategory.BASE.toString(), term.toString(), true);
 
-        /*
-        STEPH_ENT
-        Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
-        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toLocalDate(), new LocalDate("2012-04-25"));
         final AccountJson newAccount = createAccountWithDefaultPaymentMethod("dst", "dst", "dst@yahoo.com");
 
         final BundleJsonNoSubscriptions newBundleInput = new BundleJsonNoSubscriptions(null, newAccount.getAccountId(), null, null, null);
         final String newBundleInputJson = mapper.writeValueAsString(newBundleInput);
-        final String uri = JaxrsResource.BUNDLES_PATH + "/" + subscriptionJson.getBundleId();
+        final String uri = JaxrsResource.BUNDLES_PATH + "/" + entitlementJsonNoEvents.getBundleId();
         Response response = doPut(uri, newBundleInputJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
@@ -139,7 +135,5 @@ public class TestBundle extends TestJaxrsBase {
 
         response = doGetWithUrl(locationCC, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-
-*/
     }
 }

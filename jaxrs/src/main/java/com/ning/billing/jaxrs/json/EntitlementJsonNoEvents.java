@@ -61,7 +61,7 @@ public class EntitlementJsonNoEvents extends EntitlementJsonSimple {
 
     public EntitlementJsonNoEvents(final Entitlement data, @Nullable final List<AuditLog> auditLogs) {
         this(data.getAccountId().toString(),
-             data.getBaseEntitlementId().toString(),
+             data.getBundleId().toString(),
              data.getId().toString(),
              data.getExternalKey(),
              data.getEffectiveStartDate(),
