@@ -29,6 +29,12 @@
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-beatrix:test-jar:tests:0.5.1-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-payment:test-jar:tests:0.5.1-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.5.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.6.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.4.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-notification:0.4.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-beatrix:test-jar:tests:0.5.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-payment:test-jar:tests:0.5.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.5.1-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: ch.qos.logback:logback-classic:1.0.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: ch.qos.logback:logback-core:1.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />

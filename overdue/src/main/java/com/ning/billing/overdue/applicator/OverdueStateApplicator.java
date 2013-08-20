@@ -48,6 +48,7 @@ import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.email.DefaultEmailSender;
 import com.ning.billing.util.email.EmailApiException;
 import com.ning.billing.util.email.EmailConfig;
@@ -75,13 +76,14 @@ public class OverdueStateApplicator {
     private final AccountInternalApi accountApi;
     private final EntitlementApi entitlementApi;
     private final OverdueEmailGenerator overdueEmailGenerator;
-    final TagInternalApi tagApi;
+    private final TagInternalApi tagApi;
     private final EmailSender emailSender;
+    private final NonEntityDao nonEntityDao;
 
     @Inject
     public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final EntitlementApi entitlementApi,
                                   final Clock clock, final OverdueCheckPoster poster, final OverdueEmailGenerator overdueEmailGenerator,
-                                  final EmailConfig config, final PersistentBus bus, final TagInternalApi tagApi) {
+                                  final EmailConfig config, final PersistentBus bus, final NonEntityDao nonEntityDao,  final TagInternalApi tagApi) {
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
@@ -89,6 +91,7 @@ public class OverdueStateApplicator {
         this.poster = poster;
         this.overdueEmailGenerator = overdueEmailGenerator;
         this.tagApi = tagApi;
+        this.nonEntityDao = nonEntityDao;
         this.emailSender = new DefaultEmailSender(config);
         this.bus = bus;
     }
@@ -228,9 +231,9 @@ public class OverdueStateApplicator {
     }
 
     @SuppressWarnings("unchecked")
-    private void computeEntitlementsToCancel(final Account blockable, final List<Entitlement> result, final InternalTenantContext context) throws EntitlementApiException {
-        // STEPH_ENT fix internal API.
-        result.addAll(entitlementApi.getAllEntitlementsForAccountId(blockable.getId(), context.toTenantContext(null)));
+    private void computeEntitlementsToCancel(final Account account, final List<Entitlement> result, final InternalTenantContext context) throws EntitlementApiException {
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
+        result.addAll(entitlementApi.getAllEntitlementsForAccountId(account.getId(), context.toTenantContext(tenantId)));
     }
 
     private void sendEmailIfRequired(final BillingState billingState, final Account account,

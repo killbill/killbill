@@ -34,6 +34,7 @@ import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 import com.google.inject.Inject;
@@ -42,7 +43,7 @@ public class OverdueWrapperFactory {
 
     private static final Logger log = LoggerFactory.getLogger(OverdueWrapperFactory.class);
 
-    private final AccountUserApi accountUserApi;
+    private final AccountInternalApi accountApi;
     private final BillingStateCalculator billingStateCalculator;
     private final OverdueStateApplicator overdueStateApplicator;
     private final BlockingInternalApi api;
@@ -53,10 +54,10 @@ public class OverdueWrapperFactory {
     public OverdueWrapperFactory(final BlockingInternalApi api, final Clock clock,
                                  final BillingStateCalculator billingStateCalculator,
                                  final OverdueStateApplicator overdueStateApplicatorBundle,
-                                 final AccountUserApi accountUserApi) {
+                                 final AccountInternalApi accountApi) {
         this.billingStateCalculator = billingStateCalculator;
         this.overdueStateApplicator = overdueStateApplicatorBundle;
-        this.accountUserApi = accountUserApi;
+        this.accountApi = accountApi;
         this.api = api;
         this.clock = clock;
     }
@@ -71,8 +72,7 @@ public class OverdueWrapperFactory {
     public OverdueWrapper createOverdueWrapperFor(final UUID id, final InternalTenantContext context) throws OverdueException {
 
         try {
-            // STEPH_ENT
-            Account account = accountUserApi.getAccountById(id, context.toTenantContext(null));
+            Account account = accountApi.getAccountById(id, context);
             return new OverdueWrapper(account, api, getOverdueStateSetBundle(),
                                       clock, billingStateCalculator, overdueStateApplicator);
 
