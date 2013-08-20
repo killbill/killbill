@@ -16,8 +16,8 @@
 
 package com.ning.billing.mock.glue;
 
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.MockGlobalLocker;
+import com.ning.billing.commons.locker.GlobalLocker;
+import com.ning.billing.commons.locker.memory.MemoryGlobalLocker;
 
 import com.google.inject.AbstractModule;
 
@@ -25,6 +25,6 @@ public class MockGlobalLockerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
+        bind(GlobalLocker.class).to(MemoryGlobalLocker.class).asEagerSingleton();
     }
 }

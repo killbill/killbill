@@ -24,10 +24,6 @@ public class DefaultTenantContext implements TenantContext {
 
     private final UUID tenantId;
 
-    public DefaultTenantContext() {
-        this(null);
-    }
-
     public DefaultTenantContext(@Nullable final UUID tenantId) {
         this.tenantId = tenantId;
     }

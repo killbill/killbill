@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Response.Status;
 
 import org.testng.Assert;
@@ -56,6 +57,9 @@ public class TestAccount extends TestJaxrsBase {
         final AccountJson retrievedAccount = getAccountByExternalKey(input.getExternalKey());
         Assert.assertTrue(retrievedAccount.equals(input));
 
+        // Try search endpoint
+        searchAccount(input, retrievedAccount);
+
         // Update Account
         final AccountJson newInput = new AccountJson(input.getAccountId(),
                                                      "zozo", 4, input.getExternalKey(), "rr@google.com", 18,
@@ -63,6 +67,9 @@ public class TestAccount extends TestJaxrsBase {
                                                      false, false);
         final AccountJson updatedAccount = updateAccount(input.getAccountId(), newInput);
         Assert.assertTrue(updatedAccount.equals(newInput));
+
+        // Try search endpoint
+        searchAccount(input, null);
     }
 
     @Test(groups = "slow")
@@ -250,7 +257,8 @@ public class TestAccount extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testTags() throws Exception {
-        final String accountId = UUID.randomUUID().toString();
+        final AccountJson input = createAccount();
+        final String accountId = input.getAccountId();
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.TAGS;
         final String accountTagsUrl = getUrlFromUri(uri);
         // Use tag definition for AUTO_PAY_OFF
@@ -280,7 +288,6 @@ public class TestAccount extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testCustomFields() throws Exception {
-
         final AccountJson accountJson = createAccount("yoyoq", "gfgrqe", "yoyoq@yahoo.com");
         assertNotNull(accountJson);
 
@@ -298,5 +305,33 @@ public class TestAccount extends TestJaxrsBase {
         final String url = getUrlFromUri(uri);
         response = doGetWithUrl(url, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+    }
+
+    private void searchAccount(final AccountJson input, @Nullable final AccountJson output) throws Exception {
+        // Search by name
+        doSearchAccount(input.getName(), output);
+
+        // Search by email
+        doSearchAccount(input.getEmail(), output);
+
+        // Search by company name
+        doSearchAccount(input.getCompany(), output);
+
+        // Search by external key.
+        // Note: we will always find a match since we don't update it
+        final List<AccountJson> accountsByExternalKey = searchAccountsByKey(input.getExternalKey());
+        Assert.assertEquals(accountsByExternalKey.size(), 1);
+        Assert.assertEquals(accountsByExternalKey.get(0).getAccountId(), input.getAccountId());
+        Assert.assertEquals(accountsByExternalKey.get(0).getExternalKey(), input.getExternalKey());
+    }
+
+    private void doSearchAccount(final String key, @Nullable final AccountJson output) throws Exception {
+        final List<AccountJson> accountsByKey = searchAccountsByKey(key);
+        if (output == null) {
+            Assert.assertEquals(accountsByKey.size(), 0);
+        } else {
+            Assert.assertEquals(accountsByKey.size(), 1);
+            Assert.assertEquals(accountsByKey.get(0), output);
+        }
     }
 }

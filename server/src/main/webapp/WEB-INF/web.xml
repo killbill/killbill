@@ -20,17 +20,13 @@
         xmlns="http://java.sun.com/xml/ns/javaee"
         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
         version="2.5">
-    <listener>
-        <!-- Initialize Shiro WebEnvironment and put it into the ServletContext -->
-        <listener-class>org.apache.shiro.web.env.EnvironmentLoaderListener</listener-class>
-    </listener>
     <filter>
         <!-- Filter all requests through Shiro -->
         <filter-name>ShiroFilter</filter-name>
         <filter-class>org.apache.shiro.web.servlet.ShiroFilter</filter-class>
     </filter>
     <filter-mapping>
-        <!-- The Shitor filter-mapping should come first -->
+        <!-- The Shiro filter-mapping should come first -->
         <filter-name>ShiroFilter</filter-name>
         <url-pattern>/*</url-pattern>
         <dispatcher>REQUEST</dispatcher>

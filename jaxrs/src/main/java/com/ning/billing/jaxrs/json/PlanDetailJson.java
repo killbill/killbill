@@ -16,9 +16,21 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.CurrencyValueNull;
 import com.ning.billing.catalog.api.Listing;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.Price;
+import com.ning.billing.jaxrs.json.CatalogJsonSimple.PriceJson;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,14 +41,14 @@ public class PlanDetailJson {
     final String planName;
     final BillingPeriod billingPeriod;
     final String priceListName;
-    final InternationalPrice finalPhasePrice;
+    final List<PriceJson> finalPhasePrice;
 
     @JsonCreator
     public PlanDetailJson(@JsonProperty("product") final String productName,
                           @JsonProperty("plan") final String planName,
                           @JsonProperty("final_phase_billing_period") final BillingPeriod billingPeriod,
                           @JsonProperty("priceList") final String priceListName,
-                          @JsonProperty("final_phase_recurring_price") final InternationalPrice finalPhasePrice) {
+                          @JsonProperty("final_phase_recurring_price") final List<PriceJson> finalPhasePrice) {
         this.productName = productName;
         this.planName = planName;
         this.billingPeriod = billingPeriod;
@@ -45,8 +57,33 @@ public class PlanDetailJson {
     }
 
     public PlanDetailJson(final Listing listing) {
-        this(listing.getPlan().getProduct().getName(), listing.getPlan().getName(), listing.getPlan().getBillingPeriod(),
-             listing.getPriceList().getName(), listing.getPlan().getFinalPhase().getRecurringPrice());
+        final Plan plan = listing.getPlan();
+        if (plan == null) {
+            this.productName = null;
+            this.planName = null;
+            this.billingPeriod = null;
+            this.finalPhasePrice = ImmutableList.<PriceJson>of();
+        } else {
+            this.productName = plan.getProduct() == null ? null : plan.getProduct().getName();
+            this.planName = plan.getName();
+            this.billingPeriod = plan.getBillingPeriod();
+            if (plan.getFinalPhase() == null || plan.getFinalPhase().getRecurringPrice() == null || plan.getFinalPhase().getRecurringPrice().getPrices() == null) {
+                this.finalPhasePrice = ImmutableList.<PriceJson>of();
+            } else {
+                this.finalPhasePrice = Lists.transform(ImmutableList.<Price>copyOf(plan.getFinalPhase().getRecurringPrice().getPrices()),
+                                                       new Function<Price, PriceJson>() {
+                                                           @Override
+                                                           public PriceJson apply(final Price price) {
+                                                               try {
+                                                                   return new PriceJson(price);
+                                                               } catch (CurrencyValueNull e) {
+                                                                   return new PriceJson(price.getCurrency().toString(), BigDecimal.ZERO);
+                                                               }
+                                                           }
+                                                       });
+            }
+        }
+        this.priceListName = listing.getPriceList() == null ? null : listing.getPriceList().getName();
     }
 
     public String getProductName() {
@@ -65,8 +102,20 @@ public class PlanDetailJson {
         return priceListName;
     }
 
-    public InternationalPrice getFinalPhasePrice() {
+    public List<PriceJson> getFinalPhasePrice() {
         return finalPhasePrice;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("PlanDetailJson{");
+        sb.append("productName='").append(productName).append('\'');
+        sb.append(", planName='").append(planName).append('\'');
+        sb.append(", billingPeriod=").append(billingPeriod);
+        sb.append(", priceListName='").append(priceListName).append('\'');
+        sb.append(", finalPhasePrice=").append(finalPhasePrice);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override

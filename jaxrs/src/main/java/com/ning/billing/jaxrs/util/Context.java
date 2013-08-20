@@ -67,6 +67,7 @@ public class Context {
     }
 
     private Tenant getTenantFromRequest(final ServletRequest request) {
+        // See com.ning.billing.server.security.TenantFilter
         final Object tenantObject = request.getAttribute("killbill_tenant");
         if (tenantObject == null) {
             return null;

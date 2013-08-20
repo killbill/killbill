@@ -34,12 +34,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.commons.locker.GlobalLock;
+import com.ning.billing.commons.locker.GlobalLocker;
+import com.ning.billing.commons.locker.LockFailedException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -57,20 +61,20 @@ import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.clock.Clock;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
 import com.ning.billing.util.events.InvoiceInternalEvent;
-import com.ning.billing.util.globallocker.GlobalLock;
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
-import com.ning.billing.util.globallocker.LockFailedException;
+import com.ning.billing.util.globallocker.LockerType;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -89,6 +93,7 @@ public class InvoiceDispatcher {
     private final AccountInternalApi accountApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final InvoiceDao invoiceDao;
+    private final NonEntityDao nonEntityDao;
     private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
     private final PersistentBus eventBus;
@@ -99,6 +104,7 @@ public class InvoiceDispatcher {
                              final BillingInternalApi billingApi,
                              final SubscriptionBaseInternalApi SubscriptionApi,
                              final InvoiceDao invoiceDao,
+                             final NonEntityDao nonEntityDao,
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
                              final PersistentBus eventBus,
@@ -108,6 +114,7 @@ public class InvoiceDispatcher {
         this.subscriptionApi = SubscriptionApi;
         this.accountApi = accountApi;
         this.invoiceDao = invoiceDao;
+        this.nonEntityDao = nonEntityDao;
         this.invoiceNotifier = invoiceNotifier;
         this.locker = locker;
         this.eventBus = eventBus;
@@ -139,7 +146,7 @@ public class InvoiceDispatcher {
                                   final boolean dryRun, final InternalCallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
-            lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, accountId.toString(), NB_LOCK_TRY);
+            lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), accountId.toString(), NB_LOCK_TRY);
 
             return processAccountWithLock(accountId, targetDate, dryRun, context);
         } catch (LockFailedException e) {
@@ -192,7 +199,7 @@ public class InvoiceDispatcher {
                 }
             } else {
                 log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(),
-                        accountId, targetDate, targetDateTime});
+                                                                                                                                   accountId, targetDate, targetDateTime});
                 if (!dryRun) {
 
                     // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
@@ -254,7 +261,7 @@ public class InvoiceDispatcher {
             if (account.isNotifiedForInvoices() && invoice != null && !dryRun) {
                 // Need to re-hydrate the invoice object to get the invoice number (record id)
                 // API_FIX InvoiceNotifier public API?
-                invoiceNotifier.notify(account, new DefaultInvoice(invoiceDao.getById(invoice.getId(), context)), context.toTenantContext());
+                invoiceNotifier.notify(account, new DefaultInvoice(invoiceDao.getById(invoice.getId(), context)), buildTenantContext(context));
             }
 
             return invoice;
@@ -264,6 +271,9 @@ public class InvoiceDispatcher {
         }
     }
 
+    private TenantContext buildTenantContext(final InternalTenantContext context) {
+        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
+    }
 
     @VisibleForTesting
     Map<UUID, DateTime> createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final DateAndTimeZoneContext dateAndTimeZoneContext) {
@@ -273,6 +283,7 @@ public class InvoiceDispatcher {
         // at which we should be called back for next invoice.
         //
         for (final InvoiceItemModelDao item : invoiceItems) {
+
             if (item.getType() == InvoiceItemType.RECURRING) {
                 if ((item.getEndDate() != null) &&
                     (item.getAmount() == null ||

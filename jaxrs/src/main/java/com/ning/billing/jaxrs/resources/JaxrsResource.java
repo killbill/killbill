@@ -26,6 +26,13 @@ public interface JaxrsResource {
 
     public static final String TIMELINE = "timeline";
     public static final String REGISTER_NOTIFICATION_CALLBACK = "registerNotificationCallback";
+    public static final String SEARCH = "search";
+
+    /*
+     * Multi-Tenancy headers
+     */
+    public static String HDR_API_KEY = "X-Killbill-ApiKey";
+    public static String HDR_API_SECRET = "X-Killbill-ApiSecret";
 
     /*
      * Metadata Additional headers
@@ -39,6 +46,8 @@ public interface JaxrsResource {
      */
     public static String STRING_PATTERN = "[\\w-]+";
     public static String UUID_PATTERN = "\\w+-\\w+-\\w+-\\w+-\\w+";
+    public static String NUMBER_PATTERN = "[0-9]+";
+    public static String ANYTHING_PATTERN = ".*";
 
     /*
      * Query parameters
@@ -65,6 +74,7 @@ public interface JaxrsResource {
     public static final String QUERY_TAGS = "tagList";
     public static final String QUERY_CUSTOM_FIELDS = "customFieldList";
 
+    public static final String QUERY_PAYMENT_METHOD_PLUGIN_NAME = "pluginName";
     public static final String QUERY_PAYMENT_METHOD_PLUGIN_INFO = "withPluginInfo";
     public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "isDefault";
 
@@ -85,6 +95,9 @@ public interface JaxrsResource {
 
     public static final String BUNDLES = "bundles";
     public static final String BUNDLES_PATH = PREFIX + "/" + BUNDLES;
+
+    public static final String SECURITY = "security";
+    public static final String SECURITY_PATH = PREFIX + "/" + SECURITY;
 
     public static final String SUBSCRIPTIONS = "subscriptions";
     public static final String SUBSCRIPTIONS_PATH = PREFIX + "/" + SUBSCRIPTIONS;

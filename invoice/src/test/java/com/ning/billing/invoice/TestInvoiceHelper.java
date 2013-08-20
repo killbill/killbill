@@ -38,6 +38,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.commons.locker.GlobalLocker;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.invoice.api.Invoice;
@@ -59,8 +60,8 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
@@ -132,9 +133,10 @@ public class TestInvoiceHelper {
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final  BusService busService;
     private final  InvoiceDao invoiceDao;
-    private final  GlobalLocker locker;
+    private final GlobalLocker locker;
     private final  Clock clock;
     private final InternalCallContext internalCallContext;
+    private final NonEntityDao nonEntityDao;
 
     // Low level SqlDao used by the tests to directly insert rows
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
@@ -145,7 +147,7 @@ public class TestInvoiceHelper {
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
                              final BillingInternalApi billingApi, final AccountInternalApi accountApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
-                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final InternalCallContext internalCallContext) {
+                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final InternalCallContext internalCallContext) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountApi = accountApi;
@@ -154,6 +156,7 @@ public class TestInvoiceHelper {
         this.invoiceDao = invoiceDao;
         this.locker = locker;
         this.clock = clock;
+        this.nonEntityDao = nonEntityDao;
         this.internalCallContext = internalCallContext;
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
@@ -177,7 +180,7 @@ public class TestInvoiceHelper {
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
-                                                                   invoiceDao, invoiceNotifier, locker, busService.getBus(),
+                                                                   invoiceDao, nonEntityDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 
         Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, true, internalCallContext);

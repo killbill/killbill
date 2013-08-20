@@ -17,17 +17,25 @@
 package com.ning.billing.payment.api;
 
 import java.util.List;
+import java.util.UUID;
 
 public class TestPaymentMethodPlugin extends TestPaymentMethodPluginBase implements PaymentMethodPlugin {
 
+    private final UUID kbPaymentMethodId;
     private final String externalPaymentMethodId;
     private final boolean isDefaultPaymentMethod;
     private final List<PaymentMethodKVInfo> properties;
 
-    public TestPaymentMethodPlugin(final PaymentMethodPlugin src, final String externalPaymentId) {
+    public TestPaymentMethodPlugin(final UUID kbPaymentMethodId, final PaymentMethodPlugin src, final String externalPaymentId) {
+        this.kbPaymentMethodId = kbPaymentMethodId;
         this.externalPaymentMethodId = externalPaymentId;
         this.isDefaultPaymentMethod = src.isDefaultPaymentMethod();
         this.properties = src.getProperties();
+    }
+
+    @Override
+    public UUID getKbPaymentMethodId() {
+        return kbPaymentMethodId;
     }
 
     @Override
@@ -44,5 +52,4 @@ public class TestPaymentMethodPlugin extends TestPaymentMethodPluginBase impleme
     public List<PaymentMethodKVInfo> getProperties() {
         return properties;
     }
-
 }

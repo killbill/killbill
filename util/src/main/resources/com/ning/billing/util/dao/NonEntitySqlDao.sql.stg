@@ -8,6 +8,14 @@ where id = :id
 ;
 >>
 
+getIdFromObject(tableName) ::= <<
+select
+  id
+from <tableName>
+where record_id = :recordId
+;
+>>
+
 getAccountRecordIdFromAccountHistory() ::= <<
 select
   target_record_id

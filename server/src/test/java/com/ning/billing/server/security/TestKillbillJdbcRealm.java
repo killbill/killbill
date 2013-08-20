@@ -28,7 +28,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.jaxrs.TestJaxrsBase;
 import com.ning.billing.tenant.api.DefaultTenant;
 import com.ning.billing.tenant.dao.DefaultTenantDao;
@@ -50,16 +49,16 @@ public class TestKillbillJdbcRealm extends TestJaxrsBase {
         super.beforeMethod();
 
         // Create the tenant
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getDBI(), clock, cacheControllerDispatcher, new DefaultNonEntityDao(getDBI()));
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(dbi, clock, cacheControllerDispatcher, new DefaultNonEntityDao(dbi));
         tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                    UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(new TenantModelDao(tenant), internalCallContext);
 
         // Setup the security manager
         final BoneCPConfig dbConfig = new BoneCPConfig();
-        dbConfig.setJdbcUrl(getDBTestingHelper().getJdbcConnectionString());
-        dbConfig.setUsername(MysqlTestingHelper.USERNAME);
-        dbConfig.setPassword(MysqlTestingHelper.PASSWORD);
+        dbConfig.setJdbcUrl(helper.getJdbcConnectionString());
+        dbConfig.setUsername(helper.getUsername());
+        dbConfig.setPassword(helper.getPassword());
 
         final KillbillJdbcRealm jdbcRealm;
         jdbcRealm = new KillbillJdbcRealm();

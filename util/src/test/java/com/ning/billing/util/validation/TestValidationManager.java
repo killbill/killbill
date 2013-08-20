@@ -41,9 +41,9 @@ public class TestValidationManager extends UtilTestSuiteWithEmbeddedDB {
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
         super.beforeClass();
-        final DatabaseSchemaDao dao = new DatabaseSchemaDao(getDBI());
+        final DatabaseSchemaDao dao = new DatabaseSchemaDao(dbi);
         vm = new ValidationManager(dao);
-        vm.loadSchemaInformation(helper.getDbName());
+        vm.loadSchemaInformation(helper.getDatabaseName());
     }
 
 

@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.dao;
 
+import java.util.UUID;
+
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
@@ -28,6 +30,9 @@ public interface NonEntitySqlDao extends Transactional<NonEntitySqlDao>, CloseMe
 
     @SqlQuery
     public Long getRecordIdFromObject(@Bind("id") String id, @Define("tableName") final String tableName);
+
+    @SqlQuery
+    public UUID getIdFromObject(@Bind("recordId") Long recordId, @Define("tableName") final String tableName);
 
     @SqlQuery
     public Long getAccountRecordIdFromAccount(@Bind("id") String id);

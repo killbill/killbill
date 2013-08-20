@@ -16,12 +16,14 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.util.audit.ChangeType;
@@ -37,6 +39,10 @@ public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
     @SqlQuery
     public AccountModelDao getAccountByKey(@Bind("externalKey") final String key,
                                            @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public List<AccountModelDao> searchAccounts(@Define("searchKey") final String searchKey,
+                                                @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public UUID getIdFromKey(@Bind("externalKey") final String key,

@@ -168,8 +168,13 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     }
 
     @Override
-    public List<PaymentMethodPlugin> searchPaymentMethods(final String s, final TenantContext tenantContext) throws PaymentPluginApiException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public List<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
+            @Override
+            public List<PaymentMethodPlugin> doCall(final Ruby runtime) throws PaymentPluginApiException {
+                return ((PaymentPluginApi) pluginInstance).searchPaymentMethods(searchKey, tenantContext);
+            }
+        });
     }
 
     @Override
@@ -183,6 +188,4 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
             }
         });
     }
-
-
 }

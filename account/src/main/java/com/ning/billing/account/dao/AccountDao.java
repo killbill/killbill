@@ -29,6 +29,8 @@ public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountA
 
     public AccountModelDao getAccountByKey(String key, InternalTenantContext context);
 
+    public List<AccountModelDao> searchAccounts(String searchKey, InternalTenantContext context);
+
     /**
      * @throws AccountApiException when externalKey is null
      */

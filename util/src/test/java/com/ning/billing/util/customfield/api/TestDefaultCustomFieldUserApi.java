@@ -41,7 +41,7 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
         final UUID accountId = UUID.randomUUID();
         final Long accountRecordId = 19384012L;
 
-        getDBI().withHandle(new HandleCallback<Void>() {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
@@ -60,7 +60,7 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(customFields.size(), 1);
         Assert.assertEquals(customFields.get(0), customField);
         // Verify the account_record_id was populated
-        getDBTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 final List<Map<String, Object>> values = handle.select("select account_record_id from custom_fields where object_id = ?", accountId.toString());

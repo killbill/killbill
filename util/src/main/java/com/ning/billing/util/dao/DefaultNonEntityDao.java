@@ -103,6 +103,11 @@ public class DefaultNonEntityDao implements NonEntityDao {
         return nonEntitySqlDao.getHistoryTargetRecordId(recordId, tableName.getTableName());
     }
 
+    @Override
+    public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType) {
+        final TableName tableName = TableName.fromObjectType(objectType);
+        return nonEntitySqlDao.getIdFromObject(recordId, tableName.getTableName());
+    }
 
     private interface OperationRetrieval<T> {
         public T doRetrieve(final UUID objectId, final ObjectType objectType);

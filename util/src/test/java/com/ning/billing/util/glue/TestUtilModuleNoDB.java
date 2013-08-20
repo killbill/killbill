@@ -50,5 +50,9 @@ public class TestUtilModuleNoDB extends TestUtilModule {
         install(new MockNotificationQueueModule(configSource));
 
         installAuditMock();
+
+        install(new KillBillShiroModule());
+        install(new KillBillShiroAopModule());
+        install(new SecurityModule());
     }
 }

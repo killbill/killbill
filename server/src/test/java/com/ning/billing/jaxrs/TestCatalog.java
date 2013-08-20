@@ -13,29 +13,55 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs;
 
-import javax.ws.rs.core.Response.Status;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.CatalogJsonSimple;
-import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.http.client.Response;
+import com.ning.billing.jaxrs.json.CatalogJsonSimple.PlanJson;
+import com.ning.billing.jaxrs.json.CatalogJsonSimple.ProductJson;
+import com.ning.billing.jaxrs.json.PlanDetailJson;
 
 public class TestCatalog extends TestJaxrsBase {
 
-    private static final Logger log = LoggerFactory.getLogger(TestAccount.class);
-
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testCatalogSimple() throws Exception {
-        Response response = doGet(JaxrsResource.CATALOG_PATH + "/simpleCatalog", DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        String body = response.getResponseBody();
-        CatalogJsonSimple objFromJson = mapper.readValue(body, CatalogJsonSimple.class);
-        log.info("Yeaahh...");
+        final Set<String> allBasePlans = new HashSet<String>();
+
+        final CatalogJsonSimple catalogJsonSimple = getSimpleCatalog();
+        for (final ProductJson productJson : catalogJsonSimple.getProducts()) {
+            if (!"BASE".equals(productJson.getType())) {
+                Assert.assertEquals(productJson.getIncluded().size(), 0);
+                Assert.assertEquals(productJson.getAvailable().size(), 0);
+                continue;
+            }
+
+            // Save all plans for later (see below)
+            for (final PlanJson planJson : productJson.getPlans()) {
+                allBasePlans.add(planJson.getName());
+            }
+
+            // Retrieve available products (addons) for that base product
+            final List<PlanDetailJson> availableAddons = getAvailableAddons(productJson.getName());
+            final Set<String> availableAddonsNames = new HashSet<String>();
+            for (final PlanDetailJson planDetailJson : availableAddons) {
+                availableAddonsNames.add(planDetailJson.getProductName());
+            }
+            Assert.assertEquals(availableAddonsNames, new HashSet<String>(productJson.getAvailable()));
+        }
+
+        // Verify base plans endpoint
+        final List<PlanDetailJson> basePlans = getBasePlans();
+        final Set<String> foundBasePlans = new HashSet<String>();
+        for (final PlanDetailJson planDetailJson : basePlans) {
+            foundBasePlans.add(planDetailJson.getPlanName());
+        }
+        Assert.assertEquals(foundBasePlans, allBasePlans);
     }
 }

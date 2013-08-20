@@ -53,22 +53,27 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
             public BigDecimal getAmount() {
                 return amount;
             }
+
             @Override
             public DateTime getCreatedDate() {
                 return new DateTime();
             }
+
             @Override
             public DateTime getEffectiveDate() {
                 return new DateTime();
             }
+
             @Override
             public PaymentPluginStatus getStatus() {
                 return PaymentPluginStatus.PROCESSED;
             }
+
             @Override
             public String getGatewayError() {
                 return null;
             }
+
             @Override
             public String getGatewayErrorCode() {
                 return null;
@@ -120,17 +125,15 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
 
     @Override
     public List<PaymentMethodInfoPlugin> getPaymentMethods(final UUID kbAccountId, final boolean refreshFromGateway, final CallContext context) throws PaymentPluginApiException {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
-    public List<PaymentMethodPlugin> searchPaymentMethods(final String s, final TenantContext tenantContext) throws PaymentPluginApiException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public List<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return Collections.emptyList();
     }
 
     @Override
     public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {
     }
-
-
 }

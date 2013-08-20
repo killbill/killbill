@@ -16,19 +16,10 @@
 
 package com.ning.billing;
 
-
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.H2TestingHelper;
-import com.ning.billing.dbi.MysqlTestingHelper;
 
 public class GuicyKillbillTestNoDBModule extends GuicyKillbillTestModule {
-
-    private final static Logger log = LoggerFactory.getLogger(GuicyKillbillTestNoDBModule.class);
 
     private void installDBI() {
         final IDBI idbi = Mockito.mock(IDBI.class);

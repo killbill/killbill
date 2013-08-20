@@ -44,6 +44,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountEmailJson;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
+import com.ning.billing.jaxrs.json.CatalogJsonSimple;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.json.EntitlementJsonNoEvents;
@@ -56,6 +57,7 @@ import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodProperties;
+import com.ning.billing.jaxrs.json.PlanDetailJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.TenantJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
@@ -64,6 +66,8 @@ import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.ListenableFuture;
+import com.ning.http.client.Realm;
+import com.ning.http.client.Realm.AuthScheme;
 import com.ning.http.client.Response;
 import com.ning.jetty.core.CoreConfig;
 
@@ -72,9 +76,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.TypeLiteral;
 
 import static com.ning.billing.jaxrs.resources.JaxrsResource.ACCOUNTS;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.BUNDLES;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.HDR_API_KEY;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.HDR_API_SECRET;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.SUBSCRIPTIONS;
 import static org.testng.Assert.assertEquals;
@@ -84,7 +91,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected static final String PLUGIN_NAME = "noop";
 
-    protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 50000;
+    protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 20;
 
     protected static final Map<String, String> DEFAULT_EMPTY_QUERY = new HashMap<String, String>();
 
@@ -98,6 +105,16 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected CoreConfig config;
     protected AsyncHttpClient httpClient;
     protected ObjectMapper mapper;
+
+    // Multi-Tenancy information, if enabled
+    protected String DEFAULT_API_KEY = UUID.randomUUID().toString();
+    protected String DEFAULT_API_SECRET = UUID.randomUUID().toString();
+    protected String apiKey = DEFAULT_API_KEY;
+    protected String apiSecret = DEFAULT_API_SECRET;
+
+    // RBAC information, if enabled
+    protected String username = null;
+    protected String password = null;
 
     // Context information to be passed around
     protected static final String createdBy = "Toto";
@@ -154,6 +171,44 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     //
+    // SECURITY UTILITIES
+    //
+
+    protected void loginAsAdmin() {
+        loginAs("tester", "tester");
+    }
+
+    protected void loginAs(final String username, final String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    protected void logout() {
+        this.username = null;
+        this.password = null;
+    }
+
+    protected List<String> getPermissions(@Nullable final String username, @Nullable final String password) throws Exception {
+        final String oldUsername = this.username;
+        final String oldPassword = this.password;
+
+        this.username = username;
+        this.password = password;
+
+        final Response response = doGet(JaxrsResource.SECURITY_PATH + "/permissions", DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        this.username = oldUsername;
+        this.password = oldPassword;
+
+        final String baseJson = response.getResponseBody();
+        final List<String> objFromJson = mapper.readValue(baseJson, new TypeReference<List<String>>() {});
+        Assert.assertNotNull(objFromJson);
+
+        return objFromJson;
+    }
+
+    //
     // ACCOUNT UTILITIES
     //
 
@@ -175,6 +230,18 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
         final String baseJson = response.getResponseBody();
         final AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
+        Assert.assertNotNull(objFromJson);
+
+        return objFromJson;
+    }
+
+    protected List<AccountJson> searchAccountsByKey(final String key) throws Exception {
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + JaxrsResource.SEARCH + "/" + key;
+        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        final String baseJson = response.getResponseBody();
+        final List<AccountJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<AccountJson>>() {});
         Assert.assertNotNull(objFromJson);
 
         return objFromJson;
@@ -372,6 +439,10 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return doGetInvoice(invoiceId, Boolean.FALSE, InvoiceJsonSimple.class);
     }
 
+    protected InvoiceJsonSimple getInvoice(final Integer invoiceNumber) throws IOException {
+        return getInvoice(invoiceNumber.toString());
+    }
+
     protected InvoiceJsonWithItems getInvoiceWithItems(final String invoiceId) throws IOException {
         return doGetInvoice(invoiceId, Boolean.TRUE, InvoiceJsonWithItems.class);
     }
@@ -543,14 +614,33 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected PaymentMethodJson getPaymentMethodWithPluginInfo(final String paymentMethodId) throws IOException {
         final String paymentMethodURI = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodId;
 
-        final Map<String, String> queryPaymentMethods = new HashMap<String, String>();
-        final Response paymentMethodResponse = doGet(paymentMethodURI, queryPaymentMethods, DEFAULT_HTTP_TIMEOUT_SEC);
+        final Response paymentMethodResponse = doGet(paymentMethodURI,
+                                                     ImmutableMap.<String, String>of(JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO, "true"),
+                                                     DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(paymentMethodResponse.getStatusCode(), Status.OK.getStatusCode());
 
         final PaymentMethodJson paymentMethodJson = mapper.readValue(paymentMethodResponse.getResponseBody(), PaymentMethodJson.class);
         assertNotNull(paymentMethodJson);
 
         return paymentMethodJson;
+    }
+
+    protected List<PaymentMethodJson> searchPaymentMethodsByKey(final String key) throws Exception {
+        return searchPaymentMethodsByKeyAndPlugin(key, null);
+    }
+
+    protected List<PaymentMethodJson> searchPaymentMethodsByKeyAndPlugin(final String key, @Nullable final String pluginName) throws Exception {
+        final String uri = JaxrsResource.PAYMENT_METHODS_PATH + "/" + JaxrsResource.SEARCH + "/" + key;
+        final Response response = doGet(uri,
+                                        pluginName == null ? DEFAULT_EMPTY_QUERY : ImmutableMap.<String, String>of(JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_NAME, pluginName),
+                                        DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        final String baseJson = response.getResponseBody();
+        final List<PaymentMethodJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentMethodJson>>() {});
+        Assert.assertNotNull(objFromJson);
+
+        return objFromJson;
     }
 
     protected void deletePaymentMethod(final String paymentMethodId, final Boolean deleteDefault) throws IOException {
@@ -838,6 +928,33 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     //
+    // CATALOG
+    //
+
+    public CatalogJsonSimple getSimpleCatalog() throws Exception {
+        final Response response = doGet(JaxrsResource.CATALOG_PATH + "/simpleCatalog", DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String body = response.getResponseBody();
+        return mapper.readValue(body, CatalogJsonSimple.class);
+    }
+
+    public List<PlanDetailJson> getAvailableAddons(final String baseProductName) throws Exception {
+        final Response response = doGet(JaxrsResource.CATALOG_PATH + "/availableAddons",
+                                        ImmutableMap.<String, String>of("baseProductName", baseProductName),
+                                        DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String body = response.getResponseBody();
+        return mapper.readValue(body, new TypeReference<List<PlanDetailJson>>() {});
+    }
+
+    public List<PlanDetailJson> getBasePlans() throws Exception {
+        final Response response = doGet(JaxrsResource.CATALOG_PATH + "/availableBasePlans", DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String body = response.getResponseBody();
+        return mapper.readValue(body, new TypeReference<List<PlanDetailJson>>() {});
+    }
+
+    //
     // HTTP CLIENT HELPERS
     //
     protected Response doPost(final String uri, @Nullable final String body, final Map<String, String> queryParams, final int timeoutSec) {
@@ -897,12 +1014,22 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return executeAndWait(builder, timeoutSec, false);
     }
 
-    private Response executeAndWait(final BoundRequestBuilder builder, final int timeoutSec, final boolean addContextHeader) {
+    protected Response executeAndWait(final BoundRequestBuilder builder, final int timeoutSec, final boolean addContextHeader) {
 
         if (addContextHeader) {
             builder.addHeader(JaxrsResource.HDR_CREATED_BY, createdBy);
             builder.addHeader(JaxrsResource.HDR_REASON, reason);
             builder.addHeader(JaxrsResource.HDR_COMMENT, comment);
+        }
+
+        if (username != null && password != null) {
+            final Realm realm = new Realm.RealmBuilder()
+                    .setPrincipal(username)
+                    .setPassword(password)
+                    .setUsePreemptiveAuth(true)
+                    .setScheme(AuthScheme.BASIC)
+                    .build();
+            builder.setRealm(realm);
         }
 
         Response response = null;
@@ -926,7 +1053,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), uri);
     }
 
-    private BoundRequestBuilder getBuilderWithHeaderAndQuery(final String verb, final String url, final Map<String, String> queryParams) {
+    protected BoundRequestBuilder getBuilderWithHeaderAndQuery(final String verb, final String url, final Map<String, String> queryParams) {
         BoundRequestBuilder builder = null;
         if (verb.equals("GET")) {
             builder = httpClient.prepareGet(url);
@@ -945,6 +1072,8 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         }
 
         builder.addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE);
+        builder.addHeader(HDR_API_KEY, apiKey);
+        builder.addHeader(HDR_API_SECRET, apiSecret);
         for (final Entry<String, String> q : queryParams.entrySet()) {
             builder.addQueryParameter(q.getKey(), q.getValue());
         }

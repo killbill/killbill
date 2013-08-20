@@ -16,6 +16,7 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -99,6 +100,20 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
         }
 
         return null;
+    }
+
+    @Override
+    public List<AccountModelDao> searchAccounts(final String searchKey, final InternalTenantContext context) {
+        final List<AccountModelDao> results = new LinkedList<AccountModelDao>();
+        for (final AccountModelDao account : get(context)) {
+            if ((account.getName() != null && account.getName().contains(searchKey)) ||
+                (account.getEmail() != null && account.getEmail().contains(searchKey)) ||
+                (account.getExternalKey() != null && account.getExternalKey().contains(searchKey)) ||
+                (account.getCompanyName() != null && account.getCompanyName().contains(searchKey))) {
+                results.add(account);
+            }
+        }
+        return results;
     }
 
     @Override

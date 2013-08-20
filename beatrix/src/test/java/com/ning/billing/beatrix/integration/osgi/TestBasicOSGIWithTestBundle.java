@@ -37,10 +37,11 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.ning.billing.DBTestingHelper;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.dbi.DBTestingHelper;
+import com.ning.billing.commons.embeddeddb.EmbeddedDB;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.osgi.glue.OSGIDataSourceConfig;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
@@ -67,10 +68,10 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
-
-        final String jdbcConnection = getDBTestingHelper().getJdbcConnectionString();
-        final String userName = DBTestingHelper.USERNAME;
-        final String userPwd = DBTestingHelper.PASSWORD;
+        // Can't use the injected helper as Guice hasn't injected anything yet
+        final String jdbcConnection = DBTestingHelper.get().getJdbcConnectionString();
+        final String userName = DBTestingHelper.get().getUsername();
+        final String userPwd = DBTestingHelper.get().getPassword();
 
         System.setProperty(OSGIDataSourceConfig.DATA_SOURCE_PROP_PREFIX + "jdbc.url", jdbcConnection);
         System.setProperty(OSGIDataSourceConfig.DATA_SOURCE_PROP_PREFIX + "jdbc.user", userName);
@@ -90,7 +91,7 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
     public void testBundleTest() throws Exception {
 
         // At this point test bundle should have been started already
-        final TestActivatorWithAssertion assertTor = new TestActivatorWithAssertion(getDBI());
+        final TestActivatorWithAssertion assertTor = new TestActivatorWithAssertion(dbi);
         assertTor.assertPluginInitialized();
 
         // Create an account and expect test bundle listen to KB events and write the external name in its table

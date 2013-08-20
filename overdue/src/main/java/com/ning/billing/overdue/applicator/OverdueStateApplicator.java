@@ -41,7 +41,7 @@ import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueApiException;
-import com.ning.billing.overdue.OverdueCancellationPolicicy;
+import com.ning.billing.overdue.OverdueCancellationPolicy;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
@@ -202,7 +202,7 @@ public class OverdueStateApplicator {
     }
 
     private void cancelSubscriptionsIfRequired(final Account account, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
-        if (nextOverdueState.getSubscriptionCancellationPolicy() == OverdueCancellationPolicicy.NONE) {
+        if (nextOverdueState.getSubscriptionCancellationPolicy() == OverdueCancellationPolicy.NONE) {
             return;
         }
         try {
@@ -229,7 +229,8 @@ public class OverdueStateApplicator {
 
     @SuppressWarnings("unchecked")
     private void computeEntitlementsToCancel(final Account blockable, final List<Entitlement> result, final InternalTenantContext context) throws EntitlementApiException {
-        result.addAll(entitlementApi.getAllEntitlementsForAccountId(blockable.getId(), context.toTenantContext()));
+        // STEPH_ENT fix internal API.
+        result.addAll(entitlementApi.getAllEntitlementsForAccountId(blockable.getId(), context.toTenantContext(null)));
     }
 
     private void sendEmailIfRequired(final BillingState billingState, final Account account,

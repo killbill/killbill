@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.globallocker;
 
+import java.io.IOException;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.Handle;
@@ -24,21 +25,23 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.commons.locker.GlobalLock;
+import com.ning.billing.commons.locker.GlobalLocker;
+import com.ning.billing.commons.locker.LockFailedException;
+import com.ning.billing.commons.locker.mysql.MySqlGlobalLocker;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 
 public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
 
-
     // Used as a manual test to validate the simple DAO by stepping through that locking is done and release correctly
     @Test(groups = "mysql")
-    public void testSimpleLocking() {
+    public void testSimpleLocking() throws IOException, LockFailedException {
         final String lockName = UUID.randomUUID().toString();
 
-        final GlobalLocker locker = new MySqlGlobalLocker(getDBI());
-        final GlobalLock lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, lockName, 3);
+        final GlobalLocker locker = new MySqlGlobalLocker(dataSource);
+        final GlobalLock lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), lockName, 3);
 
-        getDBI().inTransaction(new TransactionCallback<Void>() {
+        dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle conn, final TransactionStatus status)
                     throws Exception {
@@ -46,11 +49,11 @@ public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
                 return null;
             }
         });
-        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, lockName), Boolean.FALSE);
+        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), lockName), false);
 
         boolean gotException = false;
         try {
-            locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, lockName, 1);
+            locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), lockName, 1);
         } catch (LockFailedException e) {
             gotException = true;
         }
@@ -58,6 +61,6 @@ public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
 
         lock.release();
 
-        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, lockName), Boolean.TRUE);
+        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), lockName), true);
     }
 }

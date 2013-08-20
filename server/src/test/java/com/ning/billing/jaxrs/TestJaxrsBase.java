@@ -19,14 +19,15 @@ package com.ning.billing.jaxrs;
 import java.io.IOException;
 import java.net.URL;
 import java.util.EventListener;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import javax.inject.Inject;
 import javax.servlet.Servlet;
+import javax.servlet.ServletContext;
 
-import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
+import org.apache.shiro.web.env.EnvironmentLoaderListener;
+import org.apache.shiro.web.servlet.ShiroFilter;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.skife.config.ConfigSource;
@@ -37,6 +38,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
+import com.ning.billing.DBTestingHelper;
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.KillbillConfigSource;
 import com.ning.billing.account.glue.DefaultAccountModule;
@@ -44,9 +46,8 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
+import com.ning.billing.commons.embeddeddb.EmbeddedDB;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
@@ -57,7 +58,9 @@ import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
+import com.ning.billing.server.modules.KillBillShiroWebModule;
 import com.ning.billing.server.modules.KillbillServerModule;
+import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.tenant.glue.TenantModule;
 import com.ning.billing.usage.glue.UsageModule;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
@@ -71,9 +74,12 @@ import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.ExportModule;
+import com.ning.billing.util.glue.KillBillShiroAopModule;
+import com.ning.billing.util.glue.KillBillShiroModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.RecordIdModule;
+import com.ning.billing.util.glue.SecurityModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -84,6 +90,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 
 import static org.testng.Assert.assertNotNull;
@@ -123,17 +130,17 @@ public class TestJaxrsBase extends KillbillClient {
 
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {
 
-        private final TestKillbillServerModule module;
+        private final EmbeddedDB helper;
 
 
-        public TestKillbillGuiceListener(final DBTestingHelper helper) {
+        public TestKillbillGuiceListener(final EmbeddedDB helper) {
             super();
-            this.module = new TestKillbillServerModule(helper);
+            this.helper = helper;
         }
 
         @Override
-        protected Module getModule() {
-            return module;
+        protected Module getModule(final ServletContext servletContext) {
+            return new TestKillbillServerModule(helper, servletContext);
         }
 
     }
@@ -152,10 +159,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     public static class TestKillbillServerModule extends KillbillServerModule {
 
-        private final DBTestingHelper helper;
+        private final EmbeddedDB helper;
 
-        public TestKillbillServerModule(final DBTestingHelper helper) {
-            super();
+        public TestKillbillServerModule(final EmbeddedDB helper, final ServletContext servletContext) {
+            super(servletContext);
             this.helper = helper;
         }
 
@@ -198,7 +205,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new EmailModule(configSource));
             install(new CacheModule(configSource));
             install(new NonEntityDaoModule());
-            install(new TestGlobalLockerModule(helper));
+            install(new TestGlobalLockerModule(DBTestingHelper.get()));
             install(new CustomFieldModule());
             install(new TagStoreModule());
             install(new AuditModule());
@@ -221,6 +228,9 @@ public class TestJaxrsBase extends KillbillClient {
             install(new UsageModule(configSource));
             install(new RecordIdModule());
             installClock();
+            install(new KillBillShiroWebModule(servletContext));
+            install(new KillBillShiroAopModule());
+            install(new SecurityModule());
         }
     }
 
@@ -233,6 +243,11 @@ public class TestJaxrsBase extends KillbillClient {
         busHandler.reset();
         clock.resetDeltaFromReality();
         clock.setDay(new LocalDate(2012, 8, 25));
+
+        loginAsAdmin();
+
+        // Recreate the tenant (tables have been cleaned-up)
+        createTenant(DEFAULT_API_KEY, DEFAULT_API_SECRET);
     }
 
     @AfterMethod(groups = "slow")
@@ -245,17 +260,15 @@ public class TestJaxrsBase extends KillbillClient {
     public void beforeClass() throws Exception {
         loadConfig();
 
-
         listener.getInstantiatedInjector().injectMembers(this);
 
         httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(DEFAULT_HTTP_TIMEOUT_SEC * 1000).build());
+
         mapper = new ObjectMapper();
         mapper.registerModule(new JodaModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        //mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
-
-        busHandler = new TestApiListener(null, getDBTestingHelper().getDBI());
+        busHandler = new TestApiListener(null, dbi);
     }
 
     protected void loadConfig() {
@@ -264,9 +277,9 @@ public class TestJaxrsBase extends KillbillClient {
         }
 
         // For shiro (outside of Guice control)
-        System.setProperty("com.ning.jetty.jdbi.url", getDBTestingHelper().getJdbcConnectionString());
-        System.setProperty("com.ning.jetty.jdbi.user", MysqlTestingHelper.USERNAME);
-        System.setProperty("com.ning.jetty.jdbi.password", MysqlTestingHelper.PASSWORD);
+        System.setProperty("com.ning.jetty.jdbi.url", DBTestingHelper.get().getJdbcConnectionString());
+        System.setProperty("com.ning.jetty.jdbi.user", DBTestingHelper.get().getUsername());
+        System.setProperty("com.ning.jetty.jdbi.password", DBTestingHelper.get().getPassword());
     }
 
     @BeforeSuite(groups = "slow")
@@ -275,27 +288,26 @@ public class TestJaxrsBase extends KillbillClient {
         loadSystemPropertiesFromClasspath("/killbill.properties");
         loadConfig();
 
-        listener = new TestKillbillGuiceListener(getDBTestingHelper());
+        listener = new TestKillbillGuiceListener(helper);
+
         server = new HttpServer();
-
         server.configure(config, getListeners(), getFilters());
-
         server.start();
-
-        listener.getInstantiatedInjector().injectMembers(this);
     }
 
     protected Iterable<EventListener> getListeners() {
         return new Iterable<EventListener>() {
             @Override
             public Iterator<EventListener> iterator() {
+                // Note! This needs to be in sync with web.xml
                 return ImmutableList.<EventListener>of(listener).iterator();
             }
         };
     }
 
     protected Map<FilterHolder, String> getFilters() {
-        return new HashMap<FilterHolder, String>();
+        // Note! This needs to be in sync with web.xml
+        return ImmutableMap.<FilterHolder, String>of(new FilterHolder(new ShiroFilter()), "/*");
     }
 
     @AfterSuite(groups = "slow")

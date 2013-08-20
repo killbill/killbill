@@ -24,6 +24,11 @@ import com.google.common.collect.ImmutableList;
 public class TestPaymentMethodPluginBase implements PaymentMethodPlugin {
 
     @Override
+    public UUID getKbPaymentMethodId() {
+        return UUID.randomUUID();
+    }
+
+    @Override
     public String getExternalPaymentMethodId() {
         return UUID.randomUUID().toString();
     }

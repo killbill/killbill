@@ -16,8 +16,6 @@
 
 package com.ning.billing.dbi;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.sql.DataSource;
 
 import org.skife.jdbi.v2.DBI;
@@ -39,24 +37,15 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 public class DBIProvider implements Provider<IDBI> {
 
-    private final String jdbcUri;
-    private final String userName;
-    private final String userPwd;
+    private final DataSource ds;
 
     @Inject
-    public DBIProvider(final DbiConfig config) {
-        this(config.getJdbcUrl(), config.getUsername(), config.getPassword());
-    }
-
-    public DBIProvider(final String jdbcUri, final String userName, final String userPwd) {
-        this.jdbcUri = jdbcUri;
-        this.userName = userName;
-        this.userPwd = userPwd;
+    public DBIProvider(final DataSource ds) {
+        this.ds = ds;
     }
 
     @Override
     public IDBI get() {
-        final DataSource ds = getC3P0DataSource();
         final DBI dbi = new DBI(ds);
         dbi.registerArgumentFactory(new UUIDArgumentFactory());
         dbi.registerArgumentFactory(new DateTimeZoneArgumentFactory());
@@ -71,30 +60,5 @@ public class DBIProvider implements Provider<IDBI> {
         //dbi.setSQLLog(log);
 
         return dbi;
-    }
-
-
-
-    private DataSource getBoneCPDatSource() {
-        final BoneCPConfig dbConfig = new BoneCPConfig();
-        dbConfig.setJdbcUrl(jdbcUri);
-        dbConfig.setUsername(userName);
-        dbConfig.setPassword(userPwd);
-        dbConfig.setPartitionCount(1);
-        //dbConfig.setDefaultTransactionIsolation("READ_COMMITTED");
-        dbConfig.setDisableJMX(false);
-
-        final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);
-        return ds;
-    }
-
-    private DataSource getC3P0DataSource() {
-        ComboPooledDataSource cpds = new ComboPooledDataSource();
-        cpds.setJdbcUrl(jdbcUri);
-        cpds.setUser(userName);
-        cpds.setPassword(userPwd);
-        cpds.setMinPoolSize(1);
-        cpds.setMaxPoolSize(10);
-        return cpds;
     }
 }

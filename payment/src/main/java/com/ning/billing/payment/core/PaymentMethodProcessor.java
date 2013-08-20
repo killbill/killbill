@@ -18,6 +18,7 @@ package com.ning.billing.payment.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -32,6 +33,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.commons.locker.GlobalLocker;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultPaymentMethod;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -48,7 +50,7 @@ import com.ning.billing.payment.provider.DefaultPaymentMethodInfoPlugin;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
@@ -71,10 +73,11 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                   final InvoiceInternalApi invoiceApi,
                                   final PersistentBus eventBus,
                                   final PaymentDao paymentDao,
+                                  final NonEntityDao nonEntityDao,
                                   final TagInternalApi tagUserApi,
                                   final GlobalLocker locker,
                                   @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(pluginRegistry, accountInternalApi, eventBus, paymentDao, tagUserApi, locker, executor, invoiceApi);
+        super(pluginRegistry, accountInternalApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi);
     }
 
     public Set<String> getAvailablePlugins() {
@@ -138,7 +141,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         if (withPluginInfo) {
             try {
                 final PaymentPluginApi pluginApi = getPaymentPluginApi(paymentMethodModelDao.getPluginName());
-                paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), context.toTenantContext());
+                paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), buildTenantContext(context));
             } catch (PaymentPluginApiException e) {
                 log.warn("Error retrieving payment method " + paymentMethodModelDao.getId() + " from plugin " + paymentMethodModelDao.getPluginName(), e);
                 throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_METHODS, paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId());
@@ -148,6 +151,45 @@ public class PaymentMethodProcessor extends ProcessorBase {
         }
 
         return new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin);
+    }
+
+    public List<PaymentMethod> searchPaymentMethods(final String searchKey, final InternalTenantContext internalTenantContext) {
+        final List<PaymentMethod> results = new LinkedList<PaymentMethod>();
+
+        // Search in all plugins
+        for (final String pluginName : getAvailablePlugins()) {
+            try {
+                results.addAll(searchPaymentMethods(searchKey, pluginName, internalTenantContext));
+            } catch (PaymentApiException e) {
+                log.warn("Error while searching plugin " + pluginName, e);
+                // Non-fatal, continue to search other plugins
+            }
+        }
+
+        return results;
+    }
+
+    public List<PaymentMethod> searchPaymentMethods(final String searchKey, final String pluginName, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+        final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
+        final List<PaymentMethodPlugin> paymentMethods;
+        try {
+            paymentMethods = pluginApi.searchPaymentMethods(searchKey, buildTenantContext(internalTenantContext));
+        } catch (PaymentPluginApiException e) {
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENT_METHODS, pluginName, searchKey);
+        }
+
+        final List<PaymentMethod> results = new LinkedList<PaymentMethod>();
+        for (final PaymentMethodPlugin paymentMethodPlugin : paymentMethods) {
+            final PaymentMethodModelDao paymentMethodModelDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodPlugin.getKbPaymentMethodId(), internalTenantContext);
+            if (paymentMethodModelDao == null) {
+                log.warn("Unable to find payment method id " + paymentMethodPlugin.getKbPaymentMethodId() + " present in plugin " + pluginName);
+                continue;
+            }
+
+            results.add(new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin));
+        }
+
+        return results;
     }
 
     public PaymentMethod getExternalPaymentMethod(final Account account, final InternalTenantContext context) throws PaymentApiException {

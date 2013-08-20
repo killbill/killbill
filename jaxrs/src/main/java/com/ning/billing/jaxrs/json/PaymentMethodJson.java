@@ -123,6 +123,11 @@ public class PaymentMethodJson {
             public PaymentMethodPlugin getPluginDetail() {
                 return new PaymentMethodPlugin() {
                     @Override
+                    public UUID getKbPaymentMethodId() {
+                        return paymentMethodId == null ? null : UUID.fromString(paymentMethodId);
+                    }
+
+                    @Override
                     public boolean isDefaultPaymentMethod() {
                         // N/A
                         return false;
@@ -242,6 +247,58 @@ public class PaymentMethodJson {
         return pluginInfo;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("PaymentMethodJson{");
+        sb.append("paymentMethodId='").append(paymentMethodId).append('\'');
+        sb.append(", accountId='").append(accountId).append('\'');
+        sb.append(", isDefault=").append(isDefault);
+        sb.append(", pluginName='").append(pluginName).append('\'');
+        sb.append(", pluginInfo=").append(pluginInfo);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final PaymentMethodJson that = (PaymentMethodJson) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (isDefault != null ? !isDefault.equals(that.isDefault) : that.isDefault != null) {
+            return false;
+        }
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
+            return false;
+        }
+        if (pluginInfo != null ? !pluginInfo.equals(that.pluginInfo) : that.pluginInfo != null) {
+            return false;
+        }
+        if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = paymentMethodId != null ? paymentMethodId.hashCode() : 0;
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (isDefault != null ? isDefault.hashCode() : 0);
+        result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
+        result = 31 * result + (pluginInfo != null ? pluginInfo.hashCode() : 0);
+        return result;
+    }
+
     public static class PaymentMethodPluginDetailJson {
 
         private final String externalPaymentId;
@@ -352,6 +409,108 @@ public class PaymentMethodJson {
         public List<PaymentMethodProperties> getProperties() {
             return properties;
         }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("PaymentMethodPluginDetailJson{");
+            sb.append("externalPaymentId='").append(externalPaymentId).append('\'');
+            sb.append(", isDefaultPaymentMethod=").append(isDefaultPaymentMethod);
+            sb.append(", type='").append(type).append('\'');
+            sb.append(", ccName='").append(ccName).append('\'');
+            sb.append(", ccType='").append(ccType).append('\'');
+            sb.append(", ccExpirationMonth='").append(ccExpirationMonth).append('\'');
+            sb.append(", ccExpirationYear='").append(ccExpirationYear).append('\'');
+            sb.append(", ccLast4='").append(ccLast4).append('\'');
+            sb.append(", address1='").append(address1).append('\'');
+            sb.append(", address2='").append(address2).append('\'');
+            sb.append(", city='").append(city).append('\'');
+            sb.append(", state='").append(state).append('\'');
+            sb.append(", zip='").append(zip).append('\'');
+            sb.append(", country='").append(country).append('\'');
+            sb.append(", properties=").append(properties);
+            sb.append('}');
+            return sb.toString();
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final PaymentMethodPluginDetailJson that = (PaymentMethodPluginDetailJson) o;
+
+            if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
+                return false;
+            }
+            if (address2 != null ? !address2.equals(that.address2) : that.address2 != null) {
+                return false;
+            }
+            if (ccExpirationMonth != null ? !ccExpirationMonth.equals(that.ccExpirationMonth) : that.ccExpirationMonth != null) {
+                return false;
+            }
+            if (ccExpirationYear != null ? !ccExpirationYear.equals(that.ccExpirationYear) : that.ccExpirationYear != null) {
+                return false;
+            }
+            if (ccLast4 != null ? !ccLast4.equals(that.ccLast4) : that.ccLast4 != null) {
+                return false;
+            }
+            if (ccName != null ? !ccName.equals(that.ccName) : that.ccName != null) {
+                return false;
+            }
+            if (ccType != null ? !ccType.equals(that.ccType) : that.ccType != null) {
+                return false;
+            }
+            if (city != null ? !city.equals(that.city) : that.city != null) {
+                return false;
+            }
+            if (country != null ? !country.equals(that.country) : that.country != null) {
+                return false;
+            }
+            if (externalPaymentId != null ? !externalPaymentId.equals(that.externalPaymentId) : that.externalPaymentId != null) {
+                return false;
+            }
+            if (isDefaultPaymentMethod != null ? !isDefaultPaymentMethod.equals(that.isDefaultPaymentMethod) : that.isDefaultPaymentMethod != null) {
+                return false;
+            }
+            if (properties != null ? !properties.equals(that.properties) : that.properties != null) {
+                return false;
+            }
+            if (state != null ? !state.equals(that.state) : that.state != null) {
+                return false;
+            }
+            if (type != null ? !type.equals(that.type) : that.type != null) {
+                return false;
+            }
+            if (zip != null ? !zip.equals(that.zip) : that.zip != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = externalPaymentId != null ? externalPaymentId.hashCode() : 0;
+            result = 31 * result + (isDefaultPaymentMethod != null ? isDefaultPaymentMethod.hashCode() : 0);
+            result = 31 * result + (type != null ? type.hashCode() : 0);
+            result = 31 * result + (ccName != null ? ccName.hashCode() : 0);
+            result = 31 * result + (ccType != null ? ccType.hashCode() : 0);
+            result = 31 * result + (ccExpirationMonth != null ? ccExpirationMonth.hashCode() : 0);
+            result = 31 * result + (ccExpirationYear != null ? ccExpirationYear.hashCode() : 0);
+            result = 31 * result + (ccLast4 != null ? ccLast4.hashCode() : 0);
+            result = 31 * result + (address1 != null ? address1.hashCode() : 0);
+            result = 31 * result + (address2 != null ? address2.hashCode() : 0);
+            result = 31 * result + (city != null ? city.hashCode() : 0);
+            result = 31 * result + (state != null ? state.hashCode() : 0);
+            result = 31 * result + (zip != null ? zip.hashCode() : 0);
+            result = 31 * result + (country != null ? country.hashCode() : 0);
+            result = 31 * result + (properties != null ? properties.hashCode() : 0);
+            return result;
+        }
     }
 
     public static final class PaymentMethodProperties {
@@ -380,6 +539,48 @@ public class PaymentMethodJson {
 
         public Boolean getIsUpdatable() {
             return isUpdatable;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("PaymentMethodProperties{");
+            sb.append("key='").append(key).append('\'');
+            sb.append(", value='").append(value).append('\'');
+            sb.append(", isUpdatable=").append(isUpdatable);
+            sb.append('}');
+            return sb.toString();
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final PaymentMethodProperties that = (PaymentMethodProperties) o;
+
+            if (isUpdatable != null ? !isUpdatable.equals(that.isUpdatable) : that.isUpdatable != null) {
+                return false;
+            }
+            if (key != null ? !key.equals(that.key) : that.key != null) {
+                return false;
+            }
+            if (value != null ? !value.equals(that.value) : that.value != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = key != null ? key.hashCode() : 0;
+            result = 31 * result + (value != null ? value.hashCode() : 0);
+            result = 31 * result + (isUpdatable != null ? isUpdatable.hashCode() : 0);
+            return result;
         }
     }
 }

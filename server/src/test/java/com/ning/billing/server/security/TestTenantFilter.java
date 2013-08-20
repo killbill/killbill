@@ -16,56 +16,30 @@
 
 package com.ning.billing.server.security;
 
-import java.util.EventListener;
-import java.util.Iterator;
-import java.util.Map;
-
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.shiro.web.env.EnvironmentLoaderListener;
-import org.apache.shiro.web.servlet.ShiroFilter;
-import org.eclipse.jetty.servlet.FilterHolder;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.TestJaxrsBase;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClientConfig;
-import com.ning.http.client.Realm;
-import com.ning.http.client.Realm.AuthScheme;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+// Pure Multi-Tenancy test (no RBAC)
+public class TestTenantFilter extends TestJaxrsBase {
 
-public class TestTenantFilter extends TestJaxrsBase  {
-
-    @Override
-    protected void loadConfig() {
-        System.setProperty(KillbillGuiceListener.KILLBILL_MULTITENANT_PROPERTY, "true");
-        super.loadConfig();
+    @AfterMethod(groups = "slow")
+    public void tearDown() throws Exception {
+        // Default credentials
+        loginTenant(DEFAULT_API_KEY, DEFAULT_API_SECRET);
     }
 
-    @Override
-    protected Iterable<EventListener> getListeners() {
-        return new Iterable<EventListener>() {
-            @Override
-            public Iterator<EventListener> iterator() {
-                return ImmutableList.<EventListener>of(listener, new EnvironmentLoaderListener()).iterator();
-            }
-        };
-    }
-
-    @Override
-    protected Map<FilterHolder, String> getFilters() {
-        return ImmutableMap.<FilterHolder, String>of(new FilterHolder(ShiroFilter.class), "/*");
-    }
-
-    // TODO Need to run by itself for now as the server from the test suite doesn't have the Shiro setup
-    @Test(groups = "slow", enabled = false)
+    @Test(groups = "slow")
     public void testTenantShouldOnlySeeOwnAccount() throws Exception {
         // Try to create an account without being logged-in
+        logoutTenant();
         Assert.assertEquals(createAccountNoValidation().getStatusCode(), Status.UNAUTHORIZED.getStatusCode());
 
         // Create the tenant
@@ -105,18 +79,12 @@ public class TestTenantFilter extends TestJaxrsBase  {
     }
 
     private void loginTenant(final String apiKey, final String apiSecret) {
-        final AsyncHttpClientConfig.Builder builder = new AsyncHttpClientConfig.Builder();
-        final Realm realm = new Realm.RealmBuilder()
-                .setPrincipal(apiKey)
-                .setPassword(apiSecret)
-                .setUsePreemptiveAuth(true)
-                .setScheme(AuthScheme.BASIC)
-                .build();
-        builder.setRealm(realm).setRequestTimeoutInMs(DEFAULT_HTTP_TIMEOUT_SEC * 1000).build();
-        httpClient = new AsyncHttpClient(builder.build());
+        this.apiKey = apiKey;
+        this.apiSecret = apiSecret;
     }
 
     private void logoutTenant() {
-        httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(DEFAULT_HTTP_TIMEOUT_SEC * 1000).build());
+        apiKey = "";
+        apiSecret = "";
     }
 }

@@ -73,7 +73,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testCacheRecordId() throws Exception {
 
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(getDBI(), clock, controlCacheDispatcher, nonEntityDao);
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controlCacheDispatcher, nonEntityDao);
         final TagModelDao tag = new TagModelDao(clock.getUTCNow(), UUID.randomUUID(), UUID.randomUUID(), ObjectType.TAG);
 
         // Verify we start with nothing in the cache

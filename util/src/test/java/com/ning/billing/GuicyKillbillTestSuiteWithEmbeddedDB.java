@@ -17,6 +17,7 @@
 package com.ning.billing;
 
 import javax.inject.Inject;
+import javax.sql.DataSource;
 
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
@@ -25,34 +26,30 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
-import com.ning.billing.dbi.DBTestingHelper;
+import com.ning.billing.commons.embeddeddb.EmbeddedDB;
 
 public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite {
 
-    private static final Logger log = LoggerFactory.getLogger(KillbillTestSuiteWithEmbeddedDB.class);
+    private static final Logger log = LoggerFactory.getLogger(GuicyKillbillTestSuiteWithEmbeddedDB.class);
 
     @Inject
-    protected DBTestingHelper helper;
+    protected EmbeddedDB helper;
 
-    public DBTestingHelper getDBTestingHelper() {
-        return GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper();
-    }
+    @Inject
+    protected DataSource dataSource;
 
-    public IDBI getDBI() {
-        return GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper().getDBI();
-    }
+    @Inject
+    protected IDBI dbi;
 
     @BeforeSuite(groups = {"slow", "mysql"})
     public void beforeSuite() throws Exception {
-        GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper().start();
-        GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper().initDb();
-        GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper().cleanupAllTables();
+        DBTestingHelper.start();
     }
 
     @BeforeMethod(groups = {"slow", "mysql"})
     public void beforeMethod() throws Exception {
         try {
-            GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper().cleanupAllTables();
+            DBTestingHelper.get().cleanupAllTables();
         } catch (Exception ignored) {
         }
     }
@@ -62,13 +59,13 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         if (hasFailed()) {
             log.error("**********************************************************************************************");
             log.error("*** TESTS HAVE FAILED - LEAVING DB RUNNING FOR DEBUGGING - MAKE SURE TO KILL IT ONCE DONE ****");
-            log.error(GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper().getConnectionString());
+            log.error(DBTestingHelper.get().getCmdLineConnectionString());
             log.error("**********************************************************************************************");
             return;
         }
 
         try {
-            GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper().stop();
+            DBTestingHelper.get().stop();
         } catch (Exception ignored) {
         }
     }

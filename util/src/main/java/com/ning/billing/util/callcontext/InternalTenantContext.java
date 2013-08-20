@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.callcontext;
 
+import java.util.UUID;
+
 import javax.annotation.Nullable;
 
 /**
@@ -35,8 +37,8 @@ public class InternalTenantContext {
         this(defaultTenantRecordId, null);
     }
 
-    public TenantContext toTenantContext() {
-        return new DefaultTenantContext();
+    public TenantContext toTenantContext(final UUID tenantId) {
+        return new DefaultTenantContext(tenantId);
     }
 
     public Long getAccountRecordId() {

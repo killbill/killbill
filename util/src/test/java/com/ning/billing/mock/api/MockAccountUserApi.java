@@ -17,6 +17,7 @@
 package com.ning.billing.mock.api;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -103,6 +104,20 @@ public class MockAccountUserApi implements AccountUserApi {
             }
         }
         return null;
+    }
+
+    @Override
+    public List<Account> searchAccounts(final String searchKey, final TenantContext tenantContext) {
+        final List<Account> results = new LinkedList<Account>();
+        for (final Account account : accounts) {
+            if ((account.getName() != null && account.getName().contains(searchKey)) ||
+                (account.getEmail() != null && account.getEmail().contains(searchKey)) ||
+                (account.getExternalKey() != null && account.getExternalKey().contains(searchKey)) ||
+                (account.getCompanyName() != null && account.getCompanyName().contains(searchKey))) {
+                results.add(account);
+            }
+        }
+        return results;
     }
 
     @Override

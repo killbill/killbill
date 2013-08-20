@@ -16,8 +16,7 @@
 
 package com.ning.billing.util.glue;
 
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.MySqlGlobalLocker;
+import com.ning.billing.commons.locker.GlobalLocker;
 
 import com.google.inject.AbstractModule;
 
@@ -25,6 +24,6 @@ public class GlobalLockerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
+        bind(GlobalLocker.class).toProvider(MySqlGlobalLockerProvider.class).asEagerSingleton();
     }
 }

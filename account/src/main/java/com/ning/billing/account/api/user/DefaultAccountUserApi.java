@@ -64,7 +64,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
         }
 
         final AccountModelDao account = new AccountModelDao(data);
-        accountDao.create(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        accountDao.create(account, internalCallContextFactory.createInternalCallContext(context));
 
         return new DefaultAccount(account);
     }
@@ -87,6 +87,17 @@ public class DefaultAccountUserApi implements AccountUserApi {
         }
 
         return new DefaultAccount(account);
+    }
+
+    @Override
+    public List<Account> searchAccounts(final String searchKey, final TenantContext context) {
+        final List<AccountModelDao> accountModelDaos = accountDao.searchAccounts(searchKey, internalCallContextFactory.createInternalTenantContext(context));
+        return ImmutableList.<Account>copyOf(Collections2.transform(accountModelDaos, new Function<AccountModelDao, Account>() {
+            @Override
+            public Account apply(final AccountModelDao input) {
+                return new DefaultAccount(input);
+            }
+        }));
     }
 
     @Override

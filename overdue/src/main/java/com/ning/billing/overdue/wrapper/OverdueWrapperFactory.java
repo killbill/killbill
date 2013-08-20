@@ -71,7 +71,8 @@ public class OverdueWrapperFactory {
     public OverdueWrapper createOverdueWrapperFor(final UUID id, final InternalTenantContext context) throws OverdueException {
 
         try {
-            Account account = accountUserApi.getAccountById(id, context.toTenantContext());
+            // STEPH_ENT
+            Account account = accountUserApi.getAccountById(id, context.toTenantContext(null));
             return new OverdueWrapper(account, api, getOverdueStateSetBundle(),
                                       clock, billingStateCalculator, overdueStateApplicator);
 

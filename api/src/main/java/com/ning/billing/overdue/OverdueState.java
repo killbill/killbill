@@ -18,9 +18,6 @@ package com.ning.billing.overdue;
 
 import org.joda.time.Period;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.api.Blockable;
-
 
 public interface OverdueState {
 
@@ -32,7 +29,7 @@ public interface OverdueState {
 
     public boolean disableEntitlementAndChangesBlocked();
 
-    public OverdueCancellationPolicicy getSubscriptionCancellationPolicy();
+    public OverdueCancellationPolicy getSubscriptionCancellationPolicy();
 
     public boolean blockChanges();
 

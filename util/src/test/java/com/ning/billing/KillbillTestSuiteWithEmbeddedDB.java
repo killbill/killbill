@@ -27,45 +27,19 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
-import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.H2TestingHelper;
-import com.ning.billing.dbi.MysqlTestingHelper;
-
 public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
 
     private static final Logger log = LoggerFactory.getLogger(KillbillTestSuiteWithEmbeddedDB.class);
 
-    protected static DBTestingHelper helper;
-
-    static {
-        if ("true".equals(System.getProperty("com.ning.billing.dbi.test.h2"))) {
-            log.info("Using h2 as the embedded database");
-            helper = new H2TestingHelper();
-        } else {
-            log.info("Using MySQL as the embedded database");
-            helper = new MysqlTestingHelper();
-        }
-    }
-
-    public static DBTestingHelper getDBTestingHelper() {
-        return helper;
-    }
-
-    public static IDBI getDBI() {
-        return helper.getDBI();
-    }
-
     @BeforeSuite(groups = {"slow", "mysql"})
     public void startMysqlBeforeTestSuite() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
-        helper.start();
-        helper.initDb();
-        helper.cleanupAllTables();
+        DBTestingHelper.start();
     }
 
     @BeforeMethod(groups = {"slow", "mysql"})
     public void cleanupTablesBetweenMethods() {
         try {
-            helper.cleanupAllTables();
+            DBTestingHelper.get().cleanupAllTables();
         } catch (Exception ignored) {
         }
     }
@@ -75,13 +49,13 @@ public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
         if (hasFailed()) {
             log.error("**********************************************************************************************");
             log.error("*** TESTS HAVE FAILED - LEAVING DB RUNNING FOR DEBUGGING - MAKE SURE TO KILL IT ONCE DONE ****");
-            log.error(helper.getConnectionString());
+            log.error(DBTestingHelper.get().getCmdLineConnectionString());
             log.error("**********************************************************************************************");
             return;
         }
 
         try {
-            helper.stop();
+            DBTestingHelper.get().stop();
         } catch (Exception ignored) {
         }
     }

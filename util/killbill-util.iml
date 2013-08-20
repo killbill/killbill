@@ -12,6 +12,16 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.3.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:0.1.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.1.7" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-queue:0.1.7" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-jdbi:0.1.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-queue:test-jar:tests:0.1.7" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-notification:0.3.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.6.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.4.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-notification:0.4.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.1.0" level="project" />
@@ -34,19 +44,21 @@
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
     <orderEntry type="library" name="Maven: com.mchange:c3p0:0.9.2" level="project" />
     <orderEntry type="library" name="Maven: com.mchange:mchange-commons-java:0.2.3.3" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.3.3-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.6.0-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="killbill-internal-api" />
-    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.3.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.4.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.skife.config:config-magic:0.14" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:0.1.7" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.1.7" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-queue:0.1.7" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-jdbi:0.1.7" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:0.2.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.2.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-embeddeddb:0.2.1" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-locker:0.2.1" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-queue:0.2.1" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-jdbi:0.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.jdbi:jdbi:2.39.1" level="project" />
     <orderEntry type="library" name="Maven: com.yammer.metrics:metrics-core:2.1.2" level="project" />
     <orderEntry type="library" name="Maven: org.weakref:jmxutils:1.12" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-queue:test-jar:tests:0.1.7" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-notification:0.3.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-queue:test-jar:tests:0.2.1" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-notification:0.4.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.samskivert:jmustache:1.5" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: mysql:mysql-connector-java:5.1.22" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: mysql:mysql-connector-mxj:5.0.12" level="project" />
@@ -57,7 +69,12 @@
     <orderEntry type="library" name="Maven: org.apache.commons:commons-email:1.2" level="project" />
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4.1" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.shiro:shiro-core:1.2.2" level="project" />
+    <orderEntry type="library" name="Maven: commons-beanutils:commons-beanutils:1.8.3" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.shiro:shiro-ehcache:1.2.2" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.shiro:shiro-guice:1.2.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.mockito:mockito-all:1.9.0" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:jcl-over-slf4j:1.7.5" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:slf4j-simple:1.7.5" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:6.3.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:3.8.1" level="project" />
