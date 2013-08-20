@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.clock.DefaultClock;
-import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
+import com.ning.billing.entitlement.api.SubscriptionEvent;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 import com.ning.billing.jaxrs.json.SubscriptionJsonWithEvents.SubscriptionReadEventJson;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -49,14 +49,14 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final SubscriptionJsonWithEvents.SubscriptionReadEventJson newEvent = new SubscriptionJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
-                                                                                                                                     BillingPeriod.NO_BILLING_PERIOD.toString(),
-                                                                                                                                     requestedDate.toLocalDate(),
-                                                                                                                                     effectiveDate.toLocalDate(),
-                                                                                                                                     UUID.randomUUID().toString(),
-                                                                                                                                     UUID.randomUUID().toString(),
-                                                                                                                                     SubscriptionBaseTransitionType.CREATE.toString(),
-                                                                                                                                     PhaseType.DISCOUNT.toString(),
-                                                                                                                                     auditLogs);
+                                                                                                                                       BillingPeriod.NO_BILLING_PERIOD.toString(),
+                                                                                                                                       requestedDate.toLocalDate(),
+                                                                                                                                       effectiveDate.toLocalDate(),
+                                                                                                                                       UUID.randomUUID().toString(),
+                                                                                                                                       UUID.randomUUID().toString(),
+                                                                                                                                       SubscriptionBaseTransitionType.CREATE.toString(),
+                                                                                                                                       PhaseType.DISCOUNT.toString(),
+                                                                                                                                       auditLogs);
         final SubscriptionEvent event = null;
         final SubscriptionJsonWithEvents entitlementJsonWithEvents = new SubscriptionJsonWithEvents(accountId, bundleId, entitlementId, externalKey, ImmutableList.<SubscriptionReadEventJson>of(newEvent), null, null, auditLogs);
 

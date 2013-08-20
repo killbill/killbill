@@ -29,8 +29,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.entitlement.api.Subscription;
-import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
+import com.ning.billing.entitlement.api.SubscriptionEvent;
 import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

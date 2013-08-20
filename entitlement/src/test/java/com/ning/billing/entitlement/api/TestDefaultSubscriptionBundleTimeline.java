@@ -17,12 +17,9 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
-import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.DefaultEntitlementService;
 import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
-import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
-import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEventType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
@@ -99,7 +96,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
     }
 
 
-
     @Test(groups = "fast")
     public void testOneEntitlementWithBlockingStatesSubscription() throws CatalogApiException {
 
@@ -146,8 +142,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<Entitlement> entitlements = new ArrayList<Entitlement>();
         final Entitlement entitlement = createEntitlement(entitlementId, allTransitions);
         entitlements.add(entitlement);
-
-
 
 
         final DefaultSubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, blockingStates);
@@ -230,8 +224,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         entitlements.add(entitlement2);
 
 
-
-
         final DefaultSubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, blockingStates);
 
         List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
@@ -265,8 +257,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
     }
 
 
-
-
     private DefaultEntitlement createEntitlement(final UUID entitlementId, final List<SubscriptionBaseTransition> allTransitions) {
 
         final DefaultEntitlement result = Mockito.mock(DefaultEntitlement.class);
@@ -284,7 +274,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
                                                         final DateTime requestedDate,
                                                         final DateTime effectiveDate,
                                                         final DateTime createdDate
-                                                        ) throws CatalogApiException {
+                                                       ) throws CatalogApiException {
 
 
         final PlanPhase phase = Mockito.mock(PlanPhase.class);
@@ -295,16 +285,16 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         Mockito.when(plan.getName()).thenReturn("plan");
 
 
-                //catalogService.getCurrentCatalog().findCurrentPlan("pistol-monthly");
+        //catalogService.getCurrentCatalog().findCurrentPlan("pistol-monthly");
         final Product product = Mockito.mock(Product.class);
         Mockito.when(product.getName()).thenReturn("product");
 
-                //catalogService.getCurrentCatalog().findCurrentProduct("Pistol");
+        //catalogService.getCurrentCatalog().findCurrentProduct("Pistol");
 
         final PriceList priceList = Mockito.mock(PriceList.class);
         Mockito.when(priceList.getName()).thenReturn("pricelist");
 
-                //catalogService.getCurrentCatalog().findCurrentPricelist(PriceListSet.DEFAULT_PRICELIST_NAME);
+        //catalogService.getCurrentCatalog().findCurrentPricelist(PriceListSet.DEFAULT_PRICELIST_NAME);
         final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
 
         final SubscriptionBaseTransition transition = new SubscriptionBaseTransitionData(UUID.randomUUID(),

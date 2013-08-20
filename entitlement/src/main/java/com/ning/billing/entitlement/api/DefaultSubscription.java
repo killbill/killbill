@@ -16,9 +16,7 @@
 
 package com.ning.billing.entitlement.api;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -56,15 +54,16 @@ public class DefaultSubscription extends DefaultEntitlement implements Subscript
     }
 
     @Override
-    public Map<String, String> getCurrentStatesForService() {
+    public String getCurrentStateForService(final String serviceName) {
 
-        final Map<String, String> result = new HashMap<String, String>();
         if (blockingStates == null) {
-            return result;
+            return null;
         }
         for (BlockingState cur : blockingStates) {
-            result.put(cur.getService(), cur.getStateName());
+            if (cur.getService().equals(serviceName)) {
+                return cur.getStateName();
+            }
         }
-        return result;
+        return null;
     }
 }

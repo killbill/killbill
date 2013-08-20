@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 
 import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionBundle;
-import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
+import com.ning.billing.entitlement.api.SubscriptionEvent;
 import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

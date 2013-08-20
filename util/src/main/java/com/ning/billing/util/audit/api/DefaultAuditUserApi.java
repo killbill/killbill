@@ -27,12 +27,7 @@ import javax.inject.Inject;
 import com.ning.billing.ObjectType;
 import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionBundle;
-import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
-import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairException;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
+import com.ning.billing.entitlement.api.SubscriptionEvent;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -73,7 +68,7 @@ public class DefaultAuditUserApi implements AuditUserApi {
     }
 
     @Override
-    public AuditLogsForAccount getAuditLogsForAccount(final UUID accountId, final AuditLevel auditLevel, final TenantContext context){
+    public AuditLogsForAccount getAuditLogsForAccount(final UUID accountId, final AuditLevel auditLevel, final TenantContext context) {
         return new DefaultAuditLogsForAccount(getAuditLogs(accountId, ObjectType.ACCOUNT, auditLevel, context));
     }
 
@@ -86,7 +81,7 @@ public class DefaultAuditUserApi implements AuditUserApi {
             bundlesAuditLogs.put(bundle.getId(), getAuditLogs(bundle.getId(), ObjectType.BUNDLE, auditLevel, context));
             for (final Subscription cur : bundle.getSubscriptions()) {
 
-                final ImmutableList<SubscriptionEvent> events =  ImmutableList.<SubscriptionEvent>copyOf(Collections2.filter(bundle.getTimeline().getSubscriptionEvents(), new Predicate<SubscriptionEvent>() {
+                final ImmutableList<SubscriptionEvent> events = ImmutableList.<SubscriptionEvent>copyOf(Collections2.filter(bundle.getTimeline().getSubscriptionEvents(), new Predicate<SubscriptionEvent>() {
                     @Override
                     public boolean apply(@Nullable final SubscriptionEvent input) {
                         return input.getEntitlementId().equals(cur.getId());
