@@ -26,6 +26,7 @@ import org.joda.time.LocalDate;
 import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.util.audit.AuditLog;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
@@ -38,7 +39,7 @@ public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
     private final Integer bcd;
     //private final Map<String, String> currentStatesForServices;
 
-
+    @JsonCreator
     public SubscriptionJsonNoEvents(@JsonProperty("accountId") @Nullable final String accountId,
                                     @JsonProperty("bundleId") @Nullable final String bundleId,
                                     @JsonProperty("entitlementId") @Nullable final String entitlementId,

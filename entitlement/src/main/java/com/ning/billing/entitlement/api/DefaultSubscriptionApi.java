@@ -175,7 +175,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
     private SubscriptionBundle getSubscriptionBundleFromEntitlements(final UUID bundleId, final List<Entitlement> entitlements, final TenantContext context) throws SubscriptionBaseApiException, AccountApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
         final SubscriptionBaseBundle baseBundle = subscriptionInternalApi.getBundleFromId(bundleId, internalTenantContext);
-        final List<Subscription> subscriptions = new ArrayList<Subscription>();
+        final List<Subscription> subscriptions = new ArrayList<Subscription>(entitlements.size());
         subscriptions.addAll(Collections2.transform(entitlements, new Function<Entitlement, Subscription>() {
             @Override
             public Subscription apply(final Entitlement input) {

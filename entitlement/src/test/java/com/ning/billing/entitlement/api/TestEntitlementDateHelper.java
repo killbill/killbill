@@ -49,7 +49,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
     public void testWithAccountInUtc() throws EntitlementApiException {
 
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
-        clock.setDay(initialDate.plusDays(1));
+        //clock.setDay(initialDate.plusDays(1));
 
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
 
@@ -64,7 +64,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
     public void testWithAccountInUtcMinus8() throws EntitlementApiException {
 
         final LocalDate inputDate = new LocalDate(2013, 8, 7);
-        clock.setDay(inputDate.plusDays(3));
+        //.setDay(inputDate.plusDays(3));
 
         final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(-8);
         Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcMinus8);
@@ -84,10 +84,10 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
     public void testWithAccountInUtcPlus5() throws EntitlementApiException {
 
         final LocalDate inputDate = new LocalDate(2013, 8, 7);
-        clock.setDay(inputDate.plusDays(1));
+        //clock.setDay(inputDate.plusDays(1));
 
-        final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(+5);
-        Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcMinus8);
+        final DateTimeZone timeZoneUtcPlus5 = DateTimeZone.forOffsetHours(+5);
+        Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcPlus5);
 
         // We also use a reference time of 20, 28, 10, 0 -> DateTime in accountTimeZone will be (2013, 8, 7, 20, 28, 10)
         final DateTime refererenceDateTime = new DateTime(2013, 1, 1, 20, 28, 10, 0, DateTimeZone.UTC);

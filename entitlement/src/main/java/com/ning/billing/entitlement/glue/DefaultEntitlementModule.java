@@ -18,6 +18,8 @@ package com.ning.billing.entitlement.glue;
 
 import org.skife.config.ConfigSource;
 
+import com.ning.billing.entitlement.DefaultEntitlementService;
+import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.api.DefaultEntitlementApi;
 import com.ning.billing.entitlement.api.DefaultSubscriptionApi;
 import com.ning.billing.entitlement.api.EntitlementApi;
@@ -45,6 +47,7 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
         installEntitlementApi();
         installSubscriptionApi();
         installBlockingChecker();
+        bind(EntitlementService.class).to(DefaultEntitlementService.class).asEagerSingleton();
     }
 
     @Override

@@ -349,7 +349,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             case RE_CREATE:
                 return SubscriptionEventType.RESUME_BILLING;
             /*
-             * Those can be ignore:
+             * Those can be ignored:
              */
             // Marker event
             case UNCANCEL:

@@ -27,6 +27,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -205,10 +206,10 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
         if (account == null && inputDate == null) {
             // We have no inputDate and so accountTimeZone so we default to LocalDate as seen in UTC
-            return new LocalDate(clock.getUTCNow());
+            return new LocalDate(clock.getUTCNow(), DateTimeZone.UTC);
         } else if (account == null && inputDate != null) {
             // We were given a date but can't get timezone, default in UTC
-            return new LocalDate(inputDate);
+            return new LocalDate(inputDate, DateTimeZone.UTC);
         } else if (account != null && inputDate == null) {
             // We have no inputDate but for accountTimeZone so default to LocalDate as seen in account timezone
             return new LocalDate(clock.getUTCNow(), account.getTimeZone());

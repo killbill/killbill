@@ -123,7 +123,6 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
 
             final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(), callContext);
-            final BlockingState currentBaseState = blockingStateDao.getBlockingStateForService(baseSubscription.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
 
             final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
             final LocalDate baseEntitlementEffectiveEndDate = getEffectiveEndDate(bundle.getAccountId(), baseSubscription, account.getTimeZone(), contextWithValidAccountRecordId);
@@ -144,7 +143,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);
             final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(baseSubscription.getBundleId(), planPhaseSpecifier, requestedDate, context);
 
-            return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), baseEntitlementState, null, account.getTimeZone(),
+            return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), EntitlementState.ACTIVE, null, account.getTimeZone(),
                                           this, internalCallContextFactory, blockingStateDao, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
@@ -179,8 +178,6 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(subscription.getBundleId(), context);
 
             final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
-            final BlockingState currentState = blockingStateDao.getBlockingStateForService(subscription.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
-
 
             final LocalDate entitlementEffectiveEndDate = getEffectiveEndDate(bundle.getAccountId(), subscription, account.getTimeZone(), context);
             final EntitlementState entitlementState = getStateForEntitlement(entitlementEffectiveEndDate, subscription, account.getTimeZone(), context);
@@ -242,7 +239,14 @@ public class DefaultEntitlementApi implements EntitlementApi {
                 public Entitlement apply(@Nullable final SubscriptionBase input) {
 
                     final LocalDate effectiveEndDate = getEffectiveEndDate(accountId, input, account.getTimeZone(), context);
-                    final EntitlementState entitlementState = getStateForEntitlement(effectiveEndDate, input, account.getTimeZone(), context);
+
+                    EntitlementState entitlementState;
+                    try {
+                        entitlementState = getStateForEntitlement(effectiveEndDate, input, account.getTimeZone(), context);
+                    } catch (EntitlementApiException e) {
+                        log.warn("Failed to extract blocking state for subscription " + input.getId().toString());
+                        entitlementState = EntitlementState.CANCELLED;
+                    }
 
                     return new DefaultEntitlement(dateHelper, input, accountId, externalKey,
                                                   entitlementState,
@@ -263,25 +267,25 @@ public class DefaultEntitlementApi implements EntitlementApi {
         LocalDate result = null;
 
         final BlockingState subEntitlementState = blockingStateDao.getBlockingStateForService(subscriptionBase.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
-        if (subEntitlementState != null && subEntitlementState.getStateName().equals(ENT_STATE_CANCELLED)) {
+        if (subEntitlementState != null && ENT_STATE_CANCELLED.equals(subEntitlementState.getStateName())) {
             result = new LocalDate(subEntitlementState.getEffectiveDate(), accountTimeZone);
         }
 
         final BlockingState bundleEntitlementState = blockingStateDao.getBlockingStateForService(subscriptionBase.getBundleId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
-        if (bundleEntitlementState != null && bundleEntitlementState .getStateName().equals(ENT_STATE_CANCELLED)) {
+        if (bundleEntitlementState != null && ENT_STATE_CANCELLED.equals(bundleEntitlementState.getStateName())) {
             final LocalDate localDate = new LocalDate(bundleEntitlementState.getEffectiveDate(), accountTimeZone);
-            result = result == null || result.compareTo(localDate) < 0 ? localDate : result;
+            result = (result == null) || (result.compareTo(localDate) < 0) ? result : localDate;
         }
 
         final BlockingState accountEntitlementState = blockingStateDao.getBlockingStateForService(accountId, EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
-        if (accountEntitlementState != null && accountEntitlementState .getStateName().equals(ENT_STATE_CANCELLED)) {
+        if (accountEntitlementState != null && ENT_STATE_CANCELLED.equals(accountEntitlementState.getStateName())) {
             final LocalDate localDate = new LocalDate(accountEntitlementState.getEffectiveDate(), accountTimeZone);
-            result = result == null || result.compareTo(localDate) < 0 ? localDate : result;
+            result = (result == null) || (result.compareTo(localDate) < 0) ? result : localDate;
         }
         return result;
     }
 
-    private EntitlementState getStateForEntitlement(final LocalDate entitlementEndDate, final SubscriptionBase subscriptionBase, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
+    private EntitlementState getStateForEntitlement(final LocalDate entitlementEndDate, final SubscriptionBase subscriptionBase, final DateTimeZone accountTimeZone, final InternalTenantContext context) throws EntitlementApiException {
 
         // Current state for the ENTITLEMENT_SERVICE_NAME is set to cancelled
         if (entitlementEndDate != null &&
@@ -294,8 +298,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
             BlockingAggregator blocking = checker.getBlockedStatus(subscriptionBase, context);
             return blocking != null && blocking.isBlockEntitlement() ? EntitlementState.BLOCKED : EntitlementState.ACTIVE;
         } catch (BlockingApiException e) {
-            log.warn("Failed to extract blocking state for subscription " + subscriptionBase.getId().toString());
-            return null;
+            throw new EntitlementApiException(e);
         }
     }
 

@@ -74,13 +74,13 @@ public class EntitlementDateHelper {
         return adjustDateTimeToNotBeInFutureIfLocaDateIsToday(t2);
     }
 
-    private final DateTime adjustDateTimeToNotBeInFutureIfLocaDateIsToday(final DateTime input) {
+    private final DateTime adjustDateTimeToNotBeInFutureIfLocaDateIsToday(final DateTime inputUtc) {
         // If the LocalDate is TODAY but after adding the reference time we end up in the future, we correct it to be NOW,
         // so change occurs immediately
-        if (isBeforeOrEqualsToday(input, DateTimeZone.UTC) && input.compareTo(clock.getUTCNow()) > 0) {
+        if (isBeforeOrEqualsToday(inputUtc, DateTimeZone.UTC) && inputUtc.compareTo(clock.getUTCNow()) > 0) {
             return clock.getUTCNow();
         } else {
-            return input;
+            return inputUtc;
         }
     }
 
