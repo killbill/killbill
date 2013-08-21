@@ -25,7 +25,7 @@
     <orderEntry type="library" name="Maven: org.osgi:org.osgi.compendium:4.3.1" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:osgi-over-slf4j:1.7.5" level="project" />
     <orderEntry type="module" module-name="killbill-util" production-on-test="" />
-    <orderEntry type="library" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.5.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.6.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.1.0" level="project" />
