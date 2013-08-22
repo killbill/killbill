@@ -68,7 +68,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
 
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.BUNDLE,"state", "test-service", bC, bE, bB, clock.getUTCNow());
+        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE,"state", "test-service", bC, bE, bB, clock.getUTCNow());
         blockingStateDao.setBlockingState(bundleState, clock, internalCallContext);
     }
 

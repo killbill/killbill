@@ -274,12 +274,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
 
     @Override
-    public void uncancel(final CallContext context) throws EntitlementApiException {
-        // STEPH_ENT
-    }
-
-
-    @Override
     public Entitlement changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
 
         if (state != EntitlementState.ACTIVE) {

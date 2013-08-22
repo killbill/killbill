@@ -48,12 +48,6 @@ public class DefaultSubscription extends DefaultEntitlement implements Subscript
     }
 
     @Override
-    public int getBCD() {
-        // STEPH_ENT
-        return 0;
-    }
-
-    @Override
     public String getCurrentStateForService(final String serviceName) {
 
         if (blockingStates == null) {

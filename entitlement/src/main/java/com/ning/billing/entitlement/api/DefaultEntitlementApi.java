@@ -322,7 +322,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
                 throw new UnsupportedOperationException("Pausing with a future date has not been implemented yet");
             }
 
-            final DefaultBlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.BUNDLE, ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, true, effectiveDate);
+            final DefaultBlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, true, effectiveDate);
             blockingStateDao.setBlockingState(state, clock, contextWithValidAccountRecordId);
 
             // Should we send one event per entitlement in the bundle?
@@ -365,7 +365,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
                 throw new UnsupportedOperationException("Resuming with a future date has not been implemented yet");
             }
 
-            final DefaultBlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.BUNDLE, ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, effectiveDate);
+            final DefaultBlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, effectiveDate);
             blockingStateDao.setBlockingState(state, clock, contextWithValidAccountRecordId);
 
             // Should we send one event per entitlement in the bundle?
@@ -416,7 +416,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);
             final SubscriptionBaseBundle newBundle = subscriptionTransferApi.transferBundle(sourceAccountId, destAccountId, externalKey, requestedDate, true, cancelImm, context);
 
-            blockingStateDao.setBlockingState(new DefaultBlockingState(bundle.getId(), BlockingStateType.BUNDLE, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, requestedDate), clock, contextWithValidAccountRecordId);
+            blockingStateDao.setBlockingState(new DefaultBlockingState(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, requestedDate), clock, contextWithValidAccountRecordId);
 
             return newBundle.getId();
         } catch (SubscriptionBaseTransferApiException e) {

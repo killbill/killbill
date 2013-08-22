@@ -36,7 +36,6 @@ public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
 
     private final LocalDate billingStartDate;
     private final LocalDate billingEndDate;
-    private final Integer bcd;
     //private final Map<String, String> currentStatesForServices;
 
     @JsonCreator
@@ -53,13 +52,11 @@ public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
                                     @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs,
                                     @JsonProperty("chargedThroughDate") @Nullable final LocalDate chargedThroughDate,
                                     @JsonProperty("billingStartDate") @Nullable final LocalDate billingStartDate,
-                                    @JsonProperty("billingEndDate") @Nullable final LocalDate billingEndDate,
-                                    @JsonProperty("bcd") @Nullable final Integer bcd) {
+                                    @JsonProperty("billingEndDate") @Nullable final LocalDate billingEndDate) {
         super(accountId, bundleId, entitlementId, externalKey, startDate, productName, productCategory, billingPeriod, priceList, cancelledDate, auditLogs);
         this.chargedThroughDate = chargedThroughDate;
         this.billingStartDate = billingStartDate;
         this.billingEndDate = billingEndDate;
-        this.bcd = bcd;
     }
 
     public SubscriptionJsonNoEvents(final Subscription s,
@@ -77,8 +74,7 @@ public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
              toAuditLogJson(auditLogs),
              s.getChargedThroughDate() != null ? s.getChargedThroughDate() : null,
              s.getBillingStartDate(),
-             s.getBillingEndDate(),
-             s.getBCD());
+             s.getBillingEndDate());
     }
 
     public LocalDate getChargedThroughDate() {
@@ -91,10 +87,6 @@ public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
 
     public LocalDate getBillingEndDate() {
         return billingEndDate;
-    }
-
-    public Integer getBcd() {
-        return bcd;
     }
 
 }

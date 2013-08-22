@@ -217,7 +217,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         effectiveDate = effectiveDate.plusDays(5);
         clock.addDays(5);
-        final BlockingState bs1 = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.BUNDLE,
+        final BlockingState bs1 = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE,
                                                            DefaultEntitlementApi.ENT_STATE_BLOCKED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow());
         blockingStates.add(bs1);

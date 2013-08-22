@@ -228,10 +228,14 @@ public class EntitlementResource extends JaxRsResourceBase {
                                             @HeaderParam(HDR_REASON) final String reason,
                                             @HeaderParam(HDR_COMMENT) final String comment,
                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
+
+        throw new UnsupportedOperationException("Call not implemented");
+/*
         final UUID uuid = UUID.fromString(entitlementId);
         final Entitlement current = entitlementApi.getEntitlementForId(uuid, context.createContext(createdBy, reason, comment, request));
         current.uncancel(context.createContext(createdBy, reason, comment, request));
         return Response.status(Status.OK).build();
+        */
     }
 
     @DELETE
