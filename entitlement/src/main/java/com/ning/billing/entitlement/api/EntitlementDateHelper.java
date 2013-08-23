@@ -68,16 +68,16 @@ public class EntitlementDateHelper {
         final DateTime t2 = new DateTime(t1, DateTimeZone.UTC);
 
         //
-        // Ok, in the case of a LocalDate of today we expect any chnage to be immediate, so we check that DateTime returned is not in the future
+        // Ok, in the case of a LocalDate of today we expect any change to be immediate, so we check that DateTime returned is not in the future
         // (which means that reference time might not be honored, but this is not very important).
         //
-        return adjustDateTimeToNotBeInFutureIfLocaDateIsToday(t2);
+        return adjustDateTimeToNotBeInFutureIfLocaDateIsToday(t2, accountTimeZone);
     }
 
-    private final DateTime adjustDateTimeToNotBeInFutureIfLocaDateIsToday(final DateTime inputUtc) {
+    private final DateTime adjustDateTimeToNotBeInFutureIfLocaDateIsToday(final DateTime inputUtc, final DateTimeZone accountTimeZone) {
         // If the LocalDate is TODAY but after adding the reference time we end up in the future, we correct it to be NOW,
         // so change occurs immediately
-        if (isBeforeOrEqualsToday(inputUtc, DateTimeZone.UTC) && inputUtc.compareTo(clock.getUTCNow()) > 0) {
+        if (isBeforeOrEqualsToday(inputUtc, accountTimeZone) && inputUtc.compareTo(clock.getUTCNow()) > 0) {
             return clock.getUTCNow();
         } else {
             return inputUtc;
@@ -87,7 +87,7 @@ public class EntitlementDateHelper {
     /**
      *
      * @param inputDate       the fully qualified DateTime
-     * @param accountTimeZone the acount timezone
+     * @param accountTimeZone the account timezone
      * @return true if the inputDate, once converted into a LocalDate using account timezone is less or equals than today
      */
     public boolean isBeforeOrEqualsToday(final DateTime inputDate, final DateTimeZone accountTimeZone) {

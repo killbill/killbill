@@ -300,7 +300,7 @@ public class SubscriptionJsonWithEvents extends EntitlementJsonSimple {
                                                           billingPeriod != null ? billingPeriod.toString() : null,
                                                           cur.getRequestedDate(),
                                                           cur.getEffectiveDate(),
-                                                          product != null ? product.toString() : null,
+                                                          product != null ? product.getName() : null,
                                                           priceList != null ? priceList.getName() : null,
                                                           cur.getSubscriptionEventType().toString(),
                                                           phase != null ? phase.getName() : null,

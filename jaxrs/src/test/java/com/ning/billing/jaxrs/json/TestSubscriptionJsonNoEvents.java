@@ -61,7 +61,7 @@ public class TestSubscriptionJsonNoEvents extends JaxrsTestSuiteNoDB {
                                                                                                productCategory, billingPeriod, priceList, cancelDate, auditLogs, chargedThroughDate,
                                                                                                billingStartDate, billingEndDate);
 
-        Assert.assertEquals(subscriptionJsonNoEvents.getEntitlementId(), entitlementId);
+        Assert.assertEquals(subscriptionJsonNoEvents.getSubscriptionId(), entitlementId);
         Assert.assertEquals(subscriptionJsonNoEvents.getBundleId(), bundleId);
         Assert.assertEquals(subscriptionJsonNoEvents.getStartDate(), startDate);
         Assert.assertEquals(subscriptionJsonNoEvents.getProductName(), productName);

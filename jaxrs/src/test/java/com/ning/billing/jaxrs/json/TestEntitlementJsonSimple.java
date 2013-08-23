@@ -38,7 +38,7 @@ public class TestEntitlementJsonSimple extends JaxrsTestSuiteNoDB {
         final EntitlementJsonSimple entitlementJsonSimple = new EntitlementJsonSimple(accountId, bundleId, entitlementId, externalKey, auditLogs);
         Assert.assertEquals(entitlementJsonSimple.getAccountId(), accountId);
         Assert.assertEquals(entitlementJsonSimple.getBundleId(), bundleId);
-        Assert.assertEquals(entitlementJsonSimple.getEntitlementId(), entitlementId);
+        Assert.assertEquals(entitlementJsonSimple.getSubscriptionId(), entitlementId);
         Assert.assertEquals(entitlementJsonSimple.getExternalKey(), externalKey);
         Assert.assertEquals(entitlementJsonSimple.getAuditLogs(), auditLogs);
 

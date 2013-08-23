@@ -27,24 +27,24 @@ public class EntitlementJsonSimple extends JsonBase {
 
     protected final String accountId;
     protected final String bundleId;
-    protected final String entitlementId;
+    protected final String subscriptionId;
     protected final String externalKey;
 
     @JsonCreator
     public EntitlementJsonSimple(@JsonProperty("accountId") @Nullable final String accountId,
                                  @JsonProperty("bundleId") @Nullable final String bundleId,
-                                 @JsonProperty("entitlementId") @Nullable final String entitlementId,
+                                 @JsonProperty("subscriptionId") @Nullable final String entitlementId,
                                  @JsonProperty("externalKey") @Nullable final String externalKey,
                                  @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.accountId = accountId;
         this.bundleId = bundleId;
-        this.entitlementId = entitlementId;
+        this.subscriptionId = entitlementId;
         this.externalKey = externalKey;
     }
 
-    public String getEntitlementId() {
-        return entitlementId;
+    public String getSubscriptionId() {
+        return subscriptionId;
     }
 
     public String getAccountId() {
@@ -63,7 +63,7 @@ public class EntitlementJsonSimple extends JsonBase {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("EntitlementJsonSimple");
-        sb.append("{subscriptionId='").append(entitlementId).append('\'');
+        sb.append("{subscriptionId='").append(subscriptionId).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -85,7 +85,7 @@ public class EntitlementJsonSimple extends JsonBase {
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
-        if (entitlementId != null ? !entitlementId.equals(that.entitlementId) : that.entitlementId != null) {
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
             return false;
         }
         return true;
@@ -95,7 +95,7 @@ public class EntitlementJsonSimple extends JsonBase {
     public int hashCode() {
         int result = accountId != null ? accountId.hashCode() : 0;
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
-        result = 31 * result + (entitlementId != null ? entitlementId.hashCode() : 0);
+        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         return result;
     }
 }

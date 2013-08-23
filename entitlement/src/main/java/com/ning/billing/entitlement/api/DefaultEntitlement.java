@@ -165,7 +165,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Product getProduct() {
-        return subscriptionBase.getCurrentPlan().getProduct();
+        return subscriptionBase.getCurrentPlan() != null ? subscriptionBase.getCurrentPlan().getProduct() : null;
     }
 
     @Override

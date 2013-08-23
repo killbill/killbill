@@ -135,6 +135,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
 
         int index = -1;
         final Iterator<SubscriptionEvent> it = result.iterator();
+        // Where we need to insert in that stream
         DefaultSubscriptionEvent cur = null;
         while (it.hasNext()) {
             cur = (DefaultSubscriptionEvent) it.next();
@@ -167,15 +168,16 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         }
 
 
-        final DefaultSubscriptionEvent next = it.hasNext() ? (DefaultSubscriptionEvent) it.next() : null;
-
         final List<UUID> targetEntitlementIds = bs.getType() == BlockingStateType.SUBSCRIPTION ? ImmutableList.<UUID>of(bs.getBlockedId()) :
                                                 ImmutableList.<UUID>copyOf(allEntitlementUUIDs);
         for (UUID target : targetEntitlementIds) {
 
+
+            final SubscriptionEvent[] prevNext = findPrevNext(result, target, cur, bs);
+
             // If the blocking state is ENT_STATE_CANCELLED there is nothing else to look at, just insert the event
             if (bs.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED)) {
-                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.STOP_ENTITLEMENT, accountTimeZone));
+                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], target, bs, SubscriptionEventType.STOP_ENTITLEMENT, accountTimeZone));
                 continue;
             }
 
@@ -187,20 +189,47 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             final Boolean isServiceStateChange = !(isResumeEntitlement || isPauseEntitlement || isResumeBilling || isPauseBilling);
 
             if (isResumeEntitlement) {
-                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.RESUME_ENTITLEMENT, accountTimeZone));
+                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], target, bs, SubscriptionEventType.RESUME_ENTITLEMENT, accountTimeZone));
             } else if (isPauseEntitlement) {
-                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.PAUSE_ENTITLEMENT, accountTimeZone));
+                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], target, bs, SubscriptionEventType.PAUSE_ENTITLEMENT, accountTimeZone));
             }
             if (isResumeBilling) {
-                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.RESUME_BILLING, accountTimeZone));
+                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], target, bs, SubscriptionEventType.RESUME_BILLING, accountTimeZone));
             } else if (isPauseBilling) {
-                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.PAUSE_BILLING, accountTimeZone));
+                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], target, bs, SubscriptionEventType.PAUSE_BILLING, accountTimeZone));
             }
             if (isServiceStateChange) {
-                newEvents.add(toSubscriptionEvent(cur, next, target, bs, SubscriptionEventType.SERVICE_STATE_CHANGE, accountTimeZone));
+                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], target, bs, SubscriptionEventType.SERVICE_STATE_CHANGE, accountTimeZone));
             }
         }
         return index;
+    }
+
+    private SubscriptionEvent[] findPrevNext(final List<SubscriptionEvent> events, final UUID targetEntitlementId, final SubscriptionEvent insertionEvent, final BlockingState bs) {
+
+        // Find prev/next event for the same entitlement
+        final SubscriptionEvent[] result =  new DefaultSubscriptionEvent[2];
+        final Iterator<SubscriptionEvent> it = events.iterator();
+        DefaultSubscriptionEvent prev = null;
+        DefaultSubscriptionEvent next = null;
+        boolean foundCur = false;
+        while (it.hasNext()) {
+            final DefaultSubscriptionEvent tmp = (DefaultSubscriptionEvent) it.next();
+            if (tmp.getEntitlementId().equals(targetEntitlementId)) {
+                if (!foundCur) {
+                    prev = tmp;
+                } else {
+                    next = tmp;
+                    break;
+                }
+            }
+            if (tmp.getId().equals(insertionEvent.getId())) {
+                foundCur = true;
+            }
+        }
+        result[0] = prev;
+        result[1] = next;
+        return result;
     }
 
 
@@ -293,11 +322,12 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                             in.isBlockBilling(),
                                             in.getService(),
                                             in.getStateName(),
-                                            prev != null ? prev.getNextProduct() : null,
-                                            prev != null ? prev.getNextPlan() : null,
-                                            prev != null ? prev.getNextPhase() : null,
-                                            prev != null ? prev.getNextPriceList() : null,
-                                            prev != null ? prev.getNextBillingPeriod() : null,
+                                            // We look for the next for the 'prev' meaning we we are headed to, but if this is null -- for example on cancellation we get the prev which gives the correct state.
+                                            prev != null ? (prev.getNextProduct() != null ? prev.getNextProduct() : prev.getPrevProduct()) : null,
+                                            prev != null ? (prev.getNextPlan() != null ? prev.getNextPlan() : prev.getPrevPlan()) : null,
+                                            prev != null ? (prev.getNextPhase() != null ? prev.getNextPhase() : prev.getPrevPhase()) : null,
+                                            prev != null ? (prev.getNextPriceList() != null ? prev.getNextPriceList() : prev.getPrevPriceList()) : null,
+                                            prev != null ? (prev.getNextBillingPeriod() != null ? prev.getNextBillingPeriod() : prev.getPrevBillingPeriod())  : null,
                                             next != null ? next.getPrevProduct() : null,
                                             next != null ? next.getPrevPlan() : null,
                                             next != null ? next.getPrevPhase() : null,

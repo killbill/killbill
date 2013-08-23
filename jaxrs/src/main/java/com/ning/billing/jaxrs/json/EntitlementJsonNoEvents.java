@@ -41,7 +41,7 @@ public class EntitlementJsonNoEvents extends EntitlementJsonSimple {
     @JsonCreator
     public EntitlementJsonNoEvents(@JsonProperty("accountId") @Nullable final String accountId,
                                    @JsonProperty("bundleId") @Nullable final String bundleId,
-                                   @JsonProperty("entitlementId") @Nullable final String entitlementId,
+                                   @JsonProperty("subscriptionId") @Nullable final String subscriptionId,
                                    @JsonProperty("externalKey") @Nullable final String externalKey,
                                    @JsonProperty("startDate") @Nullable final LocalDate startDate,
                                    @JsonProperty("productName") @Nullable final String productName,
@@ -50,7 +50,7 @@ public class EntitlementJsonNoEvents extends EntitlementJsonSimple {
                                    @JsonProperty("priceList") @Nullable final String priceList,
                                    @JsonProperty("cancelledDate") @Nullable final LocalDate cancelledDate,
                                    @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(accountId, bundleId, entitlementId, externalKey, auditLogs);
+        super(accountId, bundleId, subscriptionId, externalKey, auditLogs);
         this.startDate = startDate;
         this.productName = productName;
         this.productCategory = productCategory;
@@ -99,7 +99,7 @@ public class EntitlementJsonNoEvents extends EntitlementJsonSimple {
 
     @Override
     public String toString() {
-        return "SubscriptionJson [subscriptionId=" + entitlementId
+        return "SubscriptionJson [subscriptionId=" + subscriptionId
                + ", productName=" + productName
                + ", productCategory=" + productCategory + ", billingPeriod="
                + billingPeriod + ", priceList=" + priceList + "]";

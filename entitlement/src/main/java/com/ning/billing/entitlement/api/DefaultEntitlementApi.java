@@ -274,13 +274,13 @@ public class DefaultEntitlementApi implements EntitlementApi {
         final BlockingState bundleEntitlementState = blockingStateDao.getBlockingStateForService(subscriptionBase.getBundleId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
         if (bundleEntitlementState != null && ENT_STATE_CANCELLED.equals(bundleEntitlementState.getStateName())) {
             final LocalDate localDate = new LocalDate(bundleEntitlementState.getEffectiveDate(), accountTimeZone);
-            result = (result == null) || (result.compareTo(localDate) < 0) ? result : localDate;
+            result = ((result == null) || (localDate.compareTo(result) < 0)) ? localDate : result;
         }
 
         final BlockingState accountEntitlementState = blockingStateDao.getBlockingStateForService(accountId, EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
         if (accountEntitlementState != null && ENT_STATE_CANCELLED.equals(accountEntitlementState.getStateName())) {
             final LocalDate localDate = new LocalDate(accountEntitlementState.getEffectiveDate(), accountTimeZone);
-            result = (result == null) || (result.compareTo(localDate) < 0) ? result : localDate;
+            result = ((result == null) || (localDate.compareTo(result) < 0)) ? localDate : result;
         }
         return result;
     }

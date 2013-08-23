@@ -50,7 +50,7 @@ public class TestSubscription extends TestJaxrsBase {
 
         final EntitlementJsonNoEvents entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName, ProductCategory.BASE.toString(), term.toString(), true);
 
-        String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getEntitlementId();
+        String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
 
         // Retrieves with GET
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);

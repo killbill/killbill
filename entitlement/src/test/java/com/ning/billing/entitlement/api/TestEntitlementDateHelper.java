@@ -43,13 +43,14 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         account = Mockito.mock(Account.class);
         Mockito.when(accountInternalApi.getAccountByRecordId(Mockito.anyLong(), Mockito.<InternalTenantContext>any())).thenReturn(account);
         dateHelper = new EntitlementDateHelper(accountInternalApi, clock);
+        clock.resetDeltaFromReality();;
     }
 
     @Test(groups = "fast")
     public void testWithAccountInUtc() throws EntitlementApiException {
 
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
-        //clock.setDay(initialDate.plusDays(1));
+        clock.setDay(initialDate.plusDays(1));
 
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
 
@@ -64,7 +65,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
     public void testWithAccountInUtcMinus8() throws EntitlementApiException {
 
         final LocalDate inputDate = new LocalDate(2013, 8, 7);
-        //.setDay(inputDate.plusDays(3));
+        clock.setDay(inputDate.plusDays(3));
 
         final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(-8);
         Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcMinus8);
@@ -79,12 +80,38 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
     }
 
 
+    @Test(groups = "fast")
+    public void test2WithAccountInUtcMinus8() throws EntitlementApiException {
+
+        final DateTime initialNow = new DateTime(2013, 8, 22,22, 07, 01, 0, DateTimeZone.UTC);
+        clock.setTime(initialNow);
+
+        final LocalDate inputDate = new LocalDate(2013, 8, 22);
+
+        final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(-8);
+        Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcMinus8);
+
+        // We also use a reference time of 16, 48, 0 -> DateTime in UTC will be (2013, 8, 23, 00, 48, 0) which:
+        // * is greater than now
+        // * with a inputLocalDate in the account timezone which is today
+        //
+        // => Code will round to now to not end up in the future
+        //
+        final DateTime refererenceDateTime = new DateTime(2013, 8, 22, 16, 48, 0, DateTimeZone.UTC);
+        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, refererenceDateTime, internalCallContext);
+
+        final DateTime now = clock.getUTCNow();
+        Assert.assertTrue(initialNow.compareTo(targetDate) <= 0);
+        Assert.assertTrue(targetDate.compareTo(now) <= 0);
+    }
+
+
 
     @Test(groups = "fast")
     public void testWithAccountInUtcPlus5() throws EntitlementApiException {
 
         final LocalDate inputDate = new LocalDate(2013, 8, 7);
-        //clock.setDay(inputDate.plusDays(1));
+        clock.setDay(inputDate.plusDays(1));
 
         final DateTimeZone timeZoneUtcPlus5 = DateTimeZone.forOffsetHours(+5);
         Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcPlus5);

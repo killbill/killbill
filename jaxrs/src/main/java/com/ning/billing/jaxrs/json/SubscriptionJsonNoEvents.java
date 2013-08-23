@@ -41,7 +41,7 @@ public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
     @JsonCreator
     public SubscriptionJsonNoEvents(@JsonProperty("accountId") @Nullable final String accountId,
                                     @JsonProperty("bundleId") @Nullable final String bundleId,
-                                    @JsonProperty("entitlementId") @Nullable final String entitlementId,
+                                    @JsonProperty("subscriptionId") @Nullable final String subscriptionId,
                                     @JsonProperty("externalKey") @Nullable final String externalKey,
                                     @JsonProperty("startDate") @Nullable final LocalDate startDate,
                                     @JsonProperty("productName") @Nullable final String productName,
@@ -53,7 +53,7 @@ public class SubscriptionJsonNoEvents extends EntitlementJsonNoEvents {
                                     @JsonProperty("chargedThroughDate") @Nullable final LocalDate chargedThroughDate,
                                     @JsonProperty("billingStartDate") @Nullable final LocalDate billingStartDate,
                                     @JsonProperty("billingEndDate") @Nullable final LocalDate billingEndDate) {
-        super(accountId, bundleId, entitlementId, externalKey, startDate, productName, productCategory, billingPeriod, priceList, cancelledDate, auditLogs);
+        super(accountId, bundleId, subscriptionId, externalKey, startDate, productName, productCategory, billingPeriod, priceList, cancelledDate, auditLogs);
         this.chargedThroughDate = chargedThroughDate;
         this.billingStartDate = billingStartDate;
         this.billingEndDate = billingEndDate;

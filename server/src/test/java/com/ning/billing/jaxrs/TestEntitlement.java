@@ -56,7 +56,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final EntitlementJsonNoEvents entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName, ProductCategory.BASE.toString(), term.toString(), true);
 
-        String uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getEntitlementId();
+        String uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
 
         // Retrieves with GET
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -70,7 +70,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final EntitlementJsonNoEvents newInput = new EntitlementJsonNoEvents(null,
                                                                              null,
-                                                                             entitlementJson.getEntitlementId(),
+                                                                             entitlementJson.getSubscriptionId(),
                                                                              null,
                                                                              null,
                                                                              newProductName,
@@ -95,12 +95,12 @@ public class TestEntitlement extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Cancel EOT
-        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getEntitlementId();
+        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
         response = doDelete(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         // Retrieves to check EndDate
-        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getEntitlementId();
+        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
@@ -111,7 +111,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // Uncancel
         // STEPH_ENT uncancel not implemented yet
-        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getEntitlementId() + "/uncancel";
+        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId() + "/uncancel";
         response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
     }
@@ -144,7 +144,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.ANNUAL;
 
         final EntitlementJsonNoEvents entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), "99999", productName, ProductCategory.BASE.toString(), term.toString(), true);
-        final String uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJsonNoEvents.getEntitlementId();
+        final String uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJsonNoEvents.getSubscriptionId();
 
         // Retrieves with GET
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -157,7 +157,7 @@ public class TestEntitlement extends TestJaxrsBase {
         // Change billing period immediately
         final EntitlementJsonNoEvents newInput = new EntitlementJsonNoEvents(null,
                                                                              null,
-                                                                             entitlementJsonNoEvents.getEntitlementId(),
+                                                                             entitlementJsonNoEvents.getSubscriptionId(),
                                                                              null,
                                                                              null,
                                                                              entitlementJsonNoEvents.getProductName(),
