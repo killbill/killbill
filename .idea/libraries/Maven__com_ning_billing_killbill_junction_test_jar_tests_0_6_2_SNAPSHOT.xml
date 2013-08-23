@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.ning.billing:killbill-junction:test-jar:tests:0.6.2-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-junction/0.6.2-SNAPSHOT/killbill-junction-0.6.2-SNAPSHOT-tests.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-junction/0.6.2-SNAPSHOT/killbill-junction-0.6.2-SNAPSHOT-test-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-junction/0.6.2-SNAPSHOT/killbill-junction-0.6.2-SNAPSHOT-test-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

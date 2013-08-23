@@ -33,10 +33,10 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: cglib:cglib-nodep:2.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.objenesis:objenesis:1.2" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.6.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.6.1" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.0" level="project" />
     <orderEntry type="module" module-name="killbill-catalog" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-catalog:test-jar:tests:0.6.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-catalog:test-jar:tests:0.6.2-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="killbill-internal-api" />
     <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.4.0" level="project" />
     <orderEntry type="library" name="Maven: org.skife.config:config-magic:0.14" level="project" />
@@ -72,7 +72,7 @@
     <orderEntry type="library" name="Maven: org.slf4j:jcl-over-slf4j:1.7.5" level="project" />
     <orderEntry type="module" module-name="killbill-catalog" scope="TEST" />
     <orderEntry type="module" module-name="killbill-util" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.6.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.6.2-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.2.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-embeddeddb:0.2.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-queue:test-jar:tests:0.2.1" level="project" />
