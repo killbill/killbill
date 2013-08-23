@@ -109,11 +109,11 @@ public class TestEntitlement extends TestJaxrsBase {
         assertNotNull(objFromJson.getCancelledDate());
         assertTrue(objFromJson.getCancelledDate().compareTo(new LocalDate(clock.getUTCNow())) == 0);
 
-        // Uncancel
-        // STEPH_ENT uncancel not implemented yet
+    /*
         uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId() + "/uncancel";
         response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        */
     }
 
     @Test(groups = "slow")
