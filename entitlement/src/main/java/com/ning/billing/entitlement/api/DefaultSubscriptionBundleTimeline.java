@@ -417,16 +417,8 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             this.perServiceBlockingState = new HashMap<String, BlockingState>();
         }
 
-        public boolean isEntitlementStarted() {
-            return isEntitlementStarted;
-        }
-
         public void setEntitlementStarted() {
             isEntitlementStarted = true;
-        }
-
-        public boolean isEntitlementStopped() {
-            return isEntitlementStopped;
         }
 
         public void setEntitlementStopped() {
@@ -434,16 +426,8 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         }
 
 
-        public boolean isBillingStarted() {
-            return isBillingStarted;
-        }
-
         public void setBillingStarted() {
             isBillingStarted = true;
-        }
-
-        public boolean isBillingStopped() {
-            return isBillingStopped;
         }
 
         public void setBillingStopped() {
