@@ -115,17 +115,15 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         });
 
         for (BlockingState bs : allBlockingStates) {
-            final LocalDate bsEffectiveDate = new LocalDate(bs.getEffectiveDate(), accountTimeZone);
-
 
             final List<SubscriptionEvent> newEvents = new ArrayList<SubscriptionEvent>();
-            int index = insertFromBlockingEvent(accountTimeZone, allEntitlementUUIDs, result, bs, bsEffectiveDate, newEvents);
+            int index = insertFromBlockingEvent(accountTimeZone, allEntitlementUUIDs, result, bs, bs.getEffectiveDate(), newEvents);
             result.addAll(index, newEvents);
         }
         return result;
     }
 
-    private int insertFromBlockingEvent(final DateTimeZone accountTimeZone, final Set<UUID> allEntitlementUUIDs, final LinkedList<SubscriptionEvent> result, final BlockingState bs, final LocalDate bsEffectiveDate, final List<SubscriptionEvent> newEvents) {
+    private int insertFromBlockingEvent(final DateTimeZone accountTimeZone, final Set<UUID> allEntitlementUUIDs, final LinkedList<SubscriptionEvent> result, final BlockingState bs, final DateTime bsEffectiveDate, final List<SubscriptionEvent> newEvents) {
 
 
         // Keep the current state per entitlement
@@ -145,7 +143,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             DefaultSubscriptionEvent cur = (DefaultSubscriptionEvent) it.next();
             index++;
 
-            final int compEffectiveDate = bsEffectiveDate.compareTo(cur.getEffectiveDate());
+            final int compEffectiveDate = bsEffectiveDate.compareTo(cur.getEffectiveDateTime());
             final boolean shouldContinue = (compEffectiveDate > 0 ||
                                             (compEffectiveDate == 0 && bs.getCreatedDate().compareTo(cur.getCreatedDate()) >= 0));
             if (!shouldContinue) {
