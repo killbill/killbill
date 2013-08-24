@@ -35,7 +35,7 @@ import com.google.inject.Inject;
 
 public class DefaultBlockingChecker implements BlockingChecker {
 
-    private static class DefaultBlockingAggregator implements BlockingAggregator {
+    public static class DefaultBlockingAggregator implements BlockingAggregator {
 
         private boolean blockChange = false;
         private boolean blockEntitlement = false;

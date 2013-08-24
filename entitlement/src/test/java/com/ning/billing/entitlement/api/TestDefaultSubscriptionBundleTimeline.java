@@ -72,18 +72,18 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         final DateTime requestedDate = new DateTime();
         DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
-        final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow());
+        final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), 0);
         allTransitions.add(tr1);
 
         effectiveDate = effectiveDate.plusDays(30);
         clock.addDays(30);
-        final SubscriptionBaseTransition tr2 = createTransition(entitlementId, EventType.PHASE, null, requestedDate, effectiveDate, clock.getUTCNow());
+        final SubscriptionBaseTransition tr2 = createTransition(entitlementId, EventType.PHASE, null, requestedDate, effectiveDate, clock.getUTCNow(), 1);
         allTransitions.add(tr2);
 
 
         effectiveDate = effectiveDate.plusDays(15);
         clock.addDays(15);
-        final SubscriptionBaseTransition tr3 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CANCEL, requestedDate, effectiveDate, clock.getUTCNow());
+        final SubscriptionBaseTransition tr3 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CANCEL, requestedDate, effectiveDate, clock.getUTCNow(), 2);
         allTransitions.add(tr3);
 
 
@@ -109,6 +109,11 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
         assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.PHASE);
         assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
+
+        assertEquals(events.get(0).getNextPhase().getName(), "phase-0");
+        assertEquals(events.get(1).getNextPhase().getName(), "phase-0");
+        assertEquals(events.get(2).getNextPhase().getName(), "phase-1");
+        assertEquals(events.get(3).getNextPhase().getName(), "phase-2");
     }
 
 
@@ -130,12 +135,12 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         final DateTime requestedDate = new DateTime();
         DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
-        final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow());
+        final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), 0);
         allTransitions.add(tr1);
 
         effectiveDate = effectiveDate.plusDays(30);
         clock.addDays(30);
-        final SubscriptionBaseTransition tr2 = createTransition(entitlementId, EventType.PHASE, null, requestedDate, effectiveDate, clock.getUTCNow());
+        final SubscriptionBaseTransition tr2 = createTransition(entitlementId, EventType.PHASE, null, requestedDate, effectiveDate, clock.getUTCNow(), 1);
         allTransitions.add(tr2);
 
         effectiveDate = effectiveDate.plusDays(5);
@@ -147,7 +152,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         effectiveDate = effectiveDate.plusDays(15);
         clock.addDays(15);
-        final SubscriptionBaseTransition tr3 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CANCEL, requestedDate, effectiveDate, clock.getUTCNow());
+        final SubscriptionBaseTransition tr3 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CANCEL, requestedDate, effectiveDate, clock.getUTCNow(), 2);
         allTransitions.add(tr3);
         final BlockingState bs2 = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
                                                            DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
@@ -201,18 +206,18 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         final DateTime requestedDate = new DateTime();
         DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
-        final SubscriptionBaseTransition ent1Tr1 = createTransition(entitlementId1, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow());
+        final SubscriptionBaseTransition ent1Tr1 = createTransition(entitlementId1, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), 0);
         allTransitions1.add(ent1Tr1);
 
 
         effectiveDate = effectiveDate.plusDays(15);
         clock.addDays(15);
-        final SubscriptionBaseTransition ent2Tr1 = createTransition(entitlementId2, EventType.API_USER, ApiEventType.TRANSFER, requestedDate, effectiveDate, clock.getUTCNow());
+        final SubscriptionBaseTransition ent2Tr1 = createTransition(entitlementId2, EventType.API_USER, ApiEventType.TRANSFER, requestedDate, effectiveDate, clock.getUTCNow(), 1);
         allTransitions2.add(ent2Tr1);
 
         effectiveDate = effectiveDate.plusDays(15);
         clock.addDays(15);
-        final SubscriptionBaseTransition ent1Tr2 = createTransition(entitlementId1, EventType.PHASE, null, requestedDate, effectiveDate, clock.getUTCNow());
+        final SubscriptionBaseTransition ent1Tr2 = createTransition(entitlementId1, EventType.PHASE, null, requestedDate, effectiveDate, clock.getUTCNow(), 2);
         allTransitions1.add(ent1Tr2);
 
         effectiveDate = effectiveDate.plusDays(5);
@@ -224,7 +229,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         effectiveDate = effectiveDate.plusDays(15);
         clock.addDays(15);
-        final SubscriptionBaseTransition ent1Tr3 = createTransition(entitlementId1, EventType.API_USER, ApiEventType.CANCEL, requestedDate, effectiveDate, clock.getUTCNow());
+        final SubscriptionBaseTransition ent1Tr3 = createTransition(entitlementId1, EventType.API_USER, ApiEventType.CANCEL, requestedDate, effectiveDate, clock.getUTCNow(), 3);
         allTransitions1.add(ent1Tr3);
         final BlockingState bs2 = new DefaultBlockingState(UUID.randomUUID(), entitlementId1, BlockingStateType.SUBSCRIPTION,
                                                            DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
@@ -284,17 +289,25 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         return result;
     }
 
+    private String computePhaseName(final UUID entitlementId, final EventType eventType, final ApiEventType apiEventType) {
+        return "phase-" +
+               entitlementId.toString() +
+               "-" +
+               (eventType == EventType.API_USER ? apiEventType : eventType);
+    }
+
     private SubscriptionBaseTransition createTransition(final UUID entitlementId,
                                                         final EventType eventType,
                                                         final ApiEventType apiEventType,
                                                         final DateTime requestedDate,
                                                         final DateTime effectiveDate,
-                                                        final DateTime createdDate
+                                                        final DateTime createdDate,
+                                                        int order
                                                        ) throws CatalogApiException {
 
 
         final PlanPhase phase = Mockito.mock(PlanPhase.class);
-        Mockito.when(phase.getName()).thenReturn("phase");
+        Mockito.when(phase.getName()).thenReturn("phase-" + order);
 
         //catalogService.getCurrentCatalog().findCurrentPhase("pistol-monthly-trial");
         final Plan plan = Mockito.mock(Plan.class);
