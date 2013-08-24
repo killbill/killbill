@@ -129,7 +129,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
 
 
         // Keep the current state per entitlement
-        final Map<UUID, TargetState> targetStates= new HashMap<UUID, TargetState>();
+        final Map<UUID, TargetState> targetStates = new HashMap<UUID, TargetState>();
         for (UUID cur : allEntitlementUUIDs) {
             targetStates.put(cur, new TargetState());
         }
@@ -140,38 +140,38 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         int index = -1;
         final Iterator<SubscriptionEvent> it = result.iterator();
         // Where we need to insert in that stream
-        DefaultSubscriptionEvent cur = null;
+        DefaultSubscriptionEvent curInsertion = null;
         while (it.hasNext()) {
-            cur = (DefaultSubscriptionEvent) it.next();
+            DefaultSubscriptionEvent cur = (DefaultSubscriptionEvent) it.next();
             index++;
 
             final int compEffectiveDate = bsEffectiveDate.compareTo(cur.getEffectiveDate());
             final boolean shouldContinue = (compEffectiveDate > 0 ||
                                             (compEffectiveDate == 0 && bs.getCreatedDate().compareTo(cur.getCreatedDate()) >= 0));
-
-            final TargetState curTargetState = targetStates.get(cur.getEntitlementId());
-            if (shouldContinue) {
-                switch (cur.getSubscriptionEventType()) {
-                    case START_ENTITLEMENT:
-                        curTargetState.setEntitlementStarted();
-                        break;
-                    case STOP_ENTITLEMENT:
-                        curTargetState.setEntitlementStopped();
-                        break;
-                    case START_BILLING:
-                        curTargetState.setBillingStarted();
-                        break;
-                    case PAUSE_BILLING:
-                    case PAUSE_ENTITLEMENT:
-                        curTargetState.addEntitlementEvent(cur);
-                        break;
-                    case STOP_BILLING:
-                        curTargetState.setBillingStopped();
-                        break;
-                }
-            } else {
+            if (!shouldContinue) {
                 break;
             }
+
+            final TargetState curTargetState = targetStates.get(cur.getEntitlementId());
+            switch (cur.getSubscriptionEventType()) {
+                case START_ENTITLEMENT:
+                    curTargetState.setEntitlementStarted();
+                    break;
+                case STOP_ENTITLEMENT:
+                    curTargetState.setEntitlementStopped();
+                    break;
+                case START_BILLING:
+                    curTargetState.setBillingStarted();
+                    break;
+                case PAUSE_BILLING:
+                case PAUSE_ENTITLEMENT:
+                    curTargetState.addEntitlementEvent(cur);
+                    break;
+                case STOP_BILLING:
+                    curTargetState.setBillingStopped();
+                    break;
+            }
+            curInsertion = cur;
         }
 
         // Extract the list of targets based on the type of blocking state
@@ -181,7 +181,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         // For each target compute the new events that should be inserted in the stream
         for (UUID target : targetEntitlementIds) {
 
-            final SubscriptionEvent[] prevNext = findPrevNext(result, target, cur, bs);
+            final SubscriptionEvent[] prevNext = findPrevNext(result, target, curInsertion);
             final TargetState curTargetState = targetStates.get(target);
 
             final List<SubscriptionEventType> eventTypes = curTargetState.addStateAndReturnEventTypes(bs);
@@ -192,10 +192,16 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         return index;
     }
 
-    private SubscriptionEvent[] findPrevNext(final List<SubscriptionEvent> events, final UUID targetEntitlementId, final SubscriptionEvent insertionEvent, final BlockingState bs) {
+    private SubscriptionEvent[] findPrevNext(final List<SubscriptionEvent> events, final UUID targetEntitlementId, final SubscriptionEvent insertionEvent) {
 
         // Find prev/next event for the same entitlement
-        final SubscriptionEvent[] result =  new DefaultSubscriptionEvent[2];
+        final SubscriptionEvent[] result = new DefaultSubscriptionEvent[2];
+        if (insertionEvent == null) {
+            result[0] = null;
+            result[1] = events.size() > 0 ? events.get(0) : null;
+            return result;
+        }
+
         final Iterator<SubscriptionEvent> it = events.iterator();
         DefaultSubscriptionEvent prev = null;
         DefaultSubscriptionEvent next = null;
@@ -251,16 +257,16 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     private void sanitizeForBaseRecreateEvents(final LinkedList<SubscriptionEvent> input) {
 
         final Set<UUID> guiltyEntitlementIds = new TreeSet<UUID>();
-        ListIterator<SubscriptionEvent> it = input.listIterator(input.size() - 1);
+        ListIterator<SubscriptionEvent> it = input.listIterator(input.size());
         while (it.hasPrevious()) {
             final SubscriptionEvent cur = it.previous();
             if (cur.getSubscriptionEventType() == SubscriptionEventType.RESUME_BILLING) {
-                guiltyEntitlementIds.add(cur.getId());
+                guiltyEntitlementIds.add(cur.getEntitlementId());
                 continue;
             }
             if (cur.getSubscriptionEventType() == SubscriptionEventType.STOP_BILLING &&
-                guiltyEntitlementIds.contains(cur.getId())) {
-                guiltyEntitlementIds.remove(cur.getId());
+                guiltyEntitlementIds.contains(cur.getEntitlementId())) {
+                guiltyEntitlementIds.remove(cur.getEntitlementId());
                 final SubscriptionEvent correctedEvent = new DefaultSubscriptionEvent((DefaultSubscriptionEvent) cur, SubscriptionEventType.PAUSE_BILLING);
                 it.set(correctedEvent);
             }
@@ -314,7 +320,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                             prev != null ? (prev.getNextPlan() != null ? prev.getNextPlan() : prev.getPrevPlan()) : null,
                                             prev != null ? (prev.getNextPhase() != null ? prev.getNextPhase() : prev.getPrevPhase()) : null,
                                             prev != null ? (prev.getNextPriceList() != null ? prev.getNextPriceList() : prev.getPrevPriceList()) : null,
-                                            prev != null ? (prev.getNextBillingPeriod() != null ? prev.getNextBillingPeriod() : prev.getPrevBillingPeriod())  : null,
+                                            prev != null ? (prev.getNextBillingPeriod() != null ? prev.getNextBillingPeriod() : prev.getPrevBillingPeriod()) : null,
                                             next != null ? next.getPrevProduct() : null,
                                             next != null ? next.getPrevPlan() : null,
                                             next != null ? next.getPrevPhase() : null,
@@ -401,6 +407,9 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         return events;
     }
 
+    //
+    // Internal class to keep the state associated with each subscription
+    //
     private final static class TargetState {
 
         private boolean isEntitlementStarted;
@@ -425,7 +434,6 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             isEntitlementStopped = true;
         }
 
-
         public void setBillingStarted() {
             isBillingStarted = true;
         }
@@ -441,17 +449,28 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             perServiceBlockingState.put(converted.getService(), converted);
 
         }
+
         public List<SubscriptionEventType> addStateAndReturnEventTypes(final BlockingState bs) {
 
-            final List<SubscriptionEventType> result  = new ArrayList<SubscriptionEventType>(4);
-            if (bs.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED)) {
+            // Turn off isBlockedEntitlement and isBlockedBilling if there was not start event
+            final BlockingState fixedBlockingState = new DefaultBlockingState(bs.getBlockedId(),
+                                                                              bs.getType(),
+                                                                              bs.getStateName(),
+                                                                              bs.getService(),
+                                                                              bs.isBlockChange(),
+                                                                              (bs.isBlockEntitlement() && isEntitlementStarted && !isEntitlementStopped),
+                                                                              (bs.isBlockBilling() && isBillingStarted && !isBillingStopped),
+                                                                              bs.getEffectiveDate());
+
+            final List<SubscriptionEventType> result = new ArrayList<SubscriptionEventType>(4);
+            if (fixedBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED)) {
                 isEntitlementStopped = true;
                 result.add(SubscriptionEventType.STOP_ENTITLEMENT);
                 return result;
             }
 
             final BlockingAggregator stateBefore = getState();
-            perServiceBlockingState.put(bs.getService(), bs);
+            perServiceBlockingState.put(fixedBlockingState.getService(), fixedBlockingState);
             final BlockingAggregator stateAfter = getState();
 
             final boolean shouldResumeEntitlement = isEntitlementStarted && !isEntitlementStopped && stateBefore.isBlockEntitlement() && !stateAfter.isBlockEntitlement();
@@ -472,7 +491,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 result.add(SubscriptionEventType.PAUSE_BILLING);
             }
 
-            if (!shouldResumeEntitlement && !shouldBlockEntitlement && !shouldBlockEntitlement && !shouldBlockBilling && !bs.getService().equals(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME)) {
+            if (!shouldResumeEntitlement && !shouldBlockEntitlement && !shouldBlockEntitlement && !shouldBlockBilling && !fixedBlockingState.getService().equals(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME)) {
                 result.add(SubscriptionEventType.SERVICE_STATE_CHANGE);
             }
             return result;
@@ -578,7 +597,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                  copy.getNextPriceList(),
                  copy.getNextBillingPeriod(),
                  copy.getCreatedDate(),
-                copy.getAccountTimeZone());
+                 copy.getAccountTimeZone());
         }
 
         public DateTimeZone getAccountTimeZone() {
