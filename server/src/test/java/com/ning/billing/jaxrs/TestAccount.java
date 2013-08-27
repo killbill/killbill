@@ -31,12 +31,14 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountJsonWithBalance;
+import com.ning.billing.jaxrs.json.AuditLogJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
+import com.ning.billing.util.api.AuditLevel;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -280,10 +282,20 @@ public class TestAccount extends TestJaxrsBase {
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
         // Retrieves all tags again
-        response = doGetWithUrl(accountTagsUrl, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doGetWithUrl(accountTagsUrl, ImmutableMap.<String, String>of(JaxrsResource.QUERY_AUDIT, AuditLevel.FULL.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final List<TagJson> tags2 = mapper.readValue(response.getResponseBody(), new TypeReference<List<TagJson>>() {});
         Assert.assertEquals(tags2, tags1);
+
+        // Verify audit logs
+        Assert.assertEquals(tags2.get(0).getAuditLogs().size(), 1);
+        final AuditLogJson auditLogJson = tags2.get(0).getAuditLogs().get(0);
+        Assert.assertEquals(auditLogJson.getChangeType(), "INSERT");
+        Assert.assertEquals(auditLogJson.getChangedBy(), createdBy);
+        Assert.assertEquals(auditLogJson.getReasonCode(), reason);
+        Assert.assertEquals(auditLogJson.getComments(), comment);
+        Assert.assertNotNull(auditLogJson.getChangeDate());
+        Assert.assertNotNull(auditLogJson.getUserToken());
     }
 
     @Test(groups = "slow")
@@ -292,9 +304,9 @@ public class TestAccount extends TestJaxrsBase {
         assertNotNull(accountJson);
 
         final List<CustomFieldJson> customFields = new LinkedList<CustomFieldJson>();
-        customFields.add(new CustomFieldJson("1", "value1"));
-        customFields.add(new CustomFieldJson("2", "value2"));
-        customFields.add(new CustomFieldJson("3", "value3"));
+        customFields.add(new CustomFieldJson("1", "value1", null));
+        customFields.add(new CustomFieldJson("2", "value2", null));
+        customFields.add(new CustomFieldJson("3", "value3", null));
         final String baseJson = mapper.writeValueAsString(customFields);
 
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.CUSTOM_FIELDS;

@@ -83,7 +83,7 @@ public class PaymentJsonSimple extends JsonBase {
         this.extSecondPaymentIdRef = extSecondPaymentIdRef;
     }
 
-    public PaymentJsonSimple(final Payment src, final List<AuditLog> auditLogs) {
+    public PaymentJsonSimple(final Payment src, @Nullable final List<AuditLog> auditLogs) {
         this(src.getAmount(), src.getPaidAmount(), src.getAccountId().toString(), src.getInvoiceId().toString(),
              src.getId().toString(), src.getPaymentMethodId().toString(), src.getEffectiveDate(), src.getEffectiveDate(),
              src.getAttempts().size(), src.getCurrency().toString(), src.getPaymentStatus().toString(),

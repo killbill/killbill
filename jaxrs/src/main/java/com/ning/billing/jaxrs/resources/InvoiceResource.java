@@ -49,6 +49,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -70,11 +71,13 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.audit.AuditLogsForInvoices;
+import com.ning.billing.util.audit.AuditLogsForPayments;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.clock.Clock;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -113,6 +116,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getInvoices(@QueryParam(QUERY_ACCOUNT_ID) final String accountId,
                                 @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
 
@@ -120,17 +124,22 @@ public class InvoiceResource extends JaxRsResourceBase {
         accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
 
         final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(UUID.fromString(accountId), tenantContext);
+        final AuditLogsForInvoices invoicesAuditLogs = auditUserApi.getAuditLogsForInvoices(invoices, auditMode.getLevel(), tenantContext);
+
         if (withItems) {
             final List<InvoiceJsonWithItems> result = new LinkedList<InvoiceJsonWithItems>();
             for (final Invoice invoice : invoices) {
-                result.add(new InvoiceJsonWithItems(invoice));
+                result.add(new InvoiceJsonWithItems(invoice,
+                                                    invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
+                                                    invoicesAuditLogs.getInvoiceItemsAuditLogs()));
             }
 
             return Response.status(Status.OK).entity(result).build();
         } else {
             final List<InvoiceJsonSimple> result = new LinkedList<InvoiceJsonSimple>();
             for (final Invoice invoice : invoices) {
-                result.add(new InvoiceJsonSimple(invoice));
+                result.add(new InvoiceJsonSimple(invoice,
+                                                 invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId())));
             }
 
             return Response.status(Status.OK).entity(result).build();
@@ -142,12 +151,23 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getInvoice(@PathParam("invoiceId") final String invoiceId,
                                @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                               @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
-        final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId), context.createContext(request));
+        final TenantContext tenantContext = context.createContext(request);
+        final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId), tenantContext);
+        final AuditLogsForInvoices invoicesAuditLogs = auditUserApi.getAuditLogsForInvoices(ImmutableList.<Invoice>of(invoice),
+                                                                                            auditMode.getLevel(),
+                                                                                            tenantContext);
+
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         } else {
-            final InvoiceJsonSimple json = withItems ? new InvoiceJsonWithItems(invoice) : new InvoiceJsonSimple(invoice);
+            final InvoiceJsonSimple json = withItems ?
+                                           new InvoiceJsonWithItems(invoice,
+                                                                    invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
+                                                                    invoicesAuditLogs.getInvoiceItemsAuditLogs()) :
+                                           new InvoiceJsonSimple(invoice,
+                                                                 invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()));
             return Response.status(Status.OK).entity(json).build();
         }
     }
@@ -157,12 +177,23 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getInvoiceByNumber(@PathParam("invoiceNumber") final Integer invoiceNumber,
                                        @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
-        final Invoice invoice = invoiceApi.getInvoiceByNumber(invoiceNumber, context.createContext(request));
+        final TenantContext tenantContext = context.createContext(request);
+        final Invoice invoice = invoiceApi.getInvoiceByNumber(invoiceNumber, tenantContext);
+        final AuditLogsForInvoices invoicesAuditLogs = auditUserApi.getAuditLogsForInvoices(ImmutableList.<Invoice>of(invoice),
+                                                                                            auditMode.getLevel(),
+                                                                                            tenantContext);
+
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceNumber);
         } else {
-            final InvoiceJsonSimple json = withItems ? new InvoiceJsonWithItems(invoice) : new InvoiceJsonSimple(invoice);
+            final InvoiceJsonSimple json = withItems ?
+                                           new InvoiceJsonWithItems(invoice,
+                                                                    invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
+                                                                    invoicesAuditLogs.getInvoiceItemsAuditLogs()) :
+                                           new InvoiceJsonSimple(invoice,
+                                                                 invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()));
             return Response.status(Status.OK).entity(json).build();
         }
     }
@@ -189,7 +220,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
 
-        final DateTime inputDateTime =  targetDateTime != null ? DATE_TIME_FORMATTER.parseDateTime(targetDateTime) : clock.getUTCNow();
+        final DateTime inputDateTime = targetDateTime != null ? DATE_TIME_FORMATTER.parseDateTime(targetDateTime) : clock.getUTCNow();
         final LocalDate inputDate = inputDateTime.toDateTime(account.getTimeZone()).toLocalDate();
 
         final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRun,
@@ -349,12 +380,15 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
     public Response getPayments(@PathParam("invoiceId") final String invoiceId,
+                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        final List<Payment> payments = paymentApi.getInvoicePayments(UUID.fromString(invoiceId), context.createContext(request));
+        final TenantContext tenantContext = context.createContext(request);
+        final List<Payment> payments = paymentApi.getInvoicePayments(UUID.fromString(invoiceId), tenantContext);
+        final AuditLogsForPayments auditLogsForPayments = auditUserApi.getAuditLogsForPayments(payments, auditMode.getLevel(), tenantContext);
 
         final List<PaymentJsonSimple> result = new ArrayList<PaymentJsonSimple>(payments.size());
         for (final Payment cur : payments) {
-            result.add(new PaymentJsonSimple(cur));
+            result.add(new PaymentJsonSimple(cur, auditLogsForPayments.getPaymentsAuditLogs().get(cur.getId())));
         }
 
         return Response.status(Status.OK).entity(result).build();
@@ -438,8 +472,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path(CUSTOM_FIELD_URI)
     @Produces(APPLICATION_JSON)
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+                                    @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        return super.getCustomFields(UUID.fromString(id), context.createContext(request));
+        return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
     }
 
     @POST
@@ -474,9 +509,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path(TAG_URI)
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
-                            @QueryParam(QUERY_AUDIT) @DefaultValue("false") final Boolean withAudit,
+                            @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), withAudit, context.createContext(request));
+        return super.getTags(UUID.fromString(id), auditMode, context.createContext(request));
     }
 
     @POST

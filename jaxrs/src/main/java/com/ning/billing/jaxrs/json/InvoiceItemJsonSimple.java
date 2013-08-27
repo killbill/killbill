@@ -25,6 +25,7 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -76,11 +77,15 @@ public class InvoiceItemJsonSimple extends JsonBase {
         this.currency = currency;
     }
 
-    public InvoiceItemJsonSimple(final InvoiceItem item) {
+    public InvoiceItemJsonSimple(final InvoiceItem item, @Nullable final List<AuditLog> auditLogs) {
         this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getLinkedItemId()),
              toString(item.getAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
              item.getPlanName(), item.getPhaseName(), item.getDescription(), item.getStartDate(), item.getEndDate(),
-             item.getAmount(), item.getCurrency(), null);
+             item.getAmount(), item.getCurrency(), toAuditLogJson(auditLogs));
+    }
+
+    public InvoiceItemJsonSimple(final InvoiceItem input) {
+        this(input, null);
     }
 
     public String getInvoiceItemId() {

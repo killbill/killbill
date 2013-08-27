@@ -436,7 +436,11 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected InvoiceJsonSimple getInvoice(final String invoiceId) throws IOException {
-        return doGetInvoice(invoiceId, Boolean.FALSE, InvoiceJsonSimple.class);
+        return getInvoiceWithAudits(invoiceId, AuditLevel.NONE);
+    }
+
+    protected InvoiceJsonSimple getInvoiceWithAudits(final String invoiceId, final AuditLevel auditLevel) throws IOException {
+        return doGetInvoice(invoiceId, Boolean.FALSE, InvoiceJsonSimple.class, auditLevel);
     }
 
     protected InvoiceJsonSimple getInvoice(final Integer invoiceNumber) throws IOException {
@@ -444,14 +448,19 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected InvoiceJsonWithItems getInvoiceWithItems(final String invoiceId) throws IOException {
-        return doGetInvoice(invoiceId, Boolean.TRUE, InvoiceJsonWithItems.class);
+        return getInvoiceWithItemsWithAudits(invoiceId, AuditLevel.NONE);
     }
 
-    private <T> T doGetInvoice(final String invoiceId, final Boolean withItems, final Class<T> clazz) throws IOException {
+    protected InvoiceJsonWithItems getInvoiceWithItemsWithAudits(final String invoiceId, final AuditLevel auditLevel) throws IOException {
+        return doGetInvoice(invoiceId, Boolean.TRUE, InvoiceJsonWithItems.class, auditLevel);
+    }
+
+    private <T> T doGetInvoice(final String invoiceId, final Boolean withItems, final Class<T> clazz, final AuditLevel auditLevel) throws IOException {
         final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId;
 
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, withItems.toString());
+        queryParams.put(JaxrsResource.QUERY_AUDIT, auditLevel.toString());
 
         final Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
@@ -464,19 +473,28 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected List<InvoiceJsonSimple> getInvoicesForAccount(final String accountId) throws IOException {
-        return doGetInvoicesForAccount(accountId, Boolean.FALSE, new TypeReference<List<InvoiceJsonSimple>>() {});
+        return getInvoicesForAccountWithAudits(accountId, AuditLevel.NONE);
+    }
+
+    protected List<InvoiceJsonSimple> getInvoicesForAccountWithAudits(final String accountId, final AuditLevel auditLevel) throws IOException {
+        return doGetInvoicesForAccount(accountId, Boolean.FALSE, new TypeReference<List<InvoiceJsonSimple>>() {}, auditLevel);
     }
 
     protected List<InvoiceJsonWithItems> getInvoicesWithItemsForAccount(final String accountId) throws IOException {
-        return doGetInvoicesForAccount(accountId, Boolean.TRUE, new TypeReference<List<InvoiceJsonWithItems>>() {});
+        return getInvoicesWithItemsForAccountWithAudits(accountId, AuditLevel.NONE);
     }
 
-    private <T> List<T> doGetInvoicesForAccount(final String accountId, final Boolean withItems, final TypeReference<List<T>> clazz) throws IOException {
+    protected List<InvoiceJsonWithItems> getInvoicesWithItemsForAccountWithAudits(final String accountId, final AuditLevel auditLevel) throws IOException {
+        return doGetInvoicesForAccount(accountId, Boolean.TRUE, new TypeReference<List<InvoiceJsonWithItems>>() {}, auditLevel);
+    }
+
+    private <T> List<T> doGetInvoicesForAccount(final String accountId, final Boolean withItems, final TypeReference<List<T>> clazz, final AuditLevel auditLevel) throws IOException {
         final String invoicesURI = JaxrsResource.INVOICES_PATH;
 
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountId);
         queryParams.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, withItems.toString());
+        queryParams.put(JaxrsResource.QUERY_AUDIT, auditLevel.toString());
 
         final Response invoicesResponse = doGet(invoicesURI, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(invoicesResponse.getStatusCode(), Status.OK.getStatusCode());

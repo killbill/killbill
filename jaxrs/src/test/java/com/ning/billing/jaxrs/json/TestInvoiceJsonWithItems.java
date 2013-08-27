@@ -84,7 +84,7 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuiteNoDB {
         final InvoiceItem invoiceItem = createInvoiceItem();
         Mockito.when(invoice.getInvoiceItems()).thenReturn(ImmutableList.<InvoiceItem>of(invoiceItem));
 
-        final InvoiceJsonWithItems invoiceJsonWithItems = new InvoiceJsonWithItems(invoice);
+        final InvoiceJsonWithItems invoiceJsonWithItems = new InvoiceJsonWithItems(invoice, null, null);
         Assert.assertEquals(invoiceJsonWithItems.getAmount(), invoice.getChargedAmount());
         Assert.assertEquals(invoiceJsonWithItems.getInvoiceId(), invoice.getId().toString());
         Assert.assertEquals(invoiceJsonWithItems.getInvoiceDate(), invoice.getInvoiceDate());

@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -27,6 +29,7 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -52,11 +55,11 @@ public class InvoiceJsonWithItems extends InvoiceJsonSimple {
         this.items = new ArrayList<InvoiceItemJsonSimple>(items);
     }
 
-    public InvoiceJsonWithItems(final Invoice input) {
-        super(input);
+    public InvoiceJsonWithItems(final Invoice input, @Nullable final List<AuditLog> invoiceAuditLogs, @Nullable final Map<UUID, List<AuditLog>> invoiceItemsAuditLogs) {
+        super(input, invoiceAuditLogs);
         this.items = new ArrayList<InvoiceItemJsonSimple>(input.getInvoiceItems().size());
         for (final InvoiceItem item : input.getInvoiceItems()) {
-            this.items.add(new InvoiceItemJsonSimple(item));
+            this.items.add(new InvoiceItemJsonSimple(item, invoiceItemsAuditLogs == null ? null : invoiceItemsAuditLogs.get(item.getId())));
         }
     }
 

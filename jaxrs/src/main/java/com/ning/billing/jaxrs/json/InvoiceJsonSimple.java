@@ -67,7 +67,7 @@ public class InvoiceJsonSimple extends JsonBase {
         this.accountId = accountId;
     }
 
-    public InvoiceJsonSimple(final Invoice input, final List<AuditLog> auditLogs) {
+    public InvoiceJsonSimple(final Invoice input, @Nullable final List<AuditLog> auditLogs) {
         this(input.getChargedAmount(), input.getCurrency().toString(), input.getCreditedAmount(), input.getRefundedAmount(),
              input.getId().toString(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
              input.getBalance(), input.getAccountId().toString(), toAuditLogJson(auditLogs));

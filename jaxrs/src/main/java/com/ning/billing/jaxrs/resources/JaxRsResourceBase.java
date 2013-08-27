@@ -17,11 +17,9 @@
 package com.ning.billing.jaxrs.resources;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -35,7 +33,6 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -51,6 +48,7 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.customfield.CustomField;
@@ -97,46 +95,18 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return null;
     }
 
-    protected Response getTags(final UUID id, final boolean withAudit, final TenantContext context) throws TagDefinitionApiException {
-        final List<Tag> tags = tagUserApi.getTagsForObject(id, getObjectType(), context);
-        final Collection<UUID> tagIdList = (tags.size() == 0) ?
-                                           Collections.<UUID>emptyList() :
-                                           Collections2.transform(tags, new Function<Tag, UUID>() {
-                                               @Override
-                                               public UUID apply(final Tag input) {
-                                                   return input.getTagDefinitionId();
-                                               }
-                                           });
+    protected Response getTags(final UUID taggedObjectId, final AuditMode auditMode, final TenantContext context) throws TagDefinitionApiException {
+        final List<Tag> tags = tagUserApi.getTagsForObject(taggedObjectId, getObjectType(), context);
 
-        final AtomicReference<TagDefinitionApiException> theException = new AtomicReference<TagDefinitionApiException>();
-        final List<TagDefinition> tagDefinitionList = tagUserApi.getTagDefinitions(tagIdList, context);
-        final List<TagJson> result = ImmutableList.<TagJson>copyOf(Collections2.transform(tagIdList, new Function<UUID, TagJson>() {
-            @Override
-            public TagJson apply(final UUID input) {
-                try {
-                    final TagDefinition tagDefinition = findTagDefinitionFromId(tagDefinitionList, input);
-                    return new TagJson(input.toString(), tagDefinition.getName(), null);
-                } catch (TagDefinitionApiException e) {
-                    theException.set(e);
-                    return null;
-                }
-            }
-        }));
-        // Yackk..
-        if (theException.get() != null) {
-            throw theException.get();
+        final Collection<TagJson> result = new LinkedList<TagJson>();
+        for (final Tag tag : tags) {
+            final TagDefinition tagDefinition = tagUserApi.getTagDefinition(tag.getTagDefinitionId(), context);
+            // TODO PIERRE - Bulk API
+            final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tag.getId(), ObjectType.TAG, auditMode.getLevel(), context);
+            result.add(new TagJson(tagDefinition, auditLogs));
         }
 
         return Response.status(Response.Status.OK).entity(result).build();
-    }
-
-    private TagDefinition findTagDefinitionFromId(final List<TagDefinition> tagDefinitionList, final UUID tagDefinitionId) throws TagDefinitionApiException {
-        for (TagDefinition cur : tagDefinitionList) {
-            if (cur.getId().equals(tagDefinitionId)) {
-                return cur;
-            }
-        }
-        throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, tagDefinitionId);
     }
 
     protected Response createTags(final UUID id,
@@ -168,12 +138,14 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return Response.status(Response.Status.OK).build();
     }
 
-    protected Response getCustomFields(final UUID id, final TenantContext context) {
+    protected Response getCustomFields(final UUID id, final AuditMode auditMode, final TenantContext context) {
         final List<CustomField> fields = customFieldUserApi.getCustomFieldsForObject(id, getObjectType(), context);
 
         final List<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
         for (final CustomField cur : fields) {
-            result.add(new CustomFieldJson(cur));
+            // TODO PIERRE - Bulk API
+            final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(cur.getId(), ObjectType.CUSTOM_FIELD, auditMode.getLevel(), context);
+            result.add(new CustomFieldJson(cur, auditLogs));
         }
 
         return Response.status(Response.Status.OK).entity(result).build();

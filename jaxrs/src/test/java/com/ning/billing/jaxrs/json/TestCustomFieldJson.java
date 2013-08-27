@@ -29,14 +29,12 @@ public class TestCustomFieldJson extends JaxrsTestSuiteNoDB {
     public void testJson() throws Exception {
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
-        final CustomFieldJson customFieldJson = new CustomFieldJson(name, value);
+        final CustomFieldJson customFieldJson = new CustomFieldJson(name, value, null);
         Assert.assertEquals(customFieldJson.getName(), name);
         Assert.assertEquals(customFieldJson.getValue(), value);
+        Assert.assertNull(customFieldJson.getAuditLogs());
 
         final String asJson = mapper.writeValueAsString(customFieldJson);
-        Assert.assertEquals(asJson, "{\"name\":\"" + customFieldJson.getName() + "\"," +
-                                    "\"value\":\"" + customFieldJson.getValue() + "\"}");
-
         final CustomFieldJson fromJson = mapper.readValue(asJson, CustomFieldJson.class);
         Assert.assertEquals(fromJson, customFieldJson);
     }

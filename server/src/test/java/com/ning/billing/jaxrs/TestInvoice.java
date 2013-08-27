@@ -22,15 +22,18 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.jaxrs.json.AuditLogJson;
 import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
+import com.ning.billing.util.api.AuditLevel;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -44,8 +47,18 @@ public class TestInvoice extends TestJaxrsBase {
 
         final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final List<InvoiceJsonSimple> invoices = getInvoicesForAccount(accountJson.getAccountId());
+        final List<InvoiceJsonSimple> invoices = getInvoicesForAccountWithAudits(accountJson.getAccountId(), AuditLevel.FULL);
         assertEquals(invoices.size(), 2);
+        for (final InvoiceJsonSimple invoiceJsonSimple : invoices) {
+            Assert.assertEquals(invoiceJsonSimple.getAuditLogs().size(), 1);
+            final AuditLogJson auditLogJson = invoiceJsonSimple.getAuditLogs().get(0);
+            Assert.assertEquals(auditLogJson.getChangeType(), "INSERT");
+            Assert.assertEquals(auditLogJson.getChangedBy(), "SubscriptionBaseTransition");
+            Assert.assertFalse(auditLogJson.getChangeDate().isBefore(initialDate));
+            Assert.assertNotNull(auditLogJson.getUserToken());
+            Assert.assertNull(auditLogJson.getReasonCode());
+            Assert.assertNull(auditLogJson.getComments());
+        }
 
         // Check we can retrieve an individual invoice
         final InvoiceJsonSimple invoiceJsonSimple = invoices.get(0);
@@ -187,8 +200,42 @@ public class TestInvoice extends TestJaxrsBase {
         adjustInvoiceItem(accountJson.getAccountId(), invoice.getInvoiceId(), invoiceItem.getInvoiceItemId(), null, null, null);
 
         // Verify the new invoice balance is zero
-        final InvoiceJsonSimple adjustedInvoice = getInvoice(invoice.getInvoiceId());
+        final InvoiceJsonWithItems adjustedInvoice = getInvoiceWithItemsWithAudits(invoice.getInvoiceId(), AuditLevel.FULL);
         assertEquals(adjustedInvoice.getAmount().compareTo(BigDecimal.ZERO), 0);
+
+        // Verify invoice audit logs
+        Assert.assertEquals(adjustedInvoice.getAuditLogs().size(), 1);
+        final AuditLogJson invoiceAuditLogJson = adjustedInvoice.getAuditLogs().get(0);
+        Assert.assertEquals(invoiceAuditLogJson.getChangeType(), "INSERT");
+        Assert.assertEquals(invoiceAuditLogJson.getChangedBy(), "SubscriptionBaseTransition");
+        Assert.assertNotNull(invoiceAuditLogJson.getChangeDate());
+        Assert.assertNotNull(invoiceAuditLogJson.getUserToken());
+        Assert.assertNull(invoiceAuditLogJson.getReasonCode());
+        Assert.assertNull(invoiceAuditLogJson.getComments());
+
+        Assert.assertEquals(adjustedInvoice.getItems().size(), 2);
+
+        // Verify invoice items audit logs
+
+        // The first item is the original item
+        Assert.assertEquals(adjustedInvoice.getItems().get(0).getAuditLogs().size(), 1);
+        final AuditLogJson itemAuditLogJson = adjustedInvoice.getItems().get(0).getAuditLogs().get(0);
+        Assert.assertEquals(itemAuditLogJson.getChangeType(), "INSERT");
+        Assert.assertEquals(itemAuditLogJson.getChangedBy(), "SubscriptionBaseTransition");
+        Assert.assertNotNull(itemAuditLogJson.getChangeDate());
+        Assert.assertNotNull(itemAuditLogJson.getUserToken());
+        Assert.assertNull(itemAuditLogJson.getReasonCode());
+        Assert.assertNull(itemAuditLogJson.getComments());
+
+        // The second one is the adjustment
+        Assert.assertEquals(adjustedInvoice.getItems().get(1).getAuditLogs().size(), 1);
+        final AuditLogJson adjustedItemAuditLogJson = adjustedInvoice.getItems().get(1).getAuditLogs().get(0);
+        Assert.assertEquals(adjustedItemAuditLogJson.getChangeType(), "INSERT");
+        Assert.assertEquals(adjustedItemAuditLogJson.getChangedBy(), createdBy);
+        Assert.assertEquals(adjustedItemAuditLogJson.getReasonCode(), reason);
+        Assert.assertEquals(adjustedItemAuditLogJson.getComments(), comment);
+        Assert.assertNotNull(adjustedItemAuditLogJson.getChangeDate());
+        Assert.assertNotNull(adjustedItemAuditLogJson.getUserToken());
     }
 
     @Test(groups = "slow")

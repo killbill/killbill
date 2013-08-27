@@ -40,8 +40,8 @@ public class TagJson extends JsonBase {
         this.tagDefinitionName = tagDefinitionName;
     }
 
-    public TagJson(final TagDefinition tagDefintion, @Nullable final List<AuditLog> auditLogs) {
-        this(tagDefintion.getId().toString(), tagDefintion.getName(), toAuditLogJson(auditLogs));
+    public TagJson(final TagDefinition tagDefinition, @Nullable final List<AuditLog> auditLogs) {
+        this(tagDefinition.getId().toString(), tagDefinition.getName(), toAuditLogJson(auditLogs));
     }
 
     public String getTagDefinitionId() {

@@ -13,7 +13,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-account:test-jar:tests:0.4.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.3.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-invoice:test-jar:tests:0.4.1-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-junction:test-jar:tests:0.4.1-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-payment:test-jar:tests:0.4.1-SNAPSHOT" level="project" />

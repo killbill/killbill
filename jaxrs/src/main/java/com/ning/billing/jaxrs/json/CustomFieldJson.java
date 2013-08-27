@@ -16,32 +16,32 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
+import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.customfield.CustomField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class CustomFieldJson {
+public class CustomFieldJson extends JsonBase {
 
     private final String name;
     private final String value;
 
-    public CustomFieldJson() {
-        this(null, null);
-    }
-
     @JsonCreator
     public CustomFieldJson(@JsonProperty("name") @Nullable final String name,
-                           @JsonProperty("value") @Nullable final String value) {
+                           @JsonProperty("value") @Nullable final String value,
+                           @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
         this.name = name;
         this.value = value;
     }
 
-    public CustomFieldJson(final CustomField input) {
-        this.name = input.getFieldName();
-        this.value = input.getFieldValue();
+    public CustomFieldJson(final CustomField input, @Nullable final List<AuditLog> auditLogs) {
+        this(input.getFieldName(), input.getFieldValue(), toAuditLogJson(auditLogs));
     }
 
     public String getName() {
@@ -50,6 +50,15 @@ public class CustomFieldJson {
 
     public String getValue() {
         return value;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("CustomFieldJson{");
+        sb.append("name='").append(name).append('\'');
+        sb.append(", value='").append(value).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override
