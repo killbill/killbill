@@ -126,19 +126,17 @@ public class EntitlementResource extends JaxRsResourceBase {
                                       @HeaderParam(HDR_COMMENT) final String comment,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
         final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
             public Entitlement doOperation(final CallContext ctx) throws InterruptedException, TimeoutException, EntitlementApiException {
 
-                //final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(entitlement.getProductName(),
                                                                        ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
 
 
                 final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
-                final LocalDate inputLocalDate = toLocalDate(accountId, inputDate, callContext);
+                final LocalDate inputLocalDate = toLocalDate(accountId, requestedDate, callContext);
                 final UUID bundleId = entitlement.getBundleId() != null ? UUID.fromString(entitlement.getBundleId()) : null;
                 return (entitlement.getProductCategory().equals(ProductCategory.ADD_ON.toString())) ?
                        entitlementApi.addEntitlement(bundleId, spec, inputLocalDate, callContext) :
@@ -184,11 +182,9 @@ public class EntitlementResource extends JaxRsResourceBase {
             public Response doOperation(final CallContext ctx) throws EntitlementApiException, InterruptedException,
                                                                       TimeoutException, AccountApiException {
                 final UUID uuid = UUID.fromString(entitlementId);
-                final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
-
 
                 final Entitlement current = entitlementApi.getEntitlementForId(uuid, callContext);
-                final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), inputDate, callContext);
+                final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
                 final Entitlement newEntitlement;
                 if (policyString == null) {
                     newEntitlement = current.changePlan(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, ctx);
@@ -265,9 +261,7 @@ public class EntitlementResource extends JaxRsResourceBase {
 
                 final Entitlement current = entitlementApi.getEntitlementForId(uuid, ctx);
 
-                final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
-                final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), inputDate, callContext);
-
+                final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
                 final Entitlement newEntitlement;
                 if (policyString == null) {
                     newEntitlement = current.cancelEntitlementWithDate(inputLocalDate, ctx);

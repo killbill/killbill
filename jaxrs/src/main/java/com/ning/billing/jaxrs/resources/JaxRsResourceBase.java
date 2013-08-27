@@ -29,6 +29,7 @@ import javax.ws.rs.core.UriInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
@@ -74,6 +75,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final Clock clock;
 
     protected final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTimeParser();
+    protected final DateTimeFormatter LOCAL_DATE_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd");
 
     public JaxRsResourceBase(final JaxrsUriBuilder uriBuilder,
                              final TagUserApi tagUserApi,
@@ -196,12 +198,24 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return Response.status(Response.Status.OK).build();
     }
 
-    protected LocalDate toLocalDate(final UUID accountId, final DateTime inputDate, final TenantContext context)  {
+    protected LocalDate toLocalDate(final UUID accountId, final String inputDate, final TenantContext context) {
+
+        if (inputDate != null) {
+            try {
+                final LocalDate localDate = LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
+                return localDate;
+            } catch (IllegalArgumentException expectedAndIgnore) { /*Fall through... */ }
+        }
+        final DateTime inputDateTime = inputDate != null ? DATE_TIME_FORMATTER.parseDateTime(inputDate) : clock.getUTCNow();
+        return toLocalDate(accountId, inputDateTime, context);
+    }
+
+    private LocalDate toLocalDate(final UUID accountId, final DateTime inputDate, final TenantContext context) {
         Account account = null;
         try {
             account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
         } catch (AccountApiException e) {
-            log.info("Failed to retrieve account for id " + accountId );
+            log.info("Failed to retrieve account for id " + accountId);
         }
 
         if (account == null && inputDate == null) {

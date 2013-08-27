@@ -65,10 +65,10 @@ public class EntitlementJsonNoEvents extends EntitlementJsonSimple {
              data.getId().toString(),
              data.getExternalKey(),
              data.getEffectiveStartDate(),
-             data.getProduct().getName(),
-             data.getProduct().getCategory().name(),
-             data.getPlan().getBillingPeriod().name(),
-             data.getPriceList().getName(),
+             data.getProduct() != null ? data.getProduct().getName() : null,
+             data.getProduct() != null ? data.getProduct().getCategory().name() : null,
+             data.getPlan() != null ? data.getPlan().getBillingPeriod().name() : null,
+             data.getPriceList() !=  null ? data.getPriceList().getName() : null,
              data.getEffectiveEndDate(),
              toAuditLogJson(auditLogs));
     }

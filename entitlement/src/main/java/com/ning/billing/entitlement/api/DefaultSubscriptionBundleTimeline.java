@@ -708,5 +708,105 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         public DateTime getCreatedDate() {
             return createdDate;
         }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final DefaultSubscriptionEvent that = (DefaultSubscriptionEvent) o;
+
+            if (isBlockingBilling != that.isBlockingBilling) {
+                return false;
+            }
+            if (isBlockingEntitlement != that.isBlockingEntitlement) {
+                return false;
+            }
+            if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+                return false;
+            }
+            if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+                return false;
+            }
+            if (entitlementId != null ? !entitlementId.equals(that.entitlementId) : that.entitlementId != null) {
+                return false;
+            }
+            if (eventType != that.eventType) {
+                return false;
+            }
+            if (id != null ? !id.equals(that.id) : that.id != null) {
+                return false;
+            }
+            if (nextBillingPeriod != that.nextBillingPeriod) {
+                return false;
+            }
+            if (nextPlan != null ? !nextPlan.equals(that.nextPlan) : that.nextPlan != null) {
+                return false;
+            }
+            if (nextPlanPhase != null ? !nextPlanPhase.equals(that.nextPlanPhase) : that.nextPlanPhase != null) {
+                return false;
+            }
+            if (nextPriceList != null ? !nextPriceList.equals(that.nextPriceList) : that.nextPriceList != null) {
+                return false;
+            }
+            if (nextProduct != null ? !nextProduct.equals(that.nextProduct) : that.nextProduct != null) {
+                return false;
+            }
+            if (prevBillingPeriod != that.prevBillingPeriod) {
+                return false;
+            }
+            if (prevPlan != null ? !prevPlan.equals(that.prevPlan) : that.prevPlan != null) {
+                return false;
+            }
+            if (prevPlanPhase != null ? !prevPlanPhase.equals(that.prevPlanPhase) : that.prevPlanPhase != null) {
+                return false;
+            }
+            if (prevPriceList != null ? !prevPriceList.equals(that.prevPriceList) : that.prevPriceList != null) {
+                return false;
+            }
+            if (prevProduct != null ? !prevProduct.equals(that.prevProduct) : that.prevProduct != null) {
+                return false;
+            }
+            if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
+                return false;
+            }
+            if (serviceName != null ? !serviceName.equals(that.serviceName) : that.serviceName != null) {
+                return false;
+            }
+            if (serviceStateName != null ? !serviceStateName.equals(that.serviceStateName) : that.serviceStateName != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = id != null ? id.hashCode() : 0;
+            result = 31 * result + (entitlementId != null ? entitlementId.hashCode() : 0);
+            result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+            result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
+            result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
+            result = 31 * result + (isBlockingEntitlement ? 1 : 0);
+            result = 31 * result + (isBlockingBilling ? 1 : 0);
+            result = 31 * result + (serviceName != null ? serviceName.hashCode() : 0);
+            result = 31 * result + (serviceStateName != null ? serviceStateName.hashCode() : 0);
+            result = 31 * result + (prevProduct != null ? prevProduct.hashCode() : 0);
+            result = 31 * result + (prevPlan != null ? prevPlan.hashCode() : 0);
+            result = 31 * result + (prevPlanPhase != null ? prevPlanPhase.hashCode() : 0);
+            result = 31 * result + (prevPriceList != null ? prevPriceList.hashCode() : 0);
+            result = 31 * result + (prevBillingPeriod != null ? prevBillingPeriod.hashCode() : 0);
+            result = 31 * result + (nextProduct != null ? nextProduct.hashCode() : 0);
+            result = 31 * result + (nextPlan != null ? nextPlan.hashCode() : 0);
+            result = 31 * result + (nextPlanPhase != null ? nextPlanPhase.hashCode() : 0);
+            result = 31 * result + (nextPriceList != null ? nextPriceList.hashCode() : 0);
+            result = 31 * result + (nextBillingPeriod != null ? nextBillingPeriod.hashCode() : 0);
+            result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
+            return result;
+        }
     }
 }
