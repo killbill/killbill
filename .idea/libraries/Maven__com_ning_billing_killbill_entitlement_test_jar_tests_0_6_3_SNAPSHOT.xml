@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.ning.billing:killbill-entitlement:test-jar:tests:0.6.3-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-entitlement/0.6.3-SNAPSHOT/killbill-entitlement-0.6.3-SNAPSHOT-tests.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-entitlement/0.6.3-SNAPSHOT/killbill-entitlement-0.6.3-SNAPSHOT-test-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-entitlement/0.6.3-SNAPSHOT/killbill-entitlement-0.6.3-SNAPSHOT-test-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
