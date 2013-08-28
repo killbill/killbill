@@ -97,6 +97,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         return subscription;
     }
 
+    @Deprecated
     @Override
     public boolean recreatePlan(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs, final CallContext context)
             throws SubscriptionBaseApiException {
@@ -411,12 +412,9 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         return subscriptionsToBeCancelled.size();
     }
 
+
     private void validateRequestedDate(final DefaultSubscriptionBase subscription, final DateTime now, final DateTime requestedDate)
             throws SubscriptionBaseApiException {
-
-        if (requestedDate.isAfter(now)) {
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_FUTURE_DATE, requestedDate.toString());
-        }
 
         final SubscriptionBaseTransition previousTransition = subscription.getPreviousTransition();
         if (previousTransition != null && previousTransition.getEffectiveTransitionTime().isAfter(requestedDate)) {

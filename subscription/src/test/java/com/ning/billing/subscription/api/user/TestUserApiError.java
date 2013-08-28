@@ -81,21 +81,6 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testRecreateSubscriptionBPNotCancelled() {
-        try {
-            final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
-            try {
-                subscription.recreate(testUtil.getProductSpecifier("Pistol", PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, null), clock.getUTCNow(), callContext);
-                Assert.assertFalse(true);
-            } catch (SubscriptionBaseApiException e) {
-                assertEquals(e.getCode(), ErrorCode.SUB_RECREATE_BAD_STATE.getCode());
-            }
-        } catch (Exception e) {
-            Assert.fail(e.toString());
-        }
-    }
-
-    @Test(groups = "fast")
     public void testCreateSubscriptionAddOnNotAvailable() {
         try {
             final UUID accountId = UUID.randomUUID();

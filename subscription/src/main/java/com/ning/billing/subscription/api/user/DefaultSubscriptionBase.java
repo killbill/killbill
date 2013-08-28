@@ -39,11 +39,10 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
-import com.ning.billing.subscription.api.SubscriptionBaseApiService;
 import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseApiService;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Kind;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Order;
@@ -209,6 +208,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return null;
     }
 
+    public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate,
+                            final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.recreatePlan(this, spec, requestedDate, context);
+    }
+
     @Override
     public boolean cancel(final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
         return apiService.cancel(this, requestedDate, context);
@@ -235,12 +239,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
                                         final DateTime requestedDate, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
         return apiService.changePlanWithPolicy(this, productName, term, priceList, requestedDate, policy, context);
-    }
-
-    @Override
-    public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate,
-                            final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.recreatePlan(this, spec, requestedDate, context);
     }
 
     @Override
@@ -452,11 +450,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
 
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(clock,
-                                                                                             transitions,
-                                                                                             Order.DESC_FROM_FUTURE,
-                                                                                             Kind.SUBSCRIPTION,
-                                                                                             Visibility.ALL,
-                                                                                             TimeLimit.PAST_OR_PRESENT_ONLY);
+                                                                                                     transitions,
+                                                                                                     Order.DESC_FROM_FUTURE,
+                                                                                                     Kind.SUBSCRIPTION,
+                                                                                                     Visibility.ALL,
+                                                                                                     TimeLimit.PAST_OR_PRESENT_ONLY);
 
         while (it.hasNext()) {
             final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
@@ -479,9 +477,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy,
                                                final DateTime requestedDate) {
 
+        // Return requested date to potentially honor date in the past, or NOW
         if (policy == BillingActionPolicy.IMMEDIATE) {
-            return requestedDate;
+            return requestedDate.compareTo(clock.getUTCNow()) < 0 ? requestedDate : clock.getUTCNow();
         }
+
         if (policy != BillingActionPolicy.END_OF_TERM) {
             throw new SubscriptionBaseError(String.format(
                     "Unexpected policy type %s", policy.toString()));

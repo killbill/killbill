@@ -36,7 +36,8 @@ public interface SubscriptionBaseApiService {
                                        CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean recreatePlan(DefaultSubscriptionBase subscription, PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
+    @Deprecated
+    public boolean recreatePlan(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs, final CallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean cancel(DefaultSubscriptionBase subscription, DateTime requestedDate, CallContext context)

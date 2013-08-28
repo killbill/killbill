@@ -57,9 +57,6 @@ public interface SubscriptionBase extends Entity, Blockable {
                                         final BillingActionPolicy policy, final CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
-            throws SubscriptionBaseApiException;
-
     public UUID getBundleId();
 
     public EntitlementState getState();

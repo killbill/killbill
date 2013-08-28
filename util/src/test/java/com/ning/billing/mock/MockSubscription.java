@@ -104,12 +104,6 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
-            throws SubscriptionBaseApiException {
-        return sub.recreate(spec, requestedDate, context);
-    }
-
-    @Override
     public UUID getId() {
         return id;
     }

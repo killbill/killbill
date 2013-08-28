@@ -113,11 +113,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     if (baseSubscription != null) {
                         if (baseSubscription.getState() == EntitlementState.ACTIVE) {
                             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
-                        } else {
-                            // If we do create on an existing CANCELLED BP, this is equivalent to call recreate on that SubscriptionBase.
-                            final SubscriptionBase recreatedSubscriptionForApiUse = createSubscriptionForApiUse(baseSubscription);
-                            recreatedSubscriptionForApiUse.recreate(spec, requestedDate, context.toCallContext());
-                            return recreatedSubscriptionForApiUse;
                         }
                     }
                     bundleStartDate = requestedDate;
