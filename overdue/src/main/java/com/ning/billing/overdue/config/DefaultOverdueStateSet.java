@@ -64,7 +64,7 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<OverdueCon
     @Override
     public DefaultOverdueState calculateOverdueState(final BillingState billingState, final LocalDate now) throws OverdueApiException {
         for (final DefaultOverdueState overdueState : getStates()) {
-            if (overdueState.getCondition().evaluate(billingState, now)) {
+            if (overdueState.getCondition() != null && overdueState.getCondition().evaluate(billingState, now)) {
                 return overdueState;
             }
         }
