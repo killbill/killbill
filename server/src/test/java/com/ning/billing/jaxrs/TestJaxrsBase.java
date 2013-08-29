@@ -26,7 +26,6 @@ import javax.inject.Inject;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 
-import org.apache.shiro.web.env.EnvironmentLoaderListener;
 import org.apache.shiro.web.servlet.ShiroFilter;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
@@ -75,7 +74,6 @@ import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.KillBillShiroAopModule;
-import com.ning.billing.util.glue.KillBillShiroModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.RecordIdModule;
@@ -162,7 +160,7 @@ public class TestJaxrsBase extends KillbillClient {
         private final EmbeddedDB helper;
 
         public TestKillbillServerModule(final EmbeddedDB helper, final ServletContext servletContext) {
-            super(servletContext);
+            super(servletContext, false);
             this.helper = helper;
         }
 

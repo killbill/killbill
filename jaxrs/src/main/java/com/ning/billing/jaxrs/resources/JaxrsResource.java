@@ -59,7 +59,8 @@ public interface JaxrsResource {
     public static final String QUERY_CALL_TIMEOUT = "callTimeoutSec";
     public static final String QUERY_DRY_RUN = "dryRun";
     public static final String QUERY_TARGET_DATE = "targetDate";
-    public static final String QUERY_POLICY = "policy";
+    public static final String QUERY_BILLING_POLICY = "billingPolicy";
+    public static final String QUERY_ENTITLEMENT_POLICY = "entitlementPolicy";
 
     public static final String QUERY_ACCOUNT_WITH_BALANCE = "accountWithBalance";
     public static final String QUERY_ACCOUNT_WITH_BALANCE_AND_CBA = "accountWithBalanceAndCBA";

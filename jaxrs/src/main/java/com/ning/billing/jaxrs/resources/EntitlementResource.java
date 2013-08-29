@@ -37,7 +37,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +50,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.Entitlement;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
@@ -167,7 +167,7 @@ public class EntitlementResource extends JaxRsResourceBase {
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
-                                          @QueryParam(QUERY_POLICY) final String policyString,
+                                          @QueryParam(QUERY_BILLING_POLICY) final String policyString,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
@@ -241,7 +241,8 @@ public class EntitlementResource extends JaxRsResourceBase {
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
-                                          @QueryParam(QUERY_POLICY) final String policyString,
+                                          @QueryParam(QUERY_ENTITLEMENT_POLICY) final String entitlementPolicyString,
+                                          @QueryParam(QUERY_BILLING_POLICY) final String billingPolicyString,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
@@ -263,11 +264,18 @@ public class EntitlementResource extends JaxRsResourceBase {
 
                 final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
                 final Entitlement newEntitlement;
-                if (policyString == null) {
+                if (billingPolicyString == null && entitlementPolicyString == null) {
                     newEntitlement = current.cancelEntitlementWithDate(inputLocalDate, ctx);
+                } else if (billingPolicyString == null && entitlementPolicyString != null) {
+                    final EntitlementActionPolicy entitlementPolicy = EntitlementActionPolicy.valueOf(entitlementPolicyString);
+                    newEntitlement = current.cancelEntitlementWithPolicy(entitlementPolicy, ctx);
+                } else if (billingPolicyString != null && entitlementPolicyString == null) {
+                    final BillingActionPolicy billingPolicy = BillingActionPolicy.valueOf(billingPolicyString.toUpperCase());
+                    newEntitlement = current.cancelEntitlementWithDateOverrideBillingPolicy(inputLocalDate, billingPolicy, ctx);
                 } else {
-                    final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
-                    newEntitlement = current.cancelEntitlementWithDateOverrideBillingPolicy(inputLocalDate, policy, ctx);
+                    final EntitlementActionPolicy entitlementPolicy = EntitlementActionPolicy.valueOf(entitlementPolicyString);
+                    final BillingActionPolicy billingPolicy = BillingActionPolicy.valueOf(billingPolicyString.toUpperCase());
+                    newEntitlement = current.cancelEntitlementWithPolicyOverrideBillingPolicy(entitlementPolicy, billingPolicy, ctx);
                 }
                 isImmediateOp = newEntitlement.getState() == EntitlementState.ACTIVE;
                 return Response.status(Status.OK).build();

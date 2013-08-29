@@ -168,7 +168,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                              null);
         baseJson = mapper.writeValueAsString(newInput);
         final Map<String, String> queryParams = getQueryParamsForCallCompletion(CALL_COMPLETION_TIMEOUT_SEC);
-        queryParams.put(JaxrsResource.QUERY_POLICY, "immediate");
+        queryParams.put(JaxrsResource.QUERY_BILLING_POLICY, "immediate");
         response = doPut(uri, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();

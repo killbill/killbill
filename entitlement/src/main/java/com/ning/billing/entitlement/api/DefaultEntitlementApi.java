@@ -265,21 +265,25 @@ public class DefaultEntitlementApi implements EntitlementApi {
     private LocalDate getEffectiveEndDate(final UUID accountId, final SubscriptionBase subscriptionBase, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
 
         LocalDate result = null;
+        BlockingState lastEntry = null;
 
-        final BlockingState subEntitlementState = blockingStateDao.getBlockingStateForService(subscriptionBase.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
-        if (subEntitlementState != null && ENT_STATE_CANCELLED.equals(subEntitlementState.getStateName())) {
-            result = new LocalDate(subEntitlementState.getEffectiveDate(), accountTimeZone);
+        final List<BlockingState> subEntitlementState = blockingStateDao.getBlockingHistoryForService(subscriptionBase.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
+        lastEntry = (subEntitlementState.size() > 0) ? subEntitlementState.get(subEntitlementState.size() - 1) : null;
+        if (lastEntry != null && ENT_STATE_CANCELLED.equals(lastEntry.getStateName())) {
+            result = new LocalDate(lastEntry.getEffectiveDate(), accountTimeZone);
         }
 
-        final BlockingState bundleEntitlementState = blockingStateDao.getBlockingStateForService(subscriptionBase.getBundleId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
-        if (bundleEntitlementState != null && ENT_STATE_CANCELLED.equals(bundleEntitlementState.getStateName())) {
-            final LocalDate localDate = new LocalDate(bundleEntitlementState.getEffectiveDate(), accountTimeZone);
+        final List<BlockingState> bundleEntitlementState = blockingStateDao.getBlockingHistoryForService(subscriptionBase.getBundleId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
+        lastEntry = (bundleEntitlementState.size() > 0) ? bundleEntitlementState.get(bundleEntitlementState.size() - 1) : null;
+        if (lastEntry != null && ENT_STATE_CANCELLED.equals(lastEntry.getStateName())) {
+            final LocalDate localDate = new LocalDate(lastEntry.getEffectiveDate(), accountTimeZone);
             result = ((result == null) || (localDate.compareTo(result) < 0)) ? localDate : result;
         }
 
-        final BlockingState accountEntitlementState = blockingStateDao.getBlockingStateForService(accountId, EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
-        if (accountEntitlementState != null && ENT_STATE_CANCELLED.equals(accountEntitlementState.getStateName())) {
-            final LocalDate localDate = new LocalDate(accountEntitlementState.getEffectiveDate(), accountTimeZone);
+        final List<BlockingState> accountEntitlementState = blockingStateDao.getBlockingHistoryForService(accountId, EntitlementService.ENTITLEMENT_SERVICE_NAME, context);
+        lastEntry = (accountEntitlementState.size() > 0) ? accountEntitlementState.get(accountEntitlementState.size() - 1) : null;
+        if (lastEntry != null && ENT_STATE_CANCELLED.equals(lastEntry.getStateName())) {
+            final LocalDate localDate = new LocalDate(lastEntry.getEffectiveDate(), accountTimeZone);
             result = ((result == null) || (localDate.compareTo(result) < 0)) ? localDate : result;
         }
         return result;

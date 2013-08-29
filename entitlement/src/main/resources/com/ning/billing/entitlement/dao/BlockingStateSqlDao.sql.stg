@@ -70,7 +70,6 @@ from
 <tableName()>
 where blockable_id = :blockableId
 and service = :service
-and effective_date \<= :effectiveDate
 <AND_CHECK_TENANT()>
 order by record_id asc
 ;
@@ -82,7 +81,6 @@ select
 from
 <tableName()>
 where blockable_id = :blockableId
-and effective_date \<= :effectiveDate
 <AND_CHECK_TENANT()>
 order by record_id asc
 ;

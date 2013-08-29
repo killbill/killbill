@@ -63,7 +63,10 @@
             <groupId>com.ning.billing.commons</groupId>
             <artifactId>killbill-clock</artifactId>
             <type>test-jar</type>
+            <!--
+            Until we move ClockMock outside of test package
             <scope>test</scope>
+            -->
         </dependency>
         <dependency>
             <groupId>com.ning.billing.commons</groupId>

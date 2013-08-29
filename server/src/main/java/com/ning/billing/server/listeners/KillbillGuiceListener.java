@@ -48,6 +48,7 @@ public class KillbillGuiceListener extends SetupServer {
 
     public static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
     public static final String KILLBILL_MULTITENANT_PROPERTY = "killbill.server.multitenant";
+    public static final String KILLBILL_TEST_MODE_PROPERTY = "killbill.server.test.mode";
 
     private Injector injector;
     private DefaultLifecycle killbillLifecycle;
@@ -55,7 +56,8 @@ public class KillbillGuiceListener extends SetupServer {
     private KillbillEventHandler killbilleventHandler;
 
     protected Module getModule(final ServletContext servletContext) {
-        return new KillbillServerModule(servletContext);
+        final boolean testModeEnabled = Boolean.parseBoolean(System.getProperty(KILLBILL_TEST_MODE_PROPERTY, "false"));
+        return new KillbillServerModule(servletContext, testModeEnabled);
     }
 
     private void registerMBeansForCache(final CacheManager cacheManager) {

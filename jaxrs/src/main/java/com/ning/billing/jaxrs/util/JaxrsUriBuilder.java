@@ -29,7 +29,9 @@ public class JaxrsUriBuilder {
         return ri.entity(new Object() {
             @SuppressWarnings(value = "all")
             public URI getUri() {
-                final URI newUriFromResource = UriBuilder.fromResource(theClass).path(theClass, getMethodName).build(objectId);
+                final URI newUriFromResource = objectId != null ?
+                                               UriBuilder.fromResource(theClass).path(theClass, getMethodName).build(objectId) :
+                                               UriBuilder.fromResource(theClass).path(theClass, getMethodName).build();
                 return newUriFromResource;
             }
         }).build();

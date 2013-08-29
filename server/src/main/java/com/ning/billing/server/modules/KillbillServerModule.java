@@ -19,6 +19,9 @@ package com.ning.billing.server.modules;
 import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 
+import com.ning.billing.clock.Clock;
+import com.ning.billing.clock.ClockMock;
+import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import org.skife.config.ConfigSource;
 import org.skife.config.SimplePropertyConfigSource;
@@ -30,6 +33,7 @@ import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.jaxrs.resources.EntitlementResource;
 import com.ning.billing.jaxrs.resources.SubscriptionResource;
+import com.ning.billing.jaxrs.resources.TestResource;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.jaxrs.resources.AccountResource;
@@ -77,9 +81,11 @@ import com.google.inject.AbstractModule;
 public class KillbillServerModule extends AbstractModule {
 
     protected final ServletContext servletContext;
+    private final boolean isTestModeEnabled;
 
-    public KillbillServerModule(final ServletContext servletContext) {
+    public KillbillServerModule(final ServletContext servletContext, final boolean testModeEnabled) {
         this.servletContext = servletContext;
+        this.isTestModeEnabled = testModeEnabled;
     }
 
     @Override
@@ -127,7 +133,12 @@ public class KillbillServerModule extends AbstractModule {
     }
 
     protected void installClock() {
-        install(new ClockModule());
+        if (isTestModeEnabled) {
+            bind(Clock.class).to(ClockMock.class).asEagerSingleton();
+            bind(TestResource.class).asEagerSingleton();
+        } else {
+            install(new ClockModule());
+        }
     }
 
     protected void installKillbillModules() {
@@ -161,7 +172,6 @@ public class KillbillServerModule extends AbstractModule {
         install(new KillBillShiroWebModule(servletContext));
         install(new KillBillShiroAopModule());
         install(new SecurityModule());
-
         installClock();
     }
 }
