@@ -110,9 +110,7 @@ public class AccountResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "accountId";
 
-    private final EntitlementApi entitlementApi;
     private final SubscriptionApi subscriptionApi;
-    private final SubscriptionBaseTimelineApi timelineApi;
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final PaymentApi paymentApi;
@@ -120,11 +118,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
                            final AccountUserApi accountApi,
-                           final EntitlementApi entitlementApi,
                            final InvoiceUserApi invoiceApi,
                            final InvoicePaymentApi invoicePaymentApi,
                            final PaymentApi paymentApi,
-                           final SubscriptionBaseTimelineApi timelineApi,
                            final TagUserApi tagUserApi,
                            final AuditUserApi auditUserApi,
                            final CustomFieldUserApi customFieldUserApi,
@@ -132,12 +128,10 @@ public class AccountResource extends JaxRsResourceBase {
                            final Clock clock,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, clock, context);
-        this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;
         this.invoiceApi = invoiceApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.paymentApi = paymentApi;
-        this.timelineApi = timelineApi;
     }
 
     @GET

@@ -90,7 +90,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
             entitlement.cancelEntitlementWithDate(cancelDate, callContext);
             final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
             assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
-            assertNull(entitlement2.getEffectiveEndDate());
+            assertEquals(entitlement2.getEffectiveEndDate(), cancelDate);
 
             clock.addDays(1);
             final Entitlement entitlement3 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
@@ -157,7 +157,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
             final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
             final Entitlement entitlement3 = entitlement2.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, callContext);
             assertEquals(entitlement3.getState(), EntitlementState.ACTIVE);
-            assertNull(entitlement3.getEffectiveEndDate());
+            assertEquals(entitlement3.getEffectiveEndDate(), new LocalDate(ctd));
 
             clock.addMonths(1);
 

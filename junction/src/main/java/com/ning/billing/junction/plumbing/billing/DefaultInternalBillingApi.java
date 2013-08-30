@@ -129,15 +129,18 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     private void addBillingEventsForSubscription(final List<SubscriptionBase> subscriptions, final SubscriptionBaseBundle bundle, final Account account, final InternalCallContext context, final DefaultBillingEventSet result) {
+
+        boolean updatedAccountBCD = false;
         for (final SubscriptionBase subscription : subscriptions) {
             for (final EffectiveSubscriptionInternalEvent transition : subscriptionApi.getBillingTransitions(subscription, context)) {
                 try {
                     final int bcdLocal = bcdCalculator.calculateBcd(bundle, subscription, transition, account, context);
 
-                    if (account.getBillCycleDayLocal() == 0) {
+                    if (account.getBillCycleDayLocal() == 0 && !updatedAccountBCD) {
                         final MutableAccountData modifiedData = account.toMutableAccountData();
                         modifiedData.setBillCycleDayLocal(bcdLocal);
                         accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
+                        updatedAccountBCD = true;
                     }
 
                     final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcdLocal, account.getCurrency(), catalogService.getFullCatalog());

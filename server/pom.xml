@@ -149,7 +149,10 @@
             <groupId>com.ning.billing.commons</groupId>
             <artifactId>killbill-clock</artifactId>
             <type>test-jar</type>
-            <scope>test</scope>
+            <!--
++            Until we move ClockMock outside of test package
+           <scope>test</scope>
+           -->
         </dependency>
         <dependency>
             <groupId>com.ning.billing.commons</groupId>
@@ -305,10 +308,10 @@
                 <executions>
                     <execution>
                         <!-- We would like to be able to run the war, jar and jettyconsole plugins at the same time;
-                         and we could, except they rely on a strict ordering (jettyconsole has to run after the war and
-                         before the jar, or jettyconsole won't find the war artifact). This could be done by relying
-                         on the declaration ordering of the various plugins (all have to be bound to the package phase),
-                         but that's fragile. Instead, ignore altogether the jar for now, until maven is smarter. -->
+                        and we could, except they rely on a strict ordering (jettyconsole has to run after the war and
+                        before the jar, or jettyconsole won't find the war artifact). This could be done by relying
+                        on the declaration ordering of the various plugins (all have to be bound to the package phase),
+                        but that's fragile. Instead, ignore altogether the jar for now, until maven is smarter. -->
                         <phase>pierre-s-hack-for-maven</phase>
                     </execution>
                 </executions>
