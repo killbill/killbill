@@ -20,6 +20,7 @@ import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.MetricsModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
@@ -36,6 +37,7 @@ public class TestJunctionModuleWithEmbeddedDB extends TestJunctionModule {
         install(new GuicyKillbillTestWithEmbeddedDBModule());
         install(new NonEntityDaoModule());
         install(new BusModule(configSource));
+        install(new MetricsModule());
         install(new TagStoreModule());
     }
 }

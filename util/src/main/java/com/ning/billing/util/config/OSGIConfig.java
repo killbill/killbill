@@ -73,6 +73,8 @@ public interface OSGIConfig extends KillbillConfig {
              // javax.servlet and javax.servlet.http are not exported by default - we
              // need the bundles to see them for them to be able to register their servlets.
              // Note: bundles should mark javax.servlet:servlet-api as provided
+             "sun.misc," +
+             "javax.management," +
              "javax.servlet;version=3.0," +
              "javax.servlet.http;version=3.0," +
              // Since we are using joda in our APIs we need to export it

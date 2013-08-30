@@ -25,29 +25,21 @@ import com.ning.billing.bus.api.PersistentBusConfig;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 
 public class BusModule extends AbstractModule {
 
-    // This has to match the DLL
-    private final static String BUS_TABLE_NAME = "bus_events";
-    private final static String BUS_HISTORY_TABLE_NAME = "bus_events_history";
-
     private final BusType type;
     private final ConfigSource configSource;
-    private final String tableName;
-    private final String historyTableName;
 
     public BusModule(final ConfigSource configSource) {
-        this(BusType.PERSISTENT, configSource, BUS_TABLE_NAME, BUS_HISTORY_TABLE_NAME);
+        this(BusType.PERSISTENT, configSource);
     }
 
-
-    protected BusModule(final BusType type, final ConfigSource configSource, final String tableName, final String historyTableName) {
+    protected BusModule(final BusType type, final ConfigSource configSource) {
         this.type = type;
         this.configSource = configSource;
-        this.tableName = tableName;
-        this.historyTableName = historyTableName;
     }
 
     public enum BusType {
@@ -66,19 +58,14 @@ public class BusModule extends AbstractModule {
                 configurePersistentEventBus();
                 break;
             default:
-                new RuntimeException("Unrecognized EventBus type " + type);
+                throw new RuntimeException("Unrecognized EventBus type " + type);
         }
-
     }
 
-    protected void configurePersistentBusConfig() {
-        final PersistentBusConfig config = new ConfigurationObjectFactory(configSource).build(PersistentBusConfig.class);
-        bind(PersistentBusConfig.class).toInstance(config);
-    }
-
-    private void configurePersistentEventBus() {
-        configurePersistentBusConfig();
-        bind(BusProvider.class).toInstance(new BusProvider(tableName, historyTableName));
+    protected void configurePersistentEventBus() {
+        final PersistentBusConfig busConfig = new ConfigurationObjectFactory(configSource).buildWithReplacements(PersistentBusConfig.class,
+                                                                                                                 ImmutableMap.<String, String>of("instanceName", "main"));
+        bind(BusProvider.class).toInstance(new BusProvider(busConfig));
         bind(PersistentBus.class).toProvider(BusProvider.class).asEagerSingleton();
     }
 

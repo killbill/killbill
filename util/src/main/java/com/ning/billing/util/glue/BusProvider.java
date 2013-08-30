@@ -26,30 +26,30 @@ import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBusConfig;
 import com.ning.billing.clock.Clock;
 
+import com.codahale.metrics.MetricRegistry;
+
 
 public class BusProvider implements Provider<PersistentBus> {
 
+    private final PersistentBusConfig busConfig;
+
     private IDBI dbi;
     private Clock clock;
-    private PersistentBusConfig busConfig;
-    private String tableName;
-    private String historyTableName;
+    private MetricRegistry metricRegistry;
 
-    public BusProvider(final String tableName, final String historyTableName) {
-        this.tableName = tableName;
-        this.historyTableName = historyTableName;
+    public BusProvider(final PersistentBusConfig busConfig) {
+        this.busConfig = busConfig;
     }
 
     @Inject
-    public void initialize(final IDBI dbi, final Clock clock, final PersistentBusConfig config) {
+    public void initialize(final IDBI dbi, final Clock clock, final MetricRegistry metricRegistry) {
         this.dbi = dbi;
         this.clock = clock;
-        this.busConfig = config;
+        this.metricRegistry = metricRegistry;
     }
-
 
     @Override
     public PersistentBus get() {
-        return new DefaultPersistentBus(dbi, clock, busConfig, tableName, historyTableName);
+        return new DefaultPersistentBus(dbi, clock, busConfig, metricRegistry);
     }
 }

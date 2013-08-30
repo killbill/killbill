@@ -65,6 +65,7 @@ import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
+import com.ning.billing.util.glue.MetricsModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.RecordIdModule;
@@ -103,6 +104,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new CacheModule(configSource));
         install(new EmailModule(configSource));
         install(new CallContextModule());
+        install(new MetricsModule());
         install(new BusModule(configSource));
         install(new NotificationQueueModule(configSource));
         install(new TagStoreModule());
@@ -123,7 +125,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new DefaultOSGIModule(configSource));
         install(new NonEntityDaoModule());
         install(new RecordIdModule());
-        install(new BeatrixModuleWithSubsetLifecycle());
+        install(new BeatrixModuleWithSubsetLifecycle(configSource));
 
         bind(AccountChecker.class).asEagerSingleton();
         bind(SubscriptionChecker.class).asEagerSingleton();
@@ -194,6 +196,10 @@ public class BeatrixIntegrationModule extends AbstractModule {
     }
 
     private static final class BeatrixModuleWithSubsetLifecycle extends BeatrixModule {
+
+        public BeatrixModuleWithSubsetLifecycle(final ConfigSource configSource) {
+            super(configSource);
+        }
 
         @Override
         protected void installLifecycle() {

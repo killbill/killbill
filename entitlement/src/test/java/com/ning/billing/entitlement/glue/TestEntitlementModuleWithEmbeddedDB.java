@@ -25,6 +25,7 @@ import com.ning.billing.entitlement.EntitlementTestListenerStatus;
 import com.ning.billing.glue.AccountModule;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.MetricsModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
@@ -42,6 +43,7 @@ public class TestEntitlementModuleWithEmbeddedDB extends TestEntitlementModule {
         install(new DefaultAccountModule(configSource));
         install(new GuicyKillbillTestWithEmbeddedDBModule());
         install(new NonEntityDaoModule());
+        install(new MetricsModule());
         install(new BusModule(configSource));
         install(new TagStoreModule());
         install(new CatalogModule(configSource));

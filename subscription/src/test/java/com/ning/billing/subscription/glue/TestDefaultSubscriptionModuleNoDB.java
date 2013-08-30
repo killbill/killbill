@@ -20,16 +20,17 @@ import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
-import com.ning.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
-import com.ning.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
-import com.ning.billing.subscription.engine.dao.SubscriptionDao;
-import com.ning.billing.subscription.engine.dao.RepairSubscriptionDao;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.notificationq.MockNotificationQueueService;
 import com.ning.billing.notificationq.api.NotificationQueueConfig;
 import com.ning.billing.notificationq.api.NotificationQueueService;
+import com.ning.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
+import com.ning.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
+import com.ning.billing.subscription.engine.dao.RepairSubscriptionDao;
+import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.util.bus.InMemoryBusModule;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.name.Names;
 
 public class TestDefaultSubscriptionModuleNoDB extends TestDefaultSubscriptionModule {
@@ -52,7 +53,8 @@ public class TestDefaultSubscriptionModuleNoDB extends TestDefaultSubscriptionMo
     }
 
     protected void configureNotificationQueueConfig() {
-        final NotificationQueueConfig config = new ConfigurationObjectFactory(configSource).build(NotificationQueueConfig.class);
+        final NotificationQueueConfig config = new ConfigurationObjectFactory(configSource).buildWithReplacements(NotificationQueueConfig.class,
+                                                                                                                  ImmutableMap.<String, String>of("instanceName", "main"));
         bind(NotificationQueueConfig.class).toInstance(config);
     }
 

@@ -76,6 +76,7 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.KillBillShiroAopModule;
 import com.ning.billing.util.glue.KillBillShiroModule;
+import com.ning.billing.util.glue.MetricsModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.RecordIdModule;
@@ -210,6 +211,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new TagStoreModule());
             install(new AuditModule());
             install(new CatalogModule(configSource));
+            install(new MetricsModule());
             install(new BusModule(configSource));
             install(new NotificationQueueModule(configSource));
             install(new CallContextModule());
@@ -219,7 +221,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new DefaultSubscriptionModule(configSource));
             install(new DefaultEntitlementModule(configSource));
             install(new PaymentMockModule(configSource));
-            install(new BeatrixModule());
+            install(new BeatrixModule(configSource));
             install(new DefaultJunctionModule(configSource));
             install(new DefaultOverdueModule(configSource));
             install(new TenantModule(configSource));

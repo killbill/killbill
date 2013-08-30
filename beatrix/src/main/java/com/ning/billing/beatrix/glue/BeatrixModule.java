@@ -16,25 +16,32 @@
 
 package com.ning.billing.beatrix.glue;
 
+import org.skife.config.ConfigSource;
+import org.skife.config.ConfigurationObjectFactory;
+
 import com.ning.billing.beatrix.DefaultBeatrixService;
 import com.ning.billing.beatrix.bus.api.BeatrixService;
 import com.ning.billing.beatrix.extbus.BeatrixListener;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.bus.api.PersistentBusConfig;
 import com.ning.billing.util.glue.BusProvider;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
 public class BeatrixModule extends AbstractModule {
 
-    // This has to match the DDL
-    private final static String EXTERNAL_BUS_TABLE_NAME = "bus_ext_events";
-    private final static String EXTERNAL_BUS_HISTORY_TABLE_NAME = "bus_ext_events_history";
-
     public static final String EXTERNAL_BUS = "externalBus";
+
+    private final ConfigSource configSource;
+
+    public BeatrixModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
 
     @Override
     protected void configure() {
@@ -50,7 +57,9 @@ public class BeatrixModule extends AbstractModule {
         bind(BeatrixService.class).to(DefaultBeatrixService.class);
         bind(DefaultBeatrixService.class).asEagerSingleton();
 
-        bind(BusProvider.class).annotatedWith(Names.named(EXTERNAL_BUS)).toInstance(new BusProvider(EXTERNAL_BUS_TABLE_NAME, EXTERNAL_BUS_HISTORY_TABLE_NAME));
+        final PersistentBusConfig extBusConfig = new ConfigurationObjectFactory(configSource).buildWithReplacements(PersistentBusConfig.class,
+                                                                                                                    ImmutableMap.<String, String>of("instanceName", "external"));
+        bind(BusProvider.class).annotatedWith(Names.named(EXTERNAL_BUS)).toInstance(new BusProvider(extBusConfig));
         bind(PersistentBus.class).annotatedWith(Names.named(EXTERNAL_BUS)).toProvider(Key.get(BusProvider.class, Names.named(EXTERNAL_BUS))).asEagerSingleton();
 
         bind(BeatrixListener.class).asEagerSingleton();

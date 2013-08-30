@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,15 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.util.bus;
+package com.ning.billing.util.glue;
 
-import org.skife.config.ConfigSource;
+import com.codahale.metrics.MetricRegistry;
+import com.google.inject.AbstractModule;
 
-import com.ning.billing.util.glue.BusModule;
+public class MetricsModule extends AbstractModule {
 
-public class InMemoryBusModule extends BusModule {
-
-    public InMemoryBusModule(final ConfigSource configSource) {
-        super(BusType.MEMORY, configSource);
+    @Override
+    protected void configure() {
+        bind(MetricRegistry.class).asEagerSingleton();
     }
 }

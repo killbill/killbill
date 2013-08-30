@@ -66,6 +66,7 @@ import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.KillBillShiroAopModule;
 import com.ning.billing.util.glue.KillBillShiroModule;
+import com.ning.billing.util.glue.MetricsModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.RecordIdModule;
@@ -139,6 +140,7 @@ public class KillbillServerModule extends AbstractModule {
         install(new CustomFieldModule());
         install(new AuditModule());
         install(new CatalogModule(configSource));
+        install(new MetricsModule());
         install(new BusModule(configSource));
         install(new NotificationQueueModule(configSource));
         install(new CallContextModule());
@@ -148,7 +150,7 @@ public class KillbillServerModule extends AbstractModule {
         install(new DefaultSubscriptionModule(configSource));
         install(new DefaultEntitlementModule(configSource));
         install(new PaymentModule(configSource));
-        install(new BeatrixModule());
+        install(new BeatrixModule(configSource));
         install(new DefaultJunctionModule(configSource));
         install(new DefaultOverdueModule(configSource));
         install(new TenantModule(configSource));

@@ -24,6 +24,8 @@ import com.ning.billing.notificationq.api.NotificationQueueConfig;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
+import com.google.common.collect.ImmutableMap;
+
 public class MockNotificationQueueModule extends NotificationQueueModule {
 
     public MockNotificationQueueModule(final ConfigSource configSource) {
@@ -32,9 +34,11 @@ public class MockNotificationQueueModule extends NotificationQueueModule {
 
     @Override
     protected void configureNotificationQueueConfig() {
-        final NotificationQueueConfig config = new ConfigurationObjectFactory(configSource).build(NotificationQueueConfig.class);
+        final NotificationQueueConfig config = new ConfigurationObjectFactory(configSource).buildWithReplacements(NotificationQueueConfig.class,
+                                                                                                                  ImmutableMap.<String, String>of("instanceName", "main"));
         bind(NotificationQueueConfig.class).toInstance(config);
     }
+
     @Override
     protected void configure() {
         bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();

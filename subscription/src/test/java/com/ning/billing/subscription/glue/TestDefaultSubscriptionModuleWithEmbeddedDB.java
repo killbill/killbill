@@ -25,6 +25,7 @@ import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.engine.dao.RepairSubscriptionDao;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CustomFieldModule;
+import com.ning.billing.util.glue.MetricsModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
@@ -55,6 +56,7 @@ public class TestDefaultSubscriptionModuleWithEmbeddedDB extends TestDefaultSubs
 
         install(new NotificationQueueModule(configSource));
         install(new CustomFieldModule());
+        install(new MetricsModule());
         install(new BusModule(configSource));
         super.configure();
     }
