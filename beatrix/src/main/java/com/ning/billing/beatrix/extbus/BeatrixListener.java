@@ -189,8 +189,7 @@ public class
 
             case OVERDUE_CHANGE:
                 OverdueChangeInternalEvent realEventOC = (OverdueChangeInternalEvent) event;
-                // TODO When Killbil supports more than overdue for bundle, this will break...
-                objectType = ObjectType.BUNDLE;
+                objectType = ObjectType.ACCOUNT;
                 objectId = realEventOC.getOverdueObjectId();
                 eventBusType = ExtBusEventType.OVERDUE_CHANGE;
                 break;
