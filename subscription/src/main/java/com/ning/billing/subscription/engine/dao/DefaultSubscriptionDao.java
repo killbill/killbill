@@ -769,6 +769,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
                                                                                              .setProcessedDate(now)
                                                                                              .setEffectiveDate(futureBaseEvent.getEffectiveDate())
                                                                                              .setRequestedDate(now)
+                                                                                             .setCreatedDate(futureBaseEvent.getCreatedDate())
                                                                                                      // This event is only there to indicate the ADD_ON is future canceled, but it is not there
                                                                                                      // on disk until the base plan cancellation becomes effective
                                                                                              .setFromDisk(false));
