@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.ning.billing:killbill-beatrix:test-jar:tests:0.6.5-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-beatrix/0.6.5-SNAPSHOT/killbill-beatrix-0.6.5-SNAPSHOT-tests.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-beatrix/0.6.5-SNAPSHOT/killbill-beatrix-0.6.5-SNAPSHOT-test-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-beatrix/0.6.5-SNAPSHOT/killbill-beatrix-0.6.5-SNAPSHOT-test-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -45,6 +45,7 @@
     <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.4.0" level="project" />
     <orderEntry type="library" name="Maven: org.skife.config:config-magic:0.14" level="project" />
     <orderEntry type="module" module-name="killbill-util" />
+    <orderEntry type="library" name="Maven: com.codahale.metrics:metrics-core:3.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-joda:2.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.jolbox:bonecp:0.7.1.RELEASE" level="project" />
@@ -53,7 +54,6 @@
     <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:0.2.3" level="project" />
     <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-locker:0.2.3" level="project" />
     <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-queue:0.2.3" level="project" />
-    <orderEntry type="library" name="Maven: com.codahale.metrics:metrics-core:3.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-jdbi:0.2.3" level="project" />
     <orderEntry type="library" name="Maven: org.jdbi:jdbi:2.39.1" level="project" />
     <orderEntry type="library" name="Maven: org.weakref:jmxutils:1.12" level="project" />
@@ -83,7 +83,7 @@
     <orderEntry type="module" module-name="killbill-usage" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.1" level="project" />
     <orderEntry type="module" module-name="killbill-beatrix" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-beatrix:test-jar:tests:0.6.3-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-beatrix:test-jar:tests:0.6.5-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="killbill-jaxrs" />
     <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.2.3" level="project" />
     <orderEntry type="library" name="Maven: javax.ws.rs:jsr311-api:1.1.1" level="project" />
@@ -96,9 +96,9 @@
     <orderEntry type="library" name="Maven: org.apache.felix:org.osgi.core:1.0.1" level="project" />
     <orderEntry type="module" module-name="killbill-overdue" />
     <orderEntry type="module" module-name="killbill-payment" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-payment:test-jar:tests:0.6.3-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-payment:test-jar:tests:0.6.5-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="killbill-util" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.6.3-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.6.5-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-embeddeddb:0.2.3" level="project" />
     <orderEntry type="library" name="Maven: com.ning.jetty:ning-service-skeleton-base:0.1.7" level="project" />
     <orderEntry type="library" name="Maven: com.ning:metrics.eventtracker-smile:4.1.2" level="project" />
