@@ -21,7 +21,10 @@ import org.apache.shiro.guice.ShiroModule;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.session.mgt.SessionManager;
+import org.skife.config.ConfigSource;
+import org.skife.config.ConfigurationObjectFactory;
 
+import com.ning.billing.util.config.RbacConfig;
 import com.ning.billing.util.security.shiro.dao.JDBCSessionDao;
 import com.ning.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 
@@ -42,7 +45,16 @@ public class KillBillShiroModule extends ShiroModule {
         return Boolean.parseBoolean(System.getProperty(KILLBILL_RBAC_PROPERTY, "true"));
     }
 
+    private final ConfigSource configSource;
+
+    public KillBillShiroModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
+
     protected void configureShiro() {
+        final RbacConfig config = new ConfigurationObjectFactory(configSource).build(RbacConfig.class);
+        bind(RbacConfig.class).toInstance(config);
+
         bindRealm().toProvider(IniRealmProvider.class).asEagerSingleton();
 
         if (isLDAPEnabled()) {

@@ -23,17 +23,20 @@ import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.util.config.RbacConfig;
 import com.ning.billing.util.security.shiro.dao.JDBCSessionDao;
 
 public class JDBCSessionDaoProvider implements Provider<JDBCSessionDao> {
 
     private final SessionManager sessionManager;
     private final IDBI dbi;
+    private final RbacConfig rbacConfig;
 
     @Inject
-    public JDBCSessionDaoProvider(final IDBI dbi, final SessionManager sessionManager) {
+    public JDBCSessionDaoProvider(final IDBI dbi, final SessionManager sessionManager, final RbacConfig rbacConfig) {
         this.sessionManager = sessionManager;
         this.dbi = dbi;
+        this.rbacConfig = rbacConfig;
     }
 
     @Override
@@ -41,7 +44,9 @@ public class JDBCSessionDaoProvider implements Provider<JDBCSessionDao> {
         final JDBCSessionDao jdbcSessionDao = new JDBCSessionDao(dbi);
 
         if (sessionManager instanceof DefaultSessionManager) {
-            ((DefaultSessionManager) sessionManager).setSessionDAO(jdbcSessionDao);
+            final DefaultSessionManager defaultSessionManager = (DefaultSessionManager) sessionManager;
+            defaultSessionManager.setSessionDAO(jdbcSessionDao);
+            defaultSessionManager.setGlobalSessionTimeout(rbacConfig.getGlobalSessionTimeout().getMillis());
         }
 
         return jdbcSessionDao;

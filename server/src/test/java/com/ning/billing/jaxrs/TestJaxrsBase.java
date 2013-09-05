@@ -228,7 +228,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new UsageModule(configSource));
             install(new RecordIdModule());
             installClock();
-            install(new KillBillShiroWebModule(servletContext));
+            install(new KillBillShiroWebModule(servletContext, configSource));
             install(new KillBillShiroAopModule());
             install(new SecurityModule());
         }

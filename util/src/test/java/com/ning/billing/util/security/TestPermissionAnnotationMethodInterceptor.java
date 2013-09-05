@@ -74,7 +74,7 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
         // Shutdown the cache manager to avoid duplicate exceptions
         CacheManager.getInstance().shutdown();
         final Injector injector = Guice.createInjector(Stage.PRODUCTION,
-                                                       new KillBillShiroModule(),
+                                                       new KillBillShiroModule(configSource),
                                                        new KillBillShiroAopModule(),
                                                        new SecurityModule(),
                                                        new AbstractModule() {
@@ -102,7 +102,7 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
         // Shutdown the cache manager to avoid duplicate exceptions
         CacheManager.getInstance().shutdown();
         final Injector injector = Guice.createInjector(Stage.PRODUCTION,
-                                                       new KillBillShiroModule(),
+                                                       new KillBillShiroModule(configSource),
                                                        new KillBillShiroAopModule(),
                                                        new SecurityModule(),
                                                        new AbstractModule() {
