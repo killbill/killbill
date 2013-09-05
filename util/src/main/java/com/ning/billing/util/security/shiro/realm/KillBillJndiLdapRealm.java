@@ -107,7 +107,8 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
 
         if (securityConfig.getShiroLDAPPermissionsByGroup() != null) {
             final Ini ini = new Ini();
-            ini.load(securityConfig.getShiroLDAPPermissionsByGroup());
+            // When passing properties on the command line, \n can be escaped
+            ini.load(securityConfig.getShiroLDAPPermissionsByGroup().replace("\\n", "\n"));
             for (final Section section : ini.getSections()) {
                 for (final String role : section.keySet()) {
                     final Collection<String> permissions = ImmutableList.<String>copyOf(SPLITTER.split(section.get(role)));
