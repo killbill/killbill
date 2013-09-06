@@ -5,12 +5,8 @@
   }
 }
 
-section {
+h2, h3, section {
     padding-top: 30px;
-}
-
-.api_table {
-    margin-left: 15px;
 }
 
 .jumbotron {
