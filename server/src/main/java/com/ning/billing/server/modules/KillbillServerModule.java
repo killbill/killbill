@@ -21,7 +21,6 @@ import javax.sql.DataSource;
 
 import com.ning.billing.clock.Clock;
 import com.ning.billing.clock.ClockMock;
-import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import org.skife.config.ConfigSource;
 import org.skife.config.SimplePropertyConfigSource;
@@ -69,7 +68,6 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.KillBillShiroAopModule;
-import com.ning.billing.util.glue.KillBillShiroModule;
 import com.ning.billing.util.glue.MetricsModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
@@ -171,7 +169,7 @@ public class KillbillServerModule extends AbstractModule {
         install(new DefaultOSGIModule(configSource));
         install(new UsageModule(configSource));
         install(new RecordIdModule());
-        install(new KillBillShiroWebModule(servletContext));
+        install(new KillBillShiroWebModule(servletContext, configSource));
         install(new KillBillShiroAopModule());
         install(new SecurityModule());
         installClock();

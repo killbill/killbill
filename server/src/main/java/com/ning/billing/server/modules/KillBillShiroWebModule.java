@@ -22,8 +22,11 @@ import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.guice.web.ShiroWebModule;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
+import org.skife.config.ConfigSource;
+import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.jaxrs.resources.JaxrsResource;
+import com.ning.billing.util.config.RbacConfig;
 import com.ning.billing.util.glue.EhCacheManagerProvider;
 import com.ning.billing.util.glue.IniRealmProvider;
 import com.ning.billing.util.glue.JDBCSessionDaoProvider;
@@ -37,12 +40,18 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
 // See com.ning.billing.util.glue.KillBillShiroModule for Kill Bill library.
 public class KillBillShiroWebModule extends ShiroWebModule {
 
-    public KillBillShiroWebModule(final ServletContext servletContext) {
+    private final ConfigSource configSource;
+
+    public KillBillShiroWebModule(final ServletContext servletContext, final ConfigSource configSource) {
         super(servletContext);
+        this.configSource = configSource;
     }
 
     @Override
     protected void configureShiroWeb() {
+        final RbacConfig config = new ConfigurationObjectFactory(configSource).build(RbacConfig.class);
+        bind(RbacConfig.class).toInstance(config);
+
         bindRealm().toProvider(IniRealmProvider.class).asEagerSingleton();
 
         if (KillBillShiroModule.isLDAPEnabled()) {
