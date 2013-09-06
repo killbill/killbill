@@ -1,8 +1,8 @@
-In order to test the chnages for the doc, one can use Kekyll to visualize the chnages locally:
+In order to test the changes for the doc, one can use Jekyll to visualize the changes locally:
+
 # Install the gem if not already present
 > gem install jekyll
 # Start the server
-# jekyll --server --auto
+# jekyll serve --watch
 
-Then check result on http://127.0.0.1:4000/
-
+Then check the results at http://127.0.0.1:4000/
