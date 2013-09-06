@@ -88,8 +88,6 @@ public class InvoiceResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceResource.class);
     private static final String ID_PARAM_NAME = "invoiceId";
-    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
-    private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
     private final InvoiceUserApi invoiceApi;
     private final PaymentApi paymentApi;
@@ -299,7 +297,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @POST
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
-    @Path(CHARGES)
+    @Path("/" +CHARGES)
     public Response createExternalCharge(final InvoiceItemJsonSimple externalChargeJson,
                                          @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -469,7 +467,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path(CUSTOM_FIELD_URI)
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -478,7 +476,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path(CUSTOM_FIELD_URI)
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -492,7 +490,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path(CUSTOM_FIELD_URI)
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -506,7 +504,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path(TAG_URI)
+    @Path("/{invoiceId:"  + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -515,7 +513,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path(TAG_URI)
+    @Path("/{invoiceId:"  + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
@@ -530,7 +528,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path(TAG_URI)
+    @Path("/{invoiceId:"  + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,

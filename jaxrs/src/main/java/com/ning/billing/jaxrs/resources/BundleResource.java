@@ -73,8 +73,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class BundleResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "bundleId";
-    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS;
-    private static final String TAG_URI = JaxrsResource.TAGS;
 
     private final SubscriptionApi subscriptionApi;
     private final EntitlementApi entitlementApi;
@@ -125,7 +123,7 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -134,7 +132,7 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -148,7 +146,7 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -162,7 +160,7 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAG_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -196,7 +194,7 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAG_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
@@ -211,7 +209,7 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAG_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,
