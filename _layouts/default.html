@@ -9,11 +9,13 @@
         <![endif]-->
 
         <link rel=stylesheet type="text/css" href="/stylesheets/bootstrap.min.css">
+        <link rel=stylesheet type="text/css" href="/stylesheets/bootstrap-responsive.min.css">
         <link rel=stylesheet type="text/css" href="/stylesheets/prettify.css">
         <link rel=stylesheet type="text/css" href="/stylesheets/killbill.css">
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <script src="/javascripts/prettify.js"></script>
         <script src="/javascripts/bootstrap.min.js"></script>
+        <script src="/javascripts/killbill.js"></script>
 
         <script type="text/javascript">
             var _gaq = _gaq || [];
@@ -31,9 +33,15 @@
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
                 <div class="container">
+                    <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
                     <a class="brand" href="./index.html">Kill Bill</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
+                            <!-- Use relative links for highlighting, see killbill.js -->
                             <li><a href="/about.html">About</a></li>
                             <li><a href="/features.html">Features</a></li>
                             <li><a href="http://docs.kill-bill.org/userguide.html">Userguide</a></li>
@@ -43,7 +51,7 @@
                             <li><a href="http://groups.google.com/group/killbilling-users" target="_blank">User Mailing-List</a></li>
                             <li><a href="http://groups.google.com/group/killbilling-dev" target="_blank">Dev Mailing-List</a></li>
                         </ul>
-                    </div>
+                    </div><!--/.nav-collapse -->
                 </div>
             </div>
         </div>
