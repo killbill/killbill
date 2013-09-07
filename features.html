@@ -212,6 +212,30 @@ layout: default
   Our plugin system uses the OSGi standard and today we support plugins written in either Java or Ruby.
   </p>
 
+  <h2>Multi-Tenancy</h2>
+  <p>
+  Kill Bill supports Multi-Tenancy, meaning you can run multiple logical instances of Kill Bill with a single server and database.
+  For example, say you own two online stores, each of them having different catalogs, users, etc. You could configure a tenant for each
+  of them, which would make the data from one store invisible to the other.
+  </p>
+  <p>
+  This feature can be very useful for development and debugging as well. If you want to test a catalog change for example, you could
+  create a new tenant in your QA or staging environment, and import all the data from production into that tenant. Existing teams
+  using the test environments won't be affected, and Kill Bill makes it very easy to export, spin up, import and delete tenants.
+  </p>
+
+  <h2>Role-based access control</h2>
+  <p>
+  Kill Bill implements role-based access control (RBAC) for authentication and authorization. While the concept of users and roles
+  are expected to be managed outside of Kill Bill, a set of permissions are defined and enforced at the library API level.
+  For example, you can connect Kill Bill to your corporate LDAP server and define groups (e.g. Finance, Support, ...) with fine-grained
+  permissions (e.g. users of the Finance group can record chargebacks, whereas users of the Support group can only issue refunds and
+  change plans).
+  </p>
+  <p>
+  RBAC is tightly integrated with our management interface as well.
+  </p>
+
   <h2>Management interface</h2>
   <p>
   See it in action <a href="/kaui.html">here</a>
