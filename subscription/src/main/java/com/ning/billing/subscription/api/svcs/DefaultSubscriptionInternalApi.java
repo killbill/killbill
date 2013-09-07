@@ -152,8 +152,12 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context) throws SubscriptionBaseApiException {
-        final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleName, accountId, clock.getUTCNow());
+    public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final InternalCallContext context) throws SubscriptionBaseApiException {
+        final SubscriptionBaseBundle result = getActiveBundleForKeyNotException(bundleKey, context);
+        if (result != null) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, bundleKey);
+        }
+        final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, clock.getUTCNow());
         return dao.createSubscriptionBundle(bundle, context);
     }
 
@@ -175,6 +179,32 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     public List<SubscriptionBaseBundle> getBundlesForKey(final String bundleKey, final InternalTenantContext context) {
         final List<SubscriptionBaseBundle> result = dao.getSubscriptionBundlesForKey(bundleKey, context);
         return result;
+    }
+
+    @Override
+    public SubscriptionBaseBundle getActiveBundleForKey(final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException  {
+        final SubscriptionBaseBundle result =  getActiveBundleForKeyNotException(bundleKey, context);
+        if (result == null) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, bundleKey);
+        }
+        return result;
+    }
+
+    private SubscriptionBaseBundle getActiveBundleForKeyNotException(final String bundleKey, final InternalTenantContext context)  {
+
+        final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
+        for (SubscriptionBaseBundle cur : existingBundles) {
+            final List<SubscriptionBase> subscriptions = dao.getSubscriptions(cur.getId(), context);
+            for (SubscriptionBase s : subscriptions) {
+                if (s.getCategory() == ProductCategory.ADD_ON) {
+                    continue;
+                }
+                if (s.getEndDate() == null || s.getEndDate().compareTo(clock.getUTCNow()) > 0) {
+                    return cur;
+                }
+            }
+        }
+        return null;
     }
 
     @Override

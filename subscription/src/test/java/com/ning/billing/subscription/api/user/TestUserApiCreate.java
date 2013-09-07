@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
@@ -32,6 +33,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.subscription.DefaultSubscriptionTestInitializer;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
@@ -43,6 +45,45 @@ import static org.testng.Assert.assertTrue;
 public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
     private static final Logger log = LoggerFactory.getLogger(TestUserApiCreate.class);
+
+
+    @Test(groups = "slow")
+    public void testCreateBundlesWithSameExternalKeys() {
+        try {
+            final DateTime init = clock.getUTCNow();
+            final DateTime requestedDate = init.minusYears(1);
+
+            final String productName = "Shotgun";
+            final BillingPeriod term = BillingPeriod.MONTHLY;
+            final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+
+            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
+                                                                                                                              testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
+            assertNotNull(subscription);
+
+            try {
+                final SubscriptionBaseBundle newBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, internalCallContext);
+                Assert.fail("Unexpected success to create a bundle");
+            } catch (SubscriptionBaseApiException e) {
+                Assert.assertEquals(e.getCode(), ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode());
+            }
+
+            subscription.cancel(clock.getUTCNow(), callContext);
+
+            final SubscriptionBaseBundle newBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, internalCallContext);
+            assertNotNull(newBundle);
+
+            final DefaultSubscriptionBase newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(newBundle.getId(),
+                                                                                                                              testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
+            assertNotNull(newSubscription);
+
+
+        } catch (SubscriptionBaseApiException e) {
+            log.error("Unexpected exception", e);
+            Assert.fail(e.getMessage());
+        }
+    }
 
     @Test(groups = "slow")
     public void testCreateWithRequestedDate() {
@@ -58,7 +99,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                                       testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
+                                                                                                                              testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
             assertNotNull(subscription);
 
             //
@@ -106,7 +147,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                                       testUtil.getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), internalCallContext);
+                                                                                                                              testUtil.getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), internalCallContext);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -144,8 +185,8 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                                       testUtil.getProductSpecifier(productName, planSetName, term, null),
-                                                                                                       clock.getUTCNow(), internalCallContext);
+                                                                                                                              testUtil.getProductSpecifier(productName, planSetName, term, null),
+                                                                                                                              clock.getUTCNow(), internalCallContext);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -200,7 +241,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
             // CREATE SUBSCRIPTION
             DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                                 testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), internalCallContext);
+                                                                                                                        testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), internalCallContext);
             assertNotNull(subscription);
 
             PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -244,7 +285,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                                       testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), internalCallContext);
+                                                                                                                              testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), internalCallContext);
             assertNotNull(subscription);
 
             assertListenerStatus();

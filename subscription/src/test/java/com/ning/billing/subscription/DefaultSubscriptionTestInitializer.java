@@ -43,6 +43,7 @@ import static org.testng.Assert.assertNotNull;
 
 public class DefaultSubscriptionTestInitializer implements SubscriptionTestInitializer {
 
+    public static final String DEFAULT_BUNDLE_KEY = "myDefaultBundle";
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionTestInitializer.class);
 
@@ -78,7 +79,7 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
 
     public SubscriptionBaseBundle initBundle(final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception {
         final UUID accountId = UUID.randomUUID();
-        final SubscriptionBaseBundle bundle = subscriptionApi.createBundleForAccount(accountId, "myDefaultBundle",  callContext);
+        final SubscriptionBaseBundle bundle = subscriptionApi.createBundleForAccount(accountId, DEFAULT_BUNDLE_KEY,  callContext);
         assertNotNull(bundle);
         return bundle;
     }
