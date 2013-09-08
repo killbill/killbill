@@ -67,7 +67,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
 
             // CANCEL in trial period to get IMM policy
-            subscription.cancel(clock.getUTCNow(), callContext);
+            subscription.cancel(callContext);
             currentPhase = subscription.getCurrentPhase();
             testListener.isCompleted(3000);
 
@@ -125,7 +125,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             // CANCEL
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel(clock.getUTCNow(), callContext);
+            subscription.cancel(callContext);
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
@@ -191,7 +191,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL
-            subscription.cancel(clock.getUTCNow(), callContext);
+            subscription.cancel(callContext);
             assertTrue(testListener.isCompleted(5000));
 
             final PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -238,7 +238,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
             // CANCEL EOT
-            subscription.cancel(clock.getUTCNow(), callContext);
+            subscription.cancel(callContext);
 
             subscription.uncancel(callContext);
 

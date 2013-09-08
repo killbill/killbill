@@ -479,7 +479,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
                 for (final SubscriptionEventModelDao cur : eventModels) {
                     if (cur.getUserType() == ApiEventType.CANCEL) {
                         if (cancelledEvent != null) {
-                            throw new SubscriptionBaseError(String.format("Found multiple cancel active events for subscriptions %s", subscriptionId.toString()));
+                            throw new SubscriptionBaseError(String.format("Found multiple cancelWithRequestedDate active events for subscriptions %s", subscriptionId.toString()));
                         }
                         cancelledEvent = cur;
                     }

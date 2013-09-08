@@ -69,7 +69,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
                 Assert.assertEquals(e.getCode(), ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode());
             }
 
-            subscription.cancel(clock.getUTCNow(), callContext);
+            subscription.cancelWithDate(clock.getUTCNow(), callContext);
 
             final SubscriptionBaseBundle newBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, internalCallContext);
             assertNotNull(newBundle);

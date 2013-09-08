@@ -96,7 +96,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
 
         // NOW CANCEL ADN THIS SHOULD WORK
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        subscription.cancel(null, callContext);
+        subscription.cancelWithDate(null, callContext);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.RE_CREATE);

@@ -375,7 +375,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         expectedAO.add(testUtil.createExistingEventForAssertion(SubscriptionBaseTransitionType.PHASE, "Telescopic-Scope", PhaseType.EVERGREEN,
                                                                 ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, baseSubscription.getStartDate().plusMonths(1)));
         expectedAO.add(testUtil.createExistingEventForAssertion(SubscriptionBaseTransitionType.CANCEL, "Telescopic-Scope", PhaseType.EVERGREEN,
-                                                                ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, newChargedThroughDate));
+                                                                ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, bpCancelDate));
 
         int index = 0;
         for (final ExistingEvent e : expectedAO) {
@@ -389,7 +389,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         expectedBP.add(testUtil.createExistingEventForAssertion(SubscriptionBaseTransitionType.PHASE, "Shotgun", PhaseType.EVERGREEN,
                                                                 ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, baseSubscription.getStartDate().plusDays(30)));
         expectedBP.add(testUtil.createExistingEventForAssertion(SubscriptionBaseTransitionType.CANCEL, "Shotgun", PhaseType.EVERGREEN,
-                                                                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, newChargedThroughDate));
+                                                                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, bpCancelDate));
         index = 0;
         for (final ExistingEvent e : expectedBP) {
             testUtil.validateExistingEventForAssertion(e, bpRepair.getExistingEvents().get(index++));
@@ -427,24 +427,6 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         }
 
         newAoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
-        assertEquals(newAoSubscription.getState(), EntitlementState.ACTIVE);
-        assertEquals(newAoSubscription.getAllTransitions().size(), 3);
-        assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
-
-        newBaseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
-        assertEquals(newBaseSubscription.getState(), EntitlementState.ACTIVE);
-        assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
-        assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
-
-        // MOVE CLOCK AFTER CANCEL DATE
-        testListener.pushExpectedEvent(NextEvent.CANCEL);
-        testListener.pushExpectedEvent(NextEvent.CANCEL);
-
-        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
-        clock.addDeltaFromReality(it.toDurationMillis());
-        assertTrue(testListener.isCompleted(7000));
-
-        newAoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), EntitlementState.CANCELLED);
         assertEquals(newAoSubscription.getAllTransitions().size(), 3);
         assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -453,6 +435,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(newBaseSubscription.getState(), EntitlementState.CANCELLED);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
+
     }
 
     @Test(groups = "slow")

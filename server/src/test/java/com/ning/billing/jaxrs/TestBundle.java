@@ -38,6 +38,9 @@ import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
+
 public class TestBundle extends TestJaxrsBase {
 
     @Test(groups = "slow", enabled = true)
@@ -122,12 +125,23 @@ public class TestBundle extends TestJaxrsBase {
 
         final EntitlementJsonNoEvents entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), "93199", productName, ProductCategory.BASE.toString(), term.toString(), true);
 
+
+        Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "93199");
+        String uri = JaxrsResource.BUNDLES_PATH;
+        Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final BundleJsonNoSubscriptions originalBundle = mapper.readValue(response.getResponseBody(), BundleJsonNoSubscriptions.class);
+        assertEquals(originalBundle.getAccountId(), accountJson.getAccountId());
+        assertEquals(originalBundle.getExternalKey(), "93199");
+
+
         final AccountJson newAccount = createAccountWithDefaultPaymentMethod("dst", "dst", "dst@yahoo.com");
 
         final BundleJsonNoSubscriptions newBundleInput = new BundleJsonNoSubscriptions(null, newAccount.getAccountId(), null, null, null);
         final String newBundleInputJson = mapper.writeValueAsString(newBundleInput);
-        final String uri = JaxrsResource.BUNDLES_PATH + "/" + entitlementJsonNoEvents.getBundleId();
-        Response response = doPut(uri, newBundleInputJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        uri = JaxrsResource.BUNDLES_PATH + "/" + entitlementJsonNoEvents.getBundleId();
+        response = doPut(uri, newBundleInputJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
         final String locationCC = response.getHeader("Location");
@@ -135,5 +149,17 @@ public class TestBundle extends TestJaxrsBase {
 
         response = doGetWithUrl(locationCC, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "93199");
+        uri = JaxrsResource.BUNDLES_PATH;
+        response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final BundleJsonNoSubscriptions newBundle = mapper.readValue(response.getResponseBody(), BundleJsonNoSubscriptions.class);
+
+        assertNotEquals(newBundle.getBundleId(), originalBundle.getBundleId());
+        assertEquals(newBundle.getExternalKey(), originalBundle.getExternalKey());
+        assertEquals(newBundle.getAccountId(), newAccount.getAccountId());
+
     }
 }

@@ -32,29 +32,36 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 public interface SubscriptionBaseApiService {
 
     public DefaultSubscriptionBase createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
-                                       String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
-                                       CallContext context)
+                                              String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
+                                              CallContext context)
             throws SubscriptionBaseApiException;
 
     @Deprecated
     public boolean recreatePlan(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs, final CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean cancel(DefaultSubscriptionBase subscription, DateTime requestedDate, CallContext context)
-        throws SubscriptionBaseApiException;
+    public boolean cancel(DefaultSubscriptionBase subscription, CallContext context)
+            throws SubscriptionBaseApiException;
 
-    public boolean cancelWithPolicy(DefaultSubscriptionBase subscription, DateTime requestedDate, BillingActionPolicy policy, CallContext context)
-        throws SubscriptionBaseApiException;
+    public boolean cancelWithRequestedDate(DefaultSubscriptionBase subscription, DateTime requestedDate, CallContext context)
+            throws SubscriptionBaseApiException;
+
+    public boolean cancelWithPolicy(DefaultSubscriptionBase subscription, BillingActionPolicy policy, CallContext context)
+            throws SubscriptionBaseApiException;
 
     public boolean uncancel(DefaultSubscriptionBase subscription, CallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean changePlan(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
-                              String priceList, DateTime requestedDate, CallContext context)
+                              String priceList, CallContext context)
+            throws SubscriptionBaseApiException;
+
+    public boolean changePlanWithRequestedDate(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
+                                               String priceList, DateTime requestedDate, CallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean changePlanWithPolicy(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
-                                        String priceList, DateTime requestedDate, BillingActionPolicy policy, CallContext context)
+                                        String priceList, BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
     public int cancelAddOnsIfRequired(final DefaultSubscriptionBase baseSubscription, final DateTime effectiveDate, final InternalCallContext context);

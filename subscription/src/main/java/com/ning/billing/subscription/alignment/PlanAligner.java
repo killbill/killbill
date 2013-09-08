@@ -163,7 +163,7 @@ public class PlanAligner extends BaseAligner {
                                                                                lastPlanTransition.getNextPriceList().getName(),
                                                                                requestedDate);
                     return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
-                // If we went through Plan changes, borrow the logic for changePlan alignment
+                // If we went through Plan changes, borrow the logic for changePlanWithRequestedDate alignment
                 case CHANGE:
                     return getTimedPhaseOnChange(subscription.getAlignStartDate(),
                                                  subscription.getBundleStartDate(),

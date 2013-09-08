@@ -41,19 +41,25 @@ import com.ning.billing.util.entity.Entity;
 public interface SubscriptionBase extends Entity, Blockable {
 
 
-    public boolean cancel(final DateTime requestedDate, final CallContext context)
+    public boolean cancel(final CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean cancelWithPolicy(final DateTime requestedDate, final BillingActionPolicy policy, final CallContext context)
+    public boolean cancelWithDate(final DateTime requestedDate, final CallContext context)
+            throws SubscriptionBaseApiException;
+
+    public boolean cancelWithPolicy(final BillingActionPolicy policy, final CallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean uncancel(final CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate, final CallContext context)
+    public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
+    public boolean changePlanWithDate(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate, final CallContext context)
+            throws SubscriptionBaseApiException;
+
+    public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
                                         final BillingActionPolicy policy, final CallContext context)
             throws SubscriptionBaseApiException;
 

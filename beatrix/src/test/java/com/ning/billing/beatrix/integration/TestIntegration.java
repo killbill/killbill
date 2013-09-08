@@ -36,13 +36,17 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
+import com.ning.billing.entitlement.api.Entitlement;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
+import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -452,6 +456,42 @@ public class TestIntegration extends TestIntegrationBase {
 
 
     @Test(groups = "slow")
+    public void testCreateMultipleBPWithSameExternalKey() throws Exception {
+
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 13, 42, 0, testTimeZone);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
+        assertNotNull(account);
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final SubscriptionBundle initialBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey("bundleKey", callContext);
+
+        busHandler.pushExpectedEvent(NextEvent.CANCEL);
+        baseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, callContext);
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        final String newProductName = "Pistol";
+        final DefaultEntitlement newBaseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", newProductName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+
+        final SubscriptionBundle newBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey("bundleKey", callContext);
+
+        assertNotEquals(initialBundle.getId(), newBundle.getId());
+        assertEquals(initialBundle.getAccountId(), newBundle.getAccountId());
+        assertEquals(initialBundle.getExternalKey(), newBundle.getExternalKey());
+
+        final Entitlement refreshedBseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+
+        assertEquals(refreshedBseEntitlement.getState(), EntitlementState.CANCELLED);
+        assertEquals(newBaseEntitlement.getState(), EntitlementState.ACTIVE);
+    }
+
+
+
+        @Test(groups = "slow")
     public void testWithPauseResume() throws Exception {
         final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         final int billingDay = 2;

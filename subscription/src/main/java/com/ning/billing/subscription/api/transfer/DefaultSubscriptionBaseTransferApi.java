@@ -230,7 +230,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                     }
                 } else {
 
-                    // If BP or STANDALONE subscription, create the cancel event on effectiveCancelDate
+                    // If BP or STANDALONE subscription, create the cancelWithRequestedDate event on effectiveCancelDate
                     final DateTime effectiveCancelDate = !cancelImmediately && oldSubscription.getChargedThroughDate() != null &&
                                                          effectiveTransferDate.isBefore(oldSubscription.getChargedThroughDate()) ?
                                                          oldSubscription.getChargedThroughDate() : effectiveTransferDate;
@@ -268,7 +268,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
             }
             BundleMigrationData bundleMigrationData = new BundleMigrationData(subscriptionBundleData, subscriptionMigrationDataList);
 
-            // Atomically cancel all subscription on old account and create new bundle, subscriptions, events for new account
+            // Atomically cancelWithRequestedDate all subscription on old account and create new bundle, subscriptions, events for new account
             dao.transfer(sourceAccountId, destAccountId, bundleMigrationData, transferCancelDataList, fromInternalCallContext, toInternalCallContext);
 
             return bundleMigrationData.getData();

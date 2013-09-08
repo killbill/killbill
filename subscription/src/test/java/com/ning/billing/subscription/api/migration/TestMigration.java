@@ -304,7 +304,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(billingTransitions.get(0), initialMigrateBilling);
 
             // Now make an IMMEDIATE change of plan
-            subscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
+            subscription.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
 
             final List<SubscriptionBaseTransition> newTransitions = subscription.getAllTransitions();
             assertEquals(newTransitions.size(), 3);

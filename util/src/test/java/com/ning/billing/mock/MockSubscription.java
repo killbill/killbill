@@ -27,7 +27,6 @@ import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -36,7 +35,6 @@ import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
-import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
@@ -75,15 +73,19 @@ public class MockSubscription implements SubscriptionBase {
     SubscriptionBase sub = Mockito.mock(SubscriptionBase.class);
 
     @Override
-    public boolean cancel(final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
-        return sub.cancel(requestedDate, context);
+    public boolean cancel(final CallContext context) throws SubscriptionBaseApiException {
+        return sub.cancel(context);
     }
 
     @Override
-    public boolean cancelWithPolicy(DateTime requestedDate,
-                                    BillingActionPolicy policy, CallContext context)
+    public boolean cancelWithDate(final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
+        return sub.cancelWithDate(requestedDate, context);
+    }
+
+    @Override
+    public boolean cancelWithPolicy(BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException {
-        return sub.cancelWithPolicy(requestedDate, policy, context);
+        return sub.cancelWithPolicy(policy, context);
     }
 
     @Override
@@ -92,15 +94,20 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
-                              final CallContext context) throws SubscriptionBaseApiException {
-        return sub.changePlan(productName, term, priceList, requestedDate, context);
+    public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final CallContext context) throws SubscriptionBaseApiException {
+        return sub.changePlan(productName, term, priceList, context);
+    }
+
+    @Override
+    public boolean changePlanWithDate(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
+                                      final CallContext context) throws SubscriptionBaseApiException {
+        return sub.changePlanWithDate(productName, term, priceList, requestedDate, context);
     }
 
     @Override
     public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-                                        final DateTime requestedDate, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        return sub.changePlan(productName, term, priceList, requestedDate, context);
+                                        final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+        return sub.changePlanWithPolicy(productName, term, priceList, policy, context);
     }
 
     @Override

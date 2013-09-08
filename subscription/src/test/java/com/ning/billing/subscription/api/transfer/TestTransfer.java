@@ -39,7 +39,6 @@ import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -312,7 +311,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String newBaseProduct1 = "Assault-Rifle";
         final BillingPeriod newBaseTerm1 = BillingPeriod.ANNUAL;
         final DateTime changeDate1 = clock.getUTCNow();
-        newBaseSubscription.changePlan(newBaseProduct1, newBaseTerm1, basePriceList, changeDate1, callContext);
+        newBaseSubscription.changePlan(newBaseProduct1, newBaseTerm1, basePriceList, callContext);
 
         newPlan = newBaseSubscription.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);
@@ -328,7 +327,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String newBaseProduct2 = "Pistol";
         final BillingPeriod newBaseTerm2 = BillingPeriod.ANNUAL;
         final DateTime changeDate2 = clock.getUTCNow();
-        newBaseSubscriptionWithCtd.changePlan(newBaseProduct2, newBaseTerm2, basePriceList, changeDate2, callContext);
+        newBaseSubscriptionWithCtd.changePlan(newBaseProduct2, newBaseTerm2, basePriceList, callContext);
 
         newPlan = newBaseSubscriptionWithCtd.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);
@@ -464,7 +463,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         subscriptionInternalApi.setChargedThroughDate(aoSubscription1.getId(), ctd, internalCallContext);
 
         // CANCEL ADDON
-        aoSubscription1.cancel(clock.getUTCNow(), callContext);
+        aoSubscription1.cancelWithDate(clock.getUTCNow(), callContext);
 
         clock.addDays(1);
 
@@ -501,7 +500,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // CANCEL BP
         baseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
-        baseSubscription.cancel(clock.getUTCNow(), callContext);
+        baseSubscription.cancel(callContext);
 
         // MOVE CLOCK one day AHEAD AND UNCANCEL BP
         clock.addDays(1);

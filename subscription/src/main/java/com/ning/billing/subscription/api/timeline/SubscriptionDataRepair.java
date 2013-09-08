@@ -43,7 +43,6 @@ import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventBuilder;
 import com.ning.billing.subscription.events.user.ApiEventCancel;
-import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.clock.Clock;
@@ -113,12 +112,12 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
                     checkAddonRights(baseSubscription);
                     break;
                 case CHANGE:
-                    changePlan(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), input.getRequestedDate(), context);
+                    changePlanWithDate(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), input.getRequestedDate(), context);
                     checkAddonRights(baseSubscription);
                     trickleDownBPEffectForAddon(addonSubscriptions, getLastUserEventEffectiveDate(), context);
                     break;
                 case CANCEL:
-                    cancel(input.getRequestedDate(), context);
+                    cancelWithDate(input.getRequestedDate(), context);
                     trickleDownBPEffectForAddon(addonSubscriptions, getLastUserEventEffectiveDate(), context);
                     break;
                 case PHASE:

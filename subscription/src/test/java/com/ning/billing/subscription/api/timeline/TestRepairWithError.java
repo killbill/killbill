@@ -99,7 +99,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
 
                 testListener.pushExpectedEvent(NextEvent.CHANGE);
                 final DateTime changeTime = clock.getUTCNow();
-                baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, callContext);
+                baseSubscription.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, callContext);
                 assertTrue(testListener.isCompleted(5000));
 
                 // MOVE AFTER TRIAL
@@ -390,7 +390,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 assertTrue(testListener.isCompleted(5000));
 
                 DateTime requestedChange = clock.getUTCNow();
-                baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, callContext);
+                baseSubscription.changePlanWithRequestedDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, callContext);
 
                 DateTime reapairTime = clock.getUTCNow().minusDays(1);
 

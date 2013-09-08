@@ -83,7 +83,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
             // CHANGE PLAN
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), callContext);
+            subscription.changePlan(toProd, toTerm, toPlanSet, callContext);
             assertTrue(testListener.isCompleted(5000));
 
             // CHECK CHANGE PLAN
@@ -127,7 +127,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
-            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), callContext);
+            subscription.changePlan(toProd, toTerm, toPlanSet, callContext);
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
@@ -176,7 +176,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             clock.addDeltaFromReality(it.toDurationMillis());
 
             // CHANGE PLAN IMM
-            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), callContext);
+            subscription.changePlan(toProd, toTerm, toPlanSet, callContext);
             checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.TRIAL);
 
             assertTrue(testListener.isCompleted(5000));
@@ -236,7 +236,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
             // CHANGE PLAN
             currentTime = clock.getUTCNow();
-            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), callContext);
+            subscription.changePlan(toProd, toTerm, toPlanSet, callContext);
 
             checkChangePlan(subscription, fromProd, ProductCategory.BASE, fromTerm, PhaseType.EVERGREEN);
 
@@ -314,13 +314,13 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             // CHANGE EOT
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow(), callContext);
+            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", callContext);
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
             // CHANGE
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), callContext);
+            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", callContext);
             assertTrue(testListener.isCompleted(5000));
 
             final Plan currentPlan = subscription.getCurrentPlan();
@@ -363,14 +363,14 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             // CHANGE EOT
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow(), callContext);
+            subscription.changePlan("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount", callContext);
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
             // CHANGE EOT
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), callContext);
+            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", callContext);
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
@@ -440,7 +440,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             // CHANGE IMMEDIATE TO A 3 PHASES PLAN
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), callContext);
+            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", callContext);
             assertTrue(testListener.isCompleted(5000));
             testListener.reset();
 

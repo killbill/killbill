@@ -81,7 +81,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     private final DateTime paidThroughDate;
 
     //
-    // User APIs (create, change, cancel,...) will recompute those each time,
+    // User APIs (create, change, cancelWithRequestedDate,...) will recompute those each time,
     // so the user holding that subscription object get the correct state when
     // the call completes
     //
@@ -214,13 +214,18 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public boolean cancel(final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.cancel(this, requestedDate, context);
+    public boolean cancel(final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.cancel(this, context);
     }
 
     @Override
-    public boolean cancelWithPolicy(final DateTime requestedDate, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.cancelWithPolicy(this, requestedDate, policy, context);
+    public boolean cancelWithDate(final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.cancelWithRequestedDate(this, requestedDate, context);
+    }
+
+    @Override
+    public boolean cancelWithPolicy(final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.cancelWithPolicy(this, policy, context);
     }
 
     @Override
@@ -231,14 +236,20 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public boolean changePlan(final String productName, final BillingPeriod term, final String priceList,
-                              final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlan(this, productName, term, priceList, requestedDate, context);
+                                      final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.changePlan(this, productName, term, priceList, context);
+    }
+
+    @Override
+    public boolean changePlanWithDate(final String productName, final BillingPeriod term, final String priceList,
+                                      final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.changePlanWithRequestedDate(this, productName, term, priceList, requestedDate, context);
     }
 
     @Override
     public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-                                        final DateTime requestedDate, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlanWithPolicy(this, productName, term, priceList, requestedDate, policy, context);
+                                        final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.changePlanWithPolicy(this, productName, term, priceList, policy, context);
     }
 
     @Override
@@ -474,24 +485,15 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return getFutureEndDate() != null;
     }
 
-    public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy,
-                                               final DateTime requestedDate) {
-
-        // Return requested date to potentially honor date in the past, or NOW
-        if (policy == BillingActionPolicy.IMMEDIATE) {
-            return requestedDate.compareTo(clock.getUTCNow()) < 0 ? requestedDate : clock.getUTCNow();
-        }
-
-        if (policy != BillingActionPolicy.END_OF_TERM) {
-            throw new SubscriptionBaseError(String.format(
-                    "Unexpected policy type %s", policy.toString()));
-        }
-
-        if (chargedThroughDate == null) {
-            return requestedDate;
-        } else {
-            return chargedThroughDate.isBefore(requestedDate) ? requestedDate
-                                                              : chargedThroughDate;
+    public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy) {
+        switch (policy) {
+            case IMMEDIATE:
+                return clock.getUTCNow();
+            case END_OF_TERM:
+                return (chargedThroughDate != null) ? chargedThroughDate : clock.getUTCNow();
+            default:
+                throw new SubscriptionBaseError(String.format(
+                        "Unexpected policy type %s", policy.toString()));
         }
     }
 

@@ -71,7 +71,7 @@ public interface SubscriptionDao {
 
     public List<SubscriptionBaseEvent> getPendingEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 
-    // SubscriptionBase creation, cancellation, changePlan apis
+    // SubscriptionBase creation, cancellation, changePlanWithRequestedDate apis
     public void createSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> initialEvents, InternalCallContext context);
 
     public void recreateSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> recreateEvents, InternalCallContext context);

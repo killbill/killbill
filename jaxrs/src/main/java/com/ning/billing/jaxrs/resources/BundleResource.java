@@ -104,6 +104,17 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
+
+    @GET
+    @Produces(APPLICATION_JSON)
+    public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
+                              @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+        final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, context.createContext(request));
+        final BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
+        return Response.status(Status.OK).entity(json).build();
+    }
+
+
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + SUBSCRIPTIONS)
     @Produces(APPLICATION_JSON)
