@@ -283,7 +283,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
          try {
             checker.checkBlockedChange(subscriptionBase, context);
-            subscriptionBase.changePlan(productName, billingPeriod, priceList, callContext);
+            final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(localDate, subscriptionBase.getStartDate(), context);
+            subscriptionBase.changePlanWithDate(productName, billingPeriod, priceList, effectiveChangeDate, callContext);
             return entitlementApi.getEntitlementForId(getId(), callContext);
         } catch (BlockingApiException e) {
             throw new EntitlementApiException(e, e.getCode(), e.getMessage());
