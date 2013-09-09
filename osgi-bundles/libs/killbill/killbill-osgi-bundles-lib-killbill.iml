@@ -14,7 +14,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.ning.billing.plugin:killbill-plugin-api-notification:0.3.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.findbugs:jsr305:1.3.9" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: com.ning.billing:killbill-api:0.6.3" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.ning.billing:killbill-api:0.6.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.1.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: joda-time:joda-time:2.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.ning.billing.plugin:killbill-plugin-api-notification:0.4.0" level="project" />

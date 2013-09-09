@@ -726,7 +726,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
     private void checkChangePlanWithOverdueState(final Entitlement entitlement, final boolean shouldFail) {
         if (shouldFail) {
             try {
-                entitlement.changePlan("Pistol", term, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), callContext);
+                entitlement.changePlan("Pistol", term, PriceListSet.DEFAULT_PRICELIST_NAME, callContext);
             } catch (EntitlementApiException e) {
                 assertTrue(e.getCause() instanceof BlockingApiException);
             }

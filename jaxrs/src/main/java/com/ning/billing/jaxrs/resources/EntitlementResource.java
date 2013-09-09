@@ -184,11 +184,13 @@ public class EntitlementResource extends JaxRsResourceBase {
                 final Entitlement current = entitlementApi.getEntitlementForId(uuid, callContext);
                 final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
                 final Entitlement newEntitlement;
-                if (policyString == null) {
-                    newEntitlement = current.changePlan(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, ctx);
+                if (requestedDate == null && policyString == null) {
+                    newEntitlement = current.changePlan(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), ctx);
+                } else if (policyString == null) {
+                    newEntitlement = current.changePlanWithDate(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, ctx);
                 } else {
                     final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
-                    newEntitlement  = current.changePlanOverrideBillingPolicy(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, policy, ctx);
+                    newEntitlement = current.changePlanOverrideBillingPolicy(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, policy, ctx);
                 }
                 isImmediateOp = newEntitlement.getProduct().getName().equals(entitlement.getProductName()) &&
                                 newEntitlement.getPlan().getBillingPeriod() == BillingPeriod.valueOf(entitlement.getBillingPeriod()) &&
@@ -241,6 +243,7 @@ public class EntitlementResource extends JaxRsResourceBase {
                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
                                           @QueryParam(QUERY_ENTITLEMENT_POLICY) final String entitlementPolicyString,
                                           @QueryParam(QUERY_BILLING_POLICY) final String billingPolicyString,
+                                          @QueryParam(QUERY_USE_REQUESTED_DATE_FOR_BILLING) @DefaultValue("true") final Boolean useRequestedDateForBilling,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
@@ -263,7 +266,7 @@ public class EntitlementResource extends JaxRsResourceBase {
                 final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
                 final Entitlement newEntitlement;
                 if (billingPolicyString == null && entitlementPolicyString == null) {
-                    newEntitlement = current.cancelEntitlementWithDate(inputLocalDate, ctx);
+                    newEntitlement = current.cancelEntitlementWithDate(inputLocalDate, useRequestedDateForBilling, ctx);
                 } else if (billingPolicyString == null && entitlementPolicyString != null) {
                     final EntitlementActionPolicy entitlementPolicy = EntitlementActionPolicy.valueOf(entitlementPolicyString);
                     newEntitlement = current.cancelEntitlementWithPolicy(entitlementPolicy, ctx);

@@ -56,6 +56,7 @@ public interface JaxrsResource {
     public static final String QUERY_API_KEY = "apiKey";
     public static final String QUERY_REQUESTED_DT = "requestedDate";
     public static final String QUERY_CALL_COMPLETION = "callCompletion";
+    public static final String QUERY_USE_REQUESTED_DATE_FOR_BILLING = "useRequestedDateForBilling";
     public static final String QUERY_CALL_TIMEOUT = "callTimeoutSec";
     public static final String QUERY_DRY_RUN = "dryRun";
     public static final String QUERY_TARGET_DATE = "targetDate";

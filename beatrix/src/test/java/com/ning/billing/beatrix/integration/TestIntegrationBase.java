@@ -539,7 +539,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     if (billingPolicy == null) {
-                        refreshedEntitlement = refreshedEntitlement.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, callContext);
                     } else {
                         refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), billingPolicy, callContext);
                     }
@@ -561,7 +561,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                 try {
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-                    refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithDate(requestedDate.toLocalDate(), callContext);
+                    refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithDate(requestedDate.toLocalDate(), false, callContext);
                     return  refreshedEntitlement;
                 } catch (EntitlementApiException e) {
                     fail(e.getMessage());

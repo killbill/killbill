@@ -57,7 +57,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
             clock.addDays(5);
             final LocalDate cancelDate = new LocalDate(clock.getUTCNow());
-            entitlement.cancelEntitlementWithDate(cancelDate, callContext);
+            entitlement.cancelEntitlementWithDate(cancelDate, true, callContext);
             final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
             assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
             assertEquals(entitlement2.getEffectiveEndDate(), cancelDate);
@@ -87,7 +87,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
             clock.addDays(5);
             final LocalDate cancelDate = new LocalDate(clock.getUTCToday().plusDays(1));
-            entitlement.cancelEntitlementWithDate(cancelDate, callContext);
+            entitlement.cancelEntitlementWithDate(cancelDate, true, callContext);
             final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
             assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
             assertEquals(entitlement2.getEffectiveEndDate(), cancelDate);
