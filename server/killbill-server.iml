@@ -83,7 +83,7 @@
     <orderEntry type="module" module-name="killbill-usage" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.1" level="project" />
     <orderEntry type="module" module-name="killbill-beatrix" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-beatrix:test-jar:tests:0.6.6-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-beatrix:test-jar:tests:0.6.7-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="killbill-jaxrs" />
     <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.2.3" level="project" />
     <orderEntry type="library" name="Maven: javax.ws.rs:jsr311-api:1.1.1" level="project" />
@@ -96,9 +96,9 @@
     <orderEntry type="library" name="Maven: org.apache.felix:org.osgi.core:1.0.1" level="project" />
     <orderEntry type="module" module-name="killbill-overdue" />
     <orderEntry type="module" module-name="killbill-payment" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-payment:test-jar:tests:0.6.6-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-payment:test-jar:tests:0.6.7-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="killbill-util" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.6.6-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.6.7-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-embeddeddb:0.2.3" level="project" />
     <orderEntry type="library" name="Maven: com.ning.jetty:ning-service-skeleton-base:0.1.7" level="project" />
     <orderEntry type="library" name="Maven: com.ning:metrics.eventtracker-smile:4.1.2" level="project" />
