@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill</artifactId>
         <groupId>com.ning.billing</groupId>
-        <version>0.6.7-SNAPSHOT</version>
+        <version>0.6.7</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-beatrix</artifactId>
@@ -236,9 +236,9 @@
                         </goals>
                         <configuration>
                             <tasks>
-                                <copy file="${basedir}/../osgi-bundles/tests/beatrix/target/killbill-osgi-bundles-test-beatrix-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-beatrix-${project.version}-jar-with-dependencies.jar" />
-                                <copy file="${basedir}/../osgi-bundles/tests/payment/target/killbill-osgi-bundles-test-payment-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-payment-${project.version}-jar-with-dependencies.jar" />
-                                <copy file="${basedir}/../osgi-bundles/bundles/jruby/target/killbill-osgi-bundles-jruby-${project.version}.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-jruby-${project.version}.jar" />
+                                <copy file="${basedir}/../osgi-bundles/tests/beatrix/target/killbill-osgi-bundles-test-beatrix-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-beatrix-${project.version}-jar-with-dependencies.jar"></copy>
+                                <copy file="${basedir}/../osgi-bundles/tests/payment/target/killbill-osgi-bundles-test-payment-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-payment-${project.version}-jar-with-dependencies.jar"></copy>
+                                <copy file="${basedir}/../osgi-bundles/bundles/jruby/target/killbill-osgi-bundles-jruby-${project.version}.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-jruby-${project.version}.jar"></copy>
                             </tasks>
                         </configuration>
                     </execution>
