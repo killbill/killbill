@@ -17,12 +17,10 @@
 package com.ning.billing.entitlement.api;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTimeZone;
@@ -43,12 +41,10 @@ import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 
-public class DefaultSubscriptionApi implements SubscriptionApi  {
+public class DefaultSubscriptionApi implements SubscriptionApi {
 
     private final SubscriptionBaseInternalApi subscriptionInternalApi;
     private final EntitlementApi entitlementApi;
@@ -66,7 +62,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
         this.accountApi = accountApi;
         this.checker = checker;
         this.blockingStateDao = blockingStateDao;
-        this.dateHelper = new EntitlementDateHelper(accountApi, clock);;
+        this.dateHelper = new EntitlementDateHelper(accountApi, clock);
+        ;
         this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -102,11 +99,20 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
     }
 
 
-
     @Override
     public SubscriptionBundle getSubscriptionBundleForAccountIdAndExternalKey(final UUID accountId, final String externalKey, final TenantContext context) throws SubscriptionApiException {
 
         try {
+            // If active bundle exists on this account, this is what we are looking for.
+            try {
+                final SubscriptionBundle activeBundleForkey = getActiveSubscriptionBundleForExternalKey(externalKey, context);
+                if (activeBundleForkey.getAccountId().equals(accountId)) {
+                    return activeBundleForkey;
+                }
+            } catch (SubscriptionApiException ignore) {
+            }
+
+            // If not return first cancelled bundle if this is exists
             final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(accountId, externalKey, context);
             if (entitlements.isEmpty()) {
                 throw new SubscriptionApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, externalKey);
@@ -122,7 +128,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
     }
 
     @Override
-    public SubscriptionBundle getActiveSubscriptionBundleForExternalKey(final String externalKey, final TenantContext context) throws SubscriptionApiException {
+    public SubscriptionBundle getActiveSubscriptionBundleForExternalKey(final String externalKey,
+                                                                        final TenantContext context) throws SubscriptionApiException {
 
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
         try {
@@ -140,7 +147,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
     }
 
     @Override
-    public List<SubscriptionBundle> getSubscriptionBundlesForAccountId(final UUID accountId, final TenantContext context) throws SubscriptionApiException {
+    public List<SubscriptionBundle> getSubscriptionBundlesForAccountId(final UUID accountId,
+                                                                       final TenantContext context) throws SubscriptionApiException {
         try {
 
             final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(accountId, context);
@@ -153,7 +161,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi  {
                 perBundleEntitlements.put(cur.getBundleId(), cur);
             }
 
-            final List<SubscriptionBundle> result  = new ArrayList<SubscriptionBundle>(perBundleEntitlements.keySet().size());
+            final List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>(perBundleEntitlements.keySet().size());
             for (UUID bundleId : perBundleEntitlements.keySet()) {
                 final List<Entitlement> e = perBundleEntitlements.get(bundleId);
                 final SubscriptionBundle b = getSubscriptionBundleFromEntitlements(bundleId, e, context);
