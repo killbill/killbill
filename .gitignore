@@ -3,6 +3,7 @@
 *.iws
 *.DS_Store
 *.bak
+*.iml
 target
 staging
 overlays
