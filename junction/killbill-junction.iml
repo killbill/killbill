@@ -31,7 +31,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.0" level="project" />
     <orderEntry type="module" module-name="killbill-catalog" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-catalog:test-jar:tests:0.6.7-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-catalog:test-jar:tests:0.6.8-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="killbill-internal-api" />
     <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.4.0" level="project" />
     <orderEntry type="library" name="Maven: org.skife.config:config-magic:0.14" level="project" />
@@ -68,11 +68,11 @@
     <orderEntry type="library" name="Maven: org.slf4j:jcl-over-slf4j:1.7.5" level="project" />
     <orderEntry type="module" module-name="killbill-catalog" scope="TEST" />
     <orderEntry type="module" module-name="killbill-entitlement" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-entitlement:test-jar:tests:0.6.7-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-entitlement:test-jar:tests:0.6.8-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="killbill-account" scope="TEST" />
     <orderEntry type="module" module-name="killbill-entitlement" scope="TEST" />
     <orderEntry type="module" module-name="killbill-util" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.6.7-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.6.8-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.2.3" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-embeddeddb:0.2.3" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: mysql:mysql-connector-java:5.1.22" level="project" />
