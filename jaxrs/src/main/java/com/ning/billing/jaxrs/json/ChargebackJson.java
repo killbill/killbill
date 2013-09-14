@@ -33,23 +33,23 @@ public class ChargebackJson extends JsonBase {
 
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
-    private final BigDecimal chargebackAmount;
+    private final BigDecimal amount;
     private final String paymentId;
-    private final String reason;
+    private final String currency;
 
     @JsonCreator
     public ChargebackJson(@JsonProperty("requestedDate") final DateTime requestedDate,
                           @JsonProperty("effectiveDate") final DateTime effectiveDate,
-                          @JsonProperty("chargebackAmount") final BigDecimal chargebackAmount,
+                          @JsonProperty("amount") final BigDecimal chargebackAmount,
                           @JsonProperty("paymentId") final String paymentId,
-                          @JsonProperty("reason") final String reason,
+                          @JsonProperty("currency") final String currency,
                           @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
-        this.chargebackAmount = chargebackAmount;
+        this.amount = chargebackAmount;
         this.paymentId = paymentId;
-        this.reason = reason;
+        this.currency = currency;
     }
 
     public ChargebackJson(final InvoicePayment chargeback) {
@@ -58,7 +58,7 @@ public class ChargebackJson extends JsonBase {
 
     public ChargebackJson(final InvoicePayment chargeback, @Nullable final List<AuditLog> auditLogs) {
         this(chargeback.getPaymentDate(), chargeback.getPaymentDate(), chargeback.getAmount().negate(),
-             chargeback.getPaymentId().toString(), reasonCodeFromAuditLogs(auditLogs), toAuditLogJson(auditLogs));
+             chargeback.getPaymentId().toString(), chargeback.getCurrency().toString(), toAuditLogJson(auditLogs));
     }
 
     public DateTime getRequestedDate() {
@@ -69,16 +69,16 @@ public class ChargebackJson extends JsonBase {
         return effectiveDate;
     }
 
-    public BigDecimal getChargebackAmount() {
-        return chargebackAmount;
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public String getCurrency() {
+        return currency;
     }
 
     public String getPaymentId() {
         return paymentId;
-    }
-
-    public String getReason() {
-        return reason;
     }
 
     @Override
@@ -92,8 +92,8 @@ public class ChargebackJson extends JsonBase {
 
         final ChargebackJson that = (ChargebackJson) o;
 
-        if (!((chargebackAmount == null && that.chargebackAmount == null) ||
-              (chargebackAmount != null && that.chargebackAmount != null && chargebackAmount.compareTo(that.chargebackAmount) == 0))) {
+        if (!((amount == null && that.amount == null) ||
+              (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
             return false;
         }
         if (!((effectiveDate == null && that.effectiveDate == null) ||
@@ -103,7 +103,7 @@ public class ChargebackJson extends JsonBase {
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
-        if (reason != null ? !reason.equals(that.reason) : that.reason != null) {
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
         if (!((requestedDate == null && that.requestedDate == null) ||
@@ -118,9 +118,9 @@ public class ChargebackJson extends JsonBase {
     public int hashCode() {
         int result = requestedDate != null ? requestedDate.hashCode() : 0;
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
-        result = 31 * result + (chargebackAmount != null ? chargebackAmount.hashCode() : 0);
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
-        result = 31 * result + (reason != null ? reason.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
         return result;
     }
 }

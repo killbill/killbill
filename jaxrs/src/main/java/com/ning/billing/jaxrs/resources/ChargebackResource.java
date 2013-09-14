@@ -16,8 +16,6 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,7 +35,6 @@ import com.ning.billing.clock.Clock;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.jaxrs.json.ChargebackCollectionJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -45,7 +42,6 @@ import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.TenantContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -98,7 +94,7 @@ public class ChargebackResource extends JaxRsResourceBase {
         if (invoicePayment == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, json.getPaymentId());
         }
-        final InvoicePayment chargeBack = invoicePaymentApi.createChargeback(invoicePayment.getId(), json.getChargebackAmount(),
+        final InvoicePayment chargeBack = invoicePaymentApi.createChargeback(invoicePayment.getId(), json.getAmount(),
                                                                              callContext);
         return uriBuilder.buildResponse(ChargebackResource.class, "getChargeback", chargeBack.getId());
     }

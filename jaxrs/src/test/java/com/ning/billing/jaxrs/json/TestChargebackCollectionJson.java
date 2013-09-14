@@ -39,10 +39,10 @@ public class TestChargebackCollectionJson extends JaxrsTestSuiteNoDB {
         final DateTime effectiveDate = new DateTime(DateTimeZone.UTC);
         final BigDecimal chargebackAmount = BigDecimal.TEN;
         final String paymentId = UUID.randomUUID().toString();
-        final String reason = UUID.randomUUID().toString();
+        final String currency = "USD";
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final ChargebackJson chargebackJson = new ChargebackJson(requestedDate, effectiveDate, chargebackAmount, paymentId,
-                                                                 reason, auditLogs);
+                                                                 currency, auditLogs);
 
         final String accountId = UUID.randomUUID().toString();
         final ChargebackCollectionJson chargebackCollectionJson = new ChargebackCollectionJson(accountId, ImmutableList.<ChargebackJson>of(chargebackJson));

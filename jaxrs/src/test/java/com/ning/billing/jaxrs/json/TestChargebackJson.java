@@ -37,15 +37,14 @@ public class TestChargebackJson extends JaxrsTestSuiteNoDB {
         final DateTime effectiveDate = new DateTime(DateTimeZone.UTC);
         final BigDecimal chargebackAmount = BigDecimal.TEN;
         final String paymentId = UUID.randomUUID().toString();
-        final String reason = UUID.randomUUID().toString();
+        final String currency = "USD";
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final ChargebackJson chargebackJson = new ChargebackJson(requestedDate, effectiveDate, chargebackAmount, paymentId,
-                                                                 reason, auditLogs);
+                                                                 currency, auditLogs);
         Assert.assertEquals(chargebackJson.getRequestedDate(), requestedDate);
         Assert.assertEquals(chargebackJson.getEffectiveDate(), effectiveDate);
-        Assert.assertEquals(chargebackJson.getChargebackAmount(), chargebackAmount);
+        Assert.assertEquals(chargebackJson.getAmount(), chargebackAmount);
         Assert.assertEquals(chargebackJson.getPaymentId(), paymentId);
-        Assert.assertEquals(chargebackJson.getReason(), reason);
         Assert.assertEquals(chargebackJson.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(chargebackJson);

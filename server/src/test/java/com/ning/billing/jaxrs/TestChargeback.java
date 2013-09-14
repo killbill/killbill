@@ -82,7 +82,7 @@ public class TestChargeback extends TestJaxrsBase {
         assertEquals(objFromJson.getChargebacks().size(), 4);
         for (int i = 0; i < objFromJson.getChargebacks().size(); i++) {
             final ChargebackJson chargeBack = objFromJson.getChargebacks().get(i);
-            assertTrue(chargeBack.getChargebackAmount().compareTo(input.getChargebackAmount()) == 0);
+            assertTrue(chargeBack.getAmount().compareTo(input.getAmount()) == 0);
             assertEquals(chargeBack.getPaymentId(), input.getPaymentId());
         }
 
@@ -113,8 +113,8 @@ public class TestChargeback extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testInvoicePaymentDoesNotExist() throws Exception {
         final ChargebackJson input = new ChargebackJson(new DateTime(DateTimeZone.UTC), new DateTime(DateTimeZone.UTC),
-                                                        BigDecimal.TEN, UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-                                                        null);
+                                                        BigDecimal.TEN, UUID.randomUUID().toString(),
+                                                        null, null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Try to create the chargeback
@@ -179,14 +179,14 @@ public class TestChargeback extends TestJaxrsBase {
         final ChargebackCollectionJson objFromJson = mapper.readValue(response.getResponseBody(), ChargebackCollectionJson.class);
         assertEquals(objFromJson.getChargebacks().size(), 1);
         final ChargebackJson chargeBack = objFromJson.getChargebacks().get(0);
-        assertTrue(chargeBack.getChargebackAmount().compareTo(input.getChargebackAmount()) == 0);
+        assertTrue(chargeBack.getAmount().compareTo(input.getAmount()) == 0);
         assertEquals(chargeBack.getPaymentId(), input.getPaymentId());
     }
 
     private void verifySingleChargebackResponse(final Response response, final ChargebackJson input) throws IOException {
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final ChargebackJson objFromJson = mapper.readValue(response.getResponseBody(), ChargebackJson.class);
-        assertTrue(objFromJson.getChargebackAmount().compareTo(input.getChargebackAmount()) == 0);
+        assertTrue(objFromJson.getAmount().compareTo(input.getAmount()) == 0);
     }
 
     private PaymentJsonSimple createAccountWithInvoiceAndPayment() throws Exception {

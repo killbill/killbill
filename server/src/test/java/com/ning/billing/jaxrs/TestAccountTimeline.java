@@ -120,7 +120,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
             Assert.assertEquals(paymentJson.getChargebacks().size(), 1);
             final ChargebackJson chargebackJson = paymentJson.getChargebacks().get(0);
             Assert.assertEquals(chargebackJson.getPaymentId(), paymentJson.getPaymentId());
-            Assert.assertEquals(chargebackJson.getChargebackAmount().compareTo(chargebackAmount), 0);
+            Assert.assertEquals(chargebackJson.getAmount().compareTo(chargebackAmount), 0);
 
             // Verify audits
             final List<AuditLogJson> paymentAuditLogs = paymentJson.getAuditLogs();
