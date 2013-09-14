@@ -35,6 +35,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
@@ -80,8 +81,8 @@ public class CreditResource extends JaxRsResourceBase {
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
         final InvoiceItem credit = invoiceUserApi.getCreditById(UUID.fromString(creditId), tenantContext);
-        final Account account = accountUserApi.getAccountById(credit.getAccountId(), tenantContext);
-        final CreditJson creditJson = new CreditJson(credit, account.getTimeZone());
+        final Invoice invoice = invoiceUserApi.getInvoice(credit.getInvoiceId(), tenantContext);
+        final CreditJson creditJson = new CreditJson(invoice, credit);
         return Response.status(Response.Status.OK).entity(creditJson).build();
     }
 
@@ -96,7 +97,7 @@ public class CreditResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);
-        final LocalDate effectiveDate = json.getEffectiveDate().toDateTime(account.getTimeZone()).toLocalDate();
+        final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), account.getTimeZone());
 
         final InvoiceItem credit;
         if (json.getInvoiceId() != null) {

@@ -843,8 +843,8 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected CreditJson createCreditForInvoice(final String accountId, final String invoiceId, final BigDecimal creditAmount,
                                                 final DateTime requestedDate, final DateTime effectiveDate) throws IOException {
         final CreditJson input = new CreditJson(creditAmount, invoiceId, UUID.randomUUID().toString(),
-                                                requestedDate, effectiveDate,
-                                                UUID.randomUUID().toString(), accountId,
+                                                effectiveDate.toLocalDate(),
+                                                accountId,
                                                 null);
         final String jsonInput = mapper.writeValueAsString(input);
 

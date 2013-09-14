@@ -134,7 +134,7 @@ public class AccountTimelineJson {
             for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
                 if (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType())) {
                     final List<AuditLog> auditLogs = invoiceItemsAuditLogs.get(invoiceItem.getId());
-                    credits.add(new CreditJson(invoiceItem, account.getTimeZone(), auditLogs));
+                    credits.add(new CreditJson(invoice, invoiceItem, auditLogs));
                 }
             }
         }

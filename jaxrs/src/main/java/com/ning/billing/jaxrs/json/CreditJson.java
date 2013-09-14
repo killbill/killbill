@@ -23,7 +23,9 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.util.audit.AuditLog;
 
@@ -35,43 +37,35 @@ public class CreditJson extends JsonBase {
     private final BigDecimal creditAmount;
     private final String invoiceId;
     private final String invoiceNumber;
-    private final DateTime requestedDate;
-    private final DateTime effectiveDate;
-    private final String reason;
+    private final LocalDate effectiveDate;
     private final String accountId;
 
     @JsonCreator
     public CreditJson(@JsonProperty("creditAmount") final BigDecimal creditAmount,
                       @JsonProperty("invoiceId") final String invoiceId,
                       @JsonProperty("invoiceNumber") final String invoiceNumber,
-                      @JsonProperty("requestedDate") final DateTime requestedDate,
-                      @JsonProperty("effectiveDate") final DateTime effectiveDate,
-                      @JsonProperty("reason") final String reason,
+                      @JsonProperty("effectiveDate") final LocalDate effectiveDate,
                       @JsonProperty("accountId") final String accountId,
                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.creditAmount = creditAmount;
         this.invoiceId = invoiceId;
         this.invoiceNumber = invoiceNumber;
-        this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
-        this.reason = reason;
         this.accountId = accountId;
     }
 
-    public CreditJson(final InvoiceItem credit, final DateTimeZone accountTimeZone, final List<AuditLog> auditLogs) {
+    public CreditJson(final Invoice invoice, final InvoiceItem credit, final List<AuditLog> auditLogs) {
         super(toAuditLogJson(auditLogs));
+        this.accountId = toString(credit.getAccountId());
         this.creditAmount = credit.getAmount();
         this.invoiceId = toString(credit.getInvoiceId());
-        this.invoiceNumber = null;
-        this.requestedDate = null;
-        this.effectiveDate = credit.getStartDate().toDateTimeAtStartOfDay(accountTimeZone);
-        this.reason = null;
-        this.accountId = toString(credit.getAccountId());
+        this.invoiceNumber = invoice.getInvoiceNumber().toString();
+        this.effectiveDate = credit.getStartDate();
     }
 
-    public CreditJson(final InvoiceItem credit, final DateTimeZone timeZone) {
-        this(credit, timeZone, null);
+    public CreditJson(final Invoice invoice, final InvoiceItem credit) {
+        this(invoice, credit, null);
     }
 
     public BigDecimal getCreditAmount() {
@@ -86,16 +80,8 @@ public class CreditJson extends JsonBase {
         return invoiceNumber;
     }
 
-    public DateTime getRequestedDate() {
-        return requestedDate;
-    }
-
-    public DateTime getEffectiveDate() {
+    public LocalDate getEffectiveDate() {
         return effectiveDate;
-    }
-
-    public String getReason() {
-        return reason;
     }
 
     public String getAccountId() {
@@ -109,9 +95,7 @@ public class CreditJson extends JsonBase {
         sb.append("{creditAmount=").append(creditAmount);
         sb.append(", invoiceId=").append(invoiceId);
         sb.append(", invoiceNumber='").append(invoiceNumber).append('\'');
-        sb.append(", requestedDate=").append(requestedDate);
         sb.append(", effectiveDate=").append(effectiveDate);
-        sb.append(", reason='").append(reason).append('\'');
         sb.append(", accountId=").append(accountId);
         sb.append('}');
         return sb.toString();
@@ -132,21 +116,14 @@ public class CreditJson extends JsonBase {
               (creditAmount != null && that.creditAmount != null && creditAmount.compareTo(that.creditAmount) == 0))) {
             return false;
         }
-        if (!((effectiveDate == null && that.effectiveDate == null) ||
-              (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
-            return false;
-        }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
             return false;
         }
         if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
             return false;
         }
-        if (reason != null ? !reason.equals(that.reason) : that.reason != null) {
-            return false;
-        }
-        if (!((requestedDate == null && that.requestedDate == null) ||
-              (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
+        if (!((effectiveDate == null && that.effectiveDate == null) ||
+              (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
             return false;
         }
 
@@ -158,9 +135,7 @@ public class CreditJson extends JsonBase {
         int result = creditAmount != null ? creditAmount.hashCode() : 0;
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         result = 31 * result + (invoiceNumber != null ? invoiceNumber.hashCode() : 0);
-        result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
-        result = 31 * result + (reason != null ? reason.hashCode() : 0);
         return result;
     }
 }

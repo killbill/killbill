@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -35,19 +36,15 @@ public class TestCreditJson extends JaxrsTestSuiteNoDB {
         final BigDecimal creditAmount = BigDecimal.TEN;
         final String invoiceId = UUID.randomUUID().toString();
         final String invoiceNumber = UUID.randomUUID().toString();
-        final DateTime requestedDate = clock.getUTCNow();
-        final DateTime effectiveDate = clock.getUTCNow();
-        final String reason = UUID.randomUUID().toString();
+        final LocalDate effectiveDate = clock.getUTCToday();
         final String accountId = UUID.randomUUID().toString();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final CreditJson creditJson = new CreditJson(creditAmount, invoiceId, invoiceNumber, requestedDate, effectiveDate,
-                                                     reason, accountId, auditLogs);
-        Assert.assertEquals(creditJson.getRequestedDate(), requestedDate);
+        final CreditJson creditJson = new CreditJson(creditAmount, invoiceId, invoiceNumber, effectiveDate,
+                                                     accountId, auditLogs);
         Assert.assertEquals(creditJson.getEffectiveDate(), effectiveDate);
         Assert.assertEquals(creditJson.getCreditAmount(), creditAmount);
         Assert.assertEquals(creditJson.getInvoiceId(), invoiceId);
         Assert.assertEquals(creditJson.getInvoiceNumber(), invoiceNumber);
-        Assert.assertEquals(creditJson.getReason(), reason);
         Assert.assertEquals(creditJson.getAccountId(), accountId);
 
         final String asJson = mapper.writeValueAsString(creditJson);

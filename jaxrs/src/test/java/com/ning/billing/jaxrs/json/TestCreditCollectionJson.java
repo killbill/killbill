@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -39,12 +40,10 @@ public class TestCreditCollectionJson extends JaxrsTestSuiteNoDB {
         final BigDecimal creditAmount = BigDecimal.TEN;
         final String invoiceId = UUID.randomUUID().toString();
         final String invoiceNumber = UUID.randomUUID().toString();
-        final DateTime requestedDate = clock.getUTCNow();
-        final DateTime effectiveDate = clock.getUTCNow();
-        final String reason = UUID.randomUUID().toString();
+        final LocalDate effectiveDate = clock.getUTCToday();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final CreditJson creditJson = new CreditJson(creditAmount, invoiceId, invoiceNumber, requestedDate,
-                                                     effectiveDate, reason, accountId, auditLogs);
+        final CreditJson creditJson = new CreditJson(creditAmount, invoiceId, invoiceNumber,
+                                                     effectiveDate, accountId, auditLogs);
 
         final CreditCollectionJson creditCollectionJson = new CreditCollectionJson(accountId, ImmutableList.<CreditJson>of(creditJson));
         Assert.assertEquals(creditCollectionJson.getAccountId(), accountId);

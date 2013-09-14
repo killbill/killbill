@@ -22,6 +22,7 @@ import java.util.UUID;
 import javax.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -54,16 +55,15 @@ public class TestCredit extends TestJaxrsBase {
         // We can't just compare the object via .equals() due e.g. to the invoice id
         assertEquals(objFromJson.getAccountId(), accountJson.getAccountId());
         assertEquals(objFromJson.getCreditAmount().compareTo(creditAmount), 0);
-        assertEquals(objFromJson.getEffectiveDate().toLocalDate().compareTo(effectiveDate.toLocalDate()), 0);
+        assertEquals(objFromJson.getEffectiveDate().compareTo(effectiveDate.toLocalDate()), 0);
     }
 
     @Test(groups = "slow")
     public void testAccountDoesNotExist() throws Exception {
-        final DateTime requestedDate = clock.getUTCNow();
-        final DateTime effectiveDate = clock.getUTCNow();
+        final LocalDate effectiveDate = clock.getUTCToday();
         final CreditJson input = new CreditJson(BigDecimal.TEN, UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-                                                requestedDate, effectiveDate,
-                                                UUID.randomUUID().toString(), UUID.randomUUID().toString(), null);
+                                                effectiveDate,
+                                                UUID.randomUUID().toString(), null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Try to create the credit
@@ -73,7 +73,7 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testBadRequest() throws Exception {
-        final CreditJson input = new CreditJson(null, null, null, null, null, null, null, null);
+        final CreditJson input = new CreditJson(null, null, null, null, null, null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Try to create the credit
