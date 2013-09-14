@@ -34,28 +34,51 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
-public class BundleJsonWithSubscriptions extends BundleJsonSimple {
+public class BundleJson extends JsonBase {
 
-    private final List<SubscriptionJsonWithEvents> subscriptions;
+    protected final String accountId;
+    protected final String bundleId;
+    protected final String externalKey;
+    private final List<SubscriptionJson> subscriptions;
 
     @JsonCreator
-    public BundleJsonWithSubscriptions(@JsonProperty("bundleId") @Nullable final String bundleId,
-                                       @JsonProperty("externalKey") @Nullable final String externalKey,
-                                       @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions,
-                                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(bundleId, externalKey, auditLogs);
+    public BundleJson(@JsonProperty("accountId") @Nullable final String accountId,
+                      @JsonProperty("bundleId") @Nullable final String bundleId,
+                      @JsonProperty("externalKey") @Nullable final String externalKey,
+                      @JsonProperty("subscriptions") @Nullable final List<SubscriptionJson> subscriptions,
+                      @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
+        this.accountId = accountId;
+        this.bundleId = bundleId;
+        this.externalKey = externalKey;
         this.subscriptions = subscriptions;
     }
 
     @JsonProperty("subscriptions")
-    public List<SubscriptionJsonWithEvents> getSubscriptions() {
+    public List<SubscriptionJson> getSubscriptions() {
         return subscriptions;
     }
 
-    public BundleJsonWithSubscriptions(final SubscriptionBundle bundle, final List<AuditLog> auditLogs,
-                                       final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
-        super(bundle.getId(), bundle.getExternalKey(), auditLogs);
-        this.subscriptions = new LinkedList<SubscriptionJsonWithEvents>();
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public String getBundleId() {
+        return bundleId;
+    }
+
+    public String getExternalKey() {
+        return externalKey;
+    }
+
+    public BundleJson(final SubscriptionBundle bundle, final List<AuditLog> auditLogs,
+                      final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
+        super(toAuditLogJson(auditLogs));
+        this.accountId = bundle.getAccountId().toString();
+        this.bundleId = bundle.getId().toString();
+        this.externalKey = bundle.getExternalKey();
+
+        this.subscriptions = new LinkedList<SubscriptionJson>();
         for (final Subscription cur : bundle.getSubscriptions()) {
 
             final ImmutableList<SubscriptionEvent> events = ImmutableList.<SubscriptionEvent>copyOf(Collections2.filter(bundle.getTimeline().getSubscriptionEvents(), new Predicate<SubscriptionEvent>() {
@@ -64,13 +87,20 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
                     return input.getEntitlementId().equals(cur.getId());
                 }
             }));
-            this.subscriptions.add(new SubscriptionJsonWithEvents(cur.getAccountId(),
-                                                                  cur.getBundleId(),
-                                                                  cur.getId(),
-                                                                  cur.getExternalKey(),
+            this.subscriptions.add(new SubscriptionJson(cur,
                                                                   events,
                                                                   subscriptionsAuditLogs.get(cur.getId()), subscriptionEventsAuditLogs));
         }
+    }
+
+    @Override
+    public String toString() {
+        return "BundleJson{" +
+               "accountId='" + accountId + '\'' +
+               ", bundleId='" + bundleId + '\'' +
+               ", externalKey='" + externalKey + '\'' +
+               ", subscriptions=" + subscriptions +
+               '}';
     }
 
     @Override
@@ -81,12 +111,18 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        if (!super.equals(o)) {
+
+        final BundleJson that = (BundleJson) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-
-        final BundleJsonWithSubscriptions that = (BundleJsonWithSubscriptions) o;
-
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
+            return false;
+        }
         if (subscriptions != null ? !subscriptions.equals(that.subscriptions) : that.subscriptions != null) {
             return false;
         }
@@ -96,7 +132,9 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (subscriptions != null ? subscriptions.hashCode() : 0);
         return result;
     }

@@ -142,16 +142,6 @@ public class DefaultPayment extends EntityBase implements Payment {
     }
 
     @Override
-    public String getExtFirstPaymentIdRef() {
-        return extFirstPaymentIdRef;
-    }
-
-    @Override
-    public String getExtSecondPaymentIdRef() {
-        return extSecondPaymentIdRef;
-    }
-
-    @Override
     public PaymentInfoPlugin getPaymentInfoPlugin() {
         return paymentPluginInfo;
     }

@@ -29,18 +29,30 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionEvent;
 import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class SubscriptionJsonWithEvents extends EntitlementJsonSimple {
+public class SubscriptionJson extends JsonBase {
 
+    private final String accountId;
+    private final String bundleId;
+    private final String subscriptionId;
+    private final String externalKey;
+    private final LocalDate startDate;
+    private final String productName;
+    private final String productCategory;
+    private final String billingPeriod;
+    private final String priceList;
+    private final LocalDate cancelledDate;
+    private final LocalDate chargedThroughDate;
+    private final LocalDate billingStartDate;
+    private final LocalDate billingEndDate;
     private final List<SubscriptionReadEventJson> events;
-
     private final List<SubscriptionDeletedEventJson> deletedEvents;
-
     private final List<SubscriptionNewEventJson> newEvents;
 
     public static class SubscriptionReadEventJson extends SubscriptionBaseEventJson {
@@ -265,33 +277,63 @@ public class SubscriptionJsonWithEvents extends EntitlementJsonSimple {
     }
 
     @JsonCreator
-    public SubscriptionJsonWithEvents(@JsonProperty("accountId") @Nullable final String accountId,
-                                      @JsonProperty("bundleId") @Nullable final String bundleId,
-                                      @JsonProperty("entitlementId") @Nullable final String entitlementId,
-                                      @JsonProperty("externalKey") @Nullable final String externalKey,
-                                      @JsonProperty("events") @Nullable final List<SubscriptionReadEventJson> events,
-                                      @JsonProperty("newEvents") @Nullable final List<SubscriptionNewEventJson> newEvents,
-                                      @JsonProperty("deletedEvents") @Nullable final List<SubscriptionDeletedEventJson> deletedEvents,
-                                      @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(accountId, bundleId, entitlementId, externalKey, auditLogs);
+    public SubscriptionJson(@JsonProperty("accountId") @Nullable final String accountId,
+                            @JsonProperty("bundleId") @Nullable final String bundleId,
+                            @JsonProperty("entitlementId") @Nullable final String entitlementId,
+                            @JsonProperty("externalKey") @Nullable final String externalKey,
+                            @JsonProperty("startDate") @Nullable final LocalDate startDate,
+                            @JsonProperty("productName") @Nullable final String productName,
+                            @JsonProperty("productCategory") @Nullable final String productCategory,
+                            @JsonProperty("billingPeriod") @Nullable final String billingPeriod,
+                            @JsonProperty("priceList") @Nullable final String priceList,
+                            @JsonProperty("cancelledDate") @Nullable final LocalDate cancelledDate,
+                            @JsonProperty("chargedThroughDate") @Nullable final LocalDate chargedThroughDate,
+                            @JsonProperty("billingStartDate") @Nullable final LocalDate billingStartDate,
+                            @JsonProperty("billingEndDate") @Nullable final LocalDate billingEndDate,
+                            @JsonProperty("events") @Nullable final List<SubscriptionReadEventJson> events,
+                            @JsonProperty("newEvents") @Nullable final List<SubscriptionNewEventJson> newEvents,
+                            @JsonProperty("deletedEvents") @Nullable final List<SubscriptionDeletedEventJson> deletedEvents,
+                            @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
+        this.startDate = startDate;
+        this.productName = productName;
+        this.productCategory = productCategory;
+        this.billingPeriod = billingPeriod;
+        this.priceList = priceList;
+        this.cancelledDate = cancelledDate;
+        this.chargedThroughDate = chargedThroughDate;
+        this.billingStartDate = billingStartDate;
+        this.billingEndDate = billingEndDate;
+        this.accountId = accountId;
+        this.bundleId = bundleId;
+        this.subscriptionId = entitlementId;
+        this.externalKey = externalKey;
         this.events = events;
         this.deletedEvents = deletedEvents;
         this.newEvents = newEvents;
     }
 
 
-    public SubscriptionJsonWithEvents(final UUID accountId,
-                                      final UUID bundleId,
-                                      final UUID subscriptionId,
-                                      final String externalKey,
-
-                                      final List<SubscriptionEvent> subscriptionEvents,
-                                      final List<AuditLog> bundleAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
-        super(accountId.toString(), bundleId.toString(), subscriptionId.toString(), externalKey, toAuditLogJson(bundleAuditLogs));
-
+    public SubscriptionJson(final Subscription subscription,
+                            final List<SubscriptionEvent> subscriptionEvents,
+                            final List<AuditLog> subscriptionAuditLogs,
+                            final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
+        super(toAuditLogJson(subscriptionAuditLogs));
+        this.startDate = subscription.getEffectiveStartDate();
+        this.productName = subscription.getLastActiveProduct().getName();
+        this.productCategory = subscription.getLastActiveProductCategory().name();
+        this.billingPeriod = subscription.getLastActivePlan().getBillingPeriod().toString();
+        this.priceList = subscription.getLastActivePriceList().getName();
+        this.cancelledDate = subscription.getEffectiveEndDate();
+        this.chargedThroughDate = subscription.getChargedThroughDate();
+        this.billingStartDate = subscription.getBillingStartDate();
+        this.billingEndDate = subscription.getBillingEndDate();
+        this.accountId = subscription.getAccountId().toString();
+        this.bundleId = subscription.getBundleId().toString();
+        this.subscriptionId = subscription.getId().toString();
+        this.externalKey = subscription.getExternalKey();
         this.events = new LinkedList<SubscriptionReadEventJson>();
         for (SubscriptionEvent cur : subscriptionEvents) {
-            final String eventId = cur.getId().toString();
             final BillingPeriod billingPeriod = cur.getNextBillingPeriod() != null ? cur.getNextBillingPeriod() : cur.getPrevBillingPeriod();
             final Product product = cur.getNextProduct() != null ? cur.getNextProduct() : cur.getPrevProduct();
             final PriceList priceList = cur.getNextPriceList() != null ? cur.getNextPriceList() : cur.getPrevPriceList();
@@ -310,28 +352,90 @@ public class SubscriptionJsonWithEvents extends EntitlementJsonSimple {
         this.deletedEvents = null;
     }
 
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public String getBundleId() {
+        return bundleId;
+    }
+
+    public String getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    public String getExternalKey() {
+        return externalKey;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public String getProductCategory() {
+        return productCategory;
+    }
+
+    public String getBillingPeriod() {
+        return billingPeriod;
+    }
+
+    public String getPriceList() {
+        return priceList;
+    }
+
+    public LocalDate getCancelledDate() {
+        return cancelledDate;
+    }
+
+    public LocalDate getChargedThroughDate() {
+        return chargedThroughDate;
+    }
+
+    public LocalDate getBillingStartDate() {
+        return billingStartDate;
+    }
+
+    public LocalDate getBillingEndDate() {
+        return billingEndDate;
+    }
 
     public List<SubscriptionReadEventJson> getEvents() {
         return events;
-    }
-
-    public List<SubscriptionNewEventJson> getNewEvents() {
-        return newEvents;
     }
 
     public List<SubscriptionDeletedEventJson> getDeletedEvents() {
         return deletedEvents;
     }
 
+    public List<SubscriptionNewEventJson> getNewEvents() {
+        return newEvents;
+    }
+
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("SubscriptionJsonWithEvents");
-        sb.append("{events=").append(events);
-        sb.append(", deletedEvents=").append(deletedEvents);
-        sb.append(", newEvents=").append(newEvents);
-        sb.append('}');
-        return sb.toString();
+        return "SubscriptionJson{" +
+               "accountId='" + accountId + '\'' +
+               ", bundleId='" + bundleId + '\'' +
+               ", subscriptionId='" + subscriptionId + '\'' +
+               ", externalKey='" + externalKey + '\'' +
+               ", startDate=" + startDate +
+               ", productName='" + productName + '\'' +
+               ", productCategory='" + productCategory + '\'' +
+               ", billingPeriod='" + billingPeriod + '\'' +
+               ", priceList='" + priceList + '\'' +
+               ", cancelledDate=" + cancelledDate +
+               ", chargedThroughDate=" + chargedThroughDate +
+               ", billingStartDate=" + billingStartDate +
+               ", billingEndDate=" + billingEndDate +
+               ", events=" + events +
+               ", deletedEvents=" + deletedEvents +
+               ", newEvents=" + newEvents +
+               '}';
     }
 
     @Override
@@ -343,15 +447,54 @@ public class SubscriptionJsonWithEvents extends EntitlementJsonSimple {
             return false;
         }
 
-        final SubscriptionJsonWithEvents that = (SubscriptionJsonWithEvents) o;
+        final SubscriptionJson that = (SubscriptionJson) o;
 
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (billingEndDate != null ? billingEndDate.compareTo(that.billingEndDate) != 0 : that.billingEndDate != null) {
+            return false;
+        }
+        if (billingPeriod != null ? !billingPeriod.equals(that.billingPeriod) : that.billingPeriod != null) {
+            return false;
+        }
+        if (billingStartDate != null ? billingStartDate.compareTo(that.billingStartDate) != 0 : that.billingStartDate != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (cancelledDate != null ? cancelledDate.compareTo(that.cancelledDate) != 0 : that.cancelledDate != null) {
+            return false;
+        }
+        if (chargedThroughDate != null ? chargedThroughDate.compareTo(that.chargedThroughDate) != 0 : that.chargedThroughDate != null) {
+            return false;
+        }
         if (deletedEvents != null ? !deletedEvents.equals(that.deletedEvents) : that.deletedEvents != null) {
             return false;
         }
         if (events != null ? !events.equals(that.events) : that.events != null) {
             return false;
         }
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
+            return false;
+        }
         if (newEvents != null ? !newEvents.equals(that.newEvents) : that.newEvents != null) {
+            return false;
+        }
+        if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
+            return false;
+        }
+        if (productCategory != null ? !productCategory.equals(that.productCategory) : that.productCategory != null) {
+            return false;
+        }
+        if (productName != null ? !productName.equals(that.productName) : that.productName != null) {
+            return false;
+        }
+        if (startDate != null ? startDate.compareTo(that.startDate) != 0 : that.startDate != null) {
+            return false;
+        }
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
             return false;
         }
 
@@ -360,7 +503,20 @@ public class SubscriptionJsonWithEvents extends EntitlementJsonSimple {
 
     @Override
     public int hashCode() {
-        int result = events != null ? events.hashCode() : 0;
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
+        result = 31 * result + (productName != null ? productName.hashCode() : 0);
+        result = 31 * result + (productCategory != null ? productCategory.hashCode() : 0);
+        result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
+        result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
+        result = 31 * result + (cancelledDate != null ? cancelledDate.hashCode() : 0);
+        result = 31 * result + (chargedThroughDate != null ? chargedThroughDate.hashCode() : 0);
+        result = 31 * result + (billingStartDate != null ? billingStartDate.hashCode() : 0);
+        result = 31 * result + (billingEndDate != null ? billingEndDate.hashCode() : 0);
+        result = 31 * result + (events != null ? events.hashCode() : 0);
         result = 31 * result + (deletedEvents != null ? deletedEvents.hashCode() : 0);
         result = 31 * result + (newEvents != null ? newEvents.hashCode() : 0);
         return result;

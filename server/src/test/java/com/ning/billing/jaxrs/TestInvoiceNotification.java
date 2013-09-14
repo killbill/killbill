@@ -27,7 +27,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
-import com.ning.billing.jaxrs.json.EntitlementJsonNoEvents;
+import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
@@ -60,7 +60,7 @@ public class TestInvoiceNotification extends TestJaxrsBase {
         final AccountJson accountJson = createAccountWithDefaultPaymentMethod(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Assert.assertNotNull(accountJson);
 
-        final EntitlementJsonNoEvents subscriptionJson = createEntitlement(accountJson.getAccountId(), "76213", "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        final SubscriptionJson subscriptionJson = createEntitlement(accountJson.getAccountId(), "76213", "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         Assert.assertNotNull(subscriptionJson);
 
         return accountJson;

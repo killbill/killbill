@@ -17,7 +17,6 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -25,17 +24,10 @@ import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.SubscriptionEvent;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
-import com.ning.billing.util.audit.AuditLog;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
@@ -44,13 +36,13 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final String viewId = UUID.randomUUID().toString();
         final String reason = UUID.randomUUID().toString();
 
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = createBundleWithSubscriptions();
+        final BundleJson bundleJson = createBundleWithSubscriptions();
         final InvoiceJsonSimple invoiceJsonSimple = createInvoice();
         final PaymentJsonSimple paymentJsonSimple = createPayment(UUID.fromString(invoiceJsonSimple.getAccountId()),
                                                                   UUID.fromString(invoiceJsonSimple.getInvoiceId()));
 
         final BundleTimelineJson bundleTimelineJson = new BundleTimelineJson(viewId,
-                                                                             bundleJsonWithSubscriptions,
+                                                                             bundleJson,
                                                                              ImmutableList.<PaymentJsonSimple>of(paymentJsonSimple),
                                                                              ImmutableList.<InvoiceJsonSimple>of(invoiceJsonSimple),
                                                                              reason);
@@ -60,20 +52,18 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(fromJson, bundleTimelineJson);
     }
 
-    private BundleJsonWithSubscriptions createBundleWithSubscriptions() {
-        final DateTime effectiveDate = clock.getUTCNow();
-        final UUID eventId = UUID.randomUUID();
-        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(UUID.randomUUID().toString(), ProductCategory.BASE,
-                                                                             BillingPeriod.NO_BILLING_PERIOD, UUID.randomUUID().toString(),
-                                                                             PhaseType.EVERGREEN);
+    private BundleJson createBundleWithSubscriptions() {
+        final String someUUID = UUID.randomUUID().toString();
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
         final UUID entitlementId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
 
-
-        final SubscriptionJsonWithEvents entitlementJsonWithEvents = new SubscriptionJsonWithEvents(accountId, bundleId, entitlementId, externalKey, ImmutableList.<SubscriptionEvent>of(), ImmutableList.<AuditLog>of(), ImmutableMap.<UUID, List<AuditLog>>of());
-        return new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<SubscriptionJsonWithEvents>of(entitlementJsonWithEvents), null);
+        final SubscriptionJson entitlementJsonWithEvents = new SubscriptionJson(accountId.toString(), bundleId.toString(), entitlementId.toString(), externalKey,
+                                                                                                    new LocalDate(), someUUID, someUUID, someUUID, someUUID,
+                                                                                                    new LocalDate(), new LocalDate(), new LocalDate(), new LocalDate(),
+                                                                                                    null, null, null, null);
+        return new BundleJson(accountId.toString(), bundleId.toString(), externalKey, ImmutableList.<SubscriptionJson>of(entitlementJsonWithEvents), null);
     }
 
     private InvoiceJsonSimple createInvoice() {

@@ -24,7 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.jaxrs.json.SubscriptionJsonWithEvents.SubscriptionReadEventJson;
+import com.ning.billing.jaxrs.json.SubscriptionJson.SubscriptionReadEventJson;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableList;
@@ -42,16 +42,19 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
 
         SubscriptionReadEventJson event = new SubscriptionReadEventJson(someUUID, BillingPeriod.NO_BILLING_PERIOD.toString(), new LocalDate(), new LocalDate(), "product", "priceList", "eventType", "phase", null);
-        final SubscriptionJsonWithEvents subscription = new SubscriptionJsonWithEvents(someUUID, someUUID, someUUID, externalKey, ImmutableList.<SubscriptionReadEventJson>of(event), null, null, auditLogs);
+        final SubscriptionJson subscription = new SubscriptionJson(someUUID, someUUID, someUUID, externalKey,
+                                                                                       new LocalDate(), someUUID, someUUID, someUUID, someUUID, new LocalDate(), new LocalDate(),
+                                                                                       new LocalDate(), new LocalDate(),
+                                                                                       ImmutableList.<SubscriptionReadEventJson>of(event), null, null, auditLogs);
 
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<SubscriptionJsonWithEvents>of(subscription), auditLogs);
-        Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
-        Assert.assertEquals(bundleJsonWithSubscriptions.getExternalKey(), externalKey);
-        Assert.assertEquals(bundleJsonWithSubscriptions.getSubscriptions().size(), 1);
-        Assert.assertEquals(bundleJsonWithSubscriptions.getAuditLogs(), auditLogs);
+        final BundleJson bundleJson = new BundleJson(someUUID, bundleId.toString(), externalKey, ImmutableList.<SubscriptionJson>of(subscription), auditLogs);
+        Assert.assertEquals(bundleJson.getBundleId(), bundleId.toString());
+        Assert.assertEquals(bundleJson.getExternalKey(), externalKey);
+        Assert.assertEquals(bundleJson.getSubscriptions().size(), 1);
+        Assert.assertEquals(bundleJson.getAuditLogs(), auditLogs);
 
-        final String asJson = mapper.writeValueAsString(bundleJsonWithSubscriptions);
-        final BundleJsonWithSubscriptions fromJson = mapper.readValue(asJson, BundleJsonWithSubscriptions.class);
-        Assert.assertEquals(fromJson, bundleJsonWithSubscriptions);
+        final String asJson = mapper.writeValueAsString(bundleJson);
+        final BundleJson fromJson = mapper.readValue(asJson, BundleJson.class);
+        Assert.assertEquals(fromJson, bundleJson);
     }
 }

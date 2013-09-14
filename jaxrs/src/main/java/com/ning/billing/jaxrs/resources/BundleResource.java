@@ -37,7 +37,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.ObjectType;
@@ -50,9 +49,9 @@ import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.entitlement.api.SubscriptionApiException;
 import com.ning.billing.entitlement.api.SubscriptionBundle;
-import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
+import com.ning.billing.jaxrs.json.BundleJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
-import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
+import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.AuditUserApi;
@@ -100,7 +99,7 @@ public class BundleResource extends JaxRsResourceBase {
 
         final UUID id = UUID.fromString(bundleId);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, context.createContext(request));
-        final BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
+        final BundleJson json = new BundleJson(bundle, null, null, null);
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -108,9 +107,9 @@ public class BundleResource extends JaxRsResourceBase {
     @GET
     @Produces(APPLICATION_JSON)
     public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
-                              @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, context.createContext(request));
-        final BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
+        final BundleJson json = new BundleJson(bundle, null, null, null);
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -123,11 +122,11 @@ public class BundleResource extends JaxRsResourceBase {
 
         final UUID id = UUID.fromString(bundleId);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, context.createContext(request));
-        final Collection<SubscriptionJsonNoEvents> result = Collections2.transform(bundle.getSubscriptions(), new Function<Subscription, SubscriptionJsonNoEvents>() {
+        final Collection<SubscriptionJson> result = Collections2.transform(bundle.getSubscriptions(), new Function<Subscription, SubscriptionJson>() {
             @Nullable
             @Override
-            public SubscriptionJsonNoEvents apply(@Nullable final Subscription input) {
-                return new SubscriptionJsonNoEvents(input, null);
+            public SubscriptionJson apply(@Nullable final Subscription input) {
+                return new SubscriptionJson(input, null, null, null);
             }
         });
         return Response.status(Status.OK).entity(result).build();
@@ -183,11 +182,11 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response transferBundle(@PathParam(ID_PARAM_NAME) final String id,
+    public Response transferBundle(final BundleJson json,
+                                   @PathParam(ID_PARAM_NAME) final String id,
                                    @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                    @QueryParam(QUERY_BUNDLE_TRANSFER_ADDON) @DefaultValue("true") final Boolean transferAddOn,
                                    @QueryParam(QUERY_BUNDLE_TRANSFER_CANCEL_IMM) @DefaultValue("false") final Boolean cancelImmediatley,
-                                   final BundleJsonNoSubscriptions json,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
                                    @HeaderParam(HDR_COMMENT) final String comment,
@@ -200,7 +199,7 @@ public class BundleResource extends JaxRsResourceBase {
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
         final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
 
-        final UUID newBundleId  = entitlementApi.transferEntitlements(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, callContext);
+        final UUID newBundleId = entitlementApi.transferEntitlements(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, callContext);
         return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundleId, uriInfo.getBaseUri().toString());
     }
 

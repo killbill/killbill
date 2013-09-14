@@ -49,13 +49,13 @@ import com.google.common.collect.Multimap;
 public class AccountTimelineJson {
 
     private final AccountJsonSimple account;
-    private final List<BundleJsonWithSubscriptions> bundles;
+    private final List<BundleJson> bundles;
     private final List<InvoiceJsonWithBundleKeys> invoices;
     private final List<PaymentJsonWithBundleKeys> payments;
 
     @JsonCreator
     public AccountTimelineJson(@JsonProperty("account") final AccountJsonSimple account,
-                               @JsonProperty("bundles") final List<BundleJsonWithSubscriptions> bundles,
+                               @JsonProperty("bundles") final List<BundleJson> bundles,
                                @JsonProperty("invoices") final List<InvoiceJsonWithBundleKeys> invoices,
                                @JsonProperty("payments") final List<PaymentJsonWithBundleKeys> payments) {
         this.account = account;
@@ -119,10 +119,10 @@ public class AccountTimelineJson {
                                final Map<UUID, List<AuditLog>> chargebacksAuditLogs, final Map<UUID, List<AuditLog>> bundlesAuditLogs,
                                final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
         this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
-        this.bundles = new LinkedList<BundleJsonWithSubscriptions>();
+        this.bundles = new LinkedList<BundleJson>();
         for (final SubscriptionBundle bundle : bundles) {
             final List<AuditLog> bundleAuditLogs = bundlesAuditLogs.get(bundle.getId());
-            final BundleJsonWithSubscriptions jsonWithSubscriptions = new BundleJsonWithSubscriptions(bundle, bundleAuditLogs,
+            final BundleJson jsonWithSubscriptions = new BundleJson(bundle, bundleAuditLogs,
                                                                                                       subscriptionsAuditLogs, subscriptionEventsAuditLogs);
             this.bundles.add(jsonWithSubscriptions);
         }
@@ -180,7 +180,7 @@ public class AccountTimelineJson {
         return account;
     }
 
-    public List<BundleJsonWithSubscriptions> getBundles() {
+    public List<BundleJson> getBundles() {
         return bundles;
     }
 

@@ -47,7 +47,6 @@ import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.CatalogJsonSimple;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CreditJson;
-import com.ning.billing.jaxrs.json.EntitlementJsonNoEvents;
 import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
@@ -59,6 +58,7 @@ import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJs
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodProperties;
 import com.ning.billing.jaxrs.json.PlanDetailJson;
 import com.ning.billing.jaxrs.json.RefundJson;
+import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.json.TenantJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.util.api.AuditLevel;
@@ -374,11 +374,11 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
 
 
-    protected EntitlementJsonNoEvents createEntitlement(final String accountId, final String bundleExternalKey, final String productName, final String productCategory, final String billingPeriod, final boolean waitCompletion) throws Exception {
+    protected SubscriptionJson createEntitlement(final String accountId, final String bundleExternalKey, final String productName, final String productCategory, final String billingPeriod, final boolean waitCompletion) throws Exception {
 
-        final EntitlementJsonNoEvents input =  new EntitlementJsonNoEvents(accountId, null, null, bundleExternalKey, null ,productName, productCategory,
-                                                                            billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME,
-                                                                            null, null);
+        final SubscriptionJson input =  new SubscriptionJson(accountId, null, null, bundleExternalKey, null ,productName, productCategory,
+                                                                            billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null, null, null, null, null,
+                                                                            null, null, null);
         String baseJson = mapper.writeValueAsString(input);
 
         final Map<String, String> queryParams = waitCompletion ? getQueryParamsForCallCompletion("5") : DEFAULT_EMPTY_QUERY;
@@ -394,8 +394,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         baseJson = response.getResponseBody();
-        final EntitlementJsonNoEvents objFromJson = mapper.readValue(baseJson, EntitlementJsonNoEvents.class);
-        Assert.assertTrue(objFromJson.equalsNoSubscriptionIdNoStartDateNoCTD(input));
+        final SubscriptionJson objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
         return objFromJson;
     }
 
@@ -408,7 +407,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         assertNotNull(accountJson);
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final EntitlementJsonNoEvents subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        final SubscriptionJson subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
         clock.addDays(32);
         crappyWaitForLackOfProperSynchonization();
@@ -422,7 +421,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         assertNotNull(accountJson);
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final EntitlementJsonNoEvents subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        final SubscriptionJson subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
         clock.addMonths(1);
         crappyWaitForLackOfProperSynchonization();

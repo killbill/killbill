@@ -59,7 +59,7 @@ import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountJsonWithBalance;
 import com.ning.billing.jaxrs.json.AccountJsonWithBalanceAndCBA;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
-import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
+import com.ning.billing.jaxrs.json.BundleJson;
 import com.ning.billing.jaxrs.json.ChargebackCollectionJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
@@ -181,14 +181,14 @@ public class AccountResource extends JaxRsResourceBase {
         if (externalKey != null) {
 
             final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundleForAccountIdAndExternalKey(uuid, externalKey, tenantContext);
-            final BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
+            final BundleJson json = new BundleJson(bundle, null, null, null);
             return Response.status(Status.OK).entity(json).build();
         } else {
             final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext);
-            final Collection<BundleJsonNoSubscriptions> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJsonNoSubscriptions>() {
+            final Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
                 @Override
-                public BundleJsonNoSubscriptions apply(final SubscriptionBundle input) {
-                    return new BundleJsonNoSubscriptions(input);
+                public BundleJson apply(final SubscriptionBundle input) {
+                    return new BundleJson(input, null, null, null);
                 }
             });
             return Response.status(Status.OK).entity(result).build();

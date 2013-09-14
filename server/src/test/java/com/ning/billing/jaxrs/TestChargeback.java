@@ -33,9 +33,9 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.ChargebackCollectionJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
-import com.ning.billing.jaxrs.json.EntitlementJsonNoEvents;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
@@ -200,7 +200,7 @@ public class TestChargeback extends TestJaxrsBase {
 
 
         // Create subscription
-        final EntitlementJsonNoEvents subscriptionJson = createEntitlement(accountJson.getAccountId(), "6253283", "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        final SubscriptionJson subscriptionJson = createEntitlement(accountJson.getAccountId(), "6253283", "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
 
         // Move after the trial period to trigger an invoice with a non-zero invoice item

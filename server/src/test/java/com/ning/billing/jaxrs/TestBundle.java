@@ -31,8 +31,8 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
-import com.ning.billing.jaxrs.json.EntitlementJsonNoEvents;
+import com.ning.billing.jaxrs.json.BundleJson;
+import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
@@ -56,7 +56,7 @@ public class TestBundle extends TestJaxrsBase {
         final Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
-        final BundleJsonNoSubscriptions objFromJson = mapper.readValue(baseJson, BundleJsonNoSubscriptions.class);
+        final BundleJson objFromJson = mapper.readValue(baseJson, BundleJson.class);
     }
 
     @Test(groups = "slow", enabled = true)
@@ -71,11 +71,11 @@ public class TestBundle extends TestJaxrsBase {
         final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
-        final List<BundleJsonNoSubscriptions> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJsonNoSubscriptions>>() {});
+        final List<BundleJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJson>>() {});
 
-        Collections.sort(objFromJson, new Comparator<BundleJsonNoSubscriptions>() {
+        Collections.sort(objFromJson, new Comparator<BundleJson>() {
             @Override
-            public int compare(final BundleJsonNoSubscriptions o1, final BundleJsonNoSubscriptions o2) {
+            public int compare(final BundleJson o1, final BundleJson o2) {
                 return o1.getExternalKey().compareTo(o2.getExternalKey());
             }
         });
@@ -100,7 +100,7 @@ public class TestBundle extends TestJaxrsBase {
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
-        final List<BundleJsonNoSubscriptions> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJsonNoSubscriptions>>() {});
+        final List<BundleJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJson>>() {});
         Assert.assertNotNull(objFromJson);
         Assert.assertEquals(objFromJson.size(), 0);
     }
@@ -123,7 +123,7 @@ public class TestBundle extends TestJaxrsBase {
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
-        final EntitlementJsonNoEvents entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), "93199", productName, ProductCategory.BASE.toString(), term.toString(), true);
+        final SubscriptionJson entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), "93199", productName, ProductCategory.BASE.toString(), term.toString(), true);
 
 
         Map<String, String> queryParams = new HashMap<String, String>();
@@ -131,14 +131,14 @@ public class TestBundle extends TestJaxrsBase {
         String uri = JaxrsResource.BUNDLES_PATH;
         Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final BundleJsonNoSubscriptions originalBundle = mapper.readValue(response.getResponseBody(), BundleJsonNoSubscriptions.class);
+        final BundleJson originalBundle = mapper.readValue(response.getResponseBody(), BundleJson.class);
         assertEquals(originalBundle.getAccountId(), accountJson.getAccountId());
         assertEquals(originalBundle.getExternalKey(), "93199");
 
 
         final AccountJson newAccount = createAccountWithDefaultPaymentMethod("dst", "dst", "dst@yahoo.com");
 
-        final BundleJsonNoSubscriptions newBundleInput = new BundleJsonNoSubscriptions(null, newAccount.getAccountId(), null, null, null);
+        final BundleJson newBundleInput = new BundleJson(null, newAccount.getAccountId(), null, null, null);
         final String newBundleInputJson = mapper.writeValueAsString(newBundleInput);
         uri = JaxrsResource.BUNDLES_PATH + "/" + entitlementJsonNoEvents.getBundleId();
         response = doPut(uri, newBundleInputJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -155,7 +155,7 @@ public class TestBundle extends TestJaxrsBase {
         uri = JaxrsResource.BUNDLES_PATH;
         response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final BundleJsonNoSubscriptions newBundle = mapper.readValue(response.getResponseBody(), BundleJsonNoSubscriptions.class);
+        final BundleJson newBundle = mapper.readValue(response.getResponseBody(), BundleJson.class);
 
         assertNotEquals(newBundle.getBundleId(), originalBundle.getBundleId());
         assertEquals(newBundle.getExternalKey(), originalBundle.getExternalKey());

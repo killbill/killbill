@@ -21,18 +21,15 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.clock.DefaultClock;
-import com.ning.billing.entitlement.api.SubscriptionEvent;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
-import com.ning.billing.jaxrs.json.SubscriptionJsonWithEvents.SubscriptionReadEventJson;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-
-import com.google.common.collect.ImmutableList;
 
 import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
@@ -40,6 +37,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
+        final String someUUID = UUID.randomUUID().toString();
         final String accountId = UUID.randomUUID().toString();
         final String bundleId = UUID.randomUUID().toString();
         final String entitlementId = UUID.randomUUID().toString();
@@ -48,7 +46,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final SubscriptionJsonWithEvents.SubscriptionReadEventJson newEvent = new SubscriptionJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
+        final SubscriptionJson.SubscriptionReadEventJson newEvent = new SubscriptionJson.SubscriptionReadEventJson(eventId.toString(),
                                                                                                                                        BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                                                                                        requestedDate.toLocalDate(),
                                                                                                                                        effectiveDate.toLocalDate(),
@@ -57,13 +55,15 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                                                                        SubscriptionBaseTransitionType.CREATE.toString(),
                                                                                                                                        PhaseType.DISCOUNT.toString(),
                                                                                                                                        auditLogs);
-        final SubscriptionEvent event = null;
-        final SubscriptionJsonWithEvents entitlementJsonWithEvents = new SubscriptionJsonWithEvents(accountId, bundleId, entitlementId, externalKey, ImmutableList.<SubscriptionReadEventJson>of(newEvent), null, null, auditLogs);
+        final SubscriptionJson entitlementJsonWithEvents = new SubscriptionJson(accountId, bundleId, entitlementId, externalKey,
+                                                                                                    new LocalDate(), someUUID, someUUID, someUUID, someUUID,
+                                                                                                    new LocalDate(), new LocalDate(), new LocalDate(), new LocalDate(),
+                                                                                                    null, null, null, null);
 
 
         final String asJson = mapper.writeValueAsString(entitlementJsonWithEvents);
 
-        final SubscriptionJsonWithEvents fromJson = mapper.readValue(asJson, SubscriptionJsonWithEvents.class);
+        final SubscriptionJson fromJson = mapper.readValue(asJson, SubscriptionJson.class);
         Assert.assertEquals(fromJson, entitlementJsonWithEvents);
     }
 }
