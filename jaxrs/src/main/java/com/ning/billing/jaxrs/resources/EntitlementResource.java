@@ -192,9 +192,9 @@ public class EntitlementResource extends JaxRsResourceBase {
                     final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
                     newEntitlement = current.changePlanOverrideBillingPolicy(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, policy, ctx);
                 }
-                isImmediateOp = newEntitlement.getProduct().getName().equals(entitlement.getProductName()) &&
-                                newEntitlement.getPlan().getBillingPeriod() == BillingPeriod.valueOf(entitlement.getBillingPeriod()) &&
-                                newEntitlement.getPriceList().getName().equals(entitlement.getPriceList());
+                isImmediateOp = newEntitlement.getLastActiveProduct().getName().equals(entitlement.getProductName()) &&
+                                newEntitlement.getLastActivePlan().getBillingPeriod() == BillingPeriod.valueOf(entitlement.getBillingPeriod()) &&
+                                newEntitlement.getLastActivePriceList().getName().equals(entitlement.getPriceList());
                 return Response.status(Status.OK).build();
             }
 

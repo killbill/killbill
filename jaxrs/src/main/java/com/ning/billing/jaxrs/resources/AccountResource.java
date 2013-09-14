@@ -60,13 +60,20 @@ import com.ning.billing.jaxrs.json.AccountJsonWithBalance;
 import com.ning.billing.jaxrs.json.AccountJsonWithBalanceAndCBA;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
+import com.ning.billing.jaxrs.json.ChargebackCollectionJson;
+import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.InvoiceEmailJson;
+import com.ning.billing.jaxrs.json.OverdueStateJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.overdue.OverdueApiException;
+import com.ning.billing.overdue.OverdueState;
+import com.ning.billing.overdue.OverdueUserApi;
+import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -107,7 +114,7 @@ public class AccountResource extends JaxRsResourceBase {
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final PaymentApi paymentApi;
-
+    private final OverdueUserApi overdueApi;
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
                            final AccountUserApi accountApi,
@@ -118,6 +125,7 @@ public class AccountResource extends JaxRsResourceBase {
                            final AuditUserApi auditUserApi,
                            final CustomFieldUserApi customFieldUserApi,
                            final SubscriptionApi subscriptionApi,
+                           final OverdueUserApi overdueApi,
                            final Clock clock,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, clock, context);
@@ -125,6 +133,7 @@ public class AccountResource extends JaxRsResourceBase {
         this.invoiceApi = invoiceApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.paymentApi = paymentApi;
+        this.overdueApi = overdueApi;
     }
 
     @GET
@@ -438,6 +447,26 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
+
+    /*
+     * ************************** CHARGEBACKS ********************************
+     */
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
+    @Produces(APPLICATION_JSON)
+    public Response getChargebacksForAccount(@PathParam("accountId") final String accountId,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request) {
+        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(UUID.fromString(accountId), context.createContext(request));
+        final List<ChargebackJson> chargebacksJson = new ArrayList<ChargebackJson>();
+        for (final InvoicePayment chargeback : chargebacks) {
+            chargebacksJson.add(new ChargebackJson(chargeback));
+        }
+
+        final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
+        return Response.status(Response.Status.OK).entity(json).build();
+    }
+
+
     /*
      * ************************** REFUNDS ********************************
      */
@@ -459,6 +488,24 @@ public class AccountResource extends JaxRsResourceBase {
         }));
 
         return Response.status(Status.OK).entity(result).build();
+    }
+
+
+
+    /*
+     * ************************** OVERDUE ********************************
+     */
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + OVERDUE)
+    @Produces(APPLICATION_JSON)
+    public Response getOverdueAccount(@PathParam("accountId") final String accountId,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, OverdueException, OverdueApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
+        final OverdueState overdueState = overdueApi.getOverdueStateFor(account, tenantContext);
+
+        return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
     }
 
     /*

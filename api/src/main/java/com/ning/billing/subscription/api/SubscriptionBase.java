@@ -79,6 +79,8 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public Plan getLastActivePlan();
 
+    public PlanPhase getLastActivePhase();
+
     public PriceList getCurrentPriceList();
 
     public PlanPhase getCurrentPhase();

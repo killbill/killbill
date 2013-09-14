@@ -44,8 +44,10 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.jaxrs.json.ChargebackCollectionJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
@@ -153,6 +155,31 @@ public class PaymentResource extends JaxRsResourceBase {
         final Payment newPayment = paymentApi.retryPayment(account, paymentId, callContext);
 
         return Response.status(Status.OK).entity(new PaymentJsonSimple(newPayment)).build();
+    }
+
+
+
+    @GET
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
+    @Produces(APPLICATION_JSON)
+    public Response getChargebacksForPayment(@PathParam("paymentId") final String paymentId,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
+        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentId(UUID.fromString(paymentId), tenantContext);
+        if (chargebacks.size() == 0) {
+            return Response.status(Response.Status.NO_CONTENT).build();
+        }
+
+        final UUID invoicePaymentId = chargebacks.get(0).getId();
+        final String accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(invoicePaymentId, tenantContext).toString();
+        final List<ChargebackJson> chargebacksJson = new ArrayList<ChargebackJson>();
+        for (final InvoicePayment chargeback : chargebacks) {
+            chargebacksJson.add(new ChargebackJson(chargeback));
+        }
+        final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
+
+        return Response.status(Response.Status.OK).entity(json).build();
     }
 
 

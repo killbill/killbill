@@ -76,7 +76,7 @@ public class TestChargeback extends TestJaxrsBase {
         assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.BAD_REQUEST.getStatusCode(), response.getResponseBody());
 
         // Find the chargeback by account
-        response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/accounts/" + payment.getAccountId(), DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doGet(JaxrsResource.ACCOUNTS_PATH   +  "/" + payment.getAccountId() +  "/" +JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
         ChargebackCollectionJson objFromJson = mapper.readValue(response.getResponseBody(), ChargebackCollectionJson.class);
         assertEquals(objFromJson.getChargebacks().size(), 4);
@@ -87,7 +87,7 @@ public class TestChargeback extends TestJaxrsBase {
         }
 
         // Find the chargeback by payment
-        response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/payments/" + payment.getPaymentId(), DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doGet(JaxrsResource.PAYMENTS_PATH  +  "/" + payment.getPaymentId() +  "/" +JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
         objFromJson = mapper.readValue(response.getResponseBody(), ChargebackCollectionJson.class);
         assertEquals(objFromJson.getChargebacks().size(), 4);
@@ -135,7 +135,7 @@ public class TestChargeback extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testNoChargebackForAccount() throws Exception {
         final String accountId = UUID.randomUUID().toString();
-        final Response response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/accounts/" + accountId, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        final Response response = doGet(JaxrsResource.ACCOUNTS_PATH   +  "/" + accountId +  "/" +JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode(), response.getResponseBody());
 
         final ChargebackCollectionJson chargebackCollectionJson = mapper.readValue(response.getResponseBody(), ChargebackCollectionJson.class);
@@ -145,8 +145,8 @@ public class TestChargeback extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testNoChargebackForPayment() throws Exception {
-        final String payment = UUID.randomUUID().toString();
-        final Response response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/payments/" + payment, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        final String paymentId = UUID.randomUUID().toString();
+        final Response response = doGet(JaxrsResource.PAYMENTS_PATH   +  "/" + paymentId +  "/" +JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         // STEPH needs to fix that we get 200 instaed of 204 although stepping through code, i see we do return NO_CONTENT. mistery that needs to be solved!!!!
         //assertEquals(response.getStatusCode(),Status.NO_CONTENT.getStatusCode(), response.getResponseBody());
     }
@@ -166,11 +166,11 @@ public class TestChargeback extends TestJaxrsBase {
         verifySingleChargebackResponse(response, input);
 
         // Find the chargeback by account
-        response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/accounts/" + payment.getAccountId(), DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doGet(JaxrsResource.ACCOUNTS_PATH   +  "/" + payment.getAccountId() +  "/" +JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         verifyCollectionChargebackResponse(response, input);
 
         // Find the chargeback by payment
-        response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/payments/" + payment.getPaymentId(), DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doGet(JaxrsResource.PAYMENTS_PATH   +  "/" + payment.getPaymentId() +  "/" +JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         verifyCollectionChargebackResponse(response, input);
     }
 

@@ -304,6 +304,16 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
+    public PlanPhase getLastActivePhase() {
+        if (getState() == EntitlementState.CANCELLED) {
+            final SubscriptionBaseTransition data = getPreviousTransition();
+            return data.getPreviousPhase();
+        } else {
+            return getCurrentPhase();
+        }
+    }
+
+    @Override
     public BillingPeriod getLastActiveBillingPeriod() {
         if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();

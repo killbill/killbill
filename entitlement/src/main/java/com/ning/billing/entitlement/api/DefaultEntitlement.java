@@ -164,31 +164,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Product getProduct() {
-        return subscriptionBase.getCurrentPlan() != null ? subscriptionBase.getCurrentPlan().getProduct() : null;
-    }
-
-    @Override
-    public Plan getPlan() {
-        return subscriptionBase.getCurrentPlan();
-    }
-
-    @Override
-    public PriceList getPriceList() {
-        return subscriptionBase.getCurrentPriceList();
-    }
-
-    @Override
-    public PlanPhase getCurrentPhase() {
-        return subscriptionBase.getCurrentPhase();
-    }
-
-    @Override
-    public ProductCategory getProductCategory() {
-        return subscriptionBase.getCategory();
-    }
-
-    @Override
     public Product getLastActiveProduct() {
         return subscriptionBase.getLastActiveProduct();
     }
@@ -196,6 +171,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     @Override
     public Plan getLastActivePlan() {
         return subscriptionBase.getLastActivePlan();
+    }
+
+    @Override
+    public PlanPhase getLastActivePhase() {
+        return subscriptionBase.getLastActivePhase();
     }
 
     @Override

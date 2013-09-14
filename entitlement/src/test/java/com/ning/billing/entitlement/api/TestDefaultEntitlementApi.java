@@ -70,11 +70,11 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             assertEquals(entitlement.getEffectiveStartDate(), initialDate);
             assertNull(entitlement.getEffectiveEndDate());
 
-            assertEquals(entitlement.getPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(entitlement.getProduct().getName(), "Shotgun");
-            assertEquals(entitlement.getCurrentPhase().getName(), "shotgun-monthly-trial");
-            assertEquals(entitlement.getPlan().getName(), "shotgun-monthly");
-            assertEquals(entitlement.getProductCategory(), ProductCategory.BASE);
+            assertEquals(entitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+            assertEquals(entitlement.getLastActiveProduct().getName(), "Shotgun");
+            assertEquals(entitlement.getLastActivePhase().getName(), "shotgun-monthly-trial");
+            assertEquals(entitlement.getLastActivePlan().getName(), "shotgun-monthly");
+            assertEquals(entitlement.getLastActiveProductCategory(), ProductCategory.BASE);
 
             assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
             assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
@@ -96,11 +96,11 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             assertEquals(entitlement2.getEffectiveStartDate(), initialDate);
             assertNull(entitlement2.getEffectiveEndDate());
 
-            assertEquals(entitlement2.getPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(entitlement2.getProduct().getName(), "Shotgun");
-            assertEquals(entitlement2.getCurrentPhase().getName(), "shotgun-monthly-trial");
-            assertEquals(entitlement2.getPlan().getName(), "shotgun-monthly");
-            assertEquals(entitlement2.getProductCategory(), ProductCategory.BASE);
+            assertEquals(entitlement2.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+            assertEquals(entitlement2.getLastActiveProduct().getName(), "Shotgun");
+            assertEquals(entitlement2.getLastActivePhase().getName(), "shotgun-monthly-trial");
+            assertEquals(entitlement2.getLastActivePlan().getName(), "shotgun-monthly");
+            assertEquals(entitlement2.getLastActiveProductCategory(), ProductCategory.BASE);
 
             assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
             assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
@@ -125,11 +125,11 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             assertEquals(entitlement3.getEffectiveStartDate(), initialDate);
             assertNull(entitlement3.getEffectiveEndDate());
 
-            assertEquals(entitlement3.getPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(entitlement3.getProduct().getName(), "Shotgun");
-            assertEquals(entitlement3.getCurrentPhase().getName(), "shotgun-monthly-trial");
-            assertEquals(entitlement3.getPlan().getName(), "shotgun-monthly");
-            assertEquals(entitlement3.getProductCategory(), ProductCategory.BASE);
+            assertEquals(entitlement3.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+            assertEquals(entitlement3.getLastActiveProduct().getName(), "Shotgun");
+            assertEquals(entitlement3.getLastActivePhase().getName(), "shotgun-monthly-trial");
+            assertEquals(entitlement3.getLastActivePlan().getName(), "shotgun-monthly");
+            assertEquals(entitlement3.getLastActiveProductCategory(), ProductCategory.BASE);
 
             assertEquals(entitlement3.getState(), EntitlementState.ACTIVE);
             assertEquals(entitlement3.getSourceType(), EntitlementSourceType.NATIVE);
@@ -175,11 +175,11 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             assertEquals(telescopicEntitlement.getEffectiveStartDate(), initialDate);
             assertNull(telescopicEntitlement.getEffectiveEndDate());
 
-            assertEquals(telescopicEntitlement.getPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(telescopicEntitlement.getProduct().getName(), "Telescopic-Scope");
-            assertEquals(telescopicEntitlement.getCurrentPhase().getName(), "telescopic-scope-monthly-discount");
-            assertEquals(telescopicEntitlement.getPlan().getName(), "telescopic-scope-monthly");
-            assertEquals(telescopicEntitlement.getProductCategory(), ProductCategory.ADD_ON);
+            assertEquals(telescopicEntitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+            assertEquals(telescopicEntitlement.getLastActiveProduct().getName(), "Telescopic-Scope");
+            assertEquals(telescopicEntitlement.getLastActivePhase().getName(), "telescopic-scope-monthly-discount");
+            assertEquals(telescopicEntitlement.getLastActivePlan().getName(), "telescopic-scope-monthly");
+            assertEquals(telescopicEntitlement.getLastActiveProductCategory(), ProductCategory.ADD_ON);
 
             List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement.getBundleId(), callContext);
             assertEquals(bundleEntitlements.size(), 2);

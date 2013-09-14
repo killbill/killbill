@@ -82,37 +82,7 @@ public class ChargebackResource extends JaxRsResourceBase {
         return Response.status(Response.Status.OK).entity(chargebackJson).build();
     }
 
-    @GET
-    @Path("/accounts/{accountId:" + UUID_PATTERN + "}")
-    @Produces(APPLICATION_JSON)
-    public Response getForAccount(@PathParam("accountId") final String accountId,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request) {
-        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(UUID.fromString(accountId), context.createContext(request));
-        final List<ChargebackJson> chargebacksJson = convertToJson(chargebacks);
 
-        final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
-        return Response.status(Response.Status.OK).entity(json).build();
-    }
-
-    @GET
-    @Path("/payments/{paymentId:" + UUID_PATTERN + "}")
-    @Produces(APPLICATION_JSON)
-    public Response getForPayment(@PathParam("paymentId") final String paymentId,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
-        final TenantContext tenantContext = context.createContext(request);
-
-        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentId(UUID.fromString(paymentId), tenantContext);
-        if (chargebacks.size() == 0) {
-            return Response.status(Response.Status.NO_CONTENT).build();
-        }
-
-        final UUID invoicePaymentId = chargebacks.get(0).getId();
-        final String accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(invoicePaymentId, tenantContext).toString();
-        final List<ChargebackJson> chargebacksJson = convertToJson(chargebacks);
-        final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
-
-        return Response.status(Response.Status.OK).entity(json).build();
-    }
 
     @POST
     @Consumes(APPLICATION_JSON)
@@ -131,15 +101,6 @@ public class ChargebackResource extends JaxRsResourceBase {
         final InvoicePayment chargeBack = invoicePaymentApi.createChargeback(invoicePayment.getId(), json.getChargebackAmount(),
                                                                              callContext);
         return uriBuilder.buildResponse(ChargebackResource.class, "getChargeback", chargeBack.getId());
-    }
-
-    private List<ChargebackJson> convertToJson(final List<InvoicePayment> chargebacks) {
-        final List<ChargebackJson> result = new ArrayList<ChargebackJson>();
-        for (final InvoicePayment chargeback : chargebacks) {
-            result.add(new ChargebackJson(chargeback));
-        }
-
-        return result;
     }
 
     @Override

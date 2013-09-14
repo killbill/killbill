@@ -210,6 +210,11 @@ public class MockSubscription implements SubscriptionBase {
         return sub.getLastActivePlan();
     }
 
+    @Override
+    public PlanPhase getLastActivePhase() {
+        return sub.getLastActivePhase();
+    }
+
     public void setPlan(final Plan plan) {
         this.plan = plan;
     }

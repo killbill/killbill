@@ -40,7 +40,6 @@ import com.ning.billing.jaxrs.resources.BundleResource;
 import com.ning.billing.jaxrs.resources.CatalogResource;
 import com.ning.billing.jaxrs.resources.ExportResource;
 import com.ning.billing.jaxrs.resources.InvoiceResource;
-import com.ning.billing.jaxrs.resources.OverdueResource;
 import com.ning.billing.jaxrs.resources.PaymentMethodResource;
 import com.ning.billing.jaxrs.resources.PaymentResource;
 import com.ning.billing.jaxrs.resources.PluginResource;
@@ -125,7 +124,6 @@ public class KillbillServerModule extends AbstractModule {
         bind(RefundResource.class).asEagerSingleton();
         bind(TenantResource.class).asEagerSingleton();
         bind(ExportResource.class).asEagerSingleton();
-        bind(OverdueResource.class).asEagerSingleton();
         bind(PluginResource.class).asEagerSingleton();
         bind(TenantResource.class).asEagerSingleton();
         bind(KillbillEventHandler.class).asEagerSingleton();

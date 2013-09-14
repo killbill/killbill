@@ -76,14 +76,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.TypeLiteral;
 
-import static com.ning.billing.jaxrs.resources.JaxrsResource.ACCOUNTS;
-import static com.ning.billing.jaxrs.resources.JaxrsResource.BUNDLES;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.HDR_API_KEY;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.HDR_API_SECRET;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.OVERDUE;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF;
-import static com.ning.billing.jaxrs.resources.JaxrsResource.SUBSCRIPTIONS;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -870,20 +867,9 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     // OVERDUE
     //
 
+
     protected OverdueStateJson getOverdueStateForAccount(final String accountId) throws Exception {
-        return doGetOverdueState(accountId, ACCOUNTS);
-    }
-
-    protected OverdueStateJson getOverdueStateForBundle(final String bundleId) throws Exception {
-        return doGetOverdueState(bundleId, BUNDLES);
-    }
-
-    protected OverdueStateJson getOverdueStateForSubscription(final String subscriptionId) throws Exception {
-        return doGetOverdueState(subscriptionId, SUBSCRIPTIONS);
-    }
-
-    protected OverdueStateJson doGetOverdueState(final String id, final String resourceType) throws Exception {
-        final String overdueURI = JaxrsResource.OVERDUE_PATH + "/" + resourceType + "/" + id;
+        final String overdueURI = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + OVERDUE;
         final Response overdueResponse = doGet(overdueURI, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(overdueResponse.getStatusCode(), Status.OK.getStatusCode());
 
