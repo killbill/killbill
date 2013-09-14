@@ -93,6 +93,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
     private PaymentJsonSimple createPayment(final UUID accountId, final UUID invoiceId) {
         final UUID paymentId = UUID.randomUUID();
+        final Integer paymentNumber = 17;
         final UUID paymentMethodId = UUID.randomUUID();
         final BigDecimal paidAmount = BigDecimal.TEN;
         final BigDecimal amount = BigDecimal.ZERO;
@@ -103,11 +104,8 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final String status = UUID.randomUUID().toString();
         final String gatewayErrorCode = "OK";
         final String gatewayErrorMsg = "Excellent...";
-        final String extFirstPaymentIdRef = UUID.randomUUID().toString();
-        final String extSecondPaymentIdRef = UUID.randomUUID().toString();
-
-        return new PaymentJsonSimple(amount, paidAmount, accountId.toString(), invoiceId.toString(), paymentId.toString(),
+        return new PaymentJsonSimple(amount, paidAmount, accountId.toString(), invoiceId.toString(), paymentId.toString(), paymentNumber.toString(),
                                      paymentMethodId.toString(), paymentRequestedDate, paymentEffectiveDate, retryCount, currency, status,
-                                     gatewayErrorCode, gatewayErrorMsg, extFirstPaymentIdRef, extSecondPaymentIdRef, null);
+                                     gatewayErrorCode, gatewayErrorMsg, null);
     }
 }

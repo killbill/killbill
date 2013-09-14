@@ -205,8 +205,6 @@ public class TestPayment extends TestJaxrsBase {
         Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getGatewayErrorCode(), paymentJsonSimple.getGatewayErrorCode());
         Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getGatewayErrorMsg(), paymentJsonSimple.getGatewayErrorMsg());
         Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getPaymentMethodId(), paymentJsonSimple.getPaymentMethodId());
-        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getExtFirstPaymentIdRef(), paymentJsonSimple.getExtFirstPaymentIdRef());
-        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getExtSecondPaymentIdRef(), paymentJsonSimple.getExtSecondPaymentIdRef());
         Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getChargebacks().size(), 0);
         Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getRefunds().size(), 1);
         Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getRefunds().get(0), refundJsonCheck);

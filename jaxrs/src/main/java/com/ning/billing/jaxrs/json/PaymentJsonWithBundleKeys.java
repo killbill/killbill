@@ -42,6 +42,7 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
                                      @JsonProperty("accountId") final String accountId,
                                      @JsonProperty("invoiceId") final String invoiceId,
                                      @JsonProperty("paymentId") final String paymentId,
+                                     @JsonProperty("paymentNumber") final String paymentNumber,
                                      @JsonProperty("paymentMethodId") final String paymentMethodId,
                                      @JsonProperty("requestedDate") final DateTime requestedDate,
                                      @JsonProperty("effectiveDate") final DateTime effectiveDate,
@@ -50,15 +51,12 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
                                      @JsonProperty("status") final String status,
                                      @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
                                      @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,
-                                     @JsonProperty("extFirstPaymentIdRef") final String extFirstPaymentIdRef,
-                                     @JsonProperty("extSecondPaymentIdRef") final String extSecondPaymentIdRef,
                                      @JsonProperty("externalBundleKeys") final String bundleKeys,
                                      @JsonProperty("refunds") final List<RefundJson> refunds,
                                      @JsonProperty("chargebacks") final List<ChargebackJson> chargebacks,
                                      @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(amount, paidAmount, accountId, invoiceId, paymentId, paymentMethodId, requestedDate, effectiveDate,
-              retryCount, currency, status, gatewayErrorCode, gatewayErrorMsg, extFirstPaymentIdRef,
-              extSecondPaymentIdRef, auditLogs);
+        super(amount, paidAmount, accountId, invoiceId, paymentId, paymentNumber, paymentMethodId, requestedDate, effectiveDate,
+              retryCount, currency, status, gatewayErrorCode, gatewayErrorMsg, auditLogs);
         this.bundleKeys = bundleKeys;
         this.refunds = refunds;
         this.chargebacks = chargebacks;
@@ -74,12 +72,12 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
                                      @Nullable final List<AuditLog> auditLogs) {
         this(payment.getAmount(), payment.getPaidAmount(), accountId.toString(),
              payment.getInvoiceId().toString(), payment.getId().toString(),
+             payment.getPaymentNumber().toString(),
              payment.getPaymentMethodId().toString(),
              payment.getEffectiveDate(), payment.getEffectiveDate(),
              nbOfPaymentAttempts, payment.getCurrency().toString(), status,
              payment.getAttempts().get(nbOfPaymentAttempts - 1).getGatewayErrorCode(),
              payment.getAttempts().get(nbOfPaymentAttempts - 1).getGatewayErrorMsg(),
-             payment.getExtFirstPaymentIdRef(), payment.getExtSecondPaymentIdRef(),
              bundleExternalKey, refunds, chargebacks, toAuditLogJson(auditLogs));
     }
 

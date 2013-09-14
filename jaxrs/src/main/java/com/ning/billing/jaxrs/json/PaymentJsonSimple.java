@@ -37,6 +37,7 @@ public class PaymentJsonSimple extends JsonBase {
     private final String accountId;
     private final String invoiceId;
     private final String paymentId;
+    private final String paymentNumber;
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
     private final Integer retryCount;
@@ -45,8 +46,6 @@ public class PaymentJsonSimple extends JsonBase {
     private final String gatewayErrorCode;
     private final String gatewayErrorMsg;
     private final String paymentMethodId;
-    private final String extFirstPaymentIdRef;
-    private final String extSecondPaymentIdRef;
 
     @JsonCreator
     public PaymentJsonSimple(@JsonProperty("amount") final BigDecimal amount,
@@ -54,6 +53,7 @@ public class PaymentJsonSimple extends JsonBase {
                              @JsonProperty("accountId") final String accountId,
                              @JsonProperty("invoiceId") final String invoiceId,
                              @JsonProperty("paymentId") final String paymentId,
+                             @JsonProperty("paymentNumber") final String paymentNumber,
                              @JsonProperty("paymentMethodId") final String paymentMethodId,
                              @JsonProperty("requestedDate") final DateTime requestedDate,
                              @JsonProperty("effectiveDate") final DateTime effectiveDate,
@@ -62,8 +62,6 @@ public class PaymentJsonSimple extends JsonBase {
                              @JsonProperty("status") final String status,
                              @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
                              @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,
-                             @JsonProperty("extFirstPaymentIdRef") final String extFirstPaymentIdRef,
-                             @JsonProperty("extSecondPaymentIdRef") final String extSecondPaymentIdRef,
                              @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.amount = amount;
@@ -71,6 +69,7 @@ public class PaymentJsonSimple extends JsonBase {
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.paymentId = paymentId;
+        this.paymentNumber = paymentNumber;
         this.paymentMethodId = paymentMethodId;
         this.requestedDate = DefaultClock.toUTCDateTime(requestedDate);
         this.effectiveDate = DefaultClock.toUTCDateTime(effectiveDate);
@@ -79,16 +78,14 @@ public class PaymentJsonSimple extends JsonBase {
         this.status = status;
         this.gatewayErrorCode = gatewayErrorCode;
         this.gatewayErrorMsg = gatewayErrorMsg;
-        this.extFirstPaymentIdRef = extFirstPaymentIdRef;
-        this.extSecondPaymentIdRef = extSecondPaymentIdRef;
     }
 
     public PaymentJsonSimple(final Payment src, @Nullable final List<AuditLog> auditLogs) {
         this(src.getAmount(), src.getPaidAmount(), src.getAccountId().toString(), src.getInvoiceId().toString(),
-             src.getId().toString(), src.getPaymentMethodId().toString(), src.getEffectiveDate(), src.getEffectiveDate(),
+             src.getId().toString(), src.getPaymentNumber().toString(), src.getPaymentMethodId().toString(), src.getEffectiveDate(), src.getEffectiveDate(),
              src.getAttempts().size(), src.getCurrency().toString(), src.getPaymentStatus().toString(),
              src.getAttempts().get(src.getAttempts().size() - 1).getGatewayErrorCode(), src.getAttempts().get(src.getAttempts().size() - 1).getGatewayErrorMsg(),
-             src.getExtFirstPaymentIdRef(), src.getExtSecondPaymentIdRef(), toAuditLogJson(auditLogs));
+             toAuditLogJson(auditLogs));
     }
 
     public PaymentJsonSimple(final Payment payment) {
@@ -101,6 +98,10 @@ public class PaymentJsonSimple extends JsonBase {
 
     public String getInvoiceId() {
         return invoiceId;
+    }
+
+    public String getPaymentNumber() {
+        return paymentNumber;
     }
 
     public String getPaymentId() {
@@ -147,14 +148,6 @@ public class PaymentJsonSimple extends JsonBase {
         return gatewayErrorMsg;
     }
 
-    public String getExtFirstPaymentIdRef() {
-        return extFirstPaymentIdRef;
-    }
-
-    public String getExtSecondPaymentIdRef() {
-        return extSecondPaymentIdRef;
-    }
-
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -190,6 +183,9 @@ public class PaymentJsonSimple extends JsonBase {
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
+        if (paymentNumber != null ? !paymentNumber.equals(that.paymentNumber) : that.paymentNumber != null) {
+            return false;
+        }
         if (!((requestedDate == null && that.requestedDate == null) ||
               (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
             return false;
@@ -208,14 +204,18 @@ public class PaymentJsonSimple extends JsonBase {
     public int hashCode() {
         int result = paidAmount != null ? paidAmount.hashCode() : 0;
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (paymentNumber != null ? paymentNumber.hashCode() : 0);
         result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (retryCount != null ? retryCount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
-        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (gatewayErrorCode != null ? gatewayErrorCode.hashCode() : 0);
+        result = 31 * result + (gatewayErrorMsg != null ? gatewayErrorMsg.hashCode() : 0);
+        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         return result;
     }
 }

@@ -691,7 +691,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected void payAllInvoices(final AccountJson accountJson, final Boolean externalPayment) throws IOException {
         final PaymentJsonSimple payment = new PaymentJsonSimple(null, null, accountJson.getAccountId(), null, null, null, null,
-                                                                null, 0, null, null, null, null, null, null, null);
+                                                                null, null, 0, null, null, null, null, null);
         final String postJson = mapper.writeValueAsString(payment);
 
         final String uri = JaxrsResource.INVOICES_PATH + "/" + JaxrsResource.PAYMENTS;
@@ -700,7 +700,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected List<PaymentJsonSimple> createInstaPayment(final AccountJson accountJson, final InvoiceJsonSimple invoice) throws IOException {
         final PaymentJsonSimple payment = new PaymentJsonSimple(invoice.getAmount(), BigDecimal.ZERO, accountJson.getAccountId(),
-                                                                invoice.getInvoiceId(), null, null, null, null, 0, null, null, null, null, null, null, null);
+                                                                invoice.getInvoiceId(), null, null, null, null, null, 0, null, null, null, null, null);
         final String postJson = mapper.writeValueAsString(payment);
 
         final String uri = JaxrsResource.INVOICES_PATH + "/" + invoice.getInvoiceId() + "/" + JaxrsResource.PAYMENTS;
@@ -711,8 +711,8 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected List<PaymentJsonSimple> createExternalPayment(final AccountJson accountJson, final String invoiceId, final BigDecimal paidAmount) throws IOException {
         final PaymentJsonSimple payment = new PaymentJsonSimple(paidAmount, BigDecimal.ZERO, accountJson.getAccountId(),
-                                                                invoiceId, null, null, null, null, 0,
-                                                                null, null, null, null, null, null, null);
+                                                                invoiceId, null, null, null, null, null, 0,
+                                                                null, null, null, null, null);
         final String postJson = mapper.writeValueAsString(payment);
 
         final String paymentURI = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.PAYMENTS;
