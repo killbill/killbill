@@ -48,13 +48,13 @@ import com.google.common.collect.Multimap;
 
 public class AccountTimelineJson {
 
-    private final AccountJsonSimple account;
+    private final AccountJson account;
     private final List<BundleJson> bundles;
     private final List<InvoiceJsonWithBundleKeys> invoices;
     private final List<PaymentJsonWithBundleKeys> payments;
 
     @JsonCreator
-    public AccountTimelineJson(@JsonProperty("account") final AccountJsonSimple account,
+    public AccountTimelineJson(@JsonProperty("account") final AccountJson account,
                                @JsonProperty("bundles") final List<BundleJson> bundles,
                                @JsonProperty("invoices") final List<InvoiceJsonWithBundleKeys> invoices,
                                @JsonProperty("payments") final List<PaymentJsonWithBundleKeys> payments) {
@@ -118,7 +118,7 @@ public class AccountTimelineJson {
                                final Map<UUID, List<AuditLog>> paymentsAuditLogs, final Map<UUID, List<AuditLog>> refundsAuditLogs,
                                final Map<UUID, List<AuditLog>> chargebacksAuditLogs, final Map<UUID, List<AuditLog>> bundlesAuditLogs,
                                final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
-        this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
+        this.account = new AccountJson(account, null, null);
         this.bundles = new LinkedList<BundleJson>();
         for (final SubscriptionBundle bundle : bundles) {
             final List<AuditLog> bundleAuditLogs = bundlesAuditLogs.get(bundle.getId());
@@ -176,7 +176,7 @@ public class AccountTimelineJson {
         }
     }
 
-    public AccountJsonSimple getAccount() {
+    public AccountJson getAccount() {
         return account;
     }
 

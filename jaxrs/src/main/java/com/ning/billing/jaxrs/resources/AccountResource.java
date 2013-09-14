@@ -56,8 +56,6 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.AccountEmailJson;
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.AccountJsonWithBalance;
-import com.ning.billing.jaxrs.json.AccountJsonWithBalanceAndCBA;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJson;
 import com.ning.billing.jaxrs.json.ChargebackCollectionJson;
@@ -208,16 +206,15 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     private AccountJson getAccount(final Account account, final Boolean accountWithBalance, final Boolean accountWithBalanceAndCBA, final TenantContext tenantContext) {
-        final AccountJson json;
         if (accountWithBalanceAndCBA) {
             final BigDecimal accountBalance = invoiceApi.getAccountBalance(account.getId(), tenantContext);
             final BigDecimal accountCBA = invoiceApi.getAccountCBA(account.getId(), tenantContext);
-            return new AccountJsonWithBalanceAndCBA(account, accountBalance, accountCBA);
+            return new AccountJson(account, accountBalance, accountCBA);
         } else if (accountWithBalance) {
             final BigDecimal accountBalance = invoiceApi.getAccountBalance(account.getId(), tenantContext);
-            return new AccountJsonWithBalance(account, accountBalance);
+            return new AccountJson(account, accountBalance, null);
         } else {
-            return new AccountJson(account);
+            return new AccountJson(account, null, null);
         }
     }
 

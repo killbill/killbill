@@ -30,7 +30,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.AccountJsonWithBalance;
 import com.ning.billing.jaxrs.json.AuditLogJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
@@ -66,7 +65,7 @@ public class TestAccount extends TestJaxrsBase {
         final AccountJson newInput = new AccountJson(input.getAccountId(),
                                                      "zozo", 4, input.getExternalKey(), "rr@google.com", 18,
                                                      "USD", null, "UTC", "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
-                                                     false, false);
+                                                     false, false, null, null);
         final AccountJson updatedAccount = updateAccount(input.getAccountId(), newInput);
         Assert.assertTrue(updatedAccount.equals(newInput));
 
@@ -83,7 +82,7 @@ public class TestAccount extends TestJaxrsBase {
         final Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
-        final AccountJsonWithBalance accountWithBalance = mapper.readValue(baseJson, AccountJsonWithBalance.class);
+        final AccountJson accountWithBalance = mapper.readValue(baseJson, AccountJson.class);
         final BigDecimal accountBalance = accountWithBalance.getAccountBalance();
         Assert.assertTrue(accountBalance.compareTo(BigDecimal.ZERO) > 0);
     }

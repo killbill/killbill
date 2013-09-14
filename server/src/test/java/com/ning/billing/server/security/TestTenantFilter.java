@@ -20,12 +20,10 @@ import javax.ws.rs.core.Response.Status;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.TestJaxrsBase;
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.server.listeners.KillbillGuiceListener;
 
 // Pure Multi-Tenancy test (no RBAC)
 public class TestTenantFilter extends TestJaxrsBase {

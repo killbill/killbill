@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
@@ -28,29 +29,37 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 
-public class AccountJson extends AccountJsonSimple {
+public class AccountJson extends JsonBase {
 
-    protected final String name;
-    protected final Integer firstNameLength;
-    protected final String email;
-    protected final Integer billCycleDayLocal;
-    protected final String currency;
-    protected final String paymentMethodId;
-    protected final String timeZone;
-    protected final String address1;
-    protected final String address2;
-    protected final String postalCode;
-    protected final String company;
-    protected final String city;
-    protected final String state;
-    protected final String country;
-    protected final String locale;
-    protected final String phone;
-    protected final Boolean isMigrated;
-    protected final Boolean isNotifiedForInvoices;
+    private final String accountId;
+    private final String externalKey;
+    private final BigDecimal accountCBA;
+    private final BigDecimal accountBalance;
+    private final String name;
+    private final Integer firstNameLength;
+    private final String email;
+    private final Integer billCycleDayLocal;
+    private final String currency;
+    private final String paymentMethodId;
+    private final String timeZone;
+    private final String address1;
+    private final String address2;
+    private final String postalCode;
+    private final String company;
+    private final String city;
+    private final String state;
+    private final String country;
+    private final String locale;
+    private final String phone;
+    private final Boolean isMigrated;
+    private final Boolean isNotifiedForInvoices;
 
-    public AccountJson(final Account account) {
-        super(account.getId().toString(), account.getExternalKey());
+    public AccountJson(final Account account, final BigDecimal accountBalance, final BigDecimal accountCBA) {
+        super(null);
+        this.accountCBA = accountCBA;
+        this.accountBalance = accountBalance;
+        this.accountId = account.getId().toString();
+        this.externalKey = account.getExternalKey();
         this.name = account.getName();
         this.firstNameLength = account.getFirstNameLength();
         this.email = account.getEmail();
@@ -69,6 +78,54 @@ public class AccountJson extends AccountJsonSimple {
         this.phone = account.getPhone();
         this.isMigrated = account.isMigrated();
         this.isNotifiedForInvoices = account.isNotifiedForInvoices();
+    }
+
+    @JsonCreator
+    public AccountJson(@JsonProperty("accountId") final String accountId,
+                       @JsonProperty("name") final String name,
+                       @JsonProperty("firstNameLength") final Integer firstNameLength,
+                       @JsonProperty("externalKey") final String externalKey,
+                       @JsonProperty("email") final String email,
+                       @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
+                       @JsonProperty("currency") final String currency,
+                       @JsonProperty("paymentMethodId") final String paymentMethodId,
+                       @JsonProperty("timeZone") final String timeZone,
+                       @JsonProperty("address1") final String address1,
+                       @JsonProperty("address2") final String address2,
+                       @JsonProperty("postalCode") final String postalCode,
+                       @JsonProperty("company") final String company,
+                       @JsonProperty("city") final String city,
+                       @JsonProperty("state") final String state,
+                       @JsonProperty("country") final String country,
+                       @JsonProperty("locale") final String locale,
+                       @JsonProperty("phone") final String phone,
+                       @JsonProperty("isMigrated") final Boolean isMigrated,
+                       @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices,
+                       @JsonProperty("accountBalance") final BigDecimal accountBalance,
+                       @JsonProperty("accountCBA") final BigDecimal accountCBA) {
+        super(null);
+        this.accountBalance = accountBalance;
+        this.externalKey = externalKey;
+        this.accountId = accountId;
+        this.name = name;
+        this.firstNameLength = firstNameLength;
+        this.email = email;
+        this.billCycleDayLocal = billCycleDayLocal;
+        this.currency = currency;
+        this.paymentMethodId = paymentMethodId;
+        this.timeZone = timeZone;
+        this.address1 = address1;
+        this.address2 = address2;
+        this.postalCode = postalCode;
+        this.company = company;
+        this.city = city;
+        this.state = state;
+        this.country = country;
+        this.locale = locale;
+        this.phone = phone;
+        this.isMigrated = isMigrated;
+        this.isNotifiedForInvoices = isNotifiedForInvoices;
+        this.accountCBA = accountCBA;
     }
 
     public AccountData toAccountData() {
@@ -179,47 +236,21 @@ public class AccountJson extends AccountJsonSimple {
             }
         };
     }
+    
+    public BigDecimal getAccountBalance() {
+        return accountBalance;
+    }
 
-    @JsonCreator
-    public AccountJson(@JsonProperty("accountId") final String accountId,
-                       @JsonProperty("name") final String name,
-                       @JsonProperty("firstNameLength") final Integer firstNameLength,
-                       @JsonProperty("externalKey") final String externalKey,
-                       @JsonProperty("email") final String email,
-                       @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
-                       @JsonProperty("currency") final String currency,
-                       @JsonProperty("paymentMethodId") final String paymentMethodId,
-                       @JsonProperty("timeZone") final String timeZone,
-                       @JsonProperty("address1") final String address1,
-                       @JsonProperty("address2") final String address2,
-                       @JsonProperty("postalCode") final String postalCode,
-                       @JsonProperty("company") final String company,
-                       @JsonProperty("city") final String city,
-                       @JsonProperty("state") final String state,
-                       @JsonProperty("country") final String country,
-                       @JsonProperty("locale") final String locale,
-                       @JsonProperty("phone") final String phone,
-                       @JsonProperty("isMigrated") final Boolean isMigrated,
-                       @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices) {
-        super(accountId, externalKey);
-        this.name = name;
-        this.firstNameLength = firstNameLength;
-        this.email = email;
-        this.billCycleDayLocal = billCycleDayLocal;
-        this.currency = currency;
-        this.paymentMethodId = paymentMethodId;
-        this.timeZone = timeZone;
-        this.address1 = address1;
-        this.address2 = address2;
-        this.postalCode = postalCode;
-        this.company = company;
-        this.city = city;
-        this.state = state;
-        this.country = country;
-        this.locale = locale;
-        this.phone = phone;
-        this.isMigrated = isMigrated;
-        this.isNotifiedForInvoices = isNotifiedForInvoices;
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public String getExternalKey() {
+        return externalKey;
+    }
+
+    public BigDecimal getAccountCBA() {
+        return accountCBA;
     }
 
     public String getName() {
@@ -286,144 +317,11 @@ public class AccountJson extends AccountJsonSimple {
         return phone;
     }
 
-    @JsonProperty("isMigrated")
     public Boolean isMigrated() {
         return isMigrated;
     }
 
-    @JsonProperty("isNotifiedForInvoices")
     public Boolean isNotifiedForInvoices() {
         return isNotifiedForInvoices;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("AccountJson");
-        sb.append("{name='").append(name).append('\'');
-        sb.append(", firstNameLength=").append(firstNameLength);
-        sb.append(", email='").append(email).append('\'');
-        sb.append(", billCycleDayJson=").append(billCycleDayLocal);
-        sb.append(", currency='").append(currency).append('\'');
-        sb.append(", paymentMethodId='").append(paymentMethodId).append('\'');
-        sb.append(", timeZone='").append(timeZone).append('\'');
-        sb.append(", address1='").append(address1).append('\'');
-        sb.append(", address2='").append(address2).append('\'');
-        sb.append(", postalCode='").append(postalCode).append('\'');
-        sb.append(", company='").append(company).append('\'');
-        sb.append(", city='").append(city).append('\'');
-        sb.append(", state='").append(state).append('\'');
-        sb.append(", country='").append(country).append('\'');
-        sb.append(", locale='").append(locale).append('\'');
-        sb.append(", phone='").append(phone).append('\'');
-        sb.append(", isMigrated=").append(isMigrated);
-        sb.append(", isNotifiedForInvoices=").append(isNotifiedForInvoices);
-        sb.append('}');
-        return sb.toString();
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        final AccountJson that = (AccountJson) o;
-
-        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
-            return false;
-        } else {
-            return equalsNoId(that);
-        }
-    }
-
-    // Used to check POST versus GET
-    public boolean equalsNoId(final AccountJson that) {
-        if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
-            return false;
-        }
-        if (address2 != null ? !address2.equals(that.address2) : that.address2 != null) {
-            return false;
-        }
-        if (billCycleDayLocal != null ? !billCycleDayLocal.equals(that.billCycleDayLocal) : that.billCycleDayLocal != null) {
-            return false;
-        }
-        if (city != null ? !city.equals(that.city) : that.city != null) {
-            return false;
-        }
-        if (company != null ? !company.equals(that.company) : that.company != null) {
-            return false;
-        }
-        if (country != null ? !country.equals(that.country) : that.country != null) {
-            return false;
-        }
-        if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
-            return false;
-        }
-        if (email != null ? !email.equals(that.email) : that.email != null) {
-            return false;
-        }
-        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
-            return false;
-        }
-        if (isMigrated != null ? !isMigrated.equals(that.isMigrated) : that.isMigrated != null) {
-            return false;
-        }
-        if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
-            return false;
-        }
-        if (firstNameLength != null ? !firstNameLength.equals(that.firstNameLength) : that.firstNameLength != null) {
-            return false;
-        }
-        if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
-            return false;
-        }
-        if (name != null ? !name.equals(that.name) : that.name != null) {
-            return false;
-        }
-        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
-            return false;
-        }
-        if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
-            return false;
-        }
-        if (postalCode != null ? !postalCode.equals(that.postalCode) : that.postalCode != null) {
-            return false;
-        }
-        if (state != null ? !state.equals(that.state) : that.state != null) {
-            return false;
-        }
-        if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
-        result = 31 * result + (email != null ? email.hashCode() : 0);
-        result = 31 * result + (billCycleDayLocal != null ? billCycleDayLocal.hashCode() : 0);
-        result = 31 * result + (currency != null ? currency.hashCode() : 0);
-        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
-        result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
-        result = 31 * result + (address1 != null ? address1.hashCode() : 0);
-        result = 31 * result + (address2 != null ? address2.hashCode() : 0);
-        result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
-        result = 31 * result + (company != null ? company.hashCode() : 0);
-        result = 31 * result + (city != null ? city.hashCode() : 0);
-        result = 31 * result + (state != null ? state.hashCode() : 0);
-        result = 31 * result + (country != null ? country.hashCode() : 0);
-        result = 31 * result + (locale != null ? locale.hashCode() : 0);
-        result = 31 * result + (phone != null ? phone.hashCode() : 0);
-        result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
-        result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
-        return result;
     }
 }

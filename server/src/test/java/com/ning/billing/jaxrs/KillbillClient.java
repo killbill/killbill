@@ -1105,7 +1105,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
         // Note: the accountId payload is ignored on account creation
         return new AccountJson(accountId, name, length, externalKey, email, null, currency, null, timeZone,
-                               address1, address2, postalCode, company, city, state, country, locale, phone, false, false);
+                               address1, address2, postalCode, company, city, state, country, locale, phone, false, false, null, null);
     }
 
     /**
