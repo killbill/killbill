@@ -159,7 +159,7 @@ public class AccountTimelineJson {
             final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();
             for (final InvoicePayment chargeback : chargebacksByPayment.get(payment.getId())) {
                 final List<AuditLog> auditLogs = chargebacksAuditLogs.get(chargeback.getId());
-                chargebacks.add(new ChargebackJson(chargeback, auditLogs));
+                chargebacks.add(new ChargebackJson(payment.getAccountId(), chargeback, auditLogs));
             }
 
             final int nbOfPaymentAttempts = payment.getAttempts().size();

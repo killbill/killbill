@@ -47,7 +47,6 @@ import com.ning.billing.clock.Clock;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.jaxrs.json.ChargebackCollectionJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
@@ -118,7 +117,7 @@ public class PaymentResource extends JaxRsResourceBase {
 
             final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();
             for (final InvoicePayment chargeback : invoicePaymentApi.getChargebacksByPaymentId(paymentId, tenantContext)) {
-                chargebacks.add(new ChargebackJson(chargeback));
+                chargebacks.add(new ChargebackJson(payment.getAccountId(), chargeback));
             }
 
             final int nbOfPaymentAttempts = payment.getAttempts().size();
@@ -172,14 +171,12 @@ public class PaymentResource extends JaxRsResourceBase {
         }
 
         final UUID invoicePaymentId = chargebacks.get(0).getId();
-        final String accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(invoicePaymentId, tenantContext).toString();
+        final UUID accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(invoicePaymentId, tenantContext);
         final List<ChargebackJson> chargebacksJson = new ArrayList<ChargebackJson>();
         for (final InvoicePayment chargeback : chargebacks) {
-            chargebacksJson.add(new ChargebackJson(chargeback));
+            chargebacksJson.add(new ChargebackJson(accountId, chargeback));
         }
-        final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
-
-        return Response.status(Response.Status.OK).entity(json).build();
+        return Response.status(Response.Status.OK).entity(chargebacksJson).build();
     }
 
 

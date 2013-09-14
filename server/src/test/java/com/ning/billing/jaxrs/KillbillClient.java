@@ -726,7 +726,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     //
 
     protected ChargebackJson createChargeBack(final String paymentId, final BigDecimal chargebackAmount) throws IOException {
-        final ChargebackJson input = new ChargebackJson(null, null, chargebackAmount, paymentId, null, null);
+        final ChargebackJson input = new ChargebackJson(null, null, null, chargebackAmount, paymentId, null, null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Create the chargeback

@@ -42,6 +42,7 @@ import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -72,8 +73,10 @@ public class ChargebackResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getChargeback(@PathParam("chargebackId") final String chargebackId,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
-        final InvoicePayment chargeback = invoicePaymentApi.getChargebackById(UUID.fromString(chargebackId), context.createContext(request));
-        final ChargebackJson chargebackJson = new ChargebackJson(chargeback);
+        final TenantContext tenantContext = context.createContext(request);
+        final InvoicePayment chargeback = invoicePaymentApi.getChargebackById(UUID.fromString(chargebackId), tenantContext);
+        final UUID accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(chargeback.getId(), tenantContext);
+        final ChargebackJson chargebackJson = new ChargebackJson(accountId, chargeback);
 
         return Response.status(Response.Status.OK).entity(chargebackJson).build();
     }

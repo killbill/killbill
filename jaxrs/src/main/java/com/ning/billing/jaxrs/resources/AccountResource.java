@@ -58,7 +58,6 @@ import com.ning.billing.jaxrs.json.AccountEmailJson;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJson;
-import com.ning.billing.jaxrs.json.ChargebackCollectionJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.InvoiceEmailJson;
@@ -451,16 +450,15 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Produces(APPLICATION_JSON)
-    public Response getChargebacksForAccount(@PathParam("accountId") final String accountId,
+    public Response getChargebacksForAccount(@PathParam("accountId") final String accountIdStr,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) {
-        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(UUID.fromString(accountId), context.createContext(request));
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(accountId, context.createContext(request));
         final List<ChargebackJson> chargebacksJson = new ArrayList<ChargebackJson>();
         for (final InvoicePayment chargeback : chargebacks) {
-            chargebacksJson.add(new ChargebackJson(chargeback));
+            chargebacksJson.add(new ChargebackJson(accountId, chargeback));
         }
-
-        final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
-        return Response.status(Response.Status.OK).entity(json).build();
+        return Response.status(Response.Status.OK).entity(chargebacksJson).build();
     }
 
 
