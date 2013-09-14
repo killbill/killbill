@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -51,9 +50,9 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         final CreditJson creditJson = createCreditJson();
         final List<CreditJson> credits = ImmutableList.<CreditJson>of(creditJson);
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final InvoiceJsonWithBundleKeys invoiceJsonSimple = new InvoiceJsonWithBundleKeys(amount, Currency.USD.toString(), creditAdj, refundAdj, invoiceId, invoiceDate,
+        final InvoiceJson invoiceJsonSimple = new InvoiceJson(amount, Currency.USD.toString(), creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                                           targetDate, invoiceNumber, balance, accountId, bundleKeys,
-                                                                                          credits, auditLogs);
+                                                                                          credits, null, auditLogs);
         Assert.assertEquals(invoiceJsonSimple.getAmount(), amount);
         Assert.assertEquals(invoiceJsonSimple.getCreditAdj(), creditAdj);
         Assert.assertEquals(invoiceJsonSimple.getRefundAdj(), refundAdj);
@@ -68,7 +67,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceJsonSimple.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(invoiceJsonSimple);
-        final InvoiceJsonWithBundleKeys fromJson = mapper.readValue(asJson, InvoiceJsonWithBundleKeys.class);
+        final InvoiceJson fromJson = mapper.readValue(asJson, InvoiceJson.class);
         Assert.assertEquals(fromJson, invoiceJsonSimple);
     }
 
@@ -90,19 +89,19 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         final String bundleKeys = UUID.randomUUID().toString();
         final List<CreditJson> credits = ImmutableList.<CreditJson>of(createCreditJson());
 
-        final InvoiceJsonWithBundleKeys invoiceJsonWithBundleKeys = new InvoiceJsonWithBundleKeys(invoice, bundleKeys, credits, null);
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getAmount(), invoice.getChargedAmount());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getCreditAdj(), invoice.getCreditedAmount());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getRefundAdj(), invoice.getRefundedAmount());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getInvoiceId(), invoice.getId().toString());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getInvoiceDate(), invoice.getInvoiceDate());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getTargetDate(), invoice.getTargetDate());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getInvoiceNumber(), String.valueOf(invoice.getInvoiceNumber()));
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getBalance(), invoice.getBalance());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getAccountId(), invoice.getAccountId().toString());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getBundleKeys(), bundleKeys);
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getCredits(), credits);
-        Assert.assertNull(invoiceJsonWithBundleKeys.getAuditLogs());
+        final InvoiceJson invoiceJson = new InvoiceJson(invoice, bundleKeys, credits, null);
+        Assert.assertEquals(invoiceJson.getAmount(), invoice.getChargedAmount());
+        Assert.assertEquals(invoiceJson.getCreditAdj(), invoice.getCreditedAmount());
+        Assert.assertEquals(invoiceJson.getRefundAdj(), invoice.getRefundedAmount());
+        Assert.assertEquals(invoiceJson.getInvoiceId(), invoice.getId().toString());
+        Assert.assertEquals(invoiceJson.getInvoiceDate(), invoice.getInvoiceDate());
+        Assert.assertEquals(invoiceJson.getTargetDate(), invoice.getTargetDate());
+        Assert.assertEquals(invoiceJson.getInvoiceNumber(), String.valueOf(invoice.getInvoiceNumber()));
+        Assert.assertEquals(invoiceJson.getBalance(), invoice.getBalance());
+        Assert.assertEquals(invoiceJson.getAccountId(), invoice.getAccountId().toString());
+        Assert.assertEquals(invoiceJson.getBundleKeys(), bundleKeys);
+        Assert.assertEquals(invoiceJson.getCredits(), credits);
+        Assert.assertNull(invoiceJson.getAuditLogs());
     }
 
     private CreditJson createCreditJson() {

@@ -26,8 +26,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.InvoiceItemJson;
-import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
-import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
+import com.ning.billing.jaxrs.json.InvoiceJson;
 import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
@@ -111,7 +110,7 @@ public class TestPayment extends TestJaxrsBase {
         final PaymentJson paymentJson = setupScenarioWithPayment();
 
         // Get the individual items for the invoice
-        final InvoiceJsonWithItems invoice = getInvoiceWithItems(paymentJson.getInvoiceId());
+        final InvoiceJson invoice = getInvoiceWithItems(paymentJson.getInvoiceId());
         final InvoiceItemJson itemToAdjust = invoice.getItems().get(0);
 
         // Issue a refund for the full amount
@@ -133,7 +132,7 @@ public class TestPayment extends TestJaxrsBase {
         final PaymentJson paymentJson = setupScenarioWithPayment();
 
         // Get the individual items for the invoice
-        final InvoiceJsonWithItems invoice = getInvoiceWithItems(paymentJson.getInvoiceId());
+        final InvoiceJson invoice = getInvoiceWithItems(paymentJson.getInvoiceId());
         final InvoiceItemJson itemToAdjust = invoice.getItems().get(0);
 
         // Issue a refund for a fraction of the amount
@@ -210,8 +209,8 @@ public class TestPayment extends TestJaxrsBase {
     }
 
     private void verifyInvoice(final PaymentJson paymentJson, final BigDecimal expectedInvoiceBalance) throws IOException {
-        final InvoiceJsonSimple invoiceJsonSimple = getInvoice(paymentJson.getInvoiceId());
-        Assert.assertEquals(invoiceJsonSimple.getBalance().setScale(2, BigDecimal.ROUND_HALF_UP),
+        final InvoiceJson invoiceJson = getInvoice(paymentJson.getInvoiceId());
+        Assert.assertEquals(invoiceJson.getBalance().setScale(2, BigDecimal.ROUND_HALF_UP),
                             expectedInvoiceBalance.setScale(2, BigDecimal.ROUND_HALF_UP));
     }
 }

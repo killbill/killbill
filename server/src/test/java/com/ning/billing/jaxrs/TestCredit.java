@@ -28,7 +28,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.CreditJson;
-import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
+import com.ning.billing.jaxrs.json.InvoiceJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
@@ -45,7 +45,7 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testAddCreditToInvoice() throws Exception {
-        final InvoiceJsonSimple invoice = getInvoicesForAccount(accountJson.getAccountId()).get(1);
+        final InvoiceJson invoice = getInvoicesForAccount(accountJson.getAccountId()).get(1);
 
         final DateTime effectiveDate = clock.getUTCNow();
         final BigDecimal creditAmount = BigDecimal.ONE;

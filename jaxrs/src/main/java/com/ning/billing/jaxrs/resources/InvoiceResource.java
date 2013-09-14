@@ -57,8 +57,7 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.InvoiceItemJson;
-import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
-import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
+import com.ning.billing.jaxrs.json.InvoiceJson;
 import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -125,18 +124,18 @@ public class InvoiceResource extends JaxRsResourceBase {
         final AuditLogsForInvoices invoicesAuditLogs = auditUserApi.getAuditLogsForInvoices(invoices, auditMode.getLevel(), tenantContext);
 
         if (withItems) {
-            final List<InvoiceJsonWithItems> result = new LinkedList<InvoiceJsonWithItems>();
+            final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
             for (final Invoice invoice : invoices) {
-                result.add(new InvoiceJsonWithItems(invoice,
+                result.add(new InvoiceJson(invoice,
                                                     invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
                                                     invoicesAuditLogs.getInvoiceItemsAuditLogs()));
             }
 
             return Response.status(Status.OK).entity(result).build();
         } else {
-            final List<InvoiceJsonSimple> result = new LinkedList<InvoiceJsonSimple>();
+            final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
             for (final Invoice invoice : invoices) {
-                result.add(new InvoiceJsonSimple(invoice,
+                result.add(new InvoiceJson(invoice,
                                                  invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId())));
             }
 
@@ -160,11 +159,11 @@ public class InvoiceResource extends JaxRsResourceBase {
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         } else {
-            final InvoiceJsonSimple json = withItems ?
-                                           new InvoiceJsonWithItems(invoice,
+            final InvoiceJson json = withItems ?
+                                           new InvoiceJson(invoice,
                                                                     invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
                                                                     invoicesAuditLogs.getInvoiceItemsAuditLogs()) :
-                                           new InvoiceJsonSimple(invoice,
+                                           new InvoiceJson(invoice,
                                                                  invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()));
             return Response.status(Status.OK).entity(json).build();
         }
@@ -186,11 +185,11 @@ public class InvoiceResource extends JaxRsResourceBase {
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceNumber);
         } else {
-            final InvoiceJsonSimple json = withItems ?
-                                           new InvoiceJsonWithItems(invoice,
+            final InvoiceJson json = withItems ?
+                                           new InvoiceJson(invoice,
                                                                     invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
                                                                     invoicesAuditLogs.getInvoiceItemsAuditLogs()) :
-                                           new InvoiceJsonSimple(invoice,
+                                           new InvoiceJson(invoice,
                                                                  invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()));
             return Response.status(Status.OK).entity(json).build();
         }
@@ -224,7 +223,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRun,
                                                                              callContext);
         if (dryRun) {
-            return Response.status(Status.OK).entity(new InvoiceJsonSimple(generatedInvoice)).build();
+            return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice, null)).build();
         } else {
             return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", generatedInvoice.getId());
         }

@@ -48,8 +48,7 @@ import com.ning.billing.jaxrs.json.CatalogJsonSimple;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.json.InvoiceItemJson;
-import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
-import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
+import com.ning.billing.jaxrs.json.InvoiceJson;
 import com.ning.billing.jaxrs.json.OverdueStateJson;
 import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
@@ -430,24 +429,24 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return accountJson;
     }
 
-    protected InvoiceJsonSimple getInvoice(final String invoiceId) throws IOException {
+    protected InvoiceJson getInvoice(final String invoiceId) throws IOException {
         return getInvoiceWithAudits(invoiceId, AuditLevel.NONE);
     }
 
-    protected InvoiceJsonSimple getInvoiceWithAudits(final String invoiceId, final AuditLevel auditLevel) throws IOException {
-        return doGetInvoice(invoiceId, Boolean.FALSE, InvoiceJsonSimple.class, auditLevel);
+    protected InvoiceJson getInvoiceWithAudits(final String invoiceId, final AuditLevel auditLevel) throws IOException {
+        return doGetInvoice(invoiceId, Boolean.FALSE, InvoiceJson.class, auditLevel);
     }
 
-    protected InvoiceJsonSimple getInvoice(final Integer invoiceNumber) throws IOException {
+    protected InvoiceJson getInvoice(final Integer invoiceNumber) throws IOException {
         return getInvoice(invoiceNumber.toString());
     }
 
-    protected InvoiceJsonWithItems getInvoiceWithItems(final String invoiceId) throws IOException {
+    protected InvoiceJson getInvoiceWithItems(final String invoiceId) throws IOException {
         return getInvoiceWithItemsWithAudits(invoiceId, AuditLevel.NONE);
     }
 
-    protected InvoiceJsonWithItems getInvoiceWithItemsWithAudits(final String invoiceId, final AuditLevel auditLevel) throws IOException {
-        return doGetInvoice(invoiceId, Boolean.TRUE, InvoiceJsonWithItems.class, auditLevel);
+    protected InvoiceJson getInvoiceWithItemsWithAudits(final String invoiceId, final AuditLevel auditLevel) throws IOException {
+        return doGetInvoice(invoiceId, Boolean.TRUE, InvoiceJson.class, auditLevel);
     }
 
     private <T> T doGetInvoice(final String invoiceId, final Boolean withItems, final Class<T> clazz, final AuditLevel auditLevel) throws IOException {
@@ -467,20 +466,20 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return firstInvoiceJson;
     }
 
-    protected List<InvoiceJsonSimple> getInvoicesForAccount(final String accountId) throws IOException {
+    protected List<InvoiceJson> getInvoicesForAccount(final String accountId) throws IOException {
         return getInvoicesForAccountWithAudits(accountId, AuditLevel.NONE);
     }
 
-    protected List<InvoiceJsonSimple> getInvoicesForAccountWithAudits(final String accountId, final AuditLevel auditLevel) throws IOException {
-        return doGetInvoicesForAccount(accountId, Boolean.FALSE, new TypeReference<List<InvoiceJsonSimple>>() {}, auditLevel);
+    protected List<InvoiceJson> getInvoicesForAccountWithAudits(final String accountId, final AuditLevel auditLevel) throws IOException {
+        return doGetInvoicesForAccount(accountId, Boolean.FALSE, new TypeReference<List<InvoiceJson>>() {}, auditLevel);
     }
 
-    protected List<InvoiceJsonWithItems> getInvoicesWithItemsForAccount(final String accountId) throws IOException {
+    protected List<InvoiceJson> getInvoicesWithItemsForAccount(final String accountId) throws IOException {
         return getInvoicesWithItemsForAccountWithAudits(accountId, AuditLevel.NONE);
     }
 
-    protected List<InvoiceJsonWithItems> getInvoicesWithItemsForAccountWithAudits(final String accountId, final AuditLevel auditLevel) throws IOException {
-        return doGetInvoicesForAccount(accountId, Boolean.TRUE, new TypeReference<List<InvoiceJsonWithItems>>() {}, auditLevel);
+    protected List<InvoiceJson> getInvoicesWithItemsForAccountWithAudits(final String accountId, final AuditLevel auditLevel) throws IOException {
+        return doGetInvoicesForAccount(accountId, Boolean.TRUE, new TypeReference<List<InvoiceJson>>() {}, auditLevel);
     }
 
     private <T> List<T> doGetInvoicesForAccount(final String accountId, final Boolean withItems, final TypeReference<List<T>> clazz, final AuditLevel auditLevel) throws IOException {
@@ -501,7 +500,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return invoices;
     }
 
-    protected InvoiceJsonSimple createDryRunInvoice(final String accountId, final DateTime futureDate) throws IOException {
+    protected InvoiceJson createDryRunInvoice(final String accountId, final DateTime futureDate) throws IOException {
         final String uri = JaxrsResource.INVOICES_PATH;
 
         final Map<String, String> queryParams = new HashMap<String, String>();
@@ -513,7 +512,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         final String baseJson = response.getResponseBody();
-        final InvoiceJsonSimple futureInvoice = mapper.readValue(baseJson, InvoiceJsonSimple.class);
+        final InvoiceJson futureInvoice = mapper.readValue(baseJson, InvoiceJson.class);
         assertNotNull(futureInvoice);
 
         return futureInvoice;
@@ -549,18 +548,18 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
     }
 
-    protected InvoiceJsonWithItems createExternalCharge(final String accountId, final BigDecimal amount, @Nullable final String bundleId,
+    protected InvoiceJson createExternalCharge(final String accountId, final BigDecimal amount, @Nullable final String bundleId,
                                                         @Nullable final Currency currency, @Nullable final DateTime requestedDate) throws Exception {
         return doCreateExternalCharge(accountId, null, bundleId, amount, currency, requestedDate, JaxrsResource.CHARGES_PATH);
     }
 
-    protected InvoiceJsonWithItems createExternalChargeForInvoice(final String accountId, final String invoiceId, @Nullable final String bundleId, final BigDecimal amount,
+    protected InvoiceJson createExternalChargeForInvoice(final String accountId, final String invoiceId, @Nullable final String bundleId, final BigDecimal amount,
                                                                   @Nullable final Currency currency, @Nullable final DateTime requestedDate) throws Exception {
         final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.CHARGES;
         return doCreateExternalCharge(accountId, invoiceId, bundleId, amount, currency, requestedDate, uri);
     }
 
-    private InvoiceJsonWithItems doCreateExternalCharge(final String accountId, @Nullable final String invoiceId, @Nullable final String bundleId, @Nullable final BigDecimal amount,
+    private InvoiceJson doCreateExternalCharge(final String accountId, @Nullable final String invoiceId, @Nullable final String bundleId, @Nullable final BigDecimal amount,
                                                         @Nullable final Currency currency, final DateTime requestedDate, final String uri) throws IOException {
         final Map<String, String> queryParams = new HashMap<String, String>();
         if (requestedDate != null) {
@@ -583,7 +582,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         assertEquals(invoiceResponse.getStatusCode(), Status.OK.getStatusCode());
 
         final String invoicesBaseJson = invoiceResponse.getResponseBody();
-        final InvoiceJsonWithItems invoice = mapper.readValue(invoicesBaseJson, new TypeReference<InvoiceJsonWithItems>() {});
+        final InvoiceJson invoice = mapper.readValue(invoicesBaseJson, new TypeReference<InvoiceJson>() {});
         assertNotNull(invoice);
 
         return invoice;
@@ -696,7 +695,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         doPost(uri, postJson, ImmutableMap.<String, String>of("externalPayment", externalPayment.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
     }
 
-    protected List<PaymentJson> createInstaPayment(final AccountJson accountJson, final InvoiceJsonSimple invoice) throws IOException {
+    protected List<PaymentJson> createInstaPayment(final AccountJson accountJson, final InvoiceJson invoice) throws IOException {
         final PaymentJson payment = new PaymentJson(invoice.getAmount(), BigDecimal.ZERO, accountJson.getAccountId(),
                                                                 invoice.getInvoiceId(), null, null, null, null, null, 0, null, null, null, null, null, null, null, null);
         final String postJson = mapper.writeValueAsString(payment);

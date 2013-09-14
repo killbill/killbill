@@ -37,14 +37,14 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final String reason = UUID.randomUUID().toString();
 
         final BundleJson bundleJson = createBundleWithSubscriptions();
-        final InvoiceJsonSimple invoiceJsonSimple = createInvoice();
-        final PaymentJson paymentJson = createPayment(UUID.fromString(invoiceJsonSimple.getAccountId()),
-                                                                  UUID.fromString(invoiceJsonSimple.getInvoiceId()));
+        final InvoiceJson invoiceJson = createInvoice();
+        final PaymentJson paymentJson = createPayment(UUID.fromString(invoiceJson.getAccountId()),
+                                                                  UUID.fromString(invoiceJson.getInvoiceId()));
 
         final BundleTimelineJson bundleTimelineJson = new BundleTimelineJson(viewId,
                                                                              bundleJson,
                                                                              ImmutableList.<PaymentJson>of(paymentJson),
-                                                                             ImmutableList.<InvoiceJsonSimple>of(invoiceJsonSimple),
+                                                                             ImmutableList.<InvoiceJson>of(invoiceJson),
                                                                              reason);
 
         final String asJson = mapper.writeValueAsString(bundleTimelineJson);
@@ -66,7 +66,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         return new BundleJson(accountId.toString(), bundleId.toString(), externalKey, ImmutableList.<SubscriptionJson>of(entitlementJsonWithEvents), null);
     }
 
-    private InvoiceJsonSimple createInvoice() {
+    private InvoiceJson createInvoice() {
         final UUID accountId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
         final BigDecimal invoiceAmount = BigDecimal.TEN;
@@ -77,8 +77,8 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
 
-        return new InvoiceJsonSimple(invoiceAmount, Currency.USD.toString(), creditAdj, refundAdj, invoiceId.toString(), invoiceDate,
-                                     targetDate, invoiceNumber, balance, accountId.toString(), null);
+        return new InvoiceJson(invoiceAmount, Currency.USD.toString(), creditAdj, refundAdj, invoiceId.toString(), invoiceDate,
+                                     targetDate, invoiceNumber, balance, accountId.toString(), null, null, null, null);
     }
 
     private PaymentJson createPayment(final UUID accountId, final UUID invoiceId) {

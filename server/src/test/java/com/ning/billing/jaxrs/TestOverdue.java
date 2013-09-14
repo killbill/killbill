@@ -23,8 +23,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
-import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
+import com.ning.billing.jaxrs.json.InvoiceJson;
 
 import static org.testng.Assert.assertEquals;
 
@@ -36,7 +35,7 @@ public class TestOverdue extends TestJaxrsBase {
         final AccountJson accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<InvoiceJsonWithItems> invoices = getInvoicesWithItemsForAccount(accountJson.getAccountId());
+        final List<InvoiceJson> invoices = getInvoicesWithItemsForAccount(accountJson.getAccountId());
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final String bundleId = invoices.get(1).getItems().get(0).getBundleId();
@@ -57,7 +56,7 @@ public class TestOverdue extends TestJaxrsBase {
         Assert.assertEquals(getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD3");
 
         // Post external payments
-        for (final InvoiceJsonSimple invoice : getInvoicesForAccount(accountJson.getAccountId())) {
+        for (final InvoiceJson invoice : getInvoicesForAccount(accountJson.getAccountId())) {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
                 createExternalPayment(accountJson, invoice.getInvoiceId(), invoice.getBalance());
             }

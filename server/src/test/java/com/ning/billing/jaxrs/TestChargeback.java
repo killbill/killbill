@@ -32,7 +32,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
-import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
+import com.ning.billing.jaxrs.json.InvoiceJson;
 import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
@@ -188,11 +188,11 @@ public class TestChargeback extends TestJaxrsBase {
     }
 
     private PaymentJson createAccountWithInvoiceAndPayment() throws Exception {
-        final InvoiceJsonSimple invoice = createAccountWithInvoice();
+        final InvoiceJson invoice = createAccountWithInvoice();
         return getPayment(invoice);
     }
 
-    private InvoiceJsonSimple createAccountWithInvoice() throws Exception {
+    private InvoiceJson createAccountWithInvoice() throws Exception {
         // Create account
         final AccountJson accountJson = createAccountWithDefaultPaymentMethod(UUID.randomUUID().toString(), UUID.randomUUID().toString(), "nohup@yahoo.com");
 
@@ -209,7 +209,7 @@ public class TestChargeback extends TestJaxrsBase {
         final Response response = doGet(JaxrsResource.INVOICES_PATH, ImmutableMap.<String, String>of(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId()), DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
-        final List<InvoiceJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<InvoiceJsonSimple>>() {});
+        final List<InvoiceJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<InvoiceJson>>() {});
         assertNotNull(objFromJson);
         // We should have two invoices, one for the trial (zero dollar amount) and one for the first month
         assertEquals(objFromJson.size(), 2);
@@ -218,7 +218,7 @@ public class TestChargeback extends TestJaxrsBase {
         return objFromJson.get(1);
     }
 
-    private PaymentJson getPayment(final InvoiceJsonSimple invoice) throws IOException {
+    private PaymentJson getPayment(final InvoiceJson invoice) throws IOException {
         final String uri = JaxrsResource.INVOICES_PATH + "/" + invoice.getInvoiceId() + "/" + JaxrsResource.PAYMENTS;
         final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 

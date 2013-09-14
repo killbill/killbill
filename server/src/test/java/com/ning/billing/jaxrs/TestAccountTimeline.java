@@ -31,7 +31,7 @@ import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.AuditLogJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CreditJson;
-import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
+import com.ning.billing.jaxrs.json.InvoiceJson;
 import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJson.SubscriptionReadEventJson;
@@ -72,7 +72,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         final DateTime endTime = clock.getUTCNow();
 
         // Add credit
-        final InvoiceJsonSimple invoice = getInvoicesForAccount(accountJson.getAccountId()).get(1);
+        final InvoiceJson invoice = getInvoicesForAccount(accountJson.getAccountId()).get(1);
         final DateTime creditEffectiveDate = clock.getUTCNow();
         final BigDecimal creditAmount = BigDecimal.ONE;
         createCreditForInvoice(accountJson.getAccountId(), invoice.getInvoiceId(),

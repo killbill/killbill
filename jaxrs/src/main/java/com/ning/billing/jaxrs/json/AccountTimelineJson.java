@@ -50,13 +50,13 @@ public class AccountTimelineJson {
 
     private final AccountJson account;
     private final List<BundleJson> bundles;
-    private final List<InvoiceJsonWithBundleKeys> invoices;
+    private final List<InvoiceJson> invoices;
     private final List<PaymentJson> payments;
 
     @JsonCreator
     public AccountTimelineJson(@JsonProperty("account") final AccountJson account,
                                @JsonProperty("bundles") final List<BundleJson> bundles,
-                               @JsonProperty("invoices") final List<InvoiceJsonWithBundleKeys> invoices,
+                               @JsonProperty("invoices") final List<InvoiceJson> invoices,
                                @JsonProperty("payments") final List<PaymentJson> payments) {
         this.account = account;
         this.bundles = bundles;
@@ -127,7 +127,7 @@ public class AccountTimelineJson {
             this.bundles.add(jsonWithSubscriptions);
         }
 
-        this.invoices = new LinkedList<InvoiceJsonWithBundleKeys>();
+        this.invoices = new LinkedList<InvoiceJson>();
         // Extract the credits from the invoices first
         final List<CreditJson> credits = new ArrayList<CreditJson>();
         for (final Invoice invoice : invoices) {
@@ -141,7 +141,7 @@ public class AccountTimelineJson {
         // Create now the invoice json objects
         for (final Invoice invoice : invoices) {
             final List<AuditLog> auditLogs = invoiceAuditLogs.get(invoice.getId());
-            this.invoices.add(new InvoiceJsonWithBundleKeys(invoice,
+            this.invoices.add(new InvoiceJson(invoice,
                                                             getBundleExternalKey(invoice, bundles),
                                                             credits,
                                                             auditLogs));
@@ -181,7 +181,7 @@ public class AccountTimelineJson {
         return bundles;
     }
 
-    public List<InvoiceJsonWithBundleKeys> getInvoices() {
+    public List<InvoiceJson> getInvoices() {
         return invoices;
     }
 

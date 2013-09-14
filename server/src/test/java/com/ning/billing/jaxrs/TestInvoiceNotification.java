@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
+import com.ning.billing.jaxrs.json.InvoiceJson;
 import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
@@ -44,10 +44,10 @@ public class TestInvoiceNotification extends TestJaxrsBase {
         final Response response = doGet(uri, ImmutableMap.<String, String>of(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId()), DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
-        final List<InvoiceJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<InvoiceJsonSimple>>() {});
+        final List<InvoiceJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<InvoiceJson>>() {});
         Assert.assertEquals(objFromJson.size(), 1);
 
-        final InvoiceJsonSimple invoice = objFromJson.get(0);
+        final InvoiceJson invoice = objFromJson.get(0);
         final Response triggerResponse = doPost(uri + "/" + invoice.getInvoiceId() + "/" + JaxrsResource.EMAIL_NOTIFICATIONS,
                                                 null, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(triggerResponse.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
