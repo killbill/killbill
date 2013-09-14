@@ -317,11 +317,149 @@ public class AccountJson extends JsonBase {
         return phone;
     }
 
+    @JsonProperty("isMigrated")
     public Boolean isMigrated() {
         return isMigrated;
     }
 
+    @JsonProperty("isNotifiedForInvoices")
     public Boolean isNotifiedForInvoices() {
         return isNotifiedForInvoices;
+    }
+
+    @Override
+    public String toString() {
+        return "AccountJson{" +
+               "accountId='" + accountId + '\'' +
+               ", externalKey='" + externalKey + '\'' +
+               ", accountCBA=" + accountCBA +
+               ", accountBalance=" + accountBalance +
+               ", name='" + name + '\'' +
+               ", firstNameLength=" + firstNameLength +
+               ", email='" + email + '\'' +
+               ", billCycleDayLocal=" + billCycleDayLocal +
+               ", currency='" + currency + '\'' +
+               ", paymentMethodId='" + paymentMethodId + '\'' +
+               ", timeZone='" + timeZone + '\'' +
+               ", address1='" + address1 + '\'' +
+               ", address2='" + address2 + '\'' +
+               ", postalCode='" + postalCode + '\'' +
+               ", company='" + company + '\'' +
+               ", city='" + city + '\'' +
+               ", state='" + state + '\'' +
+               ", country='" + country + '\'' +
+               ", locale='" + locale + '\'' +
+               ", phone='" + phone + '\'' +
+               ", isMigrated=" + isMigrated +
+               ", isNotifiedForInvoices=" + isNotifiedForInvoices +
+               '}';
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final AccountJson that = (AccountJson) o;
+
+        if (accountBalance != null ? accountBalance.compareTo(that.accountBalance) != 0 : that.accountBalance != null) {
+            return false;
+        }
+        if (accountCBA != null ? accountCBA.compareTo(that.accountCBA) != 0 : that.accountCBA != null) {
+            return false;
+        }
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
+            return false;
+        }
+        if (address2 != null ? !address2.equals(that.address2) : that.address2 != null) {
+            return false;
+        }
+        if (billCycleDayLocal != null ? !billCycleDayLocal.equals(that.billCycleDayLocal) : that.billCycleDayLocal != null) {
+            return false;
+        }
+        if (city != null ? !city.equals(that.city) : that.city != null) {
+            return false;
+        }
+        if (company != null ? !company.equals(that.company) : that.company != null) {
+            return false;
+        }
+        if (country != null ? !country.equals(that.country) : that.country != null) {
+            return false;
+        }
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
+            return false;
+        }
+        if (email != null ? !email.equals(that.email) : that.email != null) {
+            return false;
+        }
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
+            return false;
+        }
+        if (firstNameLength != null ? !firstNameLength.equals(that.firstNameLength) : that.firstNameLength != null) {
+            return false;
+        }
+        if (isMigrated != null ? !isMigrated.equals(that.isMigrated) : that.isMigrated != null) {
+            return false;
+        }
+        if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
+            return false;
+        }
+        if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
+            return false;
+        }
+        if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
+            return false;
+        }
+        if (postalCode != null ? !postalCode.equals(that.postalCode) : that.postalCode != null) {
+            return false;
+        }
+        if (state != null ? !state.equals(that.state) : that.state != null) {
+            return false;
+        }
+        if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        result = 31 * result + (accountCBA != null ? accountCBA.hashCode() : 0);
+        result = 31 * result + (accountBalance != null ? accountBalance.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
+        result = 31 * result + (email != null ? email.hashCode() : 0);
+        result = 31 * result + (billCycleDayLocal != null ? billCycleDayLocal.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
+        result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
+        result = 31 * result + (address1 != null ? address1.hashCode() : 0);
+        result = 31 * result + (address2 != null ? address2.hashCode() : 0);
+        result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
+        result = 31 * result + (company != null ? company.hashCode() : 0);
+        result = 31 * result + (city != null ? city.hashCode() : 0);
+        result = 31 * result + (state != null ? state.hashCode() : 0);
+        result = 31 * result + (country != null ? country.hashCode() : 0);
+        result = 31 * result + (locale != null ? locale.hashCode() : 0);
+        result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
+        result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
+        return result;
     }
 }

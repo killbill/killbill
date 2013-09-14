@@ -88,8 +88,9 @@ public class BundleJson extends JsonBase {
                 }
             }));
             this.subscriptions.add(new SubscriptionJson(cur,
-                                                                  events,
-                                                                  subscriptionsAuditLogs.get(cur.getId()), subscriptionEventsAuditLogs));
+                                                        events,
+                                                        (subscriptionsAuditLogs != null ? subscriptionsAuditLogs.get(cur.getId()) : null),
+                                                        subscriptionEventsAuditLogs));
         }
     }
 

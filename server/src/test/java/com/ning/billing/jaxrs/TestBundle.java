@@ -138,7 +138,7 @@ public class TestBundle extends TestJaxrsBase {
 
         final AccountJson newAccount = createAccountWithDefaultPaymentMethod("dst", "dst", "dst@yahoo.com");
 
-        final BundleJson newBundleInput = new BundleJson(null, newAccount.getAccountId(), null, null, null);
+        final BundleJson newBundleInput = new BundleJson(newAccount.getAccountId(), null, null, null, null);
         final String newBundleInputJson = mapper.writeValueAsString(newBundleInput);
         uri = JaxrsResource.BUNDLES_PATH + "/" + entitlementJsonNoEvents.getBundleId();
         response = doPut(uri, newBundleInputJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);

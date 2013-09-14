@@ -332,21 +332,23 @@ public class SubscriptionJson extends JsonBase {
         this.bundleId = subscription.getBundleId().toString();
         this.subscriptionId = subscription.getId().toString();
         this.externalKey = subscription.getExternalKey();
-        this.events = new LinkedList<SubscriptionReadEventJson>();
-        for (SubscriptionEvent cur : subscriptionEvents) {
-            final BillingPeriod billingPeriod = cur.getNextBillingPeriod() != null ? cur.getNextBillingPeriod() : cur.getPrevBillingPeriod();
-            final Product product = cur.getNextProduct() != null ? cur.getNextProduct() : cur.getPrevProduct();
-            final PriceList priceList = cur.getNextPriceList() != null ? cur.getNextPriceList() : cur.getPrevPriceList();
-            final PlanPhase phase = cur.getNextPhase() != null ? cur.getNextPhase() : cur.getPrevPhase();
-            this.events.add(new SubscriptionReadEventJson(cur.getId().toString(),
-                                                          billingPeriod != null ? billingPeriod.toString() : null,
-                                                          cur.getRequestedDate(),
-                                                          cur.getEffectiveDate(),
-                                                          product != null ? product.getName() : null,
-                                                          priceList != null ? priceList.getName() : null,
-                                                          cur.getSubscriptionEventType().toString(),
-                                                          phase != null ? phase.getName() : null,
-                                                          toAuditLogJson(subscriptionEventsAuditLogs.get(cur.getId()))));
+        this.events = subscriptionEvents != null ? new LinkedList<SubscriptionReadEventJson>() : null;
+        if (events != null) {
+            for (SubscriptionEvent cur : subscriptionEvents) {
+                final BillingPeriod billingPeriod = cur.getNextBillingPeriod() != null ? cur.getNextBillingPeriod() : cur.getPrevBillingPeriod();
+                final Product product = cur.getNextProduct() != null ? cur.getNextProduct() : cur.getPrevProduct();
+                final PriceList priceList = cur.getNextPriceList() != null ? cur.getNextPriceList() : cur.getPrevPriceList();
+                final PlanPhase phase = cur.getNextPhase() != null ? cur.getNextPhase() : cur.getPrevPhase();
+                this.events.add(new SubscriptionReadEventJson(cur.getId().toString(),
+                                                              billingPeriod != null ? billingPeriod.toString() : null,
+                                                              cur.getRequestedDate(),
+                                                              cur.getEffectiveDate(),
+                                                              product != null ? product.getName() : null,
+                                                              priceList != null ? priceList.getName() : null,
+                                                              cur.getSubscriptionEventType().toString(),
+                                                              phase != null ? phase.getName() : null,
+                                                              (subscriptionEventsAuditLogs != null ? toAuditLogJson(subscriptionEventsAuditLogs.get(cur.getId())) : null)));
+            }
         }
         this.newEvents = null;
         this.deletedEvents = null;
