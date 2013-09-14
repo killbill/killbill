@@ -43,7 +43,7 @@ public class TestRefundJson extends JaxrsTestSuiteNoDB {
         final boolean isAdjusted = true;
         final DateTime requestedDate = clock.getUTCNow();
         final DateTime effectiveDate = clock.getUTCNow();
-        final List<InvoiceItemJsonSimple> adjustments = ImmutableList.<InvoiceItemJsonSimple>of(createInvoiceItemJson());
+        final List<InvoiceItemJson> adjustments = ImmutableList.<InvoiceItemJson>of(createInvoiceItemJson());
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final RefundJson refundJson = new RefundJson(refundId, paymentId, amount, currency, isAdjusted, requestedDate,
                                                      effectiveDate, adjustments, auditLogs);
@@ -62,7 +62,7 @@ public class TestRefundJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(fromJson, refundJson);
     }
 
-    private InvoiceItemJsonSimple createInvoiceItemJson() {
+    private InvoiceItemJson createInvoiceItemJson() {
         final String invoiceItemId = UUID.randomUUID().toString();
         final String invoiceId = UUID.randomUUID().toString();
         final String linkedInvoiceItemId = UUID.randomUUID().toString();
@@ -77,7 +77,7 @@ public class TestRefundJson extends JaxrsTestSuiteNoDB {
         final BigDecimal amount = BigDecimal.TEN;
         final Currency currency = Currency.MXN;
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        return new InvoiceItemJsonSimple(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId, bundleId, subscriptionId,
+        return new InvoiceItemJson(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId, bundleId, subscriptionId,
                                          planName, phaseName, description, startDate, endDate,
                                          amount, currency, auditLogs);
     }

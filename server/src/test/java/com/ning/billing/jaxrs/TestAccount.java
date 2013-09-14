@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AuditLogJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
-import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.TagJson;
@@ -248,7 +248,7 @@ public class TestAccount extends TestJaxrsBase {
         final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Verify payments
-        final List<PaymentJsonSimple> objFromJson = getPaymentsForAccount(accountJson.getAccountId());
+        final List<PaymentJson> objFromJson = getPaymentsForAccount(accountJson.getAccountId());
         Assert.assertEquals(objFromJson.size(), 1);
 
         // Verify refunds

@@ -27,10 +27,10 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AuditLogJson;
-import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
+import com.ning.billing.jaxrs.json.InvoiceItemJson;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
-import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.billing.util.api.AuditLevel;
@@ -91,7 +91,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoices.size(), 2);
 
         for (final InvoiceJsonSimple cur : invoices) {
-            final List<PaymentJsonSimple> objFromJson = getPaymentsForInvoice(cur.getInvoiceId());
+            final List<PaymentJson> objFromJson = getPaymentsForInvoice(cur.getInvoiceId());
 
             if (cur.getAmount().compareTo(BigDecimal.ZERO) == 0) {
                 assertEquals(objFromJson.size(), 0);
@@ -143,7 +143,7 @@ public class TestInvoice extends TestJaxrsBase {
             }
 
             // CREATE INSTA PAYMENT
-            final List<PaymentJsonSimple> objFromJson = createInstaPayment(accountJson, cur);
+            final List<PaymentJson> objFromJson = createInstaPayment(accountJson, cur);
             assertEquals(objFromJson.size(), 1);
             assertEquals(cur.getAmount().compareTo(objFromJson.get(0).getAmount()), 0);
         }
@@ -154,7 +154,7 @@ public class TestInvoice extends TestJaxrsBase {
         final AccountJson accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Verify we didn't get any payment
-        final List<PaymentJsonSimple> noPaymentsFromJson = getPaymentsForAccount(accountJson.getAccountId());
+        final List<PaymentJson> noPaymentsFromJson = getPaymentsForAccount(accountJson.getAccountId());
         assertEquals(noPaymentsFromJson.size(), 0);
 
         // Get the invoices
@@ -168,7 +168,7 @@ public class TestInvoice extends TestJaxrsBase {
         createExternalPayment(accountJson, invoiceId, paidAmount);
 
         // Verify we indeed got the payment
-        final List<PaymentJsonSimple> paymentsFromJson = getPaymentsForAccount(accountJson.getAccountId());
+        final List<PaymentJson> paymentsFromJson = getPaymentsForAccount(accountJson.getAccountId());
         assertEquals(paymentsFromJson.size(), 1);
         assertEquals(paymentsFromJson.get(0).getPaidAmount().compareTo(paidAmount), 0);
 
@@ -192,7 +192,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceJsonWithItems invoice = invoices.get(1);
         // Verify the invoice we picked is non zero
         assertEquals(invoice.getAmount().compareTo(BigDecimal.ZERO), 1);
-        final InvoiceItemJsonSimple invoiceItem = invoice.getItems().get(0);
+        final InvoiceItemJson invoiceItem = invoice.getItems().get(0);
         // Verify the item we picked is non zero
         assertEquals(invoiceItem.getAmount().compareTo(BigDecimal.ZERO), 1);
 
@@ -249,7 +249,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceJsonWithItems invoice = invoices.get(1);
         // Verify the invoice we picked is non zero
         assertEquals(invoice.getAmount().compareTo(BigDecimal.ZERO), 1);
-        final InvoiceItemJsonSimple invoiceItem = invoice.getItems().get(0);
+        final InvoiceItemJson invoiceItem = invoice.getItems().get(0);
         // Verify the item we picked is non zero
         assertEquals(invoiceItem.getAmount().compareTo(BigDecimal.ZERO), 1);
 

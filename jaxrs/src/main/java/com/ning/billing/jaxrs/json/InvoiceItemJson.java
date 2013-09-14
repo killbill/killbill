@@ -30,7 +30,7 @@ import com.ning.billing.util.audit.AuditLog;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class InvoiceItemJsonSimple extends JsonBase {
+public class InvoiceItemJson extends JsonBase {
 
     private final String invoiceItemId;
     private final String invoiceId;
@@ -47,20 +47,20 @@ public class InvoiceItemJsonSimple extends JsonBase {
     private final Currency currency;
 
     @JsonCreator
-    public InvoiceItemJsonSimple(@JsonProperty("invoiceItemId") final String invoiceItemId,
-                                 @JsonProperty("invoiceId") final String invoiceId,
-                                 @JsonProperty("linkedInvoiceItemId") final String linkedInvoiceItemId,
-                                 @JsonProperty("accountId") final String accountId,
-                                 @JsonProperty("bundleId") final String bundleId,
-                                 @JsonProperty("subscriptionId") final String subscriptionId,
-                                 @JsonProperty("planName") final String planName,
-                                 @JsonProperty("phaseName") final String phaseName,
-                                 @JsonProperty("description") final String description,
-                                 @JsonProperty("startDate") final LocalDate startDate,
-                                 @JsonProperty("endDate") final LocalDate endDate,
-                                 @JsonProperty("amount") final BigDecimal amount,
-                                 @JsonProperty("currency") final Currency currency,
-                                 @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+    public InvoiceItemJson(@JsonProperty("invoiceItemId") final String invoiceItemId,
+                           @JsonProperty("invoiceId") final String invoiceId,
+                           @JsonProperty("linkedInvoiceItemId") final String linkedInvoiceItemId,
+                           @JsonProperty("accountId") final String accountId,
+                           @JsonProperty("bundleId") final String bundleId,
+                           @JsonProperty("subscriptionId") final String subscriptionId,
+                           @JsonProperty("planName") final String planName,
+                           @JsonProperty("phaseName") final String phaseName,
+                           @JsonProperty("description") final String description,
+                           @JsonProperty("startDate") final LocalDate startDate,
+                           @JsonProperty("endDate") final LocalDate endDate,
+                           @JsonProperty("amount") final BigDecimal amount,
+                           @JsonProperty("currency") final Currency currency,
+                           @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.invoiceItemId = invoiceItemId;
         this.invoiceId = invoiceId;
@@ -77,14 +77,14 @@ public class InvoiceItemJsonSimple extends JsonBase {
         this.currency = currency;
     }
 
-    public InvoiceItemJsonSimple(final InvoiceItem item, @Nullable final List<AuditLog> auditLogs) {
+    public InvoiceItemJson(final InvoiceItem item, @Nullable final List<AuditLog> auditLogs) {
         this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getLinkedItemId()),
              toString(item.getAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
              item.getPlanName(), item.getPhaseName(), item.getDescription(), item.getStartDate(), item.getEndDate(),
              item.getAmount(), item.getCurrency(), toAuditLogJson(auditLogs));
     }
 
-    public InvoiceItemJsonSimple(final InvoiceItem input) {
+    public InvoiceItemJson(final InvoiceItem input) {
         this(input, null);
     }
 
@@ -143,7 +143,7 @@ public class InvoiceItemJsonSimple extends JsonBase {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("InvoiceItemJsonSimple");
+        sb.append("InvoiceItemJson");
         sb.append("{invoiceItemId='").append(invoiceItemId).append('\'');
         sb.append(", invoiceId='").append(invoiceId).append('\'');
         sb.append(", linkedInvoiceItemId='").append(linkedInvoiceItemId).append('\'');
@@ -170,7 +170,7 @@ public class InvoiceItemJsonSimple extends JsonBase {
             return false;
         }
 
-        final InvoiceItemJsonSimple that = (InvoiceItemJsonSimple) o;
+        final InvoiceItemJson that = (InvoiceItemJson) o;
 
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;

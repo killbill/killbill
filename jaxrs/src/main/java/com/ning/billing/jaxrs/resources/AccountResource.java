@@ -62,7 +62,7 @@ import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.InvoiceEmailJson;
 import com.ning.billing.jaxrs.json.OverdueStateJson;
-import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -378,9 +378,9 @@ public class AccountResource extends JaxRsResourceBase {
     public Response getPayments(@PathParam("accountId") final String accountId,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final List<Payment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId), context.createContext(request));
-        final List<PaymentJsonSimple> result = new ArrayList<PaymentJsonSimple>(payments.size());
+        final List<PaymentJson> result = new ArrayList<PaymentJson>(payments.size());
         for (final Payment payment : payments) {
-            result.add(new PaymentJsonSimple(payment));
+            result.add(new PaymentJson(payment, null));
         }
         return Response.status(Status.OK).entity(result).build();
     }

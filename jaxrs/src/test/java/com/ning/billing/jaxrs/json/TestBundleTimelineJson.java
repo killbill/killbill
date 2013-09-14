@@ -38,12 +38,12 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
         final BundleJson bundleJson = createBundleWithSubscriptions();
         final InvoiceJsonSimple invoiceJsonSimple = createInvoice();
-        final PaymentJsonSimple paymentJsonSimple = createPayment(UUID.fromString(invoiceJsonSimple.getAccountId()),
+        final PaymentJson paymentJson = createPayment(UUID.fromString(invoiceJsonSimple.getAccountId()),
                                                                   UUID.fromString(invoiceJsonSimple.getInvoiceId()));
 
         final BundleTimelineJson bundleTimelineJson = new BundleTimelineJson(viewId,
                                                                              bundleJson,
-                                                                             ImmutableList.<PaymentJsonSimple>of(paymentJsonSimple),
+                                                                             ImmutableList.<PaymentJson>of(paymentJson),
                                                                              ImmutableList.<InvoiceJsonSimple>of(invoiceJsonSimple),
                                                                              reason);
 
@@ -81,7 +81,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
                                      targetDate, invoiceNumber, balance, accountId.toString(), null);
     }
 
-    private PaymentJsonSimple createPayment(final UUID accountId, final UUID invoiceId) {
+    private PaymentJson createPayment(final UUID accountId, final UUID invoiceId) {
         final UUID paymentId = UUID.randomUUID();
         final Integer paymentNumber = 17;
         final UUID paymentMethodId = UUID.randomUUID();
@@ -94,8 +94,8 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final String status = UUID.randomUUID().toString();
         final String gatewayErrorCode = "OK";
         final String gatewayErrorMsg = "Excellent...";
-        return new PaymentJsonSimple(amount, paidAmount, accountId.toString(), invoiceId.toString(), paymentId.toString(), paymentNumber.toString(),
+        return new PaymentJson(amount, paidAmount, accountId.toString(), invoiceId.toString(), paymentId.toString(), paymentNumber.toString(),
                                      paymentMethodId.toString(), paymentRequestedDate, paymentEffectiveDate, retryCount, currency, status,
-                                     gatewayErrorCode, gatewayErrorMsg, null);
+                                     gatewayErrorCode, gatewayErrorMsg, null, null, null, null);
     }
 }

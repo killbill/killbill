@@ -56,10 +56,10 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
-import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
+import com.ning.billing.jaxrs.json.InvoiceItemJson;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
-import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.payment.api.Payment;
@@ -254,7 +254,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/{invoiceId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response adjustInvoiceItem(final InvoiceItemJsonSimple json,
+    public Response adjustInvoiceItem(final InvoiceItemJson json,
                                       @PathParam("invoiceId") final String invoiceId,
                                       @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -298,7 +298,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/" +CHARGES)
-    public Response createExternalCharge(final InvoiceItemJsonSimple externalChargeJson,
+    public Response createExternalCharge(final InvoiceItemJson externalChargeJson,
                                          @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                          @HeaderParam(HDR_REASON) final String reason,
@@ -337,7 +337,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CHARGES)
-    public Response createExternalChargeForInvoice(final InvoiceItemJsonSimple externalChargeJson,
+    public Response createExternalChargeForInvoice(final InvoiceItemJson externalChargeJson,
                                                    @PathParam("invoiceId") final String invoiceIdString,
                                                    @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -384,9 +384,9 @@ public class InvoiceResource extends JaxRsResourceBase {
         final List<Payment> payments = paymentApi.getInvoicePayments(UUID.fromString(invoiceId), tenantContext);
         final AuditLogsForPayments auditLogsForPayments = auditUserApi.getAuditLogsForPayments(payments, auditMode.getLevel(), tenantContext);
 
-        final List<PaymentJsonSimple> result = new ArrayList<PaymentJsonSimple>(payments.size());
+        final List<PaymentJson> result = new ArrayList<PaymentJson>(payments.size());
         for (final Payment cur : payments) {
-            result.add(new PaymentJsonSimple(cur, auditLogsForPayments.getPaymentsAuditLogs().get(cur.getId())));
+            result.add(new PaymentJson(cur, auditLogsForPayments.getPaymentsAuditLogs().get(cur.getId())));
         }
 
         return Response.status(Status.OK).entity(result).build();
@@ -396,7 +396,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/" + PAYMENTS)
-    public Response payAllInvoices(final PaymentJsonSimple payment,
+    public Response payAllInvoices(final PaymentJson payment,
                                    @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
@@ -422,7 +422,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
-    public Response createInstantPayment(final PaymentJsonSimple payment,
+    public Response createInstantPayment(final PaymentJson payment,
                                          @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                          @HeaderParam(HDR_REASON) final String reason,

@@ -33,7 +33,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
-import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
@@ -50,13 +50,13 @@ public class TestChargeback extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testAddChargeback() throws Exception {
-        final PaymentJsonSimple payment = createAccountWithInvoiceAndPayment();
+        final PaymentJson payment = createAccountWithInvoiceAndPayment();
         createAndVerifyChargeback(payment);
     }
 
     @Test(groups = "slow")
     public void testMultipleChargeback() throws Exception {
-        final PaymentJsonSimple payment = createAccountWithInvoiceAndPayment();
+        final PaymentJson payment = createAccountWithInvoiceAndPayment();
 
         // We get a 249.95 payment so we do 4 chargeback and then the fifth should fail
         final ChargebackJson input = new ChargebackJson(null, null, null, new BigDecimal("50.00"), payment.getPaymentId(), null, null);
@@ -94,7 +94,7 @@ public class TestChargeback extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testAddChargebackForDeletedPaymentMethod() throws Exception {
-        final PaymentJsonSimple payment = createAccountWithInvoiceAndPayment();
+        final PaymentJson payment = createAccountWithInvoiceAndPayment();
 
         // Check the payment method exists
         assertEquals(getAccountById(payment.getAccountId()).getPaymentMethodId(), payment.getPaymentMethodId());
@@ -149,7 +149,7 @@ public class TestChargeback extends TestJaxrsBase {
         //assertEquals(response.getStatusCode(),Status.NO_CONTENT.getStatusCode(), response.getResponseBody());
     }
 
-    private void createAndVerifyChargeback(final PaymentJsonSimple payment) throws IOException {
+    private void createAndVerifyChargeback(final PaymentJson payment) throws IOException {
         final ChargebackJson input = new ChargebackJson(null, null, null, BigDecimal.TEN, payment.getPaymentId(), null, null);
         final String jsonInput = mapper.writeValueAsString(input);
 
@@ -187,7 +187,7 @@ public class TestChargeback extends TestJaxrsBase {
         assertTrue(objFromJson.getAmount().compareTo(input.getAmount()) == 0);
     }
 
-    private PaymentJsonSimple createAccountWithInvoiceAndPayment() throws Exception {
+    private PaymentJson createAccountWithInvoiceAndPayment() throws Exception {
         final InvoiceJsonSimple invoice = createAccountWithInvoice();
         return getPayment(invoice);
     }
@@ -218,13 +218,13 @@ public class TestChargeback extends TestJaxrsBase {
         return objFromJson.get(1);
     }
 
-    private PaymentJsonSimple getPayment(final InvoiceJsonSimple invoice) throws IOException {
+    private PaymentJson getPayment(final InvoiceJsonSimple invoice) throws IOException {
         final String uri = JaxrsResource.INVOICES_PATH + "/" + invoice.getInvoiceId() + "/" + JaxrsResource.PAYMENTS;
         final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
-        final List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
+        final List<PaymentJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJson>>() {});
         assertNotNull(objFromJson);
         assertEquals(objFromJson.size(), 1);
 

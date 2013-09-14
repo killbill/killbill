@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class InvoiceJsonWithItems extends InvoiceJsonSimple {
 
-    private final List<InvoiceItemJsonSimple> items;
+    private final List<InvoiceItemJson> items;
 
     @JsonCreator
     public InvoiceJsonWithItems(@JsonProperty("amount") final BigDecimal amount,
@@ -49,21 +49,21 @@ public class InvoiceJsonWithItems extends InvoiceJsonSimple {
                                 @JsonProperty("invoiceNumber") final String invoiceNumber,
                                 @JsonProperty("balance") final BigDecimal balance,
                                 @JsonProperty("accountId") final String accountId,
-                                @JsonProperty("items") final List<InvoiceItemJsonSimple> items,
+                                @JsonProperty("items") final List<InvoiceItemJson> items,
                                 @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(amount, currency, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId, auditLogs);
-        this.items = new ArrayList<InvoiceItemJsonSimple>(items);
+        this.items = new ArrayList<InvoiceItemJson>(items);
     }
 
     public InvoiceJsonWithItems(final Invoice input, @Nullable final List<AuditLog> invoiceAuditLogs, @Nullable final Map<UUID, List<AuditLog>> invoiceItemsAuditLogs) {
         super(input, invoiceAuditLogs);
-        this.items = new ArrayList<InvoiceItemJsonSimple>(input.getInvoiceItems().size());
+        this.items = new ArrayList<InvoiceItemJson>(input.getInvoiceItems().size());
         for (final InvoiceItem item : input.getInvoiceItems()) {
-            this.items.add(new InvoiceItemJsonSimple(item, invoiceItemsAuditLogs == null ? null : invoiceItemsAuditLogs.get(item.getId())));
+            this.items.add(new InvoiceItemJson(item, invoiceItemsAuditLogs == null ? null : invoiceItemsAuditLogs.get(item.getId())));
         }
     }
 
-    public List<InvoiceItemJsonSimple> getItems() {
+    public List<InvoiceItemJson> getItems() {
         return Collections.unmodifiableList(items);
     }
 

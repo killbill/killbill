@@ -27,7 +27,7 @@ public class BundleTimelineJson {
 
     private final BundleJson bundle;
 
-    private final List<PaymentJsonSimple> payments;
+    private final List<PaymentJson> payments;
 
     private final List<InvoiceJsonSimple> invoices;
 
@@ -37,7 +37,7 @@ public class BundleTimelineJson {
     @JsonCreator
     public BundleTimelineJson(@JsonProperty("viewId") final String viewId,
                               @JsonProperty("bundle") final BundleJson bundle,
-                              @JsonProperty("payments") final List<PaymentJsonSimple> payments,
+                              @JsonProperty("payments") final List<PaymentJson> payments,
                               @JsonProperty("invoices") final List<InvoiceJsonSimple> invoices,
                               @JsonProperty("reasonForChange") final String reason) {
         this.viewId = viewId;
@@ -55,7 +55,7 @@ public class BundleTimelineJson {
         return bundle;
     }
 
-    public List<PaymentJsonSimple> getPayments() {
+    public List<PaymentJson> getPayments() {
         return payments;
     }
 

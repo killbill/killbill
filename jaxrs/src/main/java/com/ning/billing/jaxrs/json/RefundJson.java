@@ -42,7 +42,7 @@ public class RefundJson extends JsonBase {
     private final Boolean isAdjusted;
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
-    private final List<InvoiceItemJsonSimple> adjustments;
+    private final List<InvoiceItemJson> adjustments;
 
     @JsonCreator
     public RefundJson(@JsonProperty("refundId") final String refundId,
@@ -52,7 +52,7 @@ public class RefundJson extends JsonBase {
                       @JsonProperty("adjusted") final Boolean isAdjusted,
                       @JsonProperty("requestedDate") final DateTime requestedDate,
                       @JsonProperty("effectiveDate") final DateTime effectiveDate,
-                      @JsonProperty("adjustments") @Nullable final List<InvoiceItemJsonSimple> adjustments,
+                      @JsonProperty("adjustments") @Nullable final List<InvoiceItemJson> adjustments,
                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.refundId = refundId;
@@ -72,10 +72,10 @@ public class RefundJson extends JsonBase {
     public RefundJson(final Refund refund, @Nullable final List<InvoiceItem> adjustments, @Nullable final List<AuditLog> auditLogs) {
         this(refund.getId().toString(), refund.getPaymentId().toString(), refund.getRefundAmount(), refund.getCurrency().toString(),
              refund.isAdjusted(), refund.getEffectiveDate(), refund.getEffectiveDate(),
-             adjustments == null ? null : ImmutableList.<InvoiceItemJsonSimple>copyOf(Collections2.transform(adjustments, new Function<InvoiceItem, InvoiceItemJsonSimple>() {
+             adjustments == null ? null : ImmutableList.<InvoiceItemJson>copyOf(Collections2.transform(adjustments, new Function<InvoiceItem, InvoiceItemJson>() {
                  @Override
-                 public InvoiceItemJsonSimple apply(@Nullable final InvoiceItem input) {
-                     return new InvoiceItemJsonSimple(input);
+                 public InvoiceItemJson apply(@Nullable final InvoiceItem input) {
+                     return new InvoiceItemJson(input);
                  }
              })),
              toAuditLogJson(auditLogs));
@@ -109,7 +109,7 @@ public class RefundJson extends JsonBase {
         return effectiveDate;
     }
 
-    public List<InvoiceItemJsonSimple> getAdjustments() {
+    public List<InvoiceItemJson> getAdjustments() {
         return adjustments;
     }
 

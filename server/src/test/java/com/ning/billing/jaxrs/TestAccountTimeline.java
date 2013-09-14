@@ -32,8 +32,7 @@ import com.ning.billing.jaxrs.json.AuditLogJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
-import com.ning.billing.jaxrs.json.PaymentJsonSimple;
-import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
+import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJson.SubscriptionReadEventJson;
 import com.ning.billing.util.api.AuditLevel;
@@ -80,7 +79,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
                                creditAmount, clock.getUTCNow(), creditEffectiveDate);
 
         // Add refund
-        final PaymentJsonSimple postedPayment = getPaymentsForAccount(accountJson.getAccountId()).get(0);
+        final PaymentJson postedPayment = getPaymentsForAccount(accountJson.getAccountId()).get(0);
         final BigDecimal refundAmount = BigDecimal.ONE;
         createRefund(postedPayment.getPaymentId(), refundAmount);
 
@@ -108,7 +107,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
 
             // Verify payments
             Assert.assertEquals(timeline.getPayments().size(), 1);
-            final PaymentJsonWithBundleKeys paymentJson = timeline.getPayments().get(0);
+            final PaymentJson paymentJson = timeline.getPayments().get(0);
 
             // Verify refunds
             Assert.assertEquals(paymentJson.getRefunds().size(), 1);

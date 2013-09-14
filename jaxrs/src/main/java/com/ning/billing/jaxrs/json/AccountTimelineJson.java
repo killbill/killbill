@@ -51,13 +51,13 @@ public class AccountTimelineJson {
     private final AccountJson account;
     private final List<BundleJson> bundles;
     private final List<InvoiceJsonWithBundleKeys> invoices;
-    private final List<PaymentJsonWithBundleKeys> payments;
+    private final List<PaymentJson> payments;
 
     @JsonCreator
     public AccountTimelineJson(@JsonProperty("account") final AccountJson account,
                                @JsonProperty("bundles") final List<BundleJson> bundles,
                                @JsonProperty("invoices") final List<InvoiceJsonWithBundleKeys> invoices,
-                               @JsonProperty("payments") final List<PaymentJsonWithBundleKeys> payments) {
+                               @JsonProperty("payments") final List<PaymentJson> payments) {
         this.account = account;
         this.bundles = bundles;
         this.invoices = invoices;
@@ -147,7 +147,7 @@ public class AccountTimelineJson {
                                                             auditLogs));
         }
 
-        this.payments = new LinkedList<PaymentJsonWithBundleKeys>();
+        this.payments = new LinkedList<PaymentJson>();
         for (final Payment payment : payments) {
             final List<RefundJson> refunds = new ArrayList<RefundJson>();
             for (final Refund refund : refundsByPayment.get(payment.getId())) {
@@ -165,12 +165,9 @@ public class AccountTimelineJson {
             final int nbOfPaymentAttempts = payment.getAttempts().size();
             final String status = payment.getPaymentStatus().toString();
             final List<AuditLog> auditLogs = paymentsAuditLogs.get(payment.getId());
-            this.payments.add(new PaymentJsonWithBundleKeys(payment,
-                                                            status,
-                                                            nbOfPaymentAttempts,
-                                                            getBundleExternalKey(payment.getInvoiceId(), invoices, bundles),
-                                                            account.getId(),
-                                                            refunds,
+            this.payments.add(new PaymentJson(payment,
+                                              getBundleExternalKey(payment.getInvoiceId(), invoices, bundles),
+                                              refunds,
                                                             chargebacks,
                                                             auditLogs));
         }
@@ -188,7 +185,7 @@ public class AccountTimelineJson {
         return invoices;
     }
 
-    public List<PaymentJsonWithBundleKeys> getPayments() {
+    public List<PaymentJson> getPayments() {
         return payments;
     }
 

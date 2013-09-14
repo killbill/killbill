@@ -49,9 +49,8 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
-import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
-import com.ning.billing.jaxrs.json.PaymentJsonSimple;
-import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
+import com.ning.billing.jaxrs.json.InvoiceItemJson;
+import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -108,7 +107,7 @@ public class PaymentResource extends JaxRsResourceBase {
         final UUID paymentId = UUID.fromString(paymentIdString);
         final Payment payment = paymentApi.getPayment(paymentId, false, tenantContext);
 
-        final PaymentJsonSimple paymentJsonSimple;
+        final PaymentJson paymentJson;
         if (withRefundsAndChargebacks) {
             final List<RefundJson> refunds = new ArrayList<RefundJson>();
             for (final Refund refund : paymentApi.getPaymentRefunds(paymentId, tenantContext)) {
@@ -120,20 +119,15 @@ public class PaymentResource extends JaxRsResourceBase {
                 chargebacks.add(new ChargebackJson(payment.getAccountId(), chargeback));
             }
 
-            final int nbOfPaymentAttempts = payment.getAttempts().size();
-            final String status = payment.getPaymentStatus().toString();
-            paymentJsonSimple = new PaymentJsonWithBundleKeys(payment,
-                                                              status,
-                                                              nbOfPaymentAttempts,
-                                                              null, // TODO - the keys are really only used for the timeline
-                                                              payment.getAccountId(),
+            paymentJson = new PaymentJson(payment,
+                                          null, // TODO - the keys are really only used for the timeline
                                                               refunds,
                                                               chargebacks);
         } else {
-            paymentJsonSimple = new PaymentJsonSimple(payment);
+            paymentJson = new PaymentJson(payment, null);
         }
 
-        return Response.status(Status.OK).entity(paymentJsonSimple).build();
+        return Response.status(Status.OK).entity(paymentJson).build();
     }
 
     @PUT
@@ -153,7 +147,7 @@ public class PaymentResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
         final Payment newPayment = paymentApi.retryPayment(account, paymentId, callContext);
 
-        return Response.status(Status.OK).entity(new PaymentJsonSimple(newPayment)).build();
+        return Response.status(Status.OK).entity(new PaymentJson(newPayment, null)).build();
     }
 
 
@@ -218,7 +212,7 @@ public class PaymentResource extends JaxRsResourceBase {
         if (json.isAdjusted()) {
             if (json.getAdjustments() != null && json.getAdjustments().size() > 0) {
                 final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
-                for (final InvoiceItemJsonSimple item : json.getAdjustments()) {
+                for (final InvoiceItemJson item : json.getAdjustments()) {
                     adjustments.put(UUID.fromString(item.getInvoiceItemId()), item.getAmount());
                 }
                 result = paymentApi.createRefundWithItemsAdjustments(account, paymentUuid, adjustments, callContext);
