@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.2.6">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/commons/killbill-clock/0.2.6/killbill-clock-0.2.6-tests.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/commons/killbill-clock/0.2.6/killbill-clock-0.2.6-test-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/commons/killbill-clock/0.2.6/killbill-clock-0.2.6-test-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -279,7 +279,7 @@ public class SubscriptionJson extends JsonBase {
     @JsonCreator
     public SubscriptionJson(@JsonProperty("accountId") @Nullable final String accountId,
                             @JsonProperty("bundleId") @Nullable final String bundleId,
-                            @JsonProperty("entitlementId") @Nullable final String entitlementId,
+                            @JsonProperty("subscriptionId") @Nullable final String subscriptionId,
                             @JsonProperty("externalKey") @Nullable final String externalKey,
                             @JsonProperty("startDate") @Nullable final LocalDate startDate,
                             @JsonProperty("productName") @Nullable final String productName,
@@ -306,7 +306,7 @@ public class SubscriptionJson extends JsonBase {
         this.billingEndDate = billingEndDate;
         this.accountId = accountId;
         this.bundleId = bundleId;
-        this.subscriptionId = entitlementId;
+        this.subscriptionId = subscriptionId;
         this.externalKey = externalKey;
         this.events = events;
         this.deletedEvents = deletedEvents;
