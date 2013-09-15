@@ -16,9 +16,11 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import java.util.UUID;
+import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -34,17 +36,24 @@ import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.clock.ClockMock;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.notificationq.api.NotificationQueue;
+import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.callcontext.TenantContext;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -62,9 +71,17 @@ public class TestResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(TestResource.class);
 
+    private final NotificationQueueService notificationQueueService;
+    private final RecordIdApi recordIdApi;
+
     @Inject
-    public TestResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi, final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final Clock clock, final Context context) {
+    public TestResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi,
+                        final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final RecordIdApi recordIdApi,
+                        final NotificationQueueService notificationQueueService,
+                        final Clock clock, final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        this.notificationQueueService = notificationQueueService;
+        this.recordIdApi = recordIdApi;
     }
 
 
@@ -111,7 +128,8 @@ public class TestResource extends JaxRsResourceBase {
     @Path("/clock")
     @Produces(APPLICATION_JSON)
     public Response setTestClockTime(@QueryParam(QUERY_REQUESTED_DT) final String requestedClockDate,
-                                     @QueryParam("timeZone") final String timeZoneStr) {
+                                     @QueryParam("timeZone") final String timeZoneStr,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
 
         final ClockMock testClock = getClockMock();
         if (requestedClockDate == null) {
@@ -121,6 +139,9 @@ public class TestResource extends JaxRsResourceBase {
             final DateTime newTime = DATE_TIME_FORMATTER.parseDateTime(requestedClockDate);
             testClock.setTime(newTime);
         }
+
+        waitForNotificationToComplete(request);
+
         return getCurrentTime(timeZoneStr);
     }
 
@@ -132,7 +153,8 @@ public class TestResource extends JaxRsResourceBase {
                                         @QueryParam("weeks") final Integer addWeeks,
                                         @QueryParam("months") final Integer addMonths,
                                         @QueryParam("years") final Integer addYears,
-                                        @QueryParam("timeZone") final String timeZoneStr) {
+                                        @QueryParam("timeZone") final String timeZoneStr,
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) {
 
         final ClockMock testClock = getClockMock();
         if (addDays != null) {
@@ -144,9 +166,41 @@ public class TestResource extends JaxRsResourceBase {
         } else if (addYears != null) {
             testClock.addYears(addYears);
         }
+
+        waitForNotificationToComplete(request);
+
         return getCurrentTime(timeZoneStr);
     }
 
+
+    private void waitForNotificationToComplete(final HttpServletRequest request) {
+
+        final TenantContext tenantContext = context.createContext(request);
+        final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
+        final List<NotificationQueue> queues = notificationQueueService.getNotificationQueues();
+        try {
+
+            boolean waitForQueuesToEmpty = true;
+            do {
+                waitForQueuesToEmpty = areAllNotificationsProcessed(queues, tenantRecordId);
+                if (waitForQueuesToEmpty) {
+                    Thread.sleep(1000);
+                }
+            } while (!waitForQueuesToEmpty);
+        } catch (InterruptedException ignore) {
+        }
+    }
+
+    private boolean areAllNotificationsProcessed(final List<NotificationQueue> queues, final Long tenantRecordId) {
+
+        final Iterable<NotificationQueue> filtered = Iterables.filter(queues, new Predicate<NotificationQueue>() {
+            @Override
+            public boolean apply(@Nullable final NotificationQueue input) {
+                return input.getReadyNotificationEntriesForSearchKey2(tenantRecordId) > 0;
+            }
+        });
+        return !filtered.iterator().hasNext();
+    }
 
     private ClockMock getClockMock() {
         if (!(clock instanceof ClockMock)) {
