@@ -29,6 +29,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
+import com.ning.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 
 import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
@@ -46,7 +47,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final SubscriptionJson.SubscriptionReadEventJson newEvent = new SubscriptionJson.SubscriptionReadEventJson(eventId.toString(),
+        final EventSubscriptionJson newEvent = new EventSubscriptionJson(eventId.toString(),
                                                                                                                                        BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                                                                                        requestedDate.toLocalDate(),
                                                                                                                                        effectiveDate.toLocalDate(),

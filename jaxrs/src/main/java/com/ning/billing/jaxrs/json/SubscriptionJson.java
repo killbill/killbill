@@ -51,25 +51,25 @@ public class SubscriptionJson extends JsonBase {
     private final LocalDate chargedThroughDate;
     private final LocalDate billingStartDate;
     private final LocalDate billingEndDate;
-    private final List<SubscriptionReadEventJson> events;
-    private final List<SubscriptionDeletedEventJson> deletedEvents;
-    private final List<SubscriptionNewEventJson> newEvents;
+    private final List<EventSubscriptionJson> events;
+    private final List<DeletedEventSubscriptionJson> deletedEvents;
+    private final List<NewEventSubscriptionJson> newEvents;
 
-    public static class SubscriptionReadEventJson extends SubscriptionBaseEventJson {
+    public static class EventSubscriptionJson extends EventBaseSubscriptionJson {
 
         private final String eventId;
         private final LocalDate effectiveDate;
 
         @JsonCreator
-        public SubscriptionReadEventJson(@JsonProperty("eventId") final String eventId,
-                                         @JsonProperty("billingPeriod") final String billingPeriod,
-                                         @JsonProperty("requestedDt") final LocalDate requestedDate,
-                                         @JsonProperty("effectiveDt") final LocalDate effectiveDate,
-                                         @JsonProperty("product") final String product,
-                                         @JsonProperty("priceList") final String priceList,
-                                         @JsonProperty("eventType") final String eventType,
-                                         @JsonProperty("phase") final String phase,
-                                         @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        public EventSubscriptionJson(@JsonProperty("eventId") final String eventId,
+                                     @JsonProperty("billingPeriod") final String billingPeriod,
+                                     @JsonProperty("requestedDt") final LocalDate requestedDate,
+                                     @JsonProperty("effectiveDt") final LocalDate effectiveDate,
+                                     @JsonProperty("product") final String product,
+                                     @JsonProperty("priceList") final String priceList,
+                                     @JsonProperty("eventType") final String eventType,
+                                     @JsonProperty("phase") final String phase,
+                                     @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
             super(billingPeriod, requestedDate, product, priceList, eventType, phase, auditLogs);
             this.eventId = eventId;
             this.effectiveDate = effectiveDate;
@@ -85,7 +85,7 @@ public class SubscriptionJson extends JsonBase {
 
         @Override
         public String toString() {
-            return "SubscriptionReadEventJson [eventId=" + eventId
+            return "EventSubscriptionJson [eventId=" + eventId
                    + ", effectiveDate=" + effectiveDate
                    + ", getBillingPeriod()=" + getBillingPeriod()
                    + ", getRequestedDate()=" + getRequestedDate()
@@ -105,7 +105,7 @@ public class SubscriptionJson extends JsonBase {
                 return false;
             }
 
-            final SubscriptionReadEventJson that = (SubscriptionReadEventJson) o;
+            final EventSubscriptionJson that = (EventSubscriptionJson) o;
 
             if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
                 return false;
@@ -125,10 +125,10 @@ public class SubscriptionJson extends JsonBase {
         }
     }
 
-    public static class SubscriptionDeletedEventJson extends SubscriptionReadEventJson {
+    public static class DeletedEventSubscriptionJson extends EventSubscriptionJson {
 
         @JsonCreator
-        public SubscriptionDeletedEventJson(@JsonProperty("eventId") final String eventId,
+        public DeletedEventSubscriptionJson(@JsonProperty("eventId") final String eventId,
                                             @JsonProperty("billingPeriod") final String billingPeriod,
                                             @JsonProperty("requestedDate") final LocalDate requestedDate,
                                             @JsonProperty("effectiveDate") final LocalDate effectiveDate,
@@ -141,10 +141,10 @@ public class SubscriptionJson extends JsonBase {
         }
     }
 
-    public static class SubscriptionNewEventJson extends SubscriptionBaseEventJson {
+    public static class NewEventSubscriptionJson extends EventBaseSubscriptionJson {
 
         @JsonCreator
-        public SubscriptionNewEventJson(@JsonProperty("billingPeriod") final String billingPeriod,
+        public NewEventSubscriptionJson(@JsonProperty("billingPeriod") final String billingPeriod,
                                         @JsonProperty("requestedDate") final LocalDate requestedDate,
                                         @JsonProperty("product") final String product,
                                         @JsonProperty("priceList") final String priceList,
@@ -156,7 +156,7 @@ public class SubscriptionJson extends JsonBase {
 
         @Override
         public String toString() {
-            return "SubscriptionNewEventJson [getBillingPeriod()="
+            return "NewEventSubscriptionJson [getBillingPeriod()="
                    + getBillingPeriod() + ", getRequestedDate()="
                    + getRequestedDate() + ", getProduct()=" + getProduct()
                    + ", getPriceList()=" + getPriceList()
@@ -167,7 +167,7 @@ public class SubscriptionJson extends JsonBase {
         }
     }
 
-    public abstract static class SubscriptionBaseEventJson extends JsonBase {
+    public abstract static class EventBaseSubscriptionJson extends JsonBase {
 
         private final String billingPeriod;
         private final LocalDate requestedDate;
@@ -177,7 +177,7 @@ public class SubscriptionJson extends JsonBase {
         private final String phase;
 
         @JsonCreator
-        public SubscriptionBaseEventJson(@JsonProperty("billingPeriod") final String billingPeriod,
+        public EventBaseSubscriptionJson(@JsonProperty("billingPeriod") final String billingPeriod,
                                          @JsonProperty("requestedDate") final LocalDate requestedDate,
                                          @JsonProperty("product") final String product,
                                          @JsonProperty("priceList") final String priceList,
@@ -220,7 +220,7 @@ public class SubscriptionJson extends JsonBase {
         @Override
         public String toString() {
             final StringBuilder sb = new StringBuilder();
-            sb.append("SubscriptionBaseEventJson");
+            sb.append("EventBaseSubscriptionJson");
             sb.append("{billingPeriod='").append(billingPeriod).append('\'');
             sb.append(", requestedDate=").append(requestedDate);
             sb.append(", product='").append(product).append('\'');
@@ -240,7 +240,7 @@ public class SubscriptionJson extends JsonBase {
                 return false;
             }
 
-            final SubscriptionBaseEventJson that = (SubscriptionBaseEventJson) o;
+            final EventBaseSubscriptionJson that = (EventBaseSubscriptionJson) o;
 
             if (billingPeriod != null ? !billingPeriod.equals(that.billingPeriod) : that.billingPeriod != null) {
                 return false;
@@ -290,9 +290,9 @@ public class SubscriptionJson extends JsonBase {
                             @JsonProperty("chargedThroughDate") @Nullable final LocalDate chargedThroughDate,
                             @JsonProperty("billingStartDate") @Nullable final LocalDate billingStartDate,
                             @JsonProperty("billingEndDate") @Nullable final LocalDate billingEndDate,
-                            @JsonProperty("events") @Nullable final List<SubscriptionReadEventJson> events,
-                            @JsonProperty("newEvents") @Nullable final List<SubscriptionNewEventJson> newEvents,
-                            @JsonProperty("deletedEvents") @Nullable final List<SubscriptionDeletedEventJson> deletedEvents,
+                            @JsonProperty("events") @Nullable final List<EventSubscriptionJson> events,
+                            @JsonProperty("newEvents") @Nullable final List<NewEventSubscriptionJson> newEvents,
+                            @JsonProperty("deletedEvents") @Nullable final List<DeletedEventSubscriptionJson> deletedEvents,
                             @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.startDate = startDate;
@@ -332,14 +332,14 @@ public class SubscriptionJson extends JsonBase {
         this.bundleId = subscription.getBundleId().toString();
         this.subscriptionId = subscription.getId().toString();
         this.externalKey = subscription.getExternalKey();
-        this.events = subscriptionEvents != null ? new LinkedList<SubscriptionReadEventJson>() : null;
+        this.events = subscriptionEvents != null ? new LinkedList<EventSubscriptionJson>() : null;
         if (events != null) {
             for (SubscriptionEvent cur : subscriptionEvents) {
                 final BillingPeriod billingPeriod = cur.getNextBillingPeriod() != null ? cur.getNextBillingPeriod() : cur.getPrevBillingPeriod();
                 final Product product = cur.getNextProduct() != null ? cur.getNextProduct() : cur.getPrevProduct();
                 final PriceList priceList = cur.getNextPriceList() != null ? cur.getNextPriceList() : cur.getPrevPriceList();
                 final PlanPhase phase = cur.getNextPhase() != null ? cur.getNextPhase() : cur.getPrevPhase();
-                this.events.add(new SubscriptionReadEventJson(cur.getId().toString(),
+                this.events.add(new EventSubscriptionJson(cur.getId().toString(),
                                                               billingPeriod != null ? billingPeriod.toString() : null,
                                                               cur.getRequestedDate(),
                                                               cur.getEffectiveDate(),
@@ -406,15 +406,15 @@ public class SubscriptionJson extends JsonBase {
         return billingEndDate;
     }
 
-    public List<SubscriptionReadEventJson> getEvents() {
+    public List<EventSubscriptionJson> getEvents() {
         return events;
     }
 
-    public List<SubscriptionDeletedEventJson> getDeletedEvents() {
+    public List<DeletedEventSubscriptionJson> getDeletedEvents() {
         return deletedEvents;
     }
 
-    public List<SubscriptionNewEventJson> getNewEvents() {
+    public List<NewEventSubscriptionJson> getNewEvents() {
         return newEvents;
     }
 

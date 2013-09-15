@@ -34,7 +34,7 @@ import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.json.InvoiceJson;
 import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.RefundJson;
-import com.ning.billing.jaxrs.json.SubscriptionJson.SubscriptionReadEventJson;
+import com.ning.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.ChangeType;
 
@@ -55,7 +55,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         Assert.assertEquals(timeline.getBundles().size(), 1);
         Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
         Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 3);
-        final List<SubscriptionReadEventJson> events = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents();
+        final List<EventSubscriptionJson> events = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents();
         Assert.assertEquals(events.get(0).getEffectiveDate(), new LocalDate(2012, 4, 25));
         Assert.assertEquals(events.get(0).getEventType(), "START_ENTITLEMENT");
         Assert.assertEquals(events.get(1).getEffectiveDate(), new LocalDate(2012, 4, 25));
