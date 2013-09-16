@@ -21,6 +21,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -70,6 +71,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class TestResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(TestResource.class);
+    private static final int MILLIS_IN_SEC = 1000;
 
     private final NotificationQueueService notificationQueueService;
     private final RecordIdApi recordIdApi;
@@ -129,6 +131,7 @@ public class TestResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response setTestClockTime(@QueryParam(QUERY_REQUESTED_DT) final String requestedClockDate,
                                      @QueryParam("timeZone") final String timeZoneStr,
+                                     @QueryParam("timeoutSec") @DefaultValue("5") final Long timeoutSec,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) {
 
         final ClockMock testClock = getClockMock();
@@ -140,7 +143,7 @@ public class TestResource extends JaxRsResourceBase {
             testClock.setTime(newTime);
         }
 
-        waitForNotificationToComplete(request);
+        waitForNotificationToComplete(request, timeoutSec);
 
         return getCurrentTime(timeZoneStr);
     }
@@ -154,6 +157,7 @@ public class TestResource extends JaxRsResourceBase {
                                         @QueryParam("months") final Integer addMonths,
                                         @QueryParam("years") final Integer addYears,
                                         @QueryParam("timeZone") final String timeZoneStr,
+                                        @QueryParam("timeoutSec") @DefaultValue("5") final Long timeoutSec,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) {
 
         final ClockMock testClock = getClockMock();
@@ -167,26 +171,29 @@ public class TestResource extends JaxRsResourceBase {
             testClock.addYears(addYears);
         }
 
-        waitForNotificationToComplete(request);
+        waitForNotificationToComplete(request, timeoutSec);
 
         return getCurrentTime(timeZoneStr);
     }
 
 
-    private void waitForNotificationToComplete(final HttpServletRequest request) {
+    private void waitForNotificationToComplete(final HttpServletRequest request, final Long timeoutSec) {
 
         final TenantContext tenantContext = context.createContext(request);
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
         final List<NotificationQueue> queues = notificationQueueService.getNotificationQueues();
-        try {
 
-            boolean waitForQueuesToEmpty = true;
-            do {
-                waitForQueuesToEmpty = areAllNotificationsProcessed(queues, tenantRecordId);
-                if (waitForQueuesToEmpty) {
-                    Thread.sleep(1000);
+        int nbTryLeft = timeoutSec != null ? timeoutSec.intValue() : 0;
+        try {
+            boolean areAllNotificationsProcessed = false;
+            while (!areAllNotificationsProcessed && nbTryLeft > 0) {
+                areAllNotificationsProcessed = areAllNotificationsProcessed(queues, tenantRecordId);
+                if (!areAllNotificationsProcessed) {
+                    Thread.sleep(MILLIS_IN_SEC);
+                    nbTryLeft--;
                 }
-            } while (!waitForQueuesToEmpty);
+            }
+            ;
         } catch (InterruptedException ignore) {
         }
     }
