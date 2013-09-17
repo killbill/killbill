@@ -109,39 +109,6 @@ public class InvoiceResource extends JaxRsResourceBase {
         this.invoiceNotifier = invoiceNotifier;
     }
 
-    @GET
-    @Produces(APPLICATION_JSON)
-    public Response getInvoices(@QueryParam(QUERY_ACCOUNT_ID) final String accountId,
-                                @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
-                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createContext(request);
-
-        // Verify the account exists
-        accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
-
-        final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(UUID.fromString(accountId), tenantContext);
-        final AuditLogsForInvoices invoicesAuditLogs = auditUserApi.getAuditLogsForInvoices(invoices, auditMode.getLevel(), tenantContext);
-
-        if (withItems) {
-            final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
-            for (final Invoice invoice : invoices) {
-                result.add(new InvoiceJson(invoice,
-                                                    invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
-                                                    invoicesAuditLogs.getInvoiceItemsAuditLogs()));
-            }
-
-            return Response.status(Status.OK).entity(result).build();
-        } else {
-            final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
-            for (final Invoice invoice : invoices) {
-                result.add(new InvoiceJson(invoice,
-                                                 invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId())));
-            }
-
-            return Response.status(Status.OK).entity(result).build();
-        }
-    }
 
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/")

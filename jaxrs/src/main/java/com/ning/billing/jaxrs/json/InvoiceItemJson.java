@@ -40,6 +40,7 @@ public class InvoiceItemJson extends JsonBase {
     private final String subscriptionId;
     private final String planName;
     private final String phaseName;
+    private final String itemType;
     private final String description;
     private final LocalDate startDate;
     private final LocalDate endDate;
@@ -55,6 +56,7 @@ public class InvoiceItemJson extends JsonBase {
                            @JsonProperty("subscriptionId") final String subscriptionId,
                            @JsonProperty("planName") final String planName,
                            @JsonProperty("phaseName") final String phaseName,
+                           @JsonProperty("itemType") final String itemType,
                            @JsonProperty("description") final String description,
                            @JsonProperty("startDate") final LocalDate startDate,
                            @JsonProperty("endDate") final LocalDate endDate,
@@ -70,6 +72,7 @@ public class InvoiceItemJson extends JsonBase {
         this.subscriptionId = subscriptionId;
         this.planName = planName;
         this.phaseName = phaseName;
+        this.itemType = itemType;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -80,7 +83,8 @@ public class InvoiceItemJson extends JsonBase {
     public InvoiceItemJson(final InvoiceItem item, @Nullable final List<AuditLog> auditLogs) {
         this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getLinkedItemId()),
              toString(item.getAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
-             item.getPlanName(), item.getPhaseName(), item.getDescription(), item.getStartDate(), item.getEndDate(),
+             item.getPlanName(), item.getPhaseName(), item.getInvoiceItemType().toString(),
+             item.getDescription(), item.getStartDate(), item.getEndDate(),
              item.getAmount(), item.getCurrency(), toAuditLogJson(auditLogs));
     }
 
@@ -118,6 +122,10 @@ public class InvoiceItemJson extends JsonBase {
 
     public String getPhaseName() {
         return phaseName;
+    }
+
+    public String getItemType() {
+        return itemType;
     }
 
     public String getDescription() {
