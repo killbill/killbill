@@ -18,9 +18,13 @@ package com.ning.billing.entitlement.api;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTimeZone;
@@ -40,7 +44,9 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 
@@ -196,16 +202,29 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         }));
 
         final Account account = accountApi.getAccountById(baseBundle.getAccountId(), internalTenantContext);
+
+        final InternalTenantContext internalTenantContextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(account.getId(), context);
+
         final DateTimeZone accountTimeZone = account.getTimeZone();
 
-        final List<BlockingState> allBlockingStates = new ArrayList<BlockingState>();
-        allBlockingStates.addAll(blockingStateDao.getBlockingAll(account.getId(), internalTenantContext));
-        allBlockingStates.addAll(blockingStateDao.getBlockingAll(bundleId, internalTenantContext));
-        for (Entitlement cur : entitlements) {
-            allBlockingStates.addAll(blockingStateDao.getBlockingAll(cur.getId(), internalTenantContext));
-        }
+        final List<BlockingState> allBlockingStatesPerAccountRecordId = blockingStateDao.getBlockingAllForAccountRecordId(internalTenantContextWithAccountRecordId);
+        final Set<UUID> allEntitlementIds = new HashSet<UUID>(Collections2.<Entitlement, UUID>transform(entitlements, new Function<Entitlement, UUID>() {
+            @Override
+            public UUID apply(final Entitlement input) {
+                return input.getId();
+            }
+        }));
 
-        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, account.getId(), bundleId, baseBundle.getExternalKey(), entitlements, allBlockingStates);
+        final List<BlockingState> filteredBlockingStates = new LinkedList<BlockingState>(Collections2.filter(allBlockingStatesPerAccountRecordId, new Predicate<BlockingState>() {
+            @Override
+            public boolean apply(final BlockingState input) {
+                return input.getType() == BlockingStateType.ACCOUNT ||
+                       (input.getType() == BlockingStateType.SUBSCRIPTION_BUNDLE && input.getBlockedId().equals(bundleId)) ||
+                       (input.getType() == BlockingStateType.SUBSCRIPTION && allEntitlementIds.contains(input.getBlockedId()));
+            }
+        }));
+
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, account.getId(), bundleId, baseBundle.getExternalKey(), entitlements, filteredBlockingStates);
         final DefaultSubscriptionBundle bundle = new DefaultSubscriptionBundle(bundleId, baseBundle.getAccountId(), baseBundle.getExternalKey(), subscriptions, timeline, baseBundle.getCreatedDate(), baseBundle.getUpdatedDate());
         return bundle;
     }
