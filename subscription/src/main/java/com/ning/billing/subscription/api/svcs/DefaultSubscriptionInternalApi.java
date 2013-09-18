@@ -16,8 +16,10 @@
 
 package com.ning.billing.subscription.api.svcs;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -212,6 +214,16 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                             InternalTenantContext context) {
         final List<SubscriptionBase> internalSubscriptions = dao.getSubscriptions(bundleId, context);
         return createSubscriptionsForApiUse(internalSubscriptions);
+    }
+
+    @Override
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final InternalTenantContext context) {
+        final Map<UUID, List<SubscriptionBase>> internalSubscriptions = dao.getSubscriptionsForAccount(context);
+        final Map<UUID, List<SubscriptionBase>> result = new HashMap<UUID, List<SubscriptionBase>>();
+        for (final UUID bundleId : internalSubscriptions.keySet()) {
+            result.put(bundleId, createSubscriptionsForApiUse(internalSubscriptions.get(bundleId)));
+        }
+        return result;
     }
 
     @Override

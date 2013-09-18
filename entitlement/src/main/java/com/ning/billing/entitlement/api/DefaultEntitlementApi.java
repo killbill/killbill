@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.api;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -222,7 +223,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
     @Override
     public List<Entitlement> getAllEntitlementsForAccountId(final UUID accountId, final TenantContext tenantContext) throws EntitlementApiException {
-        final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(tenantContext);
+        final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
         final Account account;
         try {
             account = accountApi.getAccountById(accountId, context);
@@ -231,9 +232,10 @@ public class DefaultEntitlementApi implements EntitlementApi {
         }
 
         final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(accountId, context);
+        final Map<UUID, List<SubscriptionBase>> subscriptionsPerBundle = subscriptionInternalApi.getSubscriptionsForAccount(context);
         final List<Entitlement> result = new LinkedList<Entitlement>();
         for (final SubscriptionBaseBundle bundle : bundles) {
-            final List<Entitlement> entitlements = getAllEntitlementsForBundleId(bundle.getId(), bundle.getAccountId(), account.getTimeZone(), bundle.getExternalKey(), context);
+            final List<Entitlement> entitlements = getAllEntitlementsForBundleId(bundle.getAccountId(), account.getTimeZone(), bundle.getExternalKey(), subscriptionsPerBundle.get(bundle.getId()), context);
             result.addAll(entitlements);
         }
         return result;
@@ -241,6 +243,10 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
     private List<Entitlement> getAllEntitlementsForBundleId(final UUID bundleId, final UUID accountId, final DateTimeZone accountTimeZone, final String externalKey, final InternalTenantContext context) throws EntitlementApiException {
         final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundleId, context);
+        return getAllEntitlementsForBundleId(accountId, accountTimeZone, externalKey, subscriptions, context);
+    }
+
+    private List<Entitlement> getAllEntitlementsForBundleId(final UUID accountId, final DateTimeZone accountTimeZone, final String externalKey, final List<SubscriptionBase> subscriptions, final InternalTenantContext context) {
         final EntitlementApi thisEntitlementApi = this;
         return ImmutableList.<Entitlement>copyOf(Collections2.transform(subscriptions, new Function<SubscriptionBase, Entitlement>() {
             @Nullable

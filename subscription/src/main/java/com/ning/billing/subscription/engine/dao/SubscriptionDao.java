@@ -55,6 +55,8 @@ public interface SubscriptionDao {
 
     public List<SubscriptionBase> getSubscriptions(UUID bundleId, InternalTenantContext context);
 
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(InternalTenantContext context);
+
     public List<SubscriptionBase> getSubscriptionsForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
 
     // Update

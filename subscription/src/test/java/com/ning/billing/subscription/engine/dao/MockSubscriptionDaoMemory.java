@@ -19,6 +19,7 @@ package com.ning.billing.subscription.engine.dao;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -195,6 +196,18 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
             if (cur.getBundleId().equals(bundleId)) {
                 results.add(buildSubscription((DefaultSubscriptionBase) cur, context));
             }
+        }
+        return results;
+    }
+
+    @Override
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final InternalTenantContext context) {
+        final Map<UUID, List<SubscriptionBase>> results = new HashMap<UUID, List<SubscriptionBase>>();
+        for (final SubscriptionBase cur : subscriptions) {
+            if (results.get(cur.getBundleId()) == null) {
+                results.put(cur.getBundleId(), new LinkedList<SubscriptionBase>());
+            }
+            results.get(cur.getBundleId()).add(buildSubscription((DefaultSubscriptionBase) cur, context));
         }
         return results;
     }

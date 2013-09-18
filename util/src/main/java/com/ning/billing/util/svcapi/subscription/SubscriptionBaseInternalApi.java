@@ -17,6 +17,7 @@
 package com.ning.billing.util.svcapi.subscription;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -26,8 +27,8 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.EntitlementAOStatusDryRun;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
@@ -36,7 +37,7 @@ import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs,
-                                           final InternalCallContext context) throws SubscriptionBaseApiException;
+                                               final InternalCallContext context) throws SubscriptionBaseApiException;
 
 
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context)
@@ -52,6 +53,8 @@ public interface SubscriptionBaseInternalApi {
     public SubscriptionBaseBundle getActiveBundleForKey(final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public List<SubscriptionBase> getSubscriptionsForBundle(final UUID bundleId, final InternalTenantContext context);
+
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final InternalTenantContext context);
 
     public SubscriptionBase getBaseSubscription(final UUID bundleId, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
@@ -70,5 +73,5 @@ public interface SubscriptionBaseInternalApi {
     public DateTime getNextBillingDate(final UUID accountId, final InternalTenantContext context);
 
     public List<EntitlementAOStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName,
-                                                                   final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
+                                                                     final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
 }

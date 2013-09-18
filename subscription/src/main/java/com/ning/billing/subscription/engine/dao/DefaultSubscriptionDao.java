@@ -251,6 +251,40 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
         });
     }
 
+    @Override
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final InternalTenantContext context) {
+        final Map<UUID, List<SubscriptionBase>> subscriptionsFromAccountId = getSubscriptionsFromAccountId(context);
+
+        final Map<UUID, List<SubscriptionBase>> result = new HashMap<UUID, List<SubscriptionBase>>();
+        for (final UUID bundleId : subscriptionsFromAccountId.keySet()) {
+            result.put(bundleId, buildBundleSubscriptions(bundleId, subscriptionsFromAccountId.get(bundleId), context));
+        }
+        return result;
+    }
+
+    private Map<UUID, List<SubscriptionBase>> getSubscriptionsFromAccountId(final InternalTenantContext context) {
+        final List<SubscriptionBase> allSubscriptions = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<SubscriptionBase>>() {
+            @Override
+            public List<SubscriptionBase> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final List<SubscriptionModelDao> models = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getByAccountRecordId(context);
+                return new ArrayList<SubscriptionBase>(Collections2.transform(models, new Function<SubscriptionModelDao, SubscriptionBase>() {
+                    @Override
+                    public SubscriptionBase apply(final SubscriptionModelDao input) {
+                        return SubscriptionModelDao.toSubscription(input);
+                    }
+                }));
+            }
+        });
+
+        final Map<UUID, List<SubscriptionBase>> result = new HashMap<UUID, List<SubscriptionBase>>();
+        for (final SubscriptionBase subscriptionBase : allSubscriptions) {
+            if (result.get(subscriptionBase.getBundleId()) == null) {
+                result.put(subscriptionBase.getBundleId(), new LinkedList<SubscriptionBase>());
+            }
+            result.get(subscriptionBase.getBundleId()).add(subscriptionBase);
+        }
+        return result;
+    }
 
     @Override
     public List<SubscriptionBase> getSubscriptionsForAccountAndKey(final UUID accountId,
