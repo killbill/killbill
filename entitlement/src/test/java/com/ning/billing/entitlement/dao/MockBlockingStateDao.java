@@ -104,6 +104,11 @@ public class MockBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
+    public List<BlockingState> getBlockingAllForAccountRecordId(final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public synchronized void setBlockingState(final BlockingState state, final Clock clock, final InternalCallContext context) {
         if (blockingStates.get(state.getBlockedId()) == null) {
             blockingStates.put(state.getBlockedId(), new ArrayList<BlockingState>());
