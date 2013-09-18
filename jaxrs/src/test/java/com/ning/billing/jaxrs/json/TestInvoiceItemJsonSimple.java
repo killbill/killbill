@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
@@ -90,6 +91,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         Mockito.when(invoiceItem.getEndDate()).thenReturn(clock.getUTCToday());
         Mockito.when(invoiceItem.getAmount()).thenReturn(BigDecimal.TEN);
         Mockito.when(invoiceItem.getCurrency()).thenReturn(Currency.EUR);
+        Mockito.when(invoiceItem.getInvoiceItemType()).thenReturn(InvoiceItemType.FIXED);
 
         final InvoiceItemJson invoiceItemJson = new InvoiceItemJson(invoiceItem);
         Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItem.getId().toString());

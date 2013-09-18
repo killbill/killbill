@@ -100,7 +100,9 @@ public class DefaultLifecycle implements Lifecycle {
                 log.debug("got instance {}", instance.getName());
                 result.add(instance);
             } catch (final Exception e) {
-                logWarn("Failed to inject " + cur.getName(), e);
+                if (!cur.getSimpleName().startsWith("Test")) {
+                    logWarn("Failed to inject " + cur.getName(), e);
+                }
             }
 
         }

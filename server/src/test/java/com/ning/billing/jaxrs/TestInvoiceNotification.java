@@ -41,7 +41,7 @@ public class TestInvoiceNotification extends TestJaxrsBase {
         final AccountJson accountJson = createScenarioWithOneInvoice();
 
         final String uri = JaxrsResource.INVOICES_PATH;
-        final Response response = doGet(uri, ImmutableMap.<String, String>of(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId()), DEFAULT_HTTP_TIMEOUT_SEC);
+        final Response response = doGet(JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.INVOICES, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
         final List<InvoiceJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<InvoiceJson>>() {});

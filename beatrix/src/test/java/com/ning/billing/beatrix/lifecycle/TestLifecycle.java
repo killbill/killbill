@@ -61,11 +61,11 @@ public class TestLifecycle extends BeatrixTestSuite {
         }
     }
 
-    public interface Service1Interface extends KillbillService {
+    public interface TestService1Interface extends KillbillService {
 
     }
 
-    public static class Service1 extends ServiceBase implements Service1Interface {
+    public static class Service1 extends ServiceBase implements TestService1Interface {
         @LifecycleHandlerType(LifecycleLevel.INIT_BUS)
         public void initBus() {
             log.info("Service1 : got INIT_BUS");
@@ -90,11 +90,11 @@ public class TestLifecycle extends BeatrixTestSuite {
         }
     }
 
-    public interface Service2Interface extends KillbillService {
+    public interface TestService2Interface extends KillbillService {
 
     }
 
-    public static class Service2 extends ServiceBase implements Service2Interface {
+    public static class Service2 extends ServiceBase implements TestService2Interface {
         @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)
         public void loadCatalog() {
             log.info("Service2 : got LOAD_CATALOG");
@@ -171,10 +171,10 @@ public class TestLifecycle extends BeatrixTestSuite {
         @Override
         protected void configure() {
             bind(DefaultLifecycle.class).to(LifecycleNoWarn.class).asEagerSingleton();
-            bind(Service1Interface.class).to(Service1.class);
+            bind(TestService1Interface.class).to(Service1.class);
             bind(Service1.class).asEagerSingleton();
             bind(Service2.class).asEagerSingleton();
-            bind(Service2Interface.class).to(Service2.class);
+            bind(TestService2Interface.class).to(Service2.class);
         }
     }
 }
