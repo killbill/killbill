@@ -33,6 +33,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -51,6 +52,9 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
 public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTimeline {
+
+    public static final String BILLING_SERVICE_NAME = "billing-service";
+    public static final String ENT_BILLING_SERVICE_NAME = "entitlement+billing-service";
 
     private final List<SubscriptionEvent> events;
     private final UUID accountId;
@@ -328,6 +332,8 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                             accountTimeZone);
     }
 
+
+
     private SubscriptionEvent toSubscriptionEvent(final SubscriptionBaseTransition in, final SubscriptionEventType eventType, final DateTimeZone accountTimeZone) {
         return new DefaultSubscriptionEvent(in.getId(),
                                             in.getSubscriptionId(),
@@ -336,7 +342,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                             eventType,
                                             false,
                                             false,
-                                            DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                            getServiceName(eventType),
                                             eventType.toString(),
                                             (in.getPreviousPlan() != null ? in.getPreviousPlan().getProduct() : null),
                                             in.getPreviousPlan(),
@@ -350,6 +356,23 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                             (in.getNextPlan() != null ? in.getNextPlan().getBillingPeriod() : null),
                                             in.getCreatedDate(),
                                             accountTimeZone);
+    }
+
+    private static String getServiceName(final SubscriptionEventType type) {
+        switch (type) {
+            case START_BILLING:
+            case PAUSE_BILLING:
+            case RESUME_BILLING:
+            case STOP_BILLING:
+                return BILLING_SERVICE_NAME;
+
+            case PHASE:
+            case CHANGE:
+                return ENT_BILLING_SERVICE_NAME;
+
+            default:
+                return DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME;
+        }
     }
 
     private SubscriptionEventType toEventType(final SubscriptionBaseTransitionType in) {
