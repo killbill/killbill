@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill-osgi-lib-bundles</artifactId>
         <groupId>com.ning.billing</groupId>
-        <version>0.6.12-SNAPSHOT</version>
+        <version>0.6.12</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-osgi-bundles-lib-killbill</artifactId>
