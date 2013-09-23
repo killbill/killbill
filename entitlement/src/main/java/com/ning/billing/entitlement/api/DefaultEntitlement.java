@@ -16,7 +16,11 @@
 
 package com.ning.billing.entitlement.api;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -41,6 +45,9 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.entity.EntityBase;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 
 public class DefaultEntitlement extends EntityBase implements Entitlement {
 
@@ -221,6 +228,37 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     public Entitlement cancelEntitlementWithPolicyOverrideBillingPolicy(final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy, final CallContext callContext) throws EntitlementApiException {
         final LocalDate cancellationDate = getLocalDateFromEntitlementPolicy(entitlementPolicy);
         return cancelEntitlementWithDateOverrideBillingPolicy(cancellationDate, billingPolicy, callContext);
+    }
+
+    @Override
+    public void uncancelEntitlement(final CallContext callContext) throws EntitlementApiException {
+        if (state == EntitlementState.CANCELLED || subscriptionBase.getState() == EntitlementState.CANCELLED) {
+            throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
+        }
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+        final List<BlockingState> blockingStates = blockingStateDao.getBlockingHistoryForService(getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
+        final Collection<BlockingState> filtered = Collections2.filter(blockingStates, new Predicate<BlockingState>() {
+            @Override
+            public boolean apply(final BlockingState input) {
+                return EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) && input.getEffectiveDate().isAfter(clock.getUTCNow());
+            }
+        });
+        final BlockingState futureCancellation = filtered.iterator().hasNext() ? filtered.iterator().next() : null;
+        if (futureCancellation == null) {
+            return;
+        }
+
+        // Reactivate entitlement
+        blockingStateDao.unactiveBlockingState(futureCancellation.getId(), contextWithValidAccountRecordId);
+
+        // If billing was previously cancelled, reactivate
+        if (subscriptionBase.getFutureEndDate() != null) {
+            try {
+                subscriptionBase.uncancel(callContext);
+            } catch (SubscriptionBaseApiException e) {
+                throw new EntitlementApiException(e);
+            }
+        }
     }
 
     @Override

@@ -90,4 +90,13 @@ public interface BlockingStateDao {
      * @param context
      */
     public void setBlockingState(BlockingState state, Clock clock, InternalCallContext context);
+
+    /**
+     * Unactive the blocking state
+     *
+     * @param blockableId
+     * @param context
+     */
+    public void unactiveBlockingState(UUID blockableId, final InternalCallContext context);
+
 }

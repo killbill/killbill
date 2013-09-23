@@ -97,6 +97,41 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(entitlement3.getState(), EntitlementState.CANCELLED);
             assertEquals(entitlement3.getEffectiveEndDate(), cancelDate);
 
+        } catch (EntitlementApiException e) {
+            Assert.fail("Test failed " + e.getMessage());
+        } catch (AccountApiException e) {
+            Assert.fail("Test failed " + e.getMessage());
+        }
+    }
+
+
+    @Test(groups = "slow")
+    public void testUncancel() {
+
+        try {
+            final LocalDate initialDate = new LocalDate(2013, 8, 7);
+            clock.setDay(initialDate);
+
+            final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+            // Create entitlement and check each field
+            final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+            assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+
+            clock.addDays(5);
+            final LocalDate cancelDate = new LocalDate(clock.getUTCToday().plusDays(1));
+            entitlement.cancelEntitlementWithDate(cancelDate, true, callContext);
+            final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+            assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
+            assertEquals(entitlement2.getEffectiveEndDate(), cancelDate);
+
+            entitlement2.uncancelEntitlement(callContext);
+
+            clock.addDays(1);
+            final Entitlement entitlement3 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+            assertEquals(entitlement3.getState(), EntitlementState.ACTIVE);
 
         } catch (EntitlementApiException e) {
             Assert.fail("Test failed " + e.getMessage());

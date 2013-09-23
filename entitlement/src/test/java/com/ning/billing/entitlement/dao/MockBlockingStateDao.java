@@ -116,6 +116,11 @@ public class MockBlockingStateDao implements BlockingStateDao {
         blockingStates.get(state.getBlockedId()).add(state);
     }
 
+    @Override
+    public void unactiveBlockingState(final UUID blockableId, final InternalCallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
     public synchronized void setBlockingStates(final UUID blockedId, final List<BlockingState> states) {
         blockingStates.put(blockedId, states);
     }

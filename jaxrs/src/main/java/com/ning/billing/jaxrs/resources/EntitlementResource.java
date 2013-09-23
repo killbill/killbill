@@ -230,14 +230,10 @@ public class EntitlementResource extends JaxRsResourceBase {
                                             @HeaderParam(HDR_REASON) final String reason,
                                             @HeaderParam(HDR_COMMENT) final String comment,
                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
-
-        throw new UnsupportedOperationException("Call not implemented");
-/*
         final UUID uuid = UUID.fromString(entitlementId);
         final Entitlement current = entitlementApi.getEntitlementForId(uuid, context.createContext(createdBy, reason, comment, request));
-        current.uncancel(context.createContext(createdBy, reason, comment, request));
+        current.uncancelEntitlement(context.createContext(createdBy, reason, comment, request));
         return Response.status(Status.OK).build();
-        */
     }
 
     @DELETE
@@ -249,7 +245,7 @@ public class EntitlementResource extends JaxRsResourceBase {
                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
                                           @QueryParam(QUERY_ENTITLEMENT_POLICY) final String entitlementPolicyString,
                                           @QueryParam(QUERY_BILLING_POLICY) final String billingPolicyString,
-                                          @QueryParam(QUERY_USE_REQUESTED_DATE_FOR_BILLING) @DefaultValue("true") final Boolean useRequestedDateForBilling,
+                                          @QueryParam(QUERY_USE_REQUESTED_DATE_FOR_BILLING) @DefaultValue("false") final Boolean useRequestedDateForBilling,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
@@ -264,7 +260,7 @@ public class EntitlementResource extends JaxRsResourceBase {
             @Override
             public Response doOperation(final CallContext ctx)
                     throws EntitlementApiException, InterruptedException,
-                           TimeoutException, AccountApiException {
+                           TimeoutException, AccountApiException, SubscriptionApiException {
                 final UUID uuid = UUID.fromString(entitlementId);
 
                 final Entitlement current = entitlementApi.getEntitlementForId(uuid, ctx);
@@ -284,7 +280,12 @@ public class EntitlementResource extends JaxRsResourceBase {
                     final BillingActionPolicy billingPolicy = BillingActionPolicy.valueOf(billingPolicyString.toUpperCase());
                     newEntitlement = current.cancelEntitlementWithPolicyOverrideBillingPolicy(entitlementPolicy, billingPolicy, ctx);
                 }
-                isImmediateOp = newEntitlement.getState() == EntitlementState.ACTIVE;
+
+                final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(newEntitlement.getId(), ctx);
+
+                final LocalDate nowInAccountTimeZone = new LocalDate(clock.getUTCNow(), subscription.getBillingEndDate().getChronology().getZone());
+                isImmediateOp = subscription.getBillingEndDate() != null &&
+                                !subscription.getBillingEndDate().isAfter(nowInAccountTimeZone);
                 return Response.status(Status.OK).build();
             }
 
@@ -346,7 +347,7 @@ public class EntitlementResource extends JaxRsResourceBase {
 
     private interface EntitlementCallCompletionCallback<T> {
 
-        public T doOperation(final CallContext ctx) throws EntitlementApiException, InterruptedException, TimeoutException, AccountApiException;
+        public T doOperation(final CallContext ctx) throws EntitlementApiException, InterruptedException, TimeoutException, AccountApiException, SubscriptionApiException;
 
         public boolean isImmOperation();
 

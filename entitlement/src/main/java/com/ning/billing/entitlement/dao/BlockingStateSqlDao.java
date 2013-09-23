@@ -27,13 +27,17 @@ import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
+import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
@@ -71,6 +75,12 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
                                                                    @BindBean final InternalTenantContext context);
 
 
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
+    public void unactiveEvent(@Bind("id") String id,
+                              @BindBean final InternalCallContext context);
+
+
     public class BlockingHistorySqlMapper extends MapperBase implements ResultSetMapper<BlockingStateModelDao> {
 
         @Override
@@ -84,6 +94,7 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
             final boolean blockChange;
             final boolean blockEntitlement;
             final boolean blockBilling;
+            final boolean isActive;
             final DateTime effectiveDate;
             final DateTime createdDate;
             final BlockingStateType type;
@@ -96,9 +107,10 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
             blockChange = r.getBoolean("block_change");
             blockEntitlement = r.getBoolean("block_entitlement");
             blockBilling = r.getBoolean("block_billing");
+            isActive = r.getBoolean("is_active");
             effectiveDate = getDateTime(r, "effective_date");
             createdDate = getDateTime(r, "created_date");
-            return new BlockingStateModelDao(id, blockableId, type, stateName, service, blockChange, blockEntitlement, blockBilling, effectiveDate, createdDate, createdDate);
+            return new BlockingStateModelDao(id, blockableId, type, stateName, service, blockChange, blockEntitlement, blockBilling, effectiveDate, isActive, createdDate, createdDate);
         }
     }
 }

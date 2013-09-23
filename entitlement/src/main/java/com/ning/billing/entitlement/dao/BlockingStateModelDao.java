@@ -38,9 +38,10 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
     private final Boolean blockEntitlement;
     private final Boolean blockBilling;
     private final DateTime effectiveDate;
+    private boolean isActive;
 
     public BlockingStateModelDao(final UUID id, final UUID blockableId, final BlockingStateType blockingStateType, final String state, final String service, final Boolean blockChange, final Boolean blockEntitlement,
-                                 final Boolean blockBilling, final DateTime effectiveDate, final DateTime createDate, final DateTime updateDate) {
+                                 final Boolean blockBilling, final DateTime effectiveDate, final boolean isActive, final DateTime createDate, final DateTime updateDate) {
         super(id, createDate, updateDate);
         this.blockableId = blockableId;
         this.effectiveDate = effectiveDate;
@@ -50,11 +51,12 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
         this.blockChange = blockChange;
         this.blockEntitlement = blockEntitlement;
         this.blockBilling = blockBilling;
+        this.isActive = isActive;
     }
 
     public BlockingStateModelDao(final BlockingState src, InternalCallContext context) {
         this(src.getId(), src.getBlockedId(), src.getType(), src.getStateName(), src.getService(), src.isBlockChange(),
-             src.isBlockEntitlement(), src.isBlockBilling(), src.getEffectiveDate(), context.getCreatedDate(), context.getUpdatedDate());
+             src.isBlockEntitlement(), src.isBlockBilling(), src.getEffectiveDate(), true, context.getCreatedDate(), context.getUpdatedDate());
     }
 
     public UUID getBlockableId() {
@@ -89,6 +91,15 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
         return effectiveDate;
     }
 
+    // TODO required for jdbi binder
+    public boolean getIsActive() {
+        return isActive;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
     public static BlockingState toBlockingState(BlockingStateModelDao src) {
         if (src == null) {
             return null;
@@ -117,6 +128,7 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
         sb.append(", blockChange=").append(blockChange);
         sb.append(", blockEntitlement=").append(blockEntitlement);
         sb.append(", blockBilling=").append(blockBilling);
+        sb.append(", isActive=").append(isActive);
         sb.append('}');
         return sb.toString();
     }

@@ -3,6 +3,8 @@ group BlockingStateSqlDao: EntitySqlDao;
 
 tableName() ::= "blocking_states"
 
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+
 tableFields(prefix) ::= <<
   <prefix>blockable_id
 , <prefix>type
@@ -12,6 +14,7 @@ tableFields(prefix) ::= <<
 , <prefix>block_entitlement
 , <prefix>block_billing
 , <prefix>effective_date
+, <prefix>is_active
 , <prefix>created_date
 >>
 
@@ -25,6 +28,7 @@ tableValues() ::= <<
 , :blockEntitlement
 , :blockBilling
 , :effectiveDate
+, :isActive
 , :createdDate
 >>
 
@@ -37,6 +41,7 @@ from
 where blockable_id = :blockableId
 and service = :service
 and effective_date \<= :effectiveDate
+and is_active
 <AND_CHECK_TENANT()>
 -- We want the current state, hence the order desc and limit 1
 order by record_id desc
@@ -55,6 +60,7 @@ getBlockingState() ::= <<
          from blocking_states
          where blockable_id = :blockableId
          and effective_date \<= :effectiveDate
+         and is_active
          <AND_CHECK_TENANT()>
          group by service
  ) tmp
@@ -70,6 +76,7 @@ from
 <tableName()>
 where blockable_id = :blockableId
 and service = :service
+and is_active
 <AND_CHECK_TENANT()>
 order by record_id asc
 ;
@@ -81,6 +88,7 @@ select
 from
 <tableName()>
 where blockable_id = :blockableId
+and is_active
 <AND_CHECK_TENANT()>
 order by record_id asc
 ;
@@ -92,7 +100,17 @@ select
 from
 <tableName()>
 where blockable_id = :blockableId
+and is_active
 <AND_CHECK_TENANT()>
 order by record_id asc
+;
+>>
+
+unactiveEvent() ::= <<
+update
+<tableName()>
+set is_active = 0
+where id = :id
+<AND_CHECK_TENANT()>
 ;
 >>

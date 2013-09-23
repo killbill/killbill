@@ -154,4 +154,16 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
             }
         });
     }
+
+    @Override
+    public void unactiveBlockingState(final UUID id, final InternalCallContext context) {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
+                sqlDao.unactiveEvent(id.toString() , context);
+                return null;
+            }
+        });
+    }
 }
