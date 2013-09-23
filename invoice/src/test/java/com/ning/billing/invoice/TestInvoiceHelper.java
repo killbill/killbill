@@ -245,8 +245,8 @@ public class TestInvoiceHelper {
         return invoiceItemSqlDao.getInvoiceItemsBySubscription(subscriptionId.toString(), internalCallContext);
     }
 
-    public List<InvoiceItemModelDao> getInvoiceItemByAccountId(final UUID accountId, final InternalCallContext internalCallContext) {
-        return invoiceItemSqlDao.getInvoiceItemsByAccount(accountId.toString(), internalCallContext);
+    public List<InvoiceItemModelDao> getInvoiceItemByAccountId(final InternalCallContext internalCallContext) {
+        return invoiceItemSqlDao.getByAccountRecordId(internalCallContext);
     }
 
     public List<InvoiceItemModelDao> getInvoiceItemByInvoiceId(final UUID invoiceId, final InternalCallContext internalCallContext) {

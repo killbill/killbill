@@ -22,8 +22,10 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -33,6 +35,7 @@ import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceItemFactory;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
 import static com.ning.billing.invoice.TestInvoiceHelper.TEN;
@@ -42,9 +45,18 @@ import static org.testng.Assert.assertTrue;
 
 public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
 
+    private Account account;
+    private InternalCallContext context;
+
+    @BeforeMethod(groups = "slow")
+    public void setUp() throws Exception {
+        account = invoiceUtil.createAccount(callContext);
+        context = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+    }
+
     @Test(groups = "slow")
     public void testInvoiceItemCreation() throws EntityPersistenceException {
-        final UUID accountId = UUID.randomUUID();
+        final UUID accountId = account.getId();
         final UUID invoiceId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
         final UUID subscriptionId = UUID.randomUUID();
@@ -54,9 +66,9 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "test plan", "test phase", startDate, endDate,
                                                                    rate, rate, Currency.USD);
-        invoiceUtil.createInvoiceItem(item, internalCallContext);
+        invoiceUtil.createInvoiceItem(item, context);
 
-        final InvoiceItemModelDao thisItem = invoiceUtil.getInvoiceItemById(item.getId(), internalCallContext);
+        final InvoiceItemModelDao thisItem = invoiceUtil.getInvoiceItemById(item.getId(), context);
         assertNotNull(thisItem);
         assertEquals(thisItem.getId(), item.getId());
         assertEquals(thisItem.getInvoiceId(), item.getInvoiceId());
@@ -72,7 +84,7 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testGetInvoiceItemsBySubscriptionId() throws EntityPersistenceException {
-        final UUID accountId = UUID.randomUUID();
+        final UUID accountId = account.getId();
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
         final LocalDate startDate = new LocalDate(2011, 3, 1);
@@ -84,16 +96,16 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
             final RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,
                                                                        "test plan", "test phase", startDate.plusMonths(i), startDate.plusMonths(i + 1),
                                                                        rate, rate, Currency.USD);
-            invoiceUtil.createInvoiceItem(item, internalCallContext);
+            invoiceUtil.createInvoiceItem(item, context);
         }
 
-        final List<InvoiceItemModelDao> items = invoiceUtil.getInvoiceItemBySubscriptionId(subscriptionId, internalCallContext);
+        final List<InvoiceItemModelDao> items = invoiceUtil.getInvoiceItemBySubscriptionId(subscriptionId, context);
         assertEquals(items.size(), 3);
     }
 
     @Test(groups = "slow")
     public void testGetInvoiceItemsByInvoiceId() throws EntityPersistenceException {
-        final UUID accountId = UUID.randomUUID();
+        final UUID accountId = account.getId();
         final UUID invoiceId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
         final LocalDate startDate = new LocalDate(2011, 3, 1);
@@ -106,21 +118,21 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
             final RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,
                                                                        "test plan", "test phase", startDate, startDate.plusMonths(1),
                                                                        amount, amount, Currency.USD);
-            invoiceUtil.createInvoiceItem(item, internalCallContext);
+            invoiceUtil.createInvoiceItem(item, context);
         }
 
-        final List<InvoiceItemModelDao> items = invoiceUtil.getInvoiceItemByInvoiceId(invoiceId, internalCallContext);
+        final List<InvoiceItemModelDao> items = invoiceUtil.getInvoiceItemByInvoiceId(invoiceId, context);
         assertEquals(items.size(), 5);
     }
 
     @Test(groups = "slow")
     public void testGetInvoiceItemsByAccountId() throws EntityPersistenceException {
-        final UUID accountId = UUID.randomUUID();
+        final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate = new LocalDate(2011, 5, 23);
         final DefaultInvoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate, Currency.USD);
 
-        invoiceUtil.createInvoice(invoice, true, internalCallContext);
+        invoiceUtil.createInvoice(invoice, true, context);
 
         final UUID invoiceId = invoice.getId();
         final LocalDate startDate = new LocalDate(2011, 3, 1);
@@ -131,51 +143,51 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
         final RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,
                                                                    "test plan", "test phase", startDate, startDate.plusMonths(1),
                                                                    rate, rate, Currency.USD);
-        invoiceUtil.createInvoiceItem(item, internalCallContext);
+        invoiceUtil.createInvoiceItem(item, context);
 
-        final List<InvoiceItemModelDao> items = invoiceUtil.getInvoiceItemByAccountId(accountId, internalCallContext);
+        final List<InvoiceItemModelDao> items = invoiceUtil.getInvoiceItemByAccountId(context);
         assertEquals(items.size(), 1);
     }
 
     @Test(groups = "slow")
     public void testCreditBalanceInvoiceSqlDao() throws EntityPersistenceException {
         final UUID invoiceId = UUID.randomUUID();
-        final UUID accountId = UUID.randomUUID();
+        final UUID accountId = account.getId();
         final LocalDate creditDate = new LocalDate(2012, 4, 1);
 
         final InvoiceItem creditInvoiceItem = new CreditBalanceAdjInvoiceItem(invoiceId, accountId, creditDate, TEN, Currency.USD);
-        invoiceUtil.createInvoiceItem(creditInvoiceItem, internalCallContext);
+        invoiceUtil.createInvoiceItem(creditInvoiceItem, context);
 
-        final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(creditInvoiceItem.getId(), internalCallContext);
+        final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(creditInvoiceItem.getId(), context);
         assertSameInvoiceItem(creditInvoiceItem, savedItem);
     }
 
     @Test(groups = "slow")
     public void testFixedPriceInvoiceSqlDao() throws EntityPersistenceException {
         final UUID invoiceId = UUID.randomUUID();
-        final UUID accountId = UUID.randomUUID();
+        final UUID accountId = account.getId();
         final LocalDate startDate = new LocalDate(2012, 4, 1);
 
         final InvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, accountId, UUID.randomUUID(),
                                                                             UUID.randomUUID(), "test plan", "test phase", startDate, TEN, Currency.USD);
-        invoiceUtil.createInvoiceItem(fixedPriceInvoiceItem, internalCallContext);
+        invoiceUtil.createInvoiceItem(fixedPriceInvoiceItem, context);
 
-        final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(fixedPriceInvoiceItem.getId(), internalCallContext);
+        final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(fixedPriceInvoiceItem.getId(), context);
         assertSameInvoiceItem(fixedPriceInvoiceItem, savedItem);
     }
 
     @Test(groups = "slow")
     public void testExternalChargeInvoiceSqlDao() throws Exception {
         final UUID invoiceId = UUID.randomUUID();
-        final UUID accountId = UUID.randomUUID();
+        final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
         final String description = UUID.randomUUID().toString();
         final LocalDate startDate = new LocalDate(2012, 4, 1);
         final InvoiceItem externalChargeInvoiceItem = new ExternalChargeInvoiceItem(invoiceId, accountId, bundleId, description,
                                                                                     startDate, TEN, Currency.USD);
-        invoiceUtil.createInvoiceItem(externalChargeInvoiceItem, internalCallContext);
+        invoiceUtil.createInvoiceItem(externalChargeInvoiceItem, context);
 
-        final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(externalChargeInvoiceItem.getId(), internalCallContext);
+        final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(externalChargeInvoiceItem.getId(), context);
         assertSameInvoiceItem(externalChargeInvoiceItem, savedItem);
     }
 

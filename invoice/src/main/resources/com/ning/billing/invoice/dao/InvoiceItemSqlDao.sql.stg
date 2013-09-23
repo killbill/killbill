@@ -47,14 +47,6 @@ getInvoiceItemsByInvoice() ::= <<
   ;
 >>
 
-getInvoiceItemsByAccount() ::= <<
-  SELECT <allTableFields()>
-  FROM <tableName()>
-  WHERE account_id = :accountId
-  <AND_CHECK_TENANT()>
-  ;
->>
-
 getInvoiceItemsBySubscription() ::= <<
   SELECT <allTableFields()>
   FROM <tableName()>
