@@ -37,7 +37,6 @@ import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -158,7 +157,7 @@ public class InvoiceDaoHelper {
 
 
     public List<InvoiceModelDao> getUnpaidInvoicesByAccountFromTransaction(final UUID accountId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final LocalDate upToDate, final InternalTenantContext context) {
-        final List<InvoiceModelDao> invoices = getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
+        final List<InvoiceModelDao> invoices = getAllInvoicesByAccountFromTransaction(entitySqlDaoWrapperFactory, context);
         return getUnpaidInvoicesByAccountFromTransaction(invoices, upToDate);
     }
 
@@ -235,8 +234,8 @@ public class InvoiceDaoHelper {
         getInvoicePaymentsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
     }
 
-    public List<InvoiceModelDao> getAllInvoicesByAccountFromTransaction(final UUID accountId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) {
-        final List<InvoiceModelDao> invoices = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class).getAllInvoicesByAccount(accountId.toString(), context);
+    public List<InvoiceModelDao> getAllInvoicesByAccountFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        final List<InvoiceModelDao> invoices = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class).getByAccountRecordId(context);
         populateChildren(invoices, entitySqlDaoWrapperFactory, context);
         return invoices;
     }

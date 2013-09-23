@@ -19,6 +19,7 @@ package com.ning.billing.invoice.glue;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.TestInvoiceNotificationQListener;
 import com.ning.billing.util.glue.BusModule;
@@ -40,7 +41,7 @@ public class TestInvoiceModuleWithEmbeddedDb extends TestInvoiceModule {
     @Override
     public void configure() {
         super.configure();
-
+        install(new DefaultAccountModule(configSource));
         install(new GuicyKillbillTestWithEmbeddedDBModule());
         install(new NonEntityDaoModule());
         install(new MetricsModule());

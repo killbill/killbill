@@ -33,6 +33,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -42,7 +43,6 @@ import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -50,11 +50,24 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 
 public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, InvoiceApiException> implements InvoiceDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
+
+    private static final Ordering<InvoiceModelDao> INVOICE_MODEL_DAO_ORDERING = Ordering.natural()
+                                                                                        .onResultOf(new Function<InvoiceModelDao, Comparable>() {
+                                                                                            @Override
+                                                                                            public Comparable apply(final InvoiceModelDao invoice) {
+                                                                                                return invoice.getTargetDate();
+                                                                                            }
+                                                                                        });
 
     private final NextBillingDatePoster nextBillingDatePoster;
     private final PersistentBus eventBus;
@@ -81,13 +94,19 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final UUID accountId, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
             @Override
             public List<InvoiceModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
 
-                final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(accountId.toString(), context);
+                final List<InvoiceModelDao> invoices = ImmutableList.<InvoiceModelDao>copyOf(INVOICE_MODEL_DAO_ORDERING.sortedCopy(Iterables.<InvoiceModelDao>filter(invoiceDao.getByAccountRecordId(context),
+                                                                                                                                                                     new Predicate<InvoiceModelDao>() {
+                                                                                                                                                                         @Override
+                                                                                                                                                                         public boolean apply(final InvoiceModelDao invoice) {
+                                                                                                                                                                             return !invoice.isMigrated();
+                                                                                                                                                                         }
+                                                                                                                                                                     })));
                 invoiceDaoHelper.populateChildren(invoices, entitySqlDaoWrapperFactory, context);
 
                 return invoices;
@@ -96,30 +115,37 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getAllInvoicesByAccount(final UUID accountId, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getAllInvoicesByAccount(final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
             @Override
             public List<InvoiceModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
+                return invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(entitySqlDaoWrapperFactory, context);
             }
         });
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final LocalDate fromDate, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
             @Override
             public List<InvoiceModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-
-                final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccountAfterDate(accountId.toString(),
-                                                                                                fromDate.toDateTimeAtStartOfDay().toDate(),
-                                                                                                context);
+                final List<InvoiceModelDao> invoices = getAllNonMigratedInvoicesByAccountAfterDate(invoiceDao, fromDate, context);
                 invoiceDaoHelper.populateChildren(invoices, entitySqlDaoWrapperFactory, context);
 
                 return invoices;
             }
         });
+    }
+
+    private List<InvoiceModelDao> getAllNonMigratedInvoicesByAccountAfterDate(final InvoiceSqlDao invoiceSqlDao, final LocalDate fromDate, final InternalTenantContext context) {
+        return ImmutableList.<InvoiceModelDao>copyOf(INVOICE_MODEL_DAO_ORDERING.sortedCopy(Iterables.<InvoiceModelDao>filter(invoiceSqlDao.getByAccountRecordId(context),
+                                                                                                                             new Predicate<InvoiceModelDao>() {
+                                                                                                                                 @Override
+                                                                                                                                 public boolean apply(final InvoiceModelDao invoice) {
+                                                                                                                                     return !invoice.isMigrated() && invoice.getTargetDate().compareTo(fromDate) >= 0;
+                                                                                                                                 }
+                                                                                                                             })));
     }
 
     @Override
@@ -235,7 +261,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 BigDecimal cba = BigDecimal.ZERO;
 
                 BigDecimal accountBalance = BigDecimal.ZERO;
-                final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
+                final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(entitySqlDaoWrapperFactory, context);
                 for (final InvoiceModelDao cur : invoices) {
                     accountBalance = accountBalance.add(InvoiceModelDaoHelper.getBalance(cur));
                     cba = cba.add(InvoiceModelDaoHelper.getCBAAmount(cur));
@@ -370,6 +396,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
         });
     }
+
     @Override
     public InvoicePaymentModelDao postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final InternalCallContext context) throws InvoiceApiException {
         return transactionalSqlDao.execute(InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<InvoicePaymentModelDao>() {
@@ -637,9 +664,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     if (accountCBA.compareTo(cbaItem.getAmount().negate()) < 0) {
                         throw new IllegalStateException("The account balance can't be lower than the amount adjusted");
                     }
-                    final List<InvoiceModelDao> invoicesFollowing = transactional.getInvoicesByAccountAfterDate(accountId.toString(),
-                                                                                                                invoice.getInvoiceDate().toDateTimeAtStartOfDay().toDate(),
-                                                                                                                context);
+                    final List<InvoiceModelDao> invoicesFollowing = getAllNonMigratedInvoicesByAccountAfterDate(transactional, invoice.getInvoiceDate(), context);
                     invoiceDaoHelper.populateChildren(invoicesFollowing, entitySqlDaoWrapperFactory, context);
 
                     // The remaining amount to adjust (i.e. the amount of credits used on following invoices)

@@ -177,7 +177,7 @@ public class InvoiceDispatcher {
 
             List<Invoice> invoices = new ArrayList<Invoice>();
             if (!billingEvents.isAccountAutoInvoiceOff()) {
-                invoices = ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(accountId, context),
+                invoices = ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(context),
                                                                                 new Function<InvoiceModelDao, Invoice>() {
                                                                                     @Override
                                                                                     public Invoice apply(final InvoiceModelDao input) {

@@ -25,12 +25,12 @@ import com.ning.billing.mock.glue.MockGlobalLockerModule;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.CacheModule;
+import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 
 public class TestInvoiceModule extends DefaultInvoiceModule {
@@ -41,14 +41,13 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
 
     private void installExternalApis() {
         bind(SubscriptionBaseInternalApi.class).toInstance(Mockito.mock(SubscriptionBaseInternalApi.class));
-        bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
         bind(BillingInternalApi.class).toInstance(Mockito.mock(BillingInternalApi.class));
     }
 
     @Override
     protected void configure() {
         super.configure();
-
+        install(new CallContextModule());
         install(new MockGlobalLockerModule());
 
         install(new CatalogModule(configSource));

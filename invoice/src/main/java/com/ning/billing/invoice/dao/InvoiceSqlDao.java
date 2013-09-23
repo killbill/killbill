@@ -16,7 +16,6 @@
 
 package com.ning.billing.invoice.dao;
 
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,19 +30,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
-
-    @SqlQuery
-    List<InvoiceModelDao> getInvoicesByAccount(@Bind("accountId") final String accountId,
-                                               @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    List<InvoiceModelDao> getAllInvoicesByAccount(@Bind("accountId") final String string,
-                                                  @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    List<InvoiceModelDao> getInvoicesByAccountAfterDate(@Bind("accountId") final String accountId,
-                                                        @Bind("fromDate") final Date fromDate,
-                                                        @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoiceModelDao> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId,

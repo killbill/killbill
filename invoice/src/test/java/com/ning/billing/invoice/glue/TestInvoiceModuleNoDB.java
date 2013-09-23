@@ -16,13 +16,16 @@
 
 package com.ning.billing.invoice.glue;
 
+import org.mockito.Mockito;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.MockInvoiceDao;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.util.bus.InMemoryBusModule;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 public class TestInvoiceModuleNoDB extends TestInvoiceModule {
 
@@ -40,5 +43,8 @@ public class TestInvoiceModuleNoDB extends TestInvoiceModule {
         install(new GuicyKillbillTestNoDBModule());
         install(new MockNonEntityDaoModule());
         install(new InMemoryBusModule(configSource));
+
+        bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
+        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
     }
 }

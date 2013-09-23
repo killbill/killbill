@@ -70,16 +70,6 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
-    public Collection<Invoice> getInvoicesByAccountId(final UUID accountId, final InternalTenantContext context) {
-        return Collections2.transform(dao.getInvoicesByAccount(accountId, context), new Function<InvoiceModelDao, Invoice>() {
-            @Override
-            public Invoice apply(final InvoiceModelDao input) {
-                return new DefaultInvoice(input);
-            }
-        });
-    }
-
-    @Override
     public BigDecimal getAccountBalance(final UUID accountId, final InternalTenantContext context) {
         return dao.getAccountBalance(accountId, context);
     }

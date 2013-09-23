@@ -32,15 +32,16 @@ import org.testng.Assert;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.commons.locker.GlobalLocker;
-import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -56,18 +57,22 @@ import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.common.base.Function;
@@ -130,27 +135,30 @@ public class TestInvoiceHelper {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
+    private final AccountUserApi accountUserApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
-    private final  BusService busService;
-    private final  InvoiceDao invoiceDao;
+    private final BusService busService;
+    private final InvoiceDao invoiceDao;
     private final GlobalLocker locker;
-    private final  Clock clock;
+    private final Clock clock;
     private final InternalCallContext internalCallContext;
     private final NonEntityDao nonEntityDao;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     // Low level SqlDao used by the tests to directly insert rows
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
 
 
-
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
-                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
-                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final InternalCallContext internalCallContext) {
+                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
+                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final InternalCallContext internalCallContext,
+                             final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountApi = accountApi;
+        this.accountUserApi = accountUserApi;
         this.subscriptionApi = subscriptionApi;
         this.busService = busService;
         this.invoiceDao = invoiceDao;
@@ -158,11 +166,12 @@ public class TestInvoiceHelper {
         this.clock = clock;
         this.nonEntityDao = nonEntityDao;
         this.internalCallContext = internalCallContext;
+        this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
     }
 
-    public UUID generateRegularInvoice(final Account account, final DateTime targetDate) throws Exception {
+    public UUID generateRegularInvoice(final Account account, final DateTime targetDate, final CallContext callContext) throws Exception {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription.getBundleId()).thenReturn(new UUID(0L, 0L));
@@ -186,13 +195,15 @@ public class TestInvoiceHelper {
         Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, true, internalCallContext);
         Assert.assertNotNull(invoice);
 
-        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+
+        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(context);
         Assert.assertEquals(invoices.size(), 0);
 
-        invoice = dispatcher.processAccount(account.getId(), targetDate, false, internalCallContext);
+        invoice = dispatcher.processAccount(account.getId(), targetDate, false, context);
         Assert.assertNotNull(invoice);
 
-        invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);
+        invoices = invoiceDao.getInvoicesByAccount(context);
         Assert.assertEquals(invoices.size(), 1);
 
         return invoice.getId();
@@ -206,18 +217,20 @@ public class TestInvoiceHelper {
         return subscription;
     }
 
-    public Account createAccount() throws AccountApiException {
-        final UUID accountId = UUID.randomUUID();
-        final Account account = Mockito.mock(Account.class);
-        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(account);
-        Mockito.when(account.getCurrency()).thenReturn(accountCurrency);
-        Mockito.when(account.getId()).thenReturn(accountId);
-        Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
-        Mockito.when(account.getBillCycleDayLocal()).thenReturn(31);
-        // The timezone is required to compute the date of the next invoice notification
-        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
-
-        return account;
+    public Account createAccount(final CallContext callContext) throws AccountApiException {
+        final AccountData accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
+                                                                .firstNameLength(6)
+                                                                .email(UUID.randomUUID().toString().substring(1, 8))
+                                                                .phone(UUID.randomUUID().toString().substring(1, 8))
+                                                                .migrated(false)
+                                                                .isNotifiedForInvoices(true)
+                                                                .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                                                                .billingCycleDayLocal(31)
+                                                                .currency(accountCurrency)
+                                                                .paymentMethodId(UUID.randomUUID())
+                                                                .timeZone(DateTimeZone.UTC)
+                                                                .build();
+        return accountUserApi.createAccount(accountData, callContext);
     }
 
     public void createInvoiceItem(final InvoiceItem invoiceItem, final InternalCallContext internalCallContext) throws EntityPersistenceException {

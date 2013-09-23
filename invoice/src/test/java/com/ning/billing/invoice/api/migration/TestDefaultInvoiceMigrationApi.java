@@ -58,10 +58,10 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
         date_migrated = clock.getUTCToday().minusYears(1);
         date_regular = clock.getUTCNow();
 
-        final Account account = invoiceUtil.createAccount();
+        final Account account = invoiceUtil.createAccount(callContext);
         accountId = account.getId();
         migrationInvoiceId = createAndCheckMigrationInvoice(accountId);
-        regularInvoiceId = invoiceUtil.generateRegularInvoice(account, date_regular);
+        regularInvoiceId = invoiceUtil.generateRegularInvoice(account, date_regular, callContext);
     }
 
     private UUID createAndCheckMigrationInvoice(final UUID accountId) throws InvoiceApiException {

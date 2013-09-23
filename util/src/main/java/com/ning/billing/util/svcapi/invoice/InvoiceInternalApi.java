@@ -38,8 +38,6 @@ public interface InvoiceInternalApi {
 
     public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, LocalDate upToDate, InternalTenantContext context);
 
-    public Collection<Invoice> getInvoicesByAccountId(UUID accountId, InternalTenantContext context);
-
     public BigDecimal getAccountBalance(UUID accountId, InternalTenantContext context);
 
     public void notifyOfPayment(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentId, DateTime paymentDate, InternalCallContext context) throws InvoiceApiException;

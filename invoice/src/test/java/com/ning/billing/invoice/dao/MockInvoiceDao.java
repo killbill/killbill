@@ -36,6 +36,8 @@ import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
 
 public class MockInvoiceDao implements InvoiceDao {
@@ -45,6 +47,7 @@ public class MockInvoiceDao implements InvoiceDao {
     private final Map<UUID, InvoiceModelDao> invoices = new LinkedHashMap<UUID, InvoiceModelDao>();
     private final Map<UUID, InvoiceItemModelDao> items = new LinkedHashMap<UUID, InvoiceItemModelDao>();
     private final Map<UUID, InvoicePaymentModelDao> payments = new LinkedHashMap<UUID, InvoicePaymentModelDao>();
+    private final BiMap<UUID, Long> accountRecordIds = HashBiMap.create();
 
     @Inject
     public MockInvoiceDao(final PersistentBus eventBus) {
@@ -62,6 +65,7 @@ public class MockInvoiceDao implements InvoiceDao {
             for (final InvoicePaymentModelDao paymentModelDao : invoicePayments) {
                 payments.put(paymentModelDao.getId(), paymentModelDao);
             }
+            accountRecordIds.put(invoice.getAccountId(), context.getAccountRecordId());
         }
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
@@ -100,10 +104,11 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final UUID accountId, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final InternalTenantContext context) {
         final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
 
         synchronized (monitor) {
+            final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : invoices.values()) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.isMigrated()) {
                     result.add(invoice);
@@ -114,10 +119,11 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final LocalDate fromDate, final InternalTenantContext context) {
         final List<InvoiceModelDao> invoicesForAccount = new ArrayList<InvoiceModelDao>();
 
         synchronized (monitor) {
+            final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : get(context)) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate) && !invoice.isMigrated()) {
                     invoicesForAccount.add(invoice);
@@ -212,10 +218,11 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoiceModelDao> getAllInvoicesByAccount(final UUID accountId, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getAllInvoicesByAccount(final InternalTenantContext context) {
         final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
 
         synchronized (monitor) {
+            final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : invoices.values()) {
                 if (accountId.equals(invoice.getAccountId())) {
                     result.add(invoice);

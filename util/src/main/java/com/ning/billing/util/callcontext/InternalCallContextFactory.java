@@ -24,13 +24,14 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.base.Objects;
 
+// Internal contexts almost always expect accountRecordId and tenantRecordId to be populated
 public class InternalCallContextFactory {
 
     public static final long INTERNAL_TENANT_RECORD_ID = 0L;
@@ -46,11 +47,11 @@ public class InternalCallContextFactory {
         this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
 
-
     /**
      * Create an internal tenant context from a tenant context
      * <p/>
-     * This is used for r/o operations - we don't need the account id in that case
+     * This is used for r/o operations - we don't need the account id in that case.
+     * You should almost never use that one, you always want to populate the accountRecordId
      *
      * @param context tenant context (tenantId can be null only if multi-tenancy is disabled)
      * @return internal tenant context
@@ -75,20 +76,38 @@ public class InternalCallContextFactory {
 
     public InternalTenantContext createInternalTenantContext(final UUID accountId, final TenantContext context) {
         final Long tenantRecordId = getTenantRecordId(context);
-        final Long accountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(accountId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
+        final Long accountRecordId = getAccountRecordId(accountId, ObjectType.ACCOUNT);
         return new InternalTenantContext(tenantRecordId, accountRecordId);
     }
 
 
+    /**
+     * Crate an internal tenant context from a tenant context, and retrieving the account_record_id from another table
+     *
+     * @param objectId   the id of the row in the table pointed by object type where to look for account_record_id
+     * @param objectType the object type pointed by this objectId
+     * @param context    original tenant context
+     * @return internal tenant context from context, with a non null account_record_id (if found)
+     */
+    public InternalTenantContext createInternalTenantContext(final UUID objectId, final ObjectType objectType, final TenantContext context) {
+        // The context may come from a user API - for security, check we're not doing cross-tenants operations
+        //final Long tenantRecordIdFromObject = retrieveTenantRecordIdFromObject(objectId, objectType);
+        //final Long tenantRecordIdFromContext = getTenantRecordId(context);
+        //Preconditions.checkState(tenantRecordIdFromContext.equals(tenantRecordIdFromObject),
+        //                         "tenant of the pointed object (%s) and the context (%s) don't match!", tenantRecordIdFromObject, tenantRecordIdFromContext);
+        final Long tenantRecordId = getTenantRecordId(context);
+        final Long accountRecordId = getAccountRecordId(objectId, objectType);
+        return createInternalTenantContext(tenantRecordId, accountRecordId);
+    }
 
-        /**
-         * Crate an internal call context from a call context, and retrieving the account_record_id from another table
-         *
-         * @param objectId   the id of the row in the table pointed by object type where to look for account_record_id
-         * @param objectType the object type pointed by this objectId
-         * @param context    original call context
-         * @return internal call context from context, with a non null account_record_id (if found)
-         */
+    /**
+     * Create an internal call context from a call context, and retrieving the account_record_id from another table
+     *
+     * @param objectId   the id of the row in the table pointed by object type where to look for account_record_id
+     * @param objectType the object type pointed by this objectId
+     * @param context    original call context
+     * @return internal call context from context, with a non null account_record_id (if found)
+     */
     public InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final CallContext context) {
         // The context may come from a user API - for security, check we're not doing cross-tenants operations
         //final Long tenantRecordIdFromObject = retrieveTenantRecordIdFromObject(objectId, objectType);
@@ -152,7 +171,7 @@ public class InternalCallContextFactory {
                                                          @Nullable final String reasonCode, @Nullable final String comment, final DateTime createdDate,
                                                          final DateTime updatedDate) {
         final Long tenantRecordId = nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID));
-        final Long accountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
+        final Long accountRecordId = getAccountRecordId(objectId, objectType);
         return createInternalCallContext(tenantRecordId, accountRecordId, userName, callOrigin, userType, userToken,
                                          reasonCode, comment, createdDate, updatedDate);
     }
@@ -202,8 +221,6 @@ public class InternalCallContextFactory {
         return new InternalCallContext(tenantRecordId, null, context);
     }
 
-
-
     // Used when we need to re-hydrate the context with the account_record_id (when creating the account)
     public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {
         return new InternalCallContext(context.getTenantRecordId(), accountRecordId, context.getUserToken(), context.getCreatedBy(),
@@ -216,6 +233,14 @@ public class InternalCallContextFactory {
         return new InternalCallContext(tenantRecordId, accountRecordId, context.getUserToken(), context.getCreatedBy(),
                                        context.getCallOrigin(), context.getContextUserType(), context.getReasonCode(), context.getComments(),
                                        context.getCreatedDate(), context.getUpdatedDate());
+    }
+
+    private Long getAccountRecordId(final UUID accountId) {
+        return getAccountRecordId(accountId, ObjectType.ACCOUNT);
+    }
+
+    private Long getAccountRecordId(final UUID objectId, final ObjectType objectType) {
+        return nonEntityDao.retrieveAccountRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
     }
 
     private Long getTenantRecordId(final TenantContext context) {

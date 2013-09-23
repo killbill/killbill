@@ -154,6 +154,27 @@ public class DBTestingHelper {
                                "    PRIMARY KEY(record_id)\n" +
                                ");");
 
+        // HACK (PIERRE): required by invoice tests which perform payments lookups to find the account record id for the internal context
+        instance.executeScript("DROP TABLE IF EXISTS payments;\n" +
+                               "CREATE TABLE payments (\n" +
+                               "    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
+                               "    id char(36) NOT NULL,\n" +
+                               "    account_id char(36) NOT NULL,\n" +
+                               "    invoice_id char(36) NOT NULL,\n" +
+                               "    payment_method_id char(36) NOT NULL,\n" +
+                               "    amount numeric(10,4),\n" +
+                               "    currency char(3),\n" +
+                               "    effective_date datetime,\n" +
+                               "    payment_status varchar(50),\n" +
+                               "    created_by varchar(50) NOT NULL,\n" +
+                               "    created_date datetime NOT NULL,\n" +
+                               "    updated_by varchar(50) NOT NULL,\n" +
+                               "    updated_date datetime NOT NULL,\n" +
+                               "    account_record_id int(11) unsigned default null,\n" +
+                               "    tenant_record_id int(11) unsigned default null,\n" +
+                               "    PRIMARY KEY (record_id)\n" +
+                               ");");
+
         for (final String pack : new String[]{"account", "analytics", "beatrix", "subscription", "util", "payment", "invoice", "entitlement", "usage", "meter", "tenant"}) {
             for (final String ddlFile : new String[]{"ddl.sql", "ddl_test.sql"}) {
                 final String ddl;

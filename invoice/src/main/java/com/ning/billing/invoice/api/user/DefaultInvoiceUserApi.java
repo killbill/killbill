@@ -90,7 +90,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId, final TenantContext context) {
-        return ImmutableList.<Invoice>copyOf(Collections2.transform(dao.getInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<Invoice>copyOf(Collections2.transform(dao.getInvoicesByAccount(internalCallContextFactory.createInternalTenantContext(accountId, context)),
                                                                     new Function<InvoiceModelDao, Invoice>() {
                                                                         @Override
                                                                         public Invoice apply(final InvoiceModelDao input) {
@@ -101,7 +101,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final TenantContext context) {
-        return ImmutableList.<Invoice>copyOf(Collections2.transform(dao.getInvoicesByAccount(accountId, fromDate, internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<Invoice>copyOf(Collections2.transform(dao.getInvoicesByAccount(fromDate, internalCallContextFactory.createInternalTenantContext(accountId, context)),
                                                                     new Function<InvoiceModelDao, Invoice>() {
                                                                         @Override
                                                                         public Invoice apply(final InvoiceModelDao input) {
@@ -112,29 +112,30 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public BigDecimal getAccountBalance(final UUID accountId, final TenantContext context) {
-        final BigDecimal result = dao.getAccountBalance(accountId, internalCallContextFactory.createInternalTenantContext(context));
+        final BigDecimal result = dao.getAccountBalance(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
         return result == null ? BigDecimal.ZERO : result;
     }
 
     @Override
     public BigDecimal getAccountCBA(final UUID accountId, final TenantContext context) {
-        final BigDecimal result = dao.getAccountCBA(accountId, internalCallContextFactory.createInternalTenantContext(context));
+        final BigDecimal result = dao.getAccountCBA(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
         return result == null ? BigDecimal.ZERO : result;
     }
 
     @Override
     public Invoice getInvoice(final UUID invoiceId, final TenantContext context) throws InvoiceApiException {
-        return new DefaultInvoice(dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(context)));
+        return new DefaultInvoice(dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(invoiceId, ObjectType.INVOICE, context)));
     }
 
     @Override
     public Invoice getInvoiceByNumber(final Integer number, final TenantContext context) throws InvoiceApiException {
+        // TODO (PIERRE) Populate accountRecordId in context
         return new DefaultInvoice(dao.getByNumber(number, internalCallContextFactory.createInternalTenantContext(context)));
     }
 
     @Override
     public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final TenantContext context) {
-        return ImmutableList.<Invoice>copyOf(Collections2.transform(dao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<Invoice>copyOf(Collections2.transform(dao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalCallContextFactory.createInternalTenantContext(accountId, context)),
                                                                     new Function<InvoiceModelDao, Invoice>() {
                                                                         @Override
                                                                         public Invoice apply(final InvoiceModelDao input) {
@@ -146,16 +147,15 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public Invoice triggerInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final boolean dryRun,
                                             final CallContext context) throws InvoiceApiException {
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
         final Account account;
         try {
-            account = accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(context));
+            account = accountUserApi.getAccountById(accountId, internalContext);
         } catch (AccountApiException e) {
             throw new InvoiceApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, e.toString());
         }
 
-        // API_FIX Could we avoid the first call to createInternalTenantContext
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
         final DateTime processingDateTime = targetDate.toDateTimeAtCurrentTime(account.getTimeZone());
         final Invoice result = dispatcher.processAccount(accountId, processingDateTime, dryRun, internalContext);
         if (result == null) {
@@ -168,30 +168,30 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public void tagInvoiceAsWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException, InvoiceApiException {
         // Note: the tagApi is audited
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
         tagApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), internalContext);
 
         // Retrieve the invoice for the account id
         final Invoice invoice = new DefaultInvoice(dao.getById(invoiceId, internalContext));
         // This is for overdue
-        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
+        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), internalContext);
     }
 
     @Override
     public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException, InvoiceApiException {
         // Note: the tagApi is audited
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
         tagApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), internalContext);
 
         // Retrieve the invoice for the account id
         final Invoice invoice = new DefaultInvoice(dao.getById(invoiceId, internalContext));
         // This is for overdue
-        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
+        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), internalContext);
     }
 
     @Override
     public InvoiceItem getExternalChargeById(final UUID externalChargeId, final TenantContext context) throws InvoiceApiException {
-        final InvoiceItem externalChargeItem = InvoiceItemFactory.fromModelDao(dao.getExternalChargeById(externalChargeId, internalCallContextFactory.createInternalTenantContext(context)));
+        final InvoiceItem externalChargeItem = InvoiceItemFactory.fromModelDao(dao.getExternalChargeById(externalChargeId, internalCallContextFactory.createInternalTenantContext(externalChargeId, ObjectType.INVOICE_ITEM, context)));
         if (externalChargeItem == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_EXTERNAL_CHARGE, externalChargeId);
         }
@@ -233,7 +233,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public InvoiceItem getCreditById(final UUID creditId, final TenantContext context) throws InvoiceApiException {
-        final InvoiceItem creditItem = InvoiceItemFactory.fromModelDao(dao.getCreditById(creditId, internalCallContextFactory.createInternalTenantContext(context)));
+        final InvoiceItem creditItem = InvoiceItemFactory.fromModelDao(dao.getCreditById(creditId, internalCallContextFactory.createInternalTenantContext(creditId, ObjectType.INVOICE_ITEM, context)));
         if (creditItem == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_CREDIT, creditId);
         }
@@ -289,7 +289,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         }
 
-        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(invoiceId, ObjectType.INVOICE, context);
         final Account account = accountUserApi.getAccountById(invoice.getAccountId(), internalContext);
 
         // Check if this account has the MANUAL_PAY system tag

@@ -43,7 +43,7 @@ public class CBADao {
     public BigDecimal getAccountCBAFromTransaction(final UUID accountId,
                                                     final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
                                                     final InternalTenantContext context) {
-        final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
+        final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(entitySqlDaoWrapperFactory, context);
         return getAccountCBAFromTransaction(invoices);
     }
 
@@ -57,11 +57,11 @@ public class CBADao {
 
     public void doCBAComplexity(final UUID accountId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
 
-        List<InvoiceModelDao> invoiceItemModelDaos = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
+        List<InvoiceModelDao> invoiceItemModelDaos = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(entitySqlDaoWrapperFactory, context);
         for (InvoiceModelDao cur : invoiceItemModelDaos) {
             addCBAIfNeeded(entitySqlDaoWrapperFactory, cur, context);
         }
-        invoiceItemModelDaos = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
+        invoiceItemModelDaos = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(entitySqlDaoWrapperFactory, context);
         useExistingCBAFromTransaction(invoiceItemModelDaos, entitySqlDaoWrapperFactory, context);
     }
 

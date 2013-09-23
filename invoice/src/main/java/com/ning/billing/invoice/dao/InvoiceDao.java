@@ -42,9 +42,9 @@ public interface InvoiceDao {
 
     List<InvoiceModelDao> get(InternalTenantContext context);
 
-    List<InvoiceModelDao> getInvoicesByAccount(UUID accountId, InternalTenantContext context);
+    List<InvoiceModelDao> getInvoicesByAccount(InternalTenantContext context);
 
-    List<InvoiceModelDao> getInvoicesByAccount(UUID accountId, LocalDate fromDate, InternalTenantContext context);
+    List<InvoiceModelDao> getInvoicesByAccount(LocalDate fromDate, InternalTenantContext context);
 
     List<InvoiceModelDao> getInvoicesBySubscription(UUID subscriptionId, InternalTenantContext context);
 
@@ -61,7 +61,7 @@ public interface InvoiceDao {
     void test(InternalTenantContext context);
 
     // Include migrated invoices
-    List<InvoiceModelDao> getAllInvoicesByAccount(UUID accountId, InternalTenantContext context);
+    List<InvoiceModelDao> getAllInvoicesByAccount(InternalTenantContext context);
 
     InvoicePaymentModelDao postChargeback(UUID invoicePaymentId, BigDecimal amount, InternalCallContext context) throws InvoiceApiException;
 

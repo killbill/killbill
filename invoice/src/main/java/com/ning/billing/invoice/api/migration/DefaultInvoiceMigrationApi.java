@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.MigrationPlan;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
@@ -35,7 +36,6 @@ import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 import com.google.common.collect.ImmutableList;
@@ -65,7 +65,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
     @Override
     public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final BigDecimal balance, final Currency currency, final CallContext context) {
         try {
-            accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(context));
+            accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
         } catch (AccountApiException e) {
             log.warn("Unable to find account for id {}", accountId);
             return null;

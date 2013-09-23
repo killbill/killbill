@@ -39,9 +39,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.util.timezone.DateAndTimeZoneContext;
+import com.ning.billing.clock.ClockMock;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -50,23 +48,26 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.clock.ClockMock;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
+import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 
 public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
     private Account account;
     private SubscriptionBase subscription;
+    private InternalCallContext context;
 
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        account = invoiceUtil.createAccount();
+        account = invoiceUtil.createAccount(callContext);
         subscription = invoiceUtil.createSubscription();
+        context = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
     }
 
     @Test(groups = "slow")
@@ -92,25 +93,24 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                    nonEntityDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 
-        Invoice invoice = dispatcher.processAccount(accountId, target, true, internalCallContext);
+        Invoice invoice = dispatcher.processAccount(accountId, target, true, context);
         Assert.assertNotNull(invoice);
 
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(callContext);
-        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(accountId, internalTenantContext);
+        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(context);
         Assert.assertEquals(invoices.size(), 0);
 
         // Try it again to double check
-        invoice = dispatcher.processAccount(accountId, target, true, internalCallContext);
+        invoice = dispatcher.processAccount(accountId, target, true, context);
         Assert.assertNotNull(invoice);
 
-        invoices = invoiceDao.getInvoicesByAccount(accountId, internalTenantContext);
+        invoices = invoiceDao.getInvoicesByAccount(context);
         Assert.assertEquals(invoices.size(), 0);
 
         // This time no dry run
-        invoice = dispatcher.processAccount(accountId, target, false, internalCallContext);
+        invoice = dispatcher.processAccount(accountId, target, false, context);
         Assert.assertNotNull(invoice);
 
-        invoices = invoiceDao.getInvoicesByAccount(accountId, internalTenantContext);
+        invoices = invoiceDao.getInvoicesByAccount(context);
         Assert.assertEquals(invoices.size(), 1);
     }
 
@@ -146,7 +146,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                    nonEntityDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 
-        final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), false, internalCallContext);
+        final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), false, context);
         Assert.assertNotNull(invoice);
 
         final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();

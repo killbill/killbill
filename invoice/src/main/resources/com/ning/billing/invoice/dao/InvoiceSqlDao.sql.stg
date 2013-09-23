@@ -26,30 +26,6 @@ extraTableFieldsWithComma(prefix) ::= <<
 , <prefix>record_id as invoice_number
 >>
 
-getInvoicesByAccount() ::= <<
-  SELECT <allTableFields()>
-  FROM <tableName()>
-  WHERE account_id = :accountId AND migrated = '0'
-  <AND_CHECK_TENANT()>
-  ORDER BY target_date ASC;
->>
-
-getAllInvoicesByAccount() ::= <<
-  SELECT <allTableFields()>
-  FROM <tableName()>
-  WHERE account_id = :accountId
-  <AND_CHECK_TENANT()>
-  ORDER BY target_date ASC;
->>
-
-getInvoicesByAccountAfterDate() ::= <<
-  SELECT <allTableFields()>
-  FROM <tableName()>
-  WHERE account_id = :accountId AND target_date >= :fromDate AND migrated = '0'
-  <AND_CHECK_TENANT()>
-  ORDER BY target_date ASC;
->>
-
 getInvoicesBySubscription() ::= <<
   SELECT <allTableFields("i.")>
   FROM <tableName()> i

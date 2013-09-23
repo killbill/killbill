@@ -26,6 +26,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.commons.locker.GlobalLocker;
@@ -76,6 +77,8 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected InvoiceGenerator generator;
     @Inject
     protected BillingInternalApi billingApi;
+    @Inject
+    protected AccountUserApi accountUserApi;
     @Inject
     protected AccountInternalApi accountApi;
     @Inject

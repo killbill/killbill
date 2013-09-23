@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -53,7 +54,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public List<Invoice> getAllInvoicesByAccount(final UUID accountId, final TenantContext context) {
-        return ImmutableList.<Invoice>copyOf(Collections2.transform(dao.getAllInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<Invoice>copyOf(Collections2.transform(dao.getAllInvoicesByAccount(internalCallContextFactory.createInternalTenantContext(accountId, context)),
                                                                     new Function<InvoiceModelDao, Invoice>() {
                                                                         @Override
                                                                         public Invoice apply(final InvoiceModelDao input) {
@@ -64,12 +65,12 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public Invoice getInvoice(final UUID invoiceId, final TenantContext context) throws InvoiceApiException {
-        return new DefaultInvoice(dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(context)));
+        return new DefaultInvoice(dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(invoiceId, ObjectType.INVOICE, context)));
     }
 
     @Override
     public List<InvoicePayment> getInvoicePayments(final UUID paymentId, final TenantContext context) {
-        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePayments(paymentId, internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePayments(paymentId, internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context)),
                                                                            new Function<InvoicePaymentModelDao, InvoicePayment>() {
                                                                                @Override
                                                                                public InvoicePayment apply(final InvoicePaymentModelDao input) {
@@ -94,12 +95,12 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId, final TenantContext context) {
-        return dao.getRemainingAmountPaid(invoicePaymentId, internalCallContextFactory.createInternalTenantContext(context));
+        return dao.getRemainingAmountPaid(invoicePaymentId, internalCallContextFactory.createInternalTenantContext(invoicePaymentId, ObjectType.INVOICE_PAYMENT, context));
     }
 
     @Override
     public List<InvoicePayment> getChargebacksByAccountId(final UUID accountId, final TenantContext context) {
-        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getChargebacksByAccountId(accountId, internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getChargebacksByAccountId(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context)),
                                                                            new Function<InvoicePaymentModelDao, InvoicePayment>() {
                                                                                @Override
                                                                                public InvoicePayment apply(final InvoicePaymentModelDao input) {
@@ -110,7 +111,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId, final TenantContext context) {
-        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getChargebacksByPaymentId(paymentId, internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getChargebacksByPaymentId(paymentId, internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context)),
                                                                            new Function<InvoicePaymentModelDao, InvoicePayment>() {
                                                                                @Override
                                                                                public InvoicePayment apply(final InvoicePaymentModelDao input) {
@@ -121,12 +122,12 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public InvoicePayment getChargebackById(final UUID chargebackId, final TenantContext context) throws InvoiceApiException {
-        return new DefaultInvoicePayment(dao.getChargebackById(chargebackId, internalCallContextFactory.createInternalTenantContext(context)));
+        return new DefaultInvoicePayment(dao.getChargebackById(chargebackId, internalCallContextFactory.createInternalTenantContext(chargebackId, ObjectType.INVOICE_PAYMENT, context)));
     }
 
     @Override
     public UUID getAccountIdFromInvoicePaymentId(final UUID invoicePaymentId, final TenantContext context) throws InvoiceApiException {
-        return dao.getAccountIdFromInvoicePaymentId(invoicePaymentId, internalCallContextFactory.createInternalTenantContext(context));
+        return dao.getAccountIdFromInvoicePaymentId(invoicePaymentId, internalCallContextFactory.createInternalTenantContext(invoicePaymentId, ObjectType.INVOICE_PAYMENT, context));
     }
 
     @Override
@@ -136,8 +137,6 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public InvoicePayment createChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
-        // Retrieve the account id for the internal call context
-        final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePaymentId, internalCallContextFactory.createInternalTenantContext(context));
-        return new DefaultInvoicePayment(dao.postChargeback(invoicePaymentId, amount, internalCallContextFactory.createInternalCallContext(accountId, context)));
+        return new DefaultInvoicePayment(dao.postChargeback(invoicePaymentId, amount, internalCallContextFactory.createInternalCallContext(invoicePaymentId, ObjectType.INVOICE_PAYMENT, context)));
     }
 }
