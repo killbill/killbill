@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ChargebackJson extends JsonBase {
 
+    private final String chargebackId;
     private final String accountId;
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
@@ -40,7 +41,8 @@ public class ChargebackJson extends JsonBase {
     private final String currency;
 
     @JsonCreator
-    public ChargebackJson(@JsonProperty("accountId") final String accountId,
+    public ChargebackJson(@JsonProperty("chargebackId") final String chargebackId,
+                          @JsonProperty("accountId") final String accountId,
                           @JsonProperty("requestedDate") final DateTime requestedDate,
                           @JsonProperty("effectiveDate") final DateTime effectiveDate,
                           @JsonProperty("amount") final BigDecimal chargebackAmount,
@@ -48,6 +50,7 @@ public class ChargebackJson extends JsonBase {
                           @JsonProperty("currency") final String currency,
                           @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
+        this.chargebackId = chargebackId;
         this.accountId = accountId;
         this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
@@ -61,8 +64,12 @@ public class ChargebackJson extends JsonBase {
     }
 
     public ChargebackJson(final UUID accountId, final InvoicePayment chargeback, @Nullable final List<AuditLog> auditLogs) {
-        this(accountId.toString(), chargeback.getPaymentDate(), chargeback.getPaymentDate(), chargeback.getAmount().negate(),
-             chargeback.getPaymentId().toString(), chargeback.getCurrency().toString(), toAuditLogJson(auditLogs));
+        this(chargeback.getId().toString(), accountId.toString(), chargeback.getPaymentDate(), chargeback.getPaymentDate(),
+               chargeback.getAmount().negate(), chargeback.getPaymentId().toString(), chargeback.getCurrency().toString(), toAuditLogJson(auditLogs));
+    }
+
+    public String getChargebackId() {
+        return chargebackId;
     }
 
     public String getAccountId() {
@@ -100,6 +107,9 @@ public class ChargebackJson extends JsonBase {
 
         final ChargebackJson that = (ChargebackJson) o;
 
+        if (chargebackId != null ? !chargebackId.equals(that.chargebackId) : that.chargebackId != null) {
+            return false;
+        }
         if (!((amount == null && that.amount == null) ||
               (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
             return false;
@@ -121,16 +131,16 @@ public class ChargebackJson extends JsonBase {
               (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
             return false;
         }
-
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = requestedDate != null ? requestedDate.hashCode() : 0;
+        int result = chargebackId != null ? chargebackId.hashCode() : 0;
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
-        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         return result;
@@ -139,7 +149,8 @@ public class ChargebackJson extends JsonBase {
     @Override
     public String toString() {
         return "ChargebackJson{" +
-               "accountId='" + accountId + '\'' +
+               "chargebackId='" + chargebackId + '\'' +
+               ", accountId='" + accountId + '\'' +
                ", requestedDate=" + requestedDate +
                ", effectiveDate=" + effectiveDate +
                ", amount=" + amount +

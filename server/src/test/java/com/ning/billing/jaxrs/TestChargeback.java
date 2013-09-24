@@ -39,7 +39,6 @@ import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -59,7 +58,7 @@ public class TestChargeback extends TestJaxrsBase {
         final PaymentJson payment = createAccountWithInvoiceAndPayment();
 
         // We get a 249.95 payment so we do 4 chargeback and then the fifth should fail
-        final ChargebackJson input = new ChargebackJson(null, null, null, new BigDecimal("50.00"), payment.getPaymentId(), null, null);
+        final ChargebackJson input = new ChargebackJson(null, null, null, null, new BigDecimal("50.00"), payment.getPaymentId(), null, null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         //
@@ -111,9 +110,9 @@ public class TestChargeback extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testInvoicePaymentDoesNotExist() throws Exception {
-        final ChargebackJson input = new ChargebackJson(null, new DateTime(DateTimeZone.UTC), new DateTime(DateTimeZone.UTC),
-                                                        BigDecimal.TEN, UUID.randomUUID().toString(),
-                                                        null, null);
+        final ChargebackJson input = new ChargebackJson(null, null, new DateTime(DateTimeZone.UTC),
+                                                          new DateTime(DateTimeZone.UTC), BigDecimal.TEN,
+                                                          UUID.randomUUID().toString(), null, null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Try to create the chargeback
@@ -123,7 +122,7 @@ public class TestChargeback extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testBadRequest() throws Exception {
-        final ChargebackJson input = new ChargebackJson(null, null, null, null, null, null, null);
+        final ChargebackJson input = new ChargebackJson(null, null, null, null, null, null, null, null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Try to create the chargeback
@@ -150,7 +149,7 @@ public class TestChargeback extends TestJaxrsBase {
     }
 
     private void createAndVerifyChargeback(final PaymentJson payment) throws IOException {
-        final ChargebackJson input = new ChargebackJson(null, null, null, BigDecimal.TEN, payment.getPaymentId(), null, null);
+        final ChargebackJson input = new ChargebackJson(null, null, null, null, BigDecimal.TEN, payment.getPaymentId(), null, null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Create the chargeback
