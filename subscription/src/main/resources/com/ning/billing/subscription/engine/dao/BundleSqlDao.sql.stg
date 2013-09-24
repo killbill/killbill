@@ -7,6 +7,7 @@ tableFields(prefix) ::= <<
   <prefix>external_key
 , <prefix>account_id
 , <prefix>last_sys_update_date
+, <prefix>original_created_date
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -17,6 +18,7 @@ tableValues() ::= <<
   :externalKey
 , :accountId
 , :lastSysUpdateDate
+, :originalCreatedDate
 , :createdBy
 , :createdDate
 , :updatedBy
@@ -40,6 +42,7 @@ from bundles
 where
 external_key = :externalKey
 <AND_CHECK_TENANT()>
+order by record_id asc
 ;
 >>
 
@@ -50,6 +53,7 @@ where
 external_key = :externalKey
 and account_id = :accountId
 <AND_CHECK_TENANT()>
+order by record_id asc
 ;
 >>
 
@@ -59,5 +63,6 @@ from bundles
 where
 account_id = :accountId
 <AND_CHECK_TENANT()>
+order by record_id asc
 ;
 >>

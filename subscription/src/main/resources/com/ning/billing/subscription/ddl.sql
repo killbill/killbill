@@ -57,6 +57,7 @@ CREATE TABLE bundles (
     external_key varchar(64) NOT NULL,
     account_id char(36) NOT NULL,
     last_sys_update_date datetime,
+    original_created_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,

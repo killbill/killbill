@@ -64,6 +64,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
             try {
                 final SubscriptionBaseBundle newBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, internalCallContext);
+
                 Assert.fail("Unexpected success to create a bundle");
             } catch (SubscriptionBaseApiException e) {
                 Assert.assertEquals(e.getCode(), ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode());
@@ -73,9 +74,10 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
             final SubscriptionBaseBundle newBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, internalCallContext);
             assertNotNull(newBundle);
+            assertEquals(newBundle.getOriginalCreatedDate().compareTo(bundle.getCreatedDate()), 0);
 
             final DefaultSubscriptionBase newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(newBundle.getId(),
-                                                                                                                              testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
+                                                                                                                                 testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
             assertNotNull(newSubscription);
 
 

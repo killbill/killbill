@@ -31,19 +31,21 @@ public class SubscriptionBundleModelDao extends EntityBase implements EntityMode
     private String externalKey;
     private UUID accountId;
     private DateTime lastSysUpdateDate;
+    private DateTime originalCreatedDate;
 
     public SubscriptionBundleModelDao() { /* For the DAO mapper */ }
 
     public SubscriptionBundleModelDao(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdateDate,
-                                      final DateTime createdDate, final DateTime updateDate) {
+                                      final DateTime createdDate, DateTime originalCreatedDate, final DateTime updateDate) {
         super(id, createdDate, updateDate);
         this.externalKey = key;
         this.accountId = accountId;
         this.lastSysUpdateDate = lastSysUpdateDate;
+        this.originalCreatedDate = originalCreatedDate;
     }
 
     public SubscriptionBundleModelDao(final DefaultSubscriptionBaseBundle input) {
-        this(input.getId(), input.getExternalKey(), input.getAccountId(), input.getLastSysUpdateDate(), input.getCreatedDate(), input.getUpdatedDate());
+        this(input.getId(), input.getExternalKey(), input.getAccountId(), input.getLastSysUpdateDate(), input.getCreatedDate(), input.getOriginalCreatedDate(), input.getUpdatedDate());
     }
 
     public String getExternalKey() {
@@ -58,11 +60,15 @@ public class SubscriptionBundleModelDao extends EntityBase implements EntityMode
         return lastSysUpdateDate;
     }
 
+    public DateTime getOriginalCreatedDate() {
+        return originalCreatedDate;
+    }
+
     public static SubscriptionBaseBundle toSubscriptionbundle(final SubscriptionBundleModelDao src) {
         if (src == null) {
             return null;
         }
-        return new DefaultSubscriptionBaseBundle(src.getId(), src.getExternalKey(), src.getAccountId(), src.getLastSysUpdateDate());
+        return new DefaultSubscriptionBaseBundle(src.getId(), src.getExternalKey(), src.getAccountId(), src.getLastSysUpdateDate(), src.getOriginalCreatedDate(), src.getCreatedDate(), src.getUpdatedDate());
     }
 
     @Override
@@ -99,6 +105,9 @@ public class SubscriptionBundleModelDao extends EntityBase implements EntityMode
         if (lastSysUpdateDate != null ? !lastSysUpdateDate.equals(that.lastSysUpdateDate) : that.lastSysUpdateDate != null) {
             return false;
         }
+        if (originalCreatedDate != null ? !originalCreatedDate.equals(that.originalCreatedDate) : that.originalCreatedDate != null) {
+            return false;
+        }
 
         return true;
     }
@@ -109,6 +118,7 @@ public class SubscriptionBundleModelDao extends EntityBase implements EntityMode
         result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (lastSysUpdateDate != null ? lastSysUpdateDate.hashCode() : 0);
+        result = 31 * result + (originalCreatedDate != null ? originalCreatedDate.hashCode() : 0);
         return result;
     }
 

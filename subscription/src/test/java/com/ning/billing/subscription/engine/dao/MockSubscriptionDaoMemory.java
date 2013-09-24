@@ -125,13 +125,14 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public SubscriptionBaseBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+    public List<SubscriptionBaseBundle> getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+        final List<SubscriptionBaseBundle> results = new ArrayList<SubscriptionBaseBundle>();
         for (final SubscriptionBaseBundle cur : bundles) {
             if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(accountId)) {
-                return cur;
+                results.add(cur);
             }
         }
-        return null;
+        return results;
     }
 
     @Override
@@ -155,6 +156,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
         throw new UnsupportedOperationException();
     }
 
+    /*
     @Override
     public List<SubscriptionBase> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
 
@@ -165,6 +167,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
         }
         return Collections.emptyList();
     }
+    */
 
     @Override
     public void createSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> initialEvents,

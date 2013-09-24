@@ -31,9 +31,11 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionApiBase;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseApiService;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
+import com.ning.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
 import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -57,6 +59,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -201,7 +204,8 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_TRANSFER_INVALID_EFF_DATE, effectiveTransferDate);
             }
 
-            final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
+            final List<SubscriptionBaseBundle> bundlesForAccountAndKey = dao.getSubscriptionBundleFromAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
+            final SubscriptionBaseBundle bundle = DefaultSubscriptionInternalApi.getActiveBundleForKeyNotException(bundlesForAccountAndKey, dao, clock, fromInternalCallContext);
             if (bundle == null) {
                 throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleKey);
             }
@@ -209,7 +213,8 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
             // Get the bundle timeline for the old account
             final BundleBaseTimeline bundleBaseTimeline = timelineApi.getBundleTimeline(bundle, context);
 
-            final DefaultSubscriptionBaseBundle subscriptionBundleData = new DefaultSubscriptionBaseBundle(bundleKey, destAccountId, effectiveTransferDate);
+            final DefaultSubscriptionBaseBundle subscriptionBundleData = new DefaultSubscriptionBaseBundle(bundleKey, destAccountId, effectiveTransferDate,
+                                                                                                           bundle.getOriginalCreatedDate(), clock.getUTCNow(), clock.getUTCNow());
             final List<SubscriptionMigrationData> subscriptionMigrationDataList = new LinkedList<SubscriptionMigrationData>();
 
             final List<TransferCancelData> transferCancelDataList = new LinkedList<TransferCancelData>();
@@ -276,4 +281,5 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
             throw new SubscriptionBaseTransferApiException(e);
         }
     }
+
 }

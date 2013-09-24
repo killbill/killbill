@@ -41,6 +41,7 @@ import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
@@ -68,6 +69,8 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
             final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBaseBundle bundle = bundles.get(0);
+
+            final DateTime bundleCreatedDate = bundle.getCreatedDate();
 
             final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
@@ -101,6 +104,10 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
             // The MIGRATE_BILLING event should have been invalidated
             assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).size(), 0);
             //assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).get(0).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
+
+            final SubscriptionBaseBundle newBundle = subscriptionInternalApi.getActiveBundleForKey(bundle.getExternalKey(), internalCallContext);
+            assertNotEquals(newBundle.getId(), bundle.getId());
+            assertEquals(newBundle.getOriginalCreatedDate().compareTo(bundleCreatedDate), 0);
 
         } catch (SubscriptionBaseMigrationApiException e) {
             Assert.fail("", e);

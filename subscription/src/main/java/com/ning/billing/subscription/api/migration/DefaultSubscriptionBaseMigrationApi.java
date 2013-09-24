@@ -89,7 +89,7 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
 
         for (final BundleMigration curBundle : toBeMigrated.getBundles()) {
 
-            final DefaultSubscriptionBaseBundle bundleData = new DefaultSubscriptionBaseBundle(curBundle.getBundleKey(), accountId, clock.getUTCNow());
+            final DefaultSubscriptionBaseBundle bundleData = new DefaultSubscriptionBaseBundle(curBundle.getBundleKey(), accountId, now, now, now, now);
             final List<SubscriptionMigrationData> bundleSubscriptionData = new LinkedList<AccountMigrationData.SubscriptionMigrationData>();
 
             final List<SubscriptionMigration> sortedSubscriptions = Lists.newArrayList(curBundle.getSubscriptions());

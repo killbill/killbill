@@ -28,23 +28,30 @@ public class DefaultSubscriptionBaseBundle extends EntityBase implements Subscri
     private final String key;
     private final UUID accountId;
     private final DateTime lastSysUpdateDate;
+    private final DateTime originalCreatedDate;
 
-    public DefaultSubscriptionBaseBundle(final String name, final UUID accountId, final DateTime startDate) {
-        this(UUID.randomUUID(), name, accountId, startDate);
+    public DefaultSubscriptionBaseBundle(final String name, final UUID accountId, final DateTime startDate, final DateTime originalCreatedDate,
+                                         final DateTime createdDate, final DateTime updatedDate) {
+        this(UUID.randomUUID(), name, accountId, startDate, originalCreatedDate, createdDate, updatedDate);
     }
 
-
-    public DefaultSubscriptionBaseBundle(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdate) {
-        // TODO add column in bundles table
-        super(id, null, null);
+    public DefaultSubscriptionBaseBundle(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdate, final DateTime originalCreatedDate,
+                                         final DateTime createdDate, final DateTime updatedDate) {
+        super(id, createdDate, updatedDate);
         this.key = key;
         this.accountId = accountId;
         this.lastSysUpdateDate = lastSysUpdate;
+        this.originalCreatedDate = originalCreatedDate;
     }
 
     @Override
     public String getExternalKey() {
         return key;
+    }
+
+    @Override
+    public DateTime getOriginalCreatedDate() {
+        return originalCreatedDate;
     }
 
     @Override
@@ -91,6 +98,9 @@ public class DefaultSubscriptionBaseBundle extends EntityBase implements Subscri
         if (lastSysUpdateDate != null ? !lastSysUpdateDate.equals(that.lastSysUpdateDate) : that.lastSysUpdateDate != null) {
             return false;
         }
+        if (originalCreatedDate != null ? !originalCreatedDate.equals(that.originalCreatedDate) : that.originalCreatedDate != null) {
+            return false;
+        }
         return true;
     }
 
@@ -100,6 +110,7 @@ public class DefaultSubscriptionBaseBundle extends EntityBase implements Subscri
         result = 31 * result + (key != null ? key.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (lastSysUpdateDate != null ? lastSysUpdateDate.hashCode() : 0);
+        result = 31 * result + (originalCreatedDate != null ? originalCreatedDate.hashCode() : 0);
         return result;
     }
 }

@@ -98,7 +98,8 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
     @Override
     public BundleBaseTimeline getBundleTimeline(final UUID accountId, final String bundleName, final TenantContext context)
             throws SubscriptionBaseRepairException {
-        final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleName, internalCallContextFactory.createInternalTenantContext(context));
+        final List<SubscriptionBaseBundle> bundles = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleName, internalCallContextFactory.createInternalTenantContext(context));
+        final SubscriptionBaseBundle bundle = bundles.size() > 0 ? bundles.get(bundles.size() - 1) : null;
         return getBundleTimelineInternal(bundle, bundleName + " [accountId= " + accountId.toString() + "]", context);
     }
 

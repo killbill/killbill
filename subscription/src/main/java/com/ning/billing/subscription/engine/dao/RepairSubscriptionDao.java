@@ -224,11 +224,6 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public SubscriptionBaseBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
-        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
-    }
-
-    @Override
     public SubscriptionBaseBundle getSubscriptionBundleFromId(final UUID bundleId, final InternalTenantContext context) {
         throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
@@ -255,12 +250,6 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
 
     @Override
     public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
-        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
-    }
-
-    @Override
-    public List<SubscriptionBase> getSubscriptionsForAccountAndKey(final UUID accountId,
-                                                               final String bundleKey, final InternalTenantContext context) {
         throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
@@ -313,6 +302,11 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
 
     @Override
     public List<SubscriptionBaseBundle> getSubscriptionBundlesForKey(final String bundleKey, final InternalTenantContext context) {
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
+    }
+
+    @Override
+    public List<SubscriptionBaseBundle> getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
         throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 }

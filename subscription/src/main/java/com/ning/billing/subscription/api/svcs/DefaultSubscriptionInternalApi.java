@@ -155,17 +155,22 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     @Override
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final InternalCallContext context) throws SubscriptionBaseApiException {
-        final SubscriptionBaseBundle result = getActiveBundleForKeyNotException(bundleKey, context);
+
+        final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
+        final SubscriptionBaseBundle result = getActiveBundleForKeyNotException(existingBundles, dao, clock, context);
         if (result != null) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, bundleKey);
         }
-        final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, clock.getUTCNow());
+        final DateTime now = clock.getUTCNow();
+        final DateTime originalCreatedDate = existingBundles.size() > 0 ? existingBundles.get(0).getCreatedDate() : now;
+        final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, originalCreatedDate, now, now);
         return dao.createSubscriptionBundle(bundle, context);
     }
 
     @Override
     public SubscriptionBaseBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
-        final SubscriptionBaseBundle result = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleKey, context);
+        final List<SubscriptionBaseBundle> bundlesForAccountAndKey = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleKey, context);
+        final SubscriptionBaseBundle result = getActiveBundleForKeyNotException(bundlesForAccountAndKey, dao, clock, context);
         if (result == null) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, bundleKey);
         }
@@ -185,16 +190,16 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     @Override
     public SubscriptionBaseBundle getActiveBundleForKey(final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException  {
-        final SubscriptionBaseBundle result =  getActiveBundleForKeyNotException(bundleKey, context);
+        final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
+
+        final SubscriptionBaseBundle result =  getActiveBundleForKeyNotException(existingBundles, dao, clock, context);
         if (result == null) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, bundleKey);
         }
         return result;
     }
 
-    private SubscriptionBaseBundle getActiveBundleForKeyNotException(final String bundleKey, final InternalTenantContext context)  {
-
-        final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
+    public static SubscriptionBaseBundle getActiveBundleForKeyNotException(final List<SubscriptionBaseBundle> existingBundles, final SubscriptionDao dao, final Clock clock, final InternalTenantContext context)  {
         for (SubscriptionBaseBundle cur : existingBundles) {
             final List<SubscriptionBase> subscriptions = dao.getSubscriptions(cur.getId(), context);
             for (SubscriptionBase s : subscriptions) {
