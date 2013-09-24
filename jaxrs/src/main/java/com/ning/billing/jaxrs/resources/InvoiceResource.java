@@ -181,11 +181,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                         @HeaderParam(HDR_COMMENT) final String comment,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-
-        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
-
-        final DateTime inputDateTime = targetDateTime != null ? DATE_TIME_FORMATTER.parseDateTime(targetDateTime) : clock.getUTCNow();
-        final LocalDate inputDate = inputDateTime.toDateTime(account.getTimeZone()).toLocalDate();
+        final LocalDate inputDate = toLocalDate(UUID.fromString(accountId), targetDateTime, callContext);
 
         final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRun,
                                                                              callContext);
@@ -229,26 +225,17 @@ public class InvoiceResource extends JaxRsResourceBase {
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);
-
-        // Get the effective date of the adjustment, in the account timezone
-        final LocalDate requestedDate;
-        if (requestedDateTimeString == null) {
-            requestedDate = clock.getUTCToday();
-        } else {
-            final DateTime requestedDateTime = DATE_TIME_FORMATTER.parseDateTime(requestedDateTimeString);
-            requestedDate = requestedDateTime.toDateTime(account.getTimeZone()).toLocalDate();
-        }
-
+        final UUID accountId = UUID.fromString(json.getAccountId());
+        final LocalDate requestedDate = toLocalDate(accountId, requestedDateTimeString, callContext);
         final InvoiceItem adjustmentItem;
         if (json.getAmount() == null) {
-            adjustmentItem = invoiceApi.insertInvoiceItemAdjustment(account.getId(),
+            adjustmentItem = invoiceApi.insertInvoiceItemAdjustment(accountId,
                                                                     UUID.fromString(invoiceId),
                                                                     UUID.fromString(json.getInvoiceItemId()),
                                                                     requestedDate,
                                                                     callContext);
         } else {
-            adjustmentItem = invoiceApi.insertInvoiceItemAdjustment(account.getId(),
+            adjustmentItem = invoiceApi.insertInvoiceItemAdjustment(accountId,
                                                                     UUID.fromString(invoiceId),
                                                                     UUID.fromString(json.getInvoiceItemId()),
                                                                     requestedDate,
@@ -276,13 +263,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()), callContext);
 
         // Get the effective date of the external charge, in the account timezone
-        final LocalDate requestedDate;
-        if (requestedDateTimeString == null) {
-            requestedDate = clock.getUTCToday();
-        } else {
-            final DateTime requestedDateTime = DATE_TIME_FORMATTER.parseDateTime(requestedDateTimeString);
-            requestedDate = requestedDateTime.toDateTime(account.getTimeZone()).toLocalDate();
-        }
+        final LocalDate requestedDate = toLocalDate(account, requestedDateTimeString, callContext);
 
         final Currency currency = Objects.firstNonNull(externalChargeJson.getCurrency(), account.getCurrency());
         final InvoiceItem externalCharge;
@@ -316,13 +297,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()), callContext);
 
         // Get the effective date of the external charge, in the account timezone
-        final LocalDate requestedDate;
-        if (requestedDateTimeString == null) {
-            requestedDate = clock.getUTCToday();
-        } else {
-            final DateTime requestedDateTime = DATE_TIME_FORMATTER.parseDateTime(requestedDateTimeString);
-            requestedDate = requestedDateTime.toDateTime(account.getTimeZone()).toLocalDate();
-        }
+        final LocalDate requestedDate = toLocalDate(account, requestedDateTimeString, callContext);
 
         final UUID invoiceId = UUID.fromString(invoiceIdString);
         final Currency currency = Objects.firstNonNull(externalChargeJson.getCurrency(), account.getCurrency());

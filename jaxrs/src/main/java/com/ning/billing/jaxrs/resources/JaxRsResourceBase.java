@@ -172,24 +172,33 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected LocalDate toLocalDate(final UUID accountId, final String inputDate, final TenantContext context) {
 
-        if (inputDate != null) {
-            try {
-                final LocalDate localDate = LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
-                return localDate;
-            } catch (IllegalArgumentException expectedAndIgnore) { /*Fall through... */ }
+        final LocalDate maybeResult  = extractLocalDate(inputDate);
+        if (maybeResult != null) {
+            return maybeResult;
         }
-        final DateTime inputDateTime = inputDate != null ? DATE_TIME_FORMATTER.parseDateTime(inputDate) : clock.getUTCNow();
-        return toLocalDate(accountId, inputDateTime, context);
-    }
-
-    private LocalDate toLocalDate(final UUID accountId, final DateTime inputDate, final TenantContext context) {
         Account account = null;
         try {
             account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
         } catch (AccountApiException e) {
             log.info("Failed to retrieve account for id " + accountId);
         }
+        final DateTime inputDateTime = inputDate != null ? DATE_TIME_FORMATTER.parseDateTime(inputDate) : clock.getUTCNow();
+        return toLocalDate(account, inputDateTime, context);
+    }
 
+
+
+    protected LocalDate toLocalDate(final Account account, final String inputDate, final TenantContext context) {
+
+        final LocalDate maybeResult  = extractLocalDate(inputDate);
+        if (maybeResult != null) {
+            return maybeResult;
+        }
+        final DateTime inputDateTime = inputDate != null ? DATE_TIME_FORMATTER.parseDateTime(inputDate) : clock.getUTCNow();
+        return toLocalDate(account, inputDateTime, context);
+    }
+
+    private LocalDate toLocalDate(final Account account, final DateTime inputDate, final TenantContext context) {
         if (account == null && inputDate == null) {
             // We have no inputDate and so accountTimeZone so we default to LocalDate as seen in UTC
             return new LocalDate(clock.getUTCNow(), DateTimeZone.UTC);
@@ -203,5 +212,16 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             // Precise LocalDate as requested
             return new LocalDate(inputDate, account.getTimeZone());
         }
+    }
+
+    private LocalDate extractLocalDate(final String inputDate) {
+        if (inputDate != null) {
+            try {
+                final LocalDate localDate = LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
+                return localDate;
+            } catch (IllegalArgumentException expectedAndIgnore) {
+            }
+        }
+        return null;
     }
 }
