@@ -40,6 +40,7 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.clock.ClockMock;
 import com.ning.billing.entitlement.api.EntitlementApi;
+import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.glue.TestEntitlementModuleWithEmbeddedDB;
 import com.ning.billing.mock.MockAccountBuilder;
@@ -71,6 +72,8 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected BlockingInternalApi blockingInternalApi;
     @Inject
     protected EntitlementApi entitlementApi;
+    @Inject
+    protected SubscriptionApi subscriptionApi;
     @Inject
     protected BlockingStateDao blockingStateDao;
     @Inject

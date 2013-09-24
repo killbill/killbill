@@ -30,13 +30,16 @@ public class DefaultSubscriptionBundle implements SubscriptionBundle {
     private final SubscriptionBundleTimeline bundleTimeline;
     private final DateTime createdDate;
     private final DateTime updatedDate;
+    private final DateTime originalCreatedDate;
 
-    public DefaultSubscriptionBundle(final UUID id, final UUID accountId, final String externalKey, final List<Subscription> subscriptions, final SubscriptionBundleTimeline bundleTimeline, final DateTime createdDate, final DateTime updatedDate) {
+    public DefaultSubscriptionBundle(final UUID id, final UUID accountId, final String externalKey, final List<Subscription> subscriptions, final SubscriptionBundleTimeline bundleTimeline,
+                                     final DateTime originalCreatedDate, final DateTime createdDate, final DateTime updatedDate) {
         this.id = id;
         this.accountId = accountId;
         this.externalKey = externalKey;
         this.subscriptions = subscriptions;
         this.bundleTimeline = bundleTimeline;
+        this.originalCreatedDate = originalCreatedDate;
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
     }
@@ -49,6 +52,11 @@ public class DefaultSubscriptionBundle implements SubscriptionBundle {
     @Override
     public String getExternalKey() {
         return externalKey;
+    }
+
+    @Override
+    public DateTime getOriginalCreatedDate() {
+        return originalCreatedDate;
     }
 
     @Override

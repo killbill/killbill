@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTimeZone;
@@ -46,7 +45,6 @@ import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 
@@ -153,6 +151,28 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
+    public List<SubscriptionBundle> getSubscriptionBundlesForExternalKey(final String externalKey, final TenantContext context) throws SubscriptionApiException {
+
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        try {
+            final List<SubscriptionBaseBundle> baseBundles = subscriptionInternalApi.getBundlesForKey(externalKey, internalContext);
+            final List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>(baseBundles.size());
+            for (SubscriptionBaseBundle cur : baseBundles) {
+                final List<Entitlement> allEntitlementsForBundle = entitlementApi.getAllEntitlementsForBundle(cur.getId(), context);
+                final SubscriptionBundle bundle = getSubscriptionBundleFromEntitlements(cur.getId(), allEntitlementsForBundle, context);
+                result.add(bundle);
+            }
+            return result;
+        } catch (SubscriptionBaseApiException e) {
+            throw new SubscriptionApiException(e);
+        } catch (EntitlementApiException e) {
+            throw new SubscriptionApiException(e);
+        } catch (AccountApiException e) {
+            throw new SubscriptionApiException(e);
+        }
+    }
+
+    @Override
     public List<SubscriptionBundle> getSubscriptionBundlesForAccountId(final UUID accountId,
                                                                        final TenantContext context) throws SubscriptionApiException {
         try {
@@ -161,19 +181,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             if (entitlements.isEmpty()) {
                 return Collections.emptyList();
             }
-
-            final ListMultimap<UUID, Entitlement> perBundleEntitlements = LinkedListMultimap.create();
-            for (Entitlement cur : entitlements) {
-                perBundleEntitlements.put(cur.getBundleId(), cur);
-            }
-
-            final List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>(perBundleEntitlements.keySet().size());
-            for (UUID bundleId : perBundleEntitlements.keySet()) {
-                final List<Entitlement> e = perBundleEntitlements.get(bundleId);
-                final SubscriptionBundle b = getSubscriptionBundleFromEntitlements(bundleId, e, context);
-                result.add(b);
-            }
-            return result;
+            return getSubscriptionBundles(entitlements, context);
         } catch (EntitlementApiException e) {
             throw new SubscriptionApiException(e);
         } catch (SubscriptionBaseApiException e) {
@@ -181,6 +189,21 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         } catch (AccountApiException e) {
             throw new SubscriptionApiException(e);
         }
+    }
+
+    private List<SubscriptionBundle> getSubscriptionBundles(final List<Entitlement> entitlements, final TenantContext context) throws SubscriptionBaseApiException, AccountApiException {
+        final ListMultimap<UUID, Entitlement> perBundleEntitlements = LinkedListMultimap.create();
+        for (Entitlement cur : entitlements) {
+            perBundleEntitlements.put(cur.getBundleId(), cur);
+        }
+
+        final List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>(perBundleEntitlements.keySet().size());
+        for (UUID bundleId : perBundleEntitlements.keySet()) {
+            final List<Entitlement> allEntitlementsForBundle = perBundleEntitlements.get(bundleId);
+            final SubscriptionBundle bundle = getSubscriptionBundleFromEntitlements(bundleId, allEntitlementsForBundle, context);
+            result.add(bundle);
+        }
+        return result;
     }
 
     private Subscription fromEntitlement(final Entitlement entitlement, final InternalTenantContext internalTenantContext) {
@@ -225,7 +248,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         }));
 
         final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, account.getId(), bundleId, baseBundle.getExternalKey(), entitlements, filteredBlockingStates);
-        final DefaultSubscriptionBundle bundle = new DefaultSubscriptionBundle(bundleId, baseBundle.getAccountId(), baseBundle.getExternalKey(), subscriptions, timeline, baseBundle.getCreatedDate(), baseBundle.getUpdatedDate());
+        final DefaultSubscriptionBundle bundle = new DefaultSubscriptionBundle(bundleId, baseBundle.getAccountId(), baseBundle.getExternalKey(), subscriptions, timeline, baseBundle.getOriginalCreatedDate() , baseBundle.getCreatedDate(), baseBundle.getUpdatedDate());
         return bundle;
     }
 }

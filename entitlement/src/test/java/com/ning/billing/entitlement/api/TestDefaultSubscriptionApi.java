@@ -1,0 +1,120 @@
+package com.ning.billing.entitlement.api;
+
+import java.util.List;
+
+import org.joda.time.LocalDate;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+
+public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbeddedDB {
+
+
+    @Test(groups = "slow")
+    public void testWithMultipleBundle() {
+
+        try {
+
+
+            final String externalKey = "fooXXX";
+
+            final LocalDate initialDate = new LocalDate(2013, 8, 7);
+            clock.setDay(initialDate);
+
+            final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+            // Create entitlement and check each field
+            final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, externalKey, initialDate, callContext);
+            assertEquals(entitlement.getAccountId(), account.getId());
+            assertEquals(entitlement.getExternalKey(), externalKey);
+
+            assertEquals(entitlement.getEffectiveStartDate(), initialDate);
+            assertNull(entitlement.getEffectiveEndDate());
+
+            final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, callContext);
+            assertEquals(bundles.size(), 1);
+
+            // Cancel entitlement
+            clock.addDays(3);
+            entitlement.cancelEntitlementWithDate(new LocalDate(clock.getUTCNow(), account.getTimeZone()), true, callContext);
+
+            clock.addDays(1);
+            // Re-create a new bundle with same externalKey
+            final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+            // Create entitlement and check each field
+            final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec2, externalKey, new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
+            assertEquals(entitlement2.getAccountId(), account.getId());
+            assertEquals(entitlement2.getExternalKey(), externalKey);
+
+            final List<SubscriptionBundle> bundles2 = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, callContext);
+            assertEquals(bundles2.size(), 2);
+
+            SubscriptionBundle firstbundle = bundles2.get(0);
+            assertEquals(firstbundle.getSubscriptions().size(), 1);
+            assertEquals(firstbundle.getSubscriptions().get(0).getEffectiveStartDate(), new LocalDate(2013, 8, 7));
+            assertEquals(firstbundle.getSubscriptions().get(0).getBillingStartDate(), new LocalDate(2013, 8, 7));
+            assertEquals(firstbundle.getSubscriptions().get(0).getEffectiveEndDate(), new LocalDate(2013, 8, 10));
+            assertEquals(firstbundle.getSubscriptions().get(0).getBillingEndDate(), new LocalDate(2013, 8, 10));
+
+            SubscriptionBundle secondbundle = bundles2.get(1);
+            assertEquals(secondbundle.getSubscriptions().size(), 1);
+            assertEquals(secondbundle.getSubscriptions().get(0).getEffectiveStartDate(), new LocalDate(2013, 8, 11));
+            assertEquals(secondbundle.getSubscriptions().get(0).getBillingStartDate(), new LocalDate(2013, 8, 11));
+            assertNull(secondbundle.getSubscriptions().get(0).getEffectiveEndDate());
+            assertNull(secondbundle.getSubscriptions().get(0).getBillingEndDate());
+            assertEquals(secondbundle.getOriginalCreatedDate().compareTo(firstbundle.getCreatedDate()), 0);
+
+
+            clock.addDays(3);
+            final Account account2 = accountApi.createAccount(getAccountData(7), callContext);
+
+            entitlementApi.transferEntitlements(account.getId(), account2.getId(), externalKey, new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
+
+            final List<SubscriptionBundle> bundles3 = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, callContext);
+            assertEquals(bundles3.size(), 3);
+
+            firstbundle = bundles3.get(0);
+            assertEquals(firstbundle.getSubscriptions().size(), 1);
+            assertEquals(firstbundle.getSubscriptions().get(0).getEffectiveStartDate(), new LocalDate(2013, 8, 7));
+            assertEquals(firstbundle.getSubscriptions().get(0).getBillingStartDate(), new LocalDate(2013, 8, 7));
+            assertEquals(firstbundle.getSubscriptions().get(0).getEffectiveEndDate(), new LocalDate(2013, 8, 10));
+            assertEquals(firstbundle.getSubscriptions().get(0).getBillingEndDate(), new LocalDate(2013, 8, 10));
+
+            secondbundle = bundles3.get(1);
+            assertEquals(secondbundle.getSubscriptions().size(), 1);
+            assertEquals(secondbundle.getSubscriptions().get(0).getEffectiveStartDate(), new LocalDate(2013, 8, 11));
+            assertEquals(secondbundle.getSubscriptions().get(0).getBillingStartDate(), new LocalDate(2013, 8, 11));
+            assertEquals(secondbundle.getSubscriptions().get(0).getEffectiveEndDate(), new LocalDate(2013, 8, 14));
+            assertEquals(secondbundle.getSubscriptions().get(0).getBillingEndDate(), new LocalDate(2013, 8, 14));
+            assertEquals(secondbundle.getOriginalCreatedDate().compareTo(firstbundle.getCreatedDate()), 0);
+
+            SubscriptionBundle thirdBundle = bundles3.get(2);
+            assertEquals(thirdBundle.getSubscriptions().size(), 1);
+            assertEquals(thirdBundle.getSubscriptions().get(0).getEffectiveStartDate(), new LocalDate(2013, 8, 14));
+            assertEquals(thirdBundle.getSubscriptions().get(0).getBillingStartDate(), new LocalDate(2013, 8, 14));
+            assertNull(thirdBundle.getSubscriptions().get(0).getEffectiveEndDate());
+            assertNull(thirdBundle.getSubscriptions().get(0).getBillingEndDate());
+            assertEquals(thirdBundle.getOriginalCreatedDate().compareTo(firstbundle.getCreatedDate()), 0);
+
+        } catch (EntitlementApiException e) {
+            Assert.fail("Test failed " + e.getMessage());
+        } catch (AccountApiException e) {
+            Assert.fail("Test failed " + e.getMessage());
+        } catch (SubscriptionApiException e) {
+            Assert.fail("Test failed " + e.getMessage());
+        }
+    }
+}
