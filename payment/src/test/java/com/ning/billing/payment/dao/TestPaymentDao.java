@@ -22,15 +22,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
-import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -98,16 +95,15 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final DateTime effectiveDate = clock.getUTCNow();
 
         final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, paymentMethodId, amount, currency, effectiveDate);
-        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), amount);
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, internalCallContext);
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), paymentMethodId, effectiveDate, amount);
+        PaymentModelDao savedPayment = paymentDao.insertPaymentWithFirstAttempt(payment, attempt, internalCallContext);
         assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
 
         final PaymentStatus paymentStatus = PaymentStatus.SUCCESS;
         final String gatewayErrorCode = "OK";
 
         clock.addDays(1);
-        final DateTime newEffectiveDate = clock.getUTCNow();
-        paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(payment.getId(), paymentStatus, newEffectiveDate, attempt.getId(), gatewayErrorCode, null,  internalCallContext);
+        paymentDao.updatePaymentAndAttemptOnCompletion(payment.getId(), paymentStatus, attempt.getId(), gatewayErrorCode, null, internalCallContext);
 
         final List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId, internalCallContext);
         assertEquals(payments.size(), 1);
@@ -118,7 +114,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedPayment.getPaymentMethodId(), paymentMethodId);
         assertEquals(savedPayment.getAmount().compareTo(amount), 0);
         assertEquals(savedPayment.getCurrency(), currency);
-        assertEquals(savedPayment.getEffectiveDate().compareTo(newEffectiveDate), 0);
+        assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
         assertEquals(savedPayment.getPaymentStatus(), PaymentStatus.SUCCESS);
 
         final List<PaymentAttemptModelDao> attempts = paymentDao.getAttemptsForPayment(payment.getId(), internalCallContext);
@@ -143,9 +139,9 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final DateTime effectiveDate = clock.getUTCNow();
 
         final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, paymentMethodId, amount, currency, effectiveDate);
-        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), amount);
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), paymentMethodId, clock.getUTCNow(), amount);
 
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, internalCallContext);
+        PaymentModelDao savedPayment = paymentDao.insertPaymentWithFirstAttempt(payment, attempt, internalCallContext);
         assertEquals(savedPayment.getId(), payment.getId());
         assertEquals(savedPayment.getAccountId(), accountId);
         assertEquals(savedPayment.getInvoiceId(), invoiceId);
@@ -195,8 +191,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final DateTime effectiveDate = clock.getUTCNow();
 
         final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, paymentMethodId, amount, currency, effectiveDate);
-        final PaymentAttemptModelDao firstAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), amount);
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, firstAttempt, internalCallContext);
+        final PaymentAttemptModelDao firstAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), paymentMethodId, effectiveDate, amount);
+        PaymentModelDao savedPayment = paymentDao.insertPaymentWithFirstAttempt(payment, firstAttempt, internalCallContext);
 
         final PaymentModelDao lastPayment = paymentDao.getLastPaymentForPaymentMethod(accountId, paymentMethodId, internalCallContext);
         assertNotNull(lastPayment);
@@ -209,9 +205,13 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(lastPayment.getEffectiveDate().compareTo(effectiveDate), 0);
         assertEquals(lastPayment.getPaymentStatus(), PaymentStatus.UNKNOWN);
 
+
+        clock.addDays(3);
+        final DateTime newEffectiveDate = clock.getUTCNow();
+        final UUID newPaymentMethodId = UUID.randomUUID();
         final BigDecimal newAmount = new BigDecimal(15.23).setScale(2, RoundingMode.HALF_EVEN);
-        final PaymentAttemptModelDao secondAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), newAmount);
-        paymentDao.insertNewAttemptForPayment(payment.getId(), secondAttempt, internalCallContext);
+        final PaymentAttemptModelDao secondAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), newPaymentMethodId, newEffectiveDate, newAmount);
+        paymentDao.updatePaymentWithNewAttempt(payment.getId(), secondAttempt, internalCallContext);
 
         final List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId, internalCallContext);
         assertEquals(payments.size(), 1);
@@ -219,25 +219,27 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedPayment.getId(), payment.getId());
         assertEquals(savedPayment.getAccountId(), accountId);
         assertEquals(savedPayment.getInvoiceId(), invoiceId);
-        assertEquals(savedPayment.getPaymentMethodId(), paymentMethodId);
+        assertEquals(savedPayment.getPaymentMethodId(), newPaymentMethodId);
         assertEquals(savedPayment.getAmount().compareTo(newAmount), 0);
         assertEquals(savedPayment.getCurrency(), currency);
-        assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
+        assertEquals(savedPayment.getEffectiveDate().compareTo(newEffectiveDate), 0);
         assertEquals(savedPayment.getPaymentStatus(), PaymentStatus.UNKNOWN);
 
         final List<PaymentAttemptModelDao> attempts = paymentDao.getAttemptsForPayment(payment.getId(), internalCallContext);
         assertEquals(attempts.size(), 2);
         final PaymentAttemptModelDao savedAttempt1 = attempts.get(0);
         assertEquals(savedAttempt1.getPaymentId(), payment.getId());
+        assertEquals(savedAttempt1.getPaymentMethodId(), paymentMethodId);
         assertEquals(savedAttempt1.getAccountId(), accountId);
         assertEquals(savedAttempt1.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt1.getProcessingStatus(), PaymentStatus.UNKNOWN);
+        assertEquals(savedAttempt1.getInvoiceId(), invoiceId);
         assertEquals(savedAttempt1.getGatewayErrorCode(), null);
         assertEquals(savedAttempt1.getGatewayErrorMsg(), null);
         assertEquals(savedAttempt1.getRequestedAmount().compareTo(amount), 0);
 
         final PaymentAttemptModelDao savedAttempt2 = attempts.get(1);
         assertEquals(savedAttempt2.getPaymentId(), payment.getId());
+        assertEquals(savedAttempt2.getPaymentMethodId(), newPaymentMethodId);
         assertEquals(savedAttempt2.getAccountId(), accountId);
         assertEquals(savedAttempt2.getInvoiceId(), invoiceId);
         assertEquals(savedAttempt2.getProcessingStatus(), PaymentStatus.UNKNOWN);

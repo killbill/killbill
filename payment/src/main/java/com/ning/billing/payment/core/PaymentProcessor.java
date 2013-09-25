@@ -432,18 +432,18 @@ public class PaymentProcessor extends ProcessorBase {
         final PaymentStatus paymentStatus = PaymentStatus.AUTO_PAY_OFF;
 
         final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), paymentMethodId, requestedAmount, invoice.getCurrency(), clock.getUTCNow(), paymentStatus);
-        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), paymentInfo.getId(), paymentStatus, clock.getUTCNow(), requestedAmount);
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), paymentInfo.getId(), paymentMethodId, paymentStatus, clock.getUTCNow(), requestedAmount);
 
-        paymentDao.insertPaymentWithAttempt(paymentInfo, attempt, context);
+        paymentDao.insertPaymentWithFirstAttempt(paymentInfo, attempt, context);
         return fromPaymentModelDao(paymentInfo, null, context);
     }
 
     private Payment processNewPaymentWithAccountLocked(final UUID paymentMethodId, final PaymentPluginApi plugin, final Account account, final Invoice invoice,
                                                        final BigDecimal requestedAmount, final boolean isInstantPayment, final InternalCallContext context) throws PaymentApiException {
         final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), paymentMethodId, requestedAmount.setScale(2, RoundingMode.HALF_UP), invoice.getCurrency(), clock.getUTCNow());
-        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), paymentMethodId, clock.getUTCNow(), requestedAmount);
 
-        final PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);
+        final PaymentModelDao savedPayment = paymentDao.insertPaymentWithFirstAttempt(payment, attempt, context);
         return processPaymentWithAccountLocked(plugin, account, invoice, savedPayment, attempt, isInstantPayment, context);
     }
 
@@ -464,9 +464,9 @@ public class PaymentProcessor extends ProcessorBase {
             default:
                 throw new IllegalStateException("Unexpected payment status for retry " + payment.getPaymentStatus());
         }
-        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
-        paymentDao.insertNewAttemptForPayment(payment.getId(), attempt, context);
-        paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(payment.getId(), paymentStatus, clock.getUTCNow(), attempt.getId(), null, terminalStateReason, context);
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), account.getPaymentMethodId(), clock.getUTCNow(), requestedAmount);
+        paymentDao.updatePaymentWithNewAttempt(payment.getId(), attempt, context);
+        paymentDao.updatePaymentAndAttemptOnCompletion(payment.getId(), paymentStatus, attempt.getId(), null, terminalStateReason, context);
 
         final List<PaymentAttemptModelDao> allAttempts = paymentDao.getAttemptsForPayment(payment.getId(), context);
         return new DefaultPayment(payment, null, allAttempts, Collections.<RefundModelDao>emptyList());
@@ -475,8 +475,8 @@ public class PaymentProcessor extends ProcessorBase {
 
     private Payment processRetryPaymentWithAccountLocked(final PaymentPluginApi plugin, final Account account, final Invoice invoice, final PaymentModelDao payment,
                                                          final BigDecimal requestedAmount, final InternalCallContext context) throws PaymentApiException {
-        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
-        paymentDao.insertNewAttemptForPayment(payment.getId(), attempt, context);
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), account.getPaymentMethodId(), clock.getUTCNow(), requestedAmount);
+        paymentDao.updatePaymentWithNewAttempt(payment.getId(), attempt, context);
         return processPaymentWithAccountLocked(plugin, account, invoice, payment, attempt, false, context);
     }
 
@@ -487,7 +487,7 @@ public class PaymentProcessor extends ProcessorBase {
 
         List<PaymentAttemptModelDao> allAttempts = null;
         if (paymentConfig.isPaymentOff()) {
-            paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), PaymentStatus.PAYMENT_SYSTEM_OFF, clock.getUTCNow(), attemptInput.getId(), null, null, context);
+            paymentDao.updatePaymentAndAttemptOnCompletion(paymentInput.getId(), PaymentStatus.PAYMENT_SYSTEM_OFF, attemptInput.getId(), null, null, context);
             allAttempts = paymentDao.getAttemptsForPayment(paymentInput.getId(), context);
             return new DefaultPayment(paymentInput, null, allAttempts, Collections.<RefundModelDao>emptyList());
         }
@@ -498,7 +498,7 @@ public class PaymentProcessor extends ProcessorBase {
         final PaymentInfoPlugin paymentPluginInfo;
         try {
             try {
-                paymentPluginInfo = plugin.processPayment(account.getId(), paymentInput.getId(), paymentInput.getPaymentMethodId(), attemptInput.getRequestedAmount(), account.getCurrency(), context.toCallContext());
+                paymentPluginInfo = plugin.processPayment(account.getId(), paymentInput.getId(), attemptInput.getPaymentMethodId(), attemptInput.getRequestedAmount(), account.getCurrency(), context.toCallContext());
             } catch (RuntimeException e) {
                 // Handle case of plugin RuntimeException to be handled the same as a Plugin failure (PaymentPluginApiException)
                 final String formatError = String.format("Plugin threw RuntimeException for payment %s", paymentInput.getId());
@@ -509,12 +509,7 @@ public class PaymentProcessor extends ProcessorBase {
                     // Update Payment/PaymentAttempt status
                     paymentStatus = PaymentStatus.SUCCESS;
 
-                    /*
-                    UUID paymentId, PaymentStatus paymentStatus, DateTime newEffectiveDate,
-                                                                  String gatewayErrorMsg, UUID attemptId, InternalCallContext callcontext, String gatewayErrorCode
-                     */
-
-                    paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), paymentStatus, clock.getUTCNow(), attemptInput.getId(), paymentPluginInfo.getGatewayErrorCode(), null, context);
+                    paymentDao.updatePaymentAndAttemptOnCompletion(paymentInput.getId(), paymentStatus, attemptInput.getId(), paymentPluginInfo.getGatewayErrorCode(), null, context);
 
                     // Fetch latest objects
                     allAttempts = paymentDao.getAttemptsForPayment(paymentInput.getId(), context);
@@ -546,7 +541,7 @@ public class PaymentProcessor extends ProcessorBase {
                         paymentStatus = PaymentStatus.PAYMENT_FAILURE_ABORTED;
                     }
 
-                    paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), paymentStatus, clock.getUTCNow(), attemptInput.getId(), paymentPluginInfo.getGatewayErrorCode(), paymentPluginInfo.getGatewayError(), context);
+                    paymentDao.updatePaymentAndAttemptOnCompletion(paymentInput.getId(), paymentStatus, attemptInput.getId(), paymentPluginInfo.getGatewayErrorCode(), paymentPluginInfo.getGatewayError(), context);
 
                     log.info(String.format("Could not process payment for account %s, invoice %s, error = %s",
                             account.getId(), invoice.getId(), paymentPluginInfo.getGatewayError()));
@@ -569,7 +564,7 @@ public class PaymentProcessor extends ProcessorBase {
             paymentStatus = isInstantPayment ? PaymentStatus.PAYMENT_FAILURE_ABORTED : scheduleRetryOnPluginFailure(paymentInput.getId(), context);
             // STEPH message might need truncation to fit??
 
-            paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), paymentStatus, clock.getUTCNow(), attemptInput.getId(), null, e.getMessage(), context);
+            paymentDao.updatePaymentAndAttemptOnCompletion(paymentInput.getId(), paymentStatus, attemptInput.getId(), null, e.getMessage(), context);
 
             event = new DefaultPaymentPluginErrorEvent(account.getId(), invoice.getId(), paymentInput.getId(), e.getMessage(),
                     context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()

@@ -34,6 +34,7 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
     private UUID accountId;
     private UUID invoiceId;
     private UUID paymentId;
+    private UUID paymentMethodId;
     private PaymentStatus processingStatus;
     private DateTime effectiveDate;
     private String gatewayErrorCode;
@@ -44,12 +45,14 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
 
     public PaymentAttemptModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                   final UUID accountId, final UUID invoiceId,
-                                  final UUID paymentId, final PaymentStatus processingStatus, final DateTime effectiveDate,
+                                  final UUID paymentId, final UUID paymentMethodId,
+                                  final PaymentStatus processingStatus, final DateTime effectiveDate,
                                   final BigDecimal requestedAmount, final String gatewayErrorCode, final String gatewayErrorMsg) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.paymentId = paymentId;
+        this.paymentMethodId = paymentMethodId;
         this.processingStatus = processingStatus;
         this.effectiveDate = effectiveDate;
         this.requestedAmount = requestedAmount;
@@ -57,17 +60,17 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         this.gatewayErrorMsg = gatewayErrorMsg;
     }
 
-    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final PaymentStatus paymentStatus, final DateTime effectiveDate, final BigDecimal requestedAmount) {
-        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, paymentStatus, effectiveDate, requestedAmount, null, null);
+    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final UUID paymentMethodId, final PaymentStatus paymentStatus, final DateTime effectiveDate, final BigDecimal requestedAmount) {
+        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, paymentMethodId, paymentStatus, effectiveDate, requestedAmount, null, null);
     }
 
-    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final DateTime effectiveDate, final BigDecimal requestedAmount) {
-        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, PaymentStatus.UNKNOWN, effectiveDate, requestedAmount, null, null);
+    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final UUID paymentMethodId, final DateTime effectiveDate, final BigDecimal requestedAmount) {
+        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, paymentMethodId, PaymentStatus.UNKNOWN, effectiveDate, requestedAmount, null, null);
     }
 
     public PaymentAttemptModelDao(final PaymentAttemptModelDao src, final PaymentStatus newProcessingStatus, final String gatewayErrorCode, final String gatewayErrorMsg) {
-        this(src.getId(), src.getCreatedDate(), src.getUpdatedDate(), src.getAccountId(), src.getInvoiceId(), src.getPaymentId(), newProcessingStatus,
-             src.getEffectiveDate(), src.getRequestedAmount(), gatewayErrorCode, gatewayErrorMsg);
+        this(src.getId(), src.getCreatedDate(), src.getUpdatedDate(), src.getAccountId(), src.getInvoiceId(), src.getPaymentId(), src.getPaymentMethodId(),
+             newProcessingStatus, src.getEffectiveDate(), src.getRequestedAmount(), gatewayErrorCode, gatewayErrorMsg);
     }
 
     public UUID getAccountId() {
@@ -80,6 +83,10 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
 
     public UUID getPaymentId() {
         return paymentId;
+    }
+
+    public UUID getPaymentMethodId() {
+        return paymentMethodId;
     }
 
     public PaymentStatus getProcessingStatus() {
@@ -150,6 +157,9 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
+            return false;
+        }
         if (processingStatus != that.processingStatus) {
             return false;
         }
@@ -166,6 +176,7 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (processingStatus != null ? processingStatus.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (gatewayErrorCode != null ? gatewayErrorCode.hashCode() : 0);

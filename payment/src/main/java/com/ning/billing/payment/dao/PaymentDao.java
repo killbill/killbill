@@ -28,13 +28,12 @@ import com.ning.billing.callcontext.InternalTenantContext;
 
 public interface PaymentDao {
 
-    // STEPH do we need object returned?
-    public PaymentModelDao insertPaymentWithAttempt(PaymentModelDao paymentInfo, PaymentAttemptModelDao attempt, InternalCallContext context);
+    public PaymentModelDao insertPaymentWithFirstAttempt(PaymentModelDao paymentInfo, PaymentAttemptModelDao attempt, InternalCallContext context);
 
-    public PaymentAttemptModelDao insertNewAttemptForPayment(UUID paymentId, PaymentAttemptModelDao attempt, InternalCallContext context);
+    public PaymentAttemptModelDao updatePaymentWithNewAttempt(UUID paymentId, PaymentAttemptModelDao attempt, InternalCallContext context);
 
-    public void updateStatusAndEffectiveDateForPaymentWithAttempt(UUID paymentId, PaymentStatus paymentStatus, DateTime newEffectiveDate,
-                                                                  UUID attemptId, String gatewayErrorMsg, String gatewayErrorCode, InternalCallContext context);
+    public void updatePaymentAndAttemptOnCompletion(UUID paymentId, PaymentStatus paymentStatus,
+                                                    UUID attemptId, String gatewayErrorMsg, String gatewayErrorCode, InternalCallContext context);
 
     public PaymentAttemptModelDao getPaymentAttempt(UUID attemptId, InternalTenantContext context);
 

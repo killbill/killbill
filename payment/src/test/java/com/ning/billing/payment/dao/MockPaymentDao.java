@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.callcontext.InternalCallContext;
@@ -40,8 +38,8 @@ public class MockPaymentDao implements PaymentDao {
     private final Map<UUID, PaymentAttemptModelDao> attempts = new HashMap<UUID, PaymentAttemptModelDao>();
 
     @Override
-    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao paymentInfo, final PaymentAttemptModelDao attempt,
-                                                    final InternalCallContext context) {
+    public PaymentModelDao insertPaymentWithFirstAttempt(final PaymentModelDao paymentInfo, final PaymentAttemptModelDao attempt,
+                                                         final InternalCallContext context) {
         synchronized (this) {
             payments.put(paymentInfo.getId(), paymentInfo);
             attempts.put(attempt.getId(), attempt);
@@ -50,7 +48,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId, final PaymentAttemptModelDao attempt, final InternalCallContext context) {
+    public PaymentAttemptModelDao updatePaymentWithNewAttempt(final UUID paymentId, final PaymentAttemptModelDao attempt, final InternalCallContext context) {
         synchronized (this) {
             attempts.put(attempt.getId(), attempt);
         }
@@ -58,9 +56,9 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updateStatusAndEffectiveDateForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final DateTime effectibeDate,  final UUID attemptId, final String gatewayErrorCode,
-                                                                  final String gatewayErrorMsg,
-                                                                  final InternalCallContext context) {
+    public void updatePaymentAndAttemptOnCompletion(final UUID paymentId, final PaymentStatus paymentStatus, final UUID attemptId, final String gatewayErrorCode,
+                                                    final String gatewayErrorMsg,
+                                                    final InternalCallContext context) {
         synchronized (this) {
             final PaymentModelDao entry = payments.remove(paymentId);
             if (entry != null) {

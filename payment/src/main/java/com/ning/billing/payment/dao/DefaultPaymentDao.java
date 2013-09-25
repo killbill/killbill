@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.payment.api.PaymentStatus;
@@ -50,24 +49,19 @@ public class DefaultPaymentDao implements PaymentDao {
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
     }
 
+
     @Override
-    public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId, final PaymentAttemptModelDao attempt, final InternalCallContext context) {
+    public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<PaymentAttemptModelDao>() {
             @Override
             public PaymentAttemptModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final PaymentAttemptSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class);
-                transactional.create(attempt, context);
-                final PaymentAttemptModelDao savedAttempt = transactional.getById(attempt.getId().toString(), context);
-
-                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentAmount(paymentId.toString(), savedAttempt.getRequestedAmount(), context);
-
-                return savedAttempt;
+                return entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class).getById(attemptId.toString(), context);
             }
         });
     }
 
     @Override
-    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao payment, final PaymentAttemptModelDao attempt, final InternalCallContext context) {
+    public PaymentModelDao insertPaymentWithFirstAttempt(final PaymentModelDao payment, final PaymentAttemptModelDao attempt, final InternalCallContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<PaymentModelDao>() {
 
             @Override
@@ -84,28 +78,34 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId, final InternalTenantContext context) {
+    public PaymentAttemptModelDao updatePaymentWithNewAttempt(final UUID paymentId, final PaymentAttemptModelDao attempt, final InternalCallContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<PaymentAttemptModelDao>() {
             @Override
             public PaymentAttemptModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class).getById(attemptId.toString(), context);
+                final PaymentAttemptSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class);
+                transactional.create(attempt, context);
+                final PaymentAttemptModelDao savedAttempt = transactional.getById(attempt.getId().toString(), context);
+
+                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentForNewAttempt(paymentId.toString(), attempt.getPaymentMethodId().toString(),
+                                                                                                  savedAttempt.getRequestedAmount(), attempt.getEffectiveDate().toDate(), context);
+
+                return savedAttempt;
             }
         });
     }
 
     @Override
-    public void updateStatusAndEffectiveDateForPaymentWithAttempt(final UUID paymentId,
-                                                                  final PaymentStatus paymentStatus,
-                                                                  final DateTime newEffectiveDate,
-                                                                  final UUID attemptId,
-                                                                  final String gatewayErrorCode,
-                                                                  final String gatewayErrorMsg,
-                                                                  final InternalCallContext context) {
+    public void updatePaymentAndAttemptOnCompletion(final UUID paymentId,
+                                                    final PaymentStatus paymentStatus,
+                                                    final UUID attemptId,
+                                                    final String gatewayErrorCode,
+                                                    final String gatewayErrorMsg,
+                                                    final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
 
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStatus(paymentId.toString(), paymentStatus.toString(), newEffectiveDate.toDate(), context);
+                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStatus(paymentId.toString(), paymentStatus.toString(), context);
                 entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class).updatePaymentAttemptStatus(attemptId.toString(), paymentStatus.toString(), gatewayErrorCode, gatewayErrorMsg, context);
                 return null;
             }

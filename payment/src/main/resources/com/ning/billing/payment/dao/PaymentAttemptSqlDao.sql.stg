@@ -2,6 +2,7 @@ group PaymentAttemptSqlDao: EntitySqlDao;
 
 tableFields(prefix) ::= <<
   <prefix>payment_id
+, <prefix>payment_method_id
 , <prefix>gateway_error_code
 , <prefix>gateway_error_msg
 , <prefix>processing_status
@@ -14,6 +15,7 @@ tableFields(prefix) ::= <<
 
 tableValues() ::= <<
   :paymentId
+, :paymentMethodId
 , :gatewayErrorCode
 , :gatewayErrorMsg
 , :processingStatus
