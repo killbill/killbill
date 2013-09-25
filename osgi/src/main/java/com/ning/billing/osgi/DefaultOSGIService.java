@@ -126,7 +126,7 @@ public class DefaultOSGIService implements OSGIService {
 
         // Install default bundles in the Framework: Killbill bundle only for now
         // Note! Think twice before adding a bundle here as it will run inside the System bundle. This means the bundle
-        // context that the bundle will see is the System bundle one, which will break e.g. resources lookup
+        // callcontext that the bundle will see is the System bundle one, which will break e.g. resources lookup
         felixConfig.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP,
                         ImmutableList.<BundleActivator>of(killbillActivator));
 

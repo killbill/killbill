@@ -17,7 +17,7 @@
 package com.ning.billing.subscription.engine.core;
 
 import com.ning.billing.subscription.events.SubscriptionBaseEvent;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 
 
 public interface EventListener {

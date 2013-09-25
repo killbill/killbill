@@ -27,10 +27,9 @@ import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.junction.glue.TestJunctionModuleNoDB;
 import com.ning.billing.junction.plumbing.billing.BillCycleDayCalculator;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.junction.BillingInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
+import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.tag.dao.TagDao;
 
 import com.google.inject.Guice;

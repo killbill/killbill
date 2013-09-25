@@ -32,7 +32,7 @@ import com.ning.billing.payment.dao.PaymentModelDao;
 import com.ning.billing.payment.dao.RefundModelDao;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

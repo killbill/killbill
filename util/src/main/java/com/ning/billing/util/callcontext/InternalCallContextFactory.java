@@ -25,6 +25,8 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.NonEntityDao;
@@ -48,13 +50,13 @@ public class InternalCallContextFactory {
     }
 
     /**
-     * Create an internal tenant context from a tenant context
+     * Create an internal tenant callcontext from a tenant callcontext
      * <p/>
      * This is used for r/o operations - we don't need the account id in that case.
      * You should almost never use that one, you always want to populate the accountRecordId
      *
-     * @param context tenant context (tenantId can be null only if multi-tenancy is disabled)
-     * @return internal tenant context
+     * @param context tenant callcontext (tenantId can be null only if multi-tenancy is disabled)
+     * @return internal tenant callcontext
      */
     public InternalTenantContext createInternalTenantContext(final TenantContext context) {
         // If tenant id is null, this will default to the default tenant record id (multi-tenancy disabled)
@@ -63,11 +65,11 @@ public class InternalCallContextFactory {
     }
 
     /**
-     * Create an internal tenant context
+     * Create an internal tenant callcontext
      *
      * @param tenantRecordId  tenant_record_id (cannot be null)
      * @param accountRecordId account_record_id (cannot be null for INSERT operations)
-     * @return internal tenant context
+     * @return internal tenant callcontext
      */
     public InternalTenantContext createInternalTenantContext(final Long tenantRecordId, @Nullable final Long accountRecordId) {
         //Preconditions.checkNotNull(tenantRecordId, "tenantRecordId cannot be null");
@@ -82,38 +84,38 @@ public class InternalCallContextFactory {
 
 
     /**
-     * Crate an internal tenant context from a tenant context, and retrieving the account_record_id from another table
+     * Crate an internal tenant callcontext from a tenant callcontext, and retrieving the account_record_id from another table
      *
      * @param objectId   the id of the row in the table pointed by object type where to look for account_record_id
      * @param objectType the object type pointed by this objectId
-     * @param context    original tenant context
-     * @return internal tenant context from context, with a non null account_record_id (if found)
+     * @param context    original tenant callcontext
+     * @return internal tenant callcontext from callcontext, with a non null account_record_id (if found)
      */
     public InternalTenantContext createInternalTenantContext(final UUID objectId, final ObjectType objectType, final TenantContext context) {
-        // The context may come from a user API - for security, check we're not doing cross-tenants operations
+        // The callcontext may come from a user API - for security, check we're not doing cross-tenants operations
         //final Long tenantRecordIdFromObject = retrieveTenantRecordIdFromObject(objectId, objectType);
-        //final Long tenantRecordIdFromContext = getTenantRecordId(context);
+        //final Long tenantRecordIdFromContext = getTenantRecordId(callcontext);
         //Preconditions.checkState(tenantRecordIdFromContext.equals(tenantRecordIdFromObject),
-        //                         "tenant of the pointed object (%s) and the context (%s) don't match!", tenantRecordIdFromObject, tenantRecordIdFromContext);
+        //                         "tenant of the pointed object (%s) and the callcontext (%s) don't match!", tenantRecordIdFromObject, tenantRecordIdFromContext);
         final Long tenantRecordId = getTenantRecordId(context);
         final Long accountRecordId = getAccountRecordId(objectId, objectType);
         return createInternalTenantContext(tenantRecordId, accountRecordId);
     }
 
     /**
-     * Create an internal call context from a call context, and retrieving the account_record_id from another table
+     * Create an internal call callcontext from a call callcontext, and retrieving the account_record_id from another table
      *
      * @param objectId   the id of the row in the table pointed by object type where to look for account_record_id
      * @param objectType the object type pointed by this objectId
-     * @param context    original call context
-     * @return internal call context from context, with a non null account_record_id (if found)
+     * @param context    original call callcontext
+     * @return internal call callcontext from callcontext, with a non null account_record_id (if found)
      */
     public InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final CallContext context) {
-        // The context may come from a user API - for security, check we're not doing cross-tenants operations
+        // The callcontext may come from a user API - for security, check we're not doing cross-tenants operations
         //final Long tenantRecordIdFromObject = retrieveTenantRecordIdFromObject(objectId, objectType);
-        //final Long tenantRecordIdFromContext = getTenantRecordId(context);
+        //final Long tenantRecordIdFromContext = getTenantRecordId(callcontext);
         //Preconditions.checkState(tenantRecordIdFromContext.equals(tenantRecordIdFromObject),
-        //                         "tenant of the pointed object (%s) and the context (%s) don't match!", tenantRecordIdFromObject, tenantRecordIdFromContext);
+        //                         "tenant of the pointed object (%s) and the callcontext (%s) don't match!", tenantRecordIdFromObject, tenantRecordIdFromContext);
 
         return createInternalCallContext(objectId, objectType, context.getUserName(), context.getCallOrigin(),
                                          context.getUserType(), context.getUserToken(), context.getReasonCode(), context.getComments(),
@@ -121,13 +123,13 @@ public class InternalCallContextFactory {
     }
 
     /**
-     * Create an internal call context using an existing account to retrieve tenant and account record ids
+     * Create an internal call callcontext using an existing account to retrieve tenant and account record ids
      * <p/>
      * This is used for r/w operations - we need the account id to populate the account_record_id field
      *
      * @param accountId account id
-     * @param context   original call context
-     * @return internal call context
+     * @param context   original call callcontext
+     * @return internal call callcontext
      */
     public InternalCallContext createInternalCallContext(final UUID accountId, final CallContext context) {
         return createInternalCallContext(accountId, ObjectType.ACCOUNT, context.getUserName(), context.getCallOrigin(),
@@ -136,14 +138,14 @@ public class InternalCallContextFactory {
     }
 
     /**
-     * Create an internal call context using an existing account to retrieve tenant and account record ids
+     * Create an internal call callcontext using an existing account to retrieve tenant and account record ids
      *
      * @param accountId  account id
      * @param userName   user name
      * @param callOrigin call origin
      * @param userType   user type
      * @param userToken  user token, if any
-     * @return internal call context
+     * @return internal call callcontext
      */
     public InternalCallContext createInternalCallContext(final UUID accountId, final String userName, final CallOrigin callOrigin,
                                                          final UserType userType, @Nullable final UUID userToken) {
@@ -151,7 +153,7 @@ public class InternalCallContextFactory {
     }
 
     /**
-     * Create an internal call context using an existing object to retrieve tenant and account record ids
+     * Create an internal call callcontext using an existing object to retrieve tenant and account record ids
      *
      * @param objectId   the id of the row in the table pointed by object type where to look for account_record_id
      * @param objectType the object type pointed by this objectId
@@ -159,7 +161,7 @@ public class InternalCallContextFactory {
      * @param callOrigin call origin
      * @param userType   user type
      * @param userToken  user token, if any
-     * @return internal call context
+     * @return internal call callcontext
      */
     public InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final String userName,
                                                          final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken) {
@@ -177,7 +179,7 @@ public class InternalCallContextFactory {
     }
 
     /**
-     * Create an internal call context
+     * Create an internal call callcontext
      * <p/>
      * This is used by notification queue and persistent bus - accountRecordId is expected to be non null
      *
@@ -187,7 +189,7 @@ public class InternalCallContextFactory {
      * @param callOrigin      call origin
      * @param userType        user type
      * @param userToken       user token, if any
-     * @return internal call context
+     * @return internal call callcontext
      */
     public InternalCallContext createInternalCallContext(@Nullable final Long tenantRecordId, final Long accountRecordId, final String userName,
                                                          final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken) {
@@ -207,13 +209,13 @@ public class InternalCallContextFactory {
     }
 
     /**
-     * Create an internal call context without populating the account record id
+     * Create an internal call callcontext without populating the account record id
      * <p/>
      * This is used for update/delete operations - we don't need the account id in that case - and
      * also when we don't have an account_record_id column (e.g. tenants, tag_definitions)
      *
-     * @param context original call context
-     * @return internal call context
+     * @param context original call callcontext
+     * @return internal call callcontext
      */
     public InternalCallContext createInternalCallContext(final CallContext context) {
         // If tenant id is null, this will default to the default tenant record id (multi-tenancy disabled)
@@ -221,14 +223,14 @@ public class InternalCallContextFactory {
         return new InternalCallContext(tenantRecordId, null, context);
     }
 
-    // Used when we need to re-hydrate the context with the account_record_id (when creating the account)
+    // Used when we need to re-hydrate the callcontext with the account_record_id (when creating the account)
     public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {
         return new InternalCallContext(context.getTenantRecordId(), accountRecordId, context.getUserToken(), context.getCreatedBy(),
                                        context.getCallOrigin(), context.getContextUserType(), context.getReasonCode(), context.getComments(),
                                        context.getCreatedDate(), context.getUpdatedDate());
     }
 
-    // Used when we need to re-hydrate the context with the tenant_record_id and account_record_id (when claiming bus events)
+    // Used when we need to re-hydrate the callcontext with the tenant_record_id and account_record_id (when claiming bus events)
     public InternalCallContext createInternalCallContext(final Long tenantRecordId, final Long accountRecordId, final InternalCallContext context) {
         return new InternalCallContext(tenantRecordId, accountRecordId, context.getUserToken(), context.getCreatedBy(),
                                        context.getCallOrigin(), context.getContextUserType(), context.getReasonCode(), context.getComments(),

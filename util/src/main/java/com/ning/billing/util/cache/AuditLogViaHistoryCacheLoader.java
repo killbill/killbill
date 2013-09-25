@@ -22,7 +22,7 @@ import javax.inject.Singleton;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.util.cache.Cachable.CacheType;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.dao.TableName;

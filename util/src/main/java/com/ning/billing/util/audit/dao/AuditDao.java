@@ -21,7 +21,7 @@ import java.util.UUID;
 
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.TableName;
 
 public interface AuditDao {

@@ -36,8 +36,8 @@ import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.util.config.PaymentConfig;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;

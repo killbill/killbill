@@ -19,8 +19,8 @@ package com.ning.billing.util.customfield.api;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.events.BusEventBase;
-import com.ning.billing.util.events.CustomFieldCreationEvent;
+import com.ning.billing.events.BusEventBase;
+import com.ning.billing.events.CustomFieldCreationEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

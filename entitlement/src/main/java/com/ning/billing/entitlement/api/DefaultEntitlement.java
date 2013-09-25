@@ -20,8 +20,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -41,10 +39,10 @@ import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.entity.EntityBase;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.entity.EntityBase;
+import com.ning.billing.junction.DefaultBlockingState;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;

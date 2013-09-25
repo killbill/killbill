@@ -30,9 +30,9 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 public class SubscriptionChecker {
 

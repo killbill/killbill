@@ -18,7 +18,7 @@ package com.ning.billing.mock.glue;
 
 import com.google.inject.AbstractModule;
 import com.ning.billing.glue.JunctionModule;
-import com.ning.billing.util.svcapi.junction.BillingInternalApi;
+import com.ning.billing.junction.BillingInternalApi;
 import org.mockito.Mockito;
 
 public class MockJunctionModule extends AbstractModule implements JunctionModule {

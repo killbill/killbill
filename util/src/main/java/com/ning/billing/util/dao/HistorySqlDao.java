@@ -19,7 +19,7 @@ package com.ning.billing.util.dao;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 

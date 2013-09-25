@@ -57,10 +57,10 @@ import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

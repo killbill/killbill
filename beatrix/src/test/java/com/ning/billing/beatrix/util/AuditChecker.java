@@ -108,14 +108,14 @@ public class AuditChecker {
      */
 
 
-    // Pass the call context used to create the bundle
+    // Pass the call callcontext used to create the bundle
     public void checkBundleCreated(final UUID bundleId, final CallContext context) {
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         Assert.assertEquals(auditLogsForBundles.getBundlesAuditLogs().keySet().size(), 1);
         checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getBundlesAuditLogs().get(bundleId).get(0), bundleId, BundleSqlDao.class, false, false);
     }
 
-    // Pass the call context used to update the bundle
+    // Pass the call callcontext used to update the bundle
     public void checkBundleUpdated(final UUID bundleId, final CallContext context) {
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         Assert.assertEquals(auditLogsForBundles.getBundlesAuditLogs().keySet().size(), 1);
@@ -126,14 +126,14 @@ public class AuditChecker {
      * ********************************************  SUBSCRIPTION *******************************************************
      */
 
-    // Pass the call context used to create the subscription
+    // Pass the call callcontext used to create the subscription
     public void checkSubscriptionCreated(final UUID bundleId, final UUID subscriptionId, final CallContext context) {
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         Assert.assertEquals(auditLogsForBundles.getSubscriptionsAuditLogs().keySet().size(), 1);
         checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getSubscriptionsAuditLogs().get(subscriptionId).get(0), subscriptionId, SubscriptionSqlDao.class, false, true);
     }
 
-    // Pass the call context used to update the subscription
+    // Pass the call callcontext used to update the subscription
     public void checkSubscriptionUpdated(final UUID bundleId, final UUID subscriptionId, final CallContext context) {
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
 
@@ -147,7 +147,7 @@ public class AuditChecker {
      * ********************************************  SUBSCRIPTION EVENTS *******************************************************
      */
 
-    // Pass the call context used to create the subscription event
+    // Pass the call callcontext used to create the subscription event
     public void checkSubscriptionEventCreated(final UUID bundleId, final UUID subscriptionEventId, final CallContext context) {
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(0), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
@@ -155,7 +155,7 @@ public class AuditChecker {
 
 
 
-    // Pass the call context used to update the subscription event
+    // Pass the call callcontext used to update the subscription event
     public void checkSubscriptionEventUpdated(final UUID bundleId, final UUID subscriptionEventId, final CallContext context) {
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         checkAuditLog(ChangeType.INSERT, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(0));
@@ -219,7 +219,7 @@ public class AuditChecker {
         if (checkContext) {
             Assert.assertEquals(auditLog.getUserName(), context.getUserName());
             Assert.assertEquals(auditLog.getComment(), context.getComments());
-            //Assert.assertEquals(auditLog.getCreatedDate().comparesTo(context.getCreatedDate()));
+            //Assert.assertEquals(auditLog.getCreatedDate().comparesTo(callcontext.getCreatedDate()));
             // We can't take userToken oustide of the 'if' because for instance NextBillingDate invoice will not have it.
             Assert.assertEquals(auditLog.getUserToken(), context.getUserToken().toString());
         }

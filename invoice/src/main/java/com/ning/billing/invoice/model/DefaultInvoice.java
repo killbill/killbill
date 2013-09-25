@@ -35,7 +35,7 @@ import com.ning.billing.invoice.calculator.InvoiceCalculatorUtils;
 import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

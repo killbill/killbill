@@ -26,7 +26,7 @@ import org.joda.time.LocalDate;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem {
     private final BigDecimal rate;

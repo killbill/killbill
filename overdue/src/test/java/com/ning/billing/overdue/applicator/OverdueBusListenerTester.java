@@ -22,7 +22,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.util.events.OverdueChangeInternalEvent;
+import com.ning.billing.events.OverdueChangeInternalEvent;
 
 import com.google.common.eventbus.Subscribe;
 

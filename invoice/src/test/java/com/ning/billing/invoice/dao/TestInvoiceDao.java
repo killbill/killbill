@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
@@ -35,7 +34,6 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.DefaultPrice;
 import com.ning.billing.catalog.MockInternationalPrice;
 import com.ning.billing.catalog.MockPlan;
@@ -62,14 +60,13 @@ import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
-import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.svcapi.junction.BillingEvent;
-import com.ning.billing.util.svcapi.junction.BillingEventSet;
-import com.ning.billing.util.svcapi.junction.BillingModeType;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.entity.EntityPersistenceException;
+import com.ning.billing.junction.BillingEvent;
+import com.ning.billing.junction.BillingEventSet;
+import com.ning.billing.junction.BillingModeType;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -1198,7 +1195,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
 
-        //invoiceUtil.createInvoice(invoice1, invoice1.getTargetDate().getDayOfMonth(), context);
+        //invoiceUtil.createInvoice(invoice1, invoice1.getTargetDate().getDayOfMonth(), callcontext);
 
         final DateTime effectiveDate2 = effectiveDate1.plusDays(30);
         final BillingEvent event2 = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate2, plan, phase2, null,
@@ -1213,7 +1210,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceList.add(invoice2);
 
-        //invoiceUtil.createInvoice(invoice2, invoice2.getTargetDate().getDayOfMonth(), context);
+        //invoiceUtil.createInvoice(invoice2, invoice2.getTargetDate().getDayOfMonth(), callcontext);
 
         final DateTime effectiveDate3 = effectiveDate2.plusMonths(1);
         final Invoice invoice3 = generator.generateInvoice(accountId, events, invoiceList, new LocalDate(effectiveDate3), Currency.USD);
@@ -1221,7 +1218,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(invoice3.getNumberOfItems(), 1);
         assertEquals(invoice3.getBalance().compareTo(cheapAmount), 0);
 
-        //invoiceUtil.createInvoice(invoice3, invoice3.getTargetDate().getDayOfMonth(), context);
+        //invoiceUtil.createInvoice(invoice3, invoice3.getTargetDate().getDayOfMonth(), callcontext);
     }
 
     @Test(groups = "slow")

@@ -26,7 +26,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<InvoiceItem> {

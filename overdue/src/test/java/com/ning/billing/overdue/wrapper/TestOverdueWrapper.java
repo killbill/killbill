@@ -26,9 +26,8 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.config.OverdueConfig;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.config.catalog.XMLLoader;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.junction.DefaultBlockingState;
 
 public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
 

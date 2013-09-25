@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.block;
 
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public interface BlockingChecker {
 

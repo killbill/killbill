@@ -30,12 +30,12 @@ import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.cache.Cachable;
 import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CachableKey;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.HistorySqlDao;
 import com.ning.billing.util.entity.Entity;
-import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.entity.EntityPersistenceException;
 
 // TODO get rid of Transmogrifier, but code does not compile even if we create the
 // method  public <T> T become(Class<T> typeToBecome); ?

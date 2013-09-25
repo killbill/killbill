@@ -28,20 +28,15 @@ import org.testng.Assert;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.catalog.MockPlan;
-import com.ning.billing.catalog.MockPriceList;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.overdue.glue.ApplicatorMockJunctionModule.ApplicatorBlockingApi;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
+import com.ning.billing.junction.BlockingInternalApi;
 
 import com.google.inject.Inject;
 

@@ -29,8 +29,7 @@ import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.junction.DefaultBlockingState;
 
 import static junit.framework.Assert.assertTrue;
 

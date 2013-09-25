@@ -31,7 +31,7 @@ public interface InvoiceMigrationApi {
      * @param targetDate maximum billing event day to consider (in the account timezone)
      * @param balance    invoice balance
      * @param currency   invoice currency
-     * @param context    call context
+     * @param context    call callcontext
      * @return The UUID of the created invoice
      */
     public UUID createMigrationInvoice(UUID accountId,

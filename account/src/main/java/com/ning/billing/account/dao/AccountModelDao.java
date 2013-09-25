@@ -27,7 +27,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class AccountModelDao extends EntityBase implements EntityModelDao<Account> {

@@ -65,7 +65,7 @@ public class DefaultAuditLog extends EntityAudit implements AuditLog {
         final StringBuilder sb = new StringBuilder();
         sb.append("DefaultAuditLog {");
         sb.append(super.toString());
-        sb.append(", callContext=").append(callContext);
+        sb.append(", callcontext=").append(callContext);
         sb.append('}');
         return sb.toString();
     }

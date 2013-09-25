@@ -60,7 +60,7 @@ import com.ning.billing.subscription.events.user.ApiEventReCreate;
 import com.ning.billing.subscription.events.user.ApiEventUncancel;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 
 import com.google.inject.Inject;

@@ -28,17 +28,17 @@ public class ContextClassLoaderHelper {
 
 
     /*
-      http://impalablog.blogspot.com/2008/10/using-threads-context-class-loader-in.html:
+      http://impalablog.blogspot.com/2008/10/using-threads-callcontext-class-loader-in.html:
 
       "Many existing java libraries are designed to run inside a container (J2EE container, Applet container etc).
       Such containers explicitly define execution boundaries between the various components running within the container.
       The container controls the execution boundaries and knows when a boundary is being crossed from one component to the next.
 
-      This level of boundary control allows a container to switch the context of a thread when a component boundary is crossed.
-      Typically when a container detects a context switch it will set the context class loader on the thread to a class loader associated with the component which is being entered.
-      When the component is exited then the container will switch the context class loader back to the previous context class loader.
+      This level of boundary control allows a container to switch the callcontext of a thread when a component boundary is crossed.
+      Typically when a container detects a callcontext switch it will set the callcontext class loader on the thread to a class loader associated with the component which is being entered.
+      When the component is exited then the container will switch the callcontext class loader back to the previous callcontext class loader.
 
-      The OSGi Framework specification does not define what the context class loader should be set to and does not define when it should be switched.
+      The OSGi Framework specification does not define what the callcontext class loader should be set to and does not define when it should be switched.
       Part of the problem is the Framework is not always aware of when a component boundary is crossed."
 
       => So our current implementation is to proxy all calls from Killbill to OSGI registered services, and set/unset classloader before/after entering the call

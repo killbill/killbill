@@ -19,7 +19,7 @@ package com.ning.billing.account.api;
 import java.util.UUID;
 
 import com.ning.billing.account.dao.AccountEmailModelDao;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 public class DefaultAccountEmail extends EntityBase implements AccountEmail {
 

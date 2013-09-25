@@ -37,10 +37,10 @@ import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;

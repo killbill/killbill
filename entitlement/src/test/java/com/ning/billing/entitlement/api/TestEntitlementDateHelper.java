@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 import static org.testng.Assert.assertTrue;
 

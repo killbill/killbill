@@ -27,15 +27,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;

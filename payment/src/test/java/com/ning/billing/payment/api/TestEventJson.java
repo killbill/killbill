@@ -24,8 +24,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.payment.PaymentTestSuiteNoDB;
-import com.ning.billing.util.events.PaymentErrorInternalEvent;
-import com.ning.billing.util.events.PaymentInfoInternalEvent;
+import com.ning.billing.events.PaymentErrorInternalEvent;
+import com.ning.billing.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson extends PaymentTestSuiteNoDB {

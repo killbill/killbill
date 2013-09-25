@@ -27,7 +27,7 @@ import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.clock.Clock;

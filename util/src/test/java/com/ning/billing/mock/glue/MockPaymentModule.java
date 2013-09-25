@@ -19,7 +19,7 @@ package com.ning.billing.mock.glue;
 import org.mockito.Mockito;
 
 import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
+import com.ning.billing.payment.api.PaymentInternalApi;
 
 import com.google.inject.AbstractModule;
 

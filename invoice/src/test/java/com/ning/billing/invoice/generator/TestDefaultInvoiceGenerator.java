@@ -57,9 +57,9 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.util.config.InvoiceConfig;
-import com.ning.billing.util.svcapi.junction.BillingEvent;
-import com.ning.billing.util.svcapi.junction.BillingEventSet;
-import com.ning.billing.util.svcapi.junction.BillingModeType;
+import com.ning.billing.junction.BillingEvent;
+import com.ning.billing.junction.BillingEventSet;
+import com.ning.billing.junction.BillingModeType;
 
 import static com.ning.billing.invoice.TestInvoiceHelper.EIGHT;
 import static com.ning.billing.invoice.TestInvoiceHelper.FIFTEEN;

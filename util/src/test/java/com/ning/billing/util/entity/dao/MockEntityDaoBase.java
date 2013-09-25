@@ -24,8 +24,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.Entity;
 
 import com.google.common.collect.ImmutableMap;

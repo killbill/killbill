@@ -23,17 +23,17 @@ import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
-import com.ning.billing.util.events.CustomFieldEvent;
-import com.ning.billing.util.events.EffectiveEntitlementInternalEvent;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
-import com.ning.billing.util.events.InvoiceCreationInternalEvent;
-import com.ning.billing.util.events.PaymentErrorInternalEvent;
-import com.ning.billing.util.events.PaymentInfoInternalEvent;
-import com.ning.billing.util.events.PaymentPluginErrorInternalEvent;
-import com.ning.billing.util.events.RepairSubscriptionInternalEvent;
-import com.ning.billing.util.events.TagDefinitionInternalEvent;
-import com.ning.billing.util.events.TagInternalEvent;
+import com.ning.billing.events.CustomFieldEvent;
+import com.ning.billing.events.EffectiveEntitlementInternalEvent;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.events.InvoiceAdjustmentInternalEvent;
+import com.ning.billing.events.InvoiceCreationInternalEvent;
+import com.ning.billing.events.PaymentErrorInternalEvent;
+import com.ning.billing.events.PaymentInfoInternalEvent;
+import com.ning.billing.events.PaymentPluginErrorInternalEvent;
+import com.ning.billing.events.RepairSubscriptionInternalEvent;
+import com.ning.billing.events.TagDefinitionInternalEvent;
+import com.ning.billing.events.TagInternalEvent;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;

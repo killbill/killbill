@@ -18,8 +18,8 @@ package com.ning.billing.overdue.applicator;
 
 import java.util.UUID;
 
-import com.ning.billing.util.events.BusEventBase;
-import com.ning.billing.util.events.OverdueChangeInternalEvent;
+import com.ning.billing.events.BusEventBase;
+import com.ning.billing.events.OverdueChangeInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

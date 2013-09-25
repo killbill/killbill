@@ -18,8 +18,8 @@ package com.ning.billing.invoice.api.user;
 
 import java.util.UUID;
 
-import com.ning.billing.util.events.BusEventBase;
-import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
+import com.ning.billing.events.BusEventBase;
+import com.ning.billing.events.InvoiceAdjustmentInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

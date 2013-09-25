@@ -28,8 +28,8 @@ import org.testng.annotations.Test;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.events.BusInternalEvent;
-import com.ning.billing.util.events.TagDefinitionInternalEvent;
+import com.ning.billing.events.BusInternalEvent;
+import com.ning.billing.events.TagDefinitionInternalEvent;
 
 import com.google.common.eventbus.Subscribe;
 

@@ -48,12 +48,12 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.payment.provider.DefaultPaymentMethodInfoPlugin;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
+import com.ning.billing.tag.TagInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

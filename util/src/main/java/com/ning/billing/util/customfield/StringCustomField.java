@@ -22,7 +22,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.customfield.dao.CustomFieldModelDao;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 public class StringCustomField extends EntityBase implements CustomField {
 

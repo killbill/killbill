@@ -131,7 +131,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 5, 2), InvoiceItemType.ITEM_ADJ, new BigDecimal("-10")),
-                // TODO PIERRE The cba start_date/end_date are created using the context
+                // TODO PIERRE The cba start_date/end_date are created using the callcontext
                 new ExpectedInvoiceItemCheck(callContext.getCreatedDate().toLocalDate(), callContext.getCreatedDate().toLocalDate(), InvoiceItemType.CBA_ADJ, new BigDecimal("10")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
@@ -150,7 +150,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 5, 2), InvoiceItemType.ITEM_ADJ, new BigDecimal("-10")),
-                // TODO PIERRE The cba start_date/end_date are created using the context
+                // TODO PIERRE The cba start_date/end_date are created using the callcontext
                 new ExpectedInvoiceItemCheck(callContext.getCreatedDate().toLocalDate(), callContext.getCreatedDate().toLocalDate(), InvoiceItemType.CBA_ADJ, new BigDecimal("10")),
                 // You can check here that 239.95 - 249.95/31 = 231.88
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-231.88")),
@@ -668,7 +668,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
-                // TODO SETPH the  ITEM_ADJ seems to be created with the context getCreatedDate()
+                // TODO SETPH the  ITEM_ADJ seems to be created with the callcontext getCreatedDate()
                 new ExpectedInvoiceItemCheck(callContext.getCreatedDate().toLocalDate(), callContext.getCreatedDate().toLocalDate(), InvoiceItemType.ITEM_ADJ, new BigDecimal("-10.00")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 

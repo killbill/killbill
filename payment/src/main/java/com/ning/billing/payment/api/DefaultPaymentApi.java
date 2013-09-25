@@ -30,7 +30,7 @@ import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.core.RefundProcessor;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 

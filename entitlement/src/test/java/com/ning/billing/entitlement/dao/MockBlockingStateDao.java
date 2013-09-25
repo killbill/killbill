@@ -25,10 +25,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.ning.billing.clock.Clock;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;

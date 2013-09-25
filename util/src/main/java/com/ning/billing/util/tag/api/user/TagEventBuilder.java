@@ -19,15 +19,14 @@ package com.ning.billing.util.tag.api.user;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.events.ControlTagCreationInternalEvent;
-import com.ning.billing.util.events.ControlTagDefinitionCreationInternalEvent;
-import com.ning.billing.util.events.ControlTagDefinitionDeletionInternalEvent;
-import com.ning.billing.util.events.ControlTagDeletionInternalEvent;
-import com.ning.billing.util.events.UserTagCreationInternalEvent;
-import com.ning.billing.util.events.UserTagDefinitionCreationInternalEvent;
-import com.ning.billing.util.events.UserTagDefinitionDeletionInternalEvent;
-import com.ning.billing.util.events.UserTagDeletionInternalEvent;
+import com.ning.billing.events.ControlTagCreationInternalEvent;
+import com.ning.billing.events.ControlTagDefinitionCreationInternalEvent;
+import com.ning.billing.events.ControlTagDefinitionDeletionInternalEvent;
+import com.ning.billing.events.ControlTagDeletionInternalEvent;
+import com.ning.billing.events.UserTagCreationInternalEvent;
+import com.ning.billing.events.UserTagDefinitionCreationInternalEvent;
+import com.ning.billing.events.UserTagDefinitionDeletionInternalEvent;
+import com.ning.billing.events.UserTagDeletionInternalEvent;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
 

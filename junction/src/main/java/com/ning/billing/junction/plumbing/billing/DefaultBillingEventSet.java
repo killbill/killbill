@@ -22,8 +22,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.util.svcapi.junction.BillingEvent;
-import com.ning.billing.util.svcapi.junction.BillingEventSet;
+import com.ning.billing.junction.BillingEvent;
+import com.ning.billing.junction.BillingEventSet;
 
 public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements SortedSet<BillingEvent>, BillingEventSet {
     private static final long serialVersionUID = 1L;

@@ -28,8 +28,8 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;

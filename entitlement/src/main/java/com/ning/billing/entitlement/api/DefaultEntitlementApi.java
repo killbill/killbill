@@ -52,13 +52,13 @@ import com.ning.billing.subscription.api.transfer.SubscriptionBaseTransferApiExc
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

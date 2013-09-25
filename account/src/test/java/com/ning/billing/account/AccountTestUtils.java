@@ -41,7 +41,7 @@ public abstract class AccountTestUtils {
             return;
         }
 
-        // Check all fields but createdDate/updatedDate (comes from the context)
+        // Check all fields but createdDate/updatedDate (comes from the callcontext)
         Assert.assertEquals(retrievedAccount.getId(), account.getId());
         Assert.assertEquals(retrievedAccount.getExternalKey(), account.getExternalKey());
         Assert.assertEquals(retrievedAccount.getEmail(), account.getEmail());

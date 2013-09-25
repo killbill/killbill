@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class AccountEmailModelDao extends EntityBase implements EntityModelDao<AccountEmail> {

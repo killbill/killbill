@@ -28,9 +28,9 @@ import com.ning.billing.tenant.api.TenantUserApi;
 import com.ning.billing.tenant.dao.TenantDao;
 import com.ning.billing.tenant.dao.TenantModelDao;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
 import com.google.inject.Inject;
@@ -92,7 +92,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
         // TODO Figure out the exact verification if nay
         /*
-        final Tenant tenant = tenantDao.getById(context.getTenantId(), internalContext);
+        final Tenant tenant = tenantDao.getById(callcontext.getTenantId(), internalContext);
         if (tenant == null) {
             throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_ID, tenantId);
         }

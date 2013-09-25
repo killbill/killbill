@@ -37,9 +37,9 @@ import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;

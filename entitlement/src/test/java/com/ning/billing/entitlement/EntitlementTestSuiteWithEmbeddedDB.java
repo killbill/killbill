@@ -46,10 +46,10 @@ import com.ning.billing.entitlement.glue.TestEntitlementModuleWithEmbeddedDB;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.junction.BlockingInternalApi;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
+import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.tag.dao.TagDao;
 

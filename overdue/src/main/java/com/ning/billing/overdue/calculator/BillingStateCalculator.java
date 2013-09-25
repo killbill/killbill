@@ -33,8 +33,8 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.PaymentResponse;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
 import com.ning.billing.util.tag.Tag;
 
 import com.google.inject.Inject;

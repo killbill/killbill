@@ -17,7 +17,7 @@
 package com.ning.billing.util.userrequest;
 
 
-import com.ning.billing.util.events.BusInternalEvent;
+import com.ning.billing.events.BusInternalEvent;
 
 
 public interface CompletionUserRequestNotifier {

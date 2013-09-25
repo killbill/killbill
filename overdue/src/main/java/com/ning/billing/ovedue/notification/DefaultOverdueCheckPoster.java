@@ -35,7 +35,7 @@ import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;

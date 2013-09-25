@@ -35,8 +35,8 @@ import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceItemFactory;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.entity.EntityPersistenceException;
 
 import static com.ning.billing.invoice.TestInvoiceHelper.TEN;
 import static org.testng.Assert.assertEquals;

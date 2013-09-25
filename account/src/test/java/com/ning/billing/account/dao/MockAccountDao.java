@@ -35,11 +35,11 @@ import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.MockEntityDaoBase;
-import com.ning.billing.util.events.AccountChangeInternalEvent;
+import com.ning.billing.events.AccountChangeInternalEvent;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;

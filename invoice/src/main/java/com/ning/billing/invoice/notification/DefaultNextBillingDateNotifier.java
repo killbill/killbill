@@ -34,7 +34,7 @@ import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQ
 import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.config.InvoiceConfig;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 import com.google.inject.Inject;
 

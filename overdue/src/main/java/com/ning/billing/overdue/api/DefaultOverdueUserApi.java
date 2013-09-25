@@ -33,10 +33,10 @@ import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.overdue.wrapper.OverdueWrapper;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import com.ning.billing.junction.BlockingInternalApi;
 
 import com.google.inject.Inject;
 

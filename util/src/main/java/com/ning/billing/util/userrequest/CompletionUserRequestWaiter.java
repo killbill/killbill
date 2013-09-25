@@ -19,14 +19,14 @@ package com.ning.billing.util.userrequest;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import com.ning.billing.util.events.AccountChangeInternalEvent;
-import com.ning.billing.util.events.AccountCreationInternalEvent;
-import com.ning.billing.util.events.BusInternalEvent;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.events.InvoiceCreationInternalEvent;
-import com.ning.billing.util.events.NullInvoiceInternalEvent;
-import com.ning.billing.util.events.PaymentErrorInternalEvent;
-import com.ning.billing.util.events.PaymentInfoInternalEvent;
+import com.ning.billing.events.AccountChangeInternalEvent;
+import com.ning.billing.events.AccountCreationInternalEvent;
+import com.ning.billing.events.BusInternalEvent;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.events.InvoiceCreationInternalEvent;
+import com.ning.billing.events.NullInvoiceInternalEvent;
+import com.ning.billing.events.PaymentErrorInternalEvent;
+import com.ning.billing.events.PaymentInfoInternalEvent;
 
 public interface CompletionUserRequestWaiter {
 

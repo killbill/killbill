@@ -21,8 +21,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public interface RolledUpUsageDao {
 

@@ -44,8 +44,8 @@ import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.mock.MockAccountBuilder;
-import com.ning.billing.util.svcapi.junction.BillingEvent;
-import com.ning.billing.util.svcapi.junction.BillingModeType;
+import com.ning.billing.junction.BillingEvent;
+import com.ning.billing.junction.BillingModeType;
 
 public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 

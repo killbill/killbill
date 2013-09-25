@@ -31,9 +31,9 @@ import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailModelDao;
 import com.ning.billing.account.dao.AccountModelDao;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.account.api.AccountInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

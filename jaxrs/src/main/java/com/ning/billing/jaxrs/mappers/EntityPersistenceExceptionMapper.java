@@ -23,7 +23,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.entity.EntityPersistenceException;
 
 @Singleton
 @Provider

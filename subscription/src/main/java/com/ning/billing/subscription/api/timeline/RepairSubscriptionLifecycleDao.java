@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.subscription.events.SubscriptionBaseEvent;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public interface RepairSubscriptionLifecycleDao {
 

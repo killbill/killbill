@@ -26,6 +26,7 @@ import org.skife.config.ConfigurationObjectFactory;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentInternalApi;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.api.svcs.DefaultPaymentInternalApi;
 import com.ning.billing.payment.bus.InvoiceHandler;
@@ -43,7 +44,6 @@ import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRet
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 import com.ning.billing.util.config.PaymentConfig;
-import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;

@@ -28,8 +28,8 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public interface InvoiceDao {
 
@@ -73,7 +73,7 @@ public interface InvoiceDao {
      * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
      * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
      * @param paymentCookieId           payment cookie id
-     * @param context                   the call context
+     * @param context                   the call callcontext
      * @return the created invoice payment object associated with this refund
      * @throws InvoiceApiException
      */
@@ -109,7 +109,7 @@ public interface InvoiceDao {
      * @param amount        the external charge amount
      * @param effectiveDate the day to post the external charge, in the account timezone
      * @param currency      the external charge currency
-     * @param context       the call context
+     * @param context       the call callcontext
      * @return the newly created external charge invoice item
      */
     InvoiceItemModelDao insertExternalCharge(UUID accountId, @Nullable UUID invoiceId, @Nullable UUID bundleId, @Nullable String description,
@@ -132,7 +132,7 @@ public interface InvoiceDao {
      * @param amount        the credit amount
      * @param effectiveDate the day to grant the credit, in the account timezone
      * @param currency      the credit currency
-     * @param context       the call context
+     * @param context       the call callcontext
      * @return the newly created credit invoice item
      */
     InvoiceItemModelDao insertCredit(UUID accountId, @Nullable UUID invoiceId, BigDecimal amount,
@@ -147,7 +147,7 @@ public interface InvoiceDao {
      * @param effectiveDate adjustment effective date, in the account timezone
      * @param amount        the amount to adjust. Pass null to adjust the full amount of the original item
      * @param currency      the currency of the amount. Pass null to default to the original currency used
-     * @param context       the call context
+     * @param context       the call callcontext
      * @return the newly created adjustment item
      */
     InvoiceItemModelDao insertInvoiceItemAdjustment(UUID accountId, UUID invoiceId, UUID invoiceItemId, LocalDate effectiveDate,
@@ -167,7 +167,7 @@ public interface InvoiceDao {
     /**
      *
      * @param accountId the account for which we need to rebalance the CBA
-     * @param context the callContext
+     * @param context the callcontext
      */
     public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context);
 }

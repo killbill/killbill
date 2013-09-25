@@ -24,7 +24,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<PaymentMethod> {

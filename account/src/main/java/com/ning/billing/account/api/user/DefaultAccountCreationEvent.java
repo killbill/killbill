@@ -23,8 +23,8 @@ import org.joda.time.DateTimeZone;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.events.AccountCreationInternalEvent;
-import com.ning.billing.util.events.BusEventBase;
+import com.ning.billing.events.AccountCreationInternalEvent;
+import com.ning.billing.events.BusEventBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

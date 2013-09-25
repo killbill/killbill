@@ -28,7 +28,7 @@ import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.junction.DefaultBlockingState;
 import com.ning.billing.util.tag.ControlTagType;
 
 @Test(groups = "slow")

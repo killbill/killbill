@@ -19,7 +19,7 @@ package com.ning.billing.util.cache;
 import javax.annotation.Nullable;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public class CacheLoaderArgument {
 

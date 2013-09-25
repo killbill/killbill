@@ -23,7 +23,7 @@ import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 import com.google.inject.AbstractModule;
 

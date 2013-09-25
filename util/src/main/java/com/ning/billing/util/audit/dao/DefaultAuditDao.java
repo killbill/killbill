@@ -27,7 +27,7 @@ import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.dao.NonEntitySqlDao;

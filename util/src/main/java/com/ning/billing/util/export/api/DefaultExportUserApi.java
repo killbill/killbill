@@ -24,7 +24,7 @@ import javax.inject.Inject;
 import com.ning.billing.util.api.DatabaseExportOutputStream;
 import com.ning.billing.util.api.ExportUserApi;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.export.dao.CSVExportOutputStream;
 import com.ning.billing.util.export.dao.DatabaseExportDao;

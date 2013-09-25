@@ -91,8 +91,8 @@ import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.config.OSGIConfig;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.common.base.Function;
@@ -254,7 +254,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         super.beforeMethod();
 
-        log.info("beforeMethod context classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
+        log.info("beforeMethod callcontext classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
         //Thread.currentThread().setContextClassLoader(null);
 
         log.warn("\n");
@@ -280,7 +280,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();
 
-        log.info("afterMethod context classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
+        log.info("afterMethod callcontext classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
 
         log.warn("DONE WITH TEST\n");
     }

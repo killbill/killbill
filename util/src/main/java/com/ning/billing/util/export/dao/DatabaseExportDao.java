@@ -30,7 +30,7 @@ import org.skife.jdbi.v2.tweak.HandleCallback;
 
 import com.ning.billing.util.api.ColumnInfo;
 import com.ning.billing.util.api.DatabaseExportOutputStream;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.validation.DefaultColumnInfo;
 import com.ning.billing.util.validation.dao.DatabaseSchemaDao;

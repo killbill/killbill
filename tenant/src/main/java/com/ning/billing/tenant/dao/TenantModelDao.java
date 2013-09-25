@@ -22,7 +22,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.tenant.api.Tenant;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class TenantModelDao extends EntityBase implements EntityModelDao<Tenant> {

@@ -33,12 +33,12 @@ import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.util.events.InvoiceCreationInternalEvent;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
+import com.ning.billing.events.InvoiceCreationInternalEvent;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
 
 import com.google.inject.Inject;
 

@@ -36,10 +36,10 @@ import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
+import com.ning.billing.entity.EntityPersistenceException;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

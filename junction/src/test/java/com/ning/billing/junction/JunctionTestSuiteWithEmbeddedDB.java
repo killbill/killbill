@@ -25,11 +25,9 @@ import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.junction.glue.TestJunctionModuleWithEmbeddedDB;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.junction.BillingInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
+import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.tag.dao.TagDao;
 
 import com.google.inject.Guice;

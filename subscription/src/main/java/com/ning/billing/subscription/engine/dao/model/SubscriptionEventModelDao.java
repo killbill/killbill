@@ -39,7 +39,7 @@ import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.events.user.ApiEventUncancel;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class SubscriptionEventModelDao extends EntityBase implements EntityModelDao<SubscriptionBaseEvent> {

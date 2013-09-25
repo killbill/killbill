@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 public class DefaultTenantKV  extends EntityBase implements TenantKV {
 

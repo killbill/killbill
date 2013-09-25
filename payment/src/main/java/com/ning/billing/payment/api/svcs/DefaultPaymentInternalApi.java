@@ -25,11 +25,11 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.PaymentInternalApi;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public class DefaultPaymentInternalApi implements PaymentInternalApi {
 

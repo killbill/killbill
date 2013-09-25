@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.callcontext.DefaultCallContext;
 import com.ning.billing.util.UtilTestSuiteNoDB;
 
 public class TestDefaultCallContext extends UtilTestSuiteNoDB {

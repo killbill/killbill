@@ -27,7 +27,7 @@ import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseApiService;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 
 import com.google.inject.Inject;

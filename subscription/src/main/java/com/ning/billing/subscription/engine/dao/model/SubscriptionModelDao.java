@@ -25,7 +25,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class SubscriptionModelDao extends EntityBase implements EntityModelDao<SubscriptionBase> {

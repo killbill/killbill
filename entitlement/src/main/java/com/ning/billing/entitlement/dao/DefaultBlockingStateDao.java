@@ -25,11 +25,10 @@ import javax.inject.Inject;
 
 import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;

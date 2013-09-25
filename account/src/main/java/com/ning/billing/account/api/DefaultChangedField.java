@@ -18,7 +18,7 @@ package com.ning.billing.account.api;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.events.ChangedField;
+import com.ning.billing.events.ChangedField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

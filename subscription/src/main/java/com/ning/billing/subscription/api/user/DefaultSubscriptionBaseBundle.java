@@ -21,7 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 public class DefaultSubscriptionBaseBundle extends EntityBase implements SubscriptionBaseBundle {
 

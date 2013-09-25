@@ -28,7 +28,7 @@ import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.entity.dao.EntitySqlDao;

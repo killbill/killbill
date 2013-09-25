@@ -40,7 +40,7 @@ import com.ning.billing.subscription.engine.dao.DefaultSubscriptionDao;
 import com.ning.billing.subscription.engine.dao.RepairSubscriptionDao;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.util.config.SubscriptionConfig;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;

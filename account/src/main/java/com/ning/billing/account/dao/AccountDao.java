@@ -21,8 +21,8 @@ import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntityDao;
 
 public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountApiException> {

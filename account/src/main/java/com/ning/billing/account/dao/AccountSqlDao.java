@@ -27,8 +27,8 @@ import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;

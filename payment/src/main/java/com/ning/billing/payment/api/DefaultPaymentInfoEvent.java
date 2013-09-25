@@ -21,8 +21,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.events.BusEventBase;
-import com.ning.billing.util.events.PaymentInfoInternalEvent;
+import com.ning.billing.events.BusEventBase;
+import com.ning.billing.events.PaymentInfoInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

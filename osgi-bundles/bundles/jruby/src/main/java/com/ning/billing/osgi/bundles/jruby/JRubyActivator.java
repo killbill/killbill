@@ -195,7 +195,7 @@ public class JRubyActivator extends KillbillActivatorBase {
             Thread.currentThread().setContextClassLoader(pluginClassLoader);
             call.doCall();
         } finally {
-            // We want to make sure that calling thread gets back its original context class loader when it returns
+            // We want to make sure that calling thread gets back its original callcontext class loader when it returns
             Thread.currentThread().setContextClassLoader(enteringContextClassLoader);
         }
     }

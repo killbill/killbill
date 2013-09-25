@@ -21,7 +21,7 @@ import org.mockito.Mockito;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.glue.EntitlementModule;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import com.ning.billing.junction.BlockingInternalApi;
 
 import com.google.inject.AbstractModule;
 

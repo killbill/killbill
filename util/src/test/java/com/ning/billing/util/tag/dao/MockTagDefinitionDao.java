@@ -24,8 +24,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public class MockTagDefinitionDao implements TagDefinitionDao {
 

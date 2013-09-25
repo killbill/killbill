@@ -22,7 +22,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.entity.Entity;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class EntityHistoryModelDao<M extends EntityModelDao<E>, E extends Entity> extends EntityBase {

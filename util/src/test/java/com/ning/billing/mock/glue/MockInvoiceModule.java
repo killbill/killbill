@@ -22,7 +22,7 @@ import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
 
 import com.google.inject.AbstractModule;
 

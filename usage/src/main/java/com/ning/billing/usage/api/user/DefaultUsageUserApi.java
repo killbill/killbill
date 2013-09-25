@@ -29,7 +29,7 @@ import com.ning.billing.usage.api.UsageUserApi;
 import com.ning.billing.usage.dao.RolledUpUsageDao;
 import com.ning.billing.usage.dao.RolledUpUsageModelDao;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 

@@ -51,7 +51,7 @@ import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEv
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.clock.Clock;
 

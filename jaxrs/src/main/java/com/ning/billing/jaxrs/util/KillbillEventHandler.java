@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.ning.billing.util.events.BusInternalEvent;
+import com.ning.billing.events.BusInternalEvent;
 import com.ning.billing.util.userrequest.CompletionUserRequest;
 import com.ning.billing.util.userrequest.CompletionUserRequestNotifier;
 

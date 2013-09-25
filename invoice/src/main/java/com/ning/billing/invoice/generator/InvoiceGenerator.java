@@ -21,13 +21,12 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.util.svcapi.junction.BillingEventSet;
+import com.ning.billing.junction.BillingEventSet;
 
 public interface InvoiceGenerator {
 

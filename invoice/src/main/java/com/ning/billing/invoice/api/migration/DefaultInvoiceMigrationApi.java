@@ -36,7 +36,7 @@ import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

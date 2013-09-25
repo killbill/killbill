@@ -31,7 +31,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 public class MockInvoice extends EntityBase implements Invoice {
     private final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();

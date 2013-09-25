@@ -20,7 +20,7 @@ import org.mockito.Mockito;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.glue.AccountModule;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
 
 import com.google.inject.AbstractModule;
 

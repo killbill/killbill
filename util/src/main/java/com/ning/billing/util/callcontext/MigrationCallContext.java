@@ -18,6 +18,8 @@ package com.ning.billing.util.callcontext;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.callcontext.CallContextBase;
+
 public class MigrationCallContext extends CallContextBase {
 
     private final DateTime createdDate;

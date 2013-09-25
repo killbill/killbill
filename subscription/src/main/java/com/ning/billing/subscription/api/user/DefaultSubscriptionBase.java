@@ -55,7 +55,7 @@ import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 public class DefaultSubscriptionBase extends EntityBase implements SubscriptionBase {
 

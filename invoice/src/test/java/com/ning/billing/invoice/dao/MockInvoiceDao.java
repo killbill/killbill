@@ -33,8 +33,8 @@ import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;

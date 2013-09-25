@@ -29,8 +29,8 @@ import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public interface SubscriptionDao {
 
@@ -57,7 +57,7 @@ public interface SubscriptionDao {
 
     public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(InternalTenantContext context);
 
-    //public List<SubscriptionBase> getSubscriptionsForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
+    //public List<SubscriptionBase> getSubscriptionsForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext callcontext);
 
     // Update
     public void updateChargedThroughDate(DefaultSubscriptionBase subscription, InternalCallContext context);

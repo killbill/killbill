@@ -26,7 +26,7 @@ import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.DefaultAccountDao;
 import com.ning.billing.glue.AccountModule;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
 
 import com.google.inject.AbstractModule;
 

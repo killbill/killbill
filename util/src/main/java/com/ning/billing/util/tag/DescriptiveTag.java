@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 public class DescriptiveTag extends EntityBase implements Tag {
 

@@ -24,7 +24,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.util.UtilTestSuiteNoDB;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.clock.ClockMock;
 import com.ning.billing.util.dao.EntityAudit;

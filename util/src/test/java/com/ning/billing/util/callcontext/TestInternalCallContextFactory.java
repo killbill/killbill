@@ -22,15 +22,11 @@ import java.util.UUID;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.clock.ClockMock;
-import com.ning.billing.util.dao.DefaultNonEntityDao;
-import com.ning.billing.util.dao.NonEntityDao;
 
 public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB {
 
@@ -100,7 +96,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
         Assert.assertEquals(context.getCreatedBy(), callContext.getUserName());
         Assert.assertEquals(context.getUserToken(), callContext.getUserToken());
         Assert.assertEquals(context.getContextUserType(), callContext.getUserType());
-        // Our test callContext doesn't have a tenant id
+        // Our test callcontext doesn't have a tenant id
         Assert.assertEquals(context.getTenantRecordId(), (Long) InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID);
     }
 }

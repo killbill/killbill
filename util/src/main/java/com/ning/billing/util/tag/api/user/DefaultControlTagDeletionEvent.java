@@ -19,8 +19,8 @@ package com.ning.billing.util.tag.api.user;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.events.BusEventBase;
-import com.ning.billing.util.events.ControlTagDeletionInternalEvent;
+import com.ning.billing.events.BusEventBase;
+import com.ning.billing.events.ControlTagDeletionInternalEvent;
 import com.ning.billing.util.tag.TagDefinition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

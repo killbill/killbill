@@ -19,9 +19,8 @@ package com.ning.billing.payment.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.util.events.BusEventBase;
-import com.ning.billing.util.events.PaymentErrorInternalEvent;
-import com.ning.billing.util.events.PaymentPluginErrorInternalEvent;
+import com.ning.billing.events.BusEventBase;
+import com.ning.billing.events.PaymentPluginErrorInternalEvent;
 
 import java.util.UUID;
 

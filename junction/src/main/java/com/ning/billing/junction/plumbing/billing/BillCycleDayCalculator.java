@@ -39,9 +39,9 @@ import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

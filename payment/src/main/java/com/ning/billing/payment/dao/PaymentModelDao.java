@@ -27,7 +27,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class PaymentModelDao extends EntityBase implements EntityModelDao<Payment> {

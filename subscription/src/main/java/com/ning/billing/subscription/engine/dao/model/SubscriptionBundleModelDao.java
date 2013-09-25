@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class SubscriptionBundleModelDao extends EntityBase implements EntityModelDao<SubscriptionBaseBundle> {

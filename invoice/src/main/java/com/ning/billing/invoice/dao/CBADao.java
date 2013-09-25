@@ -23,9 +23,9 @@ import java.util.UUID;
 
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
@@ -70,7 +70,7 @@ public class CBADao {
      *
      * @param entitySqlDaoWrapperFactory the EntitySqlDaoWrapperFactory from the current transaction
      * @param invoice                    the invoice to adjust
-     * @param context                    the call context
+     * @param context                    the call callcontext
      */
     private void addCBAIfNeeded(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
                                 final InvoiceModelDao invoice,

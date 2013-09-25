@@ -37,7 +37,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
 

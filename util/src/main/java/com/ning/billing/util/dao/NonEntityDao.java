@@ -28,7 +28,7 @@ public interface NonEntityDao {
 
     //
     // TODO should we check for InternalCallContext?
-    // That seems difficult because those APIs are called when creating a context or from the cache loaders which also dpn't know anything about context
+    // That seems difficult because those APIs are called when creating a callcontext or from the cache loaders which also dpn't know anything about callcontext
     //
     public Long retrieveRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache);
 

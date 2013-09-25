@@ -35,7 +35,7 @@ public interface SubscriptionBaseTransferApi {
      * @param requestedDate     the date at which this transfer should occur
      * @param transferAddOn     whether or not we should also transfer ADD_ON subscriptions existing on that {@code SubscriptionBaseBundle}
      * @param cancelImmediately whether cancellation on the sourceAccount occurs immediately
-     * @param context           the user context
+     * @param context           the user callcontext
      * @return the newly created {@code SubscriptionBaseBundle}
      * @throws SubscriptionBaseTransferApiException
      *          if the system could not transfer the {@code SubscriptionBaseBundle}

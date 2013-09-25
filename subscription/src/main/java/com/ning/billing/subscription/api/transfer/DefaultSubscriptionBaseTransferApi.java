@@ -31,7 +31,6 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionApiBase;
-import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseApiService;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
@@ -54,12 +53,10 @@ import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairExceptio
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
 
-import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.util.callcontext.InternalTenantContext;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;

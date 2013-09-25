@@ -32,7 +32,7 @@ import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQ
 import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.payment.glue.DefaultPaymentService;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.entity.dao.EntitySqlDao;

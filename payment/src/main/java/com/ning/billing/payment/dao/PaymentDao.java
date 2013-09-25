@@ -23,8 +23,8 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public interface PaymentDao {
 

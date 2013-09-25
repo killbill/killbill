@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.Entity;
 
 public interface EntityDao<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> {

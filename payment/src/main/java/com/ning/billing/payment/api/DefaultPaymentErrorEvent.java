@@ -18,13 +18,12 @@ package com.ning.billing.payment.api;
 
 import java.util.UUID;
 
-import com.ning.billing.util.events.BusEventBase;
-import com.ning.billing.util.events.PaymentErrorInternalEvent;
+import com.ning.billing.events.BusEventBase;
+import com.ning.billing.events.PaymentErrorInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErrorInternalEvent {
 

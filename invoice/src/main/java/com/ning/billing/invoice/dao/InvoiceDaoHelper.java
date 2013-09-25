@@ -31,9 +31,9 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
@@ -54,7 +54,7 @@ public class InvoiceDaoHelper {
      * @param invoiceId                     original invoice id
      * @param entitySqlDaoWrapperFactory    the EntitySqlDaoWrapperFactory from the current transaction
      * @param invoiceItemIdsWithNullAmounts the original mapping between invoice item ids and amount to refund (contains null)
-     * @param context                       the tenant context
+     * @param context                       the tenant callcontext
      * @return the final mapping between invoice item ids and amount to refund
      * @throws com.ning.billing.invoice.api.InvoiceApiException
      *
@@ -214,7 +214,7 @@ public class InvoiceDaoHelper {
      *
      * @param entitySqlDaoWrapperFactory the EntitySqlDaoWrapperFactory from the current transaction
      * @param item                       the invoice item to create
-     * @param context                    the call context
+     * @param context                    the call callcontext
      */
     public void insertItem(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
                            final InvoiceItemModelDao item,

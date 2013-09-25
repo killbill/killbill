@@ -20,7 +20,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
@@ -47,16 +46,15 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.retry.AutoPayRetryService.AutoPayRetryServiceScheduler;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.events.BusInternalEvent;
-import com.ning.billing.util.events.PaymentErrorInternalEvent;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.events.BusInternalEvent;
+import com.ning.billing.events.PaymentErrorInternalEvent;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
+import com.ning.billing.tag.TagInternalApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -513,7 +511,7 @@ public class PaymentProcessor extends ProcessorBase {
 
                     /*
                     UUID paymentId, PaymentStatus paymentStatus, DateTime newEffectiveDate,
-                                                                  String gatewayErrorMsg, UUID attemptId, InternalCallContext context, String gatewayErrorCode
+                                                                  String gatewayErrorMsg, UUID attemptId, InternalCallContext callcontext, String gatewayErrorCode
                      */
 
                     paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), paymentStatus, clock.getUTCNow(), attemptInput.getId(), paymentPluginInfo.getGatewayErrorCode(), null, context);

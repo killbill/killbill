@@ -50,9 +50,9 @@ import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.svcapi.junction.BillingEventSet;
-import com.ning.billing.util.svcapi.junction.BillingModeType;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.junction.BillingEventSet;
+import com.ning.billing.junction.BillingModeType;
 import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 
 public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {

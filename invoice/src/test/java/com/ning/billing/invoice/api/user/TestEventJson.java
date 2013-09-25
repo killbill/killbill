@@ -25,8 +25,8 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
-import com.ning.billing.util.events.InvoiceCreationInternalEvent;
-import com.ning.billing.util.events.NullInvoiceInternalEvent;
+import com.ning.billing.events.InvoiceCreationInternalEvent;
+import com.ning.billing.events.NullInvoiceInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson extends InvoiceTestSuiteNoDB {

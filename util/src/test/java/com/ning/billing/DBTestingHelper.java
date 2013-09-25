@@ -154,7 +154,7 @@ public class DBTestingHelper {
                                "    PRIMARY KEY(record_id)\n" +
                                ");");
 
-        // HACK (PIERRE): required by invoice tests which perform payments lookups to find the account record id for the internal context
+        // HACK (PIERRE): required by invoice tests which perform payments lookups to find the account record id for the internal callcontext
         instance.executeScript("DROP TABLE IF EXISTS payments;\n" +
                                "CREATE TABLE payments (\n" +
                                "    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +

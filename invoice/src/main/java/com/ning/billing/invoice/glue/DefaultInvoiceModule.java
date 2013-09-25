@@ -44,7 +44,7 @@ import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.util.config.InvoiceConfig;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 import com.google.inject.AbstractModule;

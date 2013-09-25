@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent;
-import com.ning.billing.util.events.RequestedSubscriptionInternalEvent;
+import com.ning.billing.events.RequestedSubscriptionInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

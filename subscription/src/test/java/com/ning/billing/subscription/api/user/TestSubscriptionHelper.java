@@ -59,9 +59,9 @@ import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.DeletedEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;

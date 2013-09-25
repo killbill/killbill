@@ -21,8 +21,8 @@ import java.util.UUID;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.Entity;
 
 public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {

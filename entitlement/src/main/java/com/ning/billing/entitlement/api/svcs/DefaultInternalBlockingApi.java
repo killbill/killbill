@@ -24,10 +24,10 @@ import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.junction.BlockingInternalApi;
+import com.ning.billing.junction.DefaultBlockingState;
 
 import java.util.List;
 import java.util.UUID;

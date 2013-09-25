@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 public class DefaultRefund extends EntityBase implements Refund {
 

@@ -34,19 +34,19 @@ import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import com.ning.billing.util.events.AccountChangeInternalEvent;
-import com.ning.billing.util.events.AccountCreationInternalEvent;
+import com.ning.billing.events.AccountChangeInternalEvent;
+import com.ning.billing.events.AccountCreationInternalEvent;
 
 import com.google.inject.Inject;
 
@@ -82,7 +82,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         }
 
         final Long recordId = entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getRecordId(savedAccount.getId().toString(), context);
-        // We need to re-hydrate the context with the account record id
+        // We need to re-hydrate the callcontext with the account record id
         final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(recordId, context);
         final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(new DefaultAccountData(savedAccount), savedAccount.getId(),
                                                                                            context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());

@@ -22,7 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.events.BusInternalEvent.BusInternalEventType;
+import com.ning.billing.events.BusInternalEvent.BusInternalEventType;
 import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestDefaultCustomFieldDeletionEvent {

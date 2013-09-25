@@ -29,14 +29,14 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.email.DefaultEmailSender;
 import com.ning.billing.util.email.EmailApiException;
 import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailSender;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 

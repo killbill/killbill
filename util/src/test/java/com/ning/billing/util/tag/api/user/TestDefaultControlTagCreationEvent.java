@@ -23,7 +23,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.UtilTestSuiteNoDB;
-import com.ning.billing.util.events.BusInternalEvent;
+import com.ning.billing.events.BusInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;

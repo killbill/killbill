@@ -16,7 +16,6 @@
 
 package com.ning.billing.overdue.listener;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -24,9 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.callcontext.InternalCallContext;
 
 import com.google.inject.Inject;
 

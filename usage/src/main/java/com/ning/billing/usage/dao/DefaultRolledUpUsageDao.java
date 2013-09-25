@@ -24,8 +24,8 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public class DefaultRolledUpUsageDao implements RolledUpUsageDao {
 

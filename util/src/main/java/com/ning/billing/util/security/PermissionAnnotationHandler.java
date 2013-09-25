@@ -30,7 +30,7 @@ import com.ning.billing.security.Permission;
 import com.ning.billing.security.RequiresPermissions;
 import com.ning.billing.security.SecurityApiException;
 import com.ning.billing.security.api.SecurityApi;
-import com.ning.billing.util.callcontext.DefaultTenantContext;
+import com.ning.billing.callcontext.DefaultTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
 import com.google.common.collect.ImmutableList;

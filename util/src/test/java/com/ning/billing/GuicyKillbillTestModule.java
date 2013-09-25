@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.clock.Clock;
@@ -32,7 +32,7 @@ public class GuicyKillbillTestModule extends AbstractModule {
 
     //
     // CreatedFontTracker references that will later be injected through Guices.
-    // That we we have only one clock and all internalContext/callContext are consistent
+    // That we we have only one clock and all internalContext/callcontext are consistent
     //
 
     private final InternalCallContext internalCallContext = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, 1687L, UUID.randomUUID(),

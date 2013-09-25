@@ -38,10 +38,10 @@ import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
-import com.ning.billing.util.svcapi.junction.BillingInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
+import com.ning.billing.junction.BillingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Guice;

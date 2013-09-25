@@ -46,18 +46,18 @@ import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.email.DefaultEmailSender;
 import com.ning.billing.util.email.EmailApiException;
 import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailSender;
-import com.ning.billing.util.events.OverdueChangeInternalEvent;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.events.OverdueChangeInternalEvent;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.junction.BlockingInternalApi;
+import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -270,7 +270,7 @@ public class OverdueStateApplicator {
     }
 
     //
-    // Uses context information to retrieve account matching the Overduable object and check whether we should do any overdue processing
+    // Uses callcontext information to retrieve account matching the Overduable object and check whether we should do any overdue processing
     //
     private boolean isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(final InternalCallContext context) throws OverdueException {
 

@@ -22,8 +22,8 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.events.BusEventBase;
-import com.ning.billing.util.events.InvoiceCreationInternalEvent;
+import com.ning.billing.events.BusEventBase;
+import com.ning.billing.events.InvoiceCreationInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

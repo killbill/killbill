@@ -35,8 +35,8 @@ import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import static org.testng.Assert.assertNotNull;

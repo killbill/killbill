@@ -29,8 +29,8 @@ import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.cache.Cachable;
 import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CachableKey;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 /**

@@ -24,11 +24,11 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ObjectType;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.util.events.ControlTagDeletionInternalEvent;
+import com.ning.billing.events.ControlTagDeletionInternalEvent;
 import com.ning.billing.util.tag.ControlTagType;
 
 import com.google.common.eventbus.Subscribe;

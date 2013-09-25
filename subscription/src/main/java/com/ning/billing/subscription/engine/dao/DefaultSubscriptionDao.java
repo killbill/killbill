@@ -78,16 +78,16 @@ import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.events.RepairSubscriptionInternalEvent;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.events.RepairSubscriptionInternalEvent;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -295,15 +295,15 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
     /*
     @Override
     public List<SubscriptionBase> getSubscriptionsForAccountAndKey(final UUID accountId,
-                                                               final String bundleKey, final InternalTenantContext context) {
+                                                               final String bundleKey, final InternalTenantContext callcontext) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<SubscriptionBase>>() {
             @Override
             public List<SubscriptionBase> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionBundleModelDao bundleModel = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundleFromAccountAndKey(accountId.toString(), bundleKey, context);
+                final SubscriptionBundleModelDao bundleModel = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundleFromAccountAndKey(accountId.toString(), bundleKey, callcontext);
                 if (bundleModel == null) {
                     return Collections.emptyList();
                 }
-                return getSubscriptions(bundleModel.getId(), context);
+                return getSubscriptions(bundleModel.getId(), callcontext);
             }
         });
     }

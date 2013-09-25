@@ -33,7 +33,7 @@ import com.ning.billing.util.audit.ChangeType;
  *         @Audited(type = ChangeType.UPDATE)
  *         @SqlUpdate public void updateChargedThroughDate(@Bind("id") String id,
  *                                                         @Bind("chargedThroughDate") Date chargedThroughDate,
- *                                                         @InternalTenantContextBinder final InternalCallContext context);
+ *                                                         @InternalTenantContextBinder final InternalCallContext callcontext);
  * </pre>
  */
 @Retention(RetentionPolicy.RUNTIME)

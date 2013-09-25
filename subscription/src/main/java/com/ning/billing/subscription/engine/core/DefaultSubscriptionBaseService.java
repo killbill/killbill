@@ -49,11 +49,11 @@ import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotific
 import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
 
 import com.google.inject.Inject;
 

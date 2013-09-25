@@ -33,14 +33,13 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.junction.BillingEvent;
-import com.ning.billing.util.svcapi.junction.BillingModeType;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.junction.BillingEvent;
+import com.ning.billing.junction.BillingModeType;
+import com.ning.billing.junction.BlockingInternalApi;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

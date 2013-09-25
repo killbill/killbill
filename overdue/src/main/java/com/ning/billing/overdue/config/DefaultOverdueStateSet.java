@@ -29,7 +29,7 @@ import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.config.catalog.ValidatingConfig;
 import com.ning.billing.util.config.catalog.ValidationErrors;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.junction.DefaultBlockingState;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public abstract class DefaultOverdueStateSet extends ValidatingConfig<OverdueConfig> implements OverdueStateSet {

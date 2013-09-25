@@ -19,11 +19,10 @@ package com.ning.billing.entitlement.api;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 
 import com.ning.billing.entitlement.EntitlementTransitionType;
-import com.ning.billing.util.events.BusEventBase;
-import com.ning.billing.util.events.EffectiveEntitlementInternalEvent;
+import com.ning.billing.events.BusEventBase;
+import com.ning.billing.events.EffectiveEntitlementInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

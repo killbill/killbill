@@ -33,7 +33,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
-import com.ning.billing.ObjectType;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -45,7 +44,7 @@ import com.ning.billing.entitlement.block.DefaultBlockingChecker.DefaultBlocking
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.junction.DefaultBlockingState;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

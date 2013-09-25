@@ -16,7 +16,6 @@
 
 package com.ning.billing.invoice.generator;
 
-import java.awt.image.DataBufferUShort;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,9 +51,9 @@ import com.ning.billing.invoice.model.RecurringInvoiceItemData;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.config.InvoiceConfig;
-import com.ning.billing.util.svcapi.junction.BillingEvent;
-import com.ning.billing.util.svcapi.junction.BillingEventSet;
-import com.ning.billing.util.svcapi.junction.BillingModeType;
+import com.ning.billing.junction.BillingEvent;
+import com.ning.billing.junction.BillingEventSet;
+import com.ning.billing.junction.BillingModeType;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;

@@ -22,6 +22,8 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.callcontext.DefaultCallContext;
+import com.ning.billing.callcontext.DefaultTenantContext;
 import com.ning.billing.clock.Clock;
 
 import com.google.inject.Inject;

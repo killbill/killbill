@@ -21,7 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.TagDefinition;

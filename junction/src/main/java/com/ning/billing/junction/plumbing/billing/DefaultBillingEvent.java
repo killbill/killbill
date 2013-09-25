@@ -30,9 +30,9 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.svcapi.junction.BillingEvent;
-import com.ning.billing.util.svcapi.junction.BillingModeType;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.junction.BillingEvent;
+import com.ning.billing.junction.BillingModeType;
 
 public class DefaultBillingEvent implements BillingEvent {
     private final Account account;

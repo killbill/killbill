@@ -35,7 +35,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.overdue.OverdueTestSuiteNoDB;
 import com.ning.billing.overdue.config.api.BillingState;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 public class TestBillingStateCalculator extends OverdueTestSuiteNoDB {
 

@@ -21,7 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 public class EntityAudit extends EntityBase {
     

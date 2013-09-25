@@ -28,7 +28,7 @@ import com.ning.billing.mock.glue.MockSubscriptionModule;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.MetricsModule;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import com.ning.billing.junction.BlockingInternalApi;
 
 public class TestJunctionModule extends DefaultJunctionModule {
 

@@ -52,14 +52,14 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
+import com.ning.billing.tag.TagInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -99,8 +99,8 @@ public class RefundProcessor extends ProcessorBase {
      * @param specifiedRefundAmount     amount to refund. If null, the amount will be the sum of adjusted invoice items
      * @param isAdjusted                whether the refund should trigger an invoice or invoice item adjustment
      * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
-     * @param context                   the call context
-     * @return the created context
+     * @param context                   the call callcontext
+     * @return the created callcontext
      * @throws PaymentApiException
      */
     public Refund createRefund(final Account account, final UUID paymentId, @Nullable final BigDecimal specifiedRefundAmount,
@@ -264,7 +264,7 @@ public class RefundProcessor extends ProcessorBase {
 
         try {
 
-            // TODO context should be created for each refund and have the correct userToken
+            // TODO callcontext should be created for each refund and have the correct userToken
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(refundsToBeFixed.iterator().next().getId(), ObjectType.REFUND, "RefundProcessor",
                                                                                                      CallOrigin.INTERNAL, UserType.SYSTEM, null);
 

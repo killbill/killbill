@@ -23,8 +23,8 @@ import org.joda.time.LocalDate;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.account.api.AccountInternalApi;
 
 public class EntitlementDateHelper {
 

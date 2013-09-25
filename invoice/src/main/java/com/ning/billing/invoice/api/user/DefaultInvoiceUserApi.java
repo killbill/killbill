@@ -50,12 +50,12 @@ import com.ning.billing.invoice.model.InvoiceItemFactory;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -129,7 +129,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public Invoice getInvoiceByNumber(final Integer number, final TenantContext context) throws InvoiceApiException {
-        // TODO (PIERRE) Populate accountRecordId in context
+        // TODO (PIERRE) Populate accountRecordId in callcontext
         return new DefaultInvoice(dao.getByNumber(number, internalCallContextFactory.createInternalTenantContext(context)));
     }
 

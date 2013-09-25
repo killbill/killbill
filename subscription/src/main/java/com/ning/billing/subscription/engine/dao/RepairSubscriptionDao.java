@@ -38,8 +38,8 @@ import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

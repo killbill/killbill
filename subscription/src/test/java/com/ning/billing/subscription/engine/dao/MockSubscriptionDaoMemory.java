@@ -18,7 +18,6 @@ package com.ning.billing.subscription.engine.dao;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -55,8 +54,8 @@ import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
@@ -158,11 +157,11 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
 
     /*
     @Override
-    public List<SubscriptionBase> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+    public List<SubscriptionBase> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext callcontext) {
 
         for (final SubscriptionBaseBundle cur : bundles) {
             if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(bundleKey)) {
-                return getSubscriptions(cur.getId(), context);
+                return getSubscriptions(cur.getId(), callcontext);
             }
         }
         return Collections.emptyList();

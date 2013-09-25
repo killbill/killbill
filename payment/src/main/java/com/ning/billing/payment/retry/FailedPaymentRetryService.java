@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.payment.core.PaymentProcessor;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.clock.Clock;
 

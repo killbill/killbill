@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 
 public interface RetryService {
 

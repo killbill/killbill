@@ -23,9 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculator;
 import com.ning.billing.overdue.config.DefaultOverdueState;
@@ -33,9 +31,9 @@ import com.ning.billing.overdue.config.DefaultOverdueStateSet;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.junction.BlockingInternalApi;
 
 import com.google.inject.Inject;
 

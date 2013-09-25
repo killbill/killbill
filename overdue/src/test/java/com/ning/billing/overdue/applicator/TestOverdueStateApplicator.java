@@ -27,13 +27,12 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.config.catalog.XMLLoader;
-import com.ning.billing.util.events.OverdueChangeInternalEvent;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.events.OverdueChangeInternalEvent;
+import com.ning.billing.junction.DefaultBlockingState;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;

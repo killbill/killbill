@@ -362,7 +362,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), allRepairs);
                 
                 boolean dryRun = true;
-                repairApi.repairBundle(bRepair, dryRun, callContext);
+                repairApi.repairBundle(bRepair, dryRun, callcontext);
                 */
             }
         }, ErrorCode.SUB_REPAIR_BP_RECREATE_MISSING_AO_CREATE);
@@ -390,7 +390,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 assertTrue(testListener.isCompleted(5000));
 
                 DateTime requestedChange = clock.getUTCNow();
-                baseSubscription.changePlanWithRequestedDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, callContext);
+                baseSubscription.changePlanWithRequestedDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, callcontext);
 
                 DateTime reapairTime = clock.getUTCNow().minusDays(1);
 
@@ -413,7 +413,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 bundleRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), allRepairs);
                 
                 boolean dryRun = false;
-                repairApi.repairBundle(bundleRepair, dryRun, callContext);
+                repairApi.repairBundle(bundleRepair, dryRun, callcontext);
                 */
             }
         }, ErrorCode.SUB_REPAIR_MISSING_AO_DELETE_EVENT);

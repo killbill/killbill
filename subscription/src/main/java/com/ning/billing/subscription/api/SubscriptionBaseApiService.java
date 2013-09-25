@@ -27,7 +27,7 @@ import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 
 public interface SubscriptionBaseApiService {
 

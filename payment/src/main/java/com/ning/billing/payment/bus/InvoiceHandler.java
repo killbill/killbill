@@ -25,11 +25,11 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.events.InvoiceCreationInternalEvent;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.events.InvoiceCreationInternalEvent;
+import com.ning.billing.account.api.AccountInternalApi;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;

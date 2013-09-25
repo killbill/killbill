@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 
 import com.ning.billing.tenant.dao.TenantModelDao;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.entity.EntityBase;
 
 public class DefaultTenant extends EntityBase implements Tenant {
 

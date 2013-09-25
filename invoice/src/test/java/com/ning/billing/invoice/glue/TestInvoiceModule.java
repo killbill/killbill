@@ -29,8 +29,8 @@ import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
-import com.ning.billing.util.svcapi.junction.BillingInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
+import com.ning.billing.junction.BillingInternalApi;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 
 public class TestInvoiceModule extends DefaultInvoiceModule {

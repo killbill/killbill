@@ -22,9 +22,9 @@ import java.util.UUID;
 
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.dao.AccountModelDao;
-import com.ning.billing.util.events.AccountChangeInternalEvent;
-import com.ning.billing.util.events.BusEventBase;
-import com.ning.billing.util.events.ChangedField;
+import com.ning.billing.events.AccountChangeInternalEvent;
+import com.ning.billing.events.BusEventBase;
+import com.ning.billing.events.ChangedField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

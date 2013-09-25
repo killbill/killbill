@@ -38,7 +38,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.junction.DefaultBlockingState;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;

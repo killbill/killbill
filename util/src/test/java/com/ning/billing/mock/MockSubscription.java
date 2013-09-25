@@ -36,7 +36,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
 
 import com.google.common.collect.ImmutableList;
 

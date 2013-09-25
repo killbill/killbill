@@ -41,7 +41,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventType;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.junction.DefaultBlockingState;
 
 import static org.testng.Assert.assertEquals;
 
