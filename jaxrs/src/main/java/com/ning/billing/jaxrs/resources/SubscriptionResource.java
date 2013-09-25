@@ -79,27 +79,27 @@ import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-@Path(JaxrsResource.ENTITLEMENTS_PATH)
-public class EntitlementResource extends JaxRsResourceBase {
+@Path(JaxrsResource.SUBSCRIPTIONS_PATH)
+public class SubscriptionResource extends JaxRsResourceBase {
 
-    private static final Logger log = LoggerFactory.getLogger(EntitlementResource.class);
-    private static final String ID_PARAM_NAME = "entitlementId";
+    private static final Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
+    private static final String ID_PARAM_NAME = "subscriptionId";
 
     private final KillbillEventHandler killbillHandler;
     private final EntitlementApi entitlementApi;
     private final SubscriptionApi subscriptionApi;
 
     @Inject
-    public EntitlementResource(final KillbillEventHandler killbillHandler,
-                               final JaxrsUriBuilder uriBuilder,
-                               final TagUserApi tagUserApi,
-                               final CustomFieldUserApi customFieldUserApi,
-                               final AuditUserApi auditUserApi,
-                               final EntitlementApi entitlementApi,
-                               final SubscriptionApi subscriptionApi,
-                               final AccountUserApi accountUserApi,
-                               final Clock clock,
-                               final Context context) {
+    public SubscriptionResource(final KillbillEventHandler killbillHandler,
+                                final JaxrsUriBuilder uriBuilder,
+                                final TagUserApi tagUserApi,
+                                final CustomFieldUserApi customFieldUserApi,
+                                final AuditUserApi auditUserApi,
+                                final EntitlementApi entitlementApi,
+                                final SubscriptionApi subscriptionApi,
+                                final AccountUserApi accountUserApi,
+                                final Clock clock,
+                                final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
         this.killbillHandler = killbillHandler;
         this.entitlementApi = entitlementApi;
@@ -107,11 +107,11 @@ public class EntitlementResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path("/{entitlementId:" + UUID_PATTERN + "}")
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getEntitlement(@PathParam("entitlementId") final String entitlementId,
+    public Response getEntitlement(@PathParam("subscriptionId") final String subscriptionId,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
-        final UUID uuid = UUID.fromString(entitlementId);
+        final UUID uuid = UUID.fromString(subscriptionId);
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(uuid, context.createContext(request));
         final SubscriptionJson json = new SubscriptionJson(subscription, null, null, null);
         return Response.status(Status.OK).entity(json).build();
@@ -153,7 +153,7 @@ public class EntitlementResource extends JaxRsResourceBase {
 
             @Override
             public Response doResponseOk(final Entitlement createdEntitlement) {
-                return uriBuilder.buildResponse(EntitlementResource.class, "getEntitlement", createdEntitlement.getId());
+                return uriBuilder.buildResponse(SubscriptionResource.class, "getEntitlement", createdEntitlement.getId());
             }
         };
 
@@ -164,9 +164,9 @@ public class EntitlementResource extends JaxRsResourceBase {
     @PUT
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
-    @Path("/{entitlementId:" + UUID_PATTERN + "}")
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     public Response changeEntitlementPlan(final SubscriptionJson entitlement,
-                                          @PathParam("entitlementId") final String entitlementId,
+                                          @PathParam("subscriptionId") final String subscriptionId,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
@@ -184,7 +184,7 @@ public class EntitlementResource extends JaxRsResourceBase {
             @Override
             public Response doOperation(final CallContext ctx) throws EntitlementApiException, InterruptedException,
                                                                       TimeoutException, AccountApiException {
-                final UUID uuid = UUID.fromString(entitlementId);
+                final UUID uuid = UUID.fromString(subscriptionId);
 
                 final Entitlement current = entitlementApi.getEntitlementForId(uuid, callContext);
                 final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
@@ -213,7 +213,7 @@ public class EntitlementResource extends JaxRsResourceBase {
                 if (operationResponse.getStatus() != Status.OK.getStatusCode()) {
                     return operationResponse;
                 }
-                return getEntitlement(entitlementId, request);
+                return getEntitlement(subscriptionId, request);
             }
         };
 
@@ -222,23 +222,23 @@ public class EntitlementResource extends JaxRsResourceBase {
     }
 
     @PUT
-    @Path("/{entitlementId:" + UUID_PATTERN + "}/uncancel")
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
     @Produces(APPLICATION_JSON)
-    public Response uncancelEntitlementPlan(@PathParam("entitlementId") final String entitlementId,
+    public Response uncancelEntitlementPlan(@PathParam("subscriptionId") final String subscriptionId,
                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                             @HeaderParam(HDR_REASON) final String reason,
                                             @HeaderParam(HDR_COMMENT) final String comment,
                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
-        final UUID uuid = UUID.fromString(entitlementId);
+        final UUID uuid = UUID.fromString(subscriptionId);
         final Entitlement current = entitlementApi.getEntitlementForId(uuid, context.createContext(createdBy, reason, comment, request));
         current.uncancelEntitlement(context.createContext(createdBy, reason, comment, request));
         return Response.status(Status.OK).build();
     }
 
     @DELETE
-    @Path("/{entitlementId:" + UUID_PATTERN + "}")
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response cancelEntitlementPlan(@PathParam("entitlementId") final String entitlementId,
+    public Response cancelEntitlementPlan(@PathParam("subscriptionId") final String subscriptionId,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
@@ -260,7 +260,7 @@ public class EntitlementResource extends JaxRsResourceBase {
             public Response doOperation(final CallContext ctx)
                     throws EntitlementApiException, InterruptedException,
                            TimeoutException, AccountApiException, SubscriptionApiException {
-                final UUID uuid = UUID.fromString(entitlementId);
+                final UUID uuid = UUID.fromString(subscriptionId);
 
                 final Entitlement current = entitlementApi.getEntitlementForId(uuid, ctx);
 
@@ -382,7 +382,7 @@ public class EntitlementResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path("/{entitlementId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -391,7 +391,7 @@ public class EntitlementResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/{entitlementId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -406,7 +406,7 @@ public class EntitlementResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path("/{entitlementId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -421,7 +421,7 @@ public class EntitlementResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path("/{entitlementId:" + UUID_PATTERN + "}/" + TAGS)
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -430,7 +430,7 @@ public class EntitlementResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/{entitlementId:" + UUID_PATTERN + "}/" + TAGS)
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
@@ -445,7 +445,7 @@ public class EntitlementResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path("/{entitlementId:" + UUID_PATTERN + "}/" + TAGS)
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,

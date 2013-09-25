@@ -57,7 +57,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final SubscriptionJson entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName, ProductCategory.BASE.toString(), term.toString(), true);
 
-        String uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
+        String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
 
         // Retrieves with GET
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -101,12 +101,12 @@ public class TestEntitlement extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Cancel IMM (Billing EOT)
-        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
         response = doDelete(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         // Retrieves to check EndDate
-        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
@@ -130,7 +130,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final SubscriptionJson entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName, ProductCategory.BASE.toString(), term.toString(), true);
 
-        String uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
+        String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
 
         // Retrieves with GET
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -150,12 +150,12 @@ public class TestEntitlement extends TestJaxrsBase {
         queryParams.put(JaxrsResource.QUERY_BILLING_POLICY, "END_OF_TERM");
         queryParams.put(JaxrsResource.QUERY_ENTITLEMENT_POLICY, "END_OF_TERM");
 
-        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
         response = doDelete(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC * 10000);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         // Retrieves to check EndDate
-        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
@@ -163,11 +163,11 @@ public class TestEntitlement extends TestJaxrsBase {
         assertNotNull(objFromJson.getCancelledDate());
 
 
-        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId() + "/uncancel";
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId() + "/uncancel";
         response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
-        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
@@ -179,7 +179,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testWithNonExistentEntitlement() throws Exception {
-        final String uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + UUID.randomUUID().toString();
+        final String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + UUID.randomUUID().toString();
         final SubscriptionJson subscriptionJson = new SubscriptionJson(null, null, UUID.randomUUID().toString(), null, null, "Pistol", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(),
                                                                        PriceListSet.DEFAULT_PRICELIST_NAME, null, null, null, null, null, null, null, null);
         final String baseJson = mapper.writeValueAsString(subscriptionJson);
@@ -205,7 +205,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.ANNUAL;
 
         final SubscriptionJson SubscriptionJson = createEntitlement(accountJson.getAccountId(), "99999", productName, ProductCategory.BASE.toString(), term.toString(), true);
-        final String uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + SubscriptionJson.getSubscriptionId();
+        final String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + SubscriptionJson.getSubscriptionId();
 
         // Retrieves with GET
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);

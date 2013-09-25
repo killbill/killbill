@@ -56,10 +56,10 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final String someUUID = UUID.randomUUID().toString();
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
-        final UUID entitlementId = UUID.randomUUID();
+        final UUID subscriptionId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
 
-        final SubscriptionJson entitlementJsonWithEvents = new SubscriptionJson(accountId.toString(), bundleId.toString(), entitlementId.toString(), externalKey,
+        final SubscriptionJson entitlementJsonWithEvents = new SubscriptionJson(accountId.toString(), bundleId.toString(), subscriptionId.toString(), externalKey,
                                                                                                     new LocalDate(), someUUID, someUUID, someUUID, someUUID,
                                                                                                     new LocalDate(), new LocalDate(), new LocalDate(), new LocalDate(),
                                                                                                     null, null, null, null);
