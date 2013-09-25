@@ -36,6 +36,14 @@
             <artifactId>killbill-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-clock</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-queue</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.ning.billing.plugin</groupId>
             <artifactId>killbill-plugin-api-payment</artifactId>
         </dependency>
