@@ -169,7 +169,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     @Override
     public SubscriptionBaseBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
-        final List<SubscriptionBaseBundle> bundlesForAccountAndKey = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleKey, context);
+        final List<SubscriptionBaseBundle> bundlesForAccountAndKey = dao.getSubscriptionBundlesFromAccountAndKey(accountId, bundleKey, context);
         final SubscriptionBaseBundle result = getActiveBundleForKeyNotException(bundlesForAccountAndKey, dao, clock, context);
         if (result == null) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, bundleKey);

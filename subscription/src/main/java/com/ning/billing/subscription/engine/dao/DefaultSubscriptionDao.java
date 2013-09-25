@@ -118,11 +118,11 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
     }
 
     @Override
-    public List<SubscriptionBaseBundle> getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+    public List<SubscriptionBaseBundle> getSubscriptionBundlesFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<SubscriptionBaseBundle>>() {
             @Override
             public List<SubscriptionBaseBundle> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final List<SubscriptionBundleModelDao> models = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundleFromAccountAndKey(accountId.toString(), bundleKey, context);
+                final List<SubscriptionBundleModelDao> models = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesFromAccountAndKey(accountId.toString(), bundleKey, context);
                 return new ArrayList<SubscriptionBaseBundle>(Collections2.transform(models, new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
                     @Override
                     public SubscriptionBaseBundle apply(@Nullable final SubscriptionBundleModelDao input) {
@@ -299,7 +299,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<SubscriptionBase>>() {
             @Override
             public List<SubscriptionBase> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionBundleModelDao bundleModel = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundleFromAccountAndKey(accountId.toString(), bundleKey, callcontext);
+                final SubscriptionBundleModelDao bundleModel = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesFromAccountAndKey(accountId.toString(), bundleKey, callcontext);
                 if (bundleModel == null) {
                     return Collections.emptyList();
                 }
@@ -990,7 +990,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
 
         final DefaultSubscriptionBaseBundle bundleData = bundleTransferData.getData();
 
-        final List<SubscriptionBundleModelDao> existingBundleModels = transBundleDao.getBundleFromAccountAndKey(bundleData.getAccountId().toString(), bundleData.getExternalKey(), context);
+        final List<SubscriptionBundleModelDao> existingBundleModels = transBundleDao.getBundlesFromAccountAndKey(bundleData.getAccountId().toString(), bundleData.getExternalKey(), context);
         if (existingBundleModels.size() != 0) {
             log.error(String.format("Attempted to create a bundle for account %s and key %s that already existed, skip...", bundleData.getAccountId().toString(), bundleData.getExternalKey()));
             return;

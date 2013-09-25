@@ -39,7 +39,7 @@ public interface SubscriptionDao {
 
     public List<SubscriptionBaseBundle> getSubscriptionBundlesForKey(String bundleKey, InternalTenantContext context);
 
-    public List<SubscriptionBaseBundle> getSubscriptionBundleFromAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
+    public List<SubscriptionBaseBundle> getSubscriptionBundlesFromAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
 
     public SubscriptionBaseBundle getSubscriptionBundleFromId(UUID bundleId, InternalTenantContext context);
 
@@ -56,8 +56,6 @@ public interface SubscriptionDao {
     public List<SubscriptionBase> getSubscriptions(UUID bundleId, InternalTenantContext context);
 
     public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(InternalTenantContext context);
-
-    //public List<SubscriptionBase> getSubscriptionsForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext callcontext);
 
     // Update
     public void updateChargedThroughDate(DefaultSubscriptionBase subscription, InternalCallContext context);

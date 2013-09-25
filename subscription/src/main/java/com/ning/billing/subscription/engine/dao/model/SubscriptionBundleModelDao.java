@@ -102,10 +102,10 @@ public class SubscriptionBundleModelDao extends EntityBase implements EntityMode
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
             return false;
         }
-        if (lastSysUpdateDate != null ? !lastSysUpdateDate.equals(that.lastSysUpdateDate) : that.lastSysUpdateDate != null) {
+        if (lastSysUpdateDate != null ? lastSysUpdateDate.compareTo(that.lastSysUpdateDate) != 0 : that.lastSysUpdateDate != null) {
             return false;
         }
-        if (originalCreatedDate != null ? !originalCreatedDate.equals(that.originalCreatedDate) : that.originalCreatedDate != null) {
+        if (originalCreatedDate != null ? originalCreatedDate.compareTo(that.originalCreatedDate) != 0 : that.originalCreatedDate != null) {
             return false;
         }
 

@@ -306,7 +306,7 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public List<SubscriptionBaseBundle> getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+    public List<SubscriptionBaseBundle> getSubscriptionBundlesFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
         throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 }

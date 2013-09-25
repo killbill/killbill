@@ -37,6 +37,7 @@ import com.ning.http.client.Response;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestEntitlement extends TestJaxrsBase {
@@ -156,13 +157,23 @@ public class TestEntitlement extends TestJaxrsBase {
         // Retrieves to check EndDate
         uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
+        objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
+        assertNotNull(objFromJson.getCancelledDate());
+
 
         uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId() + "/uncancel";
         response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        uri = JaxrsResource.ENTITLEMENTS_PATH + "/" + entitlementJson.getSubscriptionId();
+        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
+        assertNull(objFromJson.getCancelledDate());
+
     }
 
 
