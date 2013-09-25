@@ -46,7 +46,7 @@ order by record_id asc
 ;
 >>
 
-getBundleFromAccountAndKey() ::= <<
+getBundlesFromAccountAndKey() ::= <<
 select <allTableFields()>
 from bundles
 where
