@@ -114,6 +114,7 @@ public class AccountResource extends JaxRsResourceBase {
     private final InvoicePaymentApi invoicePaymentApi;
     private final PaymentApi paymentApi;
     private final OverdueUserApi overdueApi;
+
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
                            final AccountUserApi accountApi,
@@ -177,21 +178,18 @@ public class AccountResource extends JaxRsResourceBase {
 
         final UUID uuid = UUID.fromString(accountId);
         accountUserApi.getAccountById(uuid, tenantContext);
-        if (externalKey != null) {
 
-            final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundleForAccountIdAndExternalKey(uuid, externalKey, tenantContext);
-            final BundleJson json = new BundleJson(bundle, null, null, null);
-            return Response.status(Status.OK).entity(json).build();
-        } else {
-            final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext);
-            final Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
-                @Override
-                public BundleJson apply(final SubscriptionBundle input) {
-                    return new BundleJson(input, null, null, null);
-                }
-            });
-            return Response.status(Status.OK).entity(result).build();
-        }
+        final List<SubscriptionBundle> bundles = (externalKey != null) ?
+                                                 subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(uuid, externalKey, tenantContext) :
+                                                 subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext);
+
+        final Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
+            @Override
+            public BundleJson apply(final SubscriptionBundle input) {
+                return new BundleJson(input, null, null, null);
+            }
+        });
+        return Response.status(Status.OK).entity(result).build();
     }
 
     @GET
@@ -494,7 +492,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Produces(APPLICATION_JSON)
     public Response getChargebacksForAccount(@PathParam("accountId") final String accountIdStr,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                             @javax.ws.rs.core.Context final HttpServletRequest request) {
         final UUID accountId = UUID.fromString(accountIdStr);
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(accountId, context.createContext(request));
         final List<ChargebackJson> chargebacksJson = new ArrayList<ChargebackJson>();
@@ -527,7 +525,6 @@ public class AccountResource extends JaxRsResourceBase {
 
         return Response.status(Status.OK).entity(result).build();
     }
-
 
 
     /*

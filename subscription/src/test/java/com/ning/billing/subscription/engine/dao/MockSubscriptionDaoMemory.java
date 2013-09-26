@@ -124,7 +124,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public List<SubscriptionBaseBundle> getSubscriptionBundlesFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+    public List<SubscriptionBaseBundle> getSubscriptionBundlesForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
         final List<SubscriptionBaseBundle> results = new ArrayList<SubscriptionBaseBundle>();
         for (final SubscriptionBaseBundle cur : bundles) {
             if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(accountId)) {

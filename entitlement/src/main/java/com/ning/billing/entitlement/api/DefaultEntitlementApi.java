@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.api;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -180,8 +181,9 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
             final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
 
-            final LocalDate entitlementEffectiveEndDate = getEffectiveEndDate(bundle.getAccountId(), subscription, account.getTimeZone(), context);
-            final EntitlementState entitlementState = getStateForEntitlement(entitlementEffectiveEndDate, subscription, account.getTimeZone(), context);
+            final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(account.getId(), tenantContext);
+            final LocalDate entitlementEffectiveEndDate = getEffectiveEndDate(bundle.getAccountId(), subscription, account.getTimeZone(), contextWithValidAccountRecordId);
+            final EntitlementState entitlementState = getStateForEntitlement(entitlementEffectiveEndDate, subscription, account.getTimeZone(), contextWithValidAccountRecordId);
 
 
             return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), entitlementState, entitlementEffectiveEndDate, account.getTimeZone(),
@@ -199,7 +201,9 @@ public class DefaultEntitlementApi implements EntitlementApi {
         try {
             final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, context);
             final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
-            return getAllEntitlementsForBundleId(bundleId, bundle.getAccountId(), account.getTimeZone(), bundle.getExternalKey(), context);
+
+            final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(account.getId(), tenantContext);
+            return getAllEntitlementsForBundleId(bundleId, bundle.getAccountId(), account.getTimeZone(), bundle.getExternalKey(), contextWithValidAccountRecordId);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (AccountApiException e) {
@@ -209,11 +213,15 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
     @Override
     public List<Entitlement> getAllEntitlementsForAccountIdAndExternalKey(final UUID accountId, final String externalKey, final TenantContext tenantContext) throws EntitlementApiException {
-        final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(tenantContext);
+        final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
         try {
-            final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleForAccountAndKey(accountId, externalKey, context);
-            final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
-            return getAllEntitlementsForBundleId(bundle.getId(), bundle.getAccountId(), account.getTimeZone(), bundle.getExternalKey(), context);
+            final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccountAndKey(accountId, externalKey, context);
+            if (bundles.size() == 0) {
+                return Collections.emptyList();
+            }
+            final Account account = accountApi.getAccountById(bundles.get(0).getAccountId(), context);
+            return getEntitlementsForBundles(bundles, account, context);
+
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (AccountApiException e) {
@@ -230,8 +238,11 @@ public class DefaultEntitlementApi implements EntitlementApi {
         } catch (AccountApiException e) {
             throw new EntitlementApiException(e);
         }
+        final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(account.getId(), context);
+        return getEntitlementsForBundles(bundles, account, context);
+    }
 
-        final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(accountId, context);
+    private List<Entitlement> getEntitlementsForBundles(final List<SubscriptionBaseBundle> bundles, final Account account, final InternalTenantContext context) {
         final Map<UUID, List<SubscriptionBase>> subscriptionsPerBundle = subscriptionInternalApi.getSubscriptionsForAccount(context);
         final List<Entitlement> result = new LinkedList<Entitlement>();
         for (final SubscriptionBaseBundle bundle : bundles) {
@@ -425,7 +436,10 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(sourceAccountId, context);
         try {
-            final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleForAccountAndKey(sourceAccountId, externalKey, contextWithValidAccountRecordId);
+            final SubscriptionBaseBundle bundle = subscriptionInternalApi.getActiveBundleForKey(externalKey, contextWithValidAccountRecordId);
+            if (!bundle.getAccountId().equals(sourceAccountId)) {
+                throw new EntitlementApiException(new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, externalKey));
+            }
             final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), contextWithValidAccountRecordId);
 
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);

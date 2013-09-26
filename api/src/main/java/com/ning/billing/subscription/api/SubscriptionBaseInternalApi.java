@@ -42,7 +42,7 @@ public interface SubscriptionBaseInternalApi {
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context)
             throws SubscriptionBaseApiException;
 
-    public SubscriptionBaseBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context)
+    public List<SubscriptionBaseBundle> getBundlesForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context)
             throws SubscriptionBaseApiException;
 
     public List<SubscriptionBaseBundle> getBundlesForAccount(final UUID accountId, final InternalTenantContext context);

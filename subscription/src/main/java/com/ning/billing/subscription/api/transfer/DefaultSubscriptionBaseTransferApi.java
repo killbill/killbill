@@ -201,7 +201,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_TRANSFER_INVALID_EFF_DATE, effectiveTransferDate);
             }
 
-            final List<SubscriptionBaseBundle> bundlesForAccountAndKey = dao.getSubscriptionBundlesFromAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
+            final List<SubscriptionBaseBundle> bundlesForAccountAndKey = dao.getSubscriptionBundlesForAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
             final SubscriptionBaseBundle bundle = DefaultSubscriptionInternalApi.getActiveBundleForKeyNotException(bundlesForAccountAndKey, dao, clock, fromInternalCallContext);
             if (bundle == null) {
                 throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleKey);

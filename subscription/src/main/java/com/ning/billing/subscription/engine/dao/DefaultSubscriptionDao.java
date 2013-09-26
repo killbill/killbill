@@ -118,7 +118,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
     }
 
     @Override
-    public List<SubscriptionBaseBundle> getSubscriptionBundlesFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+    public List<SubscriptionBaseBundle> getSubscriptionBundlesForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<SubscriptionBaseBundle>>() {
             @Override
             public List<SubscriptionBaseBundle> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {

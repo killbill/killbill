@@ -39,7 +39,7 @@ public interface SubscriptionDao {
 
     public List<SubscriptionBaseBundle> getSubscriptionBundlesForKey(String bundleKey, InternalTenantContext context);
 
-    public List<SubscriptionBaseBundle> getSubscriptionBundlesFromAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
+    public List<SubscriptionBaseBundle> getSubscriptionBundlesForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
 
     public SubscriptionBaseBundle getSubscriptionBundleFromId(UUID bundleId, InternalTenantContext context);
 

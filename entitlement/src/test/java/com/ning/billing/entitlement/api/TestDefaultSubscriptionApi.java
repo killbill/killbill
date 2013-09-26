@@ -93,6 +93,8 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
             assertNull(secondbundle.getSubscriptions().get(0).getBillingEndDate());
             assertEquals(secondbundle.getOriginalCreatedDate().compareTo(firstbundle.getCreatedDate()), 0);
 
+            final List<SubscriptionBundle> bundles2Again = subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(account.getId(), externalKey, callContext);
+            assertEquals(bundles2Again.size(), 2);
 
             clock.addDays(3);
             final Account account2 = accountApi.createAccount(getAccountData(7), callContext);

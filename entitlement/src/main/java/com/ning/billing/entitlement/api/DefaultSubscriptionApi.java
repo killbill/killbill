@@ -104,24 +104,15 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleForAccountIdAndExternalKey(final UUID accountId, final String externalKey, final TenantContext context) throws SubscriptionApiException {
+    public List<SubscriptionBundle> getSubscriptionBundlesForAccountIdAndExternalKey(final UUID accountId, final String externalKey, final TenantContext context) throws SubscriptionApiException {
 
         try {
-            // If active bundle exists on this account, this is what we are looking for.
-            try {
-                final SubscriptionBundle activeBundleForkey = getActiveSubscriptionBundleForExternalKey(externalKey, context);
-                if (activeBundleForkey.getAccountId().equals(accountId)) {
-                    return activeBundleForkey;
-                }
-            } catch (SubscriptionApiException ignore) {
-            }
 
-            // If not return first cancelled bundle if this is exists
             final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(accountId, externalKey, context);
             if (entitlements.isEmpty()) {
                 throw new SubscriptionApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, externalKey);
             }
-            return getSubscriptionBundleFromEntitlements(entitlements.get(0).getBundleId(), entitlements, context);
+            return getSubscriptionBundles(entitlements, context);
         } catch (EntitlementApiException e) {
             throw new SubscriptionApiException(e);
         } catch (SubscriptionBaseApiException e) {
