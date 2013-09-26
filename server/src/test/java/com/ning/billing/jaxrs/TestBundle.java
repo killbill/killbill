@@ -56,7 +56,8 @@ public class TestBundle extends TestJaxrsBase {
         final Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
-        final BundleJson objFromJson = mapper.readValue(baseJson, BundleJson.class);
+        final List<BundleJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJson>>() {});
+        Assert.assertEquals(objFromJson.size(), 1);
     }
 
     @Test(groups = "slow", enabled = true)
