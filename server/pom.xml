@@ -394,4 +394,111 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>debian</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.2.1</version>
+                        <executions>
+                            <execution>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <executable>${project.basedir}/../bin/db-helper</executable>
+                            <arguments>
+                                <argument>-a dump</argument>
+                                <argument>-f ${project.build.directory}/killbill.ddl.sql</argument>
+                            </arguments>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.vafer</groupId>
+                        <artifactId>jdeb</artifactId>
+                        <version>1.0.2-SNAPSHOT</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jdeb</goal>
+                                </goals>
+                                <configuration>
+                                    <dataSet>
+                                        <!-- Ubuntu specific files -->
+                                        <data>
+                                            <src>${project.basedir}/src/deb/control/killbill-server.default</src>
+                                            <type>file</type>
+                                            <dst>/etc/default/killbill-server</dst>
+                                        </data>
+                                        <data>
+                                            <src>${project.basedir}/src/deb/control/killbill-server.upstart</src>
+                                            <type>file</type>
+                                            <dst>/etc/init/killbill-server.conf</dst>
+                                        </data>
+                                        <data>
+                                            <src>${project.basedir}/src/deb/control/copyright</src>
+                                            <type>file</type>
+                                            <dst>/usr/share/doc/killbill/copyright</dst>
+                                        </data>
+                                        <!-- TODO /usr/share/doc/changelog.Debian.gz -->
+                                        <data>
+                                            <type>template</type>
+                                            <!-- Make sure to list all of them here so they are properly deleted on package removal -->
+                                            <paths>
+                                                <path>/etc/killbill</path>
+                                                <path>/var/run/killbill</path>
+                                                <path>/usr/share/killbill</path>
+                                                <path>/var/lib/killbill</path>
+                                                <path>/var/log/killbill</path>
+                                            </paths>
+                                        </data>
+
+                                        <!-- Kill Bill specific files -->
+                                        <data>
+                                            <src>
+                                                ${project.build.directory}/${project.name}-${project.version}-jetty-console.war
+                                            </src>
+                                            <type>file</type>
+                                            <dst>/usr/share/killbill/${project.name}-standalone.war</dst>
+                                        </data>
+                                        <data>
+                                            <src>${project.basedir}/src/deb/support/killbill.sh</src>
+                                            <type>file</type>
+                                            <dst>/usr/bin/${project.name}</dst>
+                                            <mapper>
+                                                <type>perm</type>
+                                                <filemode>0755</filemode>
+                                            </mapper>
+                                        </data>
+                                        <data>
+                                            <src>${project.basedir}/src/deb/support/logback.xml</src>
+                                            <type>file</type>
+                                            <dst>/etc/killbill/logback.xml</dst>
+                                        </data>
+                                        <data>
+                                            <src>${project.basedir}/src/deb/support/killbill.properties</src>
+                                            <type>file</type>
+                                            <dst>/etc/killbill/${project.name}.properties</dst>
+                                        </data>
+                                        <data>
+                                            <src>${project.build.directory}/killbill.ddl.sql</src>
+                                            <type>file</type>
+                                            <dst>/usr/share/killbill/${project.name}.ddl.sql</dst>
+                                        </data>
+                                    </dataSet>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

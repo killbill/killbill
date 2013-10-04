@@ -31,6 +31,7 @@ DATABASE="killbill"
 USER="root"
 PWD="root"
 TEST_ALSO=
+OUTPUT_FILE=
 
 DDL_FILE=
 CLEAN_FILE=
@@ -45,7 +46,8 @@ function usage() {
     echo -n " -u user_name (default = root)"
     echo -n " -p password (default = root)"
     echo -n " -t (also include test ddl)"
-    echo -n "-h this message"
+    echo -n " -f file (output file, for dump only)"
+    echo -n " -h this message"
     echo
     exit 1
 }
@@ -61,7 +63,7 @@ function find_test_ddl() {
     
     local cur_ddl=
     for m in $modules; do
-        cur_ddl=`find $m/src/test/resources/ -name ddl_test.sql 2>/dev/null`
+        cur_ddl=`find $TOP/$m/src/test/resources/ -name ddl_test.sql 2>/dev/null`
         ddl_test="$ddl_test $cur_ddl"
     done
     echo "$ddl_test"
@@ -74,7 +76,7 @@ function find_src_ddl() {
     
     local cur_ddl=
     for m in $modules; do
-        cur_ddl=`find $m/src/main/resources/ -name ddl.sql 2>/dev/null`
+        cur_ddl=`find $TOP/$m/src/main/resources/ -name ddl.sql 2>/dev/null`
         ddl_src="$ddl_src $cur_ddl"
     done
     echo "$ddl_src"
@@ -118,13 +120,14 @@ function cleanup() {
 }
 
 
-while getopts ":a:d:u:pt" options; do
+while getopts ":a:d:u:p:f:t" options; do
   case $options in
     a ) ACTION=$OPTARG;;
 	d ) DATABASE=$OPTARG;;
 	u ) USER=$OPTARG;;
 	p ) PWD=$OPTARG;;
 	t ) TEST_ALSO=1;;
+	f ) OUTPUT_FILE=$OPTARG;;
     h ) usage;;
     * ) usage;;
   esac
@@ -133,14 +136,18 @@ done
 
 
 if [ -z $ACTION ]; then
-    echo "Need to specify an action <CREATE|CLEAN>"
+    echo "Need to specify an action <CREATE|CLEAN|DUMP>"
     usage
 fi
 
 
 if [ $ACTION == "dump" ]; then
-     DDL_FILE=`create_ddl_file`
-    cat $DDL_FILE
+    DDL_FILE=`create_ddl_file`
+    if [ -z $OUTPUT_FILE ]; then
+        cat $DDL_FILE
+    else
+        cat $DDL_FILE > $OUTPUT_FILE
+    fi
 fi
 
 if [ $ACTION == "create" ]; then
