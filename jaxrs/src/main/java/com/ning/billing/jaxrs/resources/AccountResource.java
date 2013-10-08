@@ -19,6 +19,7 @@ package com.ning.billing.jaxrs.resources;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -445,7 +446,8 @@ public class AccountResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(data.getAccountId(), callContext);
 
         final boolean hasDefaultPaymentMethod = account.getPaymentMethodId() != null || isDefault;
-        final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+        final Collection<Invoice> unpaidInvoices = payAllUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext) :
+                                                   Collections.<Invoice>emptyList();
         if (payAllUnpaidInvoices && unpaidInvoices.size() > 0 && !hasDefaultPaymentMethod) {
             return Response.status(Status.BAD_REQUEST).build();
         }
