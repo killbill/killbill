@@ -35,6 +35,7 @@ import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.billing.util.api.AuditLevel;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
 public class TestInvoice extends TestJaxrsBase {
@@ -109,7 +110,7 @@ public class TestInvoice extends TestJaxrsBase {
         final AccountJson accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Check there was no payment made
-        assertEquals(getPaymentsForAccount(accountJson.getAccountId()).size(), 0);
+        assertEquals(getPaymentsForAccount(accountJson.getAccountId()).size(), 1);
 
         // Get the invoices
         final List<InvoiceJson> invoices = getInvoicesForAccount(accountJson.getAccountId());
@@ -122,7 +123,7 @@ public class TestInvoice extends TestJaxrsBase {
         for (final InvoiceJson invoice : getInvoicesForAccount(accountJson.getAccountId())) {
             assertEquals(invoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         }
-        assertEquals(getPaymentsForAccount(accountJson.getAccountId()).size(), 1);
+        assertEquals(getPaymentsForAccount(accountJson.getAccountId()).size(), 2);
     }
 
     @Test(groups = "slow")
@@ -154,7 +155,8 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Verify we didn't get any payment
         final List<PaymentJson> noPaymentsFromJson = getPaymentsForAccount(accountJson.getAccountId());
-        assertEquals(noPaymentsFromJson.size(), 0);
+        assertEquals(noPaymentsFromJson.size(), 1);
+        final String initialPaymentId = noPaymentsFromJson.get(0).getPaymentId();
 
         // Get the invoices
         final List<InvoiceJson> invoices = getInvoicesForAccount(accountJson.getAccountId());
@@ -168,11 +170,20 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Verify we indeed got the payment
         final List<PaymentJson> paymentsFromJson = getPaymentsForAccount(accountJson.getAccountId());
-        assertEquals(paymentsFromJson.size(), 1);
-        assertEquals(paymentsFromJson.get(0).getPaidAmount().compareTo(paidAmount), 0);
+        assertEquals(paymentsFromJson.size(), 2);
+        PaymentJson secondPayment = null;
+        for (PaymentJson cur : paymentsFromJson) {
+            if (! cur.getPaymentId().equals(initialPaymentId)) {
+                secondPayment = cur;
+                break;
+            }
+        }
+        assertNotNull(secondPayment);
+
+        assertEquals(secondPayment.getPaidAmount().compareTo(paidAmount), 0);
 
         // Check the PaymentMethod from paymentMethodId returned in the Payment object
-        final String paymentMethodId = paymentsFromJson.get(0).getPaymentMethodId();
+        final String paymentMethodId = secondPayment.getPaymentMethodId();
         final PaymentMethodJson paymentMethodJson = getPaymentMethod(paymentMethodId);
         assertEquals(paymentMethodJson.getPaymentMethodId(), paymentMethodId);
         assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());
