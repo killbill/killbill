@@ -75,6 +75,8 @@ import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class PaymentProcessor extends ProcessorBase {
 
+    private static final UUID MISSING_PAYMENT_METHOD_ID = UUID.fromString("99999999-dead-beef-babe-999999999999");
+
     private final PaymentMethodProcessor paymentMethodProcessor;
     private final FailedPaymentRetryServiceScheduler failedPaymentRetryService;
     private final PluginFailureRetryServiceScheduler pluginFailureRetryService;
@@ -258,6 +260,10 @@ public class PaymentProcessor extends ProcessorBase {
                                         paymentMethodId = account.getPaymentMethodId();
                                     }
                                 } catch (PaymentApiException e) {
+
+                                    // Insert a payment entry with one attempt in a terminal state to keep a record of the failure
+                                    processNewPaymentForMissingDefaultPaymentMethodWithAccountLocked(account, invoice, requestedAmount, context);
+
                                     // This event will be caught by overdue to refresh the overdue state, if needed.
                                     // Note that at this point, we don't know the exact invoice balance (see getAndValidatePaymentAmount() below).
                                     // This means that events will be posted for null and zero dollar invoices (e.g. trials).
@@ -437,6 +443,20 @@ public class PaymentProcessor extends ProcessorBase {
         paymentDao.insertPaymentWithFirstAttempt(paymentInfo, attempt, context);
         return fromPaymentModelDao(paymentInfo, null, context);
     }
+
+
+    private Payment processNewPaymentForMissingDefaultPaymentMethodWithAccountLocked(final Account account, final Invoice invoice,
+                                                                                     final BigDecimal requestedAmount, final InternalCallContext context)
+            throws PaymentApiException {
+        final PaymentStatus paymentStatus = PaymentStatus.PAYMENT_FAILURE_ABORTED ;
+
+        final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), MISSING_PAYMENT_METHOD_ID, requestedAmount, invoice.getCurrency(), clock.getUTCNow(), paymentStatus);
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), paymentInfo.getId(), MISSING_PAYMENT_METHOD_ID, paymentStatus, clock.getUTCNow(), requestedAmount);
+
+        paymentDao.insertPaymentWithFirstAttempt(paymentInfo, attempt, context);
+        return fromPaymentModelDao(paymentInfo, null, context);
+    }
+
 
     private Payment processNewPaymentWithAccountLocked(final UUID paymentMethodId, final PaymentPluginApi plugin, final Account account, final Invoice invoice,
                                                        final BigDecimal requestedAmount, final boolean isInstantPayment, final InternalCallContext context) throws PaymentApiException {
