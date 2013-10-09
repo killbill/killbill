@@ -549,21 +549,24 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected InvoiceJson createExternalCharge(final String accountId, final BigDecimal amount, @Nullable final String bundleId,
-                                                        @Nullable final Currency currency, @Nullable final DateTime requestedDate) throws Exception {
-        return doCreateExternalCharge(accountId, null, bundleId, amount, currency, requestedDate, JaxrsResource.CHARGES_PATH);
+                                                        @Nullable final Currency currency, @Nullable final DateTime requestedDate, final Boolean autoPay) throws Exception {
+        return doCreateExternalCharge(accountId, null, bundleId, amount, currency, requestedDate, autoPay, JaxrsResource.CHARGES_PATH);
     }
 
     protected InvoiceJson createExternalChargeForInvoice(final String accountId, final String invoiceId, @Nullable final String bundleId, final BigDecimal amount,
-                                                                  @Nullable final Currency currency, @Nullable final DateTime requestedDate) throws Exception {
+                                                                  @Nullable final Currency currency, @Nullable final DateTime requestedDate, final Boolean autoPay) throws Exception {
         final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.CHARGES;
-        return doCreateExternalCharge(accountId, invoiceId, bundleId, amount, currency, requestedDate, uri);
+        return doCreateExternalCharge(accountId, invoiceId, bundleId, amount, currency, requestedDate, autoPay, uri);
     }
 
     private InvoiceJson doCreateExternalCharge(final String accountId, @Nullable final String invoiceId, @Nullable final String bundleId, @Nullable final BigDecimal amount,
-                                                        @Nullable final Currency currency, final DateTime requestedDate, final String uri) throws IOException {
+                                                        @Nullable final Currency currency, final DateTime requestedDate, final Boolean autoPay, final String uri) throws IOException {
         final Map<String, String> queryParams = new HashMap<String, String>();
         if (requestedDate != null) {
             queryParams.put(JaxrsResource.QUERY_REQUESTED_DT, requestedDate.toDateTimeISO().toString());
+        }
+        if (autoPay) {
+            queryParams.put(JaxrsResource.QUERY_PAY_INVOICE, "true");
         }
 
         final InvoiceItemJson externalCharge = new InvoiceItemJson(null, invoiceId, null, accountId, bundleId, null, null, null,

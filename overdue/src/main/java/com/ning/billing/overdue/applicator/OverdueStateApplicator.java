@@ -118,6 +118,8 @@ public class OverdueStateApplicator {
                 createFutureNotification(overdueable, clock.getUTCNow().plus(reevaluationInterval), context);
 
                 log.debug("OverdueStateApplicator <notificationQ> : inserting notification for time = " + clock.getUTCNow().plus(reevaluationInterval));
+            } else if (nextOverdueState.isClearState()) {
+                clearFutureNotification(overdueable, context);
             }
 
             if (previousOverdueStateName.equals(nextOverdueState.getName())) {
@@ -136,9 +138,6 @@ public class OverdueStateApplicator {
             }
         }
 
-        if (nextOverdueState.isClearState()) {
-            clearFutureNotification(overdueable, context);
-        }
 
         try {
             bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName(), context));

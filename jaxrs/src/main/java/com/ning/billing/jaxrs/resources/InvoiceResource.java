@@ -253,15 +253,18 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/" +CHARGES)
     public Response createExternalCharge(final InvoiceItemJson externalChargeJson,
                                          @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
+                                         @QueryParam(QUERY_PAY_INVOICE) @DefaultValue("false") final Boolean payInvoice,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                          @HeaderParam(HDR_REASON) final String reason,
                                          @HeaderParam(HDR_COMMENT) final String comment,
                                          @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
+                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException, PaymentApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()), callContext);
-
+        if (payInvoice && account.getPaymentMethodId() == null) {
+            return Response.status(Status.BAD_REQUEST).build();
+        }
         // Get the effective date of the external charge, in the account timezone
         final LocalDate requestedDate = toLocalDate(account, requestedDateTimeString, callContext);
 
@@ -277,6 +280,10 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                              currency, callContext);
         }
 
+        if (payInvoice) {
+            final Invoice invoice = invoiceApi.getInvoice(externalCharge.getInvoiceId(), callContext);
+            paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+        }
         return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", externalCharge.getInvoiceId(), uriInfo.getBaseUri().toString());
     }
 
@@ -287,14 +294,18 @@ public class InvoiceResource extends JaxRsResourceBase {
     public Response createExternalChargeForInvoice(final InvoiceItemJson externalChargeJson,
                                                    @PathParam("invoiceId") final String invoiceIdString,
                                                    @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
+                                                   @QueryParam(QUERY_PAY_INVOICE) @DefaultValue("false") final Boolean payInvoice,
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                    @HeaderParam(HDR_REASON) final String reason,
                                                    @HeaderParam(HDR_COMMENT) final String comment,
                                                    @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
+                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException, PaymentApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()), callContext);
+        if (payInvoice && account.getPaymentMethodId() == null) {
+            return Response.status(Status.BAD_REQUEST).build();
+        }
 
         // Get the effective date of the external charge, in the account timezone
         final LocalDate requestedDate = toLocalDate(account, requestedDateTimeString, callContext);
@@ -310,6 +321,11 @@ public class InvoiceResource extends JaxRsResourceBase {
             externalCharge = invoiceApi.insertExternalChargeForInvoice(account.getId(), invoiceId,
                                                                        externalChargeJson.getAmount(), externalChargeJson.getDescription(),
                                                                        requestedDate, currency, callContext);
+        }
+
+        if (payInvoice) {
+            final Invoice invoice = invoiceApi.getInvoice(externalCharge.getInvoiceId(), callContext);
+            paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
         }
 
         return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", externalCharge.getInvoiceId(), uriInfo.getBaseUri().toString());

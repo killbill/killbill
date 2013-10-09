@@ -35,6 +35,7 @@ import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.billing.util.api.AuditLevel;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
 public class TestInvoice extends TestJaxrsBase {
@@ -109,7 +110,7 @@ public class TestInvoice extends TestJaxrsBase {
         final AccountJson accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Check there was no payment made
-        assertEquals(getPaymentsForAccount(accountJson.getAccountId()).size(), 0);
+        assertEquals(getPaymentsForAccount(accountJson.getAccountId()).size(), 1);
 
         // Get the invoices
         final List<InvoiceJson> invoices = getInvoicesForAccount(accountJson.getAccountId());
@@ -122,7 +123,7 @@ public class TestInvoice extends TestJaxrsBase {
         for (final InvoiceJson invoice : getInvoicesForAccount(accountJson.getAccountId())) {
             assertEquals(invoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         }
-        assertEquals(getPaymentsForAccount(accountJson.getAccountId()).size(), 1);
+        assertEquals(getPaymentsForAccount(accountJson.getAccountId()).size(), 2);
     }
 
     @Test(groups = "slow")
@@ -154,7 +155,8 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Verify we didn't get any payment
         final List<PaymentJson> noPaymentsFromJson = getPaymentsForAccount(accountJson.getAccountId());
-        assertEquals(noPaymentsFromJson.size(), 0);
+        assertEquals(noPaymentsFromJson.size(), 1);
+        final String initialPaymentId = noPaymentsFromJson.get(0).getPaymentId();
 
         // Get the invoices
         final List<InvoiceJson> invoices = getInvoicesForAccount(accountJson.getAccountId());
@@ -168,11 +170,20 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Verify we indeed got the payment
         final List<PaymentJson> paymentsFromJson = getPaymentsForAccount(accountJson.getAccountId());
-        assertEquals(paymentsFromJson.size(), 1);
-        assertEquals(paymentsFromJson.get(0).getPaidAmount().compareTo(paidAmount), 0);
+        assertEquals(paymentsFromJson.size(), 2);
+        PaymentJson secondPayment = null;
+        for (PaymentJson cur : paymentsFromJson) {
+            if (! cur.getPaymentId().equals(initialPaymentId)) {
+                secondPayment = cur;
+                break;
+            }
+        }
+        assertNotNull(secondPayment);
+
+        assertEquals(secondPayment.getPaidAmount().compareTo(paidAmount), 0);
 
         // Check the PaymentMethod from paymentMethodId returned in the Payment object
-        final String paymentMethodId = paymentsFromJson.get(0).getPaymentMethodId();
+        final String paymentMethodId = secondPayment.getPaymentMethodId();
         final PaymentMethodJson paymentMethodJson = getPaymentMethod(paymentMethodId);
         assertEquals(paymentMethodJson.getPaymentMethodId(), paymentMethodId);
         assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());
@@ -271,13 +282,33 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Post an external charge
         final BigDecimal chargeAmount = BigDecimal.TEN;
-        final InvoiceJson invoiceWithItems = createExternalCharge(accountJson.getAccountId(), chargeAmount, null, null, null);
+        final InvoiceJson invoiceWithItems = createExternalCharge(accountJson.getAccountId(), chargeAmount, null, null, null, false);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
         assertEquals(invoiceWithItems.getItems().size(), 1);
         assertNull(invoiceWithItems.getItems().get(0).getBundleId());
 
         // Verify the total number of invoices
         assertEquals(getInvoicesForAccount(accountJson.getAccountId()).size(), 3);
+    }
+
+
+    @Test(groups = "slow")
+    public void testExternalChargeOnNewInvoiceWithAutomaticPayment() throws Exception {
+        final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        assertEquals(getInvoicesForAccount(accountJson.getAccountId()).size(), 2);
+
+        // Post an external charge
+        final BigDecimal chargeAmount = BigDecimal.TEN;
+        final InvoiceJson invoiceWithItems = createExternalCharge(accountJson.getAccountId(), chargeAmount, null, null, null, true);
+        assertEquals(invoiceWithItems.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(invoiceWithItems.getItems().size(), 1);
+        assertNull(invoiceWithItems.getItems().get(0).getBundleId());
+
+        // Verify the total number of invoices
+        assertEquals(getInvoicesForAccount(accountJson.getAccountId()).size(), 3);
+
     }
 
     @Test(groups = "slow")
@@ -290,7 +321,7 @@ public class TestInvoice extends TestJaxrsBase {
         // Post an external charge
         final BigDecimal chargeAmount = BigDecimal.TEN;
         final String bundleId = UUID.randomUUID().toString();
-        final InvoiceJson invoiceWithItems = createExternalCharge(accountJson.getAccountId(), chargeAmount, bundleId, null, null);
+        final InvoiceJson invoiceWithItems = createExternalCharge(accountJson.getAccountId(), chargeAmount, bundleId, null, null, false);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
         assertEquals(invoiceWithItems.getItems().size(), 1);
         assertEquals(invoiceWithItems.getItems().get(0).getBundleId(), bundleId);
@@ -314,7 +345,7 @@ public class TestInvoice extends TestJaxrsBase {
         // Post an external charge
         final BigDecimal chargeAmount = BigDecimal.TEN;
         final InvoiceJson invoiceWithItems = createExternalChargeForInvoice(accountJson.getAccountId(), invoiceId,
-                                                                                     null, chargeAmount, null, null);
+                                                                                     null, chargeAmount, null, null, false);
         assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
         assertNull(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId());
 
@@ -323,6 +354,31 @@ public class TestInvoice extends TestJaxrsBase {
         final BigDecimal adjustedInvoiceBalance = originalInvoiceAmount.add(chargeAmount.setScale(2, RoundingMode.HALF_UP));
         assertEquals(adjustedInvoice.getBalance().compareTo(adjustedInvoiceBalance), 0);
     }
+
+    @Test(groups = "slow")
+    public void testExternalChargeOnExistingInvoiceWithAutomaticPayment() throws Exception {
+        final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        final List<InvoiceJson> invoices = getInvoicesWithItemsForAccount(accountJson.getAccountId());
+        // 2 invoices but look for the non zero dollar one
+        assertEquals(invoices.size(), 2);
+        final String invoiceId = invoices.get(1).getInvoiceId();
+        final BigDecimal originalInvoiceAmount = invoices.get(1).getAmount();
+        final int originalNumberOfItemsForInvoice = invoices.get(1).getItems().size();
+
+        // Post an external charge
+        final BigDecimal chargeAmount = BigDecimal.TEN;
+        final InvoiceJson invoiceWithItems = createExternalChargeForInvoice(accountJson.getAccountId(), invoiceId,
+                                                                            null, chargeAmount, null, null, true);
+        assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
+        assertNull(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId());
+
+        // Verify the new invoice balance
+        final InvoiceJson adjustedInvoice = getInvoice(invoiceId);
+        assertEquals(adjustedInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+    }
+
 
     @Test(groups = "slow")
     public void testExternalChargeForBundleOnExistingInvoice() throws Exception {
@@ -340,7 +396,7 @@ public class TestInvoice extends TestJaxrsBase {
         final BigDecimal chargeAmount = BigDecimal.TEN;
         final String bundleId = UUID.randomUUID().toString();
         final InvoiceJson invoiceWithItems = createExternalChargeForInvoice(accountJson.getAccountId(), invoiceId,
-                                                                                     bundleId, chargeAmount, null, null);
+                                                                                     bundleId, chargeAmount, null, null, false);
         assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
         assertEquals(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId(), bundleId);
 

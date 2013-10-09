@@ -19,6 +19,7 @@ package com.ning.billing.jaxrs.resources;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -433,6 +434,7 @@ public class AccountResource extends JaxRsResourceBase {
     public Response createPaymentMethod(final PaymentMethodJson json,
                                         @PathParam("accountId") final String accountId,
                                         @QueryParam(QUERY_PAYMENT_METHOD_IS_DEFAULT) @DefaultValue("false") final Boolean isDefault,
+                                        @QueryParam(QUERY_PAY_ALL_UNPAID_INVOICES) @DefaultValue("false") final Boolean payAllUnpaidInvoices,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
@@ -443,7 +445,19 @@ public class AccountResource extends JaxRsResourceBase {
         final PaymentMethod data = json.toPaymentMethod(accountId);
         final Account account = accountUserApi.getAccountById(data.getAccountId(), callContext);
 
+        final boolean hasDefaultPaymentMethod = account.getPaymentMethodId() != null || isDefault;
+        final Collection<Invoice> unpaidInvoices = payAllUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext) :
+                                                   Collections.<Invoice>emptyList();
+        if (payAllUnpaidInvoices && unpaidInvoices.size() > 0 && !hasDefaultPaymentMethod) {
+            return Response.status(Status.BAD_REQUEST).build();
+        }
+
         final UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), callContext);
+        if (payAllUnpaidInvoices && unpaidInvoices.size() > 0) {
+            for (final Invoice invoice : unpaidInvoices) {
+                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+            }
+        }
         return uriBuilder.buildResponse(PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, uriInfo.getBaseUri().toString());
     }
 
@@ -473,6 +487,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS + "/{paymentMethodId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS_DEFAULT_PATH_POSTFIX)
     public Response setDefaultPaymentMethod(@PathParam("accountId") final String accountId,
                                             @PathParam("paymentMethodId") final String paymentMethodId,
+                                            @QueryParam(QUERY_PAY_ALL_UNPAID_INVOICES) @DefaultValue("false") final Boolean payAllUnpaidInvoices,
                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                             @HeaderParam(HDR_REASON) final String reason,
                                             @HeaderParam(HDR_COMMENT) final String comment,
@@ -481,6 +496,13 @@ public class AccountResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
         paymentApi.setDefaultPaymentMethod(account, UUID.fromString(paymentMethodId), callContext);
+
+        if (payAllUnpaidInvoices) {
+            final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+            for (final Invoice invoice : unpaidInvoices) {
+                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+            }
+        }
         return Response.status(Status.OK).build();
     }
 
