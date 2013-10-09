@@ -37,13 +37,20 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.commons.locker.GlobalLock;
 import com.ning.billing.commons.locker.GlobalLocker;
 import com.ning.billing.commons.locker.LockFailedException;
+import com.ning.billing.events.BusInternalEvent;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.events.InvoiceAdjustmentInternalEvent;
+import com.ning.billing.events.InvoiceInternalEvent;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -61,24 +68,18 @@ import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.events.BusInternalEvent;
-import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.events.InvoiceAdjustmentInternalEvent;
-import com.ning.billing.events.InvoiceInternalEvent;
-import com.ning.billing.util.globallocker.LockerType;
-import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.junction.BillingEventSet;
 import com.ning.billing.junction.BillingInternalApi;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.globallocker.LockerType;
 import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -198,8 +199,6 @@ public class InvoiceDispatcher {
                     postEvent(event, accountId, context);
                 }
             } else {
-                log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(),
-                                                                                                                                   accountId, targetDate, targetDateTime});
                 if (!dryRun) {
 
                     // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
@@ -213,6 +212,14 @@ public class InvoiceDispatcher {
                     }));
                     final boolean isRealInvoiceWithItems = adjustedUniqueOtherInvoiceId.remove(invoice.getId());
 
+                    if (isRealInvoiceWithItems) {
+                        log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(),                                                                                                                                           accountId, targetDate, targetDateTime});
+                    } else {
+                        final Joiner joiner = Joiner.on(",");
+                        final String adjustedInvoices = joiner.join(adjustedUniqueOtherInvoiceId.toArray(new UUID[adjustedUniqueOtherInvoiceId.size()]));
+                        log.info("Adjusting existing invoices {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{adjustedInvoices, invoice.getNumberOfItems(),
+                                                                                                                                           accountId, targetDate, targetDateTime});
+                    }
 
                     final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
                     final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.<InvoiceItemModelDao>copyOf(Collections2.transform(invoice.getInvoiceItems(),
