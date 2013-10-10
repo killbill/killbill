@@ -72,6 +72,8 @@ public class OverdueStateApplicator {
 
     private static final Logger log = LoggerFactory.getLogger(OverdueStateApplicator.class);
 
+    private static final Period ONE_DAY = new Period(24, 0, 0, 0);
+
     private final BlockingInternalApi blockingApi;
     private final Clock clock;
     private final OverdueCheckPoster poster;
@@ -125,7 +127,7 @@ public class OverdueStateApplicator {
 
             final OverdueState firstOverdueState = overdueStateSet.getFirstState();
             final Period initialReevaluationPeriod = overdueStateSet.getInitialReevaluationInterval() != null ?
-                                                     overdueStateSet.getInitialReevaluationInterval() : new Period(24, 0, 0, 0);
+                                                     overdueStateSet.getInitialReevaluationInterval() : ONE_DAY;
 
             final boolean conditionForNextNotfication = !nextOverdueState.isClearState() ||
                                                         // We did not reach the first state yet but we have an unpaid invoice
