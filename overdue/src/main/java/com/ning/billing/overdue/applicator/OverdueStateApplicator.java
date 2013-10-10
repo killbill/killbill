@@ -31,7 +31,10 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.BlockingApiException;
@@ -39,9 +42,11 @@ import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.Entitlement;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
+import com.ning.billing.events.OverdueChangeInternalEvent;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceInternalApi;
-import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.junction.BlockingInternalApi;
+import com.ning.billing.junction.DefaultBlockingState;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicy;
@@ -49,18 +54,13 @@ import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.overdue.config.api.OverdueStateSet;
+import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.email.DefaultEmailSender;
 import com.ning.billing.util.email.EmailApiException;
 import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailSender;
-import com.ning.billing.events.OverdueChangeInternalEvent;
-import com.ning.billing.account.api.AccountInternalApi;
-import com.ning.billing.junction.BlockingInternalApi;
-import com.ning.billing.junction.DefaultBlockingState;
-import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -85,10 +85,18 @@ public class OverdueStateApplicator {
     private final NonEntityDao nonEntityDao;
 
     @Inject
-    public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final EntitlementApi entitlementApi,
+    public OverdueStateApplicator(final BlockingInternalApi accessApi,
+                                  final AccountInternalApi accountApi,
+                                  final EntitlementApi entitlementApi,
                                   final InvoiceInternalApi invoiceInternalApi,
-                                  final Clock clock, final OverdueCheckPoster poster, final OverdueEmailGenerator overdueEmailGenerator,
-                                  final EmailConfig config, final PersistentBus bus, final NonEntityDao nonEntityDao,  final TagInternalApi tagApi) {
+                                  final Clock clock,
+                                  final OverdueCheckPoster poster,
+                                  final OverdueEmailGenerator overdueEmailGenerator,
+                                  final EmailConfig config,
+                                  final PersistentBus bus,
+                                  final NonEntityDao nonEntityDao,
+                                  final TagInternalApi tagApi) {
+
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
@@ -103,7 +111,7 @@ public class OverdueStateApplicator {
     }
 
 
-    public void apply(final OverdueState firstOverdueState, final BillingState billingState,
+    public void apply(final OverdueStateSet overdueStateSet, final BillingState billingState,
                       final Account account, final OverdueState previousOverdueState,
                       final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         try {
@@ -115,12 +123,16 @@ public class OverdueStateApplicator {
 
             log.debug("OverdueStateApplicator:apply <enter> : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueState.getName() + ", nextState = " + nextOverdueState);
 
+            final OverdueState firstOverdueState = overdueStateSet.getFirstState();
+            final Period initialReevaluationPeriod = overdueStateSet.getInitialReevaluationInterval() != null ?
+                                                     overdueStateSet.getInitialReevaluationInterval() : new Period(24, 0, 0, 0);
+
             final boolean conditionForNextNotfication = !nextOverdueState.isClearState() ||
                                                         // We did not reach the first state yet but we have an unpaid invoice
                                                         (firstOverdueState != null && billingState != null && billingState.getDateOfEarliestUnpaidInvoice() != null);
 
             if (conditionForNextNotfication) {
-                final Period reevaluationInterval = nextOverdueState.isClearState() ? firstOverdueState.getReevaluationInterval() : nextOverdueState.getReevaluationInterval();
+                final Period reevaluationInterval = nextOverdueState.isClearState() ? initialReevaluationPeriod : nextOverdueState.getReevaluationInterval();
                 createFutureNotification(account, clock.getUTCNow().plus(reevaluationInterval), context);
 
                 log.debug("OverdueStateApplicator <notificationQ> : inserting notification for time = " + clock.getUTCNow().plus(reevaluationInterval));
@@ -149,7 +161,7 @@ public class OverdueStateApplicator {
         }
 
         try {
-            bus.post(createOverdueEvent(account, previousOverdueState.getName(), nextOverdueState.getName(),isBlockBillingTransition(previousOverdueState, nextOverdueState),
+            bus.post(createOverdueEvent(account, previousOverdueState.getName(), nextOverdueState.getName(), isBlockBillingTransition(previousOverdueState, nextOverdueState),
                                         isUnblockBillingTransition(previousOverdueState, nextOverdueState), context));
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);

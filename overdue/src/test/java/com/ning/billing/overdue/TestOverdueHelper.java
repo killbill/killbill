@@ -45,6 +45,9 @@ public class TestOverdueHelper {
     private final String configXml =
             "<overdueConfig>" +
             "   <accountOverdueStates>" +
+            "       <initialReevaluationInterval>" +
+            "           <unit>DAYS</unit><number>100</number>" +
+            "       </initialReevaluationInterval>" +
             "       <state name=\"OD3\">" +
             "           <condition>" +
             "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +

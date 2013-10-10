@@ -41,19 +41,19 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
         OverdueWrapper wrapper;
         OverdueState state;
 
-        state = config.getBundleStateSet().findState("OD1");
+        state = config.getStateSet().findState("OD1");
         account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account);
         wrapper.refresh(internalCallContext);
         testOverdueHelper.checkStateApplied(state);
 
-        state = config.getBundleStateSet().findState("OD2");
+        state = config.getStateSet().findState("OD2");
         account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(41));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account);
         wrapper.refresh(internalCallContext);
         testOverdueHelper.checkStateApplied(state);
 
-        state = config.getBundleStateSet().findState("OD3");
+        state = config.getStateSet().findState("OD3");
         account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(51));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account);
         wrapper.refresh(internalCallContext);
@@ -70,7 +70,7 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
 
         final InputStream is = new ByteArrayInputStream(testOverdueHelper.getConfigXml().getBytes());
         final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
-        state = config.getBundleStateSet().findState(DefaultBlockingState.CLEAR_STATE_NAME);
+        state = config.getStateSet().findState(DefaultBlockingState.CLEAR_STATE_NAME);
         account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account);
         final OverdueState result = wrapper.refresh(internalCallContext);

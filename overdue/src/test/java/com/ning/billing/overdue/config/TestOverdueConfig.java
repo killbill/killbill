@@ -22,6 +22,7 @@ import java.io.InputStream;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.overdue.EmailNotification;
 import com.ning.billing.overdue.OverdueTestSuiteNoDB;
 import com.ning.billing.util.config.catalog.XMLLoader;
@@ -32,6 +33,9 @@ public class TestOverdueConfig extends OverdueTestSuiteNoDB {
     public void testParseConfig() throws Exception {
         final String xml = "<overdueConfig>" +
                            "   <accountOverdueStates>" +
+                           "       <initialReevaluationInterval>" +
+                           "           <unit>DAYS</unit><number>1</number>" +
+                           "       </initialReevaluationInterval>" +
                            "       <state name=\"OD1\">" +
                            "           <condition>" +
                            "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
@@ -65,11 +69,14 @@ public class TestOverdueConfig extends OverdueTestSuiteNoDB {
                            "</overdueConfig>";
         final InputStream is = new ByteArrayInputStream(xml.getBytes());
         final OverdueConfig c = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
-        Assert.assertEquals(c.getBundleStateSet().size(), 2);
+        Assert.assertEquals(c.getStateSet().size(), 2);
 
-        Assert.assertNull(c.getBundleStateSet().getStates()[0].getEnterStateEmailNotification());
+        Assert.assertNull(c.getStateSet().getStates()[0].getEnterStateEmailNotification());
 
-        final EmailNotification secondNotification = c.getBundleStateSet().getStates()[1].getEnterStateEmailNotification();
+        Assert.assertNotNull(c.getStateSet().getInitialReevaluationInterval());
+        Assert.assertEquals(c.getStateSet().getInitialReevaluationInterval().getDays(), 1);
+
+        final EmailNotification secondNotification = c.getStateSet().getStates()[1].getEnterStateEmailNotification();
         Assert.assertEquals(secondNotification.getSubject(), "ToTo");
         Assert.assertEquals(secondNotification.getTemplateName(), "Titi");
         Assert.assertFalse(secondNotification.isHTML());

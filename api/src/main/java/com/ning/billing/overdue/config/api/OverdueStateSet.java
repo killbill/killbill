@@ -17,16 +17,16 @@
 package com.ning.billing.overdue.config.api;
 
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 
 public interface OverdueStateSet {
 
-    public abstract OverdueState getClearState() throws OverdueApiException;
+    public OverdueState getClearState() throws OverdueApiException;
 
-    public abstract OverdueState findState(String stateName) throws OverdueApiException;
+    public OverdueState findState(String stateName) throws OverdueApiException;
 
     /**
      * Compute an overdue state, given a billing state, at a given day.
@@ -36,9 +36,11 @@ public interface OverdueStateSet {
      * @return the overdue state
      * @throws OverdueApiException
      */
-    public abstract OverdueState calculateOverdueState(BillingState billingState, LocalDate now) throws OverdueApiException;
+    public OverdueState calculateOverdueState(BillingState billingState, LocalDate now) throws OverdueApiException;
 
-    public abstract int size();
+    public int size();
 
-    public abstract OverdueState getFirstState();
+    public OverdueState getFirstState();
+
+    public Period getInitialReevaluationInterval();
 }

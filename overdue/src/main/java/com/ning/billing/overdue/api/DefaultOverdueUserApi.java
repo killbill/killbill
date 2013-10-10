@@ -62,7 +62,7 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
     public OverdueState getOverdueStateFor(final Account overdueable, final TenantContext context) throws OverdueException {
         try {
             final String stateName = accessApi.getBlockingStateForService(overdueable, OverdueService.OVERDUE_SERVICE_NAME, internalCallContextFactory.createInternalTenantContext(context)).getStateName();
-            final OverdueStateSet states = overdueConfig.getBundleStateSet();
+            final OverdueStateSet states = overdueConfig.getStateSet();
             return states.findState(stateName);
         } catch (OverdueApiException e) {
             throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, overdueable.getId(), overdueable.getClass().getSimpleName());

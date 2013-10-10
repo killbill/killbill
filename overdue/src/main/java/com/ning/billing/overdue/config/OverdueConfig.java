@@ -32,7 +32,7 @@ public class OverdueConfig extends ValidatingConfig<OverdueConfig> {
     @XmlElement(required = true, name = "accountOverdueStates")
     private OverdueStatesAccount accountOverdueStates = new OverdueStatesAccount();
 
-    public DefaultOverdueStateSet getBundleStateSet() {
+    public DefaultOverdueStateSet getStateSet() {
         return accountOverdueStates;
     }
 
@@ -42,8 +42,8 @@ public class OverdueConfig extends ValidatingConfig<OverdueConfig> {
         return accountOverdueStates.validate(root, errors);
     }
 
-    public OverdueConfig setOverdueStatesBundle(final OverdueStatesAccount bundleODS) {
-        this.accountOverdueStates = bundleODS;
+    public OverdueConfig setOverdueStates(final OverdueStatesAccount accountOverdueStates) {
+        this.accountOverdueStates = accountOverdueStates;
         return this;
     }
 

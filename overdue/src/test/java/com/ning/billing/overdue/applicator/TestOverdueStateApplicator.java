@@ -30,6 +30,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.config.OverdueConfig;
+import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.config.catalog.XMLLoader;
 import com.ning.billing.events.OverdueChangeInternalEvent;
 import com.ning.billing.junction.DefaultBlockingState;
@@ -48,21 +49,22 @@ public class TestOverdueStateApplicator extends OverdueTestSuiteWithEmbeddedDB {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
 
-        final OverdueState clearState = config.getBundleStateSet().findState(DefaultBlockingState.CLEAR_STATE_NAME);
+        final OverdueStateSet overdueStateSet = config.getStateSet();
+        final OverdueState clearState = config.getStateSet().findState(DefaultBlockingState.CLEAR_STATE_NAME);
         OverdueState state;
 
-        state = config.getBundleStateSet().findState("OD1");
-        applicator.apply(null, null, account, clearState, state, internalCallContext);
+        state = config.getStateSet().findState("OD1");
+        applicator.apply(overdueStateSet, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD1");
 
-        state = config.getBundleStateSet().findState("OD2");
-        applicator.apply(null, null, account, clearState, state, internalCallContext);
+        state = config.getStateSet().findState("OD2");
+        applicator.apply(overdueStateSet, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD2");
 
-        state = config.getBundleStateSet().findState("OD3");
-        applicator.apply(null, null, account, clearState, state, internalCallContext);
+        state = config.getStateSet().findState("OD3");
+        applicator.apply(overdueStateSet, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD3");
     }

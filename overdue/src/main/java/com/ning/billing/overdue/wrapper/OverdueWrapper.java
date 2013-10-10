@@ -62,7 +62,7 @@ public class OverdueWrapper {
         final OverdueState currentOverdueState = overdueStateSet.findState(previousOverdueStateName);
         final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getToday(billingState.getAccountTimeZone()));
 
-        overdueStateApplicator.apply(overdueStateSet.getFirstState(), billingState, overdueable, currentOverdueState, nextOverdueState, context);
+        overdueStateApplicator.apply(overdueStateSet, billingState, overdueable, currentOverdueState, nextOverdueState, context);
 
         return nextOverdueState;
     }

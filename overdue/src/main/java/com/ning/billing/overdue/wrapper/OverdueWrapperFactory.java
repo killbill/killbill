@@ -18,6 +18,7 @@ package com.ning.billing.overdue.wrapper;
 
 import java.util.UUID;
 
+import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculator;
+import com.ning.billing.overdue.config.DefaultDuration;
 import com.ning.billing.overdue.config.DefaultOverdueState;
 import com.ning.billing.overdue.config.DefaultOverdueStateSet;
 import com.ning.billing.overdue.config.OverdueConfig;
@@ -62,7 +64,7 @@ public class OverdueWrapperFactory {
 
     @SuppressWarnings("unchecked")
     public OverdueWrapper createOverdueWrapperFor(final Account blockable) throws OverdueException {
-        return (OverdueWrapper) new OverdueWrapper(blockable, api, getOverdueStateSetBundle(),
+        return (OverdueWrapper) new OverdueWrapper(blockable, api, getOverdueStateSet(),
                                                    clock, billingStateCalculator, overdueStateApplicator);
     }
 
@@ -71,7 +73,7 @@ public class OverdueWrapperFactory {
 
         try {
             Account account = accountApi.getAccountById(id, context);
-            return new OverdueWrapper(account, api, getOverdueStateSetBundle(),
+            return new OverdueWrapper(account, api, getOverdueStateSet(),
                                       clock, billingStateCalculator, overdueStateApplicator);
 
         } catch (AccountApiException e) {
@@ -79,8 +81,8 @@ public class OverdueWrapperFactory {
         }
     }
 
-    private OverdueStateSet getOverdueStateSetBundle() {
-        if (config == null || config.getBundleStateSet() == null) {
+    private OverdueStateSet getOverdueStateSet() {
+        if (config == null || config.getStateSet() == null) {
             return new DefaultOverdueStateSet() {
 
                 @SuppressWarnings("unchecked")
@@ -88,9 +90,14 @@ public class OverdueWrapperFactory {
                 protected DefaultOverdueState[] getStates() {
                     return new DefaultOverdueState[0];
                 }
+
+                @Override
+                public Period getInitialReevaluationInterval() {
+                    return null;
+                }
             };
         } else {
-            return config.getBundleStateSet();
+            return config.getStateSet();
         }
     }
 

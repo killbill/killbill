@@ -39,6 +39,9 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
     public String getOverdueConfig() {
         final String configXml = "<overdueConfig>" +
                                  "   <accountOverdueStates>" +
+                                 "       <initialReevaluationInterval>" +
+                                 "           <unit>DAYS</unit><number>5</number>" +
+                                 "       </initialReevaluationInterval>" +
                                  "       <state name=\"OD1\">" +
                                  "           <condition>" +
                                  "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +

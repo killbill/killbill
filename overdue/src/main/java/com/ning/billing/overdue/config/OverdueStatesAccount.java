@@ -18,7 +18,14 @@ package com.ning.billing.overdue.config;
 
 import javax.xml.bind.annotation.XmlElement;
 
+import org.joda.time.Period;
+
+import com.ning.billing.catalog.api.TimeUnit;
+
 public class OverdueStatesAccount extends DefaultOverdueStateSet {
+
+    @XmlElement(required = false, name = "initialReevaluationInterval")
+    private DefaultDuration initialReevaluationInterval;
 
     @SuppressWarnings("unchecked")
     @XmlElement(required = true, name = "state")
@@ -29,8 +36,21 @@ public class OverdueStatesAccount extends DefaultOverdueStateSet {
         return accountOverdueStates;
     }
 
-    protected OverdueStatesAccount setBundleOverdueStates(final DefaultOverdueState[] bundleOverdueStates) {
-        this.accountOverdueStates = bundleOverdueStates;
+    @Override
+    public Period getInitialReevaluationInterval() {
+        if (initialReevaluationInterval == null || initialReevaluationInterval.getUnit() == TimeUnit.UNLIMITED || initialReevaluationInterval.getNumber() == 0) {
+            return null;
+        }
+        return initialReevaluationInterval.toJodaPeriod();
+    }
+
+    protected OverdueStatesAccount setAccountOverdueStates(final DefaultOverdueState[] accountOverdueStates) {
+        this.accountOverdueStates = accountOverdueStates;
+        return this;
+    }
+
+    protected OverdueStatesAccount setInitialReevaluationInterval(final DefaultDuration initialReevaluationInterval) {
+        this.initialReevaluationInterval = initialReevaluationInterval;
         return this;
     }
 }
