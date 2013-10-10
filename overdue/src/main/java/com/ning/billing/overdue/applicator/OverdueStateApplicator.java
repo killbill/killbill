@@ -148,7 +148,7 @@ public class OverdueStateApplicator {
 
             cancelSubscriptionsIfRequired(account, nextOverdueState, context);
 
-            triggerInvoiceIfNeeded(account, previousOverdueState, nextOverdueState, context);
+            scheduleInvoiceIfNeeded(account, previousOverdueState, nextOverdueState, context);
 
             sendEmailIfRequired(billingState, account, nextOverdueState, context);
 
@@ -168,7 +168,15 @@ public class OverdueStateApplicator {
         }
     }
 
-    private void triggerInvoiceIfNeeded(final Account account, final OverdueState previousOverdueState, final OverdueState nextOverdueState, final InternalCallContext context) throws InvoiceApiException {
+    private void scheduleInvoiceIfNeeded(final Account account, final OverdueState previousOverdueState, final OverdueState nextOverdueState, final InternalCallContext context) throws InvoiceApiException {
+        //
+        // Invoice will re-enter a notification to schedule a new invoice with a notificationDate equivalent to today. For a given active subscription on this account:
+        // - If that notificationDate is less or equals than the chargeThroughDate of the given subscription, it means the invoice was previously invoiced and so blocking/unblocking will have an effect,
+        //   a new invoice will be generated
+        // - If that notificationDate is greater than the chargeThroughDate, then that subscription will be invoiced for the next period.
+        //
+        // So in both case a new invoice will be generated.
+        //
         if (isBlockBillingTransition(previousOverdueState, nextOverdueState) || isUnblockBillingTransition(previousOverdueState, nextOverdueState)) {
             invoiceInternalApi.scheduleInvoiceForAccount(account.getId(), account.getTimeZone(), context);
         }

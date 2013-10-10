@@ -72,5 +72,14 @@ public interface InvoiceInternalApi {
     public void consumeExistingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) throws InvoiceApiException;
 
 
+    /**
+     * Insert a new notification with a notificationDate of today to trigger a new invoice on the account.
+     *
+     * @param accountId        account id
+     * @param accountTimeZone  timezone of the account
+     * @param context          the context
+     *
+     * @throws InvoiceApiException
+     */
     public void scheduleInvoiceForAccount(UUID accountId, DateTimeZone accountTimeZone, InternalCallContext context) throws InvoiceApiException;
 }

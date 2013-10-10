@@ -27,6 +27,8 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.callcontext.InternalCallContext;
@@ -56,6 +58,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
 public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceInternalApi.class);
 
     private final InvoiceDao dao;
     private final NextBillingDatePoster nextBillingDatePoster;
@@ -159,9 +163,13 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
                 }
             }
         }
-        if (targetSubscription != null) {
-            final DateAndTimeZoneContext timeZoneContext = new DateAndTimeZoneContext(targetSubscription.getStartDate(), accountTimeZone, clock);
-            nextBillingDatePoster.insertNextBillingNotification(accountId, targetSubscription.getId(), timeZoneContext.computeUTCDateTimeFromNow(), context.getUserToken());
+        if (targetSubscription == null) {
+            log.info("scheduleInvoiceForAccount : no active subscriptions for account {}", accountId);
+            return;
         }
+
+        final DateAndTimeZoneContext timeZoneContext = new DateAndTimeZoneContext(targetSubscription.getStartDate(), accountTimeZone, clock);
+        final DateTime futureNotificationTime = timeZoneContext.computeUTCDateTimeFromNow();
+        nextBillingDatePoster.insertNextBillingNotification(accountId, targetSubscription.getId(), futureNotificationTime, context.getUserToken());
     }
 }
