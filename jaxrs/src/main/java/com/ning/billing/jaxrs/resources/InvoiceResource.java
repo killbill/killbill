@@ -262,9 +262,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()), callContext);
-        if (payInvoice && account.getPaymentMethodId() == null) {
-            return Response.status(Status.BAD_REQUEST).build();
-        }
+
         // Get the effective date of the external charge, in the account timezone
         final LocalDate requestedDate = toLocalDate(account, requestedDateTimeString, callContext);
 
@@ -303,9 +301,6 @@ public class InvoiceResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()), callContext);
-        if (payInvoice && account.getPaymentMethodId() == null) {
-            return Response.status(Status.BAD_REQUEST).build();
-        }
 
         // Get the effective date of the external charge, in the account timezone
         final LocalDate requestedDate = toLocalDate(account, requestedDateTimeString, callContext);
