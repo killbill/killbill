@@ -18,6 +18,10 @@ package com.ning.billing.beatrix.integration.overdue;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -43,10 +47,20 @@ import com.ning.billing.junction.DefaultBlockingState;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+// For all the tests, we set the the property killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logic does not end with an ABORTED state
+// preventing final instant payment to succeed.
+//
+// The tests are difficult to follow because there are actually two tracks of retry in logic:
+// - The payment retries
+// - The overdue notifications
+//
+
 
 @Test(groups = "slow")
 public class TestOverdueIntegration extends TestOverdueBase {
 
+
+    private final static Integer TIME_SINCE_EARLIEST_INVOICE_TO_TRIGGER_BLOCKING_BILLING = 40;
 
     @Override
     public String getOverdueConfig() {
@@ -71,7 +85,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
                                  "       <state name=\"OD2\">" +
                                  "           <condition>" +
                                  "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                                 "                   <unit>DAYS</unit><number>40</number>" +
+                                 "                   <unit>DAYS</unit><number>" + TIME_SINCE_EARLIEST_INVOICE_TO_TRIGGER_BLOCKING_BILLING + "</number>" +
                                  "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
                                  "           </condition>" +
                                  "           <externalMessage>Reached OD2</externalMessage>" +
@@ -101,16 +115,15 @@ public class TestOverdueIntegration extends TestOverdueBase {
     }
 
 
-    // We set the the property killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logic does not end with an ABORTED state
-    // preventing final instant payment to succeed.
-    @Test(groups = "slow")
-    public void testBasicOverdueState() throws Exception {
+    @Test(groups = "slow", description="Test overdue stages and return to clear prior to CTD")
+    public void testOverdueStages1() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
+
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
 
@@ -148,16 +161,21 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD1");
 
         // 2012, 7, 10 => Retry P0
-        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
-        checkODState("OD2");
-
-        // 2012, 7, 17 => Retry P1
-        addDaysAndCheckForCompletion(7, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
+        //
+        // This is the first stage that will block the billing (and entitlement). The overdue system will notify invoice which will in turn
+        // will adjust (repair) the previous invoice for the part that was blocked
+        //
+        addDaysAndCheckForCompletion(1, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         invoiceChecker.checkInvoice(account.getId(), 3,
                                     callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                    // Repair for the part that was blocked
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-166.64")));
+
+        // 2012, 7, 17 => Retry P1
+        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        checkODState("OD2");
 
         // 2012, 7, 18 => Retry P0
         addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
@@ -167,55 +185,29 @@ public class TestOverdueIntegration extends TestOverdueBase {
         addDaysAndCheckForCompletion(5);
         checkODState("OD3");
 
-
-        paymentPlugin.makeAllInvoicesFailWithError(false);
-        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
-        int remainingUnpaidInvoices = invoices.size();
-        for (final Invoice invoice : invoices) {
-            if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
-                remainingUnpaidInvoices--;
-                if (remainingUnpaidInvoices > 0) {
-                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT);
-                } else {
-                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.PAYMENT);
-                }
-            }
-        }
-        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
-                                    // Item for the upgraded recurring plan
+                                    // New invoice for the part that was unblocked
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("64.51")));
 
-        // Do an upgrade now
-        checkChangePlanWithOverdueState(baseEntitlement, false, true);
 
-        invoiceChecker.checkRepairedInvoice(account.getId(), 4, callContext,
-                                            // Item for the upgraded recurring plan
-                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("64.51")),
-                                            // Repair for upgrade
-                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-64.51")),
-                                            // CBA generated
-                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("64.51")));
-
+        // Add 10 days to generate next invoice. We verify that we indeed have a notification for nextBillingDate
+        addDaysAndCheckForCompletion(10, NextEvent.INVOICE, NextEvent.PAYMENT);
 
         invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                     // Item for the upgraded recurring plan
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("154.85")),
-                                    // Repair for upgrade
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("-64.51")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2012, 8, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
 
-        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 8, 31), callContext);
 
-        // Verify the account balance:
+        // Verify the account balance is now 0
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
     }
 
 
-    // We set the the property killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logic does not end with an ABORTED state
-    // preventing final instant payment to succeed.
-    @Test(groups = "slow")
-    public void testSingleRepareeOnOverdueState() throws Exception {
+    @Test(groups = "slow", description="Test overdue stages and return to clear after CTD")
+    public void testOverdueStages2() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
         // Set next invoice to fail and create subscription
@@ -223,6 +215,109 @@ public class TestOverdueIntegration extends TestOverdueBase {
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
+
+        // 2012, 5, 31 => DAY 30 have to get out of trial {I0, P0}
+        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
+
+        // 2012, 6, 8 => Retry P0
+        addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+
+        // 2012, 6, 16 => Retry P0
+        addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+
+        // 2012, 6, 24 => Retry P0
+        addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+
+        // 2012, 6, 31 => P1 (We se 6/31 instead of 6/30 because invoice might happen later in that day)
+        addDaysAndCheckForCompletion(7, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        checkODState("OD1");
+        checkChangePlanWithOverdueState(baseEntitlement, true, true);
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
+
+        // 2012, 7, 2 => Retry P0
+        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
+        checkODState("OD1");
+
+        // 2012, 7, 9 => Retry P1
+        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        checkODState("OD1");
+
+        // 2012, 7, 10 => Retry P0
+        //
+        // This is the first stage that will block the billing (and entitlement). The overdue system will notify invoice which will in turn
+        // will adjust (repair) the previous invoice for the part that was blocked
+        //
+        addDaysAndCheckForCompletion(1, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
+        checkODState("OD2");
+
+        invoiceChecker.checkInvoice(account.getId(), 3,
+                                    callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                    // Repair for the part that was blocked
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-166.64")));
+
+        // 2012, 7, 17 => Retry P1
+        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        checkODState("OD2");
+
+        // 2012, 7, 18 => Retry P0
+        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
+        checkODState("OD2");
+
+        // 2012, 7, 23 => Should be 20 but notficationQ event occurs on 23...
+        addDaysAndCheckForCompletion(5);
+        checkODState("OD3");
+
+        // 2012, 7, 25 => Retry P0
+        addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR);
+        // 2012, 7, 26 => Retry P0
+        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
+
+        // 2012, 7, 31 => No NEW INVOICE because OD2 -> still blocked
+        addDaysAndCheckForCompletion(5);
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
+
+        // 2012, 8, 1 => Nothing should have happened
+        addDaysAndCheckForCompletion(1);
+
+        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices();
+
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    // New invoice for the partial period since we unblocked on the 1st and so are missing the 31 july
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 1), new LocalDate(2012, 8, 31), InvoiceItemType.RECURRING, new BigDecimal("241.88")));
+
+        // Move one month ahead, and check if we get the next invoice
+        addDaysAndCheckForCompletion(30, NextEvent.INVOICE, NextEvent.PAYMENT);
+
+        invoiceChecker.checkInvoice(account.getId(), 5, callContext,
+                                    // New invoice for the partial period since we unblocked on the 1st and so are missing the 31 july
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 31), new LocalDate(2012, 9, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+
+        // Verify the account balance is now 0
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
+    }
+
+
+    //
+    // This test is similar to the previous one except that instaed of moving the clock to check we will get the next invoice
+    // at the end, we carry a change of plan.
+    //
+    @Test(groups = "slow", description="Test overdue stages and follow with an immediate change of plan")
+    public void testOverdueStagesFollowedWithImmediateChange1() throws Exception {
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        // Set next invoice to fail and create subscription
+        paymentPlugin.makeAllInvoicesFailWithError(true);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
 
@@ -265,7 +360,6 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         invoiceChecker.checkInvoice(account.getId(), 3,
                                     callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
-                                    // Repair for the part that was blocked
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-166.64")));
 
         // 2012, 7, 17 => Retry P1
@@ -281,44 +375,38 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD3");
 
 
-        paymentPlugin.makeAllInvoicesFailWithError(false);
-        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
-        int remainingUnpaidInvoices = invoices.size();
-        for (final Invoice invoice : invoices) {
-            if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
-                remainingUnpaidInvoices--;
-                if (remainingUnpaidInvoices > 0) {
-                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT);
-                } else {
-                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.PAYMENT);
-                }
-            }
-        }
-        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
-                                    // New invoice for the part that was unblocked
+                                    // Item for the upgraded recurring plan
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("64.51")));
 
+        // Do an upgrade now
+        checkChangePlanWithOverdueState(baseEntitlement, false, true);
 
-        // Add 10 days to generate next invoice
-        addDaysAndCheckForCompletion(10, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkRepairedInvoice(account.getId(), 4, callContext,
+                                            // Item for the upgraded recurring plan
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("64.51")),
+                                            // Repair for upgrade
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-64.51")),
+                                            // CBA generated
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("64.51")));
+
 
         invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                     // Item for the upgraded recurring plan
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2012, 8, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("154.85")),
+                                    // Repair for upgrade
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("-64.51")));
 
-        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 8, 31), callContext);
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
 
-        // Verify the account balance: 249.95 - 74.99 - 154.85
+        // Verify the account balance:
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
     }
 
-
-    // We set the the property killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logic does not end with an ABORTED state
-    // preventing final instant payment to succeed.
-    @Test(groups = "slow")
-    public void testMultipleRepareeOnOverdueState() throws Exception {
+    @Test(groups = "slow", description="Test overdue stages and follow with an immediate change of plan and use of credit")
+    public void testOverdueStagesFollowedWithImmediateChange2() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
         // Set next invoice to fail and create subscription
@@ -367,20 +455,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         addDaysAndCheckForCompletion(5);
         checkODState("OD3");
 
-        paymentPlugin.makeAllInvoicesFailWithError(false);
-        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
-        int remainingUnpaidInvoices = invoices.size();
-        for (final Invoice invoice : invoices) {
-            if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
-                remainingUnpaidInvoices--;
-                if (remainingUnpaidInvoices > 0) {
-                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT);
-                } else {
-                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.PAYMENT);
-                }
-            }
-        }
-        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices();
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     // New invoice for the part that was unblocked up to the BCD
@@ -393,7 +468,6 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     // New invoice for the part that was unblocked up to the BCD
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2013, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
-
 
 
         checkChangePlanWithOverdueState(baseEntitlement, false, false);
@@ -413,7 +487,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
     }
 
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description="Test overdue stages with missing payment method")
     public void testOverdueStateIfNoPaymentMethod() throws Exception {
         // This test is similar to the previous one - but there is no default payment method on the account, so there
         // won't be any payment retry
@@ -472,9 +546,9 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
 
         invoiceChecker.checkInvoice(account.getId(), 3,
-                                            callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
-                                            // We paid up to 07-31, hence the adjustment
-                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 15), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-124.97")));
+                                    callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                    // We paid up to 07-31, hence the adjustment
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 15), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-124.97")));
 
         // DAY 85 - 55 days after invoice
         addDaysAndCheckForCompletion(10);
@@ -486,20 +560,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Add a payment method and set it as default
         paymentApi.addPaymentMethod(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
 
-        // Pay all invoices
-        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
-        int remainingUnpaidInvoices = invoices.size();
-        for (final Invoice invoice : invoices) {
-            if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
-                remainingUnpaidInvoices--;
-                if (remainingUnpaidInvoices > 0) {
-                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT);
-                } else {
-                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.PAYMENT);
-                }
-            }
-        }
-        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     // Item for the upgraded recurring plan
@@ -510,9 +571,9 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseEntitlement, false, true);
 
         invoiceChecker.checkRepairedInvoice(account.getId(), 4, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("48.37")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-48.37")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("48.37")));
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("48.37")),
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-48.37")),
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("48.37")));
 
         invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("116.09")),
@@ -523,7 +584,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description="Test overdue from non paid external charge")
     public void testShouldBeInOverdueAfterExternalCharge() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -567,7 +628,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description="Test overdue after refund with no adjustment")
     public void testShouldBeInOverdueAfterRefundWithoutAdjustment() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -610,7 +671,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description="Test overdue after chargeback")
     public void testShouldBeInOverdueAfterChargeback() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -653,7 +714,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description="Test overdue clear after external payment")
     public void testOverdueStateShouldClearAfterExternalPayment() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -699,12 +760,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
 
-    @Test(groups = "slow", enabled = false)
-    public void testOverdueStateAndWRITTEN_OFFTag() throws Exception {
-        // TODO add/remove tag to invoice
-    }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description="Test overdue clear after item adjustment")
     public void testOverdueStateShouldClearAfterCreditOrInvoiceItemAdjustment() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -786,6 +843,48 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // We should be cleared again
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
+
+    @Test(groups = "slow", enabled = false)
+    public void testOverdueStateAndWRITTEN_OFFTag() throws Exception {
+        // TODO add/remove tag to invoice
+    }
+
+    private void allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices() {
+
+        // Reset plugin so payments should now succeed
+        paymentPlugin.makeAllInvoicesFailWithError(false);
+
+        //
+        // We now pay all unpaid invoices.
+        //
+        // Upon paying the last invoice, the overdue system will clear the state and notify invoice that it should re-generate a new invoice
+        // for the part hat was unblocked, which explains why on the last payment we expect an additional invoice and payment.
+        //
+        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+        // Sort in reverse order to first pay most recent invoice-- that way overdue state may only flip when we reach the last one.
+        final List<Invoice> sortedInvoices = new LinkedList<Invoice>(invoices);
+        Collections.sort(sortedInvoices, new Comparator<Invoice>() {
+            @Override
+            public int compare(final Invoice i1, final Invoice i2) {
+                return i2.getInvoiceDate().compareTo(i1.getInvoiceDate());
+            }
+        });
+
+        int remainingUnpaidInvoices = sortedInvoices.size();
+        for (final Invoice invoice : sortedInvoices) {
+            if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
+                remainingUnpaidInvoices--;
+                if (remainingUnpaidInvoices > 0) {
+                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT);
+                } else {
+                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.PAYMENT);
+                }
+            }
+        }
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+    }
+
+
 
     private void checkChangePlanWithOverdueState(final Entitlement entitlement, final boolean shouldFail, final boolean expectedPayment) {
         if (shouldFail) {
