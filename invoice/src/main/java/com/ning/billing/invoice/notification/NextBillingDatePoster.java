@@ -25,6 +25,9 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 public interface NextBillingDatePoster {
 
-    void insertNextBillingNotification(EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, UUID accountId,
+    void insertNextBillingNotificationFromTransaction(EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, UUID accountId,
+                                                      UUID subscriptionId, DateTime futureNotificationTime, UUID userToken);
+
+    void insertNextBillingNotification(UUID accountId,
                                        UUID subscriptionId, DateTime futureNotificationTime, UUID userToken);
 }

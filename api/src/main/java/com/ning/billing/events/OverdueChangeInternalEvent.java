@@ -26,4 +26,8 @@ public interface OverdueChangeInternalEvent extends BusInternalEvent {
     String getPreviousOverdueStateName();
 
     String getNextOverdueStateName();
+
+    Boolean isBlockedBilling();
+
+    Boolean isUnblockedBilling();
 }

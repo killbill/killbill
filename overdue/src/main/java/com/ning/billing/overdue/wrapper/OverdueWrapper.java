@@ -58,16 +58,19 @@ public class OverdueWrapper {
 
         final BillingState billingState = billingState(context);
         final String previousOverdueStateName = api.getBlockingStateForService(overdueable, OverdueService.OVERDUE_SERVICE_NAME, context).getStateName();
+
+        final OverdueState currentOverdueState = overdueStateSet.findState(previousOverdueStateName);
         final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getToday(billingState.getAccountTimeZone()));
 
-        overdueStateApplicator.apply(overdueStateSet.getFirstState(), billingState, overdueable, previousOverdueStateName, nextOverdueState, context);
+        overdueStateApplicator.apply(overdueStateSet.getFirstState(), billingState, overdueable, currentOverdueState, nextOverdueState, context);
 
         return nextOverdueState;
     }
 
     public void clear(final InternalCallContext context) throws OverdueException, OverdueApiException {
         final String previousOverdueStateName = api.getBlockingStateForService(overdueable, OverdueService.OVERDUE_SERVICE_NAME, context).getStateName();
-        overdueStateApplicator.clear(overdueable, previousOverdueStateName, overdueStateSet.getClearState(), context);
+        final OverdueState previousOverdueState = overdueStateSet.findState(previousOverdueStateName);
+        overdueStateApplicator.clear(overdueable, previousOverdueState, overdueStateSet.getClearState(), context);
     }
 
     public BillingState billingState(final InternalTenantContext context) throws OverdueException {

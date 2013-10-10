@@ -18,18 +18,27 @@ package com.ning.billing.invoice.api.svcs;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.dao.InvoiceDao;
@@ -37,9 +46,10 @@ import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.callcontext.InternalTenantContext;
-import com.ning.billing.invoice.api.InvoiceInternalApi;
+import com.ning.billing.invoice.notification.NextBillingDatePoster;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
+import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -48,10 +58,18 @@ import com.google.common.collect.Collections2;
 public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     private final InvoiceDao dao;
+    private final NextBillingDatePoster nextBillingDatePoster;
+    private final SubscriptionBaseInternalApi subscriptionBaseApi;
+    private final Clock clock;
 
     @Inject
-    public DefaultInvoiceInternalApi(final InvoiceDao dao) {
+    public DefaultInvoiceInternalApi(final InvoiceDao dao, final SubscriptionBaseInternalApi subscriptionBaseApi,
+                                     final Clock clock,
+                                     final NextBillingDatePoster nextBillingDatePoster) {
         this.dao = dao;
+        this.clock = clock;
+        this.subscriptionBaseApi = subscriptionBaseApi;
+        this.nextBillingDatePoster = nextBillingDatePoster;
     }
 
     @Override
@@ -121,5 +139,29 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public void consumeExistingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) throws InvoiceApiException {
         dao.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, context);
+    }
+
+    @Override
+    public void scheduleInvoiceForAccount(final UUID accountId, final DateTimeZone accountTimeZone, final InternalCallContext context) throws InvoiceApiException {
+        final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionBaseApi.getSubscriptionsForAccount(context);
+        SubscriptionBase targetSubscription = null;
+        for (UUID key : subscriptions.keySet()) {
+            for (SubscriptionBase cur : subscriptions.get(key)) {
+                if (cur.getCategory() == ProductCategory.ADD_ON) {
+                    continue;
+                }
+                if (cur.getState() != EntitlementState.ACTIVE) {
+                    continue;
+                }
+                if (cur.getCurrentPhase() != null && cur.getCurrentPhase().getBillingPeriod() != BillingPeriod.NO_BILLING_PERIOD) {
+                    targetSubscription = cur;
+                    break;
+                }
+            }
+        }
+        if (targetSubscription != null) {
+            final DateAndTimeZoneContext timeZoneContext = new DateAndTimeZoneContext(targetSubscription.getStartDate(), accountTimeZone, clock);
+            nextBillingDatePoster.insertNextBillingNotification(accountId, targetSubscription.getId(), timeZoneContext.computeUTCDateTimeFromNow(), context.getUserToken());
+        }
     }
 }

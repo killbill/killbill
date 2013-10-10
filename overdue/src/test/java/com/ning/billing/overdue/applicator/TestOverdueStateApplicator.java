@@ -48,20 +48,21 @@ public class TestOverdueStateApplicator extends OverdueTestSuiteWithEmbeddedDB {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
 
+        final OverdueState clearState = config.getBundleStateSet().findState(DefaultBlockingState.CLEAR_STATE_NAME);
         OverdueState state;
 
         state = config.getBundleStateSet().findState("OD1");
-        applicator.apply(null, null, account, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
+        applicator.apply(null, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD1");
 
         state = config.getBundleStateSet().findState("OD2");
-        applicator.apply(null, null, account, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
+        applicator.apply(null, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD2");
 
         state = config.getBundleStateSet().findState("OD3");
-        applicator.apply(null, null, account, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
+        applicator.apply(null, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD3");
     }

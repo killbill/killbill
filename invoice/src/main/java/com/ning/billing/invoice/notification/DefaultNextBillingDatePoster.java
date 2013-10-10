@@ -23,12 +23,12 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -51,8 +51,8 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
     }
 
     @Override
-    public void insertNextBillingNotification(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId,
-                                              final UUID subscriptionId, final DateTime futureNotificationTime, final UUID userToken) {
+    public void insertNextBillingNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId,
+                                                             final UUID subscriptionId, final DateTime futureNotificationTime, final UUID userToken) {
         final InternalCallContext context = createCallContext(accountId, userToken);
 
         final NotificationQueue nextBillingQueue;
@@ -63,6 +63,25 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
 
             nextBillingQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), futureNotificationTime,
                                                                      new NextBillingDateNotificationKey(subscriptionId), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+        } catch (NoSuchNotificationQueue e) {
+            log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).", e);
+        } catch (IOException e) {
+            log.error("Failed to serialize notificationKey for subscriptionId {}", subscriptionId);
+        }
+    }
+
+    @Override
+    public void insertNextBillingNotification(final UUID accountId, final UUID subscriptionId, final DateTime futureNotificationTime, final UUID userToken) {
+        final InternalCallContext context = createCallContext(accountId, userToken);
+
+        final NotificationQueue nextBillingQueue;
+        try {
+            nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
+                                                                             DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
+            log.info("Queuing next billing date notification at {} for subscriptionId {}", futureNotificationTime.toString(), subscriptionId.toString());
+
+            nextBillingQueue.recordFutureNotification(futureNotificationTime,
+                                                      new NextBillingDateNotificationKey(subscriptionId), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (NoSuchNotificationQueue e) {
             log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).", e);
         } catch (IOException e) {

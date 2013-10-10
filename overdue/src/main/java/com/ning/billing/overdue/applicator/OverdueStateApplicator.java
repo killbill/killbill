@@ -39,6 +39,9 @@ import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.Entitlement;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceInternalApi;
+import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicy;
@@ -75,6 +78,7 @@ public class OverdueStateApplicator {
     private final PersistentBus bus;
     private final AccountInternalApi accountApi;
     private final EntitlementApi entitlementApi;
+    private final InvoiceInternalApi invoiceInternalApi;
     private final OverdueEmailGenerator overdueEmailGenerator;
     private final TagInternalApi tagApi;
     private final EmailSender emailSender;
@@ -82,11 +86,13 @@ public class OverdueStateApplicator {
 
     @Inject
     public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final EntitlementApi entitlementApi,
+                                  final InvoiceInternalApi invoiceInternalApi,
                                   final Clock clock, final OverdueCheckPoster poster, final OverdueEmailGenerator overdueEmailGenerator,
                                   final EmailConfig config, final PersistentBus bus, final NonEntityDao nonEntityDao,  final TagInternalApi tagApi) {
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
+        this.invoiceInternalApi = invoiceInternalApi;
         this.clock = clock;
         this.poster = poster;
         this.overdueEmailGenerator = overdueEmailGenerator;
@@ -98,7 +104,7 @@ public class OverdueStateApplicator {
 
 
     public void apply(final OverdueState firstOverdueState, final BillingState billingState,
-                      final Account overdueable, final String previousOverdueStateName,
+                      final Account account, final OverdueState previousOverdueState,
                       final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         try {
 
@@ -107,7 +113,7 @@ public class OverdueStateApplicator {
                 return;
             }
 
-            log.debug("OverdueStateApplicator:apply <enter> : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueStateName + ", nextState = " + nextOverdueState);
+            log.debug("OverdueStateApplicator:apply <enter> : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueState.getName() + ", nextState = " + nextOverdueState);
 
             final boolean conditionForNextNotfication = !nextOverdueState.isClearState() ||
                                                         // We did not reach the first state yet but we have an unpaid invoice
@@ -115,54 +121,66 @@ public class OverdueStateApplicator {
 
             if (conditionForNextNotfication) {
                 final Period reevaluationInterval = nextOverdueState.isClearState() ? firstOverdueState.getReevaluationInterval() : nextOverdueState.getReevaluationInterval();
-                createFutureNotification(overdueable, clock.getUTCNow().plus(reevaluationInterval), context);
+                createFutureNotification(account, clock.getUTCNow().plus(reevaluationInterval), context);
 
                 log.debug("OverdueStateApplicator <notificationQ> : inserting notification for time = " + clock.getUTCNow().plus(reevaluationInterval));
             } else if (nextOverdueState.isClearState()) {
-                clearFutureNotification(overdueable, context);
+                clearFutureNotification(account, context);
             }
 
-            if (previousOverdueStateName.equals(nextOverdueState.getName())) {
+            if (previousOverdueState.getName().equals(nextOverdueState.getName())) {
                 return;
             }
 
-            storeNewState(overdueable, nextOverdueState, context);
+            storeNewState(account, nextOverdueState, context);
 
-            cancelSubscriptionsIfRequired(overdueable, nextOverdueState, context);
+            cancelSubscriptionsIfRequired(account, nextOverdueState, context);
 
-            sendEmailIfRequired(billingState, overdueable, nextOverdueState, context);
+            triggerInvoiceIfNeeded(account, previousOverdueState, nextOverdueState, context);
+
+            sendEmailIfRequired(billingState, account, nextOverdueState, context);
 
         } catch (OverdueApiException e) {
             if (e.getCode() != ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
                 throw new OverdueException(e);
             }
+        } catch (InvoiceApiException e) {
+            throw new OverdueException(e);
         }
 
-
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName(), context));
+            bus.post(createOverdueEvent(account, previousOverdueState.getName(), nextOverdueState.getName(),isBlockBillingTransition(previousOverdueState, nextOverdueState),
+                                        isUnblockBillingTransition(previousOverdueState, nextOverdueState), context));
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
     }
 
-    public void clear(final Account overdueable, final String previousOverdueStateName, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
+    private void triggerInvoiceIfNeeded(final Account account, final OverdueState previousOverdueState, final OverdueState nextOverdueState, final InternalCallContext context) throws InvoiceApiException {
+        if (isBlockBillingTransition(previousOverdueState, nextOverdueState) || isUnblockBillingTransition(previousOverdueState, nextOverdueState)) {
+            invoiceInternalApi.scheduleInvoiceForAccount(account.getId(), account.getTimeZone(), context);
+        }
+    }
 
-        log.debug("OverdueStateApplicator:clear : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueStateName);
+    public void clear(final Account overdueable, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
+
+        log.debug("OverdueStateApplicator:clear : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueState.getName());
 
         storeNewState(overdueable, clearState, context);
 
         clearFutureNotification(overdueable, context);
 
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, clearState.getName(), context));
+            bus.post(createOverdueEvent(overdueable, previousOverdueState.getName(), clearState.getName(), isBlockBillingTransition(previousOverdueState, clearState),
+                                        isUnblockBillingTransition(previousOverdueState, clearState), context));
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
     }
 
-    private OverdueChangeInternalEvent createOverdueEvent(final Account overdueable, final String previousOverdueStateName, final String nextOverdueStateName, final InternalCallContext context) throws BlockingApiException {
-        return new DefaultOverdueChangeEvent(overdueable.getId(), previousOverdueStateName, nextOverdueStateName,
+    private OverdueChangeInternalEvent createOverdueEvent(final Account overdueable, final String previousOverdueStateName, final String nextOverdueStateName,
+                                                          final boolean isBlockedBilling, final boolean isUnblockedBilling, final InternalCallContext context) throws BlockingApiException {
+        return new DefaultOverdueChangeEvent(overdueable.getId(), previousOverdueStateName, nextOverdueStateName, isBlockedBilling, isUnblockedBilling,
                                              context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
     }
 
@@ -180,6 +198,14 @@ public class OverdueStateApplicator {
         } catch (Exception e) {
             throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, blockable.getId(), blockable.getClass().getName());
         }
+    }
+
+    private boolean isBlockBillingTransition(final OverdueState prevOverdueState, final OverdueState nextOverdueState) {
+        return !blockBilling(prevOverdueState) && blockBilling(nextOverdueState);
+    }
+
+    private boolean isUnblockBillingTransition(final OverdueState prevOverdueState, final OverdueState nextOverdueState) {
+        return blockBilling(prevOverdueState) && !blockBilling(nextOverdueState);
     }
 
     private boolean blockChanges(final OverdueState nextOverdueState) {

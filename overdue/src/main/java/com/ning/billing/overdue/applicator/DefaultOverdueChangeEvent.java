@@ -30,16 +30,23 @@ public class DefaultOverdueChangeEvent extends BusEventBase implements OverdueCh
     private final UUID overdueObjectId;
     private final String previousOverdueStateName;
     private final String nextOverdueStateName;
+    private final Boolean isBlockedBilling;
+    private final Boolean isUnblockedBilling;
+
 
     @JsonCreator
     public DefaultOverdueChangeEvent(@JsonProperty("overdueObjectId") final UUID overdueObjectId,
                                      @JsonProperty("previousOverdueStateName") final String previousOverdueStateName,
                                      @JsonProperty("nextOverdueStateName") final String nextOverdueStateName,
+                                     @JsonProperty("isBlockedBilling") final Boolean isBlockedBilling,
+                                     @JsonProperty("isUnblockedBilling") final Boolean isUnblockedBilling,
                                      @JsonProperty("searchKey1") final Long searchKey1,
                                      @JsonProperty("searchKey2") final Long searchKey2,
                                      @JsonProperty("userToken") final UUID userToken) {
         super(searchKey1, searchKey2, userToken);
         this.overdueObjectId = overdueObjectId;
+        this.isBlockedBilling = isBlockedBilling;
+        this.isUnblockedBilling = isUnblockedBilling;
         this.previousOverdueStateName = previousOverdueStateName;
         this.nextOverdueStateName = nextOverdueStateName;
     }
@@ -65,4 +72,15 @@ public class DefaultOverdueChangeEvent extends BusEventBase implements OverdueCh
         return nextOverdueStateName;
     }
 
+    @Override
+    @JsonProperty("isBlockedBilling")
+    public Boolean isBlockedBilling() {
+        return isBlockedBilling;
+    }
+
+    @Override
+    @JsonProperty("isUnblockedBilling")
+    public Boolean isUnblockedBilling() {
+        return isUnblockedBilling;
+    }
 }

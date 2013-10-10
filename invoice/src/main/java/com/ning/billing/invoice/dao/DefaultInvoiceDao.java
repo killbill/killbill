@@ -733,7 +733,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                              final Map<UUID, DateTime> callbackDateTimePerSubscriptions, final UUID userToken) {
         for (final UUID subscriptionId : callbackDateTimePerSubscriptions.keySet()) {
             final DateTime callbackDateTimeUTC = callbackDateTimePerSubscriptions.get(subscriptionId);
-            nextBillingDatePoster.insertNextBillingNotification(entitySqlDaoWrapperFactory, accountId, subscriptionId, callbackDateTimeUTC, userToken);
+            nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, callbackDateTimeUTC, userToken);
         }
     }
 

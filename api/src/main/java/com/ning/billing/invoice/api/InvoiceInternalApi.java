@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
@@ -70,4 +71,6 @@ public interface InvoiceInternalApi {
      */
     public void consumeExistingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) throws InvoiceApiException;
 
+
+    public void scheduleInvoiceForAccount(UUID accountId, DateTimeZone accountTimeZone, InternalCallContext context) throws InvoiceApiException;
 }
