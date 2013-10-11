@@ -46,19 +46,19 @@ public class OverdueDispatcher {
         clearOverdue(accountId, context);
     }
 
-    public void processOverdue(final UUID blockableId, final InternalCallContext context) {
+    private void processOverdue(final UUID accountId, final InternalCallContext context) {
         try {
-            factory.createOverdueWrapperFor(blockableId, context).refresh(context);
+            factory.createOverdueWrapperFor(accountId, context).refresh(context);
         } catch (BillingExceptionBase e) {
-            log.error(String.format("Error processing Overdue for blockable %s", blockableId), e);
+            log.error(String.format("Error processing Overdue for blockable %s", accountId), e);
         }
     }
 
-    public void clearOverdue(final UUID blockableId, final InternalCallContext context) {
+    private void clearOverdue(final UUID accountId, final InternalCallContext context) {
         try {
-            factory.createOverdueWrapperFor(blockableId, context).clear(context);
+            factory.createOverdueWrapperFor(accountId, context).clear(context);
         } catch (BillingExceptionBase e) {
-            log.error(String.format("Error processing Overdue for blockable %s (type %s)", blockableId), e);
+            log.error(String.format("Error processing Overdue for blockable %s (type %s)", accountId), e);
         }
     }
 }

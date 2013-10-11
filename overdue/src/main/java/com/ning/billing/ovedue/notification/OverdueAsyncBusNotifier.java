@@ -29,16 +29,16 @@ import com.ning.billing.overdue.listener.OverdueListener;
 
 import com.google.inject.Inject;
 
-public class OverdueCheckNotifier extends DefaultOverdueNotifierBase implements OverdueNotifier {
+public class OverdueAsyncBusNotifier extends DefaultOverdueNotifierBase implements OverdueNotifier {
 
     private static final Logger log = LoggerFactory.getLogger(OverdueCheckNotifier.class);
 
-    public static final String OVERDUE_CHECK_NOTIFIER_QUEUE = "overdue-check-queue";
+    public static final String OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE = "overdue-async-bus-queue";
 
 
     @Inject
-    public OverdueCheckNotifier(final NotificationQueueService notificationQueueService, final OverdueProperties config,
-                                final OverdueListener listener) {
+    public OverdueAsyncBusNotifier(final NotificationQueueService notificationQueueService, final OverdueProperties config,
+                                   final OverdueListener listener) {
         super(notificationQueueService, config, listener);
     }
 
@@ -49,21 +49,31 @@ public class OverdueCheckNotifier extends DefaultOverdueNotifierBase implements 
 
     @Override
     public String getQueueName() {
-        return OVERDUE_CHECK_NOTIFIER_QUEUE;
+        return OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE;
     }
 
     @Override
     public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         try {
-            if (!(notificationKey instanceof OverdueCheckNotificationKey)) {
+            if (!(notificationKey instanceof OverdueAsyncBusNotificationKey)) {
                 getLogger().error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());
                 return;
             }
 
-            final OverdueCheckNotificationKey key = (OverdueCheckNotificationKey) notificationKey;
-            listener.handleProcessOverdueForAccount(key.getUuidKey(), userToken, accountRecordId, tenantRecordId);
+            final OverdueAsyncBusNotificationKey key = (OverdueAsyncBusNotificationKey) notificationKey;
+            switch (key.getAction()) {
+                case CLEAR:
+                    listener.handleClearOverdueForAccount(key.getUuidKey(), userToken, accountRecordId, tenantRecordId);
+                    break;
+                case REFRESH:
+                    listener.handleProcessOverdueForAccount(key.getUuidKey(), userToken, accountRecordId, tenantRecordId);
+                    break;
+                default:
+                    throw new RuntimeException("Unexpected action " + key.getAction() + " for account " + key.getUuidKey());
+            }
         } catch (IllegalArgumentException e) {
-            log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
+            log.error("The key returned from the queue " + OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE + " does not contain a valid UUID", e);
         }
     }
+
 }

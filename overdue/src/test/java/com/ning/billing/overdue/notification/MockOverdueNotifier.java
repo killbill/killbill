@@ -16,9 +16,14 @@
 
 package com.ning.billing.overdue.notification;
 
-import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
+import java.util.UUID;
 
-public class MockOverdueCheckNotifier implements OverdueCheckNotifier {
+import org.joda.time.DateTime;
+
+import com.ning.billing.notificationq.api.NotificationEvent;
+import com.ning.billing.ovedue.notification.OverdueNotifier;
+
+public class MockOverdueNotifier implements OverdueNotifier {
 
     @Override
     public void initialize() {
@@ -33,5 +38,9 @@ public class MockOverdueCheckNotifier implements OverdueCheckNotifier {
     @Override
     public void stop() {
         // do nothing
+    }
+
+    @Override
+    public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
     }
 }

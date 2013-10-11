@@ -20,10 +20,13 @@ import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.glue.OverdueModule;
-import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
-import com.ning.billing.ovedue.notification.DefaultOverdueCheckPoster;
+import com.ning.billing.ovedue.notification.DefaultOverduePosterBase;
+import com.ning.billing.ovedue.notification.OverdueAsyncBusNotifier;
+import com.ning.billing.ovedue.notification.OverdueAsyncBusPoster;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
+import com.ning.billing.ovedue.notification.OverduePoster;
+import com.ning.billing.ovedue.notification.OverdueNotifier;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueUserApi;
@@ -35,10 +38,14 @@ import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 public class DefaultOverdueModule extends AbstractModule implements OverdueModule {
 
     protected final ConfigSource configSource;
+
+    public static final String OVERDUE_NOTIFIER_CHECK_NAMED = "overdueNotifierCheck";
+    public static final String OVERDUE_NOTIFIER_ASYNC_BUS_NAMED = "overdueNotifierAsyncBus";
 
     public DefaultOverdueModule(final ConfigSource configSource) {
         this.configSource = configSource;
@@ -55,9 +62,12 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
 
         final OverdueProperties config = new ConfigurationObjectFactory(configSource).build(OverdueProperties.class);
         bind(OverdueProperties.class).toInstance(config);
-        //bind(ExtendedOverdueService.class).to(DefaultOverdueService.class).asEagerSingleton();
-        bind(OverdueCheckNotifier.class).to(DefaultOverdueCheckNotifier.class).asEagerSingleton();
-        bind(OverdueCheckPoster.class).to(DefaultOverdueCheckPoster.class).asEagerSingleton();
+
+        bind(OverdueNotifier.class).annotatedWith(Names.named(OVERDUE_NOTIFIER_CHECK_NAMED)).to(OverdueCheckNotifier.class).asEagerSingleton();
+        bind(OverdueNotifier.class).annotatedWith(Names.named(OVERDUE_NOTIFIER_ASYNC_BUS_NAMED)).to(OverdueAsyncBusNotifier.class).asEagerSingleton();
+
+        bind(OverduePoster.class).annotatedWith(Names.named(OVERDUE_NOTIFIER_CHECK_NAMED)).to(OverdueCheckPoster.class).asEagerSingleton();
+        bind(OverduePoster.class).annotatedWith(Names.named(OVERDUE_NOTIFIER_ASYNC_BUS_NAMED)).to(OverdueAsyncBusPoster.class).asEagerSingleton();
     }
 
     protected void installOverdueService() {

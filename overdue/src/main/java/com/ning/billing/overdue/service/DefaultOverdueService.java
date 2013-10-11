@@ -19,18 +19,21 @@ package com.ning.billing.overdue.service;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import javax.inject.Named;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
+import com.ning.billing.ovedue.notification.OverdueNotifier;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.api.DefaultOverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
+import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.config.catalog.XMLLoader;
@@ -43,9 +46,11 @@ public class DefaultOverdueService implements OverdueService {
     private static final Logger log = LoggerFactory.getLogger(DefaultOverdueService.class);
 
     public static final String OVERDUE_SERVICE_NAME = "overdue-service";
+
     private final OverdueUserApi userApi;
     private final OverdueProperties properties;
-    private final OverdueCheckNotifier notifier;
+    private final OverdueNotifier asyncNotifier;
+    private final OverdueNotifier checkNotifier;
     private final BusService busService;
     private final OverdueListener listener;
     private final OverdueWrapperFactory factory;
@@ -57,13 +62,15 @@ public class DefaultOverdueService implements OverdueService {
     public DefaultOverdueService(
             final OverdueUserApi userApi,
             final OverdueProperties properties,
-            final OverdueCheckNotifier notifier,
+            @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED) final OverdueNotifier checkNotifier,
+            @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED) final OverdueNotifier asyncNotifier,
             final BusService busService,
             final OverdueListener listener,
             final OverdueWrapperFactory factory) {
         this.userApi = userApi;
         this.properties = properties;
-        this.notifier = notifier;
+        this.checkNotifier = checkNotifier;
+        this.asyncNotifier = asyncNotifier;
         this.busService = busService;
         this.listener = listener;
         this.factory = factory;
@@ -78,11 +85,6 @@ public class DefaultOverdueService implements OverdueService {
     @Override
     public OverdueUserApi getUserApi() {
         return userApi;
-    }
-
-    //@Override
-    public OverdueConfig getOverdueConfig() {
-        return overdueConfig;
     }
 
     @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)
@@ -114,7 +116,8 @@ public class DefaultOverdueService implements OverdueService {
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.INIT_SERVICE)
     public void initialize() {
         registerForBus();
-        notifier.initialize();
+        checkNotifier.initialize();
+        asyncNotifier.initialize();
     }
 
     private void registerForBus() {
@@ -127,7 +130,8 @@ public class DefaultOverdueService implements OverdueService {
 
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
-        notifier.start();
+        checkNotifier.start();
+        asyncNotifier.start();
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
@@ -137,6 +141,7 @@ public class DefaultOverdueService implements OverdueService {
         } catch (final EventBusException e) {
             log.error("Problem encountered registering OverdueListener on the Event Bus", e);
         }
-        notifier.stop();
+        checkNotifier.stop();
+        asyncNotifier.stop();
     }
 }

@@ -27,9 +27,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
+import com.ning.billing.ovedue.notification.OverdueNotifier;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -41,29 +41,29 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
 
     private OverdueListenerMock mockListener;
-    private OverdueCheckNotifier notifierForMock;
+    private OverdueNotifier notifierForMock;
 
     private static final class OverdueListenerMock extends OverdueListener {
 
         int eventCount = 0;
-        UUID latestSubscriptionId = null;
+        UUID latestAccountId = null;
 
         public OverdueListenerMock(final InternalCallContextFactory internalCallContextFactory) {
-            super(null, internalCallContextFactory);
+            super(null, getClock(), null,internalCallContextFactory);
         }
 
         @Override
-        public void handleNextOverdueCheck(final OverdueCheckNotificationKey key, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        public void handleProcessOverdueForAccount(final UUID accountId, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
             eventCount++;
-            latestSubscriptionId = key.getUuidKey();
+            latestAccountId = accountId;
         }
 
         public int getEventCount() {
             return eventCount;
         }
 
-        public UUID getLatestSubscriptionId() {
-            return latestSubscriptionId;
+        public UUID getLatestAccountId() {
+            return latestAccountId;
         }
     }
 
@@ -71,13 +71,13 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         //super.beforeMethod();
-        // We override the parent method on purpose, because we want to register a different DefaultOverdueCheckNotifier
+        // We override the parent method on purpose, because we want to register a different OverdueCheckNotifier
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
 
         mockListener = new OverdueListenerMock(internalCallContextFactory);
-        notifierForMock = new DefaultOverdueCheckNotifier(notificationQueueService, overdueProperties, mockListener);
+        notifierForMock = new OverdueCheckNotifier(notificationQueueService, overdueProperties, mockListener);
 
         notifierForMock.initialize();
         notifierForMock.start();
@@ -92,13 +92,14 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void test() throws Exception {
-        final UUID subscriptionId = new UUID(0L, 1L);
-        final Account blockable = Mockito.mock(Account.class);
-        Mockito.when(blockable.getId()).thenReturn(subscriptionId);
+        final UUID accountId = new UUID(0L, 1L);
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getId()).thenReturn(accountId);
         final DateTime now = clock.getUTCNow();
         final DateTime readyTime = now.plusMillis(2000);
 
-        poster.insertOverdueCheckNotification(blockable, readyTime, internalCallContext);
+        final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(accountId);
+        checkPoster.insertOverdueNotification(accountId, readyTime, OverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE, notificationKey, internalCallContext);
 
         // Move time in the future after the notification effectiveDate
         clock.setDeltaFromReality(3000);
@@ -111,6 +112,6 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         });
 
         Assert.assertEquals(mockListener.getEventCount(), 1);
-        Assert.assertEquals(mockListener.getLatestSubscriptionId(), subscriptionId);
+        Assert.assertEquals(mockListener.getLatestAccountId(), accountId);
     }
 }

@@ -20,7 +20,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.notificationq.api.NotificationEvent;
 import com.ning.billing.notificationq.api.NotificationQueue;
@@ -32,23 +31,24 @@ import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 
-import com.google.inject.Inject;
+public abstract class DefaultOverdueNotifierBase implements OverdueNotifier {
 
-public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultOverdueCheckNotifier.class);
+    protected final NotificationQueueService notificationQueueService;
+    protected final OverdueProperties config;
+    protected final OverdueListener listener;
 
-    public static final String OVERDUE_CHECK_NOTIFIER_QUEUE = "overdue-check-queue";
+    protected NotificationQueue overdueQueue;
 
-    private final NotificationQueueService notificationQueueService;
-    private final OverdueProperties config;
-    private final OverdueListener listener;
 
-    private NotificationQueue overdueQueue;
+    public abstract Logger getLogger();
 
-    @Inject
-    public DefaultOverdueCheckNotifier(final NotificationQueueService notificationQueueService, final OverdueProperties config,
-                                       final OverdueListener listener) {
+    public abstract String getQueueName();
+
+    public abstract void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId);
+
+    public DefaultOverdueNotifierBase(final NotificationQueueService notificationQueueService, final OverdueProperties config,
+                                      final OverdueListener listener) {
         this.notificationQueueService = notificationQueueService;
         this.config = config;
         this.listener = listener;
@@ -56,27 +56,19 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
 
     @Override
     public void initialize() {
+
+        final OverdueNotifier myself = this;
+
         final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
             @Override
             public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-                try {
-                    if (!(notificationKey instanceof OverdueCheckNotificationKey)) {
-                        log.error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());
-                        return;
-                    }
-
-                    final OverdueCheckNotificationKey key = (OverdueCheckNotificationKey) notificationKey;
-                    listener.handleNextOverdueCheck(key, userToken, accountRecordId, tenantRecordId);
-                } catch (IllegalArgumentException e) {
-                    log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
-                }
-
+                myself.handleReadyNotification(notificationKey, eventDate, userToken, accountRecordId, tenantRecordId);
             }
         };
 
         try {
             overdueQueue = notificationQueueService.createNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
-                                                                            OVERDUE_CHECK_NOTIFIER_QUEUE,
+                                                                            getQueueName(),
                                                                             notificationQueueHandler);
         } catch (NotificationQueueAlreadyExists e) {
             throw new RuntimeException(e);
@@ -95,7 +87,7 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
             try {
                 notificationQueueService.deleteNotificationQueue(overdueQueue.getServiceName(), overdueQueue.getQueueName());
             } catch (NoSuchNotificationQueue e) {
-                log.error("Error deleting a queue by its own name - this should never happen", e);
+                getLogger().error("Error deleting a queue by its own name - this should never happen", e);
             }
         }
     }

@@ -16,10 +16,13 @@
 
 package com.ning.billing.beatrix.integration.overdue;
 
+import javax.inject.Named;
+
 import com.google.inject.Inject;
-import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
+import com.ning.billing.ovedue.notification.OverdueNotifier;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueUserApi;
+import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
@@ -27,9 +30,11 @@ import com.ning.billing.util.svcsapi.bus.BusService;
 
 public class MockOverdueService extends DefaultOverdueService {
     @Inject
-    public MockOverdueService(final OverdueUserApi userApi, final OverdueProperties properties, final OverdueCheckNotifier notifier,
+    public MockOverdueService(final OverdueUserApi userApi, final OverdueProperties properties,
+                              @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED) final OverdueNotifier checkNotifier,
+                              @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED) final OverdueNotifier asyncNotifier,
                               final BusService busService, final OverdueListener listener, final OverdueWrapperFactory factory) {
-        super(userApi, properties, notifier, busService, listener, factory);
+        super(userApi, properties, checkNotifier, asyncNotifier, busService, listener, factory);
     }
 
     public synchronized void loadConfig() throws ServiceException {

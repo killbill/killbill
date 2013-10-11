@@ -21,6 +21,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Named;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
@@ -47,7 +49,9 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceInternalApi;
 import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.junction.DefaultBlockingState;
-import com.ning.billing.ovedue.notification.OverdueCheckPoster;
+import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
+import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
+import com.ning.billing.ovedue.notification.OverduePoster;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicy;
 import com.ning.billing.overdue.OverdueService;
@@ -55,6 +59,7 @@ import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
+import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.email.DefaultEmailSender;
@@ -74,7 +79,7 @@ public class OverdueStateApplicator {
 
     private final BlockingInternalApi blockingApi;
     private final Clock clock;
-    private final OverdueCheckPoster poster;
+    private final OverduePoster checkPoster;
     private final PersistentBus bus;
     private final AccountInternalApi accountApi;
     private final EntitlementApi entitlementApi;
@@ -90,7 +95,7 @@ public class OverdueStateApplicator {
                                   final EntitlementApi entitlementApi,
                                   final InvoiceInternalApi invoiceInternalApi,
                                   final Clock clock,
-                                  final OverdueCheckPoster poster,
+                                  @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED)final OverduePoster checkPoster,
                                   final OverdueEmailGenerator overdueEmailGenerator,
                                   final EmailConfig config,
                                   final PersistentBus bus,
@@ -102,7 +107,7 @@ public class OverdueStateApplicator {
         this.entitlementApi = entitlementApi;
         this.invoiceInternalApi = invoiceInternalApi;
         this.clock = clock;
-        this.poster = poster;
+        this.checkPoster = checkPoster;
         this.overdueEmailGenerator = overdueEmailGenerator;
         this.tagApi = tagApi;
         this.nonEntityDao = nonEntityDao;
@@ -243,13 +248,14 @@ public class OverdueStateApplicator {
         return nextOverdueState.disableEntitlementAndChangesBlocked();
     }
 
-    protected void createFutureNotification(final Account overdueable, final DateTime timeOfNextCheck, final InternalCallContext context) {
-        poster.insertOverdueCheckNotification(overdueable, timeOfNextCheck, context);
+    protected void createFutureNotification(final Account account, final DateTime timeOfNextCheck, final InternalCallContext context) {
+        final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(account.getId());
+        checkPoster.insertOverdueNotification(account.getId(), timeOfNextCheck, OverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE, notificationKey, context);
     }
 
-    protected void clearFutureNotification(final Account blockable, final InternalCallContext context) {
+    protected void clearFutureNotification(final Account account, final InternalCallContext context) {
         // Need to clear the override table here too (when we add it)
-        poster.clearNotificationsFor(blockable, context);
+        checkPoster.clearOverdueCheckNotifications(account.getId(), OverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE, OverdueCheckNotificationKey.class, context);
     }
 
     private void cancelSubscriptionsIfRequired(final Account account, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {

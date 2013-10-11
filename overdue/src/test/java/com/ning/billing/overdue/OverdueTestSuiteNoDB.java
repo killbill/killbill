@@ -16,18 +16,21 @@
 
 package com.ning.billing.overdue;
 
+import javax.inject.Named;
+
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.ovedue.notification.OverduePoster;
 import com.ning.billing.overdue.calculator.BillingStateCalculator;
 import com.ning.billing.notificationq.api.NotificationQueueService;
-import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
-import com.ning.billing.ovedue.notification.OverdueCheckPoster;
+import com.ning.billing.ovedue.notification.OverdueNotifier;
 import com.ning.billing.overdue.applicator.OverdueBusListenerTester;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
+import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.glue.TestOverdueModuleNoDB;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
@@ -63,10 +66,18 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected NotificationQueueService notificationQueueService;
     @Inject
     protected OverdueBusListenerTester listener;
+    @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED)
     @Inject
-    protected OverdueCheckNotifier notifier;
+    protected OverdueNotifier checkNotifier;
+    @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED)
     @Inject
-    protected OverdueCheckPoster poster;
+    protected OverdueNotifier asyncNotifier;
+    @Inject
+    @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED)
+    protected OverduePoster checkPoster;
+    @Inject
+    @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED)
+    protected OverduePoster asyncPoster;
     @Inject
     protected OverdueStateApplicator applicator;
     @Inject
