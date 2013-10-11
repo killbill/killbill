@@ -274,7 +274,10 @@ public class OverdueStateApplicator {
                 cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, context.toCallContext());
             }
         } catch (EntitlementApiException e) {
-            throw new OverdueException(e);
+            // If subscription has already been cancelled, there is nothing to do so we can ignore
+            if (e.getCode() != ErrorCode.SUB_CANCEL_BAD_STATE.getCode()) {
+                throw new OverdueException(e);
+            }
         }
     }
 
