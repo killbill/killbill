@@ -72,8 +72,6 @@ public class OverdueStateApplicator {
 
     private static final Logger log = LoggerFactory.getLogger(OverdueStateApplicator.class);
 
-    private static final Period ONE_DAY = new Period(24, 0, 0, 0);
-
     private final BlockingInternalApi blockingApi;
     private final Clock clock;
     private final OverdueCheckPoster poster;
@@ -126,18 +124,21 @@ public class OverdueStateApplicator {
             log.debug("OverdueStateApplicator:apply <enter> : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueState.getName() + ", nextState = " + nextOverdueState);
 
             final OverdueState firstOverdueState = overdueStateSet.getFirstState();
-            final Period initialReevaluationPeriod = overdueStateSet.getInitialReevaluationInterval() != null ?
-                                                     overdueStateSet.getInitialReevaluationInterval() : ONE_DAY;
-
             final boolean conditionForNextNotfication = !nextOverdueState.isClearState() ||
                                                         // We did not reach the first state yet but we have an unpaid invoice
                                                         (firstOverdueState != null && billingState != null && billingState.getDateOfEarliestUnpaidInvoice() != null);
 
             if (conditionForNextNotfication) {
-                final Period reevaluationInterval = nextOverdueState.isClearState() ? initialReevaluationPeriod : nextOverdueState.getReevaluationInterval();
-                createFutureNotification(account, clock.getUTCNow().plus(reevaluationInterval), context);
+                final Period reevaluationInterval = nextOverdueState.isClearState() ? overdueStateSet.getInitialReevaluationInterval() : nextOverdueState.getReevaluationInterval();
+                // If there is no configuration in the config, we assume this is because the overdue conditions are not time based and so there is nothing to retry
+                if (reevaluationInterval == null) {
+                    log.debug("OverdueStateApplicator <notificationQ> : Missing InitialReevaluationInterval from config, NOT inserting notification for account " +  account.getId());
 
-                log.debug("OverdueStateApplicator <notificationQ> : inserting notification for time = " + clock.getUTCNow().plus(reevaluationInterval));
+                } else {
+                    log.debug("OverdueStateApplicator <notificationQ> : inserting notification for account " + account.getId() + ", time = " + clock.getUTCNow().plus(reevaluationInterval));
+                    createFutureNotification(account, clock.getUTCNow().plus(reevaluationInterval), context);
+                }
+
             } else if (nextOverdueState.isClearState()) {
                 clearFutureNotification(account, context);
             }
