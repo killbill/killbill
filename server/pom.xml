@@ -462,9 +462,7 @@
 
                                         <!-- Kill Bill specific files -->
                                         <data>
-                                            <src>
-                                                ${project.build.directory}/${project.name}-${project.version}-jetty-console.war
-                                            </src>
+                                            <src>${project.build.directory}/${project.name}-${project.version}-jetty-console.war</src>
                                             <type>file</type>
                                             <dst>/usr/share/killbill/${project.name}-standalone.war</dst>
                                         </data>
