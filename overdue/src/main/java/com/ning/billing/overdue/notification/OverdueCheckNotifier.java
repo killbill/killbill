@@ -25,7 +25,9 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.notificationq.api.NotificationEvent;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.overdue.OverdueProperties;
+import com.ning.billing.overdue.listener.OverdueDispatcher;
 import com.ning.billing.overdue.listener.OverdueListener;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 
 import com.google.inject.Inject;
 
@@ -38,13 +40,9 @@ public class OverdueCheckNotifier extends DefaultOverdueNotifierBase implements 
 
     @Inject
     public OverdueCheckNotifier(final NotificationQueueService notificationQueueService, final OverdueProperties config,
-                                final OverdueListener listener) {
-        super(notificationQueueService, config, listener);
-    }
-
-    @Override
-    public Logger getLogger() {
-        return log;
+                                final InternalCallContextFactory internalCallContextFactory,
+                                final OverdueDispatcher dispatcher) {
+        super(notificationQueueService, config, internalCallContextFactory, dispatcher);
     }
 
     @Override
@@ -56,12 +54,12 @@ public class OverdueCheckNotifier extends DefaultOverdueNotifierBase implements 
     public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         try {
             if (!(notificationKey instanceof OverdueCheckNotificationKey)) {
-                getLogger().error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());
+                log.error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());
                 return;
             }
 
             final OverdueCheckNotificationKey key = (OverdueCheckNotificationKey) notificationKey;
-            listener.handleProcessOverdueForAccount(key.getUuidKey(), userToken, accountRecordId, tenantRecordId);
+            dispatcher.processOverdueForAccount(key.getUuidKey(), createCallContext(userToken, accountRecordId, tenantRecordId));
         } catch (IllegalArgumentException e) {
             log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
         }
