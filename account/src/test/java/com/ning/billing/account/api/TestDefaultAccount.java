@@ -30,7 +30,7 @@ import com.ning.billing.catalog.api.Currency;
 
 public class TestDefaultAccount extends AccountTestSuiteNoDB {
 
-    @Test(groups = "fast")
+    @Test(groups = "fast", description="Test if Account constructor can accept null values")
     public void testConstructorAcceptsNullValues() throws Exception {
         final AccountData accountData = getNullAccountData();
         final Account account = new DefaultAccount(UUID.randomUUID(), accountData);
@@ -56,7 +56,7 @@ public class TestDefaultAccount extends AccountTestSuiteNoDB {
         Assert.assertEquals(account.isNotifiedForInvoices(), DefaultAccount.DEFAULT_NOTIFIED_FOR_INVOICES_VALUE);
     }
 
-    @Test(groups = "fast")
+    @Test(groups = "fast", description="Test mergeWithDelegate Account api")
     public void testMergeWithDelegate() throws Exception {
         final AccountData accountData = getNullAccountData();
         final Account account = new DefaultAccount(UUID.randomUUID(), accountData);
@@ -68,7 +68,7 @@ public class TestDefaultAccount extends AccountTestSuiteNoDB {
         checkAccountEquals(finalAccount, secondAccount);
     }
 
-    @Test(groups = "fast")
+    @Test(groups = "fast", description="Test Account BCD merge")
     public void testBCDMerges() throws Exception {
         final UUID accountId = UUID.randomUUID();
         final Currency currency = Currency.BRL;

@@ -34,7 +34,7 @@ public class TestEventJson extends AccountTestSuiteNoDB {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Test(groups = "fast")
+    @Test(groups = "fast", description="Test Account event deserialization")
     public void testDefaultAccountChangeEvent() throws Exception {
         final List<ChangedField> changes = new ArrayList<ChangedField>();
         changes.add(new DefaultChangedField("fieldXX", "valueX", "valueXXX"));
@@ -48,7 +48,7 @@ public class TestEventJson extends AccountTestSuiteNoDB {
         Assert.assertTrue(obj.equals(e));
     }
 
-    @Test(groups = "fast")
+    @Test(groups = "fast", description="Test Account event serialization")
     public void testAccountCreationEvent() throws Exception {
         final DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", 12, "USD", UUID.randomUUID(),
                                                                "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", false, false);

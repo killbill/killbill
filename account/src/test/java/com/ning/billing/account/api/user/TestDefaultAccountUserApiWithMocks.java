@@ -55,7 +55,7 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
         accountUserApi = new DefaultAccountUserApi(factory, internalFactory, accountDao);
     }
 
-    @Test(groups = "fast")
+    @Test(groups = "fast", description="Test Account create API")
     public void testCreateAccount() throws Exception {
         final UUID id = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
@@ -105,7 +105,7 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
         Assert.assertEquals(account.getIsNotifiedForInvoices(), isNotifiedForInvoices);
     }
 
-    @Test(groups = "fast")
+    @Test(groups = "fast", description="Test ability to add email to Account")
     public void testAddEmail() throws Exception {
         final UUID accountId = UUID.randomUUID();
 

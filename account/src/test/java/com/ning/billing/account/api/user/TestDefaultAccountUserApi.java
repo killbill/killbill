@@ -36,7 +36,7 @@ import static com.ning.billing.account.AccountTestUtils.createTestAccount;
 
 public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description="Test Account update with null values")
     public void testShouldBeAbleToPassNullForSomeFieldsToAvoidUpdate() throws Exception {
         final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
@@ -57,7 +57,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertEquals(retrievedAccount.getBillCycleDayLocal(), account.getBillCycleDayLocal());
     }
 
-    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class, description="Test updating Account BCD does throws an exception")
     public void testShouldntBeAbleToUpdateBillCycleDay() throws Exception {
         final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
@@ -67,7 +67,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
     }
 
-    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class, description="Test updating Account currency throws an exception")
     public void testShouldntBeAbleToUpdateCurrency() throws Exception {
         final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
@@ -77,7 +77,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
     }
 
-    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class, description="Test updating Account externalKey throws an exception")
     public void testShouldntBeAbleToUpdateExternalKey() throws Exception {
         final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
@@ -85,27 +85,5 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         otherAccount.setExternalKey(UUID.randomUUID().toString());
 
         accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
-    }
-
-    private class TestMigrationAccountData extends DefaultMutableAccountData implements MigrationAccountData {
-
-        public TestMigrationAccountData(final AccountData accountData) {
-            super(accountData);
-        }
-
-        @Override
-        public DateTime getCreatedDate() {
-            return null;
-        }
-
-        @Override
-        public DateTime getUpdatedDate() {
-            return null;
-        }
-
-        @Override
-        public List<String> getAdditionalContactEmails() {
-            return null;
-        }
     }
 }
