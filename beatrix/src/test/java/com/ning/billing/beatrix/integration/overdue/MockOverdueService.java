@@ -19,7 +19,7 @@ package com.ning.billing.beatrix.integration.overdue;
 import javax.inject.Named;
 
 import com.google.inject.Inject;
-import com.ning.billing.ovedue.notification.OverdueNotifier;
+import com.ning.billing.overdue.notification.OverdueNotifier;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;

@@ -25,12 +25,10 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.ovedue.notification.OverdueAsyncBusNotificationKey;
-import com.ning.billing.ovedue.notification.OverdueAsyncBusNotificationKey.OverdueAsyncBusNotificationAction;
-import com.ning.billing.ovedue.notification.OverdueAsyncBusNotifier;
-import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
-import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
-import com.ning.billing.ovedue.notification.OverduePoster;
+import com.ning.billing.overdue.notification.OverdueAsyncBusNotificationKey;
+import com.ning.billing.overdue.notification.OverdueAsyncBusNotificationKey.OverdueAsyncBusNotificationAction;
+import com.ning.billing.overdue.notification.OverdueAsyncBusNotifier;
+import com.ning.billing.overdue.notification.OverduePoster;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.callcontext.InternalCallContext;

@@ -27,9 +27,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
-import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
-import com.ning.billing.ovedue.notification.OverdueNotifier;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;

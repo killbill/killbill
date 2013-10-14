@@ -14,23 +14,19 @@
  * under the License.
  */
 
-package com.ning.billing.ovedue.notification;
-
+package com.ning.billing.overdue.notification;
 
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import com.ning.billing.notificationq.DefaultUUIDNotificationKey;
 
-import com.ning.billing.notificationq.api.NotificationEvent;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public interface OverdueNotifier {
+public class OverdueCheckNotificationKey extends DefaultUUIDNotificationKey {
 
-    public void initialize();
-
-    public void start();
-
-    public void stop();
-
-    public abstract void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId);
-
+    @JsonCreator
+    public OverdueCheckNotificationKey(@JsonProperty("uuidKey") final UUID uuidKey) {
+        super(uuidKey);
+    }
 }

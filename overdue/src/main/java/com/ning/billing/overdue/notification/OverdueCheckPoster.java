@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.ovedue.notification;
+package com.ning.billing.overdue.notification;
 
 import java.util.Collection;
 import java.util.Iterator;

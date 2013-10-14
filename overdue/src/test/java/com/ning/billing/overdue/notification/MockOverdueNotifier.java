@@ -21,7 +21,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.notificationq.api.NotificationEvent;
-import com.ning.billing.ovedue.notification.OverdueNotifier;
 
 public class MockOverdueNotifier implements OverdueNotifier {
 
