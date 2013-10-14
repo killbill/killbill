@@ -15,18 +15,6 @@ from (
   )
   union
   select
-    'ACCOUNT_HISTORY' table_name
-  , count(1) count
-  from audit_log al
-  join account_history t on al.target_record_id = t.record_id
-  where 1 = 1
-  and al.table_name = 'ACCOUNT_HISTORY'
-  and (
-       al.account_record_id != t.account_record_id
-    or al.account_record_id is null
-  )
-  union
-  select
     'BLOCKING_STATES' table_name
   , count(1) count
   from audit_log al
