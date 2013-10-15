@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.ovedue.notification;
+package com.ning.billing.overdue.notification;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -30,6 +30,9 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.notificationq.api.NotificationEventWithMetadata;
 import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
+import com.ning.billing.overdue.notification.OverdueCheckNotificationKey;
+import com.ning.billing.overdue.notification.OverdueCheckNotifier;
+import com.ning.billing.overdue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;

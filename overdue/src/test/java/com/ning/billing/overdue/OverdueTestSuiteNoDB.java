@@ -24,10 +24,10 @@ import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.bus.api.PersistentBus;
-import com.ning.billing.ovedue.notification.OverduePoster;
+import com.ning.billing.overdue.notification.OverduePoster;
 import com.ning.billing.overdue.calculator.BillingStateCalculator;
 import com.ning.billing.notificationq.api.NotificationQueueService;
-import com.ning.billing.ovedue.notification.OverdueNotifier;
+import com.ning.billing.overdue.notification.OverdueNotifier;
 import com.ning.billing.overdue.applicator.OverdueBusListenerTester;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;

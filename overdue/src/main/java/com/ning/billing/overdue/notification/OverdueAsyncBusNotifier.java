@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.ovedue.notification;
+package com.ning.billing.overdue.notification;
 
 import java.util.UUID;
 
@@ -22,10 +22,15 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.notificationq.api.NotificationEvent;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.overdue.OverdueProperties;
+import com.ning.billing.overdue.listener.OverdueDispatcher;
 import com.ning.billing.overdue.listener.OverdueListener;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 
 import com.google.inject.Inject;
 
@@ -38,13 +43,9 @@ public class OverdueAsyncBusNotifier extends DefaultOverdueNotifierBase implemen
 
     @Inject
     public OverdueAsyncBusNotifier(final NotificationQueueService notificationQueueService, final OverdueProperties config,
-                                   final OverdueListener listener) {
-        super(notificationQueueService, config, listener);
-    }
-
-    @Override
-    public Logger getLogger() {
-        return log;
+                                   final InternalCallContextFactory internalCallContextFactory,
+                                   final OverdueDispatcher dispatcher) {
+        super(notificationQueueService, config, internalCallContextFactory, dispatcher);
     }
 
     @Override
@@ -56,17 +57,17 @@ public class OverdueAsyncBusNotifier extends DefaultOverdueNotifierBase implemen
     public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         try {
             if (!(notificationKey instanceof OverdueAsyncBusNotificationKey)) {
-                getLogger().error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());
+                log.error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());
                 return;
             }
 
             final OverdueAsyncBusNotificationKey key = (OverdueAsyncBusNotificationKey) notificationKey;
             switch (key.getAction()) {
                 case CLEAR:
-                    listener.handleClearOverdueForAccount(key.getUuidKey(), userToken, accountRecordId, tenantRecordId);
+                    dispatcher.clearOverdueForAccount(key.getUuidKey(), createCallContext(userToken, accountRecordId, tenantRecordId));
                     break;
                 case REFRESH:
-                    listener.handleProcessOverdueForAccount(key.getUuidKey(), userToken, accountRecordId, tenantRecordId);
+                    dispatcher.processOverdueForAccount(key.getUuidKey(), createCallContext(userToken, accountRecordId, tenantRecordId));
                     break;
                 default:
                     throw new RuntimeException("Unexpected action " + key.getAction() + " for account " + key.getUuidKey());
@@ -75,5 +76,6 @@ public class OverdueAsyncBusNotifier extends DefaultOverdueNotifierBase implemen
             log.error("The key returned from the queue " + OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE + " does not contain a valid UUID", e);
         }
     }
+
 
 }

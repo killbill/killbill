@@ -14,13 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.ovedue.notification;
+package com.ning.billing.overdue.notification;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
@@ -42,8 +40,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 
 public abstract class DefaultOverduePosterBase implements OverduePoster {
 

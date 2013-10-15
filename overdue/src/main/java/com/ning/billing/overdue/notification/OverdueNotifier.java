@@ -14,19 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.ovedue.notification;
+package com.ning.billing.overdue.notification;
+
 
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.notificationq.api.NotificationQueue;
+import com.ning.billing.notificationq.api.NotificationEvent;
 
-public interface OverduePoster {
+public interface OverdueNotifier {
 
-    public  <T extends OverdueCheckNotificationKey> void insertOverdueNotification(final UUID accountId, final DateTime futureNotificationTime, final String overdueQueueName, final T notificationKey, final InternalCallContext context);
+    public void initialize();
 
-    public  <T extends OverdueCheckNotificationKey> void clearOverdueCheckNotifications(UUID accountId, final String overdueQueueName, final Class<T> clazz, final InternalCallContext context);
+    public void start();
+
+    public void stop();
+
+    public abstract void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId);
+
 }

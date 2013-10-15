@@ -14,13 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.ovedue.notification;
+package com.ning.billing.overdue.notification;
 
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.notificationq.api.NotificationEvent;
 import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
@@ -28,30 +30,35 @@ import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotific
 import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.overdue.OverdueProperties;
-import com.ning.billing.overdue.listener.OverdueListener;
+import com.ning.billing.overdue.listener.OverdueDispatcher;
 import com.ning.billing.overdue.service.DefaultOverdueService;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 
 public abstract class DefaultOverdueNotifierBase implements OverdueNotifier {
 
 
+    private static final Logger log = LoggerFactory.getLogger(DefaultOverdueNotifierBase.class);
+
+    private final InternalCallContextFactory internalCallContextFactory;
     protected final NotificationQueueService notificationQueueService;
     protected final OverdueProperties config;
-    protected final OverdueListener listener;
-
+    protected final OverdueDispatcher dispatcher;
     protected NotificationQueue overdueQueue;
-
-
-    public abstract Logger getLogger();
 
     public abstract String getQueueName();
 
     public abstract void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId);
 
-    public DefaultOverdueNotifierBase(final NotificationQueueService notificationQueueService, final OverdueProperties config,
-                                      final OverdueListener listener) {
+    public DefaultOverdueNotifierBase(final NotificationQueueService notificationQueueService,
+                                      final OverdueProperties config,
+                                      final InternalCallContextFactory internalCallContextFactory,
+                                      final OverdueDispatcher dispatcher) {
         this.notificationQueueService = notificationQueueService;
         this.config = config;
-        this.listener = listener;
+        this.dispatcher = dispatcher;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -87,8 +94,13 @@ public abstract class DefaultOverdueNotifierBase implements OverdueNotifier {
             try {
                 notificationQueueService.deleteNotificationQueue(overdueQueue.getServiceName(), overdueQueue.getQueueName());
             } catch (NoSuchNotificationQueue e) {
-                getLogger().error("Error deleting a queue by its own name - this should never happen", e);
+                log.error("Error deleting a queue by its own name - this should never happen", e);
             }
         }
     }
+
+    protected InternalCallContext createCallContext(final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        return internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "OverdueService", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
+    }
+
 }

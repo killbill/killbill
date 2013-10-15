@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.ovedue.notification.OverdueNotifier;
+import com.ning.billing.overdue.notification.OverdueNotifier;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueUserApi;

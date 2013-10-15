@@ -24,13 +24,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.bus.api.BusEvent;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.ovedue.notification.OverdueAsyncBusNotificationKey;
-import com.ning.billing.ovedue.notification.OverdueAsyncBusNotificationKey.OverdueAsyncBusNotificationAction;
-import com.ning.billing.ovedue.notification.OverdueAsyncBusNotifier;
-import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
-import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
-import com.ning.billing.ovedue.notification.OverduePoster;
+import com.ning.billing.overdue.notification.OverdueAsyncBusNotificationKey;
+import com.ning.billing.overdue.notification.OverdueAsyncBusNotificationKey.OverdueAsyncBusNotificationAction;
+import com.ning.billing.overdue.notification.OverdueAsyncBusNotifier;
+import com.ning.billing.overdue.notification.OverduePoster;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.callcontext.InternalCallContext;
@@ -69,18 +68,14 @@ public class OverdueListener {
     @Subscribe
     public void handle_OVERDUE_ENFORCEMENT_OFF_Insert(final ControlTagCreationInternalEvent event) {
         if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
-            final UUID accountId = event.getObjectId();
-            final OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(accountId, OverdueAsyncBusNotificationAction.CLEAR);
-            asyncPoster.insertOverdueNotification(accountId, clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
+            insertBusEventIntoNotificationQueue(event.getObjectId(), event, OverdueAsyncBusNotificationAction.CLEAR);
         }
     }
 
     @Subscribe
     public void handle_OVERDUE_ENFORCEMENT_OFF_Removal(final ControlTagDeletionInternalEvent event) {
         if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
-            final UUID accountId = event.getObjectId();
-            final OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(accountId, OverdueAsyncBusNotificationAction.REFRESH);
-            asyncPoster.insertOverdueNotification(accountId, clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
+            insertBusEventIntoNotificationQueue(event.getObjectId(), event, OverdueAsyncBusNotificationAction.REFRESH);
         }
     }
 
@@ -88,32 +83,25 @@ public class OverdueListener {
     @Subscribe
     public void handlePaymentInfoEvent(final PaymentInfoInternalEvent event) {
         log.debug("Received PaymentInfo event {}", event);
-        final OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(event.getAccountId(), OverdueAsyncBusNotificationAction.REFRESH);
-        asyncPoster.insertOverdueNotification(event.getAccountId(), clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
+        insertBusEventIntoNotificationQueue(event.getAccountId(), event, OverdueAsyncBusNotificationAction.REFRESH);
     }
 
     @Subscribe
     public void handlePaymentErrorEvent(final PaymentErrorInternalEvent event) {
         log.debug("Received PaymentError event {}", event);
-        final OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(event.getAccountId(), OverdueAsyncBusNotificationAction.REFRESH);
-        asyncPoster.insertOverdueNotification(event.getAccountId(), clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
+        insertBusEventIntoNotificationQueue(event.getAccountId(), event, OverdueAsyncBusNotificationAction.REFRESH);
     }
 
     @Subscribe
     public void handleInvoiceAdjustmentEvent(final InvoiceAdjustmentInternalEvent event) {
         log.debug("Received InvoiceAdjustment event {}", event);
-        final OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(event.getAccountId(), OverdueAsyncBusNotificationAction.REFRESH);
-        asyncPoster.insertOverdueNotification(event.getAccountId(), clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
+        insertBusEventIntoNotificationQueue(event.getAccountId(), event, OverdueAsyncBusNotificationAction.REFRESH);
     }
 
-    public void handleProcessOverdueForAccount(final UUID accountId, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-        log.info(String.format("Handle overdue notification processing for id = %s", accountId));
-        dispatcher.processOverdueForAccount(accountId, createCallContext(userToken, accountRecordId, tenantRecordId));
-    }
+    private void insertBusEventIntoNotificationQueue(final UUID accountId, final BusEvent event, final OverdueAsyncBusNotificationAction action) {
+        final OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(accountId, action);
+        asyncPoster.insertOverdueNotification(accountId, clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
 
-    public void handleClearOverdueForAccount(final UUID accountId, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-        log.info(String.format("Handle overdue notification clear for id = %s", accountId));
-        dispatcher.clearOverdueForAccount(accountId, createCallContext(userToken, accountRecordId, tenantRecordId));
     }
 
     private InternalCallContext createCallContext(final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
