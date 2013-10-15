@@ -22,6 +22,7 @@ import javax.management.MBeanServer;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
+import org.skife.config.ConfigurationObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,17 +48,15 @@ import net.sf.ehcache.management.ManagementService;
 public class KillbillGuiceListener extends SetupServer {
 
     public static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
-    public static final String KILLBILL_MULTITENANT_PROPERTY = "killbill.server.multitenant";
-    public static final String KILLBILL_TEST_MODE_PROPERTY = "killbill.server.test.mode";
 
+    private KillbillServerConfig config;
     private Injector injector;
     private DefaultLifecycle killbillLifecycle;
     private BusService killbillBusService;
     private KillbillEventHandler killbilleventHandler;
 
     protected Module getModule(final ServletContext servletContext) {
-        final boolean testModeEnabled = Boolean.parseBoolean(System.getProperty(KILLBILL_TEST_MODE_PROPERTY, "false"));
-        return new KillbillServerModule(servletContext, testModeEnabled);
+        return new KillbillServerModule(servletContext, config.isTestModeEnabled());
     }
 
     private void registerMBeansForCache(final CacheManager cacheManager) {
@@ -69,7 +68,7 @@ public class KillbillGuiceListener extends SetupServer {
 
     @Override
     public void contextInitialized(final ServletContextEvent event) {
-        final boolean multitenant = Boolean.parseBoolean(System.getProperty(KILLBILL_MULTITENANT_PROPERTY, "true"));
+        config = new ConfigurationObjectFactory(System.getProperties()).build(KillbillServerConfig.class);
 
         final ServerModuleBuilder builder = new ServerModuleBuilder()
                 .addConfig(KillbillServerConfig.class)
@@ -84,7 +83,7 @@ public class KillbillGuiceListener extends SetupServer {
                 .addJerseyResource("com.ning.billing.jaxrs.mappers")
                 .addJerseyResource("com.ning.billing.jaxrs.resources");
 
-        if (multitenant) {
+        if (config.isMultiTenancyEnabled()) {
             builder.addFilter("/*", TenantFilter.class);
         }
 

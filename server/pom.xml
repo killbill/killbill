@@ -25,6 +25,10 @@
     <artifactId>killbill-server</artifactId>
     <packaging>war</packaging>
     <name>killbill-server</name>
+    <properties>
+        <!-- http://jira.codehaus.org/browse/MRESOURCES-99 -->
+        <build.timestamp>${maven.build.timestamp}</build.timestamp>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -35,6 +39,10 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.dmurph</groupId>
+            <artifactId>JGoogleAnalyticsTracker</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -283,6 +291,7 @@
     <build>
         <resources>
             <resource>
+                <filtering>true</filtering>
                 <directory>${basedir}/src/main/resources</directory>
             </resource>
         </resources>
