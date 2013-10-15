@@ -102,6 +102,7 @@ select <allTableFields()>
 from <tableName()>
 where
 subscription_id = :subscriptionId
+and is_active = 1
 <AND_CHECK_TENANT()>
 order by
 effective_date asc
