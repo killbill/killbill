@@ -16,21 +16,28 @@
 
 package com.ning.billing.server.config;
 
+import java.net.URI;
+
 import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.Description;
 
 import com.ning.billing.util.config.KillbillConfig;
 
-public interface KillbillServerConfig extends KillbillConfig {
+public interface UpdateCheckConfig extends KillbillConfig {
 
-    @Config("killbill.server.multitenant")
-    @Default("true")
-    @Description("Whether multi-tenancy is enabled")
-    public boolean isMultiTenancyEnabled();
-
-    @Config("killbill.server.test.mode")
+    @Config("killbill.server.updateCheck.skip")
     @Default("false")
-    @Description("Whether to start in test mode")
-    public boolean isTestModeEnabled();
+    @Description("Whether to skip update checks")
+    public boolean shouldSkipUpdateCheck();
+
+    @Config("killbill.server.updateCheck.url")
+    @Default("https://raw.github.com/killbill/killbill/master/server/src/main/resources/update-checker/killbill-server-update-list.properties")
+    @Description("URL to retrieve the latest version of Kill Bill")
+    public URI updateCheckURL();
+
+    @Config("killbill.server.updateCheck.connectTimeout")
+    @Default("3000")
+    @Description("Update check connection timeout")
+    public int updateCheckConnectionTimeout();
 }
