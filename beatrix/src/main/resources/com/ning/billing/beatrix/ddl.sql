@@ -14,7 +14,7 @@ CREATE TABLE bus_ext_events (
     search_key1 int(11) unsigned default null,
     search_key2 int(11) unsigned default null,
     PRIMARY KEY(record_id)
-);
+) CHARACTER SET utf8 COLLATE utf8_bin;
 CREATE INDEX  `idx_bus_ext_where` ON bus_ext_events (`processing_state`,`processing_owner`,`processing_available_date`);
 CREATE INDEX bus_ext_events_tenant_account_record_id ON bus_ext_events(search_key2, search_key1);
 
@@ -32,5 +32,4 @@ CREATE TABLE bus_ext_events_history (
     search_key1 int(11) unsigned default null,
     search_key2 int(11) unsigned default null,
     PRIMARY KEY(record_id)
-);
-
+) CHARACTER SET utf8 COLLATE utf8_bin;

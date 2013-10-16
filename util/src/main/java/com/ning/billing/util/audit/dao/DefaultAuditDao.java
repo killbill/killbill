@@ -78,7 +78,7 @@ public class DefaultAuditDao implements AuditDao {
         final List<AuditLog> allAuditLogs = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AuditLog>>() {
             @Override
             public List<AuditLog> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsViaHistoryForTargetRecordId(historyTableName,
+                return entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsViaHistoryForTargetRecordId(historyTableName.name(),
                                                                                                                      historyTableName.getTableName().toLowerCase(),
                                                                                                                      targetRecordId,
                                                                                                                      context);
@@ -91,7 +91,7 @@ public class DefaultAuditDao implements AuditDao {
         final List<AuditLog> allAuditLogs = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AuditLog>>() {
             @Override
             public List<AuditLog> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsForTargetRecordId(tableName,
+                return entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsForTargetRecordId(tableName.name(),
                                                                                                            targetRecordId,
                                                                                                            context);
             }

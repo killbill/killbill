@@ -21,11 +21,10 @@ import javax.inject.Singleton;
 
 import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.dao.TableName;
 
 import net.sf.ehcache.loader.CacheLoader;
 
@@ -57,7 +56,7 @@ public class AuditLogViaHistoryCacheLoader extends BaseCacheLoader implements Ca
         }
 
         final Object[] args = ((CacheLoaderArgument) argument).getArgs();
-        final TableName tableName = (TableName) args[0];
+        final String tableName = (String) args[0];
         final String historyTableName = (String) args[1];
         final Long targetRecordId = (Long) args[2];
         final InternalTenantContext internalTenantContext = (InternalTenantContext) args[3];
