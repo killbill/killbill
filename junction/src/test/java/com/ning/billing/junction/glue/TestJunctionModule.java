@@ -20,6 +20,8 @@ import org.skife.config.ConfigSource;
 
 import com.ning.billing.catalog.MockCatalogModule;
 import com.ning.billing.entitlement.api.svcs.DefaultInternalBlockingApi;
+import com.ning.billing.entitlement.block.BlockingChecker;
+import com.ning.billing.entitlement.block.MockBlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.dao.MockBlockingStateDao;
 import com.ning.billing.mock.glue.MockAccountModule;
@@ -60,5 +62,11 @@ public class TestJunctionModule extends DefaultJunctionModule {
         public void installBlockingStateDao() {
             bind(BlockingStateDao.class).to(MockBlockingStateDao.class).asEagerSingleton();
         }
+
+        @Override
+        public void installBlockingChecker() {
+            bind(BlockingChecker.class).to(MockBlockingChecker.class).asEagerSingleton();
+        }
+
     }
 }

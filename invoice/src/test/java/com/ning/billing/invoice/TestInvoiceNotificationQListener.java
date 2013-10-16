@@ -22,6 +22,8 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 
 public class TestInvoiceNotificationQListener extends InvoiceListener {
@@ -30,8 +32,8 @@ public class TestInvoiceNotificationQListener extends InvoiceListener {
     UUID latestSubscriptionId = null;
 
     @Inject
-    public TestInvoiceNotificationQListener(final InternalCallContextFactory internalCallContextFactory, final InvoiceDispatcher dispatcher) {
-        super(internalCallContextFactory, dispatcher);
+    public TestInvoiceNotificationQListener(final AccountInternalApi accountApi, final Clock clock, final InternalCallContextFactory internalCallContextFactory, final InvoiceDispatcher dispatcher) {
+        super(accountApi, clock, internalCallContextFactory, null, dispatcher);
     }
 
     @Override

@@ -49,9 +49,6 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceInternalApi;
 import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.junction.DefaultBlockingState;
-import com.ning.billing.overdue.notification.OverdueCheckNotificationKey;
-import com.ning.billing.overdue.notification.OverdueCheckNotifier;
-import com.ning.billing.overdue.notification.OverduePoster;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicy;
 import com.ning.billing.overdue.OverdueService;
@@ -60,6 +57,9 @@ import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
+import com.ning.billing.overdue.notification.OverdueCheckNotificationKey;
+import com.ning.billing.overdue.notification.OverdueCheckNotifier;
+import com.ning.billing.overdue.notification.OverduePoster;
 import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.email.DefaultEmailSender;
@@ -83,7 +83,6 @@ public class OverdueStateApplicator {
     private final PersistentBus bus;
     private final AccountInternalApi accountApi;
     private final EntitlementApi entitlementApi;
-    private final InvoiceInternalApi invoiceInternalApi;
     private final OverdueEmailGenerator overdueEmailGenerator;
     private final TagInternalApi tagApi;
     private final EmailSender emailSender;
@@ -93,9 +92,8 @@ public class OverdueStateApplicator {
     public OverdueStateApplicator(final BlockingInternalApi accessApi,
                                   final AccountInternalApi accountApi,
                                   final EntitlementApi entitlementApi,
-                                  final InvoiceInternalApi invoiceInternalApi,
                                   final Clock clock,
-                                  @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED)final OverduePoster checkPoster,
+                                  @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED) final OverduePoster checkPoster,
                                   final OverdueEmailGenerator overdueEmailGenerator,
                                   final EmailConfig config,
                                   final PersistentBus bus,
@@ -105,7 +103,6 @@ public class OverdueStateApplicator {
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
-        this.invoiceInternalApi = invoiceInternalApi;
         this.clock = clock;
         this.checkPoster = checkPoster;
         this.overdueEmailGenerator = overdueEmailGenerator;
@@ -137,7 +134,7 @@ public class OverdueStateApplicator {
                 final Period reevaluationInterval = nextOverdueState.isClearState() ? overdueStateSet.getInitialReevaluationInterval() : nextOverdueState.getReevaluationInterval();
                 // If there is no configuration in the config, we assume this is because the overdue conditions are not time based and so there is nothing to retry
                 if (reevaluationInterval == null) {
-                    log.debug("OverdueStateApplicator <notificationQ> : Missing InitialReevaluationInterval from config, NOT inserting notification for account " +  account.getId());
+                    log.debug("OverdueStateApplicator <notificationQ> : Missing InitialReevaluationInterval from config, NOT inserting notification for account " + account.getId());
 
                 } else {
                     log.debug("OverdueStateApplicator <notificationQ> : inserting notification for account " + account.getId() + ", time = " + clock.getUTCNow().plus(reevaluationInterval));
@@ -156,18 +153,13 @@ public class OverdueStateApplicator {
 
             cancelSubscriptionsIfRequired(account, nextOverdueState, context);
 
-            scheduleInvoiceIfNeeded(account, previousOverdueState, nextOverdueState, context);
-
             sendEmailIfRequired(billingState, account, nextOverdueState, context);
 
         } catch (OverdueApiException e) {
             if (e.getCode() != ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
                 throw new OverdueException(e);
             }
-        } catch (InvoiceApiException e) {
-            throw new OverdueException(e);
         }
-
         try {
             bus.post(createOverdueEvent(account, previousOverdueState.getName(), nextOverdueState.getName(), isBlockBillingTransition(previousOverdueState, nextOverdueState),
                                         isUnblockBillingTransition(previousOverdueState, nextOverdueState), context));
@@ -176,19 +168,6 @@ public class OverdueStateApplicator {
         }
     }
 
-    private void scheduleInvoiceIfNeeded(final Account account, final OverdueState previousOverdueState, final OverdueState nextOverdueState, final InternalCallContext context) throws InvoiceApiException {
-        //
-        // Invoice will re-enter a notification to schedule a new invoice with a notificationDate equivalent to today. For a given active subscription on this account:
-        // - If that notificationDate is less or equals than the chargeThroughDate of the given subscription, it means the invoice was previously invoiced and so blocking/unblocking will have an effect,
-        //   a new invoice will be generated
-        // - If that notificationDate is greater than the chargeThroughDate, then that subscription will be invoiced for the next period.
-        //
-        // So in both case a new invoice will be generated.
-        //
-        if (isBlockBillingTransition(previousOverdueState, nextOverdueState) || isUnblockBillingTransition(previousOverdueState, nextOverdueState)) {
-            invoiceInternalApi.scheduleInvoiceForAccount(account.getId(), account.getTimeZone(), context);
-        }
-    }
 
     public void clear(final Account overdueable, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
 

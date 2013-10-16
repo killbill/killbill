@@ -24,6 +24,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -155,14 +156,25 @@ public class DefaultBlockingChecker implements BlockingChecker {
     }
 
     @Override
-    public BlockingAggregator getBlockedStatus(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
-        if (blockable instanceof SubscriptionBase) {
-            return getBlockedStateSubscription((SubscriptionBase) blockable, context);
-        } else if (blockable instanceof SubscriptionBaseBundle) {
-            return getBlockedStateBundle((SubscriptionBaseBundle) blockable, context);
-        } else { //(blockable instanceof Account) {
-            return getBlockedStateAccount((Account) blockable, context);
+    public BlockingAggregator getBlockedStatus(final UUID blockableId, final BlockingStateType type, final InternalTenantContext context) throws BlockingApiException {
+        if (type == BlockingStateType.SUBSCRIPTION) {
+            return getBlockedStateSubscriptionId(blockableId, context);
+        } else if (type == BlockingStateType.SUBSCRIPTION_BUNDLE) {
+            return getBlockedStateBundleId(blockableId, context);
+        } else { // BlockingStateType.ACCOUNT {
+            return getBlockedStateAccountId(blockableId, context);
         }
+    }
+
+    @Override
+    public BlockingAggregator getBlockedStatus(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
+            if (blockable instanceof SubscriptionBase) {
+                return getBlockedStateSubscription((SubscriptionBase) blockable, context);
+            } else if (blockable instanceof SubscriptionBaseBundle) {
+                return getBlockedStateBundle((SubscriptionBaseBundle) blockable, context);
+            } else { //(blockable instanceof Account) {
+                return getBlockedStateAccount((Account) blockable, context);
+            }
     }
 
     @Override

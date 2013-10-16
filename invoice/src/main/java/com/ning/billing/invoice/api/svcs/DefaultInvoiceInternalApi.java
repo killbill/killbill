@@ -145,31 +145,4 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
         dao.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, context);
     }
 
-    @Override
-    public void scheduleInvoiceForAccount(final UUID accountId, final DateTimeZone accountTimeZone, final InternalCallContext context) throws InvoiceApiException {
-        final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionBaseApi.getSubscriptionsForAccount(context);
-        SubscriptionBase targetSubscription = null;
-        for (UUID key : subscriptions.keySet()) {
-            for (SubscriptionBase cur : subscriptions.get(key)) {
-                if (cur.getCategory() == ProductCategory.ADD_ON) {
-                    continue;
-                }
-                if (cur.getState() != EntitlementState.ACTIVE) {
-                    continue;
-                }
-                if (cur.getCurrentPhase() != null && cur.getCurrentPhase().getBillingPeriod() != BillingPeriod.NO_BILLING_PERIOD) {
-                    targetSubscription = cur;
-                    break;
-                }
-            }
-        }
-        if (targetSubscription == null) {
-            log.info("scheduleInvoiceForAccount : no active subscriptions for account {}", accountId);
-            return;
-        }
-
-        final DateAndTimeZoneContext timeZoneContext = new DateAndTimeZoneContext(targetSubscription.getStartDate(), accountTimeZone, clock);
-        final DateTime futureNotificationTime = timeZoneContext.computeUTCDateTimeFromNow();
-        nextBillingDatePoster.insertNextBillingNotification(accountId, targetSubscription.getId(), futureNotificationTime, context.getUserToken());
-    }
 }

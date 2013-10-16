@@ -22,6 +22,10 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.events.BlockingTransitionInternalEvent;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -31,6 +35,7 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.events.EffectiveEntitlementInternalEvent;
 import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.events.RepairSubscriptionInternalEvent;
+import com.ning.billing.util.config.InvoiceConfig;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -38,13 +43,21 @@ import com.google.inject.Inject;
 public class InvoiceListener {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceListener.class);
+
     private final InvoiceDispatcher dispatcher;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final AccountInternalApi accountApi;
+    private final InvoiceConfig invoiceConfig;
+    private final Clock clock;
 
     @Inject
-    public InvoiceListener(final InternalCallContextFactory internalCallContextFactory, final InvoiceDispatcher dispatcher) {
+    public InvoiceListener(final AccountInternalApi accountApi, final Clock clock, final InternalCallContextFactory internalCallContextFactory,
+                           final InvoiceConfig invoiceConfig, final InvoiceDispatcher dispatcher) {
+        this.accountApi = accountApi;
         this.dispatcher = dispatcher;
+        this.invoiceConfig = invoiceConfig;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.clock = clock;
     }
 
     @Subscribe
@@ -83,6 +96,26 @@ public class InvoiceListener {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             dispatcher.processAccount(event.getAccountId(), event.getEffectiveTransitionTime(), false, context);
         } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    @Subscribe
+    public void handleBlockingStateTransition(final BlockingTransitionInternalEvent event) {
+
+        // We are only interested in unblockBilling transitions or blockBilling transitions when those are configured.
+        if (!event.isTransitionedToUnblockedBilling() &&
+            !(event.isTransitionedToBlockedBilling() && invoiceConfig.isTriggerInvoiceOnBlockingEvent())) {
+            return;
+        }
+
+        try {
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+            final UUID accountId = accountApi.getByRecordId(event.getSearchKey1(), context);
+            dispatcher.processAccount(accountId, clock.getUTCNow(), false, context);
+        } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        } catch (AccountApiException e) {
             log.error(e.getMessage());
         }
     }

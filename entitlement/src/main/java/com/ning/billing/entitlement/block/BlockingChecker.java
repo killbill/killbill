@@ -16,9 +16,12 @@
 
 package com.ning.billing.entitlement.block;
 
+import java.util.UUID;
+
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.entitlement.api.BlockingStateType;
 
 public interface BlockingChecker {
 
@@ -39,6 +42,8 @@ public interface BlockingChecker {
 
     // Only throws if we can't find the blockable enties
     public BlockingAggregator getBlockedStatus(Blockable blockable, InternalTenantContext context) throws BlockingApiException;
+
+    public BlockingAggregator getBlockedStatus(final UUID blockableId, final BlockingStateType type, final InternalTenantContext context) throws BlockingApiException;
 
     public void checkBlockedChange(Blockable blockable, InternalTenantContext context) throws BlockingApiException;
 

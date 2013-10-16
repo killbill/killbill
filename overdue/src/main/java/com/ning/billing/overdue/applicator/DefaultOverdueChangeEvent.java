@@ -83,4 +83,56 @@ public class DefaultOverdueChangeEvent extends BusEventBase implements OverdueCh
     public Boolean isUnblockedBilling() {
         return isUnblockedBilling;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultOverdueChangeEvent{");
+        sb.append("overdueObjectId=").append(overdueObjectId);
+        sb.append(", previousOverdueStateName='").append(previousOverdueStateName).append('\'');
+        sb.append(", nextOverdueStateName='").append(nextOverdueStateName).append('\'');
+        sb.append(", isBlockedBilling=").append(isBlockedBilling);
+        sb.append(", isUnblockedBilling=").append(isUnblockedBilling);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultOverdueChangeEvent)) {
+            return false;
+        }
+
+        final DefaultOverdueChangeEvent that = (DefaultOverdueChangeEvent) o;
+
+        if (isBlockedBilling != null ? !isBlockedBilling.equals(that.isBlockedBilling) : that.isBlockedBilling != null) {
+            return false;
+        }
+        if (isUnblockedBilling != null ? !isUnblockedBilling.equals(that.isUnblockedBilling) : that.isUnblockedBilling != null) {
+            return false;
+        }
+        if (nextOverdueStateName != null ? !nextOverdueStateName.equals(that.nextOverdueStateName) : that.nextOverdueStateName != null) {
+            return false;
+        }
+        if (overdueObjectId != null ? !overdueObjectId.equals(that.overdueObjectId) : that.overdueObjectId != null) {
+            return false;
+        }
+        if (previousOverdueStateName != null ? !previousOverdueStateName.equals(that.previousOverdueStateName) : that.previousOverdueStateName != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = overdueObjectId != null ? overdueObjectId.hashCode() : 0;
+        result = 31 * result + (previousOverdueStateName != null ? previousOverdueStateName.hashCode() : 0);
+        result = 31 * result + (nextOverdueStateName != null ? nextOverdueStateName.hashCode() : 0);
+        result = 31 * result + (isBlockedBilling != null ? isBlockedBilling.hashCode() : 0);
+        result = 31 * result + (isUnblockedBilling != null ? isUnblockedBilling.hashCode() : 0);
+        return result;
+    }
 }

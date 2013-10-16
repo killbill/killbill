@@ -36,6 +36,7 @@ public class MockEntitlementModule extends AbstractModule implements Entitlement
         installBlockingStateDao();
         installBlockingApi();
         installEntitlementApi();
+        installBlockingChecker();
     }
 
     @Override
