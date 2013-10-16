@@ -180,6 +180,12 @@ public class PaymentMethodProcessor extends ProcessorBase {
 
         final List<PaymentMethod> results = new LinkedList<PaymentMethod>();
         for (final PaymentMethodPlugin paymentMethodPlugin : paymentMethods) {
+            if (paymentMethodPlugin.getKbPaymentMethodId() == null) {
+                // Garbage from the plugin?
+                log.debug("Plugin {} returned a payment method without a kbPaymentMethodId for searchKey {}", pluginName, searchKey);
+                continue;
+            }
+
             final PaymentMethodModelDao paymentMethodModelDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodPlugin.getKbPaymentMethodId(), internalTenantContext);
             if (paymentMethodModelDao == null) {
                 log.warn("Unable to find payment method id " + paymentMethodPlugin.getKbPaymentMethodId() + " present in plugin " + pluginName);
