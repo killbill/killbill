@@ -125,6 +125,10 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         final Entitlement cancelledEntitlement = entitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, callContext);
         assertEquals(cancelledEntitlement.getState(), EntitlementState.CANCELLED);
         assertEquals(cancelledEntitlement.getEffectiveEndDate(), initialDate);
+
+        // Entitlement started in trial on 2013-08-07, which is when we want the billing cancellation to occur
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getBaseEntitlementId(), callContext);
+        assertEquals(subscription.getBillingEndDate().compareTo(new LocalDate(2013, 8, 7)), 0, "Unexpected billing end date: " + subscription.getBillingEndDate());
     }
 
     @Test(groups = "slow")
@@ -150,6 +154,10 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         final Entitlement entitlement3 = entitlement2.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, callContext);
         assertEquals(entitlement3.getState(), EntitlementState.ACTIVE);
         assertEquals(entitlement3.getEffectiveEndDate(), new LocalDate(ctd));
+
+        // Entitlement started in trial on 2013-08-07. The phase occurs at 2013-09-06. The CTD is 2013-10-06 which is when we want the billing cancellation to occur
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getBaseEntitlementId(), callContext);
+        assertEquals(subscription.getBillingEndDate().compareTo(new LocalDate(2013, 10, 6)), 0, "Unexpected billing end date: " + subscription.getBillingEndDate());
 
         clock.addMonths(1);
 
