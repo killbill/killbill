@@ -197,7 +197,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     @Override
     public Entitlement cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementPolicy, final CallContext callContext) throws EntitlementApiException {
         final LocalDate cancellationDate = getLocalDateFromEntitlementPolicy(entitlementPolicy);
-        return cancelEntitlementWithDate(cancellationDate, true, callContext);
+        return cancelEntitlementWithDate(cancellationDate, false, callContext);
     }
 
     @Override

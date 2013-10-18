@@ -132,6 +132,42 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testCancelWithEntitlementPolicyIMMAndCTD() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+
+        final DateTime ctd = clock.getUTCNow().plusDays(30).plusMonths(1);
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        // Go to 2013-09-08
+        clock.addDays(32);
+        // Set manually since no invoice
+        subscriptionInternalApi.setChargedThroughDate(entitlement.getId(), ctd, internalCallContext);
+        assertTrue(testListener.isCompleted(5000));
+
+        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        final Entitlement entitlement3 = entitlement2.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, callContext);
+        assertEquals(entitlement3.getState(), EntitlementState.CANCELLED);
+        assertEquals(entitlement3.getEffectiveEndDate(), new LocalDate(2013, 9, 8));
+
+        // Entitlement started in trial on 2013-08-07. The phase occurs at 2013-09-06. The CTD is 2013-10-06 which is when we want the billing cancellation to occur
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getBaseEntitlementId(), callContext);
+        assertEquals(subscription.getBillingEndDate(), new LocalDate(2013, 10, 6));
+
+        clock.addMonths(1);
+
+        final Entitlement entitlement4 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlement4.getState(), EntitlementState.CANCELLED);
+        assertEquals(entitlement4.getEffectiveEndDate(), new LocalDate(2013, 9, 8));
+    }
+
+    @Test(groups = "slow")
     public void testCancelWithEntitlementPolicyEOTAndCTD() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
