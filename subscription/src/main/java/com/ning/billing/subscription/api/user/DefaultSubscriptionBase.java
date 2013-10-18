@@ -500,7 +500,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             case IMMEDIATE:
                 return clock.getUTCNow();
             case END_OF_TERM:
-                return (chargedThroughDate != null) ? chargedThroughDate : clock.getUTCNow();
+                //
+                // If we have a chargedThroughDate that is 'up to date' we use it, if not default to now
+                // chargedThroughDate could exist and be less than now if:
+                // 1. account is not being invoiced, for e.g AUTO_INVOICING_OFF nis set
+                // 2. In the case if FIXED item CTD is set using startDate of the service period
+                //
+                return (chargedThroughDate != null && chargedThroughDate.isAfter(clock.getUTCNow())) ? chargedThroughDate : clock.getUTCNow();
             default:
                 throw new SubscriptionBaseError(String.format(
                         "Unexpected policy type %s", policy.toString()));
