@@ -113,25 +113,6 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-
-    @GET
-    @Path("/{bundleId:" + UUID_PATTERN + "}/" + SUBSCRIPTIONS)
-    @Produces(APPLICATION_JSON)
-    public Response getBundleSubscriptions(@PathParam("bundleId") final String bundleId,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
-
-        final UUID id = UUID.fromString(bundleId);
-        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, context.createContext(request));
-        final Collection<SubscriptionJson> result = Collections2.transform(bundle.getSubscriptions(), new Function<Subscription, SubscriptionJson>() {
-            @Nullable
-            @Override
-            public SubscriptionJson apply(@Nullable final Subscription input) {
-                return new SubscriptionJson(input, null, null, null);
-            }
-        });
-        return Response.status(Status.OK).entity(result).build();
-    }
-
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)

@@ -347,32 +347,6 @@ public class InvoiceResource extends JaxRsResourceBase {
     @POST
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
-    @Path("/" + PAYMENTS)
-    public Response payAllInvoices(final PaymentJson payment,
-                                   @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
-                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                   @HeaderParam(HDR_REASON) final String reason,
-                                   @HeaderParam(HDR_COMMENT) final String comment,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-
-        final Account account = accountUserApi.getAccountById(UUID.fromString(payment.getAccountId()), callContext);
-
-        final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
-        for (final Invoice invoice : unpaidInvoices) {
-            if (externalPayment) {
-                paymentApi.createExternalPayment(account, invoice.getId(), invoice.getBalance(), callContext);
-            } else {
-                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
-            }
-        }
-
-        return Response.status(Status.OK).build();
-    }
-
-    @POST
-    @Produces(APPLICATION_JSON)
-    @Consumes(APPLICATION_JSON)
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
     public Response createInstantPayment(final PaymentJson payment,
                                          @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,

@@ -694,7 +694,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
                                                                 null, null, 0, null, null, null, null, null, null, null, null);
         final String postJson = mapper.writeValueAsString(payment);
 
-        final String uri = JaxrsResource.INVOICES_PATH + "/" + JaxrsResource.PAYMENTS;
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENTS;
         doPost(uri, postJson, ImmutableMap.<String, String>of("externalPayment", externalPayment.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
     }
 

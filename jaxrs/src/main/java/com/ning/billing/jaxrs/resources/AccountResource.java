@@ -379,6 +379,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getInvoices(@PathParam("accountId") final String accountId,
                                 @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                                @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
@@ -386,7 +387,11 @@ public class AccountResource extends JaxRsResourceBase {
         // Verify the account exists
         accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
 
-        final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(UUID.fromString(accountId), tenantContext);
+
+        final List<Invoice> invoices = unpaidInvoicesOnly ?
+                                       new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(UUID.fromString(accountId), null, tenantContext)) :
+                                       invoiceApi.getInvoicesByAccount(UUID.fromString(accountId), tenantContext);
+
         final AuditLogsForInvoices invoicesAuditLogs = auditUserApi.getAuditLogsForInvoices(invoices, auditMode.getLevel(), tenantContext);
 
         if (withItems) {
@@ -426,6 +431,31 @@ public class AccountResource extends JaxRsResourceBase {
         }
         return Response.status(Status.OK).entity(result).build();
     }
+
+    @POST
+    @Produces(APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON)
+    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENTS)
+    public Response payAllInvoices(@PathParam("accountId") final String accountId,
+                                   @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
+                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                   @HeaderParam(HDR_REASON) final String reason,
+                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
+        final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+        for (final Invoice invoice : unpaidInvoices) {
+            if (externalPayment) {
+                paymentApi.createExternalPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+            } else {
+                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+            }
+        }
+        return Response.status(Status.OK).build();
+    }
+
 
     @POST
     @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENT_METHODS)
