@@ -165,4 +165,31 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         assertEquals(entitlement4.getState(), EntitlementState.CANCELLED);
         assertEquals(entitlement4.getEffectiveEndDate(), new LocalDate(ctd));
     }
+
+    @Test(groups = "slow")
+    public void testCancelWithEntitlementPolicyEOTNoCTDAndImmediateChange() throws AccountApiException, EntitlementApiException, SubscriptionApiException, InterruptedException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+
+        // Immediate change during trial
+        entitlement.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, callContext);
+        // Verify the change is immediate
+        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlement2.getLastActivePhase().getPlan().getProduct().getName(), "Assault-Rifle");
+
+        final Entitlement cancelledEntitlement = entitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, callContext);
+        assertEquals(cancelledEntitlement.getState(), EntitlementState.CANCELLED);
+        assertEquals(cancelledEntitlement.getEffectiveEndDate(), initialDate);
+
+        // Entitlement started in trial on 2013-08-07, which is when we want the billing cancellation date to occur
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getBaseEntitlementId(), callContext);
+        assertEquals(subscription.getBillingEndDate().compareTo(new LocalDate(2013, 8, 7)), 0, "Unexpected billing end date: " + subscription.getBillingEndDate());
+    }
 }

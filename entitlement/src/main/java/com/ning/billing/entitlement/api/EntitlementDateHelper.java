@@ -22,9 +22,9 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.clock.Clock;
-import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.clock.Clock;
 
 public class EntitlementDateHelper {
 
@@ -52,7 +52,6 @@ public class EntitlementDateHelper {
 
     public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
         try {
-
             final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
             return fromLocalDateAndReferenceTime(requestedDate, referenceDateTime, account.getTimeZone());
         } catch (AccountApiException e) {
@@ -74,10 +73,13 @@ public class EntitlementDateHelper {
         return adjustDateTimeToNotBeInFutureIfLocaDateIsToday(t2, accountTimeZone);
     }
 
-    private final DateTime adjustDateTimeToNotBeInFutureIfLocaDateIsToday(final DateTime inputUtc, final DateTimeZone accountTimeZone) {
+    private DateTime adjustDateTimeToNotBeInFutureIfLocaDateIsToday(final DateTime inputUtc, final DateTimeZone accountTimeZone) {
         // If the LocalDate is TODAY but after adding the reference time we end up in the future, we correct it to be NOW,
-        // so change occurs immediately
-        if (isBeforeOrEqualsToday(inputUtc, accountTimeZone) && inputUtc.compareTo(clock.getUTCNow()) > 0) {
+        // so change occurs immediately.
+        // If the LocalDate is TODAY but after adding the reference time we end up in the past, we also correct it to NOW,
+        // so we don't end up having events between this time and NOW.
+        // Note that in both these cases, we won't respect the reference time.
+        if (isEqualsToday(inputUtc, accountTimeZone)) {
             return clock.getUTCNow();
         } else {
             return inputUtc;
@@ -85,13 +87,27 @@ public class EntitlementDateHelper {
     }
 
     /**
+     * Check if the date portion of a date/time is equals at today (as returned by the clock).
+     *
+     * @param inputDate       the fully qualified DateTime
+     * @param accountTimeZone the account timezone
+     * @return true if the inputDate, once converted into a LocalDate using account timezone is equals at today
+     */
+    private boolean isEqualsToday(final DateTime inputDate, final DateTimeZone accountTimeZone) {
+        final LocalDate localDateNowInAccountTimezone = new LocalDate(clock.getUTCNow(), accountTimeZone);
+        final LocalDate targetDateInAccountTimezone = new LocalDate(inputDate, accountTimeZone);
+
+        return targetDateInAccountTimezone.compareTo(localDateNowInAccountTimezone) == 0;
+    }
+
+    /**
+     * Check if the date portion of a date/time is before or equals at now (as returned by the clock).
      *
      * @param inputDate       the fully qualified DateTime
      * @param accountTimeZone the account timezone
      * @return true if the inputDate, once converted into a LocalDate using account timezone is less or equals than today
      */
     public boolean isBeforeOrEqualsToday(final DateTime inputDate, final DateTimeZone accountTimeZone) {
-
         final LocalDate localDateNowInAccountTimezone = new LocalDate(clock.getUTCNow(), accountTimeZone);
         final LocalDate targetDateInAccountTimezone = new LocalDate(inputDate, accountTimeZone);
 
