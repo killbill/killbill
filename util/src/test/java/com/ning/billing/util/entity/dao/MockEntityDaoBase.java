@@ -26,8 +26,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.DefaultPagination;
 import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.Pagination;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
@@ -62,12 +65,22 @@ public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U 
     }
 
     @Override
-    public List<M> get(final InternalTenantContext context) {
+    public Pagination<M> getAll(final InternalTenantContext context) {
         final List<M> result = new ArrayList<M>();
         for (final Map<Long, M> cur : entities.values()) {
             result.add(cur.values().iterator().next());
         }
-        return result;
+        return new DefaultPagination<M>(getCount(context), result.iterator());
+    }
+
+    @Override
+    public Pagination<M> get(final Long offset, final Long rowCount, final InternalTenantContext context) {
+        return DefaultPagination.<M>build(offset, rowCount, ImmutableList.<M>copyOf(getAll(context)));
+    }
+
+    @Override
+    public Long getCount(final InternalTenantContext context) {
+        return (long) entities.keySet().size();
     }
 
     public void update(final M entity, final InternalCallContext context) {

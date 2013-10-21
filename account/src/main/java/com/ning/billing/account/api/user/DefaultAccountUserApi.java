@@ -19,8 +19,6 @@ package com.ning.billing.account.api.user;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -36,10 +34,13 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.entity.DefaultPagination;
+import com.ning.billing.util.entity.Pagination;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
 public class DefaultAccountUserApi implements AccountUserApi {
@@ -90,25 +91,29 @@ public class DefaultAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public List<Account> searchAccounts(final String searchKey, final TenantContext context) {
-        final List<AccountModelDao> accountModelDaos = accountDao.searchAccounts(searchKey, internalCallContextFactory.createInternalTenantContext(context));
-        return ImmutableList.<Account>copyOf(Collections2.transform(accountModelDaos, new Function<AccountModelDao, Account>() {
-            @Override
-            public Account apply(final AccountModelDao input) {
-                return new DefaultAccount(input);
-            }
-        }));
+    public Pagination<Account> searchAccounts(final String searchKey, final Long offset, final Long limit, final TenantContext context) {
+        final Pagination<AccountModelDao> accountModelDaos = accountDao.searchAccounts(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+        return new DefaultPagination<Account>(accountModelDaos,
+                                              Iterators.<AccountModelDao, Account>transform(accountModelDaos.iterator(),
+                                                                                            new Function<AccountModelDao, Account>() {
+                                                                                                @Override
+                                                                                                public Account apply(final AccountModelDao input) {
+                                                                                                    return new DefaultAccount(input);
+                                                                                                }
+                                                                                            }));
     }
 
     @Override
-    public List<Account> getAccounts(final TenantContext context) {
-        final List<AccountModelDao> accountModelDaos = accountDao.get(internalCallContextFactory.createInternalTenantContext(context));
-        return ImmutableList.<Account>copyOf(Collections2.transform(accountModelDaos, new Function<AccountModelDao, Account>() {
-            @Override
-            public Account apply(@Nullable final AccountModelDao input) {
-                return new DefaultAccount(input);
-            }
-        }));
+    public Pagination<Account> getAccounts(final Long offset, final Long limit, final TenantContext context) {
+        final Pagination<AccountModelDao> accountModelDaos = accountDao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+        return new DefaultPagination<Account>(accountModelDaos,
+                                              Iterators.<AccountModelDao, Account>transform(accountModelDaos.iterator(),
+                                                                                            new Function<AccountModelDao, Account>() {
+                                                                                                @Override
+                                                                                                public Account apply(final AccountModelDao input) {
+                                                                                                    return new DefaultAccount(input);
+                                                                                                }
+                                                                                            }));
     }
 
     @Override

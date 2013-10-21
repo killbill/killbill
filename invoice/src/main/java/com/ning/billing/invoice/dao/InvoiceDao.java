@@ -26,21 +26,19 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.util.entity.dao.EntityDao;
 
-public interface InvoiceDao {
+public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceApiException> {
 
     void createInvoice(InvoiceModelDao invoice, List<InvoiceItemModelDao> invoiceItems,
                        List<InvoicePaymentModelDao> invoicePayments, boolean isRealInvoice, final Map<UUID, DateTime> callbackDateTimePerSubscriptions, InternalCallContext context);
 
-    InvoiceModelDao getById(UUID id, InternalTenantContext context);
-
     InvoiceModelDao getByNumber(Integer number, InternalTenantContext context) throws InvoiceApiException;
-
-    List<InvoiceModelDao> get(InternalTenantContext context);
 
     List<InvoiceModelDao> getInvoicesByAccount(InternalTenantContext context);
 
@@ -57,8 +55,6 @@ public interface InvoiceDao {
     public BigDecimal getAccountCBA(UUID accountId, InternalTenantContext context);
 
     List<InvoiceModelDao> getUnpaidInvoicesByAccountId(UUID accountId, @Nullable LocalDate upToDate, InternalTenantContext context);
-
-    void test(InternalTenantContext context);
 
     // Include migrated invoices
     List<InvoiceModelDao> getAllInvoicesByAccount(InternalTenantContext context);
@@ -165,9 +161,8 @@ public interface InvoiceDao {
     void notifyOfPayment(InvoicePaymentModelDao invoicePayment, InternalCallContext context);
 
     /**
-     *
      * @param accountId the account for which we need to rebalance the CBA
-     * @param context the callcontext
+     * @param context   the callcontext
      */
     public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context);
 }

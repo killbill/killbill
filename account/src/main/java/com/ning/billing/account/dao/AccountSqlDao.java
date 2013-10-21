@@ -16,7 +16,7 @@
 
 package com.ning.billing.account.dao;
 
-import java.util.List;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -24,11 +24,12 @@ import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
+import org.skife.jdbi.v2.sqlobject.customizers.FetchSize;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
@@ -41,8 +42,13 @@ public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
                                            @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<AccountModelDao> searchAccounts(@Define("searchKey") final String searchKey,
-                                                @BindBean final InternalTenantContext context);
+    // Magic value to force MySQL to stream from the database
+    // See http://dev.mysql.com/doc/refman/5.0/en/connector-j-reference-implementation-notes.html (ResultSet)
+    @FetchSize(Integer.MIN_VALUE)
+    public Iterator<AccountModelDao> searchAccounts(@Define("searchKey") final String searchKey,
+                                                    @Bind("offset") final Long offset,
+                                                    @Bind("rowCount") final Long rowCount,
+                                                    @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public UUID getIdFromKey(@Bind("externalKey") final String key,

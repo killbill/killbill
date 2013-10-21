@@ -38,6 +38,7 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.entity.Pagination;
 
 public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi {
 
@@ -168,11 +169,11 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     }
 
     @Override
-    public List<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final TenantContext tenantContext) throws PaymentPluginApiException {
+    public Pagination<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
         return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
-            public List<PaymentMethodPlugin> doCall(final Ruby runtime) throws PaymentPluginApiException {
-                return ((PaymentPluginApi) pluginInstance).searchPaymentMethods(searchKey, tenantContext);
+            public Pagination<PaymentMethodPlugin> doCall(final Ruby runtime) throws PaymentPluginApiException {
+                return ((PaymentPluginApi) pluginInstance).searchPaymentMethods(searchKey, offset, limit, tenantContext);
             }
         });
     }

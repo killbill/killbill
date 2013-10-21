@@ -30,17 +30,21 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.bus.api.PersistentBus;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
+import com.ning.billing.util.entity.DefaultPagination;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
 
-public class MockInvoiceDao implements InvoiceDao {
+public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, InvoiceApiException> implements InvoiceDao {
 
     private final PersistentBus eventBus;
     private final Object monitor = new Object();
@@ -70,7 +74,7 @@ public class MockInvoiceDao implements InvoiceDao {
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                           InvoiceModelDaoHelper.getBalance(invoice), invoice.getCurrency(),
-                          context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
+                                                          context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
         } catch (PersistentBus.EventBusException ex) {
             throw new RuntimeException(ex);
         }
@@ -97,9 +101,9 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoiceModelDao> get(final InternalTenantContext context) {
+    public Pagination<InvoiceModelDao> getAll(final InternalTenantContext context) {
         synchronized (monitor) {
-            return new ArrayList<InvoiceModelDao>(invoices.values());
+            return new DefaultPagination<InvoiceModelDao>((long) invoices.values().size(), invoices.values().iterator());
         }
     }
 
@@ -124,7 +128,7 @@ public class MockInvoiceDao implements InvoiceDao {
 
         synchronized (monitor) {
             final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
-            for (final InvoiceModelDao invoice : get(context)) {
+            for (final InvoiceModelDao invoice : getAll(context)) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate) && !invoice.isMigrated()) {
                     invoicesForAccount.add(invoice);
                 }
@@ -195,7 +199,7 @@ public class MockInvoiceDao implements InvoiceDao {
     public BigDecimal getAccountBalance(final UUID accountId, final InternalTenantContext context) {
         BigDecimal balance = BigDecimal.ZERO;
 
-        for (final InvoiceModelDao invoice : get(context)) {
+        for (final InvoiceModelDao invoice : getAll(context)) {
             if (accountId.equals(invoice.getAccountId())) {
                 balance = balance.add(InvoiceModelDaoHelper.getBalance(invoice));
             }
@@ -208,7 +212,7 @@ public class MockInvoiceDao implements InvoiceDao {
     public List<InvoiceModelDao> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final InternalTenantContext context) {
         final List<InvoiceModelDao> unpaidInvoices = new ArrayList<InvoiceModelDao>();
 
-        for (final InvoiceModelDao invoice : get(context)) {
+        for (final InvoiceModelDao invoice : getAll(context)) {
             if (accountId.equals(invoice.getAccountId()) && (InvoiceModelDaoHelper.getBalance(invoice).compareTo(BigDecimal.ZERO) > 0) && !invoice.isMigrated()) {
                 unpaidInvoices.add(invoice);
             }

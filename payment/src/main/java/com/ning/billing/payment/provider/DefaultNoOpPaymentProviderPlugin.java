@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.NoOpPaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
@@ -35,7 +36,8 @@ import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.clock.Clock;
+import com.ning.billing.util.entity.DefaultPagination;
+import com.ning.billing.util.entity.Pagination;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -157,8 +159,8 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public List<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final TenantContext tenantContext) throws PaymentPluginApiException {
-        return ImmutableList.<PaymentMethodPlugin>copyOf(Iterables.<PaymentMethodPlugin>filter(Iterables.<PaymentMethodPlugin>concat(paymentMethods.values()), new Predicate<PaymentMethodPlugin>() {
+    public Pagination<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        final ImmutableList<PaymentMethodPlugin> results = ImmutableList.<PaymentMethodPlugin>copyOf(Iterables.<PaymentMethodPlugin>filter(Iterables.<PaymentMethodPlugin>concat(paymentMethods.values()), new Predicate<PaymentMethodPlugin>() {
             @Override
             public boolean apply(final PaymentMethodPlugin input) {
                 return (input.getAddress1() != null && input.getAddress1().contains(searchKey)) ||
@@ -170,6 +172,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
                        (input.getCountry() != null && input.getCountry().contains(searchKey));
             }
         }));
+        return DefaultPagination.<PaymentMethodPlugin>build(offset, limit, results);
     }
 
     @Override

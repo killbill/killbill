@@ -23,13 +23,14 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.Pagination;
 import com.ning.billing.util.entity.dao.EntityDao;
 
 public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountApiException> {
 
     public AccountModelDao getAccountByKey(String key, InternalTenantContext context);
 
-    public List<AccountModelDao> searchAccounts(String searchKey, InternalTenantContext context);
+    public Pagination<AccountModelDao> searchAccounts(String searchKey, Long offset, Long rowCount, InternalTenantContext context);
 
     /**
      * @throws AccountApiException when externalKey is null
@@ -49,6 +50,4 @@ public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountA
     public void removeEmail(AccountEmailModelDao email, InternalCallContext context);
 
     public List<AccountEmailModelDao> getEmailsByAccountId(UUID accountId, InternalTenantContext context);
-
-    public AccountModelDao getByRecordId(Long recordId, InternalCallContext context);
 }

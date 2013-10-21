@@ -18,6 +18,7 @@ package com.ning.billing.osgi.bundles.test;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +35,7 @@ import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.entity.Pagination;
 
 public class TestPaymentPluginApi implements PaymentPluginApi {
 
@@ -129,8 +131,38 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
     }
 
     @Override
-    public List<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final TenantContext tenantContext) throws PaymentPluginApiException {
-        return Collections.emptyList();
+    public Pagination<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return new Pagination<PaymentMethodPlugin>() {
+            @Override
+            public Long getCurrentOffset() {
+                return 0L;
+            }
+
+            @Override
+            public Long getNextOffset() {
+                return null;
+            }
+
+            @Override
+            public Long getTotalNbResults() {
+                return 0L;
+            }
+
+            @Override
+            public Long getNbResults() {
+                return null;
+            }
+
+            @Override
+            public Long getNbResultsFromOffset() {
+                return null;
+            }
+
+            @Override
+            public Iterator<PaymentMethodPlugin> iterator() {
+                return null;
+            }
+        };
     }
 
     @Override

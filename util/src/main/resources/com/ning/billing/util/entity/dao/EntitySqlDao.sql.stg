@@ -133,13 +133,32 @@ allHistoryTableValues() ::= <<
 CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
 AND_CHECK_TENANT(prefix) ::= "and <CHECK_TENANT(prefix)>"
 
-get(limit) ::= <<
+getAll() ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
 where <CHECK_TENANT("t.")>
 <andCheckSoftDeletionWithComma("t.")>
-<if(limit)>limit :limit<endif>
+;
+>>
+
+get(offset, rowCount, orderBy) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <CHECK_TENANT("t.")>
+<andCheckSoftDeletionWithComma("t.")>
+order by :orderBy
+limit :offset, :rowCount
+;
+>>
+
+getCount() ::= <<
+select
+count(1) as count
+from <tableName()> t
+where <CHECK_TENANT("t.")>
+<andCheckSoftDeletionWithComma("t.")>
 ;
 >>
 

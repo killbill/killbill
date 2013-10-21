@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.invoice.api.Invoice;
@@ -41,8 +43,6 @@ import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -146,21 +146,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                                                                      return !invoice.isMigrated() && invoice.getTargetDate().compareTo(fromDate) >= 0;
                                                                                                                                  }
                                                                                                                              })));
-    }
-
-    @Override
-    public List<InvoiceModelDao> get(final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
-            @Override
-            public List<InvoiceModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-
-                final List<InvoiceModelDao> invoices = invoiceDao.get(context);
-                invoiceDaoHelper.populateChildren(invoices, entitySqlDaoWrapperFactory, context);
-
-                return invoices;
-            }
-        });
     }
 
     @Override

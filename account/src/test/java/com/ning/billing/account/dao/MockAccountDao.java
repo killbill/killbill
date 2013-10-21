@@ -36,14 +36,16 @@ import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAcco
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.callcontext.InternalTenantContext;
-import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 import com.ning.billing.events.AccountChangeInternalEvent;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.entity.DefaultPagination;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
@@ -79,7 +81,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
         final long tenantRecordId = context == null ? InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID
                                                     : context.getTenantRecordId();
         final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), currentAccount, account,
-                accountRecordId, tenantRecordId, UUID.randomUUID()
+                                                                                     accountRecordId, tenantRecordId, UUID.randomUUID()
         );
         if (changeEvent.hasChanges()) {
             try {
@@ -103,9 +105,9 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
     }
 
     @Override
-    public List<AccountModelDao> searchAccounts(final String searchKey, final InternalTenantContext context) {
+    public Pagination<AccountModelDao> searchAccounts(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         final List<AccountModelDao> results = new LinkedList<AccountModelDao>();
-        for (final AccountModelDao account : get(context)) {
+        for (final AccountModelDao account : getAll(context)) {
             if ((account.getName() != null && account.getName().contains(searchKey)) ||
                 (account.getEmail() != null && account.getEmail().contains(searchKey)) ||
                 (account.getExternalKey() != null && account.getExternalKey().contains(searchKey)) ||
@@ -113,7 +115,8 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
                 results.add(account);
             }
         }
-        return results;
+
+        return DefaultPagination.<AccountModelDao>build(offset, limit, results);
     }
 
     @Override
@@ -152,7 +155,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
 
     @Override
     public List<AccountEmailModelDao> getEmailsByAccountId(final UUID accountId, final InternalTenantContext context) {
-        return ImmutableList.<AccountEmailModelDao>copyOf(Collections2.filter(accountEmailSqlDao.get(context), new Predicate<AccountEmailModelDao>() {
+        return ImmutableList.<AccountEmailModelDao>copyOf(Iterables.<AccountEmailModelDao>filter(accountEmailSqlDao.getAll(context), new Predicate<AccountEmailModelDao>() {
             @Override
             public boolean apply(final AccountEmailModelDao input) {
                 return input.getAccountId().equals(accountId);
@@ -160,8 +163,4 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
         }));
     }
 
-    @Override
-    public AccountModelDao getByRecordId(final Long recordId, final InternalCallContext context) {
-        return null;
-    }
 }

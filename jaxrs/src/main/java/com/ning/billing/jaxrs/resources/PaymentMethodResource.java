@@ -16,8 +16,9 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,8 +31,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
@@ -49,10 +52,10 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.entity.Pagination;
 
-import com.google.common.base.Function;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -96,34 +99,55 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response searchPaymentMethods(@PathParam("searchKey") final String searchKey,
+                                         @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                         @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                          @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_NAME) final String pluginName,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         // Search the plugin(s)
-        final List<PaymentMethod> paymentMethods;
+        final Pagination<PaymentMethod> paymentMethods;
         if (Strings.isNullOrEmpty(pluginName)) {
-            paymentMethods = paymentApi.searchPaymentMethods(searchKey, tenantContext);
+            paymentMethods = paymentApi.searchPaymentMethods(searchKey, offset, limit, tenantContext);
         } else {
-            paymentMethods = paymentApi.searchPaymentMethods(searchKey, pluginName, tenantContext);
+            paymentMethods = paymentApi.searchPaymentMethods(searchKey, offset, limit, pluginName, tenantContext);
         }
 
-        // Lookup the associated account(s)
         final Map<UUID, Account> accounts = new HashMap<UUID, Account>();
-        for (final PaymentMethod paymentMethod : paymentMethods) {
-            if (accounts.get(paymentMethod.getAccountId()) == null) {
-                final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
-                accounts.put(paymentMethod.getAccountId(), account);
-            }
-        }
-
-        final List<PaymentMethodJson> json = Lists.transform(paymentMethods, new Function<PaymentMethod, PaymentMethodJson>() {
+        final StreamingOutput json = new StreamingOutput() {
             @Override
-            public PaymentMethodJson apply(final PaymentMethod paymentMethod) {
-                return PaymentMethodJson.toPaymentMethodJson(accounts.get(paymentMethod.getAccountId()), paymentMethod);
+            public void write(final OutputStream output) throws IOException, WebApplicationException {
+                final JsonGenerator generator = mapper.getFactory().createJsonGenerator(output);
+                generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+
+                generator.writeStartArray();
+                for (final PaymentMethod paymentMethod : paymentMethods) {
+                    // Lookup the associated account(s)
+                    if (accounts.get(paymentMethod.getAccountId()) == null) {
+                        final Account account;
+                        try {
+                            account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
+                            accounts.put(paymentMethod.getAccountId(), account);
+                        } catch (AccountApiException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    final PaymentMethodJson asJson = PaymentMethodJson.toPaymentMethodJson(accounts.get(paymentMethod.getAccountId()), paymentMethod);
+                    generator.writeObject(asJson);
+                }
+                generator.writeEndArray();
+                generator.close();
             }
-        });
-        return Response.status(Status.OK).entity(json).build();
+        };
+        return Response.status(Status.OK)
+                       .entity(json)
+                       .header(HDR_PAGINATION_CURRENT_OFFSET, paymentMethods.getCurrentOffset())
+                       .header(HDR_PAGINATION_NEXT_OFFSET, paymentMethods.getNextOffset())
+                       .header(HDR_PAGINATION_TOTAL_NB_RESULTS, paymentMethods.getTotalNbResults())
+                       .header(HDR_PAGINATION_NB_RESULTS, paymentMethods.getNbResults())
+                       .header(HDR_PAGINATION_NB_RESULTS_FROM_OFFSET, paymentMethods.getNbResultsFromOffset())
+                       .build();
     }
 
     @DELETE

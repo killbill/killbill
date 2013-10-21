@@ -86,22 +86,27 @@ getAccountByKey() ::= <<
     where external_key = :externalKey <AND_CHECK_TENANT()>;
 >>
 
-searchAccounts(searchKey) ::= <<
+searchAccounts(searchKey, offset, rowCount) ::= <<
 select <allTableFields()>
-from accounts
-where name like ('%<searchKey>%') <AND_CHECK_TENANT()>
-union
-select <allTableFields()>
-from accounts
-where email like ('%<searchKey>%') <AND_CHECK_TENANT()>
-union
-select <allTableFields()>
-from accounts
-where external_key like ('%<searchKey>%') <AND_CHECK_TENANT()>
-union
-select <allTableFields()>
-from accounts
-where company_name like ('%<searchKey>%') <AND_CHECK_TENANT()>
+from (
+  select <allTableFields()>
+  from accounts
+  where name like ('%<searchKey>%') <AND_CHECK_TENANT()>
+  union
+  select <allTableFields()>
+  from accounts
+  where email like ('%<searchKey>%') <AND_CHECK_TENANT()>
+  union
+  select <allTableFields()>
+  from accounts
+  where external_key like ('%<searchKey>%') <AND_CHECK_TENANT()>
+  union
+  select <allTableFields()>
+  from accounts
+  where company_name like ('%<searchKey>%') <AND_CHECK_TENANT()>
+) results
+order by results.record_id
+limit :offset, :rowCount
 ;
 >>
 
