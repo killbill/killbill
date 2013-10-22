@@ -45,6 +45,7 @@ public interface JaxrsResource {
     public static String HDR_PAGINATION_TOTAL_NB_RESULTS = "X-Killbill-Pagination-TotalNbResults";
     public static String HDR_PAGINATION_NB_RESULTS = "X-Killbill-Pagination-NbResults";
     public static String HDR_PAGINATION_NB_RESULTS_FROM_OFFSET = "X-Killbill-Pagination-NbResultsFromOffset";
+    public static String HDR_PAGINATION_NEXT_PAGE_URI = "X-Killbill-Pagination-NextPageUri";
 
     /*
      * Patterns
@@ -99,6 +100,8 @@ public interface JaxrsResource {
     public static final String QUERY_AUDIT = "audit";
 
     public static final String QUERY_NOTIFICATION_CALLBACK = "cb";
+
+    public static final String PAGINATION = "pagination";
 
     public static final String ACCOUNTS = "accounts";
     public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;

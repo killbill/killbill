@@ -108,17 +108,29 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public Pagination<AccountModelDao> searchAccounts(final String searchKey, final Long offset, final Long rowCount, final InternalTenantContext context) {
+        // Note: the connection will be busy as we stream the results out: hence we cannot use
+        // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
+        // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
+        // more pages. To do that, we perform a dummy search query with SQL_CALC_FOUND_ROWS (but limit 1).
+        final Long count = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
+            @Override
+            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final AccountSqlDao accountSqlDao = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
+                final Iterator<AccountModelDao> dumbIterator = accountSqlDao.searchAccounts(searchKey, offset, 1L, context);
+                while (dumbIterator.hasNext()) {
+                    dumbIterator.next();
+                }
+                return accountSqlDao.getFoundRows(context);
+            }
+        });
+
         // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
         // Since we want to stream the results out, we don't want to auto-commit when this method returns.
         final AccountSqlDao accountSqlDao = transactionalSqlDao.onDemand(AccountSqlDao.class);
-
-        // Note: the connection will be busy as we stream the results out: hence we cannot use
-        // SQL_CALC_FOUND_ROWS / FOUND_ROWS and we don't know the total number of results (in this case,
-        // performing a second time the search just to get the count is too expensive to be worth it).
-        final Long count = null;
-
+        final Long totalCount = accountSqlDao.getCount(context);
         final Iterator<AccountModelDao> results = accountSqlDao.searchAccounts(searchKey, offset, rowCount, context);
-        return new DefaultPagination<AccountModelDao>(offset, rowCount, count, results);
+
+        return new DefaultPagination<AccountModelDao>(offset, count, totalCount, results);
     }
 
     @Override

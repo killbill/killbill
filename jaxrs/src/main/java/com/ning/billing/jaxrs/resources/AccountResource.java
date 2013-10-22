@@ -19,6 +19,7 @@ package com.ning.billing.jaxrs.resources;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -103,6 +104,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -156,6 +158,20 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @GET
+    @Path("/" + PAGINATION)
+    @Produces(APPLICATION_JSON)
+    public Response getAccounts(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
+                                @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
+                                @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final Pagination<Account> accounts = accountUserApi.getAccounts(offset, limit, tenantContext);
+        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "getAccounts", accounts.getNextOffset(), limit, ImmutableMap.<String, String>of());
+        return buildStreamingAccountsResponse(accounts, accountWithBalance, accountWithBalanceAndCBA, nextPageUri, tenantContext);
+    }
+
+    @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response searchAccounts(@PathParam("searchKey") final String searchKey,
@@ -166,7 +182,12 @@ public class AccountResource extends JaxRsResourceBase {
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
         final Pagination<Account> accounts = accountUserApi.searchAccounts(searchKey, offset, limit, tenantContext);
+        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "searchAccounts", accounts.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey));
+        return buildStreamingAccountsResponse(accounts, accountWithBalance, accountWithBalanceAndCBA, nextPageUri, tenantContext);
+    }
 
+    private Response buildStreamingAccountsResponse(final Pagination<Account> accounts, final Boolean accountWithBalance,
+                                                    final Boolean accountWithBalanceAndCBA, final URI nextPageUri, final TenantContext tenantContext) {
         final StreamingOutput json = new StreamingOutput() {
             @Override
             public void write(final OutputStream output) throws IOException, WebApplicationException {
@@ -189,9 +210,9 @@ public class AccountResource extends JaxRsResourceBase {
                        .header(HDR_PAGINATION_TOTAL_NB_RESULTS, accounts.getTotalNbResults())
                        .header(HDR_PAGINATION_NB_RESULTS, accounts.getNbResults())
                        .header(HDR_PAGINATION_NB_RESULTS_FROM_OFFSET, accounts.getNbResultsFromOffset())
+                       .header(HDR_PAGINATION_NEXT_PAGE_URI, nextPageUri)
                        .build();
     }
-
 
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)
