@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs.resources;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -56,6 +57,7 @@ import com.ning.billing.util.entity.Pagination;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -113,6 +115,8 @@ public class PaymentMethodResource extends JaxRsResourceBase {
             paymentMethods = paymentApi.searchPaymentMethods(searchKey, offset, limit, pluginName, tenantContext);
         }
 
+        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "searchPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of());
+
         final Map<UUID, Account> accounts = new HashMap<UUID, Account>();
         final StreamingOutput json = new StreamingOutput() {
             @Override
@@ -144,9 +148,9 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                        .entity(json)
                        .header(HDR_PAGINATION_CURRENT_OFFSET, paymentMethods.getCurrentOffset())
                        .header(HDR_PAGINATION_NEXT_OFFSET, paymentMethods.getNextOffset())
-                       .header(HDR_PAGINATION_TOTAL_NB_RESULTS, paymentMethods.getTotalNbResults())
-                       .header(HDR_PAGINATION_NB_RESULTS, paymentMethods.getNbResults())
-                       .header(HDR_PAGINATION_NB_RESULTS_FROM_OFFSET, paymentMethods.getNbResultsFromOffset())
+                       .header(HDR_PAGINATION_TOTAL_NB_RECORDS, paymentMethods.getTotalNbRecords())
+                       .header(HDR_PAGINATION_MAX_NB_RECORDS, paymentMethods.getMaxNbRecords())
+                       .header(HDR_PAGINATION_NEXT_PAGE_URI, nextPageUri)
                        .build();
     }
 

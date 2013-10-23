@@ -147,7 +147,7 @@ where <CHECK_TENANT("t.")>
 >>
 
 get(offset, rowCount, orderBy) ::= <<
-select
+select SQL_CALC_FOUND_ROWS
 <allTableFields("t.")>
 from <tableName()> t
 where <CHECK_TENANT("t.")>

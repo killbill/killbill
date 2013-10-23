@@ -118,6 +118,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         // Invoices will be shallow, i.e. won't contain items nor payments
         final Pagination<InvoiceModelDao> invoiceModelDaos = dao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
         return new DefaultPagination<Invoice>(invoiceModelDaos,
+                                              limit,
                                               Iterators.<InvoiceModelDao, Invoice>transform(invoiceModelDaos.iterator(),
                                                                                             new Function<InvoiceModelDao, Invoice>() {
                                                                                                 @Override

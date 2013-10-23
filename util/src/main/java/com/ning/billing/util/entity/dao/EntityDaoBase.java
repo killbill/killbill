@@ -129,13 +129,31 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     }
 
     @Override
-    public Pagination<M> get(final Long offset, final Long rowCount, final InternalTenantContext context) {
-        // See notes above
-        final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemand(realSqlDao);
-        final Long count = sqlDao.getCount(context);
+    public Pagination<M> get(final Long offset, final Long limit, final InternalTenantContext context) {
+        // Note: the connection will be busy as we stream the results out: hence we cannot use
+        // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
+        // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
+        // more pages. To do that, we perform a dummy search query with SQL_CALC_FOUND_ROWS (but limit 1).
+        final Long count = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
+            @Override
+            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final EntitySqlDao<M, E> sqlDao = entitySqlDaoWrapperFactory.become(realSqlDao);
+                final Iterator<M> dumbIterator = sqlDao.get(offset, 1L, getNaturalOrderingColumns(), context);
+                // Make sure to go through the results to close the connection
+                while (dumbIterator.hasNext()) {
+                    dumbIterator.next();
+                }
+                return sqlDao.getFoundRows(context);
+            }
+        });
 
-        final Iterator<M> results = sqlDao.get(offset, rowCount, getNaturalOrderingColumns(), context);
-        return new DefaultPagination<M>(offset, rowCount, count, results);
+        // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
+        // Since we want to stream the results out, we don't want to auto-commit when this method returns.
+        final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemand(realSqlDao);
+        final Long totalCount = sqlDao.getCount(context);
+        final Iterator<M> results = sqlDao.get(offset, limit, getNaturalOrderingColumns(), context);
+
+        return new DefaultPagination<M>(offset, limit, count, totalCount, results);
     }
 
     @Override

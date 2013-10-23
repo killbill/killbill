@@ -42,9 +42,8 @@ public interface JaxrsResource {
     public static String HDR_COMMENT = "X-Killbill-Comment";
     public static String HDR_PAGINATION_CURRENT_OFFSET = "X-Killbill-Pagination-CurrentOffset";
     public static String HDR_PAGINATION_NEXT_OFFSET = "X-Killbill-Pagination-NextOffset";
-    public static String HDR_PAGINATION_TOTAL_NB_RESULTS = "X-Killbill-Pagination-TotalNbResults";
-    public static String HDR_PAGINATION_NB_RESULTS = "X-Killbill-Pagination-NbResults";
-    public static String HDR_PAGINATION_NB_RESULTS_FROM_OFFSET = "X-Killbill-Pagination-NbResultsFromOffset";
+    public static String HDR_PAGINATION_TOTAL_NB_RECORDS = "X-Killbill-Pagination-TotalNbRecords";
+    public static String HDR_PAGINATION_MAX_NB_RECORDS = "X-Killbill-Pagination-MaxNbRecords";
     public static String HDR_PAGINATION_NEXT_PAGE_URI = "X-Killbill-Pagination-NextPageUri";
 
     /*

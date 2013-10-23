@@ -190,6 +190,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         }
 
         return new DefaultPagination<PaymentMethod>(paymentMethods,
+                                                    limit,
                                                     Iterators.<PaymentMethod>filter(Iterators.<PaymentMethodPlugin, PaymentMethod>transform(paymentMethods.iterator(),
                                                                                                                                             new Function<PaymentMethodPlugin, PaymentMethod>() {
                                                                                                                                                 @Override

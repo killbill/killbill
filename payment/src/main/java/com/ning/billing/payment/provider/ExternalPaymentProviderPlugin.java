@@ -101,8 +101,8 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     @Override
-    public Pagination<PaymentMethodPlugin> searchPaymentMethods(final String searchKy, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
-        return new DefaultPagination<PaymentMethodPlugin>(0L, Iterators.<PaymentMethodPlugin>emptyIterator());
+    public Pagination<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return new DefaultPagination<PaymentMethodPlugin>(offset, limit, 0L, 0L, Iterators.<PaymentMethodPlugin>emptyIterator());
     }
 
     @Override

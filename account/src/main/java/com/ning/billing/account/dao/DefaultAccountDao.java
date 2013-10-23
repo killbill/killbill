@@ -107,7 +107,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
     }
 
     @Override
-    public Pagination<AccountModelDao> searchAccounts(final String searchKey, final Long offset, final Long rowCount, final InternalTenantContext context) {
+    public Pagination<AccountModelDao> searchAccounts(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         // Note: the connection will be busy as we stream the results out: hence we cannot use
         // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
         // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
@@ -117,6 +117,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final AccountSqlDao accountSqlDao = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
                 final Iterator<AccountModelDao> dumbIterator = accountSqlDao.searchAccounts(searchKey, offset, 1L, context);
+                // Make sure to go through the results to close the connection
                 while (dumbIterator.hasNext()) {
                     dumbIterator.next();
                 }
@@ -128,9 +129,9 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         // Since we want to stream the results out, we don't want to auto-commit when this method returns.
         final AccountSqlDao accountSqlDao = transactionalSqlDao.onDemand(AccountSqlDao.class);
         final Long totalCount = accountSqlDao.getCount(context);
-        final Iterator<AccountModelDao> results = accountSqlDao.searchAccounts(searchKey, offset, rowCount, context);
+        final Iterator<AccountModelDao> results = accountSqlDao.searchAccounts(searchKey, offset, limit, context);
 
-        return new DefaultPagination<AccountModelDao>(offset, count, totalCount, results);
+        return new DefaultPagination<AccountModelDao>(offset, limit, count, totalCount, results);
     }
 
     @Override

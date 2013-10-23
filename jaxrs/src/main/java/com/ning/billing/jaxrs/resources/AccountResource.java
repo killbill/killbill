@@ -207,9 +207,8 @@ public class AccountResource extends JaxRsResourceBase {
                        .entity(json)
                        .header(HDR_PAGINATION_CURRENT_OFFSET, accounts.getCurrentOffset())
                        .header(HDR_PAGINATION_NEXT_OFFSET, accounts.getNextOffset())
-                       .header(HDR_PAGINATION_TOTAL_NB_RESULTS, accounts.getTotalNbResults())
-                       .header(HDR_PAGINATION_NB_RESULTS, accounts.getNbResults())
-                       .header(HDR_PAGINATION_NB_RESULTS_FROM_OFFSET, accounts.getNbResultsFromOffset())
+                       .header(HDR_PAGINATION_TOTAL_NB_RECORDS, accounts.getTotalNbRecords())
+                       .header(HDR_PAGINATION_MAX_NB_RECORDS, accounts.getMaxNbRecords())
                        .header(HDR_PAGINATION_NEXT_PAGE_URI, nextPageUri)
                        .build();
     }
