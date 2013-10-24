@@ -187,6 +187,7 @@ public class FileInstall {
         if (new File(expectedPath).isFile()) {
             return expectedPath;
         } else {
+            logger.warn("Unable to find the JRuby bundle at {}, ruby plugins won't be started!", expectedPath);
             return null;
         }
     }
