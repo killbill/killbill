@@ -98,6 +98,28 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     }
 
     @GET
+    @Path("/" + PAGINATION)
+    @Produces(APPLICATION_JSON)
+    public Response getPaymentMethods(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                      @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                      @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_NAME) final String pluginName,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
+        final Pagination<PaymentMethod> paymentMethods;
+        final Map<String, String> nextUriParams = new HashMap<String, String>();
+        if (Strings.isNullOrEmpty(pluginName)) {
+            paymentMethods = paymentApi.getPaymentMethods(offset, limit, tenantContext);
+        } else {
+            paymentMethods = paymentApi.getPaymentMethods(offset, limit, pluginName, tenantContext);
+            nextUriParams.put(QUERY_PAYMENT_METHOD_PLUGIN_NAME, pluginName);
+        }
+
+        final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "getPaymentMethods", paymentMethods.getNextOffset(), limit, nextUriParams);
+        return buildStreamingPaymentMethodsResponse(paymentMethods, nextPageUri, tenantContext);
+    }
+
+    @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response searchPaymentMethods(@PathParam("searchKey") final String searchKey,
@@ -116,7 +138,10 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         }
 
         final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "searchPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of());
+        return buildStreamingPaymentMethodsResponse(paymentMethods, nextPageUri, tenantContext);
+    }
 
+    private Response buildStreamingPaymentMethodsResponse(final Pagination<PaymentMethod> paymentMethods, final URI nextPageUri, final TenantContext tenantContext) {
         final Map<UUID, Account> accounts = new HashMap<UUID, Account>();
         final StreamingOutput json = new StreamingOutput() {
             @Override

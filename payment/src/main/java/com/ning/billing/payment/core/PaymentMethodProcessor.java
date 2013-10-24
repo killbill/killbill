@@ -53,6 +53,8 @@ import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.payment.provider.DefaultPaymentMethodInfoPlugin;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.billing.tag.TagInternalApi;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.DefaultPagination;
 import com.ning.billing.util.entity.Pagination;
@@ -155,6 +157,74 @@ public class PaymentMethodProcessor extends ProcessorBase {
         }
 
         return new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin);
+    }
+
+    public Pagination<PaymentMethod> getPaymentMethods(final Long offset, final Long limit, final TenantContext tenantContext, final CallContext callContext, final InternalTenantContext internalTenantContext) {
+        // Note that we cannot easily do streaming here, since we would have to rely on the statistics
+        // returned by the Pagination objects from the plugins and we probably don't want to do that (if
+        // one plugin gets it wrong, it may starve the others).
+        final List<PaymentMethod> allResults = new LinkedList<PaymentMethod>();
+
+        // Search in all plugins (we treat the full set of results as a union with respect to offset/limit)
+        for (final String pluginName : getAvailablePlugins()) {
+            try {
+                final Pagination<PaymentMethod> paymentMethods = getPaymentMethods(0L, Long.MAX_VALUE, pluginName, tenantContext, callContext, internalTenantContext);
+                allResults.addAll(ImmutableList.<PaymentMethod>copyOf(paymentMethods));
+                if (allResults.size() > offset + limit) {
+                    break;
+                }
+            } catch (PaymentApiException e) {
+                log.warn("Error while searching plugin " + pluginName, e);
+                // Non-fatal, continue to search other plugins
+            }
+        }
+
+        return DefaultPagination.<PaymentMethod>build(offset, limit, allResults);
+    }
+
+    public Pagination<PaymentMethod> getPaymentMethods(final Long offset, final Long limit, final String pluginName, final TenantContext tenantContext, final CallContext callContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+        final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
+        final List<PaymentMethodPlugin> paymentMethods = new LinkedList<PaymentMethodPlugin>();
+
+        // Find all payment methods for all accounts
+        final Pagination<Account> accounts = accountInternalApi.getAccounts(0L, Long.MAX_VALUE, internalTenantContext);
+        for (final Account account : accounts) {
+            try {
+                final List<PaymentMethodInfoPlugin> paymentMethodInfos = pluginApi.getPaymentMethods(account.getId(), true, callContext);
+                for (final PaymentMethodInfoPlugin paymentMethodInfoPlugin : paymentMethodInfos) {
+                    final PaymentMethodPlugin paymentMethodDetail = pluginApi.getPaymentMethodDetail(account.getId(), paymentMethodInfoPlugin.getPaymentMethodId(), tenantContext);
+                    paymentMethods.add(paymentMethodDetail);
+                    if (paymentMethods.size() > offset + limit) {
+                        break;
+                    }
+                }
+            } catch (PaymentPluginApiException e) {
+                throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_GET_PAYMENT_METHODS, pluginName);
+            }
+        }
+
+        return new DefaultPagination<PaymentMethod>(DefaultPagination.<PaymentMethodPlugin>build(offset, limit, paymentMethods),
+                                                    limit,
+                                                    Iterators.<PaymentMethod>filter(Iterators.<PaymentMethodPlugin, PaymentMethod>transform(paymentMethods.iterator(),
+                                                                                                                                            new Function<PaymentMethodPlugin, PaymentMethod>() {
+                                                                                                                                                @Override
+                                                                                                                                                public PaymentMethod apply(final PaymentMethodPlugin paymentMethodPlugin) {
+                                                                                                                                                    if (paymentMethodPlugin.getKbPaymentMethodId() == null) {
+                                                                                                                                                        // Garbage from the plugin?
+                                                                                                                                                        log.debug("Plugin {} returned a payment method without a kbPaymentMethodId", pluginName);
+                                                                                                                                                        return null;
+                                                                                                                                                    }
+
+                                                                                                                                                    final PaymentMethodModelDao paymentMethodModelDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodPlugin.getKbPaymentMethodId(), internalTenantContext);
+                                                                                                                                                    if (paymentMethodModelDao == null) {
+                                                                                                                                                        log.warn("Unable to find payment method id " + paymentMethodPlugin.getKbPaymentMethodId() + " present in plugin " + pluginName);
+                                                                                                                                                        return null;
+                                                                                                                                                    }
+
+                                                                                                                                                    return new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin);
+                                                                                                                                                }
+                                                                                                                                            }),
+                                                                                    Predicates.<PaymentMethod>notNull()));
     }
 
     public Pagination<PaymentMethod> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final InternalTenantContext internalTenantContext) {
