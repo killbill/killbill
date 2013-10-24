@@ -24,18 +24,17 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.callcontext.DefaultCallContext;
 import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.events.ControlTagDeletionInternalEvent;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.clock.Clock;
-import com.ning.billing.events.ControlTagDeletionInternalEvent;
-import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.util.tag.ControlTagType;
 
 import com.google.common.eventbus.Subscribe;
@@ -72,14 +71,8 @@ public class PaymentTagHandler {
 
     private void processUnpaid_AUTO_PAY_OFF_payments(final UUID accountId, final Long accountRecordId, final Long tenantRecordId, final UUID userToken) {
         try {
-
-            // A bit convoluted... we need to specify correct tenant info for getAccountById if not multi-tenant implementation will break
-            // In addition for removing tag, we also need correct account (recordId) info
-            //
-            final CallContext context = new DefaultCallContext(null, "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, userToken, clock);
-            final InternalCallContext tmp = internalCallContextFactory.createInternalCallContext(accountId, context);
-            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, tmp);
-
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId,
+                                                                                                                 "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
             final Account account = accountApi.getAccountById(accountId, internalCallContext);
             paymentProcessor.process_AUTO_PAY_OFF_removal(account, internalCallContext);
 
