@@ -18,6 +18,7 @@ package com.ning.billing.osgi.bundles.test;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +35,7 @@ import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.entity.Pagination;
 
 public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
 
@@ -54,22 +56,27 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
             public BigDecimal getAmount() {
                 return amount;
             }
+
             @Override
             public DateTime getCreatedDate() {
                 return new DateTime();
             }
+
             @Override
             public DateTime getEffectiveDate() {
                 return new DateTime();
             }
+
             @Override
             public PaymentPluginStatus getStatus() {
                 return PaymentPluginStatus.PROCESSED;
             }
+
             @Override
             public String getGatewayError() {
                 return null;
             }
+
             @Override
             public String getGatewayErrorCode() {
                 return null;
@@ -96,22 +103,27 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
             public BigDecimal getAmount() {
                 return someAmount;
             }
+
             @Override
             public DateTime getCreatedDate() {
                 return new DateTime();
             }
+
             @Override
             public DateTime getEffectiveDate() {
                 return new DateTime();
             }
+
             @Override
             public PaymentPluginStatus getStatus() {
                 return PaymentPluginStatus.PROCESSED;
             }
+
             @Override
             public String getGatewayError() {
                 return null;
             }
+
             @Override
             public String getGatewayErrorCode() {
                 return null;
@@ -138,22 +150,27 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
             public BigDecimal getAmount() {
                 return null;
             }
+
             @Override
             public DateTime getCreatedDate() {
                 return null;
             }
+
             @Override
             public DateTime getEffectiveDate() {
                 return null;
             }
+
             @Override
             public RefundPluginStatus getStatus() {
                 return null;
             }
+
             @Override
             public String getGatewayError() {
                 return null;
             }
+
             @Override
             public String getGatewayErrorCode() {
                 return null;
@@ -194,8 +211,33 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
     }
 
     @Override
-    public List<PaymentMethodPlugin> searchPaymentMethods(final String s, final TenantContext tenantContext) throws PaymentPluginApiException {
-        return Collections.emptyList();
+    public Pagination<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return new Pagination<PaymentMethodPlugin>() {
+            @Override
+            public Long getCurrentOffset() {
+                return 0L;
+            }
+
+            @Override
+            public Long getNextOffset() {
+                return null;
+            }
+
+            @Override
+            public Long getMaxNbRecords() {
+                return 0L;
+            }
+
+            @Override
+            public Long getTotalNbRecords() {
+                return 0L;
+            }
+
+            @Override
+            public Iterator<PaymentMethodPlugin> iterator() {
+                return null;
+            }
+        };
     }
 
     @Override

@@ -26,6 +26,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.dao.AccountDao;
@@ -33,11 +34,13 @@ import com.ning.billing.account.dao.AccountEmailModelDao;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
-import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.util.entity.DefaultPagination;
+import com.ning.billing.util.entity.Pagination;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 
 public class DefaultAccountInternalApi implements AccountInternalApi {
 
@@ -61,6 +64,21 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     public Account getAccountByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
         final AccountModelDao accountModelDao = getAccountModelDaoByRecordId(recordId, context);
         return new DefaultAccount(accountModelDao);
+    }
+
+    @Override
+    public Pagination<Account> getAccounts(final Long offset, final Long limit, final InternalTenantContext context) {
+        final Pagination<AccountModelDao> accountModelDaos = accountDao.get(offset, limit, context);
+        return new DefaultPagination<Account>(accountModelDaos,
+                                              limit,
+                                              Iterators.<AccountModelDao, Account>transform(accountModelDaos.iterator(),
+                                                                                            new Function<AccountModelDao, Account>() {
+                                                                                                @Override
+                                                                                                public Account apply(final AccountModelDao input) {
+                                                                                                    return new DefaultAccount(input);
+                                                                                                }
+                                                                                            }));
+
     }
 
     @Override

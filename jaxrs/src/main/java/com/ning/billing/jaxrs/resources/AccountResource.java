@@ -16,7 +16,10 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,8 +39,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
 import com.ning.billing.ErrorCode;
@@ -92,12 +97,14 @@ import com.ning.billing.util.audit.AuditLogsForPayments;
 import com.ning.billing.util.audit.AuditLogsForRefunds;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.entity.Pagination;
 import com.ning.billing.util.tag.ControlTagType;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -151,23 +158,60 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @GET
+    @Path("/" + PAGINATION)
+    @Produces(APPLICATION_JSON)
+    public Response getAccounts(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
+                                @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
+                                @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final Pagination<Account> accounts = accountUserApi.getAccounts(offset, limit, tenantContext);
+        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "getAccounts", accounts.getNextOffset(), limit, ImmutableMap.<String, String>of());
+        return buildStreamingAccountsResponse(accounts, accountWithBalance, accountWithBalanceAndCBA, nextPageUri, tenantContext);
+    }
+
+    @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response searchAccounts(@PathParam("searchKey") final String searchKey,
+                                   @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                   @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                    @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
                                    @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
-        final List<Account> accounts = accountUserApi.searchAccounts(searchKey, tenantContext);
-        final List<AccountJson> accountsJson = ImmutableList.<AccountJson>copyOf(Collections2.transform(accounts, new Function<Account, AccountJson>() {
-            @Override
-            public AccountJson apply(final Account account) {
-                return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, tenantContext);
-            }
-        }));
-        return Response.status(Status.OK).entity(accountsJson).build();
+        final Pagination<Account> accounts = accountUserApi.searchAccounts(searchKey, offset, limit, tenantContext);
+        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "searchAccounts", accounts.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey));
+        return buildStreamingAccountsResponse(accounts, accountWithBalance, accountWithBalanceAndCBA, nextPageUri, tenantContext);
     }
 
+    private Response buildStreamingAccountsResponse(final Pagination<Account> accounts, final Boolean accountWithBalance,
+                                                    final Boolean accountWithBalanceAndCBA, final URI nextPageUri, final TenantContext tenantContext) {
+        final StreamingOutput json = new StreamingOutput() {
+            @Override
+            public void write(final OutputStream output) throws IOException, WebApplicationException {
+                final JsonGenerator generator = mapper.getFactory().createJsonGenerator(output);
+                generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+
+                generator.writeStartArray();
+                for (final Account account : accounts) {
+                    final AccountJson asJson = getAccount(account, accountWithBalance, accountWithBalanceAndCBA, tenantContext);
+                    generator.writeObject(asJson);
+                }
+                generator.writeEndArray();
+                generator.close();
+            }
+        };
+        return Response.status(Status.OK)
+                       .entity(json)
+                       .header(HDR_PAGINATION_CURRENT_OFFSET, accounts.getCurrentOffset())
+                       .header(HDR_PAGINATION_NEXT_OFFSET, accounts.getNextOffset())
+                       .header(HDR_PAGINATION_TOTAL_NB_RECORDS, accounts.getTotalNbRecords())
+                       .header(HDR_PAGINATION_MAX_NB_RECORDS, accounts.getMaxNbRecords())
+                       .header(HDR_PAGINATION_NEXT_PAGE_URI, nextPageUri)
+                       .build();
+    }
 
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)

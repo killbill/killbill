@@ -16,6 +16,7 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,21 +33,23 @@ import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
-import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.entity.EntityPersistenceException;
+import com.ning.billing.events.AccountChangeInternalEvent;
+import com.ning.billing.events.AccountCreationInternalEvent;
+import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.entity.DefaultPagination;
+import com.ning.billing.util.entity.Pagination;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import com.ning.billing.events.AccountChangeInternalEvent;
-import com.ning.billing.events.AccountCreationInternalEvent;
 
 import com.google.inject.Inject;
 
@@ -104,13 +107,31 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
     }
 
     @Override
-    public List<AccountModelDao> searchAccounts(final String searchKey, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AccountModelDao>>() {
+    public Pagination<AccountModelDao> searchAccounts(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        // Note: the connection will be busy as we stream the results out: hence we cannot use
+        // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
+        // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
+        // more pages. To do that, we perform a dummy search query with SQL_CALC_FOUND_ROWS (but limit 1).
+        final Long count = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
             @Override
-            public List<AccountModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).searchAccounts(searchKey, context);
+            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final AccountSqlDao accountSqlDao = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
+                final Iterator<AccountModelDao> dumbIterator = accountSqlDao.searchAccounts(searchKey, offset, 1L, context);
+                // Make sure to go through the results to close the connection
+                while (dumbIterator.hasNext()) {
+                    dumbIterator.next();
+                }
+                return accountSqlDao.getFoundRows(context);
             }
         });
+
+        // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
+        // Since we want to stream the results out, we don't want to auto-commit when this method returns.
+        final AccountSqlDao accountSqlDao = transactionalSqlDao.onDemand(AccountSqlDao.class);
+        final Long totalCount = accountSqlDao.getCount(context);
+        final Iterator<AccountModelDao> results = accountSqlDao.searchAccounts(searchKey, offset, limit, context);
+
+        return new DefaultPagination<AccountModelDao>(offset, limit, count, totalCount, results);
     }
 
     @Override
@@ -236,13 +257,4 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         });
     }
 
-    @Override
-    public AccountModelDao getByRecordId(final Long recordId, final InternalCallContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
-            @Override
-            public AccountModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getByRecordId(recordId, context);
-            }
-        });
-    }
 }

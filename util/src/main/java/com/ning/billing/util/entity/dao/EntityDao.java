@@ -16,13 +16,13 @@
 
 package com.ning.billing.util.entity.dao;
 
-import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.Pagination;
 
 public interface EntityDao<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> {
 
@@ -34,7 +34,11 @@ public interface EntityDao<M extends EntityModelDao<E>, E extends Entity, U exte
 
     public M getById(UUID id, InternalTenantContext context);
 
-    public List<M> get(InternalTenantContext context);
+    public Pagination<M> getAll(InternalTenantContext context);
+
+    public Pagination<M> get(Long offset, Long limit, InternalTenantContext context);
+
+    public Long getCount(InternalTenantContext context);
 
     public void test(InternalTenantContext context);
 }

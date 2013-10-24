@@ -32,8 +32,11 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.api.Invoice;
@@ -48,20 +51,20 @@ import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceItemFactory;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
+import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.account.api.AccountInternalApi;
-import com.ning.billing.tag.TagInternalApi;
+import com.ning.billing.util.entity.DefaultPagination;
+import com.ning.billing.util.entity.Pagination;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
 public class DefaultInvoiceUserApi implements InvoiceUserApi {
@@ -108,6 +111,21 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                             return new DefaultInvoice(input);
                                                                         }
                                                                     }));
+    }
+
+    @Override
+    public Pagination<Invoice> getInvoices(final Long offset, final Long limit, final TenantContext context) {
+        // Invoices will be shallow, i.e. won't contain items nor payments
+        final Pagination<InvoiceModelDao> invoiceModelDaos = dao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+        return new DefaultPagination<Invoice>(invoiceModelDaos,
+                                              limit,
+                                              Iterators.<InvoiceModelDao, Invoice>transform(invoiceModelDaos.iterator(),
+                                                                                            new Function<InvoiceModelDao, Invoice>() {
+                                                                                                @Override
+                                                                                                public Invoice apply(final InvoiceModelDao input) {
+                                                                                                    return new DefaultInvoice(input);
+                                                                                                }
+                                                                                            }));
     }
 
     @Override

@@ -53,6 +53,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
+import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
@@ -63,6 +64,8 @@ import com.google.common.collect.ImmutableList;
 public abstract class JaxRsResourceBase implements JaxrsResource {
 
     private static final Logger log = LoggerFactory.getLogger(JaxRsResourceBase.class);
+
+    protected static final ObjectMapper mapper = new ObjectMapper();
 
     protected final JaxrsUriBuilder uriBuilder;
     protected final TagUserApi tagUserApi;
@@ -172,7 +175,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected LocalDate toLocalDate(final UUID accountId, final String inputDate, final TenantContext context) {
 
-        final LocalDate maybeResult  = extractLocalDate(inputDate);
+        final LocalDate maybeResult = extractLocalDate(inputDate);
         if (maybeResult != null) {
             return maybeResult;
         }
@@ -187,10 +190,9 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
 
-
     protected LocalDate toLocalDate(final Account account, final String inputDate, final TenantContext context) {
 
-        final LocalDate maybeResult  = extractLocalDate(inputDate);
+        final LocalDate maybeResult = extractLocalDate(inputDate);
         if (maybeResult != null) {
             return maybeResult;
         }

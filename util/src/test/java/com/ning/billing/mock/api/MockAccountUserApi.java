@@ -16,7 +16,6 @@
 
 package com.ning.billing.mock.api;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +32,8 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.entity.DefaultPagination;
+import com.ning.billing.util.entity.Pagination;
 
 public class MockAccountUserApi implements AccountUserApi {
 
@@ -107,7 +108,7 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public List<Account> searchAccounts(final String searchKey, final TenantContext tenantContext) {
+    public Pagination<Account> searchAccounts(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) {
         final List<Account> results = new LinkedList<Account>();
         for (final Account account : accounts) {
             if ((account.getName() != null && account.getName().contains(searchKey)) ||
@@ -117,12 +118,12 @@ public class MockAccountUserApi implements AccountUserApi {
                 results.add(account);
             }
         }
-        return results;
+        return DefaultPagination.<Account>build(offset, limit, results);
     }
 
     @Override
-    public List<Account> getAccounts(final TenantContext context) {
-        return new ArrayList<Account>(accounts);
+    public Pagination<Account> getAccounts(final Long offset, final Long limit, final TenantContext context) {
+        return DefaultPagination.<Account>build(offset, limit, accounts);
     }
 
     @Override

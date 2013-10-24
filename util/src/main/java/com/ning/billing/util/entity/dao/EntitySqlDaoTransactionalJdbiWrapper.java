@@ -21,8 +21,8 @@ import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.TransactionStatus;
 
-import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.Entity;
 
@@ -69,6 +69,10 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
     public <ReturnType> ReturnType execute(final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) {
         final EntitySqlDao<EntityModelDao<Entity>, Entity> entitySqlDao = dbi.onDemand(InitialEntitySqlDao.class);
         return entitySqlDao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(entitySqlDaoTransactionWrapper));
+    }
+
+    public <M extends EntityModelDao<E>, E extends Entity, T extends EntitySqlDao<M, E>> T onDemand(final Class<T> sqlObjectType) {
+        return dbi.onDemand(sqlObjectType);
     }
 
     /**

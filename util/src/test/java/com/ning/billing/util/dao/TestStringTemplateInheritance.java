@@ -102,29 +102,30 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
                                                                                      "where t.target_record_id = :targetRecordId\n" +
                                                                                      "and t.tenant_record_id = :tenantRecordId\n" +
                                                                                      ";");
-        Assert.assertEquals(kombucha.getInstanceOf("get").toString(), "select\n" +
-                                                                      "  t.record_id\n" +
-                                                                      ", t.id\n" +
-                                                                      ", t.tea\n" +
-                                                                      ", t.mushroom\n" +
-                                                                      ", t.sugar\n" +
-                                                                      ", t.account_record_id\n" +
-                                                                      ", t.tenant_record_id\n" +
-                                                                      "from kombucha t\n" +
-                                                                      "where t.tenant_record_id = :tenantRecordId\n" +
-                                                                      ";");
-        Assert.assertEquals(kombucha.getInstanceOf("get", ImmutableMap.<String, String>of("limit", "12")).toString(), "select\n" +
-                                                                                                                      "  t.record_id\n" +
-                                                                                                                      ", t.id\n" +
-                                                                                                                      ", t.tea\n" +
-                                                                                                                      ", t.mushroom\n" +
-                                                                                                                      ", t.sugar\n" +
-                                                                                                                      ", t.account_record_id\n" +
-                                                                                                                      ", t.tenant_record_id\n" +
-                                                                                                                      "from kombucha t\n" +
-                                                                                                                      "where t.tenant_record_id = :tenantRecordId\n" +
-                                                                                                                      "limit :limit\n" +
-                                                                                                                      ";");
+        Assert.assertEquals(kombucha.getInstanceOf("getAll").toString(), "select\n" +
+                                                                         "  t.record_id\n" +
+                                                                         ", t.id\n" +
+                                                                         ", t.tea\n" +
+                                                                         ", t.mushroom\n" +
+                                                                         ", t.sugar\n" +
+                                                                         ", t.account_record_id\n" +
+                                                                         ", t.tenant_record_id\n" +
+                                                                         "from kombucha t\n" +
+                                                                         "where t.tenant_record_id = :tenantRecordId\n" +
+                                                                         ";");
+        Assert.assertEquals(kombucha.getInstanceOf("get", ImmutableMap.<String, String>of("orderBy", "recordId", "offset", "3", "rowCount", "12")).toString(), "select SQL_CALC_FOUND_ROWS\n" +
+                                                                                                                                                               "  t.record_id\n" +
+                                                                                                                                                               ", t.id\n" +
+                                                                                                                                                               ", t.tea\n" +
+                                                                                                                                                               ", t.mushroom\n" +
+                                                                                                                                                               ", t.sugar\n" +
+                                                                                                                                                               ", t.account_record_id\n" +
+                                                                                                                                                               ", t.tenant_record_id\n" +
+                                                                                                                                                               "from kombucha t\n" +
+                                                                                                                                                               "where t.tenant_record_id = :tenantRecordId\n" +
+                                                                                                                                                               "order by :orderBy\n" +
+                                                                                                                                                               "limit :offset, :rowCount\n" +
+                                                                                                                                                               ";");
         Assert.assertEquals(kombucha.getInstanceOf("test").toString(), "select\n" +
                                                                        "  t.record_id\n" +
                                                                        ", t.id\n" +

@@ -28,12 +28,12 @@ import javax.annotation.Nullable;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entity.EntityPersistenceException;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
@@ -223,7 +223,6 @@ public class InvoiceDaoHelper {
         transInvoiceItemDao.create(item, context);
     }
 
-
     public void populateChildren(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         getInvoiceItemsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
         getInvoicePaymentsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
@@ -271,6 +270,4 @@ public class InvoiceDaoHelper {
         final List<InvoicePaymentModelDao> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId, context);
         invoice.addPayments(invoicePayments);
     }
-
-
 }

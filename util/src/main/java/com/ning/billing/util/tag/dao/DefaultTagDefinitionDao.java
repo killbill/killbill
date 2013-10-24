@@ -17,6 +17,7 @@
 package com.ning.billing.util.tag.dao;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -29,25 +30,26 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.bus.api.PersistentBus;
-import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.events.TagDefinitionInternalEvent;
+import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import com.ning.billing.events.TagDefinitionInternalEvent;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
 public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao, TagDefinition, TagDefinitionApiException> implements TagDefinitionDao {
@@ -71,8 +73,10 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
             @Override
             public List<TagDefinitionModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 // Get user definitions from the database
+                final TagDefinitionSqlDao tagDefinitionSqlDao = entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class);
+                final Iterator<TagDefinitionModelDao> all = tagDefinitionSqlDao.getAll(context);
                 final List<TagDefinitionModelDao> definitionList = new LinkedList<TagDefinitionModelDao>();
-                definitionList.addAll(entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).get(context));
+                Iterators.addAll(definitionList, all);
 
                 // Add control tag definitions
                 for (final ControlTagType controlTag : ControlTagType.values()) {
@@ -240,7 +244,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
                                      tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition,
                                                                                           context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
                                      tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition,
-                                             context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+                                                                                       context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
 
                 break;
             case DELETE:

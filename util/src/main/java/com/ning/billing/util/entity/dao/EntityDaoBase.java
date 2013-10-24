@@ -16,14 +16,16 @@
 
 package com.ning.billing.util.entity.dao;
 
-import java.util.List;
+import java.util.Iterator;
 import java.util.UUID;
 
 import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.entity.DefaultPagination;
 import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.Pagination;
 
 public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
 
@@ -71,6 +73,10 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
 
     protected abstract U generateAlreadyExistsException(final M entity, final InternalCallContext context);
 
+    protected String getNaturalOrderingColumns() {
+        return "recordId";
+    }
+
     @Override
     public Long getRecordId(final UUID id, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
@@ -108,13 +114,56 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     }
 
     @Override
-    public List<M> get(final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<M>>() {
+    public Pagination<M> getAll(final InternalTenantContext context) {
+        // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
+        // Since we want to stream the results out, we don't want to auto-commit when this method returns.
+        final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemand(realSqlDao);
+
+        // Note: we need to perform the count before streaming the results, as the connection
+        // will be busy as we stream the results out. This is also why we cannot use
+        // SQL_CALC_FOUND_ROWS / FOUND_ROWS (which may ne be faster anyways).
+        final Long count = sqlDao.getCount(context);
+
+        final Iterator<M> results = sqlDao.getAll(context);
+        return new DefaultPagination<M>(count, results);
+    }
+
+    @Override
+    public Pagination<M> get(final Long offset, final Long limit, final InternalTenantContext context) {
+        // Note: the connection will be busy as we stream the results out: hence we cannot use
+        // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
+        // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
+        // more pages. To do that, we perform a dummy search query with SQL_CALC_FOUND_ROWS (but limit 1).
+        final Long count = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
+            @Override
+            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final EntitySqlDao<M, E> sqlDao = entitySqlDaoWrapperFactory.become(realSqlDao);
+                final Iterator<M> dumbIterator = sqlDao.get(offset, 1L, getNaturalOrderingColumns(), context);
+                // Make sure to go through the results to close the connection
+                while (dumbIterator.hasNext()) {
+                    dumbIterator.next();
+                }
+                return sqlDao.getFoundRows(context);
+            }
+        });
+
+        // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
+        // Since we want to stream the results out, we don't want to auto-commit when this method returns.
+        final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemand(realSqlDao);
+        final Long totalCount = sqlDao.getCount(context);
+        final Iterator<M> results = sqlDao.get(offset, limit, getNaturalOrderingColumns(), context);
+
+        return new DefaultPagination<M>(offset, limit, count, totalCount, results);
+    }
+
+    @Override
+    public Long getCount(final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
 
             @Override
-            public List<M> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
-                return transactional.get(context);
+                return transactional.getCount(context);
             }
         });
     }

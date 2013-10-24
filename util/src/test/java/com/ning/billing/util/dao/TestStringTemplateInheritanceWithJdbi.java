@@ -20,7 +20,6 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.dao.EntityModelDao;
@@ -48,6 +47,6 @@ public class TestStringTemplateInheritanceWithJdbi extends UtilTestSuiteWithEmbe
         Assert.assertEquals(dao.isIsTimeForKombucha(), clock.getUTCNow().getHourOfDay() == 17);
 
         // Verify inherited templates
-        Assert.assertEquals(dao.get(internalCallContext).size(), 0);
+        Assert.assertFalse(dao.getAll(internalCallContext).hasNext());
     }
 }

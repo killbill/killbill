@@ -40,6 +40,11 @@ public interface JaxrsResource {
     public static String HDR_CREATED_BY = "X-Killbill-CreatedBy";
     public static String HDR_REASON = "X-Killbill-Reason";
     public static String HDR_COMMENT = "X-Killbill-Comment";
+    public static String HDR_PAGINATION_CURRENT_OFFSET = "X-Killbill-Pagination-CurrentOffset";
+    public static String HDR_PAGINATION_NEXT_OFFSET = "X-Killbill-Pagination-NextOffset";
+    public static String HDR_PAGINATION_TOTAL_NB_RECORDS = "X-Killbill-Pagination-TotalNbRecords";
+    public static String HDR_PAGINATION_MAX_NB_RECORDS = "X-Killbill-Pagination-MaxNbRecords";
+    public static String HDR_PAGINATION_NEXT_PAGE_URI = "X-Killbill-Pagination-NextPageUri";
 
     /*
      * Patterns
@@ -62,6 +67,8 @@ public interface JaxrsResource {
     public static final String QUERY_TARGET_DATE = "targetDate";
     public static final String QUERY_BILLING_POLICY = "billingPolicy";
     public static final String QUERY_ENTITLEMENT_POLICY = "entitlementPolicy";
+    public static final String QUERY_SEARCH_OFFSET = "offset";
+    public static final String QUERY_SEARCH_LIMIT = "limit";
 
     public static final String QUERY_ACCOUNT_WITH_BALANCE = "accountWithBalance";
     public static final String QUERY_ACCOUNT_WITH_BALANCE_AND_CBA = "accountWithBalanceAndCBA";
@@ -92,6 +99,8 @@ public interface JaxrsResource {
     public static final String QUERY_AUDIT = "audit";
 
     public static final String QUERY_NOTIFICATION_CALLBACK = "cb";
+
+    public static final String PAGINATION = "pagination";
 
     public static final String ACCOUNTS = "accounts";
     public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;

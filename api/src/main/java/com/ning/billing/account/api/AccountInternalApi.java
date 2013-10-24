@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.Pagination;
 
 public interface AccountInternalApi {
 
@@ -29,6 +30,8 @@ public interface AccountInternalApi {
     public Account getAccountById(UUID accountId, InternalTenantContext context) throws AccountApiException;
 
     public Account getAccountByRecordId(Long recordId, InternalTenantContext context) throws AccountApiException;
+
+    public Pagination<Account> getAccounts(Long offset, Long limit, InternalTenantContext context);
 
     public void updateAccount(String key, AccountData accountData, InternalCallContext context) throws AccountApiException;
 

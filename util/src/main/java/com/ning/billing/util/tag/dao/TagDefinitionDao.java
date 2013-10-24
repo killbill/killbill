@@ -20,15 +20,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.entity.dao.EntityDao;
+import com.ning.billing.util.tag.TagDefinition;
 
-public interface TagDefinitionDao {
+public interface TagDefinitionDao extends EntityDao<TagDefinitionModelDao, TagDefinition, TagDefinitionApiException> {
 
     public List<TagDefinitionModelDao> getTagDefinitions(InternalTenantContext context);
-
-    public TagDefinitionModelDao getById(UUID definitionId, InternalTenantContext context);
 
     public TagDefinitionModelDao getByName(String definitionName, InternalTenantContext context);
 

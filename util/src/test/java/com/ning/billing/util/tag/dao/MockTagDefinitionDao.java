@@ -23,11 +23,13 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.entity.dao.MockEntityDaoBase;
+import com.ning.billing.util.tag.TagDefinition;
 
-public class MockTagDefinitionDao implements TagDefinitionDao {
+public class MockTagDefinitionDao extends MockEntityDaoBase<TagDefinitionModelDao, TagDefinition, TagDefinitionApiException> implements TagDefinitionDao {
 
     private final Map<String, TagDefinitionModelDao> tags = new ConcurrentHashMap<String, TagDefinitionModelDao>();
 
@@ -53,11 +55,6 @@ public class MockTagDefinitionDao implements TagDefinitionDao {
     @Override
     public void deleteById(final UUID definitionId, final InternalCallContext context) throws TagDefinitionApiException {
         tags.remove(definitionId.toString());
-    }
-
-    @Override
-    public TagDefinitionModelDao getById(final UUID definitionId, final InternalTenantContext context) {
-        return null;
     }
 
     @Override

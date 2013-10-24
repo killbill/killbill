@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 
@@ -31,7 +31,7 @@ public class MockCustomFieldDao extends MockEntityDaoBase<CustomFieldModelDao, C
     @Override
     public List<CustomFieldModelDao> getCustomFieldsForObject(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
         final List<CustomFieldModelDao> result = new ArrayList<CustomFieldModelDao>();
-        final List<CustomFieldModelDao> all = get(context);
+        final Iterable<CustomFieldModelDao> all = getAll(context);
         for (final CustomFieldModelDao cur : all) {
             if (cur.getObjectId().equals(objectId) && cur.getObjectType() == objectType) {
                 result.add(cur);
