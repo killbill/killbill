@@ -26,17 +26,14 @@ import java.util.UUID;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.callcontext.DefaultCallContext;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.core.RefundProcessor;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.entity.Pagination;
 
 import com.google.common.collect.ImmutableMap;
@@ -182,16 +179,12 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Pagination<PaymentMethod> getPaymentMethods(final Long offset, final Long limit, final TenantContext context) {
-        // Lame, but required
-        final CallContext callContext = new DefaultCallContext(context.getTenantId(), DefaultPaymentApi.class.toString(), CallOrigin.EXTERNAL, UserType.CUSTOMER, UUID.randomUUID(), clock);
-        return methodProcessor.getPaymentMethods(offset, limit, context, callContext, internalCallContextFactory.createInternalTenantContext(context));
+        return methodProcessor.getPaymentMethods(offset, limit, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public Pagination<PaymentMethod> getPaymentMethods(final Long offset, final Long limit, final String pluginName, final TenantContext context) throws PaymentApiException {
-        // Lame, but required
-        final CallContext callContext = new DefaultCallContext(context.getTenantId(), DefaultPaymentApi.class.toString(), CallOrigin.EXTERNAL, UserType.CUSTOMER, UUID.randomUUID(), clock);
-        return methodProcessor.getPaymentMethods(offset, limit, pluginName, context, callContext, internalCallContextFactory.createInternalTenantContext(context));
+        return methodProcessor.getPaymentMethods(offset, limit, pluginName, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override

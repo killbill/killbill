@@ -25,10 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
+import com.ning.billing.util.entity.Pagination;
 
 import com.google.common.collect.ImmutableList;
 
@@ -147,6 +148,11 @@ public class MockPaymentDao implements PaymentDao {
             }
         }
         return result;
+    }
+
+    @Override
+    public Pagination<PaymentMethodModelDao> getPaymentMethods(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

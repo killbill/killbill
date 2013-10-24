@@ -160,7 +160,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
     @Override
     public Pagination<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
-        final ImmutableList<PaymentMethodPlugin> results = ImmutableList.<PaymentMethodPlugin>copyOf(Iterables.<PaymentMethodPlugin>filter(Iterables.<PaymentMethodPlugin>concat(paymentMethods.values()), new Predicate<PaymentMethodPlugin>() {
+        final ImmutableList<PaymentMethodPlugin> allResults = ImmutableList.<PaymentMethodPlugin>copyOf(Iterables.<PaymentMethodPlugin>filter(Iterables.<PaymentMethodPlugin>concat(paymentMethods.values()), new Predicate<PaymentMethodPlugin>() {
             @Override
             public boolean apply(final PaymentMethodPlugin input) {
                 return (input.getAddress1() != null && input.getAddress1().contains(searchKey)) ||
@@ -172,7 +172,17 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
                        (input.getCountry() != null && input.getCountry().contains(searchKey));
             }
         }));
-        return DefaultPagination.<PaymentMethodPlugin>build(offset, limit, results);
+
+        final List<PaymentMethodPlugin> results;
+        if (offset >= allResults.size()) {
+            results = ImmutableList.<PaymentMethodPlugin>of();
+        } else if (offset + limit > allResults.size()) {
+            results = allResults.subList(offset.intValue(), allResults.size());
+        } else {
+            results = allResults.subList(offset.intValue(), offset.intValue() + limit.intValue());
+        }
+
+        return new DefaultPagination<PaymentMethodPlugin>(offset, limit, (long) results.size(), (long) paymentMethods.values().size(), results.iterator());
     }
 
     @Override

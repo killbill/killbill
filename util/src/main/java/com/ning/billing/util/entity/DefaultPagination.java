@@ -33,7 +33,7 @@ public class DefaultPagination<T> implements Pagination<T> {
     private final Long maxNbRecords;
     private final Iterator<T> delegateIterator;
 
-    // Builder when the streaming API can't be used
+    // Builder when the streaming API can't be used (should only be used for tests)
     // Notes: elements should be the entire records set (regardless of filtering) otherwise maxNbRecords won't be accurate
     public static <T> Pagination<T> build(final Long offset, final Long limit, final Collection<T> elements) {
         final List<T> allResults = ImmutableList.<T>copyOf(elements);

@@ -67,21 +67,6 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     }
 
     @Override
-    public Pagination<Account> getAccounts(final Long offset, final Long limit, final InternalTenantContext context) {
-        final Pagination<AccountModelDao> accountModelDaos = accountDao.get(offset, limit, context);
-        return new DefaultPagination<Account>(accountModelDaos,
-                                              limit,
-                                              Iterators.<AccountModelDao, Account>transform(accountModelDaos.iterator(),
-                                                                                            new Function<AccountModelDao, Account>() {
-                                                                                                @Override
-                                                                                                public Account apply(final AccountModelDao input) {
-                                                                                                    return new DefaultAccount(input);
-                                                                                                }
-                                                                                            }));
-
-    }
-
-    @Override
     public void updateAccount(final String externalKey, final AccountData accountData,
                               final InternalCallContext context) throws AccountApiException {
         final Account currentAccount = getAccountByKey(externalKey, context);

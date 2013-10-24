@@ -158,7 +158,8 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                             account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
                             accounts.put(paymentMethod.getAccountId(), account);
                         } catch (AccountApiException e) {
-                            throw new RuntimeException(e);
+                            log.warn("Unable to retrieve account", e);
+                            continue;
                         }
                     }
 
