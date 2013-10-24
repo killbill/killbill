@@ -47,6 +47,7 @@ public class JRubyActivator extends KillbillActivatorBase {
 
     private static final String KILLBILL_PLUGIN_JPAYMENT = "Killbill::Plugin::Api::PaymentPluginApi";
     private static final String KILLBILL_PLUGIN_JNOTIFICATION = "Killbill::Plugin::Api::NotificationPluginApi";
+    private static final String KILLBILL_PLUGIN_JCURRENCY = "Killbill::Plugin::Api::CurrencyPluginApi";
 
     public void start(final BundleContext context) throws Exception {
         super.start(context);
@@ -68,6 +69,9 @@ public class JRubyActivator extends KillbillActivatorBase {
                 } else if (PluginType.PAYMENT.equals(rubyConfig.getPluginType())) {
                     plugin = new JRubyPaymentPlugin(rubyConfig, context, logService);
                     pluginMain = KILLBILL_PLUGIN_JPAYMENT;
+                } else if (PluginType.CURRENCY.equals(rubyConfig.getPluginType())) {
+                    plugin = new JRubyCurrencyPlugin(rubyConfig, context, logService);
+                    pluginMain = KILLBILL_PLUGIN_JCURRENCY;
                 } else {
                     throw new IllegalStateException("Unsupported plugin type " + rubyConfig.getPluginType());
                 }

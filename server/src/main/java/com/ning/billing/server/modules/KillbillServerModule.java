@@ -21,6 +21,7 @@ import javax.sql.DataSource;
 
 import com.ning.billing.clock.Clock;
 import com.ning.billing.clock.ClockMock;
+import com.ning.billing.currency.glue.CurrencyModule;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import org.skife.config.ConfigSource;
 import org.skife.config.SimplePropertyConfigSource;
@@ -158,6 +159,7 @@ public class KillbillServerModule extends AbstractModule {
         install(new BeatrixModule(configSource));
         install(new DefaultJunctionModule(configSource));
         install(new DefaultOverdueModule(configSource));
+        install(new CurrencyModule(configSource));
         install(new TenantModule(configSource));
         install(new ExportModule());
         install(new TagStoreModule());

@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/currency/currency.iml" filepath="$PROJECT_DIR$/currency/currency.iml" />
       <module fileurl="file://$PROJECT_DIR$/killbill.iml" filepath="$PROJECT_DIR$/killbill.iml" />
       <module fileurl="file://$PROJECT_DIR$/account/killbill-account.iml" filepath="$PROJECT_DIR$/account/killbill-account.iml" />
       <module fileurl="file://$PROJECT_DIR$/beatrix/killbill-beatrix.iml" filepath="$PROJECT_DIR$/beatrix/killbill-beatrix.iml" />

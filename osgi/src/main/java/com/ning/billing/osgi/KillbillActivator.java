@@ -37,6 +37,7 @@ import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.currency.plugin.api.CurrencyPluginApi;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.OSGIPluginProperties;
 import com.ning.billing.osgi.api.OSGIServiceDescriptor;
@@ -71,13 +72,14 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
                              final HttpService defaultHttpService,
                              final KillbillEventObservable observable,
                              final OSGIServiceRegistration<Servlet> servletRouter,
-                             final OSGIServiceRegistration<PaymentPluginApi> paymentProviderPluginRegistry) {
+                             final OSGIServiceRegistration<PaymentPluginApi> paymentProviderPluginRegistry,
+                             final OSGIServiceRegistration<CurrencyPluginApi> currencyProviderPluginRegistry) {
         this.osgiKillbill = osgiKillbill;
         this.defaultHttpService = defaultHttpService;
         this.dataSource = dataSource;
         this.observable = observable;
         this.registrar = new OSGIKillbillRegistrar();
-        this.allRegistrationHandlers = ImmutableList.<OSGIServiceRegistration>of(servletRouter, paymentProviderPluginRegistry);
+        this.allRegistrationHandlers = ImmutableList.<OSGIServiceRegistration>of(servletRouter, paymentProviderPluginRegistry, currencyProviderPluginRegistry);
     }
 
     @Override

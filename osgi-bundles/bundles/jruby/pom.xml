@@ -47,6 +47,10 @@
             <artifactId>killbill-plugin-api-payment</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.ning.billing.plugin</groupId>
+            <artifactId>killbill-plugin-api-currency</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-osgi-bundles-lib-killbill</artifactId>
         </dependency>
@@ -144,6 +148,7 @@
                             com.ning.billing.overdue;
                             com.ning.billing.payment.api;
                             com.ning.billing.payment.plugin.api;
+                            com.ning.billing.currency.plugin.api;
                             com.ning.billing.tenant.api;
                             com.ning.billing.usage.api;
                             com.ning.billing.util.api;

@@ -73,6 +73,21 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.ning.billing.plugin</groupId>
+            <artifactId>killbill-plugin-api-currency</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.plugin</groupId>
+            <artifactId>killbill-plugin-api-notification</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.plugin</groupId>
+            <artifactId>killbill-plugin-api-payment</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
         </dependency>

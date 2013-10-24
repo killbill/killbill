@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill-oss-parent</artifactId>
         <groupId>com.ning.billing</groupId>
-        <version>0.5.1</version>
+        <version>0.4.19-SNAPSHOT</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.6.18-SNAPSHOT</version>
@@ -45,6 +45,7 @@
         <module>tenant</module>
         <module>osgi</module>
         <module>osgi-bundles</module>
+        <module>currency</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/killbill/killbill.git</connection>

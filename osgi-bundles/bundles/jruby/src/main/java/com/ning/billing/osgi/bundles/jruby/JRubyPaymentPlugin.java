@@ -40,7 +40,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.entity.Pagination;
 
-public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi {
+public  class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi {
 
     private volatile ServiceRegistration<PaymentPluginApi> paymentInfoPluginRegistration;
 

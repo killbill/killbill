@@ -47,6 +47,7 @@ public abstract class JRubyPlugin {
     private static final String KILLBILL_PLUGIN_BASE = "Killbill::Plugin::PluginBase";
     private static final String KILLBILL_PLUGIN_NOTIFICATION = "Killbill::Plugin::Notification";
     private static final String KILLBILL_PLUGIN_PAYMENT = "Killbill::Plugin::Payment";
+    private static final String KILLBILL_PLUGIN_CURRENCY = "Killbill::Plugin::Currency";
 
     // Magic ruby variables
     private static final String KILLBILL_SERVICES = "java_apis";
@@ -171,6 +172,14 @@ public abstract class JRubyPlugin {
         }
     }
 
+    private void checkValidCurrencyPlugin() throws IllegalArgumentException {
+        try {
+            container.runScriptlet(checkInstanceOfPlugin(KILLBILL_PLUGIN_CURRENCY));
+        } catch (EvalFailedException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
     private String checkInstanceOfPlugin(final String baseClass) {
         final StringBuilder builder = new StringBuilder(getRequireLine());
         builder.append("raise ArgumentError.new('Invalid plugin: ")
@@ -239,6 +248,7 @@ public abstract class JRubyPlugin {
     public enum VALIDATION_PLUGIN_TYPE {
         NOTIFICATION,
         PAYMENT,
+        CURRENCY,
         NONE
     }
 
@@ -268,6 +278,9 @@ public abstract class JRubyPlugin {
                         break;
                     case PAYMENT:
                         checkValidPaymentPlugin();
+                        break;
+                    case CURRENCY:
+                        checkValidCurrencyPlugin();
                         break;
                     default:
                         break;

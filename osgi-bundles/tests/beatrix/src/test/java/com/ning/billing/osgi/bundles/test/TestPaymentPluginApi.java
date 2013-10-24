@@ -160,6 +160,7 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
         };
     }
 
+
     @Override
     public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {
     }
