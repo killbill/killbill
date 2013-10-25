@@ -444,7 +444,7 @@ public class AccountResource extends JaxRsResourceBase {
      */
 
     @GET
-    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENTS)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
     public Response getPayments(@PathParam("accountId") final String accountId,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
@@ -459,7 +459,7 @@ public class AccountResource extends JaxRsResourceBase {
     @POST
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
-    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENTS)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     public Response payAllInvoices(@PathParam("accountId") final String accountId,
                                    @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -482,7 +482,7 @@ public class AccountResource extends JaxRsResourceBase {
 
 
     @POST
-    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENT_METHODS)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createPaymentMethod(final PaymentMethodJson json,
