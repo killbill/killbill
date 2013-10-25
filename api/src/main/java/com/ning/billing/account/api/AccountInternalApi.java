@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.Pagination;
 
 public interface AccountInternalApi {
 

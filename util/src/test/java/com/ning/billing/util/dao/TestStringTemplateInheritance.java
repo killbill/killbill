@@ -113,7 +113,7 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
                                                                          "from kombucha t\n" +
                                                                          "where t.tenant_record_id = :tenantRecordId\n" +
                                                                          ";");
-        Assert.assertEquals(kombucha.getInstanceOf("get", ImmutableMap.<String, String>of("orderBy", "recordId", "offset", "3", "rowCount", "12")).toString(), "select\n" +
+        Assert.assertEquals(kombucha.getInstanceOf("get", ImmutableMap.<String, String>of("orderBy", "recordId", "offset", "3", "rowCount", "12")).toString(), "select SQL_CALC_FOUND_ROWS\n" +
                                                                                                                                                                "  t.record_id\n" +
                                                                                                                                                                ", t.id\n" +
                                                                                                                                                                ", t.tea\n" +

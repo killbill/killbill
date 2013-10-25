@@ -133,6 +133,10 @@ allHistoryTableValues() ::= <<
 CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
 AND_CHECK_TENANT(prefix) ::= "and <CHECK_TENANT(prefix)>"
 
+getFoundRows() ::= <<
+select FOUND_ROWS();
+>>
+
 getAll() ::= <<
 select
 <allTableFields("t.")>
@@ -143,7 +147,7 @@ where <CHECK_TENANT("t.")>
 >>
 
 get(offset, rowCount, orderBy) ::= <<
-select
+select SQL_CALC_FOUND_ROWS
 <allTableFields("t.")>
 from <tableName()> t
 where <CHECK_TENANT("t.")>

@@ -5,7 +5,7 @@ install: mvn install -DskipTests=true
 
 notifications:
   email:
-    - killbilling-dev@googlegroups.com
+    - kill-bill-commits@googlegroups.com
 
 jdk:
   - openjdk6

@@ -63,7 +63,7 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class JaxRsResourceBase implements JaxrsResource {
 
-    private static final Logger log = LoggerFactory.getLogger(JaxRsResourceBase.class);
+    static final Logger log = LoggerFactory.getLogger(JaxRsResourceBase.class);
 
     protected static final ObjectMapper mapper = new ObjectMapper();
 

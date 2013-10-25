@@ -87,7 +87,7 @@ getAccountByKey() ::= <<
 >>
 
 searchAccounts(searchKey, offset, rowCount) ::= <<
-select <allTableFields()>
+select SQL_CALC_FOUND_ROWS <allTableFields()>
 from (
   select <allTableFields()>
   from accounts

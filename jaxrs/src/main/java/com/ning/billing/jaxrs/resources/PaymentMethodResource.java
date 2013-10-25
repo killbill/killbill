@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs.resources;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -56,6 +57,7 @@ import com.ning.billing.util.entity.Pagination;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -96,6 +98,28 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     }
 
     @GET
+    @Path("/" + PAGINATION)
+    @Produces(APPLICATION_JSON)
+    public Response getPaymentMethods(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                      @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                      @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_NAME) final String pluginName,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
+        final Pagination<PaymentMethod> paymentMethods;
+        final Map<String, String> nextUriParams = new HashMap<String, String>();
+        if (Strings.isNullOrEmpty(pluginName)) {
+            paymentMethods = paymentApi.getPaymentMethods(offset, limit, tenantContext);
+        } else {
+            paymentMethods = paymentApi.getPaymentMethods(offset, limit, pluginName, tenantContext);
+            nextUriParams.put(QUERY_PAYMENT_METHOD_PLUGIN_NAME, pluginName);
+        }
+
+        final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "getPaymentMethods", paymentMethods.getNextOffset(), limit, nextUriParams);
+        return buildStreamingPaymentMethodsResponse(paymentMethods, nextPageUri, tenantContext);
+    }
+
+    @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response searchPaymentMethods(@PathParam("searchKey") final String searchKey,
@@ -113,6 +137,11 @@ public class PaymentMethodResource extends JaxRsResourceBase {
             paymentMethods = paymentApi.searchPaymentMethods(searchKey, offset, limit, pluginName, tenantContext);
         }
 
+        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "searchPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of());
+        return buildStreamingPaymentMethodsResponse(paymentMethods, nextPageUri, tenantContext);
+    }
+
+    private Response buildStreamingPaymentMethodsResponse(final Pagination<PaymentMethod> paymentMethods, final URI nextPageUri, final TenantContext tenantContext) {
         final Map<UUID, Account> accounts = new HashMap<UUID, Account>();
         final StreamingOutput json = new StreamingOutput() {
             @Override
@@ -129,7 +158,8 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                             account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
                             accounts.put(paymentMethod.getAccountId(), account);
                         } catch (AccountApiException e) {
-                            throw new RuntimeException(e);
+                            log.warn("Unable to retrieve account", e);
+                            continue;
                         }
                     }
 
@@ -144,9 +174,9 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                        .entity(json)
                        .header(HDR_PAGINATION_CURRENT_OFFSET, paymentMethods.getCurrentOffset())
                        .header(HDR_PAGINATION_NEXT_OFFSET, paymentMethods.getNextOffset())
-                       .header(HDR_PAGINATION_TOTAL_NB_RESULTS, paymentMethods.getTotalNbResults())
-                       .header(HDR_PAGINATION_NB_RESULTS, paymentMethods.getNbResults())
-                       .header(HDR_PAGINATION_NB_RESULTS_FROM_OFFSET, paymentMethods.getNbResultsFromOffset())
+                       .header(HDR_PAGINATION_TOTAL_NB_RECORDS, paymentMethods.getTotalNbRecords())
+                       .header(HDR_PAGINATION_MAX_NB_RECORDS, paymentMethods.getMaxNbRecords())
+                       .header(HDR_PAGINATION_NEXT_PAGE_URI, nextPageUri)
                        .build();
     }
 

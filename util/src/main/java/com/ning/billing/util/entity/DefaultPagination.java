@@ -20,16 +20,21 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.ImmutableList;
 
+// Assumes the original offset starts at zero.
 public class DefaultPagination<T> implements Pagination<T> {
 
     private final Long currentOffset;
-    private final Long approximateNbResults;
-    private final Long approximateTotalNbResults;
+    private final Long limit;
+    private final Long totalNbRecords;
+    private final Long maxNbRecords;
     private final Iterator<T> delegateIterator;
 
-    // Builder when the streaming API can't be used
+    // Builder when the streaming API can't be used (should only be used for tests)
+    // Notes: elements should be the entire records set (regardless of filtering) otherwise maxNbRecords won't be accurate
     public static <T> Pagination<T> build(final Long offset, final Long limit, final Collection<T> elements) {
         final List<T> allResults = ImmutableList.<T>copyOf(elements);
 
@@ -41,24 +46,26 @@ public class DefaultPagination<T> implements Pagination<T> {
         } else {
             results = allResults.subList(offset.intValue(), offset.intValue() + limit.intValue());
         }
-        return new DefaultPagination<T>(offset, (long) results.size(), (long) allResults.size(), results.iterator());
+        return new DefaultPagination<T>(offset, limit, (long) results.size(), (long) allResults.size(), results.iterator());
     }
 
     // Constructor for DAO -> API bridge
-    public DefaultPagination(final Pagination original, final Iterator<T> delegate) {
-        this(original.getCurrentOffset(), original.getNbResults(), original.getTotalNbResults(), delegate);
+    public DefaultPagination(final Pagination original, final Long limit, final Iterator<T> delegate) {
+        this(original.getCurrentOffset(), limit, original.getTotalNbRecords(), original.getMaxNbRecords(), delegate);
     }
 
     // Constructor for DAO getAll calls
-    public DefaultPagination(final Long approximateTotalNbResults, final Iterator<T> results) {
-        this(0L, approximateTotalNbResults, approximateTotalNbResults, results);
+    public DefaultPagination(final Long maxNbRecords, final Iterator<T> results) {
+        this(0L, Long.MAX_VALUE, maxNbRecords, maxNbRecords, results);
     }
 
-    public DefaultPagination(final Long currentOffset, final Long approximateNbResults,
-                             final Long approximateTotalNbResults, final Iterator<T> delegateIterator) {
+    public DefaultPagination(final Long currentOffset, final Long limit,
+                             @Nullable final Long totalNbRecords, @Nullable final Long maxNbRecords,
+                             final Iterator<T> delegateIterator) {
         this.currentOffset = currentOffset;
-        this.approximateNbResults = approximateNbResults;
-        this.approximateTotalNbResults = approximateTotalNbResults;
+        this.limit = limit;
+        this.totalNbRecords = totalNbRecords;
+        this.maxNbRecords = maxNbRecords;
         this.delegateIterator = delegateIterator;
     }
 
@@ -74,22 +81,27 @@ public class DefaultPagination<T> implements Pagination<T> {
 
     @Override
     public Long getNextOffset() {
-        return currentOffset + approximateNbResults;
+        final long candidate = currentOffset + limit;
+        if (totalNbRecords != null && candidate >= totalNbRecords) {
+            // No more results
+            return null;
+        } else {
+            // When we don't know the total number of records, the next offset
+            // returned here won't make sense once the last result is returned.
+            // It is the responsibility of the client to handle the pagination stop condition
+            // in that case (i.e. check if there is no more results).
+            return candidate;
+        }
     }
 
     @Override
-    public Long getTotalNbResults() {
-        return approximateTotalNbResults;
+    public Long getMaxNbRecords() {
+        return maxNbRecords;
     }
 
     @Override
-    public Long getNbResults() {
-        return approximateNbResults;
-    }
-
-    @Override
-    public Long getNbResultsFromOffset() {
-        return approximateNbResults - getNextOffset() + 1;
+    public Long getTotalNbRecords() {
+        return totalNbRecords;
     }
 
     @Override
@@ -97,9 +109,8 @@ public class DefaultPagination<T> implements Pagination<T> {
         final StringBuilder sb = new StringBuilder("DefaultPagination{");
         sb.append("currentOffset=").append(currentOffset);
         sb.append(", nextOffset=").append(getNextOffset());
-        sb.append(", approximateNbResults=").append(approximateNbResults);
-        sb.append(", approximateTotalNbResults=").append(approximateTotalNbResults);
-        sb.append(", approximateNbResultsFromOffset=").append(getNbResultsFromOffset());
+        sb.append(", totalNbRecords=").append(totalNbRecords);
+        sb.append(", maxNbRecords=").append(maxNbRecords);
         sb.append('}');
         return sb.toString();
     }
@@ -116,10 +127,10 @@ public class DefaultPagination<T> implements Pagination<T> {
 
         final DefaultPagination that = (DefaultPagination) o;
 
-        if (approximateNbResults != null ? !approximateNbResults.equals(that.approximateNbResults) : that.approximateNbResults != null) {
+        if (totalNbRecords != null ? !totalNbRecords.equals(that.totalNbRecords) : that.totalNbRecords != null) {
             return false;
         }
-        if (approximateTotalNbResults != null ? !approximateTotalNbResults.equals(that.approximateTotalNbResults) : that.approximateTotalNbResults != null) {
+        if (maxNbRecords != null ? !maxNbRecords.equals(that.maxNbRecords) : that.maxNbRecords != null) {
             return false;
         }
         if (currentOffset != null ? !currentOffset.equals(that.currentOffset) : that.currentOffset != null) {
@@ -135,8 +146,8 @@ public class DefaultPagination<T> implements Pagination<T> {
     @Override
     public int hashCode() {
         int result = currentOffset != null ? currentOffset.hashCode() : 0;
-        result = 31 * result + (approximateNbResults != null ? approximateNbResults.hashCode() : 0);
-        result = 31 * result + (approximateTotalNbResults != null ? approximateTotalNbResults.hashCode() : 0);
+        result = 31 * result + (totalNbRecords != null ? totalNbRecords.hashCode() : 0);
+        result = 31 * result + (maxNbRecords != null ? maxNbRecords.hashCode() : 0);
         result = 31 * result + (delegateIterator != null ? delegateIterator.hashCode() : 0);
         return result;
     }

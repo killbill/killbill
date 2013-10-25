@@ -74,8 +74,8 @@ public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U 
     }
 
     @Override
-    public Pagination<M> get(final Long offset, final Long rowCount, final InternalTenantContext context) {
-        return DefaultPagination.<M>build(offset, rowCount, ImmutableList.<M>copyOf(getAll(context)));
+    public Pagination<M> get(final Long offset, final Long limit, final InternalTenantContext context) {
+        return DefaultPagination.<M>build(offset, limit, ImmutableList.<M>copyOf(getAll(context)));
     }
 
     @Override

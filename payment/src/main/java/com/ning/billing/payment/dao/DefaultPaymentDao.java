@@ -17,6 +17,7 @@
 package com.ning.billing.payment.dao;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,14 +25,16 @@ import javax.inject.Inject;
 
 import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
-import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.entity.EntityPersistenceException;
+import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
+import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.entity.DefaultPagination;
+import com.ning.billing.util.entity.Pagination;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -212,6 +215,34 @@ public class DefaultPaymentDao implements PaymentDao {
                 return entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class).getByAccountId(accountId.toString(), context);
             }
         });
+    }
+
+    @Override
+    public Pagination<PaymentMethodModelDao> getPaymentMethods(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
+        // Note: the connection will be busy as we stream the results out: hence we cannot use
+        // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
+        // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
+        // more pages. To do that, we perform a dummy search query with SQL_CALC_FOUND_ROWS (but limit 1).
+        final Long count = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
+            @Override
+            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final PaymentMethodSqlDao sqlDao = entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class);
+                final Iterator<PaymentMethodModelDao> dumbIterator = sqlDao.getByPluginName(pluginName, offset, 1L, context);
+                // Make sure to go through the results to close the connection
+                while (dumbIterator.hasNext()) {
+                    dumbIterator.next();
+                }
+                return sqlDao.getFoundRows(context);
+            }
+        });
+
+        // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
+        // Since we want to stream the results out, we don't want to auto-commit when this method returns.
+        final PaymentMethodSqlDao paymentMethodSqlDao = transactionalSqlDao.onDemand(PaymentMethodSqlDao.class);
+        final Long totalCount = paymentMethodSqlDao.getCount(context);
+        final Iterator<PaymentMethodModelDao> results = paymentMethodSqlDao.getByPluginName(pluginName, offset, limit, context);
+
+        return new DefaultPagination<PaymentMethodModelDao>(offset, limit, count, totalCount, results);
     }
 
     @Override

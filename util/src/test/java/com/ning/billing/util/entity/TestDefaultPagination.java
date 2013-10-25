@@ -46,8 +46,8 @@ public class TestDefaultPagination extends UtilTestSuiteNoDB {
         Assert.assertEquals(DefaultPagination.<Integer>build(5L, 3L, ImmutableList.<Integer>of(1, 2, 3, 4, 5)), expectedOf(5L, 0L, 5L, ImmutableList.<Integer>of()));
     }
 
-    private Pagination<Integer> expectedOf(final Long currentOffset, final Long approximateNbResults,
-                                           final Long approximateTotalNbResults, final List<Integer> delegate) {
-        return new DefaultPagination<Integer>(currentOffset, approximateNbResults, approximateTotalNbResults, delegate.iterator());
+    private Pagination<Integer> expectedOf(final Long currentOffset, final Long totalNbRecords,
+                                           final Long maxNbRecords, final List<Integer> delegate) {
+        return new DefaultPagination<Integer>(currentOffset, Long.MAX_VALUE, totalNbRecords, maxNbRecords, delegate.iterator());
     }
 }

@@ -94,6 +94,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
     public Pagination<Account> searchAccounts(final String searchKey, final Long offset, final Long limit, final TenantContext context) {
         final Pagination<AccountModelDao> accountModelDaos = accountDao.searchAccounts(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
         return new DefaultPagination<Account>(accountModelDaos,
+                                              limit,
                                               Iterators.<AccountModelDao, Account>transform(accountModelDaos.iterator(),
                                                                                             new Function<AccountModelDao, Account>() {
                                                                                                 @Override
@@ -107,6 +108,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
     public Pagination<Account> getAccounts(final Long offset, final Long limit, final TenantContext context) {
         final Pagination<AccountModelDao> accountModelDaos = accountDao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
         return new DefaultPagination<Account>(accountModelDaos,
+                                              limit,
                                               Iterators.<AccountModelDao, Account>transform(accountModelDaos.iterator(),
                                                                                             new Function<AccountModelDao, Account>() {
                                                                                                 @Override

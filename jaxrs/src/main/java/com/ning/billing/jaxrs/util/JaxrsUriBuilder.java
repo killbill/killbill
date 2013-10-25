@@ -13,12 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs.util;
+
+import java.net.URI;
+import java.util.Map;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
 
+import com.ning.billing.jaxrs.resources.JaxRsResourceBase;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 
 public class JaxrsUriBuilder {
@@ -37,6 +41,21 @@ public class JaxrsUriBuilder {
         }).build();
     }
 
+    public URI nextPage(final Class<? extends JaxrsResource> theClass, final String getMethodName, final Long nextOffset, final Long limit, final Map<String, String> params) {
+        if (nextOffset == null || limit == null) {
+            // End of pagination?
+            return null;
+        }
+
+        final UriBuilder uriBuilder = UriBuilder.fromResource(theClass)
+                                                .path(theClass, getMethodName)
+                                                .queryParam(JaxRsResourceBase.QUERY_SEARCH_OFFSET, nextOffset)
+                                                .queryParam(JaxRsResourceBase.QUERY_SEARCH_LIMIT, limit);
+        for (final String key : params.keySet()) {
+            uriBuilder.queryParam(key, params.get(key));
+        }
+        return uriBuilder.build();
+    }
 
     public Response buildResponse(final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId, final String baseUri) {
 

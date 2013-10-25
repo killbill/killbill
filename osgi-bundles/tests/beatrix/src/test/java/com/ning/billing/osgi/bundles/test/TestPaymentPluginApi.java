@@ -144,18 +144,13 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
             }
 
             @Override
-            public Long getTotalNbResults() {
+            public Long getMaxNbRecords() {
                 return 0L;
             }
 
             @Override
-            public Long getNbResults() {
-                return null;
-            }
-
-            @Override
-            public Long getNbResultsFromOffset() {
-                return null;
+            public Long getTotalNbRecords() {
+                return 0L;
             }
 
             @Override

@@ -30,7 +30,7 @@ public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountA
 
     public AccountModelDao getAccountByKey(String key, InternalTenantContext context);
 
-    public Pagination<AccountModelDao> searchAccounts(String searchKey, Long offset, Long rowCount, InternalTenantContext context);
+    public Pagination<AccountModelDao> searchAccounts(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
     /**
      * @throws AccountApiException when externalKey is null

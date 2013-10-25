@@ -68,6 +68,9 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
                             @BindBean final InternalTenantContext context);
 
     @SqlQuery
+    public Long getFoundRows(@BindBean final InternalTenantContext context);
+
+    @SqlQuery
     // Magic value to force MySQL to stream from the database
     // See http://dev.mysql.com/doc/refman/5.0/en/connector-j-reference-implementation-notes.html (ResultSet)
     @FetchSize(Integer.MIN_VALUE)
