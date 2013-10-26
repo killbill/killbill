@@ -137,7 +137,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
             paymentMethods = paymentApi.searchPaymentMethods(searchKey, offset, limit, pluginName, tenantContext);
         }
 
-        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "searchPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of());
+        final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "searchPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of());
         return buildStreamingPaymentMethodsResponse(paymentMethods, nextPageUri, tenantContext);
     }
 
