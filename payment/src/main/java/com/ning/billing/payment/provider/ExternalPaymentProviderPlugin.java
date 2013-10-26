@@ -88,7 +88,7 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public PaymentMethodPlugin getPaymentMethodDetail(final UUID kbAccountId, final UUID kbPaymentMethodId, final TenantContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentMethodPlugin("unknown", false, Collections.<PaymentMethodKVInfo>emptyList());
+        return new DefaultNoOpPaymentMethodPlugin(kbPaymentMethodId, "unknown", false, Collections.<PaymentMethodKVInfo>emptyList());
     }
 
     @Override

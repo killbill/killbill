@@ -23,7 +23,14 @@
     </encoder>
   </appender>
 
-  <root level="info">
+  <!-- Silence verbose loggers in DEBUG mode -->
+  <logger name="com.dmurph" level="INFO"/>
+  <logger name="com.ning.billing.notificationq" level="INFO"/>
+  <logger name="com.ning.billing.queue" level="INFO"/>
+  <logger name="com.ning.billing.server.updatechecker" level="INFO"/>
+  <logger name="org.eclipse" level="INFO"/>
+
+  <root level="INFO">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

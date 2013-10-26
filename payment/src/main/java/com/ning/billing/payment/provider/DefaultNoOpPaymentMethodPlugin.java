@@ -19,6 +19,8 @@ package com.ning.billing.payment.provider;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import com.ning.billing.payment.api.PaymentMethodKVInfo;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 
@@ -39,7 +41,14 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
     public DefaultNoOpPaymentMethodPlugin(final String externalId,
                                           final boolean isDefault,
                                           final List<PaymentMethodKVInfo> props) {
-        this.kbPaymentMethodId = null;
+        this(null, externalId, isDefault, props);
+    }
+
+    public DefaultNoOpPaymentMethodPlugin(@Nullable final UUID kbPaymentMethodId,
+                                          final String externalId,
+                                          final boolean isDefault,
+                                          final List<PaymentMethodKVInfo> props) {
+        this.kbPaymentMethodId = kbPaymentMethodId;
         this.externalId = externalId;
         this.isDefault = isDefault;
         this.props = props;

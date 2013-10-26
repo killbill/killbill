@@ -25,6 +25,7 @@ import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.Pagination;
 
 public interface PaymentDao {
 
@@ -64,6 +65,8 @@ public interface PaymentDao {
     public PaymentMethodModelDao getPaymentMethodIncludedDeleted(UUID paymentMethodId, InternalTenantContext context);
 
     public List<PaymentMethodModelDao> getPaymentMethods(UUID accountId, InternalTenantContext context);
+
+    public Pagination<PaymentMethodModelDao> getPaymentMethods(String pluginName, Long offset, Long limit, InternalTenantContext context);
 
     public void deletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
 

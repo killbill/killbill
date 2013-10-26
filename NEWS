@@ -1,3 +1,7 @@
+0.7.0
+    Initial support for pagination
+    Entitlement bugfixes
+
 0.5.0
     Initial implementation of RBAC
      - default credentials: admin/password

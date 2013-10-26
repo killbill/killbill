@@ -31,8 +31,6 @@ public interface AccountInternalApi {
 
     public Account getAccountByRecordId(Long recordId, InternalTenantContext context) throws AccountApiException;
 
-    public Pagination<Account> getAccounts(Long offset, Long limit, InternalTenantContext context);
-
     public void updateAccount(String key, AccountData accountData, InternalCallContext context) throws AccountApiException;
 
     public List<AccountEmail> getEmails(UUID accountId, InternalTenantContext context);
