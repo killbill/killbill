@@ -37,7 +37,7 @@ import static org.testng.Assert.assertNotNull;
 
 public class TestJrubyCurrencyPlugin extends TestOSGIBase {
 
-    private final String BUNDLE_TEST_RESOURCE_PREFIX = "killbill-currency-plugin";
+    private final String BUNDLE_TEST_RESOURCE_PREFIX = "killbill-currency-plugin-test";
     private final String BUNDLE_TEST_RESOURCE = BUNDLE_TEST_RESOURCE_PREFIX + ".tar.gz";
 
 
