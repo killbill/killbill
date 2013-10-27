@@ -46,6 +46,7 @@ import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.commons.embeddeddb.EmbeddedDB;
+import com.ning.billing.currency.glue.CurrencyModule;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
@@ -223,6 +224,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new DefaultJunctionModule(configSource));
             install(new DefaultOverdueModule(configSource));
             install(new TenantModule(configSource));
+            install(new CurrencyModule(configSource));
             install(new ExportModule());
             install(new DefaultOSGIModule(configSource));
             install(new UsageModule(configSource));
