@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill-osgi-bundles</artifactId>
         <groupId>com.ning.billing</groupId>
-        <version>0.7.1</version>
+        <version>0.7.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-osgi-bundles-logger</artifactId>
@@ -56,7 +56,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>com.ning.billing.osgi.bundles.logger.Activator</Bundle-Activator>
-                        <Export-Package></Export-Package>
+                        <Export-Package />
                         <Private-Package>com.ning.billing.osgi.bundles.logger.*</Private-Package>
                         <!-- Optional resolution because exported by the Felix system bundle -->
                         <Import-Package>*;resolution:=optional</Import-Package>
