@@ -20,6 +20,7 @@ import javax.inject.Inject;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.CatalogUserApi;
+import com.ning.billing.currency.api.CurrencyConversionApi;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
@@ -50,6 +51,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     private final TagUserApi tagUserApi;
     private final EntitlementApi entitlementApi;
     private final SubscriptionApi subscriptionApi;
+    private final CurrencyConversionApi currencyConversionApi;
     private final RecordIdApi recordIdApi;
 
     private final PluginConfigServiceApi configServiceApi;
@@ -69,6 +71,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
                                final EntitlementApi entitlementApi,
                                final SubscriptionApi subscriptionApi,
                                final RecordIdApi recordIdApi,
+                               final CurrencyConversionApi currencyConversionApi,
                                final PluginConfigServiceApi configServiceApi) {
         this.accountUserApi = accountUserApi;
         this.catalogUserApi = catalogUserApi;
@@ -83,6 +86,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
         this.tagUserApi = tagUserApi;
         this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;
+        this.currencyConversionApi = currencyConversionApi;
         this.recordIdApi = recordIdApi;
         this.configServiceApi = configServiceApi;
     }
@@ -155,6 +159,11 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Override
     public RecordIdApi getRecordIdApi() {
         return recordIdApi;
+    }
+
+    @Override
+    public CurrencyConversionApi getCurrencyConversionApi() {
+        return currencyConversionApi;
     }
 
     @Override
