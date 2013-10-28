@@ -20,20 +20,23 @@ import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 
 public class DefaultNoOpRefundInfoPlugin implements RefundInfoPlugin {
 
     private final BigDecimal amount;
+    private final Currency currency;
     private final DateTime effectiveDate;
     private final DateTime createdDate;
     private final RefundPluginStatus status;
     private final String error;
 
-    public DefaultNoOpRefundInfoPlugin(final BigDecimal amount, final DateTime effectiveDate,
+    public DefaultNoOpRefundInfoPlugin(final BigDecimal amount, final Currency currency, final DateTime effectiveDate,
                                        final DateTime createdDate, final RefundPluginStatus status, final String error) {
         this.amount = amount;
+        this.currency = currency;
         this.effectiveDate = effectiveDate;
         this.createdDate = createdDate;
         this.status = status;
@@ -43,6 +46,11 @@ public class DefaultNoOpRefundInfoPlugin implements RefundInfoPlugin {
     @Override
     public BigDecimal getAmount() {
         return amount;
+    }
+
+    @Override
+    public Currency getCurrency() {
+        return currency;
     }
 
     @Override

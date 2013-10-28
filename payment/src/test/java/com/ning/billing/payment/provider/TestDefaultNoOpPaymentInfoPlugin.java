@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.PaymentTestSuiteNoDB;
 import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 
@@ -36,15 +37,15 @@ public class TestDefaultNoOpPaymentInfoPlugin extends PaymentTestSuiteNoDB {
         final PaymentPluginStatus status = PaymentPluginStatus.UNDEFINED;
         final String error = UUID.randomUUID().toString();
 
-        final DefaultNoOpPaymentInfoPlugin info = new DefaultNoOpPaymentInfoPlugin(amount, effectiveDate, createdDate,
+        final DefaultNoOpPaymentInfoPlugin info = new DefaultNoOpPaymentInfoPlugin(amount, Currency.USD, effectiveDate, createdDate,
                                                                                    status, error);
         Assert.assertEquals(info, info);
 
-        final DefaultNoOpPaymentInfoPlugin sameInfo = new DefaultNoOpPaymentInfoPlugin(amount, effectiveDate, createdDate,
+        final DefaultNoOpPaymentInfoPlugin sameInfo = new DefaultNoOpPaymentInfoPlugin(amount, Currency.USD, effectiveDate, createdDate,
                                                                                        status, error);
         Assert.assertEquals(sameInfo, info);
 
-        final DefaultNoOpPaymentInfoPlugin otherInfo = new DefaultNoOpPaymentInfoPlugin(amount, effectiveDate, createdDate,
+        final DefaultNoOpPaymentInfoPlugin otherInfo = new DefaultNoOpPaymentInfoPlugin(amount, Currency.USD, effectiveDate, createdDate,
                                                                                         status, UUID.randomUUID().toString());
         Assert.assertNotEquals(otherInfo, info);
     }

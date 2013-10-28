@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.dao.TableName;
@@ -40,6 +41,7 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
     private String gatewayErrorCode;
     private String gatewayErrorMsg;
     private BigDecimal requestedAmount;
+    private Currency requestedCurrency;
 
     public PaymentAttemptModelDao() { /* For the DAO mapper */ }
 
@@ -47,7 +49,8 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
                                   final UUID accountId, final UUID invoiceId,
                                   final UUID paymentId, final UUID paymentMethodId,
                                   final PaymentStatus processingStatus, final DateTime effectiveDate,
-                                  final BigDecimal requestedAmount, final String gatewayErrorCode, final String gatewayErrorMsg) {
+                                  final BigDecimal requestedAmount, Currency requestedCurrency,
+                                  final String gatewayErrorCode, final String gatewayErrorMsg) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -56,21 +59,24 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         this.processingStatus = processingStatus;
         this.effectiveDate = effectiveDate;
         this.requestedAmount = requestedAmount;
+        this.requestedCurrency = requestedCurrency;
         this.gatewayErrorCode = gatewayErrorCode;
         this.gatewayErrorMsg = gatewayErrorMsg;
     }
 
-    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final UUID paymentMethodId, final PaymentStatus paymentStatus, final DateTime effectiveDate, final BigDecimal requestedAmount) {
-        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, paymentMethodId, paymentStatus, effectiveDate, requestedAmount, null, null);
+    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final UUID paymentMethodId, final PaymentStatus paymentStatus, final DateTime effectiveDate,
+                                  final BigDecimal requestedAmount, final Currency requestedCurrency) {
+        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, paymentMethodId, paymentStatus, effectiveDate, requestedAmount, requestedCurrency, null, null);
     }
 
-    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final UUID paymentMethodId, final DateTime effectiveDate, final BigDecimal requestedAmount) {
-        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, paymentMethodId, PaymentStatus.UNKNOWN, effectiveDate, requestedAmount, null, null);
+    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final UUID paymentMethodId, final DateTime effectiveDate,
+                                  final BigDecimal requestedAmount, final Currency requestedCurrency) {
+        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, paymentMethodId, PaymentStatus.UNKNOWN, effectiveDate, requestedAmount, requestedCurrency, null, null);
     }
 
     public PaymentAttemptModelDao(final PaymentAttemptModelDao src, final PaymentStatus newProcessingStatus, final String gatewayErrorCode, final String gatewayErrorMsg) {
         this(src.getId(), src.getCreatedDate(), src.getUpdatedDate(), src.getAccountId(), src.getInvoiceId(), src.getPaymentId(), src.getPaymentMethodId(),
-             newProcessingStatus, src.getEffectiveDate(), src.getRequestedAmount(), gatewayErrorCode, gatewayErrorMsg);
+             newProcessingStatus, src.getEffectiveDate(), src.getRequestedAmount(), src.getRequestedCurrency(), gatewayErrorCode, gatewayErrorMsg);
     }
 
     public UUID getAccountId() {
@@ -109,6 +115,10 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         return requestedAmount;
     }
 
+    public Currency getRequestedCurrency() {
+        return requestedCurrency;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -121,6 +131,7 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         sb.append(", gatewayErrorCode='").append(gatewayErrorCode).append('\'');
         sb.append(", gatewayErrorMsg='").append(gatewayErrorMsg).append('\'');
         sb.append(", requestedAmount=").append(requestedAmount);
+        sb.append(", requestedCurrency=").append(requestedCurrency);
         sb.append('}');
         return sb.toString();
     }
@@ -166,7 +177,9 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         if (requestedAmount != null ? !requestedAmount.equals(that.requestedAmount) : that.requestedAmount != null) {
             return false;
         }
-
+        if (requestedCurrency != that.requestedCurrency) {
+            return false;
+        }
         return true;
     }
 
@@ -182,6 +195,7 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         result = 31 * result + (gatewayErrorCode != null ? gatewayErrorCode.hashCode() : 0);
         result = 31 * result + (gatewayErrorMsg != null ? gatewayErrorMsg.hashCode() : 0);
         result = 31 * result + (requestedAmount != null ? requestedAmount.hashCode() : 0);
+        result = 31 * result + (requestedCurrency != null ? requestedCurrency.hashCode() : 0);
         return result;
     }
 

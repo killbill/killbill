@@ -39,6 +39,8 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Paymen
     private UUID paymentMethodId;
     private BigDecimal amount;
     private Currency currency;
+    private BigDecimal processedAmount;
+    private Currency processedCurrency;
     private DateTime effectiveDate;
     private Integer paymentNumber;
     private PaymentStatus paymentStatus;
@@ -49,7 +51,7 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Paymen
 
     public PaymentModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
                            final UUID invoiceId, final UUID paymentMethodId,
-                           final Integer paymentNumber, final BigDecimal amount, final Currency currency,
+                           final Integer paymentNumber, final BigDecimal amount, final Currency currency, final BigDecimal processedAmount, final Currency processedCurrency,
                            final PaymentStatus paymentStatus, final DateTime effectiveDate, final String extFirstPaymentRefId, final String extSecondPaymentRefId) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
@@ -58,6 +60,8 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Paymen
         this.paymentNumber = paymentNumber;
         this.amount = amount;
         this.currency = currency;
+        this.processedAmount = processedAmount;
+        this.processedCurrency = processedCurrency;
         this.paymentStatus = paymentStatus;
         this.effectiveDate = effectiveDate;
         this.extFirstPaymentRefId = extFirstPaymentRefId;
@@ -66,17 +70,17 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Paymen
 
     public PaymentModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
                            final BigDecimal amount, final Currency currency, final DateTime effectiveDate, final PaymentStatus paymentStatus) {
-        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, paymentStatus, effectiveDate, null, null);
+        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, amount, currency, paymentStatus, effectiveDate, null, null);
     }
 
     public PaymentModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
                            final BigDecimal amount, final Currency currency, final DateTime effectiveDate) {
-        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, PaymentStatus.UNKNOWN, effectiveDate, null, null);
+        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, amount, currency, PaymentStatus.UNKNOWN, effectiveDate, null, null);
     }
 
     public PaymentModelDao(final PaymentModelDao src, final PaymentStatus newPaymentStatus) {
         this(src.getId(), src.getCreatedDate(), src.getUpdatedDate(), src.getAccountId(), src.getInvoiceId(), src.getPaymentMethodId(),
-             src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate(), null, null);
+             src.getPaymentNumber(), src.getAmount(), src.getCurrency(), src.getProcessedAmount(), src.getProcessedCurrency(), newPaymentStatus, src.getEffectiveDate(), null, null);
     }
 
     public UUID getAccountId() {
@@ -99,12 +103,20 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Paymen
         return amount;
     }
 
-    public PaymentStatus getPaymentStatus() {
-        return paymentStatus;
-    }
-
     public Currency getCurrency() {
         return currency;
+    }
+
+    public BigDecimal getProcessedAmount() {
+        return processedAmount;
+    }
+
+    public Currency getProcessedCurrency() {
+        return processedCurrency;
+    }
+
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
     }
 
     public DateTime getEffectiveDate() {
@@ -160,6 +172,12 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Paymen
         if (currency != that.currency) {
             return false;
         }
+        if (processedAmount != null ? !processedAmount.equals(that.processedAmount) : that.processedAmount != null) {
+            return false;
+        }
+        if (processedCurrency != that.processedCurrency) {
+            return false;
+        }
         if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
             return false;
         }
@@ -181,7 +199,6 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Paymen
         if (paymentStatus != that.paymentStatus) {
             return false;
         }
-
         return true;
     }
 
@@ -193,6 +210,8 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Paymen
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (processedAmount != null ? processedAmount.hashCode() : 0);
+        result = 31 * result + (processedCurrency != null ? processedCurrency.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (paymentNumber != null ? paymentNumber.hashCode() : 0);
         result = 31 * result + (paymentStatus != null ? paymentStatus.hashCode() : 0);

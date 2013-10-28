@@ -96,7 +96,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
         }
 
         final PaymentPluginStatus status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
-        final PaymentInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(amount, clock.getUTCNow(), clock.getUTCNow(), status, null);
+        final PaymentInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, null);
         payments.put(kbPaymentId.toString(), result);
         return result;
     }
@@ -205,7 +205,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
                                                                   refundAmount, kbPaymentId.toString(), paymentInfoPlugin.getAmount(), PLUGIN_NAME));
         }
 
-        final DefaultNoOpRefundInfoPlugin refundInfoPlugin = new DefaultNoOpRefundInfoPlugin(refundAmount, clock.getUTCNow(), clock.getUTCNow(), RefundPluginStatus.PROCESSED, null);
+        final DefaultNoOpRefundInfoPlugin refundInfoPlugin = new DefaultNoOpRefundInfoPlugin(refundAmount, currency, clock.getUTCNow(), clock.getUTCNow(), RefundPluginStatus.PROCESSED, null);
         refunds.put(kbPaymentId.toString(), refundInfoPlugin);
 
         return refundInfoPlugin;

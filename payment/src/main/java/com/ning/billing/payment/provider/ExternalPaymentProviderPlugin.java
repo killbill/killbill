@@ -60,17 +60,17 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public PaymentInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(amount, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
+        return new DefaultNoOpPaymentInfoPlugin(amount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
     }
 
     @Override
     public PaymentInfoPlugin getPaymentInfo(final UUID kbAccountId, final UUID kbPaymentId, final TenantContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(BigDecimal.ZERO, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
+        return new DefaultNoOpPaymentInfoPlugin(BigDecimal.ZERO, null, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
     }
 
     @Override
     public RefundInfoPlugin processRefund(final UUID kbAccountId, final UUID kbPaymentId, final BigDecimal refundAmount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpRefundInfoPlugin(BigDecimal.ZERO, clock.getUTCNow(), clock.getUTCNow(), RefundPluginStatus.PROCESSED, null);
+        return new DefaultNoOpRefundInfoPlugin(BigDecimal.ZERO, currency, clock.getUTCNow(), clock.getUTCNow(), RefundPluginStatus.PROCESSED, null);
     }
 
     @Override

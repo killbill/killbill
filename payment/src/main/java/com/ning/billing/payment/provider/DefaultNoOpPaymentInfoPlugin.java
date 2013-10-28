@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 
@@ -30,19 +31,26 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
     private final DateTime createdDate;
     private final PaymentPluginStatus status;
     private final String error;
+    private final Currency currency;
 
-    public DefaultNoOpPaymentInfoPlugin(final BigDecimal amount, final DateTime effectiveDate,
+    public DefaultNoOpPaymentInfoPlugin(final BigDecimal amount, final Currency currency, final DateTime effectiveDate,
                                         final DateTime createdDate, final PaymentPluginStatus status, final String error) {
         this.amount = amount;
         this.effectiveDate = effectiveDate;
         this.createdDate = createdDate;
         this.status = status;
         this.error = error;
+        this.currency = currency;
     }
 
     @Override
     public BigDecimal getAmount() {
         return amount;
+    }
+
+    @Override
+    public Currency getCurrency() {
+        return currency;
     }
 
     @Override

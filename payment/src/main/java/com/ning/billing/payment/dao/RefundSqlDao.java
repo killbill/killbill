@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.dao;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -23,6 +24,7 @@ import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.callcontext.InternalCallContext;
@@ -38,6 +40,8 @@ public interface RefundSqlDao extends EntitySqlDao<RefundModelDao, Refund> {
     @Audited(ChangeType.UPDATE)
     void updateStatus(@Bind("id") final String refundId,
                       @Bind("refundStatus") final String status,
+                      @Bind("processedAmount") final BigDecimal processedAmount,
+                      @Bind("processedCurrency") final Currency processedCurrency,
                       @BindBean final InternalCallContext context);
 
     @SqlQuery

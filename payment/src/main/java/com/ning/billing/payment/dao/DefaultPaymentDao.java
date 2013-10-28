@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.dao;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +28,7 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.payment.api.PaymentStatus;
@@ -100,6 +102,8 @@ public class DefaultPaymentDao implements PaymentDao {
     @Override
     public void updatePaymentAndAttemptOnCompletion(final UUID paymentId,
                                                     final PaymentStatus paymentStatus,
+                                                    final BigDecimal processedAmount,
+                                                    final Currency processedCurrency,
                                                     final UUID attemptId,
                                                     final String gatewayErrorCode,
                                                     final String gatewayErrorMsg,
@@ -108,7 +112,7 @@ public class DefaultPaymentDao implements PaymentDao {
 
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStatus(paymentId.toString(), paymentStatus.toString(), context);
+                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStatus(paymentId.toString(), processedAmount, processedCurrency, paymentStatus.toString(), context);
                 entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class).updatePaymentAttemptStatus(attemptId.toString(), paymentStatus.toString(), gatewayErrorCode, gatewayErrorMsg, context);
                 return null;
             }
@@ -147,11 +151,11 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updateRefundStatus(final UUID refundId, final RefundStatus refundStatus, final InternalCallContext context) {
+    public void updateRefundStatus(final UUID refundId, final RefundStatus refundStatus, final BigDecimal processedAmount, final Currency processedCurrency, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(RefundSqlDao.class).updateStatus(refundId.toString(), refundStatus.toString(), context);
+                entitySqlDaoWrapperFactory.become(RefundSqlDao.class).updateStatus(refundId.toString(), refundStatus.toString(), processedAmount, processedCurrency, context);
                 return null;
             }
         });

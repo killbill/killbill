@@ -25,6 +25,7 @@ import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.callcontext.InternalCallContext;
@@ -39,6 +40,8 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updatePaymentStatus(@Bind("id") final String paymentId,
+                             @Bind("processedAmount") final BigDecimal processedAmount,
+                             @Bind("processedCurrency") final Currency processedCurrency,
                              @Bind("paymentStatus") final String paymentStatus,
                              @BindBean final InternalCallContext context);
 

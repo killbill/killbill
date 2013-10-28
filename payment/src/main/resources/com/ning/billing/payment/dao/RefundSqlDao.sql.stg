@@ -9,6 +9,8 @@ tableFields(prefix) ::= <<
 , <prefix>payment_id
 , <prefix>amount
 , <prefix>currency
+, <prefix>processed_amount
+, <prefix>processed_currency
 , <prefix>is_adjusted
 , <prefix>refund_status
 , <prefix>created_by
@@ -22,6 +24,8 @@ tableValues() ::= <<
 , :paymentId
 , :amount
 , :currency
+, :processedAmount
+, :processedCurrency
 , :isAdjusted
 , :refundStatus
 , :createdBy
@@ -33,6 +37,8 @@ tableValues() ::= <<
 updateStatus(refundStatus) ::= <<
 update <tableName()>
 set refund_status = :refundStatus
+, processed_amount = :processedAmount
+, processed_currency = :processedCurrency
 where id = :id
 <AND_CHECK_TENANT()>
 ;

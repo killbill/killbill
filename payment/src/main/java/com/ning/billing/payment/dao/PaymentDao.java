@@ -16,11 +16,13 @@
 
 package com.ning.billing.payment.dao;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.callcontext.InternalCallContext;
@@ -34,6 +36,7 @@ public interface PaymentDao {
     public PaymentAttemptModelDao updatePaymentWithNewAttempt(UUID paymentId, PaymentAttemptModelDao attempt, InternalCallContext context);
 
     public void updatePaymentAndAttemptOnCompletion(UUID paymentId, PaymentStatus paymentStatus,
+                                                    BigDecimal processedAmount, Currency processedCurrency,
                                                     UUID attemptId, String gatewayErrorMsg, String gatewayErrorCode, InternalCallContext context);
 
     public PaymentAttemptModelDao getPaymentAttempt(UUID attemptId, InternalTenantContext context);
@@ -50,7 +53,7 @@ public interface PaymentDao {
 
     public RefundModelDao insertRefund(RefundModelDao refundInfo, InternalCallContext context);
 
-    public void updateRefundStatus(UUID refundId, RefundStatus status, InternalCallContext context);
+    public void updateRefundStatus(UUID refundId, RefundStatus status, BigDecimal processedAmount, Currency processedCurrency, InternalCallContext context);
 
     public RefundModelDao getRefund(UUID refundId, InternalTenantContext context);
 

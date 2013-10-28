@@ -58,6 +58,11 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
             }
 
             @Override
+            public Currency getCurrency() {
+                return currency;
+            }
+
+            @Override
             public DateTime getCreatedDate() {
                 return new DateTime();
             }
@@ -105,6 +110,11 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
             }
 
             @Override
+            public Currency getCurrency() {
+                return null;
+            }
+
+            @Override
             public DateTime getCreatedDate() {
                 return new DateTime();
             }
@@ -148,6 +158,11 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
         return withRuntimeCheckForExceptions(new RefundInfoPlugin() {
             @Override
             public BigDecimal getAmount() {
+                return null;
+            }
+
+            @Override
+            public Currency getCurrency() {
                 return null;
             }
 

@@ -51,7 +51,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
     protected static final Logger log = LoggerFactory.getLogger(TestTransfer.class);
 
 
-    @Test(groups = "slow", enabled = false)
+    @Test(groups = "slow", enabled = true)
     public void testTransferMigratedSubscriptionWithCTDInFuture() throws Exception {
 
         final UUID newAccountId = UUID.randomUUID();

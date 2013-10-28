@@ -120,24 +120,24 @@ public class RefundProcessor extends ProcessorBase {
                         throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, paymentId);
                     }
 
-                    final RefundModelDao refundInfo = new RefundModelDao(account.getId(), paymentId, refundAmount, account.getCurrency(), isAdjusted);
+                    final RefundModelDao refundInfo = new RefundModelDao(account.getId(), paymentId, refundAmount, account.getCurrency(), refundAmount, account.getCurrency(), isAdjusted);
                     paymentDao.insertRefund(refundInfo, context);
 
                     final PaymentPluginApi plugin = getPaymentProviderPlugin(payment.getPaymentMethodId(), context);
                     final RefundInfoPlugin refundInfoPlugin = plugin.processRefund(account.getId(), paymentId, refundAmount, account.getCurrency(), context.toCallContext());
 
                     if (refundInfoPlugin.getStatus() == RefundPluginStatus.PROCESSED) {
-                        paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, context);
+                        paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, refundInfoPlugin.getAmount(), refundInfoPlugin.getCurrency(), context);
 
                         invoiceApi.createRefund(paymentId, refundAmount, isAdjusted, invoiceItemIdsWithAmounts, refundInfo.getId(), context);
 
-                        paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.COMPLETED, context);
+                        paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.COMPLETED, refundInfoPlugin.getAmount(), refundInfoPlugin.getCurrency(), context);
 
                         return new DefaultRefund(refundInfo.getId(), refundInfo.getCreatedDate(), refundInfo.getUpdatedDate(),
                                                  paymentId, refundInfo.getAmount(), account.getCurrency(),
                                                  isAdjusted, refundInfo.getCreatedDate());
                     } else {
-                        paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_ERRORED, context);
+                        paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_ERRORED, refundAmount, account.getCurrency(), context);
                         throw new PaymentPluginApiException("Refund error for RefundInfo: " + refundInfo.toString(),
                                                             String.format("Gateway error: %s, Gateway error code: %s, Reference id: %s", refundInfoPlugin.getGatewayError(), refundInfoPlugin.getGatewayErrorCode(), refundInfoPlugin.getReferenceId()));
                     }
@@ -278,7 +278,7 @@ public class RefundProcessor extends ProcessorBase {
 
                             // TODO - we currently don't save the items to be adjusted. If we crash, they won't be adjusted...
                             invoiceApi.createRefund(cur.getPaymentId(), cur.getAmount(), cur.isAdjusted(), ImmutableMap.<UUID, BigDecimal>of(), cur.getId(), context);
-                            paymentDao.updateRefundStatus(cur.getId(), RefundStatus.COMPLETED, context);
+                            paymentDao.updateRefundStatus(cur.getId(), RefundStatus.COMPLETED, cur.getProcessedAmount(), cur.getProcessedCurrency(), context);
                         }
                     } catch (InvoiceApiException e) {
                         throw new PaymentApiException(e);

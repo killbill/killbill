@@ -57,6 +57,11 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
             }
 
             @Override
+            public Currency getCurrency() {
+                return currency;
+            }
+
+            @Override
             public DateTime getCreatedDate() {
                 return new DateTime();
             }

@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.dao;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ import java.util.UUID;
 
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.entity.Pagination;
@@ -57,7 +59,9 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updatePaymentAndAttemptOnCompletion(final UUID paymentId, final PaymentStatus paymentStatus, final UUID attemptId, final String gatewayErrorCode,
+    public void updatePaymentAndAttemptOnCompletion(final UUID paymentId, final PaymentStatus paymentStatus,
+                                                    BigDecimal processedAmount, Currency processedCurrency,
+                                                    final UUID attemptId, final String gatewayErrorCode,
                                                     final String gatewayErrorMsg,
                                                     final InternalCallContext context) {
         synchronized (this) {
@@ -183,8 +187,10 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updateRefundStatus(final UUID refundId, final RefundStatus status, final InternalCallContext context) {
+    public void updateRefundStatus(final UUID refundId, final RefundStatus status, final BigDecimal processedAmount, final Currency processedCurrency, final InternalCallContext context) {
+        return;
     }
+
 
     @Override
     public RefundModelDao getRefund(final UUID refundId, final InternalTenantContext context) {

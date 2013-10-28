@@ -35,24 +35,29 @@ public class RefundModelDao extends EntityBase implements EntityModelDao<Refund>
     private UUID paymentId;
     private BigDecimal amount;
     private Currency currency;
+    private BigDecimal processedAmount;
+    private Currency processedCurrency;
     private boolean isAdjusted;
     private RefundStatus refundStatus;
 
     public RefundModelDao() { /* For the DAO mapper */ }
 
-    public RefundModelDao(final UUID accountId, final UUID paymentId, final BigDecimal amount,
-                          final Currency currency, final boolean isAdjusted) {
-        this(UUID.randomUUID(), accountId, paymentId, amount, currency, isAdjusted, RefundStatus.CREATED, null, null);
+    public RefundModelDao(final UUID accountId, final UUID paymentId, final BigDecimal amount, final Currency currency,
+                          final BigDecimal processedAmount, final Currency processedCurrency, final boolean isAdjusted) {
+        this(UUID.randomUUID(), accountId, paymentId, amount, currency, processedAmount, processedCurrency, isAdjusted, RefundStatus.CREATED, null, null);
     }
 
     public RefundModelDao(final UUID id, final UUID accountId, final UUID paymentId, final BigDecimal amount,
-                          final Currency currency, final boolean isAdjusted, final RefundStatus refundStatus,
+                          final Currency currency, final BigDecimal processedAmount, final Currency processedCurrency,
+                          final boolean isAdjusted, final RefundStatus refundStatus,
                           @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.paymentId = paymentId;
         this.amount = amount;
         this.currency = currency;
+        this.processedAmount = processedAmount;
+        this.processedCurrency = processedCurrency;
         this.refundStatus = refundStatus;
         this.isAdjusted = isAdjusted;
     }
@@ -71,6 +76,14 @@ public class RefundModelDao extends EntityBase implements EntityModelDao<Refund>
 
     public Currency getCurrency() {
         return currency;
+    }
+
+    public BigDecimal getProcessedAmount() {
+        return processedAmount;
+    }
+
+    public Currency getProcessedCurrency() {
+        return processedCurrency;
     }
 
     public RefundStatus getRefundStatus() {
@@ -102,6 +115,8 @@ public class RefundModelDao extends EntityBase implements EntityModelDao<Refund>
         sb.append(", paymentId=").append(paymentId);
         sb.append(", amount=").append(amount);
         sb.append(", currency=").append(currency);
+        sb.append(", processedAmount=").append(processedAmount);
+        sb.append(", processedCurrency=").append(processedCurrency);
         sb.append(", isAdjusted=").append(isAdjusted);
         sb.append(", refundStatus=").append(refundStatus);
         sb.append(", createdDate=").append(createdDate);
@@ -130,10 +145,16 @@ public class RefundModelDao extends EntityBase implements EntityModelDao<Refund>
         if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
             return false;
         }
+        if (processedAmount != null ? !processedAmount.equals(that.processedAmount) : that.processedAmount != null) {
+            return false;
+        }
         if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
             return false;
         }
         if (currency != that.currency) {
+            return false;
+        }
+        if (processedCurrency != that.processedCurrency) {
             return false;
         }
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
@@ -155,6 +176,8 @@ public class RefundModelDao extends EntityBase implements EntityModelDao<Refund>
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (processedAmount != null ? processedAmount.hashCode() : 0);
+        result = 31 * result + (processedCurrency != null ? processedCurrency.hashCode() : 0);
         result = 31 * result + (isAdjusted ? 1 : 0);
         result = 31 * result + (refundStatus != null ? refundStatus.hashCode() : 0);
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);

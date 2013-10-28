@@ -10,8 +10,10 @@ tableFields(prefix) ::= <<
 , <prefix>invoice_id
 , <prefix>payment_method_id
 , <prefix>amount
-, <prefix>effective_date
 , <prefix>currency
+, <prefix>processed_amount
+, <prefix>processed_currency
+, <prefix>effective_date
 , <prefix>payment_status
 , <prefix>created_by
 , <prefix>created_date
@@ -24,8 +26,10 @@ tableValues() ::= <<
 , :invoiceId
 , :paymentMethodId
 , :amount
-, :effectiveDate
 , :currency
+, :processedAmount
+, :processedCurrency
+, :effectiveDate
 , :paymentStatus
 , :createdBy
 , :createdDate
@@ -72,6 +76,8 @@ order by effective_date desc limit 1
 updatePaymentStatus() ::= <<
 update payments
 set payment_status = :paymentStatus
+, processed_amount = :processedAmount
+, processed_currency = :processedCurrency
 where id = :id
 <AND_CHECK_TENANT()>
 ;
