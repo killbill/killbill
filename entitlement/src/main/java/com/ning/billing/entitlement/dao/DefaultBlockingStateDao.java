@@ -87,7 +87,7 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingHistoryForService(blockableId, serviceName, clock.getUTCNow().toDate(), context);
+                final List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingHistoryForService(blockableId, serviceName, context);
                 return new ArrayList<BlockingState>(Collections2.transform(models, new Function<BlockingStateModelDao, BlockingState>() {
                     @Override
                     public BlockingState apply(@Nullable final BlockingStateModelDao src) {
@@ -139,7 +139,7 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
 
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
                 // Get all blocking states for that blocked id and service
-                final List<BlockingStateModelDao> allForBlockedItAndService = sqlDao.getBlockingHistoryForService(state.getBlockedId(), state.getService(), clock.getUTCNow().toDate(), context);
+                final List<BlockingStateModelDao> allForBlockedItAndService = sqlDao.getBlockingHistoryForService(state.getBlockedId(), state.getService(), context);
 
                 // Add the new one (we rely below on the fact that the ID for newBlockingStateModelDao is now set)
                 allForBlockedItAndService.add(newBlockingStateModelDao);

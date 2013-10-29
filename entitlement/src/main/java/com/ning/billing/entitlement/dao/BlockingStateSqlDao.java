@@ -61,7 +61,6 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
     @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingHistoryForService(@Bind("blockableId") UUID blockableId,
                                                                              @Bind("service") String serviceName,
-                                                                             @Bind("effectiveDate") Date effectiveDate,
                                                                              @BindBean final InternalTenantContext context);
 
     @SqlQuery
