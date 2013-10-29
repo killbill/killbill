@@ -31,16 +31,16 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.entitlement.api.BlockingStateType;
-import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
+import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
-import com.ning.billing.junction.DefaultBlockingState;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(BlockingStateSqlDao.BlockingHistorySqlMapper.class)
@@ -64,15 +64,9 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
                                                                              @Bind("effectiveDate") Date effectiveDate,
                                                                              @BindBean final InternalTenantContext context);
 
-
-    @SqlQuery
-    public abstract List<BlockingStateModelDao> getBlockingHistory(@Bind("blockableId") UUID blockableId,
-                                                                   @Bind("effectiveDate") Date effectiveDate,
-                                                                   @BindBean final InternalTenantContext context);
-
     @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingAll(@Bind("blockableId") UUID blockableId,
-                                                                   @BindBean final InternalTenantContext context);
+                                                               @BindBean final InternalTenantContext context);
 
 
     @SqlUpdate

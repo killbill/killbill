@@ -19,8 +19,6 @@ package com.ning.billing.entitlement.api.svcs;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,16 +85,6 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
     }
 
     @Override
-    public List<BlockingState> getBlockingHistory(final Blockable overdueable, final InternalTenantContext context) {
-        return dao.getBlockingHistory(overdueable.getId(), context);
-    }
-
-    @Override
-    public List<BlockingState> getBlockingHistory(final UUID overdueableId, final InternalTenantContext context) {
-        return dao.getBlockingHistory(overdueableId, context);
-    }
-
-    @Override
     public List<BlockingState> getBlockingAll(final Blockable overdueable, final InternalTenantContext context) {
         return dao.getBlockingAll(overdueable.getId(), context);
     }
@@ -129,7 +117,7 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
     }
 
     private void postBlockingTransitionEvent(final UUID blockableId, final BlockingStateType type,
-            final BlockingAggregator previousState, final BlockingAggregator currentState, final InternalCallContext context) {
+                                             final BlockingAggregator previousState, final BlockingAggregator currentState, final InternalCallContext context) {
 
         try {
             final boolean isTransitionToBlockedBilling = !previousState.isBlockBilling() && currentState.isBlockBilling();
@@ -139,10 +127,10 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
             final boolean isTransitionToUnblockedEntitlement = previousState.isBlockEntitlement() && !currentState.isBlockEntitlement();
 
             final BlockingTransitionInternalEvent event = new DefaultBlockingTransitionInternalEvent(blockableId, type,
-                                                                                               isTransitionToBlockedBilling, isTransitionToUnblockedBilling,
-                                                                                               isTransitionToBlockedEntitlement, isTransitionToUnblockedEntitlement,
+                                                                                                     isTransitionToBlockedBilling, isTransitionToUnblockedBilling,
+                                                                                                     isTransitionToBlockedEntitlement, isTransitionToUnblockedEntitlement,
 
-                                                                                               context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+                                                                                                     context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
 
             // TODO
             // STEPH Ideally we would like to post from transaction when we inserted the new blocking state, but new state would have to be recalculated from transaction which is

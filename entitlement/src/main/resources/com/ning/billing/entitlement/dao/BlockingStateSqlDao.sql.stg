@@ -82,18 +82,6 @@ order by record_id asc
 ;
 >>
 
-getBlockingHistory() ::= <<
-select
-<allTableFields()>
-from
-<tableName()>
-where blockable_id = :blockableId
-and is_active
-<AND_CHECK_TENANT()>
-order by record_id asc
-;
->>
-
 getBlockingAll() ::= <<
 select
 <allTableFields()>

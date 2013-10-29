@@ -99,22 +99,6 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public List<BlockingState> getBlockingHistory(final UUID blockableId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
-            @Override
-            public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingHistory(blockableId, clock.getUTCNow().toDate(), context);
-                return new ArrayList<BlockingState>(Collections2.transform(models, new Function<BlockingStateModelDao, BlockingState>() {
-                    @Override
-                    public BlockingState apply(@Nullable final BlockingStateModelDao src) {
-                        return BlockingStateModelDao.toBlockingState(src);
-                    }
-                }));
-            }
-        });
-    }
-
-    @Override
     public List<BlockingState> getBlockingAll(final UUID blockableId, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
