@@ -241,13 +241,13 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 return EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) && input.getEffectiveDate().isAfter(clock.getUTCNow());
             }
         });
-        final BlockingState futureCancellation = filtered.iterator().hasNext() ? filtered.iterator().next() : null;
-        if (futureCancellation == null) {
-            return;
-        }
 
         // Reactivate entitlement
-        blockingStateDao.unactiveBlockingState(futureCancellation.getId(), contextWithValidAccountRecordId);
+        // We should only have one future event in theory - but cleanup the data if it's not the case
+        // See https://github.com/killbill/killbill/issues/111
+        for (final BlockingState futureCancellation : filtered) {
+            blockingStateDao.unactiveBlockingState(futureCancellation.getId(), contextWithValidAccountRecordId);
+        }
 
         // If billing was previously cancelled, reactivate
         if (subscriptionBase.getFutureEndDate() != null) {
