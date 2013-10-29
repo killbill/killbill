@@ -66,6 +66,7 @@ public interface OSGIConfig extends KillbillConfig {
              "com.ning.billing.util.customfield," +
              "com.ning.billing.notification.plugin," +
              "com.ning.billing.currency.plugin.api," +
+             "com.ning.billing.currency.api," +
              "com.ning.billing.util.email," +
              "com.ning.billing.util.entity," +
              "com.ning.billing.util.tag," +

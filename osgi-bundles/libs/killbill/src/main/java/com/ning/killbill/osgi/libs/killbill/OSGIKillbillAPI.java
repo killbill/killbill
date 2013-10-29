@@ -21,7 +21,6 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.CatalogUserApi;
-import com.ning.billing.currency.api.CurrencyConversion;
 import com.ning.billing.currency.api.CurrencyConversionApi;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.SubscriptionApi;
