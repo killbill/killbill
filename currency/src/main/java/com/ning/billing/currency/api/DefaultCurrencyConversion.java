@@ -16,25 +16,20 @@
 
 package com.ning.billing.currency.api;
 
+import java.util.Set;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 
 public class DefaultCurrencyConversion implements CurrencyConversion {
 
-    private final DateTime conversionDate;
     private final Currency baseCurrency;
-    private final Rates rates;
+    private final Set<Rate> rates;
 
-    public DefaultCurrencyConversion(final DateTime conversionDate, final Currency baseCurrency, final Rates rates) {
-        this.conversionDate = conversionDate;
+    public DefaultCurrencyConversion(final Currency baseCurrency, final Set<Rate> rates) {
         this.baseCurrency = baseCurrency;
         this.rates = rates;
-    }
-
-    @Override
-    public DateTime getConversionDate() {
-        return conversionDate;
     }
 
     @Override
@@ -43,7 +38,7 @@ public class DefaultCurrencyConversion implements CurrencyConversion {
     }
 
     @Override
-    public Rates getRates() {
+    public final Set<Rate> getRates() {
         return rates;
     }
 }

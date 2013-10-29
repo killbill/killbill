@@ -28,8 +28,8 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.currency.api.Rate;
 import com.ning.billing.currency.plugin.api.CurrencyPluginApi;
-import com.ning.billing.currency.plugin.api.Rate;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 
 import static org.testng.Assert.assertEquals;

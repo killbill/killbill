@@ -16,9 +16,6 @@
 
 package com.ning.billing.currency.api;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -28,7 +25,6 @@ import org.joda.time.DateTime;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.currency.plugin.api.CurrencyPluginApi;
-import com.ning.billing.currency.plugin.api.Rate;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.util.config.CurrencyConfig;
 
@@ -71,16 +67,7 @@ public class DefaultCurrencyConversionApi implements CurrencyConversionApi {
     }
 
     private CurrencyConversion getCurrencyConversionInternal(final Currency baseCurrency, final Set<Rate> allRates) {
-        final Map<Currency, BigDecimal> rateMap = new HashMap<Currency, BigDecimal>();
-        DateTime conversionDate = null;
-        for (Rate cur : allRates) {
-            // We expect all those dates to be the same but if that were not the case we take the min -- what looks like the oldest
-            conversionDate = (conversionDate == null || conversionDate.isAfter(cur.getConversionDate())) ? cur.getConversionDate() : conversionDate;
-            rateMap.put(cur.getCurrency(), cur.getValue());
-        }
-
-        final Rates rates = new DefaultRates(rateMap);
-        final CurrencyConversion result = new DefaultCurrencyConversion(conversionDate, baseCurrency, rates);
+        final CurrencyConversion result = new DefaultCurrencyConversion(baseCurrency, allRates);
         return result;
     }
 }

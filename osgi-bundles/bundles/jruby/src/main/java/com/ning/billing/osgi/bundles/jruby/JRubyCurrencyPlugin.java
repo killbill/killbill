@@ -28,8 +28,8 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.currency.api.Rate;
 import com.ning.billing.currency.plugin.api.CurrencyPluginApi;
-import com.ning.billing.currency.plugin.api.Rate;
 import com.ning.billing.osgi.api.OSGIPluginProperties;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
