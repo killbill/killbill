@@ -93,12 +93,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-util</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.ning.billing.commons</groupId>
             <artifactId>killbill-clock</artifactId>
         </dependency>
