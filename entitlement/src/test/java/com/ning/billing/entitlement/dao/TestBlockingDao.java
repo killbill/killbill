@@ -91,7 +91,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
-        final List<BlockingState> history2 = blockingStateDao.getBlockingHistory(bundle.getId(), internalCallContext);
+        final List<BlockingState> history2 = blockingStateDao.getBlockingAll(bundle.getId(), internalCallContext);
         Assert.assertEquals(history2.size(), 2);
         Assert.assertEquals(history2.get(0).getStateName(), overdueStateName);
         Assert.assertEquals(history2.get(1).getStateName(), overdueStateName2);

@@ -41,7 +41,7 @@ public class MockBlockingStateDao implements BlockingStateDao {
 
     @Override
     public BlockingState getBlockingStateForService(final UUID blockableId, final String serviceName, final InternalTenantContext context) {
-        final List<BlockingState> states = getBlockingHistory(blockableId, context);
+        final List<BlockingState> states = getBlockingAll(blockableId, context);
         if (states == null) {
             return null;
         }
@@ -86,13 +86,6 @@ public class MockBlockingStateDao implements BlockingStateDao {
 
         // Note! The returned list cannot be immutable!
         return states == null ? new ArrayList<BlockingState>() : new ArrayList<BlockingState>(filtered);
-    }
-
-    @Override
-    public List<BlockingState> getBlockingHistory(final UUID overdueableId, final InternalTenantContext context) {
-        final List<BlockingState> states = blockingStates.get(overdueableId);
-        // Note! The returned list cannot be immutable!
-        return states == null ? new ArrayList<BlockingState>() : states;
     }
 
     @Override

@@ -19,10 +19,10 @@ package com.ning.billing.junction;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.entitlement.api.Blockable;
-import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.entitlement.api.Blockable;
+import com.ning.billing.entitlement.api.BlockingState;
 
 public interface BlockingInternalApi {
 
@@ -33,10 +33,6 @@ public interface BlockingInternalApi {
     public List<BlockingState> getBlockingHistoryForService(Blockable blockable, String serviceName, InternalTenantContext context);
 
     public List<BlockingState> getBlockingHistoryForService(UUID blockableId, String serviceName, InternalTenantContext context);
-
-    public List<BlockingState> getBlockingHistory(Blockable blockable, InternalTenantContext context);
-
-    public List<BlockingState> getBlockingHistory(UUID blockableId, InternalTenantContext context);
 
     public List<BlockingState> getBlockingAll(Blockable blockable, InternalTenantContext context);
 

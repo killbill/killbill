@@ -133,16 +133,6 @@ public class ApplicatorMockJunctionModule extends AbstractModule {
         }
 
         @Override
-        public List<BlockingState> getBlockingHistory(final Blockable blockable, final InternalTenantContext context) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<BlockingState> getBlockingHistory(final UUID blockableId, final InternalTenantContext context) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public List<BlockingState> getBlockingAll(final Blockable blockable, final InternalTenantContext context) {
             throw new UnsupportedOperationException();
         }
