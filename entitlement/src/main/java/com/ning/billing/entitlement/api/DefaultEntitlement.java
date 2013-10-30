@@ -235,17 +235,19 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         }
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         final List<BlockingState> blockingStates = blockingStateDao.getBlockingHistoryForService(getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
-        final Collection<BlockingState> filtered = Collections2.filter(blockingStates, new Predicate<BlockingState>() {
+        final Collection<BlockingState> futureEntitlementCancellationEvents = Collections2.filter(blockingStates, new Predicate<BlockingState>() {
             @Override
             public boolean apply(final BlockingState input) {
-                return EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) && input.getEffectiveDate().isAfter(clock.getUTCNow());
+                return EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) &&
+                       DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName()) &&
+                       input.getEffectiveDate().isAfter(clock.getUTCNow());
             }
         });
 
         // Reactivate entitlement
         // We should only have one future event in theory - but cleanup the data if it's not the case
         // See https://github.com/killbill/killbill/issues/111
-        for (final BlockingState futureCancellation : filtered) {
+        for (final BlockingState futureCancellation : futureEntitlementCancellationEvents) {
             blockingStateDao.unactiveBlockingState(futureCancellation.getId(), contextWithValidAccountRecordId);
         }
 
