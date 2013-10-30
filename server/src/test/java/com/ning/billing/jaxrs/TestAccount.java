@@ -319,6 +319,11 @@ public class TestAccount extends TestJaxrsBase {
     }
 
     private void searchAccount(final AccountJson input, @Nullable final AccountJson output) throws Exception {
+        // Search by id
+        if (output != null) {
+            doSearchAccount(input.getAccountId(), output);
+        }
+
         // Search by name
         doSearchAccount(input.getName(), output);
 
