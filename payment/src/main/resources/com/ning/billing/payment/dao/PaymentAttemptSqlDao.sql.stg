@@ -7,6 +7,7 @@ tableFields(prefix) ::= <<
 , <prefix>gateway_error_msg
 , <prefix>processing_status
 , <prefix>requested_amount
+, <prefix>requested_currency
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -20,6 +21,7 @@ tableValues() ::= <<
 , :gatewayErrorMsg
 , :processingStatus
 , :requestedAmount
+, :requestedCurrency
 , :createdBy
 , :createdDate
 , :updatedBy
