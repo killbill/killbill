@@ -14,6 +14,9 @@ CREATE TABLE blocking_states (
     effective_date datetime NOT NULL,
     is_active bool DEFAULT 1,
     created_date datetime NOT NULL,
+    created_by varchar(50) NOT NULL,
+    updated_date datetime DEFAULT NULL,
+    updated_by varchar(50) DEFAULT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)

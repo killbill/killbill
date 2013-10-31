@@ -15,7 +15,10 @@ tableFields(prefix) ::= <<
 , <prefix>block_billing
 , <prefix>effective_date
 , <prefix>is_active
+, <prefix>created_by
 , <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
 >>
 
 
@@ -29,7 +32,10 @@ tableValues() ::= <<
 , :blockBilling
 , :effectiveDate
 , :isActive
+, :createdBy
 , :createdDate
+, :updatedBy
+, :updatedDate
 >>
 
 
