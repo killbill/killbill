@@ -49,7 +49,7 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
                                   final UUID accountId, final UUID invoiceId,
                                   final UUID paymentId, final UUID paymentMethodId,
                                   final PaymentStatus processingStatus, final DateTime effectiveDate,
-                                  final BigDecimal requestedAmount, Currency requestedCurrency,
+                                  final BigDecimal requestedAmount, final Currency requestedCurrency,
                                   final String gatewayErrorCode, final String gatewayErrorMsg) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
