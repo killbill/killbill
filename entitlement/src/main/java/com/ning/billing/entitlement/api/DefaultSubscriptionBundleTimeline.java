@@ -17,6 +17,7 @@
 package com.ning.billing.entitlement.api;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -226,24 +227,16 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         return result;
     }
 
-
     private LinkedList<SubscriptionEvent> computeSubscriptionBaseEvents(final List<Entitlement> entitlements, final DateTimeZone accountTimeZone) {
-
         final LinkedList<SubscriptionEvent> result = new LinkedList<SubscriptionEvent>();
-        for (Entitlement cur : entitlements) {
+        for (final Entitlement cur : entitlements) {
             final SubscriptionBase base = ((DefaultEntitlement) cur).getSubscriptionBase();
             final List<SubscriptionBaseTransition> baseTransitions = base.getAllTransitions();
-            for (SubscriptionBaseTransition tr : baseTransitions) {
-                final SubscriptionEventType eventType = toEventType(tr.getTransitionType());
-                if (eventType == null) {
-                    continue;
-                }
-                final SubscriptionEvent event = toSubscriptionEvent(tr, eventType, accountTimeZone);
-                insertSubscriptionEvent(event, result);
-                if (tr.getTransitionType() == SubscriptionBaseTransitionType.CREATE ||
-                    tr.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER) {
-                    final SubscriptionEvent billingEvent = toSubscriptionEvent(tr, SubscriptionEventType.START_BILLING, accountTimeZone);
-                    insertSubscriptionEvent(billingEvent, result);
+            for (final SubscriptionBaseTransition tr : baseTransitions) {
+                final List<SubscriptionEventType> eventTypes = toEventTypes(tr.getTransitionType());
+                for (final SubscriptionEventType eventType : eventTypes) {
+                    final SubscriptionEvent event = toSubscriptionEvent(tr, eventType, accountTimeZone);
+                    insertSubscriptionEvent(event, result);
                 }
             }
         }
@@ -251,14 +244,12 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         return result;
     }
 
-
     //
-    // Old version of code would use CANCEL/ RE_CREATE to simulate PAUSE_BILLING/RESUME_BILLING
+    // Old version of code would use CANCEL/RE_CREATE to simulate PAUSE_BILLING/RESUME_BILLING
     //
     private void sanitizeForBaseRecreateEvents(final LinkedList<SubscriptionEvent> input) {
-
-        final Set<UUID> guiltyEntitlementIds = new TreeSet<UUID>();
-        ListIterator<SubscriptionEvent> it = input.listIterator(input.size());
+        final Collection<UUID> guiltyEntitlementIds = new TreeSet<UUID>();
+        final ListIterator<SubscriptionEvent> it = input.listIterator(input.size());
         while (it.hasPrevious()) {
             final SubscriptionEvent cur = it.previous();
             if (cur.getSubscriptionEventType() == SubscriptionEventType.RESUME_BILLING) {
@@ -268,12 +259,15 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             if (cur.getSubscriptionEventType() == SubscriptionEventType.STOP_BILLING &&
                 guiltyEntitlementIds.contains(cur.getEntitlementId())) {
                 guiltyEntitlementIds.remove(cur.getEntitlementId());
-                final SubscriptionEvent correctedEvent = new DefaultSubscriptionEvent((DefaultSubscriptionEvent) cur, SubscriptionEventType.PAUSE_BILLING);
-                it.set(correctedEvent);
+                final SubscriptionEvent correctedBillingEvent = new DefaultSubscriptionEvent((DefaultSubscriptionEvent) cur, SubscriptionEventType.PAUSE_BILLING);
+                it.set(correctedBillingEvent);
+
+                // Old versions of the code won't have an associated event in blocking_states - we need to add one on the fly
+                final SubscriptionEvent correctedEntitlementEvent = new DefaultSubscriptionEvent((DefaultSubscriptionEvent) cur, SubscriptionEventType.PAUSE_ENTITLEMENT);
+                it.add(correctedEntitlementEvent);
             }
         }
     }
-
 
     private void insertSubscriptionEvent(final SubscriptionEvent event, final LinkedList<SubscriptionEvent> result) {
         int index = 0;
@@ -374,25 +368,25 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         }
     }
 
-    private SubscriptionEventType toEventType(final SubscriptionBaseTransitionType in) {
+    private List<SubscriptionEventType> toEventTypes(final SubscriptionBaseTransitionType in) {
         switch (in) {
             case CREATE:
-                return SubscriptionEventType.START_ENTITLEMENT;
-            case MIGRATE_ENTITLEMENT:
-                return SubscriptionEventType.START_ENTITLEMENT;
+                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.START_ENTITLEMENT, SubscriptionEventType.START_BILLING);
             case TRANSFER:
-                return SubscriptionEventType.START_ENTITLEMENT;
+                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.START_ENTITLEMENT, SubscriptionEventType.START_BILLING);
+            case MIGRATE_ENTITLEMENT:
+                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.START_ENTITLEMENT);
             case MIGRATE_BILLING:
-                return SubscriptionEventType.START_BILLING;
+                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.START_BILLING);
             case CHANGE:
-                return SubscriptionEventType.CHANGE;
+                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.CHANGE);
             case CANCEL:
-                return SubscriptionEventType.STOP_BILLING;
+                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.STOP_BILLING);
             case PHASE:
-                return SubscriptionEventType.PHASE;
+                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.PHASE);
             // STEPH This is the old way of pausing billing; not used any longer, but kept for compatibility reason
             case RE_CREATE:
-                return SubscriptionEventType.RESUME_BILLING;
+                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.RESUME_ENTITLEMENT, SubscriptionEventType.RESUME_BILLING);
             /*
              * Those can be ignored:
              */
@@ -402,10 +396,9 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             case START_BILLING_DISABLED:
             case END_BILLING_DISABLED:
             default:
-                return null;
+                return ImmutableList.<SubscriptionEventType>of();
         }
     }
-
 
     @Override
     public UUID getAccountId() {

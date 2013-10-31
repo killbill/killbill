@@ -234,20 +234,33 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
         }
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
-        final List<BlockingState> blockingStates = blockingStateDao.getBlockingHistoryForService(getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
-        final Collection<BlockingState> filtered = Collections2.filter(blockingStates, new Predicate<BlockingState>() {
+        final List<BlockingState> blockingStatesForAccount = blockingStateDao.getBlockingAllForAccountRecordId(contextWithValidAccountRecordId);
+        final Collection<BlockingState> futureEntitlementCancellationEvents = Collections2.filter(blockingStatesForAccount, new Predicate<BlockingState>() {
             @Override
             public boolean apply(final BlockingState input) {
-                return EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) && input.getEffectiveDate().isAfter(clock.getUTCNow());
+                // Delete all future cancellation events...
+                return EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) &&
+                       DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName()) &&
+                       input.getEffectiveDate().isAfter(clock.getUTCNow()) &&
+                       (
+                               // ... for that subscription
+                               BlockingStateType.SUBSCRIPTION.equals(input.getType()) && input.getBlockedId().equals(getId()) ||
+                               // ... for the associated base subscription (to make sure an add-on isn't associated with a cancelled base entitlement)
+                               BlockingStateType.SUBSCRIPTION.equals(input.getType()) && input.getBlockedId().equals(getBaseEntitlementId()) ||
+                               // ... for that bundle (to make sure the subscription isn't associated with a cancelled bundle - not yet implemented)
+                               BlockingStateType.SUBSCRIPTION_BUNDLE.equals(input.getType()) && input.getBlockedId().equals(getBundleId()) ||
+                               // ... for that bundle (to make sure the subscription isn't associated with a cancelled account - not yet implemented)
+                               BlockingStateType.ACCOUNT.equals(input.getType()) && input.getBlockedId().equals(getAccountId())
+                       );
             }
         });
-        final BlockingState futureCancellation = filtered.iterator().hasNext() ? filtered.iterator().next() : null;
-        if (futureCancellation == null) {
-            return;
-        }
 
         // Reactivate entitlement
-        blockingStateDao.unactiveBlockingState(futureCancellation.getId(), contextWithValidAccountRecordId);
+        // We should only have one future event in theory - but cleanup the data if it's not the case
+        // See https://github.com/killbill/killbill/issues/111
+        for (final BlockingState futureCancellation : futureEntitlementCancellationEvents) {
+            blockingStateDao.unactiveBlockingState(futureCancellation.getId(), contextWithValidAccountRecordId);
+        }
 
         // If billing was previously cancelled, reactivate
         if (subscriptionBase.getFutureEndDate() != null) {

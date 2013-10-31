@@ -19,10 +19,10 @@ package com.ning.billing.entitlement.dao;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.api.BlockingState;
 
 public interface BlockingStateDao {
 
@@ -56,15 +56,6 @@ public interface BlockingStateDao {
     public List<BlockingState> getBlockingHistoryForService(UUID blockableId, String serviceName, InternalTenantContext context);
 
     /**
-     * Returns the state history across all the services
-     *
-     * @param blockableId
-     * @param context
-     * @return
-     */
-    public List<BlockingState> getBlockingHistory(UUID blockableId, InternalTenantContext context);
-
-    /**
      * Return all the events (past and future) across all services
      *
      * @param blockableId
@@ -76,6 +67,7 @@ public interface BlockingStateDao {
 
     /**
      * Return all events (past and future) across all services) for a given callcontext (account_record_id)
+     *
      * @param context
      * @return
      */
