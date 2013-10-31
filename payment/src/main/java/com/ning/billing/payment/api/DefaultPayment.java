@@ -191,12 +191,12 @@ public class DefaultPayment extends EntityBase implements Payment {
 
                     @Override
                     public DateTime getCreatedDate() {
-                        throw new UnsupportedOperationException();
+                        return input.getCreatedDate();
                     }
 
                     @Override
                     public DateTime getUpdatedDate() {
-                        throw new UnsupportedOperationException();
+                        return input.getUpdatedDate();
                     }
 
                     @Override
