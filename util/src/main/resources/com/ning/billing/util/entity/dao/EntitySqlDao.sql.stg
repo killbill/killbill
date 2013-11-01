@@ -181,6 +181,7 @@ select
 <allTableFields("t.")>
 from <tableName()> t
 where <recordIdField("t.")> = :recordId
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
 >>
@@ -191,6 +192,7 @@ select
 <allTableFields("t.")>
 from <tableName()> t
 where <accountRecordIdField("t.")> \<=\> :accountRecordId
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
 >>
@@ -201,6 +203,7 @@ select
 <targetRecordIdField("t.")>
 from <historyTableName()> t
 where <recordIdField("t.")> = :recordId
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
 >>
@@ -211,6 +214,7 @@ select
   <recordIdField("t.")>
 from <tableName()> t
 where <idField("t.")> = :id
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
 >>
@@ -220,6 +224,7 @@ select
   <recordIdField("t.")>
 from <tableName> t
 where <idField("t.")> = :id
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
 >>
@@ -229,6 +234,7 @@ select
   max(<recordIdField("t.")>)
 from <historyTableName()> t
 where <targetRecordIdField("t.")> = :targetRecordId
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
 >>
@@ -239,6 +245,7 @@ select
   <recordIdField("t.")>
 from <historyTableName> t
 where <targetRecordIdField("t.")> = :targetRecordId
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
 >>
@@ -325,6 +332,7 @@ select
 from <auditTableName()> t
 where t.target_record_id = :targetRecordId
 and t.table_name = :tableName
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 order by <recordIdField("t.")> ASC
 ;
@@ -339,6 +347,7 @@ join (
     <recordIdField("h.")> record_id
   from <historyTableName> h
   where <targetRecordIdField("h.")> = :targetRecordId
+  <andCheckSoftDeletionWithComma("t.")>
   <AND_CHECK_TENANT("h.")>
 ) history_record_ids on t.target_record_id = history_record_ids.record_id
 where t.table_name = :tableName
@@ -352,6 +361,7 @@ select
 <allTableFields("t.")>
 from <tableName()> t
 where <CHECK_TENANT("t.")>
+<andCheckSoftDeletionWithComma("t.")>
 limit 1
 ;
 >>
