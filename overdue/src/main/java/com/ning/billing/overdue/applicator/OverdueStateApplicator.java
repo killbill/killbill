@@ -17,6 +17,7 @@
 package com.ning.billing.overdue.applicator;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +39,7 @@ import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.BillingActionPolicy;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingStateType;
@@ -45,8 +47,6 @@ import com.ning.billing.entitlement.api.Entitlement;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.events.OverdueChangeInternalEvent;
-import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.invoice.api.InvoiceInternalApi;
 import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.junction.DefaultBlockingState;
 import com.ning.billing.overdue.OverdueApiException;
@@ -69,6 +69,8 @@ import com.ning.billing.util.email.EmailSender;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.samskivert.mustache.MustacheException;
@@ -266,10 +268,18 @@ public class OverdueStateApplicator {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void computeEntitlementsToCancel(final Account account, final List<Entitlement> result, final InternalTenantContext context) throws EntitlementApiException {
         final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
-        result.addAll(entitlementApi.getAllEntitlementsForAccountId(account.getId(), context.toTenantContext(tenantId)));
+        final List<Entitlement> allEntitlementsForAccountId = entitlementApi.getAllEntitlementsForAccountId(account.getId(), context.toTenantContext(tenantId));
+        // Entitlement is smart enough and will cancel the associated add-ons. See also discussion in https://github.com/killbill/killbill/issues/94
+        final Collection<Entitlement> allEntitlementsButAddonsForAccountId = Collections2.<Entitlement>filter(allEntitlementsForAccountId,
+                                                                                                              new Predicate<Entitlement>() {
+                                                                                                                  @Override
+                                                                                                                  public boolean apply(final Entitlement entitlement) {
+                                                                                                                      return !ProductCategory.ADD_ON.equals(entitlement.getLastActiveProductCategory());
+                                                                                                                  }
+                                                                                                              });
+        result.addAll(allEntitlementsButAddonsForAccountId);
     }
 
     private void sendEmailIfRequired(final BillingState billingState, final Account account,
