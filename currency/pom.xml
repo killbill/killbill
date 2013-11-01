@@ -19,14 +19,13 @@
     <parent>
         <artifactId>killbill</artifactId>
         <groupId>com.ning.billing</groupId>
-        <version>0.7.3-SNAPSHOT</version>
+        <version>0.8.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>killbill-currency</artifactId>
     <packaging>jar</packaging>
     <name>killbill-currency</name>
-
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
