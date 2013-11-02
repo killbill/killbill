@@ -107,8 +107,8 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final DateTime referenceTime = clock.getUTCNow();
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, referenceTime, contextWithValidAccountRecordId);
             final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(bundle.getId(), planPhaseSpecifier, requestedDate, contextWithValidAccountRecordId);
-            return new DefaultEntitlement(dateHelper, subscription, accountId, bundle.getExternalKey(), EntitlementState.ACTIVE, null, account.getTimeZone(), this,
-                                          internalCallContextFactory, blockingStateDao, clock, checker);
+            return new DefaultEntitlement(dateHelper, subscription, accountId, bundle.getExternalKey(), EntitlementState.ACTIVE, null, account.getTimeZone(), accountApi, this,
+                                          subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (AccountApiException e) {
@@ -146,7 +146,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(baseSubscription.getBundleId(), planPhaseSpecifier, requestedDate, context);
 
             return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), EntitlementState.ACTIVE, null, account.getTimeZone(),
-                                          this, internalCallContextFactory, blockingStateDao, clock, checker);
+                                          accountApi, this, subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (BlockingApiException e) {
@@ -187,7 +187,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
 
             return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), entitlementState, entitlementEffectiveEndDate, account.getTimeZone(),
-                                          this, internalCallContextFactory, blockingStateDao, clock, checker);
+                                          accountApi, this, subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (AccountApiException e) {
@@ -278,8 +278,8 @@ public class DefaultEntitlementApi implements EntitlementApi {
                                               entitlementState,
                                               effectiveEndDate,
                                               accountTimeZone,
-                                              thisEntitlementApi,
-                                              internalCallContextFactory, blockingStateDao, clock, checker);
+                                              accountApi, thisEntitlementApi,
+                                              subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker);
             }
         }));
     }

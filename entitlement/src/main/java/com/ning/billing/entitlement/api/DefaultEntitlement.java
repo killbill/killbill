@@ -25,6 +25,10 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
@@ -36,13 +40,14 @@ import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.entity.EntityBase;
 import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -50,21 +55,25 @@ import com.google.common.collect.Collections2;
 public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     protected final EntitlementDateHelper dateHelper;
-    protected final SubscriptionBase subscriptionBase;
     protected final InternalCallContextFactory internalCallContextFactory;
     protected final Clock clock;
-    protected final EntitlementState state;
-    protected final LocalDate effectiveEndDate;
     protected final BlockingChecker checker;
     protected final UUID accountId;
-    protected final String externalKey;
+    protected final AccountInternalApi accountApi;
     protected final EntitlementApi entitlementApi;
-    protected final DateTimeZone accountTimeZone;
+    protected final SubscriptionBaseInternalApi subscriptionInternalApi;
     protected final BlockingStateDao blockingStateDao;
+
+    // Refresh-able
+    protected SubscriptionBase subscriptionBase;
+    protected EntitlementState state;
+    protected LocalDate effectiveEndDate;
+    protected String externalKey;
+    protected DateTimeZone accountTimeZone;
 
     public DefaultEntitlement(final EntitlementDateHelper dateHelper, final SubscriptionBase subscriptionBase, final UUID accountId,
                               final String externalKey, final EntitlementState state, final LocalDate effectiveEndDate, final DateTimeZone accountTimeZone,
-                              final EntitlementApi entitlementApi, final InternalCallContextFactory internalCallContextFactory,
+                              final AccountInternalApi accountApi, final EntitlementApi entitlementApi, final SubscriptionBaseInternalApi subscriptionInternalApi, final InternalCallContextFactory internalCallContextFactory,
                               final BlockingStateDao blockingStateDao,
                               final Clock clock, final BlockingChecker checker) {
         super(subscriptionBase.getId(), subscriptionBase.getCreatedDate(), subscriptionBase.getUpdatedDate());
@@ -74,7 +83,9 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         this.externalKey = externalKey;
         this.state = state;
         this.effectiveEndDate = effectiveEndDate;
+        this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
+        this.subscriptionInternalApi = subscriptionInternalApi;
         this.accountTimeZone = accountTimeZone;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
@@ -90,10 +101,13 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
              in.getState(),
              in.getEffectiveEndDate(),
              in.getAccountTimeZone(),
+             in.getAccountApi(),
              in.getEntitlementApi(),
+             in.getSubscriptionInternalApi(),
              in.getInternalCallContextFactory(),
              in.getBlockingStateDao(),
-             in.getClock(), in.getChecker());
+             in.getClock(),
+             in.getChecker());
     }
 
     public SubscriptionBase getSubscriptionBase() {
@@ -108,8 +122,16 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         return internalCallContextFactory;
     }
 
+    public AccountInternalApi getAccountApi() {
+        return accountApi;
+    }
+
     public EntitlementApi getEntitlementApi() {
         return entitlementApi;
+    }
+
+    public SubscriptionBaseInternalApi getSubscriptionInternalApi() {
+        return subscriptionInternalApi;
     }
 
     public Clock getClock() {
@@ -202,11 +224,15 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement cancelEntitlementWithDate(final LocalDate localCancelDate, final boolean overrideBillingEffectiveDate, final CallContext callContext) throws EntitlementApiException {
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+
+        // Get the latest state from disk
+        refresh(callContext, contextWithValidAccountRecordId);
 
         if (state == EntitlementState.CANCELLED) {
             throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
         }
-        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+
         final DateTime effectiveCancelDate = dateHelper.fromLocalDateAndReferenceTime(localCancelDate, subscriptionBase.getStartDate(), contextWithValidAccountRecordId);
         try {
             if (overrideBillingEffectiveDate) {
@@ -230,10 +256,14 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public void uncancelEntitlement(final CallContext callContext) throws EntitlementApiException {
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+
+        // Get the latest state from disk
+        refresh(callContext, contextWithValidAccountRecordId);
+
         if (state == EntitlementState.CANCELLED || subscriptionBase.getState() == EntitlementState.CANCELLED) {
             throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
         }
-        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         final List<BlockingState> blockingStatesForAccount = blockingStateDao.getBlockingAllForAccountRecordId(contextWithValidAccountRecordId);
         final Collection<BlockingState> futureEntitlementCancellationEvents = Collections2.filter(blockingStatesForAccount, new Predicate<BlockingState>() {
             @Override
@@ -274,11 +304,14 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement cancelEntitlementWithDateOverrideBillingPolicy(final LocalDate localCancelDate, final BillingActionPolicy billingPolicy, final CallContext callContext) throws EntitlementApiException {
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+
+        // Get the latest state from disk
+        refresh(callContext, contextWithValidAccountRecordId);
 
         if (state == EntitlementState.CANCELLED) {
             throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
         }
-        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         final LocalDate effectiveLocalDate = new LocalDate(localCancelDate, accountTimeZone);
         final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(effectiveLocalDate, subscriptionBase.getStartDate(), contextWithValidAccountRecordId);
         try {
@@ -307,13 +340,16 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
 
     @Override
-    public Entitlement changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList,final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final CallContext callContext) throws EntitlementApiException {
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+
+        // Get the latest state from disk
+        refresh(callContext, context);
 
         if (state != EntitlementState.ACTIVE) {
             throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), state);
         }
 
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         try {
             checker.checkBlockedChange(subscriptionBase, context);
             subscriptionBase.changePlan(productName, billingPeriod, priceList, callContext);
@@ -328,12 +364,15 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement changePlanWithDate(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+
+        // Get the latest state from disk
+        refresh(callContext, context);
 
         if (state != EntitlementState.ACTIVE) {
             throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), state);
         }
 
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         try {
             checker.checkBlockedChange(subscriptionBase, context);
             final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(localDate, subscriptionBase.getStartDate(), context);
@@ -348,12 +387,15 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement changePlanOverrideBillingPolicy(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDateX, final BillingActionPolicy actionPolicy, final CallContext callContext) throws EntitlementApiException {
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+
+        // Get the latest state from disk
+        refresh(callContext, context);
 
         if (state != EntitlementState.ACTIVE) {
             throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), state);
         }
 
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         try {
             checker.checkBlockedChange(subscriptionBase, context);
             subscriptionBase.changePlanWithPolicy(productName, billingPeriod, priceList, actionPolicy, callContext);
@@ -362,6 +404,31 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             throw new EntitlementApiException(e, e.getCode(), e.getMessage());
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
+        }
+    }
+
+    private void refresh(final TenantContext context, final InternalCallContext internalCallContext) throws EntitlementApiException {
+        try {
+            final Account account = accountApi.getAccountById(accountId, internalCallContext);
+            // Not really required today as we don't allow timezone changes, but do it nonetheless
+            // in case we change our mind later (and so we don't get surprises...).
+            accountTimeZone = account.getTimeZone();
+        } catch (AccountApiException e) {
+            throw new EntitlementApiException(e);
+        }
+
+        final Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(getId(), context);
+        state = refreshedEntitlement.getState();
+        effectiveEndDate = refreshedEntitlement.getEffectiveEndDate();
+        externalKey = refreshedEntitlement.getExternalKey();
+        if (refreshedEntitlement instanceof DefaultEntitlement) {
+            subscriptionBase = ((DefaultEntitlement) refreshedEntitlement).getSubscriptionBase();
+        } else {
+            try {
+                subscriptionBase = subscriptionInternalApi.getBaseSubscription(refreshedEntitlement.getBundleId(), internalCallContext);
+            } catch (SubscriptionBaseApiException e) {
+                throw new EntitlementApiException(e);
+            }
         }
     }
 }

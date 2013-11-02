@@ -48,6 +48,64 @@ import static org.testng.Assert.assertTrue;
 
 public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedDB {
 
+    @Test(groups = "slow")
+    public void testCheckStaleStates() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+
+        // Add ADD_ON
+        // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final Entitlement addOnEntitlement = entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, initialDate, callContext);
+
+        /*
+        // TODO It looks like we don't check if there is a future cancellation. Maybe we should?
+        try {
+            entitlement.uncancelEntitlement(callContext);
+            Assert.fail("Entitlement hasn't been cancelled yet");
+        } catch (final EntitlementApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CANCEL_BAD_STATE.getCode());
+        }*/
+
+        clock.addDays(3);
+
+        // Cancelling the base entitlement will cancel the add-on
+        entitlement.cancelEntitlementWithDateOverrideBillingPolicy(clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, callContext);
+
+        try {
+            entitlement.cancelEntitlementWithDateOverrideBillingPolicy(clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, callContext);
+            Assert.fail("Entitlement is already cancelled");
+        } catch (final EntitlementApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CANCEL_BAD_STATE.getCode());
+        }
+
+        try {
+            addOnEntitlement.cancelEntitlementWithDateOverrideBillingPolicy(clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, callContext);
+            Assert.fail("Add-On Entitlement is already cancelled");
+        } catch (final EntitlementApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CANCEL_BAD_STATE.getCode());
+        }
+
+        try {
+            entitlement.uncancelEntitlement(callContext);
+            Assert.fail("Entitlement is already cancelled");
+        } catch (final EntitlementApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CANCEL_BAD_STATE.getCode());
+        }
+
+        try {
+            addOnEntitlement.uncancelEntitlement(callContext);
+            Assert.fail("Add-On Entitlement is already cancelled");
+        } catch (final EntitlementApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CANCEL_BAD_STATE.getCode());
+        }
+    }
 
     @Test(groups = "slow")
     public void testCreateEntitlementWithCheck() {
