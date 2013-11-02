@@ -16,8 +16,6 @@
 
 package com.ning.billing.entitlement.api;
 
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,8 +36,6 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
-
-import com.google.common.io.BaseEncoding;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -108,281 +104,238 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
     }
 
     @Test(groups = "slow")
-    public void testCreateEntitlementWithCheck() {
+    public void testCreateEntitlementWithCheck() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
 
-        try {
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
 
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
-            final LocalDate initialDate = new LocalDate(2013, 8, 7);
-            clock.setDay(initialDate);
+        // Create entitlement and check each field
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        assertEquals(entitlement.getAccountId(), account.getId());
+        assertEquals(entitlement.getExternalKey(), account.getExternalKey());
 
-            final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        assertEquals(entitlement.getEffectiveStartDate(), initialDate);
+        assertNull(entitlement.getEffectiveEndDate());
 
-            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        assertEquals(entitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(entitlement.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(entitlement.getLastActivePhase().getName(), "shotgun-monthly-trial");
+        assertEquals(entitlement.getLastActivePlan().getName(), "shotgun-monthly");
+        assertEquals(entitlement.getLastActiveProductCategory(), ProductCategory.BASE);
 
-            // Create entitlement and check each field
-            final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
-            assertEquals(entitlement.getAccountId(), account.getId());
-            assertEquals(entitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
 
-            assertEquals(entitlement.getEffectiveStartDate(), initialDate);
-            assertNull(entitlement.getEffectiveEndDate());
+        assertEquals(entitlement.getLastActivePlan().getName(), "shotgun-monthly");
+        assertEquals(entitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(entitlement.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(entitlement.getLastActiveProductCategory(), ProductCategory.BASE);
 
-            assertEquals(entitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(entitlement.getLastActiveProduct().getName(), "Shotgun");
-            assertEquals(entitlement.getLastActivePhase().getName(), "shotgun-monthly-trial");
-            assertEquals(entitlement.getLastActivePlan().getName(), "shotgun-monthly");
-            assertEquals(entitlement.getLastActiveProductCategory(), ProductCategory.BASE);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
 
-            assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
-            assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
+        // Now retrieve entitlement by id and recheck everything
+        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
 
-            assertEquals(entitlement.getLastActivePlan().getName(), "shotgun-monthly");
-            assertEquals(entitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(entitlement.getLastActiveProduct().getName(), "Shotgun");
-            assertEquals(entitlement.getLastActiveProductCategory(), ProductCategory.BASE);
+        assertEquals(entitlement2.getAccountId(), account.getId());
+        assertEquals(entitlement2.getExternalKey(), account.getExternalKey());
 
-            assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
-            assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
+        assertEquals(entitlement2.getEffectiveStartDate(), initialDate);
+        assertNull(entitlement2.getEffectiveEndDate());
 
-            // Now retrieve entitlement by id and recheck everything
-            final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlement2.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(entitlement2.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(entitlement2.getLastActivePhase().getName(), "shotgun-monthly-trial");
+        assertEquals(entitlement2.getLastActivePlan().getName(), "shotgun-monthly");
+        assertEquals(entitlement2.getLastActiveProductCategory(), ProductCategory.BASE);
 
-            assertEquals(entitlement2.getAccountId(), account.getId());
-            assertEquals(entitlement2.getExternalKey(), account.getExternalKey());
+        assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
 
-            assertEquals(entitlement2.getEffectiveStartDate(), initialDate);
-            assertNull(entitlement2.getEffectiveEndDate());
+        assertEquals(entitlement2.getLastActivePlan().getName(), "shotgun-monthly");
+        assertEquals(entitlement2.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(entitlement2.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(entitlement2.getLastActiveProductCategory(), ProductCategory.BASE);
 
-            assertEquals(entitlement2.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(entitlement2.getLastActiveProduct().getName(), "Shotgun");
-            assertEquals(entitlement2.getLastActivePhase().getName(), "shotgun-monthly-trial");
-            assertEquals(entitlement2.getLastActivePlan().getName(), "shotgun-monthly");
-            assertEquals(entitlement2.getLastActiveProductCategory(), ProductCategory.BASE);
+        assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
 
-            assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
-            assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
+        // Finally
+        final List<Entitlement> accountEntitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
+        assertEquals(accountEntitlements.size(), 1);
 
-            assertEquals(entitlement2.getLastActivePlan().getName(), "shotgun-monthly");
-            assertEquals(entitlement2.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(entitlement2.getLastActiveProduct().getName(), "Shotgun");
-            assertEquals(entitlement2.getLastActiveProductCategory(), ProductCategory.BASE);
+        final Entitlement entitlement3 = accountEntitlements.get(0);
 
-            assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
-            assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
+        assertEquals(entitlement3.getAccountId(), account.getId());
+        assertEquals(entitlement3.getExternalKey(), account.getExternalKey());
 
-            // Finally
-            List<Entitlement> accountEntitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
-            assertEquals(accountEntitlements.size(), 1);
+        assertEquals(entitlement3.getEffectiveStartDate(), initialDate);
+        assertNull(entitlement3.getEffectiveEndDate());
 
-            final Entitlement entitlement3 = accountEntitlements.get(0);
+        assertEquals(entitlement3.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(entitlement3.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(entitlement3.getLastActivePhase().getName(), "shotgun-monthly-trial");
+        assertEquals(entitlement3.getLastActivePlan().getName(), "shotgun-monthly");
+        assertEquals(entitlement3.getLastActiveProductCategory(), ProductCategory.BASE);
 
-            assertEquals(entitlement3.getAccountId(), account.getId());
-            assertEquals(entitlement3.getExternalKey(), account.getExternalKey());
+        assertEquals(entitlement3.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement3.getSourceType(), EntitlementSourceType.NATIVE);
 
-            assertEquals(entitlement3.getEffectiveStartDate(), initialDate);
-            assertNull(entitlement3.getEffectiveEndDate());
+        assertEquals(entitlement3.getLastActivePlan().getName(), "shotgun-monthly");
+        assertEquals(entitlement3.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(entitlement3.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(entitlement3.getLastActiveProductCategory(), ProductCategory.BASE);
 
-            assertEquals(entitlement3.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(entitlement3.getLastActiveProduct().getName(), "Shotgun");
-            assertEquals(entitlement3.getLastActivePhase().getName(), "shotgun-monthly-trial");
-            assertEquals(entitlement3.getLastActivePlan().getName(), "shotgun-monthly");
-            assertEquals(entitlement3.getLastActiveProductCategory(), ProductCategory.BASE);
-
-            assertEquals(entitlement3.getState(), EntitlementState.ACTIVE);
-            assertEquals(entitlement3.getSourceType(), EntitlementSourceType.NATIVE);
-
-            assertEquals(entitlement3.getLastActivePlan().getName(), "shotgun-monthly");
-            assertEquals(entitlement3.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(entitlement3.getLastActiveProduct().getName(), "Shotgun");
-            assertEquals(entitlement3.getLastActiveProductCategory(), ProductCategory.BASE);
-
-            assertEquals(entitlement3.getState(), EntitlementState.ACTIVE);
-            assertEquals(entitlement3.getSourceType(), EntitlementSourceType.NATIVE);
-
-
-        } catch (EntitlementApiException e) {
-            Assert.fail("Test failed " + e.getMessage());
-        } catch (AccountApiException e) {
-            Assert.fail("Test failed " + e.getMessage());
-        }
+        assertEquals(entitlement3.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement3.getSourceType(), EntitlementSourceType.NATIVE);
     }
 
     @Test(groups = "slow")
-    public void testAddEntitlement() {
+    public void testAddEntitlement() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
 
-        try {
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
 
-            final LocalDate initialDate = new LocalDate(2013, 8, 7);
-            clock.setDay(initialDate);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
-            final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        // Create entitlement and check each field
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
 
-            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        // Add ADD_ON
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final Entitlement telescopicEntitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, initialDate, callContext);
 
-            // Create entitlement and check each field
-            final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        assertEquals(telescopicEntitlement.getAccountId(), account.getId());
+        assertEquals(telescopicEntitlement.getExternalKey(), account.getExternalKey());
 
-            // Add ADD_ON
-            final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-            final Entitlement telescopicEntitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, initialDate, callContext);
+        assertEquals(telescopicEntitlement.getEffectiveStartDate(), initialDate);
+        assertNull(telescopicEntitlement.getEffectiveEndDate());
 
-            assertEquals(telescopicEntitlement.getAccountId(), account.getId());
-            assertEquals(telescopicEntitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(telescopicEntitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(telescopicEntitlement.getLastActiveProduct().getName(), "Telescopic-Scope");
+        assertEquals(telescopicEntitlement.getLastActivePhase().getName(), "telescopic-scope-monthly-discount");
+        assertEquals(telescopicEntitlement.getLastActivePlan().getName(), "telescopic-scope-monthly");
+        assertEquals(telescopicEntitlement.getLastActiveProductCategory(), ProductCategory.ADD_ON);
 
-            assertEquals(telescopicEntitlement.getEffectiveStartDate(), initialDate);
-            assertNull(telescopicEntitlement.getEffectiveEndDate());
+        List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement.getBundleId(), callContext);
+        assertEquals(bundleEntitlements.size(), 2);
 
-            assertEquals(telescopicEntitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(telescopicEntitlement.getLastActiveProduct().getName(), "Telescopic-Scope");
-            assertEquals(telescopicEntitlement.getLastActivePhase().getName(), "telescopic-scope-monthly-discount");
-            assertEquals(telescopicEntitlement.getLastActivePlan().getName(), "telescopic-scope-monthly");
-            assertEquals(telescopicEntitlement.getLastActiveProductCategory(), ProductCategory.ADD_ON);
-
-            List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement.getBundleId(), callContext);
-            assertEquals(bundleEntitlements.size(), 2);
-
-            bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), account.getExternalKey(), callContext);
-            assertEquals(bundleEntitlements.size(), 2);
-
-        } catch (AccountApiException e) {
-            Assert.fail("Test failed " + e.getMessage());
-        } catch (EntitlementApiException e) {
-            Assert.fail("Test failed " + e.getMessage());
-        }
+        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), account.getExternalKey(), callContext);
+        assertEquals(bundleEntitlements.size(), 2);
     }
 
-
     @Test(groups = "slow")
-    public void testPauseUnpause() {
+    public void testPauseUnpause() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
 
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+
+        clock.addDays(1);
+        final LocalDate effectiveDateSpec1 = new LocalDate(clock.getUTCNow(), account.getTimeZone());
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final Entitlement telescopicEntitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, effectiveDateSpec1, callContext);
+
+        // Block all entitlement in the bundle
+        clock.addDays(5);
+        entitlementApi.pause(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
+
+        // Verify blocking state
+        final Entitlement baseEntitlement2 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        assertEquals(baseEntitlement2.getState(), EntitlementState.BLOCKED);
+
+        final Entitlement telescopicEntitlement2 = entitlementApi.getEntitlementForId(telescopicEntitlement.getId(), callContext);
+        assertEquals(telescopicEntitlement2.getState(), EntitlementState.BLOCKED);
+
+        // Check we can't block in a blocked state
         try {
-
-            final LocalDate initialDate = new LocalDate(2013, 8, 7);
-            clock.setDay(initialDate);
-
-            final Account account = accountApi.createAccount(getAccountData(7), callContext);
-
-            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-
-            // Create entitlement and check each field
-            final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
-
-            clock.addDays(1);
-            final LocalDate effectiveDateSpec1 = new LocalDate(clock.getUTCNow(), account.getTimeZone());
-            final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-            final Entitlement telescopicEntitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, effectiveDateSpec1, callContext);
-
-            // Block all entitlement in the bundle
-            clock.addDays(5);
             entitlementApi.pause(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
-
-            // Verify blocking state
-            final Entitlement baseEntitlement2 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
-            assertEquals(baseEntitlement2.getState(), EntitlementState.BLOCKED);
-
-            final Entitlement telescopicEntitlement2 = entitlementApi.getEntitlementForId(telescopicEntitlement.getId(), callContext);
-            assertEquals(telescopicEntitlement2.getState(), EntitlementState.BLOCKED);
-
-            // Check we can't block in a blocked state
-            try {
-                entitlementApi.pause(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
-                Assert.fail("Should not have succeeded to block in a blocked state");
-            } catch (EntitlementApiException e) {
-                assertEquals(e.getCode(), ErrorCode.ENT_ALREADY_BLOCKED.getCode());
-            }
-
-
-            final List<Entitlement> bundleEntitlements2 = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement2.getBundleId(), callContext);
-            assertEquals(bundleEntitlements2.size(), 2);
-            for (Entitlement cur : bundleEntitlements2) {
-                assertEquals(cur.getState(), EntitlementState.BLOCKED);
-            }
-
-            // Try to add an ADD_ON, it should fail
-            try {
-                final PlanPhaseSpecifier spec3 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                final Entitlement telescopicEntitlement3 = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, effectiveDateSpec1, callContext);
-            } catch (EntitlementApiException e) {
-                assertEquals(e.getCode(), ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode());
-            }
-
-            clock.addDays(3);
-            entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
-
-            // Verify call is idempotent
-            entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
-
-            // Verify blocking state
-            final Entitlement baseEntitlement3 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
-            assertEquals(baseEntitlement3.getState(), EntitlementState.ACTIVE);
-
-            final Entitlement telescopicEntitlement3 = entitlementApi.getEntitlementForId(telescopicEntitlement.getId(), callContext);
-            assertEquals(telescopicEntitlement3.getState(), EntitlementState.ACTIVE);
-
-            final List<Entitlement> bundleEntitlements3 = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement2.getBundleId(), callContext);
-            assertEquals(bundleEntitlements3.size(), 2);
-            for (Entitlement cur : bundleEntitlements3) {
-                assertEquals(cur.getState(), EntitlementState.ACTIVE);
-            }
-
-        } catch (AccountApiException e) {
-            Assert.fail("Test failed " + e.getMessage());
+            Assert.fail("Should not have succeeded to block in a blocked state");
         } catch (EntitlementApiException e) {
-            Assert.fail("Test failed " + e.getMessage());
+            assertEquals(e.getCode(), ErrorCode.ENT_ALREADY_BLOCKED.getCode());
+        }
+
+
+        final List<Entitlement> bundleEntitlements2 = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement2.getBundleId(), callContext);
+        assertEquals(bundleEntitlements2.size(), 2);
+        for (final Entitlement cur : bundleEntitlements2) {
+            assertEquals(cur.getState(), EntitlementState.BLOCKED);
+        }
+
+        // Try to add an ADD_ON, it should fail
+        try {
+            final PlanPhaseSpecifier spec3 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+            final Entitlement telescopicEntitlement3 = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, effectiveDateSpec1, callContext);
+        } catch (EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode());
+        }
+
+        clock.addDays(3);
+        entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
+
+        // Verify call is idempotent
+        entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
+
+        // Verify blocking state
+        final Entitlement baseEntitlement3 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        assertEquals(baseEntitlement3.getState(), EntitlementState.ACTIVE);
+
+        final Entitlement telescopicEntitlement3 = entitlementApi.getEntitlementForId(telescopicEntitlement.getId(), callContext);
+        assertEquals(telescopicEntitlement3.getState(), EntitlementState.ACTIVE);
+
+        final List<Entitlement> bundleEntitlements3 = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement2.getBundleId(), callContext);
+        assertEquals(bundleEntitlements3.size(), 2);
+        for (Entitlement cur : bundleEntitlements3) {
+            assertEquals(cur.getState(), EntitlementState.ACTIVE);
         }
     }
-
-
 
     @Test(groups = "slow")
-    public void testTransferBundle() {
+    public void testTransferBundle() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
 
-        try {
+        final Account accountSrc = accountApi.createAccount(getAccountData(7), callContext);
 
-            final LocalDate initialDate = new LocalDate(2013, 8, 7);
-            clock.setDay(initialDate);
+        final Account accountDesc = accountApi.createAccount(getAccountData(15), callContext);
 
-            final Account accountSrc = accountApi.createAccount(getAccountData(7), callContext);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
-            final Account accountDesc = accountApi.createAccount(getAccountData(15), callContext);
+        // Create entitlement
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(accountSrc.getId(), spec, accountSrc.getExternalKey(), initialDate, callContext);
 
-            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final DateTime ctd = clock.getUTCNow().plusDays(30).plusMonths(1);
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        clock.addDays(32);
+        // Set manually since no invoice
+        subscriptionInternalApi.setChargedThroughDate(baseEntitlement.getId(), ctd, internalCallContext);
+        assertTrue(testListener.isCompleted(5000));
 
-            // Create entitlement
-            final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(accountSrc.getId(), spec, accountSrc.getExternalKey(), initialDate, callContext);
+        // Transfer bundle to dest account
+        final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), accountSrc.getTimeZone());
+        testListener.pushExpectedEvent(NextEvent.TRANSFER);
+        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(accountSrc.getId(), accountDesc.getId(), baseEntitlement.getExternalKey(), effectiveDate, BillingActionPolicy.END_OF_TERM, callContext);
+        assertTrue(testListener.isCompleted(5000));
 
-            final DateTime ctd = clock.getUTCNow().plusDays(30).plusMonths(1);
-            testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.addDays(32);
-            // Set manually since no invoice
-            subscriptionInternalApi.setChargedThroughDate(baseEntitlement.getId(), ctd, internalCallContext);
-            assertTrue(testListener.isCompleted(5000));
+        final Entitlement oldBaseEntitlement = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(accountSrc.getId(), accountSrc.getExternalKey(), callContext).get(0);
+        assertEquals(oldBaseEntitlement.getEffectiveEndDate(), effectiveDate);
+        assertEquals(oldBaseEntitlement.getState(), EntitlementState.CANCELLED);
 
-            // Transfer bundle to dest acccount
-            final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), accountSrc.getTimeZone());
-            testListener.pushExpectedEvent(NextEvent.TRANSFER);
-            final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(accountSrc.getId(), accountDesc.getId(), baseEntitlement.getExternalKey(), effectiveDate, BillingActionPolicy.END_OF_TERM, callContext);
-            assertTrue(testListener.isCompleted(5000));
+        final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForBundle(newBundleId, callContext);
+        assertEquals(entitlements.size(), 1);
 
-            final Entitlement oldBaseEntitlement = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(accountSrc.getId(), accountSrc.getExternalKey(), callContext).get(0);
-            assertEquals(oldBaseEntitlement.getEffectiveEndDate(), effectiveDate);
-            assertEquals(oldBaseEntitlement.getState(), EntitlementState.CANCELLED);
-
-            final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForBundle(newBundleId, callContext);
-            assertEquals(entitlements.size(), 1);
-
-            final Entitlement newBaseEntitlement = entitlements.get(0);
-            assertEquals(newBaseEntitlement.getState(), EntitlementState.ACTIVE);
-            assertEquals(newBaseEntitlement.getEffectiveStartDate(), effectiveDate);
-            assertEquals(newBaseEntitlement.getEffectiveEndDate(), null);
-
-        } catch (AccountApiException e) {
-            Assert.fail("Test failed " + e.getMessage());
-        } catch (EntitlementApiException e) {
-            Assert.fail("Test failed " + e.getMessage());
-        }
+        final Entitlement newBaseEntitlement = entitlements.get(0);
+        assertEquals(newBaseEntitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(newBaseEntitlement.getEffectiveStartDate(), effectiveDate);
+        assertEquals(newBaseEntitlement.getEffectiveEndDate(), null);
     }
-
-
-        }
+}
