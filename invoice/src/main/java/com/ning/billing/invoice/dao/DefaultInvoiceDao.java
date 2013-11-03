@@ -334,7 +334,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final InvoicePaymentModelDao refund = new InvoicePaymentModelDao(UUID.randomUUID(), context.getCreatedDate(), InvoicePaymentType.REFUND,
                                                                                  payment.getInvoiceId(), paymentId,
                                                                                  context.getCreatedDate(), requestedPositiveAmount.negate(),
-                                                                                 payment.getCurrency(), paymentCookieId, payment.getId());
+                                                                                 payment.getCurrency(), payment.getProcessedCurrency(), paymentCookieId, payment.getId());
                 transactional.create(refund, context);
 
                 // Retrieve invoice after the Refund
@@ -404,7 +404,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 }
                 final InvoicePaymentModelDao chargeBack = new InvoicePaymentModelDao(UUID.randomUUID(), context.getCreatedDate(), InvoicePaymentType.CHARGED_BACK,
                                                                                      payment.getInvoiceId(), payment.getPaymentId(), context.getCreatedDate(),
-                                                                                     requestedChargedBackAmount.negate(), payment.getCurrency(), null, payment.getId());
+                                                                                     requestedChargedBackAmount.negate(), payment.getCurrency(), payment.getProcessedCurrency(),
+                                                                                     null, payment.getId());
                 transactional.create(chargeBack, context);
 
                 // Notify the bus since the balance of the invoice changed

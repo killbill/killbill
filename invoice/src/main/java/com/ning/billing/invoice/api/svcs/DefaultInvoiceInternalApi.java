@@ -97,8 +97,8 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
-    public void notifyOfPayment(final UUID invoiceId, final BigDecimal amount, final Currency currency, final UUID paymentId, final DateTime paymentDate, final InternalCallContext context) throws InvoiceApiException {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency);
+    public void notifyOfPayment(final UUID invoiceId, final BigDecimal amount, final Currency currency, final Currency processedCurrency, final UUID paymentId, final DateTime paymentDate, final InternalCallContext context) throws InvoiceApiException {
+        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency);
         notifyOfPayment(invoicePayment, context);
     }
 

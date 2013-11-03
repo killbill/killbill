@@ -18,6 +18,7 @@ package com.ning.billing.invoice.template.formatters;
 
 import java.util.Locale;
 
+import com.ning.billing.currency.api.CurrencyConversionApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
@@ -26,7 +27,7 @@ import com.ning.billing.util.template.translation.TranslatorConfig;
 public class DefaultInvoiceFormatterFactory implements InvoiceFormatterFactory {
 
     @Override
-    public InvoiceFormatter createInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale) {
-        return new DefaultInvoiceFormatter(config, invoice, locale);
+    public InvoiceFormatter createInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale, CurrencyConversionApi currencyConversionApi) {
+        return new DefaultInvoiceFormatter(config, invoice, locale, currencyConversionApi);
     }
 }

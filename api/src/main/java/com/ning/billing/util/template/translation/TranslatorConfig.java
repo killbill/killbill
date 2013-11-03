@@ -39,7 +39,6 @@ public interface TranslatorConfig {
     String getCatalogBundlePath();
 
     // Invoices
-
     @Config("killbill.template.bundlePath")
     @Default("com/ning/billing/util/template/translation/InvoiceTranslation")
     @Description("Path to the invoice template translation bundle")

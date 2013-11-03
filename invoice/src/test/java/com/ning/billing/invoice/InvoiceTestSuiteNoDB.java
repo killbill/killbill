@@ -28,6 +28,7 @@ import org.testng.annotations.BeforeMethod;
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.commons.locker.GlobalLocker;
+import com.ning.billing.currency.api.CurrencyConversionApi;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
@@ -86,6 +87,8 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected InvoiceDao invoiceDao;
     @Inject
     protected TestInvoiceHelper invoiceUtil;
+    @Inject
+    protected CurrencyConversionApi currencyConversionApi;
 
     private void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = InvoiceTestSuiteNoDB.class.getResource(resource);

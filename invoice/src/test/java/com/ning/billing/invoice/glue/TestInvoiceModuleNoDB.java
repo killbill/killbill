@@ -16,11 +16,23 @@
 
 package com.ning.billing.invoice.glue;
 
+import java.math.BigDecimal;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.tz.UTCProvider;
 import org.mockito.Mockito;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.currency.api.CurrencyConversion;
+import com.ning.billing.currency.api.CurrencyConversionApi;
+import com.ning.billing.currency.api.CurrencyConversionException;
+import com.ning.billing.currency.api.Rate;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.MockInvoiceDao;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
@@ -46,5 +58,38 @@ public class TestInvoiceModuleNoDB extends TestInvoiceModule {
 
         bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
         bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
+
+        final CurrencyConversionApi currencyConversionApi = Mockito.mock(CurrencyConversionApi.class);
+        final CurrencyConversion currencyConversion = Mockito.mock(CurrencyConversion.class);
+        final Set<Rate> rates = new TreeSet<Rate>();
+        rates.add(new Rate() {
+            @Override
+            public Currency getBaseCurrency() {
+                return Currency.USD;
+            }
+
+            @Override
+            public Currency getCurrency() {
+                return Currency.BRL;
+            }
+
+            @Override
+            public BigDecimal getValue() {
+                return new BigDecimal("0.4234");
+            }
+
+            @Override
+            public DateTime getConversionDate() {
+                return new DateTime(DateTimeZone.UTC);
+            }
+        });
+        Mockito.when(currencyConversion.getRates()).thenReturn(rates);
+        try {
+            Mockito.when(currencyConversionApi.getCurrencyConversion(Mockito.<Currency>any(), Mockito.<DateTime>any())).thenReturn(currencyConversion);
+        } catch (CurrencyConversionException e) {
+            e.printStackTrace();
+        }
+
+        bind(CurrencyConversionApi.class).toInstance(currencyConversionApi);
     }
 }

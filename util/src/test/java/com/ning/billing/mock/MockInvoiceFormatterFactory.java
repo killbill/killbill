@@ -18,6 +18,7 @@ package com.ning.billing.mock;
 
 import java.util.Locale;
 
+import com.ning.billing.currency.api.CurrencyConversionApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
@@ -25,7 +26,7 @@ import com.ning.billing.util.template.translation.TranslatorConfig;
 
 public class MockInvoiceFormatterFactory implements InvoiceFormatterFactory {
     @Override
-    public InvoiceFormatter createInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale) {
+    public InvoiceFormatter createInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale, CurrencyConversionApi currencyConversionApi) {
         return null;
     }
 }

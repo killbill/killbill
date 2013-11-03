@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.currency.api.CurrencyConversionApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
@@ -39,12 +40,15 @@ public class HtmlInvoiceGenerator {
     private final InvoiceFormatterFactory factory;
     private final TemplateEngine templateEngine;
     private final TranslatorConfig config;
+    private final CurrencyConversionApi currencyConversionApi;
 
     @Inject
-    public HtmlInvoiceGenerator(final InvoiceFormatterFactory factory, final TemplateEngine templateEngine, final TranslatorConfig config) {
+    public HtmlInvoiceGenerator(final InvoiceFormatterFactory factory, final TemplateEngine templateEngine,
+                                final TranslatorConfig config, final CurrencyConversionApi currencyConversionApi) {
         this.factory = factory;
         this.templateEngine = templateEngine;
         this.config = config;
+        this.currencyConversionApi = currencyConversionApi;
     }
 
     public String generateInvoice(final Account account, @Nullable final Invoice invoice, final boolean manualPay) throws IOException {
@@ -60,7 +64,7 @@ public class HtmlInvoiceGenerator {
         data.put("text", invoiceTranslator);
         data.put("account", account);
 
-        final InvoiceFormatter formattedInvoice = factory.createInvoiceFormatter(config, invoice, locale);
+        final InvoiceFormatter formattedInvoice = factory.createInvoiceFormatter(config, invoice, locale, currencyConversionApi);
         data.put("invoice", formattedInvoice);
 
         if (manualPay) {

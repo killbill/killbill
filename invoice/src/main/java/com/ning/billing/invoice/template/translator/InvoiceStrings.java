@@ -54,4 +54,8 @@ public interface InvoiceStrings {
     String getInvoiceAmountPaid();
 
     String getInvoiceBalance();
+
+    String getProcessedPaymentCurrency();
+
+    String getProcessedPaymentRate();
 }

@@ -9,6 +9,7 @@ tableFields(prefix) ::= <<
 , <prefix>payment_date
 , <prefix>amount
 , <prefix>currency
+, <prefix>processed_currency
 , <prefix>payment_cookie_id
 , <prefix>linked_invoice_payment_id
 , <prefix>created_by
@@ -22,6 +23,7 @@ tableValues() ::= <<
 , :paymentDate
 , :amount
 , :currency
+, :processedCurrency
 , :paymentCookieId
 , :linkedInvoicePaymentId
 , :createdBy

@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -28,8 +29,14 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.currency.api.CurrencyConversion;
+import com.ning.billing.currency.api.CurrencyConversionApi;
+import com.ning.billing.currency.api.CurrencyConversionException;
+import com.ning.billing.currency.api.Rate;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -37,6 +44,7 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 import com.google.common.base.Objects;
@@ -50,16 +58,20 @@ import static com.ning.billing.util.DefaultAmountFormatter.round;
  */
 public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
+    private final static Logger logger = LoggerFactory.getLogger(DefaultInvoiceFormatter.class);
+
     private final TranslatorConfig config;
     private final Invoice invoice;
     private final DateTimeFormatter dateFormatter;
     private final Locale locale;
+    private final CurrencyConversionApi currencyConversionApi;
 
-    public DefaultInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale) {
+    public DefaultInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale, final CurrencyConversionApi currencyConversionApi) {
         this.config = config;
         this.invoice = invoice;
         dateFormatter = DateTimeFormat.mediumDate().withLocale(locale);
         this.locale = locale;
+        this.currencyConversionApi = currencyConversionApi;
     }
 
     @Override
@@ -208,6 +220,43 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     public String getFormattedBalance() {
         final NumberFormat number = NumberFormat.getCurrencyInstance(locale);
         return number.format(getBalance().doubleValue());
+    }
+
+    @Override
+    public Currency getProcessedCurrency() {
+        final Currency processedCurrency = ((DefaultInvoice) invoice).getProcessedCurrency();
+        // If the processed currency is different we return it; otherwise we return null so that template does not print anything special
+        return (processedCurrency != getCurrency()) ? processedCurrency : null;
+    }
+
+    @Override
+    public String getProcessedPaymentRate() {
+        final Currency currency = getProcessedCurrency();
+        if (currency == null) {
+            return null;
+        }
+        // If there were multiple payments (and refunds) we pick chose the last one
+        DateTime latestPaymentDate = null;
+        final Iterator<InvoicePayment> paymentIterator = ((DefaultInvoice) invoice).getPayments().iterator();
+        while (paymentIterator.hasNext()) {
+            final InvoicePayment cur = paymentIterator.next();
+            latestPaymentDate = latestPaymentDate != null && latestPaymentDate.isAfter(cur.getPaymentDate()) ?
+                                latestPaymentDate : cur.getPaymentDate();
+
+        }
+        try {
+            final CurrencyConversion conversion = currencyConversionApi.getCurrencyConversion(currency, latestPaymentDate);
+            for (Rate rate : conversion.getRates()) {
+                if (rate.getCurrency() == getCurrency()) {
+                    return rate.getValue().toString();
+                }
+            }
+        } catch (CurrencyConversionException e) {
+            logger.warn("Failed to retrieve currency conversion rates for currency = " + currency + " and date = " + latestPaymentDate, e);
+            return null;
+        }
+        logger.warn("Failed to retrieve currency conversion rates for currency = " + currency + " and date = " + latestPaymentDate);
+        return null;
     }
 
     @Override

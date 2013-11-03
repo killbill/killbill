@@ -51,6 +51,8 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     private final Currency currency;
     private final boolean migrationInvoice;
 
+    private final Currency processedCurrency;
+
     // Used to create a new invoice
     public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
         this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false);
@@ -58,26 +60,27 @@ public class DefaultInvoice extends EntityBase implements Invoice {
 
     public DefaultInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
                           final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice) {
-        this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, isMigrationInvoice);
+        this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, currency, isMigrationInvoice);
     }
 
     // Used to hydrate invoice from persistence layer
-    private DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
+    public DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
                            @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
-                           final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice) {
+                           final LocalDate targetDate, final Currency currency, final Currency processedCurrency, final boolean isMigrationInvoice) {
         super(invoiceId, createdDate, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
         this.invoiceDate = invoiceDate;
         this.targetDate = targetDate;
         this.currency = currency;
+        this.processedCurrency = processedCurrency;
         this.migrationInvoice = isMigrationInvoice;
     }
 
     public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
         this(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
              invoiceModelDao.getInvoiceNumber(), invoiceModelDao.getInvoiceDate(), invoiceModelDao.getTargetDate(),
-             invoiceModelDao.getCurrency(), invoiceModelDao.isMigrated());
+             invoiceModelDao.getCurrency(), invoiceModelDao.getProcessedCurrency(), invoiceModelDao.isMigrated());
         addInvoiceItems(Collections2.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
             @Override
             public InvoiceItem apply(final InvoiceItemModelDao input) {
@@ -171,6 +174,10 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     @Override
     public Currency getCurrency() {
         return currency;
+    }
+
+    public Currency getProcessedCurrency() {
+        return processedCurrency;
     }
 
     @Override
