@@ -277,8 +277,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public boolean changePlan(final DefaultSubscriptionBase subscription, final String productName, final BillingPeriod term,
-                                               final String priceList, final CallContext context)
+    public DateTime changePlan(final DefaultSubscriptionBase subscription, final String productName, final BillingPeriod term,
+                               final String priceList, final CallContext context)
             throws SubscriptionBaseApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime requestedDate = now;
@@ -297,8 +297,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
 
     @Override
-    public boolean changePlanWithRequestedDate(final DefaultSubscriptionBase subscription, final String productName, final BillingPeriod term,
-                                               final String priceList, final DateTime requestedDateWithMs, final CallContext context)
+    public DateTime changePlanWithRequestedDate(final DefaultSubscriptionBase subscription, final String productName, final BillingPeriod term,
+                                                final String priceList, final DateTime requestedDateWithMs, final CallContext context)
             throws SubscriptionBaseApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
@@ -314,8 +314,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public boolean changePlanWithPolicy(final DefaultSubscriptionBase subscription, final String productName, final BillingPeriod term,
-                                        final String priceList, final BillingActionPolicy policy, final CallContext context)
+    public DateTime changePlanWithPolicy(final DefaultSubscriptionBase subscription, final String productName, final BillingPeriod term,
+                                         final String priceList, final BillingActionPolicy policy, final CallContext context)
             throws SubscriptionBaseApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime requestedDate = now;
@@ -355,14 +355,14 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         return planChangeResult;
     }
 
-    private boolean doChangePlan(final DefaultSubscriptionBase subscription,
-                                 final String newProductName,
-                                 final BillingPeriod newBillingPeriod,
-                                 final String newPriceList,
-                                 final DateTime now,
-                                 final DateTime requestedDate,
-                                 final DateTime effectiveDate,
-                                 final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
+    private DateTime doChangePlan(final DefaultSubscriptionBase subscription,
+                                  final String newProductName,
+                                  final BillingPeriod newBillingPeriod,
+                                  final String newPriceList,
+                                  final DateTime now,
+                                  final DateTime requestedDate,
+                                  final DateTime effectiveDate,
+                                  final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
 
         final Plan newPlan = catalogService.getFullCatalog().findPlan(newProductName, newBillingPeriod, newPriceList, effectiveDate, subscription.getStartDate());
 
@@ -399,7 +399,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final boolean isChangeImmediate = subscription.getCurrentPlan().getProduct().getName().equals(newProductName) &&
                                           subscription.getCurrentPlan().getBillingPeriod() == newBillingPeriod;
-        return isChangeImmediate;
+        return isChangeImmediate ? null : effectiveDate;
     }
 
 

@@ -21,20 +21,27 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 
 public class MockProduct implements Product {
+
     private final String name;
     private final ProductCategory category;
     private final String catalogName;
+    private final Product[] included;
+    private final Product[] available;
 
     public MockProduct() {
-        name = "TestProduct";
-        category = ProductCategory.BASE;
-        catalogName = "Vehicules";
+        this("TestProduct", ProductCategory.BASE, "Vehicules");
     }
 
     public MockProduct(final String name, final ProductCategory category, final String catalogName) {
+        this(name, category, catalogName, null, null);
+    }
+
+    public MockProduct(final String name, final ProductCategory category, final String catalogName, final Product[] included, final Product[] available) {
         this.name = name;
         this.category = category;
         this.catalogName = catalogName;
+        this.included = included;
+        this.available = available;
     }
 
     @Override
@@ -59,12 +66,12 @@ public class MockProduct implements Product {
 
     @Override
     public Product[] getAvailable() {
-        throw new UnsupportedOperationException();
+        return available;
     }
 
     @Override
     public Product[] getIncluded() {
-        throw new UnsupportedOperationException();
+        return included;
     }
 
     public static MockProduct createBicycle() {

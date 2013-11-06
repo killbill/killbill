@@ -31,6 +31,27 @@ import com.ning.billing.junction.DefaultBlockingState;
 
 public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbeddedDB {
 
+    @Test(groups = "slow", description = "Verify we don't insert extra add-on events")
+    public void testUnnecessaryEventsAreNotAdded() throws Exception {
+        // This is a simple smoke test at the dao level only to make sure we do sane
+        // things in case there are no future add-on cancellation events to add in the stream.
+        // See TestEntitlementUtils for a more comprehensive test
+        final UUID blockableId = UUID.randomUUID();
+        final BlockingStateType type = BlockingStateType.SUBSCRIPTION;
+        final String state = "state";
+        final String service = "service";
+
+        // Verify initial state
+        Assert.assertEquals(blockingStateDao.getBlockingAll(blockableId, internalCallContext).size(), 0);
+
+        // Set a state
+        final DateTime stateDateTime = new DateTime(2013, 5, 6, 10, 11, 12, DateTimeZone.UTC);
+        final BlockingState blockingState = new DefaultBlockingState(blockableId, type, state, service, false, false, false, stateDateTime);
+        blockingStateDao.setBlockingState(blockingState, clock, internalCallContext);
+
+        Assert.assertEquals(blockingStateDao.getBlockingAll(blockableId, internalCallContext).size(), 1);
+    }
+
     // See https://github.com/killbill/killbill/issues/111
     @Test(groups = "slow", description = "Verify we don't insert duplicate blocking states")
     public void testSetBlockingState() throws Exception {

@@ -52,16 +52,19 @@ public interface SubscriptionBaseApiService {
     public boolean uncancel(DefaultSubscriptionBase subscription, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean changePlan(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
-                              String priceList, CallContext context)
+    // Return the effective date of the change, null for immediate
+    public DateTime changePlan(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
+                               String priceList, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean changePlanWithRequestedDate(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
-                                               String priceList, DateTime requestedDate, CallContext context)
+    // Return the effective date of the change, null for immediate
+    public DateTime changePlanWithRequestedDate(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
+                                                String priceList, DateTime requestedDate, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean changePlanWithPolicy(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
-                                        String priceList, BillingActionPolicy policy, CallContext context)
+    // Return the effective date of the change, null for immediate
+    public DateTime changePlanWithPolicy(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
+                                         String priceList, BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
     public int cancelAddOnsIfRequired(final DefaultSubscriptionBase baseSubscription, final DateTime effectiveDate, final InternalCallContext context);

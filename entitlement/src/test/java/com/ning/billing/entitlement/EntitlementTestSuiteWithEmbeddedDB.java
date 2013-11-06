@@ -30,6 +30,7 @@ import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
@@ -42,13 +43,13 @@ import com.ning.billing.clock.ClockMock;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
+import com.ning.billing.entitlement.engine.core.EntitlementUtils;
 import com.ning.billing.entitlement.glue.TestEntitlementModuleWithEmbeddedDB;
+import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
-import com.ning.billing.account.api.AccountInternalApi;
-import com.ning.billing.junction.BlockingInternalApi;
-import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.tag.dao.TagDao;
@@ -63,6 +64,9 @@ import static org.testng.Assert.assertNotNull;
 public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
     protected static final Logger log = LoggerFactory.getLogger(EntitlementTestSuiteWithEmbeddedDB.class);
+
+    // Be generous...
+    protected static final Long DELAY = 20000L;
 
     @Inject
     protected AccountUserApi accountApi;
@@ -86,14 +90,18 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected TagDao tagDao;
     @Inject
     protected TagInternalApi tagInternalApi;
-    @javax.inject.Inject
+    @Inject
     protected TestApiListener testListener;
-    @javax.inject.Inject
+    @Inject
     protected TestListenerStatus testListenerStatus;
-    @javax.inject.Inject
+    @Inject
     protected BusService busService;
-    @javax.inject.Inject
+    @Inject
     protected SubscriptionBaseService subscriptionBaseService;
+    @Inject
+    protected EntitlementService entitlementService;
+    @Inject
+    protected EntitlementUtils entitlementUtils;
 
     protected Catalog catalog;
 
@@ -114,13 +122,13 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        startTestFamework(testListener, testListenerStatus, clock, busService, subscriptionBaseService);
+        startTestFamework(testListener, testListenerStatus, clock, busService, subscriptionBaseService, entitlementService);
         this.catalog = initCatalog(catalogService);
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
-        stopTestFramework(testListener, busService, subscriptionBaseService);
+        stopTestFramework(testListener, busService, subscriptionBaseService, entitlementService);
     }
 
     private Catalog initCatalog(final CatalogService catalogService) throws Exception {
@@ -133,10 +141,11 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
 
 
     private void startTestFamework(final TestApiListener testListener,
-                                  final TestListenerStatus testListenerStatus,
-                                  final ClockMock clock,
-                                  final BusService busService,
-                                  final SubscriptionBaseService subscriptionBaseService) throws Exception {
+                                   final TestListenerStatus testListenerStatus,
+                                   final ClockMock clock,
+                                   final BusService busService,
+                                   final SubscriptionBaseService subscriptionBaseService,
+                                   final EntitlementService entitlementService) throws Exception {
         log.warn("STARTING TEST FRAMEWORK");
 
         resetTestListener(testListener, testListenerStatus);
@@ -146,17 +155,20 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         startBusAndRegisterListener(busService, testListener);
 
         restartSubscriptionService(subscriptionBaseService);
+        restartEntitlementService(entitlementService);
 
         log.warn("STARTED TEST FRAMEWORK");
     }
 
 
     private void stopTestFramework(final TestApiListener testListener,
-                                  final BusService busService,
-                                  final SubscriptionBaseService subscriptionBaseService) throws Exception {
+                                   final BusService busService,
+                                   final SubscriptionBaseService subscriptionBaseService,
+                                   final EntitlementService entitlementService) throws Exception {
         log.warn("STOPPING TEST FRAMEWORK");
         stopBusAndUnregisterListener(busService, testListener);
         stopSubscriptionService(subscriptionBaseService);
+        stopEntitlementService(entitlementService);
         log.warn("STOPPED TEST FRAMEWORK");
     }
 
@@ -187,6 +199,12 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         ((DefaultSubscriptionBaseService) subscriptionBaseService).start();
     }
 
+    private void restartEntitlementService(final EntitlementService entitlementService) {
+        // START NOTIFICATION QUEUE FOR ENTITLEMENT
+        ((DefaultEntitlementService) entitlementService).initialize();
+        ((DefaultEntitlementService) entitlementService).start();
+    }
+
     private void stopBusAndUnregisterListener(final BusService busService, final TestApiListener testListener) throws Exception {
         busService.getBus().unregister(testListener);
         busService.getBus().stop();
@@ -196,6 +214,9 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         ((DefaultSubscriptionBaseService) subscriptionBaseService).stop();
     }
 
+    private void stopEntitlementService(final EntitlementService entitlementService) throws Exception {
+        ((DefaultEntitlementService) entitlementService).stop();
+    }
 
     protected AccountData getAccountData(final int billingDay) {
         return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))

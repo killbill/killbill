@@ -14,24 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.events;
+package com.ning.billing.entitlement.engine.core;
 
-import java.util.UUID;
-
-import com.ning.billing.entitlement.api.BlockingStateType;
-
-// Event for effective blocking state changes (not entitlement specific)
-public interface BlockingTransitionInternalEvent extends BusInternalEvent {
-
-    public UUID getBlockableId();
-
-    public BlockingStateType getBlockingType();
-
-    public Boolean isTransitionedToBlockedBilling();
-
-    public Boolean isTransitionedToUnblockedBilling();
-
-    public Boolean isTransitionedToBlockedEntitlement();
-
-    public Boolean isTransitionedToUnblockedEntitlement();
+public enum EntitlementNotificationKeyAction {
+    CANCEL,
+    CHANGE
 }

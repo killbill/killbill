@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DefaultBlockingTransitionInternalEvent extends BusEventBase implements BlockingTransitionInternalEvent {
 
-
     private final UUID blockableId;
     private final BlockingStateType blockingType;
     private final Boolean isTransitionedToBlockedBilling;

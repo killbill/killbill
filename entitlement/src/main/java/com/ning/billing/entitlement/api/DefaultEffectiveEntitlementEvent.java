@@ -38,7 +38,6 @@ public class DefaultEffectiveEntitlementEvent extends BusEventBase implements Ef
     private final DateTime effectiveTransitionTime;
     private final DateTime requestedTransitionTime;
 
-
     @JsonCreator
     public DefaultEffectiveEntitlementEvent(@JsonProperty("eventId") final UUID id,
                                             @JsonProperty("entitlementId") final UUID entitlementId,

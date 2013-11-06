@@ -40,6 +40,7 @@ import com.ning.billing.util.callcontext.TenantContext;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestUserApiError extends SubscriptionTestSuiteNoDB {
@@ -156,7 +157,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
             assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
         }
 
-        assertTrue(subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, BillingActionPolicy.IMMEDIATE, callContext));
+        assertNull(subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, BillingActionPolicy.IMMEDIATE, callContext));
         assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
     }
 

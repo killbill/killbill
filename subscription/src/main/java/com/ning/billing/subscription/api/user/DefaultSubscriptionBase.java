@@ -235,20 +235,20 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public boolean changePlan(final String productName, final BillingPeriod term, final String priceList,
-                                      final CallContext context) throws SubscriptionBaseApiException {
+    public DateTime changePlan(final String productName, final BillingPeriod term, final String priceList,
+                               final CallContext context) throws SubscriptionBaseApiException {
         return apiService.changePlan(this, productName, term, priceList, context);
     }
 
     @Override
-    public boolean changePlanWithDate(final String productName, final BillingPeriod term, final String priceList,
-                                      final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
+    public DateTime changePlanWithDate(final String productName, final BillingPeriod term, final String priceList,
+                                       final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
         return apiService.changePlanWithRequestedDate(this, productName, term, priceList, requestedDate, context);
     }
 
     @Override
-    public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-                                        final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+    public DateTime changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
+                                         final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
         return apiService.changePlanWithPolicy(this, productName, term, priceList, policy, context);
     }
 

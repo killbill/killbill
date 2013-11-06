@@ -53,14 +53,17 @@ public interface SubscriptionBase extends Entity, Blockable {
     public boolean uncancel(final CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final CallContext context)
+    // Return the effective date of the change, null for immediate
+    public DateTime changePlan(final String productName, final BillingPeriod term, final String priceList, final CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean changePlanWithDate(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate, final CallContext context)
+    // Return the effective date of the change, null for immediate
+    public DateTime changePlanWithDate(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate, final CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-                                        final BillingActionPolicy policy, final CallContext context)
+    // Return the effective date of the change, null for immediate
+    public DateTime changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
+                                         final BillingActionPolicy policy, final CallContext context)
             throws SubscriptionBaseApiException;
 
     public UUID getBundleId();

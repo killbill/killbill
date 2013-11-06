@@ -23,6 +23,14 @@ import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ning.billing.events.BlockingTransitionInternalEvent;
 import com.ning.billing.events.CustomFieldEvent;
 import com.ning.billing.events.EffectiveEntitlementInternalEvent;
 import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
@@ -34,12 +42,6 @@ import com.ning.billing.events.PaymentPluginErrorInternalEvent;
 import com.ning.billing.events.RepairSubscriptionInternalEvent;
 import com.ning.billing.events.TagDefinitionInternalEvent;
 import com.ning.billing.events.TagInternalEvent;
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.tweak.HandleCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
@@ -81,6 +83,7 @@ public class TestApiListener {
         PAUSE,
         RESUME,
         PHASE,
+        BLOCK,
         INVOICE,
         INVOICE_ADJUSTMENT,
         PAYMENT,
@@ -105,10 +108,8 @@ public class TestApiListener {
         notifyIfStackEmpty();
     }
 
-
     @Subscribe
     public void handleEntitlementEvents(final EffectiveEntitlementInternalEvent eventEffective) {
-
         log.info(String.format("Got entitlement event %s", eventEffective.toString()));
         switch (eventEffective.getTransitionType()) {
             case BLOCK_BUNDLE:
@@ -120,6 +121,12 @@ public class TestApiListener {
         }
     }
 
+    @Subscribe
+    public void handleEntitlementEvents(final BlockingTransitionInternalEvent event) {
+        log.info(String.format("Got entitlement event %s", event.toString()));
+        assertEqualsNicely(NextEvent.BLOCK);
+        notifyIfStackEmpty();
+    }
 
     @Subscribe
     public void handleSubscriptionEvents(final EffectiveSubscriptionInternalEvent eventEffective) {
@@ -216,6 +223,7 @@ public class TestApiListener {
         assertEqualsNicely(NextEvent.PAYMENT_ERROR);
         notifyIfStackEmpty();
     }
+
     @Subscribe
     public void handlePaymentPluginErrorEvents(final PaymentPluginErrorInternalEvent event) {
         log.info(String.format("Got PaymentPluginError event %s", event.toString()));

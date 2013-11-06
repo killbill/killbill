@@ -16,10 +16,153 @@
 
 package com.ning.billing.entitlement;
 
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ning.billing.ObjectType;
+import com.ning.billing.bus.api.BusEvent;
+import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus.EventBusException;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.api.DefaultBlockingTransitionInternalEvent;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
+import com.ning.billing.entitlement.api.Entitlement;
+import com.ning.billing.entitlement.api.EntitlementApi;
+import com.ning.billing.entitlement.api.EntitlementApiException;
+import com.ning.billing.entitlement.engine.core.BlockingTransitionNotificationKey;
+import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
+import com.ning.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.notificationq.api.NotificationEvent;
+import com.ning.billing.notificationq.api.NotificationQueue;
+import com.ning.billing.notificationq.api.NotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
+import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueHandler;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.dao.NonEntityDao;
+
+import com.google.inject.Inject;
+
 public class DefaultEntitlementService implements EntitlementService {
+
+    public static final String NOTIFICATION_QUEUE_NAME = "entitlement-events";
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementService.class);
+
+    private final EntitlementApi entitlementApi;
+    private final NonEntityDao nonEntityDao;
+    private final Clock clock;
+    private final PersistentBus eventBus;
+    private final NotificationQueueService notificationQueueService;
+    private final InternalCallContextFactory internalCallContextFactory;
+
+    private NotificationQueue entitlementEventQueue;
+
+    @Inject
+    public DefaultEntitlementService(final EntitlementApi entitlementApi,
+                                     final NonEntityDao nonEntityDao,
+                                     final Clock clock,
+                                     final PersistentBus eventBus,
+                                     final NotificationQueueService notificationQueueService,
+                                     final InternalCallContextFactory internalCallContextFactory) {
+        this.entitlementApi = entitlementApi;
+        this.nonEntityDao = nonEntityDao;
+        this.clock = clock;
+        this.eventBus = eventBus;
+        this.notificationQueueService = notificationQueueService;
+        this.internalCallContextFactory = internalCallContextFactory;
+    }
 
     @Override
     public String getName() {
         return EntitlementService.ENTITLEMENT_SERVICE_NAME;
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
+    public void initialize() {
+        try {
+            final NotificationQueueHandler queueHandler = new NotificationQueueHandler() {
+                @Override
+                public void handleReadyNotification(final NotificationEvent inputKey, final DateTime eventDateTime, final UUID fromNotificationQueueUserToken, final Long accountRecordId, final Long tenantRecordId) {
+                    final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "EntitlementQueue", CallOrigin.INTERNAL, UserType.SYSTEM, fromNotificationQueueUserToken);
+
+                    if (inputKey instanceof EntitlementNotificationKey) {
+                        final UUID tenantId = nonEntityDao.retrieveIdFromObject(tenantRecordId, ObjectType.TENANT);
+                        processEntitlementNotification((EntitlementNotificationKey) inputKey, tenantId, internalCallContext);
+                    } else if (inputKey instanceof BlockingTransitionNotificationKey) {
+                        processBlockingNotification((BlockingTransitionNotificationKey) inputKey, internalCallContext);
+                    } else if (inputKey != null) {
+                        log.error("Entitlement service received an unexpected event type {}" + inputKey.getClass());
+                    } else {
+                        log.error("Entitlement service received an unexpected null event");
+                    }
+                }
+            };
+
+            entitlementEventQueue = notificationQueueService.createNotificationQueue(ENTITLEMENT_SERVICE_NAME,
+                                                                                     NOTIFICATION_QUEUE_NAME,
+                                                                                     queueHandler);
+        } catch (final NotificationQueueAlreadyExists e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void processEntitlementNotification(final EntitlementNotificationKey key, final UUID tenantId, final InternalCallContext internalCallContext) {
+        final Entitlement entitlement;
+        try {
+            entitlement = entitlementApi.getEntitlementForId(key.getEntitlementId(), internalCallContext.toTenantContext(tenantId));
+        } catch (final EntitlementApiException e) {
+            log.error("Error retrieving entitlement for id " + key.getEntitlementId(), e);
+            return;
+        }
+
+        if (!(entitlement instanceof DefaultEntitlement)) {
+            log.error("Entitlement service received an unexpected entitlement class type {}" + entitlement.getClass().getName());
+            return;
+        }
+
+        final EntitlementNotificationKeyAction entitlementNotificationKeyAction = key.getEntitlementNotificationKeyAction();
+        if (EntitlementNotificationKeyAction.CHANGE.equals(entitlementNotificationKeyAction) ||
+            EntitlementNotificationKeyAction.CANCEL.equals(entitlementNotificationKeyAction)) {
+            try {
+                ((DefaultEntitlement) entitlement).blockAddOnsIfRequired(key.getEffectiveDate(), internalCallContext.toTenantContext(tenantId), internalCallContext);
+            } catch (EntitlementApiException e) {
+                log.error("Error processing event for entitlement {}" + entitlement.getId(), e);
+            }
+        }
+    }
+
+    private void processBlockingNotification(final BlockingTransitionNotificationKey key, final InternalCallContext internalCallContext) {
+        final BusEvent event = new DefaultBlockingTransitionInternalEvent(key.getBlockableId(), key.getBlockingType(),
+                                                                          key.isTransitionedToBlockedBilling(), key.isTransitionedToUnblockedBilling(),
+                                                                          key.isTransitionedToBlockedEntitlement(), key.isTransitionToUnblockedEntitlement(),
+                                                                          internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), internalCallContext.getUserToken());
+
+        try {
+            eventBus.post(event);
+        } catch (EventBusException e) {
+            log.warn("Failed to post event {}", e);
+        }
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
+    public void start() {
+        entitlementEventQueue.startQueue();
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
+    public void stop() throws NoSuchNotificationQueue {
+        if (entitlementEventQueue != null) {
+            entitlementEventQueue.stopQueue();
+            notificationQueueService.deleteNotificationQueue(entitlementEventQueue.getServiceName(), entitlementEventQueue.getQueueName());
+        }
     }
 }

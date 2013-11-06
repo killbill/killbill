@@ -35,8 +35,11 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -47,19 +50,18 @@ import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.block.BlockingChecker.BlockingAggregator;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
+import com.ning.billing.entitlement.engine.core.EntitlementUtils;
+import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionBaseTransferApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.account.api.AccountInternalApi;
-import com.ning.billing.junction.DefaultBlockingState;
-import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -82,9 +84,14 @@ public class DefaultEntitlementApi implements EntitlementApi {
     private final BlockingStateDao blockingStateDao;
     private final EntitlementDateHelper dateHelper;
     private final PersistentBus eventBus;
+    protected final NotificationQueueService notificationQueueService;
+    protected final EntitlementUtils entitlementUtils;
 
     @Inject
-    public DefaultEntitlementApi(final PersistentBus eventBus, final InternalCallContextFactory internalCallContextFactory, final SubscriptionBaseTransferApi subscriptionTransferApi, final SubscriptionBaseInternalApi subscriptionInternalApi, final AccountInternalApi accountApi, final BlockingStateDao blockingStateDao, final Clock clock, final BlockingChecker checker) {
+    public DefaultEntitlementApi(final PersistentBus eventBus, final InternalCallContextFactory internalCallContextFactory,
+                                 final SubscriptionBaseTransferApi subscriptionTransferApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
+                                 final AccountInternalApi accountApi, final BlockingStateDao blockingStateDao, final Clock clock,
+                                 final BlockingChecker checker, final NotificationQueueService notificationQueueService, final EntitlementUtils entitlementUtils) {
         this.eventBus = eventBus;
         this.internalCallContextFactory = internalCallContextFactory;
         this.subscriptionInternalApi = subscriptionInternalApi;
@@ -93,9 +100,10 @@ public class DefaultEntitlementApi implements EntitlementApi {
         this.clock = clock;
         this.checker = checker;
         this.blockingStateDao = blockingStateDao;
+        this.notificationQueueService = notificationQueueService;
+        this.entitlementUtils = entitlementUtils;
         this.dateHelper = new EntitlementDateHelper(accountApi, clock);
     }
-
 
     @Override
     public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final LocalDate effectiveDate, final CallContext callContext) throws EntitlementApiException {
@@ -108,7 +116,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, referenceTime, contextWithValidAccountRecordId);
             final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(bundle.getId(), planPhaseSpecifier, requestedDate, contextWithValidAccountRecordId);
             return new DefaultEntitlement(dateHelper, subscription, accountId, bundle.getExternalKey(), EntitlementState.ACTIVE, null, account.getTimeZone(), accountApi, this,
-                                          subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker);
+                                          subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker, notificationQueueService, entitlementUtils);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (AccountApiException e) {
@@ -146,7 +154,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(baseSubscription.getBundleId(), planPhaseSpecifier, requestedDate, context);
 
             return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), EntitlementState.ACTIVE, null, account.getTimeZone(),
-                                          accountApi, this, subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker);
+                                          accountApi, this, subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker, notificationQueueService, entitlementUtils);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (BlockingApiException e) {
@@ -187,7 +195,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
 
             return new DefaultEntitlement(dateHelper, subscription, bundle.getAccountId(), bundle.getExternalKey(), entitlementState, entitlementEffectiveEndDate, account.getTimeZone(),
-                                          accountApi, this, subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker);
+                                          accountApi, this, subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker, notificationQueueService, entitlementUtils);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (AccountApiException e) {
@@ -279,7 +287,8 @@ public class DefaultEntitlementApi implements EntitlementApi {
                                               effectiveEndDate,
                                               accountTimeZone,
                                               accountApi, thisEntitlementApi,
-                                              subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker);
+                                              subscriptionInternalApi, internalCallContextFactory,
+                                              blockingStateDao, clock, checker, notificationQueueService, entitlementUtils);
             }
         }));
     }
@@ -348,8 +357,8 @@ public class DefaultEntitlementApi implements EntitlementApi {
                 throw new UnsupportedOperationException("Pausing with a future date has not been implemented yet");
             }
 
-            final DefaultBlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, true, effectiveDate);
-            blockingStateDao.setBlockingState(state, clock, contextWithValidAccountRecordId);
+            final BlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, true, effectiveDate);
+            entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(state, contextWithValidAccountRecordId);
 
             // Should we send one event per entitlement in the bundle?
             // Code below only sends one event for the bundle and use the base entitlementId
@@ -391,8 +400,8 @@ public class DefaultEntitlementApi implements EntitlementApi {
                 throw new UnsupportedOperationException("Resuming with a future date has not been implemented yet");
             }
 
-            final DefaultBlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, effectiveDate);
-            blockingStateDao.setBlockingState(state, clock, contextWithValidAccountRecordId);
+            final BlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, effectiveDate);
+            entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(state, contextWithValidAccountRecordId);
 
             // Should we send one event per entitlement in the bundle?
             // Code below only sends one event for the bundle and use the base entitlementId
@@ -445,7 +454,8 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);
             final SubscriptionBaseBundle newBundle = subscriptionTransferApi.transferBundle(sourceAccountId, destAccountId, externalKey, requestedDate, true, cancelImm, context);
 
-            blockingStateDao.setBlockingState(new DefaultBlockingState(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, requestedDate), clock, contextWithValidAccountRecordId);
+            final BlockingState newBlockingState = new DefaultBlockingState(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, requestedDate);
+            entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(newBlockingState, contextWithValidAccountRecordId);
 
             return newBundle.getId();
         } catch (SubscriptionBaseTransferApiException e) {

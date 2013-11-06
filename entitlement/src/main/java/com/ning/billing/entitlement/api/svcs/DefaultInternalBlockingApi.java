@@ -19,24 +19,15 @@ package com.ning.billing.entitlement.api.svcs;
 import java.util.List;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.ning.billing.account.api.Account;
-import com.ning.billing.bus.api.PersistentBus;
-import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.Blockable;
-import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
-import com.ning.billing.entitlement.api.DefaultBlockingTransitionInternalEvent;
-import com.ning.billing.entitlement.block.BlockingChecker;
-import com.ning.billing.entitlement.block.BlockingChecker.BlockingAggregator;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
-import com.ning.billing.events.BlockingTransitionInternalEvent;
+import com.ning.billing.entitlement.engine.core.EntitlementUtils;
 import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.junction.DefaultBlockingState;
 
@@ -44,20 +35,15 @@ import com.google.inject.Inject;
 
 public class DefaultInternalBlockingApi implements BlockingInternalApi {
 
-
-    private static final Logger log = LoggerFactory.getLogger(DefaultInternalBlockingApi.class);
-
+    private final EntitlementUtils entitlementUtils;
     private final BlockingStateDao dao;
-    private final BlockingChecker blockingChecker;
     private final Clock clock;
-    private final PersistentBus eventBus;
 
     @Inject
-    public DefaultInternalBlockingApi(final BlockingStateDao dao, final BlockingChecker blockingChecker, final PersistentBus eventBus, final Clock clock) {
+    public DefaultInternalBlockingApi(final EntitlementUtils entitlementUtils, final BlockingStateDao dao, final Clock clock) {
+        this.entitlementUtils = entitlementUtils;
         this.dao = dao;
         this.clock = clock;
-        this.blockingChecker = blockingChecker;
-        this.eventBus = eventBus;
     }
 
     @Override
@@ -96,52 +82,8 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
 
     @Override
     public void setBlockingState(final BlockingState state, final InternalCallContext context) {
-
-        final BlockingAggregator previousState = getBlockingStateFor(state.getBlockedId(), state.getType(), context);
-
-        dao.setBlockingState(state, clock, context);
-
-        final BlockingAggregator currentState = getBlockingStateFor(state.getBlockedId(), state.getType(), context);
-        if (previousState != null && currentState != null) {
-            postBlockingTransitionEvent(state.getBlockedId(), state.getType(), previousState, currentState, context);
-        }
+        entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(state, context);
     }
-
-    private BlockingAggregator getBlockingStateFor(final UUID blockableId, final BlockingStateType type, final InternalCallContext context) {
-        try {
-            return blockingChecker.getBlockedStatus(blockableId, type, context);
-        } catch (BlockingApiException e) {
-            log.warn("Failed to retrieve blocking state for {} {}", blockableId, type);
-            return null;
-        }
-    }
-
-    private void postBlockingTransitionEvent(final UUID blockableId, final BlockingStateType type,
-                                             final BlockingAggregator previousState, final BlockingAggregator currentState, final InternalCallContext context) {
-
-        try {
-            final boolean isTransitionToBlockedBilling = !previousState.isBlockBilling() && currentState.isBlockBilling();
-            final boolean isTransitionToUnblockedBilling = previousState.isBlockBilling() && !currentState.isBlockBilling();
-
-            final boolean isTransitionToBlockedEntitlement = !previousState.isBlockEntitlement() && currentState.isBlockEntitlement();
-            final boolean isTransitionToUnblockedEntitlement = previousState.isBlockEntitlement() && !currentState.isBlockEntitlement();
-
-            final BlockingTransitionInternalEvent event = new DefaultBlockingTransitionInternalEvent(blockableId, type,
-                                                                                                     isTransitionToBlockedBilling, isTransitionToUnblockedBilling,
-                                                                                                     isTransitionToBlockedEntitlement, isTransitionToUnblockedEntitlement,
-
-                                                                                                     context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
-
-            // TODO
-            // STEPH Ideally we would like to post from transaction when we inserted the new blocking state, but new state would have to be recalculated from transaction which is
-            // difficult without the help of BlockingChecker -- which itself relies on dao. Other alternative is duplicating the logic, or refactoring the DAO to export higher level api.
-            eventBus.post(event);
-        } catch (EventBusException e) {
-            log.warn("Failed to post event {}", e);
-        }
-
-    }
-
 
     BlockingStateType getBlockingStateType(final Blockable overdueable) {
         if (overdueable instanceof Account) {

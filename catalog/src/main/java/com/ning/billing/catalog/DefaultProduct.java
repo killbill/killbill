@@ -198,4 +198,52 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
                 + Arrays.toString(included) + ", available=" + Arrays.toString(available) + ", catalogName="
                 + catalogName + "]";
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final DefaultProduct that = (DefaultProduct) o;
+
+        if (!Arrays.equals(available, that.available)) {
+            return false;
+        }
+        if (catalogName != null ? !catalogName.equals(that.catalogName) : that.catalogName != null) {
+            return false;
+        }
+        if (category != that.category) {
+            return false;
+        }
+        if (!Arrays.equals(included, that.included)) {
+            return false;
+        }
+        if (!Arrays.equals(limits, that.limits)) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        if (retired != null ? !retired.equals(that.retired) : that.retired != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (retired != null ? retired.hashCode() : 0);
+        result = 31 * result + (category != null ? category.hashCode() : 0);
+        result = 31 * result + (included != null ? Arrays.hashCode(included) : 0);
+        result = 31 * result + (available != null ? Arrays.hashCode(available) : 0);
+        result = 31 * result + (limits != null ? Arrays.hashCode(limits) : 0);
+        result = 31 * result + (catalogName != null ? catalogName.hashCode() : 0);
+        return result;
+    }
 }

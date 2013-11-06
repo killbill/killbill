@@ -54,9 +54,13 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
         this.isActive = isActive;
     }
 
-    public BlockingStateModelDao(final BlockingState src, InternalCallContext context) {
+    public BlockingStateModelDao(final BlockingState src, final InternalCallContext context) {
+        this(src, context.getCreatedDate(), context.getUpdatedDate());
+    }
+
+    public BlockingStateModelDao(final BlockingState src, final DateTime createdDate, final DateTime updatedDate) {
         this(src.getId(), src.getBlockedId(), src.getType(), src.getStateName(), src.getService(), src.isBlockChange(),
-             src.isBlockEntitlement(), src.isBlockBilling(), src.getEffectiveDate(), true, context.getCreatedDate(), context.getUpdatedDate());
+             src.isBlockEntitlement(), src.isBlockBilling(), src.getEffectiveDate(), true, createdDate, updatedDate);
     }
 
     public UUID getBlockableId() {
