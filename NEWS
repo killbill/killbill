@@ -1,3 +1,7 @@
+0.7.1
+    Add support for currency conversion plugin type
+    Allow payments/refund to be processed by plugin in a different currency than the one on the account
+
 0.7.0
     Initial support for pagination
     Entitlement bugfixes
