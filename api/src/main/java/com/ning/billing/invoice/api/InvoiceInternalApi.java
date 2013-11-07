@@ -40,7 +40,7 @@ public interface InvoiceInternalApi {
 
     public BigDecimal getAccountBalance(UUID accountId, InternalTenantContext context);
 
-    public void notifyOfPayment(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentId, DateTime paymentDate, InternalCallContext context) throws InvoiceApiException;
+    public void notifyOfPayment(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, DateTime paymentDate, InternalCallContext context) throws InvoiceApiException;
 
     public void notifyOfPayment(InvoicePayment invoicePayment, InternalCallContext context) throws InvoiceApiException;
 

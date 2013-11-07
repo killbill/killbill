@@ -549,6 +549,7 @@ public class PaymentProcessor extends ProcessorBase {
                     invoiceApi.notifyOfPayment(invoice.getId(),
                             payment.getAmount(),
                             payment.getCurrency(),
+                            paymentPluginInfo.getCurrency(),
                             payment.getId(),
                             payment.getEffectiveDate(),
                             context);

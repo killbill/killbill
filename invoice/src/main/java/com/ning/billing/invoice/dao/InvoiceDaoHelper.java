@@ -268,6 +268,13 @@ public class InvoiceDaoHelper {
         final InvoicePaymentSqlDao invoicePaymentSqlDao = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
         final String invoiceId = invoice.getId().toString();
         final List<InvoicePaymentModelDao> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId, context);
+        for (final InvoicePaymentModelDao cur : invoicePayments) {
+            if (cur.getCurrency() != cur.getProcessedCurrency()) {
+                // If any entry is set with a different processed currency, we use it as a processed currency.
+                invoice.setProcessedCurrency(cur.getProcessedCurrency());
+                break;
+            }
+        }
         invoice.addPayments(invoicePayments);
     }
 }

@@ -16,10 +16,12 @@
 
 package com.ning.billing.invoice.glue;
 
+import org.mockito.Mockito;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.account.glue.DefaultAccountModule;
+import com.ning.billing.currency.api.CurrencyConversionApi;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.TestInvoiceNotificationQListener;
 import com.ning.billing.util.glue.BusModule;
@@ -46,5 +48,7 @@ public class TestInvoiceModuleWithEmbeddedDb extends TestInvoiceModule {
         install(new NonEntityDaoModule());
         install(new MetricsModule());
         install(new BusModule(configSource));
+
+        bind(CurrencyConversionApi.class).toInstance(Mockito.mock(CurrencyConversionApi.class));
     }
 }

@@ -42,6 +42,7 @@ public class InvoiceModelDao extends EntityBase implements EntityModelDao<Invoic
     // Note in the database, for convenience only
     private List<InvoiceItemModelDao> invoiceItems;
     private List<InvoicePaymentModelDao> invoicePayments;
+    private Currency processedCurrency;
 
     public InvoiceModelDao() { /* For the DAO mapper */ }
 
@@ -84,6 +85,14 @@ public class InvoiceModelDao extends EntityBase implements EntityModelDao<Invoic
 
     public List<InvoicePaymentModelDao> getInvoicePayments() {
         return invoicePayments;
+    }
+
+    public void setProcessedCurrency(Currency currency) {
+        this.processedCurrency = currency;
+    }
+
+    public Currency getProcessedCurrency() {
+        return processedCurrency != null ? processedCurrency : currency;
     }
 
     public UUID getAccountId() {

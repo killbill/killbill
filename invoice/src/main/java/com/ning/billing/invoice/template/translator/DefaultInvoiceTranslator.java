@@ -135,4 +135,14 @@ public class DefaultInvoiceTranslator extends DefaultTranslatorBase implements I
     public String getInvoiceBalance() {
         return getTranslation(locale, "invoiceBalance");
     }
+
+    @Override
+    public String getProcessedPaymentCurrency() {
+        return getTranslation(locale, "processedPaymentCurrency");
+    }
+
+    @Override
+    public String getProcessedPaymentRate() {
+        return getTranslation(locale, "processedPaymentRate");
+    }
 }

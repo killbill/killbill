@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill</artifactId>
         <groupId>com.ning.billing</groupId>
-        <version>0.8.1-SNAPSHOT</version>
+        <version>0.8.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-junction</artifactId>

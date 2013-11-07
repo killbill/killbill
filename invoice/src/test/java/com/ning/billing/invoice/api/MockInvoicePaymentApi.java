@@ -95,7 +95,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
 
         if (existingPayment != null) {
             invoicePayments.add(new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, null, null, DateTime.now(DateTimeZone.UTC), amount,
-                                                          Currency.USD, null, existingPayment.getId()));
+                                                          existingPayment.getCurrency(), existingPayment.getProcessedCurrency(), null, existingPayment.getId()));
         }
 
         return existingPayment;

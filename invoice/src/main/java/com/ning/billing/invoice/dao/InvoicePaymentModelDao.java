@@ -36,6 +36,7 @@ public class InvoicePaymentModelDao extends EntityBase implements EntityModelDao
     private DateTime paymentDate;
     private BigDecimal amount;
     private Currency currency;
+    private Currency processedCurrency;
     private UUID paymentCookieId;
     private UUID linkedInvoicePaymentId;
 
@@ -43,7 +44,7 @@ public class InvoicePaymentModelDao extends EntityBase implements EntityModelDao
 
     public InvoicePaymentModelDao(final UUID id, final DateTime createdDate, final InvoicePaymentType type, final UUID invoiceId,
                                   final UUID paymentId, final DateTime paymentDate, final BigDecimal amount, final Currency currency,
-                                  final UUID paymentCookieId, final UUID linkedInvoicePaymentId) {
+                                  final Currency processedCurrency, final UUID paymentCookieId, final UUID linkedInvoicePaymentId) {
         super(id, createdDate, createdDate);
         this.type = type;
         this.invoiceId = invoiceId;
@@ -51,13 +52,14 @@ public class InvoicePaymentModelDao extends EntityBase implements EntityModelDao
         this.paymentDate = paymentDate;
         this.amount = amount;
         this.currency = currency;
+        this.processedCurrency = processedCurrency;
         this.paymentCookieId = paymentCookieId;
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
     }
 
     public InvoicePaymentModelDao(final InvoicePayment invoicePayment) {
         this(invoicePayment.getId(), invoicePayment.getCreatedDate(), invoicePayment.getType(), invoicePayment.getInvoiceId(), invoicePayment.getPaymentId(),
-             invoicePayment.getPaymentDate(), invoicePayment.getAmount(), invoicePayment.getCurrency(), invoicePayment.getPaymentCookieId(),
+             invoicePayment.getPaymentDate(), invoicePayment.getAmount(), invoicePayment.getCurrency(), invoicePayment.getProcessedCurrency(), invoicePayment.getPaymentCookieId(),
              invoicePayment.getLinkedInvoicePaymentId());
     }
 
@@ -83,6 +85,10 @@ public class InvoicePaymentModelDao extends EntityBase implements EntityModelDao
 
     public Currency getCurrency() {
         return currency;
+    }
+
+    public Currency getProcessedCurrency() {
+        return processedCurrency;
     }
 
     public UUID getPaymentCookieId() {

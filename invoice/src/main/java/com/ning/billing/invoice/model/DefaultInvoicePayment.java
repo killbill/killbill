@@ -37,22 +37,23 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     private final DateTime paymentDate;
     private final BigDecimal amount;
     private final Currency currency;
+    private final Currency processedCurrency;
     private final UUID paymentCookieId;
     private final UUID linkedInvoicePaymentId;
 
     public DefaultInvoicePayment(final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
-                                 final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), null, type, paymentId, invoiceId, paymentDate, amount, currency, null, null);
+                                 final BigDecimal amount, final Currency currency, final Currency processedCurrency) {
+        this(UUID.randomUUID(), null, type, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, null, null);
     }
 
     public DefaultInvoicePayment(final UUID id, final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
-                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final UUID paymentCookieId,
+                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final Currency processedCurrency, @Nullable final UUID paymentCookieId,
                                  @Nullable final UUID linkedInvoicePaymentId) {
-        this(id, null, type, paymentId, invoiceId, paymentDate, amount, currency, paymentCookieId, linkedInvoicePaymentId);
+        this(id, null, type, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, paymentCookieId, linkedInvoicePaymentId);
     }
 
     public DefaultInvoicePayment(final UUID id, @Nullable final DateTime createdDate, final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
-                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final UUID paymentCookieId,
+                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final Currency processedCurrency, @Nullable final UUID paymentCookieId,
                                  @Nullable final UUID linkedInvoicePaymentId) {
         super(id, createdDate, createdDate);
         this.type = type;
@@ -61,6 +62,7 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
         this.invoiceId = invoiceId;
         this.paymentDate = paymentDate;
         this.currency = currency;
+        this.processedCurrency =processedCurrency;
         this.paymentCookieId = paymentCookieId;
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
     }
@@ -68,7 +70,8 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     public DefaultInvoicePayment(final InvoicePaymentModelDao invoicePaymentModelDao) {
         this(invoicePaymentModelDao.getId(), invoicePaymentModelDao.getCreatedDate(), invoicePaymentModelDao.getType(),
              invoicePaymentModelDao.getPaymentId(), invoicePaymentModelDao.getInvoiceId(), invoicePaymentModelDao.getPaymentDate(),
-             invoicePaymentModelDao.getAmount(), invoicePaymentModelDao.getCurrency(), invoicePaymentModelDao.getPaymentCookieId(),
+             invoicePaymentModelDao.getAmount(), invoicePaymentModelDao.getCurrency(), invoicePaymentModelDao.getProcessedCurrency(),
+             invoicePaymentModelDao.getPaymentCookieId(),
              invoicePaymentModelDao.getLinkedInvoicePaymentId());
     }
 
@@ -110,6 +113,11 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     @Override
     public UUID getPaymentCookieId() {
         return paymentCookieId;
+    }
+
+    @Override
+    public Currency getProcessedCurrency() {
+        return processedCurrency;
     }
 
 }
