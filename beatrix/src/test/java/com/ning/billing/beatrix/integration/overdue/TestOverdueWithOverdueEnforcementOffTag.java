@@ -65,8 +65,8 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
 
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
-        // Set the OVERDUE_ENFORCEMENT_OFF tag
-        busHandler.pushExpectedEvent(NextEvent.TAG);
+        // Set the OVERDUE_ENFORCEMENT_OFF tag (we set the clear state, hence the blocking event)
+        busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.BLOCK);
         tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId(), callContext);
         busHandler.isCompleted(DELAY);
 

@@ -81,7 +81,7 @@ public class TestIntegration extends TestIntegrationBase {
         // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
         // There is no invoice created as we only adjust the previous invoice.
         //
-        cancelEntitlementAndCheckForCompletion(bpSubscription, clock.getUTCNow(), NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
+        cancelEntitlementAndCheckForCompletion(bpSubscription, clock.getUTCNow(), NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
         invoiceChecker.checkInvoice(account.getId(), 2,
                                     callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")),
                                     // The second invoice should be adjusted for the AO (we paid for the full period) and since we paid we should also see a CBA
@@ -163,7 +163,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
-        baseEntitlement = cancelEntitlementAndCheckForCompletion(baseEntitlement, clock.getUTCNow());
+        baseEntitlement = cancelEntitlementAndCheckForCompletion(baseEntitlement, clock.getUTCNow(), NextEvent.BLOCK);
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
@@ -245,13 +245,11 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
-        cancelEntitlementAndCheckForCompletion(baseEntitlement, clock.getUTCNow());
+        cancelEntitlementAndCheckForCompletion(baseEntitlement, clock.getUTCNow(), NextEvent.BLOCK);
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 2), callContext);
-
-        log.info("TEST PASSED !");
     }
 
     @Test(groups = "slow")
@@ -335,7 +333,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
-        baseEntitlement = cancelEntitlementAndCheckForCompletion(baseEntitlement, clock.getUTCNow());
+        baseEntitlement = cancelEntitlementAndCheckForCompletion(baseEntitlement, clock.getUTCNow(), NextEvent.BLOCK);
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
@@ -470,7 +468,7 @@ public class TestIntegration extends TestIntegrationBase {
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         final SubscriptionBundle initialBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey("bundleKey", callContext);
 
-        busHandler.pushExpectedEvent(NextEvent.CANCEL);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL);
         baseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, callContext);
         assertTrue(busHandler.isCompleted(DELAY));
 

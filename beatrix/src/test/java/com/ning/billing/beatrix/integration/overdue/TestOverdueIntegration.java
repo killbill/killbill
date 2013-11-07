@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
@@ -43,6 +44,8 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.junction.DefaultBlockingState;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -146,7 +149,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // 2012, 6, 31 => P1 (We se 6/31 instead of 6/30 because invoice might happen later in that day)
-        addDaysAndCheckForCompletion(7, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(7, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
         invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
@@ -165,7 +168,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // This is the first stage that will block the billing (and entitlement). The overdue system will notify invoice which will in turn
         // will adjust (repair) the previous invoice for the part that was blocked
         //
-        addDaysAndCheckForCompletion(1, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         invoiceChecker.checkInvoice(account.getId(), 3,
@@ -182,7 +185,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD2");
 
         // 2012, 7, 23 => Should be 20 but notficationQ event occurs on 23...
-        addDaysAndCheckForCompletion(5);
+        addDaysAndCheckForCompletion(5, NextEvent.BLOCK);
         checkODState("OD3");
 
         allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices();
@@ -236,7 +239,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // 2012, 6, 31 => P1 (We se 6/31 instead of 6/30 because invoice might happen later in that day)
-        addDaysAndCheckForCompletion(7, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(7, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
         invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
@@ -255,7 +258,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // This is the first stage that will block the billing (and entitlement). The overdue system will notify invoice which will in turn
         // will adjust (repair) the previous invoice for the part that was blocked
         //
-        addDaysAndCheckForCompletion(1, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         invoiceChecker.checkInvoice(account.getId(), 3,
@@ -272,7 +275,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD2");
 
         // 2012, 7, 23 => Should be 20 but notficationQ event occurs on 23...
-        addDaysAndCheckForCompletion(5);
+        addDaysAndCheckForCompletion(5, NextEvent.BLOCK);
         checkODState("OD3");
 
         // 2012, 7, 25 => Retry P0
@@ -333,7 +336,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // 2012, 6, 31 => P1 (We se 6/31 instead of 6/30 because invoice might happen later in that day)
-        addDaysAndCheckForCompletion(7, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(7, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
         invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
@@ -352,7 +355,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // This is the first stage that will block the billing (and entitlement). The overdue system will notify invoice which will in turn
         // will adjust (repair) the previous invoice for the part that was blocked
         //
-        addDaysAndCheckForCompletion(1, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         invoiceChecker.checkInvoice(account.getId(), 3,
@@ -369,7 +372,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD2");
 
         // 2012, 7, 23 => Should be 20 but notficationQ event occurs on 23...
-        addDaysAndCheckForCompletion(5);
+        addDaysAndCheckForCompletion(5, NextEvent.BLOCK);
         checkODState("OD3");
 
         // 2012, 7, 25 => Retry P0
@@ -436,7 +439,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // 2012, 6, 31 => P1 (We se 6/31 instead of 6/30 because invoice might happen later in that day)
-        addDaysAndCheckForCompletion(7, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(7, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
         invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
@@ -451,7 +454,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD1");
 
         // 2012, 7, 10 => Retry P0
-        addDaysAndCheckForCompletion(1, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         invoiceChecker.checkInvoice(account.getId(), 3,
@@ -467,7 +470,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD2");
 
         // 2012, 7, 23 => Should be 20 but notficationQ event occurs on 23...
-        addDaysAndCheckForCompletion(5);
+        addDaysAndCheckForCompletion(5, NextEvent.BLOCK);
         checkODState("OD3");
 
 
@@ -532,11 +535,11 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // 2012, 7, 2 => Retry P0
-        addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(8, NextEvent.BLOCK, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
 
         // 2012, 7, 10 => Retry P0
-        addDaysAndCheckForCompletion(8,  NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(8,  NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         invoiceChecker.checkInvoice(account.getId(), 2,
@@ -548,7 +551,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD2");
 
         // 2012, 7, 23 => Should be 20 but notficationQ event occurs on 23...
-        addDaysAndCheckForCompletion(5);
+        addDaysAndCheckForCompletion(5, NextEvent.BLOCK);
         checkODState("OD3");
 
         allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices();
@@ -617,7 +620,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // DAY 65 - 35 days after invoice
         // Single PAYMENT_ERROR here here triggered by the invoice
-        addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(20, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
@@ -634,7 +637,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
 
         // DAY 75 - 45 days after invoice
-        addDaysAndCheckForCompletion(8, NextEvent.INVOICE_ADJUSTMENT);
+        addDaysAndCheckForCompletion(8, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
 
         // Should now be in OD2
         checkODState("OD2");
@@ -647,7 +650,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 15), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-124.97")));
 
         // DAY 85 - 55 days after invoice
-        addDaysAndCheckForCompletion(10);
+        addDaysAndCheckForCompletion(10, NextEvent.BLOCK);
 
         // Should now be in OD3
         checkODState("OD3");
@@ -710,7 +713,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Past 30 days since the external charge
-        addDaysAndCheckForCompletion(6);
+        addDaysAndCheckForCompletion(6, NextEvent.BLOCK);
         // Note! We need to explicitly refresh here because overdue won't get notified to refresh up until the next
         // payment (when the next invoice is generated)
         // TODO - we should fix this
@@ -761,7 +764,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // Now, refund the second (first non-zero dollar) invoice
         final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), false, callContext);
-        refundPaymentAndCheckForCompletion(account, payment, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentAndCheckForCompletion(account, payment, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
         // We should now be in OD1
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
@@ -804,7 +807,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // Now, create a chargeback for the second (first non-zero dollar) invoice
         final InvoicePayment payment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
-        createChargeBackAndCheckForCompletion(payment, NextEvent.INVOICE_ADJUSTMENT);
+        createChargeBackAndCheckForCompletion(payment, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
         // We should now be in OD1
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
@@ -838,7 +841,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 65 - 35 days after invoice
-        addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(20, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
@@ -885,7 +888,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 65 - 35 days after invoice
-        addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(20, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
@@ -898,7 +901,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Adjust the first (and only) item of the first invoice - we should then be 5 days apart from the second invoice
         // (which is the earliest unpaid one) and hence come back to a clear state (see configuration)
         final Invoice firstNonZeroInvoice = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
-        fullyAdjustInvoiceItemAndCheckForCompletion(account, firstNonZeroInvoice, 1, NextEvent.INVOICE_ADJUSTMENT);
+        fullyAdjustInvoiceItemAndCheckForCompletion(account, firstNonZeroInvoice, 1, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
         // We should be clear now
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
@@ -920,7 +923,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 95 - 35 days after second invoice
-        addDaysAndCheckForCompletion(15, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(15, NextEvent.BLOCK, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
 
         // We should now be in OD1
         checkODState("OD1");
@@ -929,10 +932,12 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2012, 8, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
 
         // Fully adjust all invoices
-        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
-        for (final Invoice invoice : invoices) {
-            if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
-                fullyAdjustInvoiceAndCheckForCompletion(account, invoice, NextEvent.INVOICE_ADJUSTMENT);
+        final List<Invoice> invoicesToAdjust = ImmutableList.<Invoice>copyOf(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext));
+        for (int i = 0; i < invoicesToAdjust.size(); i++) {
+            if (i == invoicesToAdjust.size() - 1) {
+                fullyAdjustInvoiceAndCheckForCompletion(account, invoicesToAdjust.get(i), NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
+            } else {
+                fullyAdjustInvoiceAndCheckForCompletion(account, invoicesToAdjust.get(i), NextEvent.INVOICE_ADJUSTMENT);
             }
         }
 
@@ -973,7 +978,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
                 if (remainingUnpaidInvoices > 0) {
                     createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT);
                 } else {
-                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.PAYMENT);
+                    createPaymentAndCheckForCompletion(account, invoice, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.PAYMENT);
                 }
             }
         }
@@ -981,13 +986,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
     }
 
 
-
     private void checkChangePlanWithOverdueState(final Entitlement entitlement, final boolean shouldFail, final boolean expectedPayment) {
         if (shouldFail) {
             try {
                 entitlement.changePlan("Pistol", term, PriceListSet.DEFAULT_PRICELIST_NAME, callContext);
             } catch (EntitlementApiException e) {
-                assertTrue(e.getCause() instanceof BlockingApiException);
+                assertTrue(e.getCause() instanceof BlockingApiException || e.getCode() == ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode(),
+                           String.format("Cause is %s, message is %s", e.getCause(), e.getMessage()));
             }
         } else {
             // Upgrade - we don't expect a payment here due to the scenario (the account will have some CBA)

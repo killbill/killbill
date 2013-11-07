@@ -21,6 +21,7 @@ import java.net.URL;
 import java.util.Set;
 
 import com.ning.billing.currency.glue.CurrencyModule;
+import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import org.skife.config.ConfigSource;
 
@@ -187,6 +188,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
                     .add(injector.getInstance(BusService.class))
                     .add(injector.getInstance(CatalogService.class))
                     .add(injector.getInstance(SubscriptionBaseService.class))
+                    .add(injector.getInstance(EntitlementService.class))
                     .add(injector.getInstance(InvoiceService.class))
                     .add(injector.getInstance(PaymentService.class))
                     .add(injector.getInstance(OverdueService.class))

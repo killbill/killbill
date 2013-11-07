@@ -84,8 +84,8 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // Should still be in clear state
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
-        // DAY 36 -- RIGHT AFTER OD1
-        addDaysAndCheckForCompletion(6, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
+        // DAY 36 -- RIGHT AFTER OD1 (two block events, for the cancellation and the OD1 state)
+        addDaysAndCheckForCompletion(6, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
 
         // Should be in OD1
         checkODState("OD1");

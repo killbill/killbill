@@ -17,11 +17,17 @@
 package com.ning.billing.junction.glue;
 
 import org.skife.config.ConfigSource;
+import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.mock.glue.MockTagModule;
+import com.ning.billing.notificationq.MockNotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueConfig;
+import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.util.bus.InMemoryBusModule;
+
+import com.google.common.collect.ImmutableMap;
 
 public class TestJunctionModuleNoDB extends TestJunctionModule {
 
@@ -37,5 +43,17 @@ public class TestJunctionModuleNoDB extends TestJunctionModule {
         install(new MockNonEntityDaoModule());
         install(new InMemoryBusModule(configSource));
         install(new MockTagModule());
+        installNotificationQueue();
+    }
+
+    private void installNotificationQueue() {
+        bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
+        configureNotificationQueueConfig();
+    }
+
+    protected void configureNotificationQueueConfig() {
+        final NotificationQueueConfig config = new ConfigurationObjectFactory(configSource).buildWithReplacements(NotificationQueueConfig.class,
+                                                                                                                  ImmutableMap.<String, String>of("instanceName", "main"));
+        bind(NotificationQueueConfig.class).toInstance(config);
     }
 }
