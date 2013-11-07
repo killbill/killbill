@@ -487,11 +487,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         if (refreshedEntitlement instanceof DefaultEntitlement) {
             subscriptionBase = ((DefaultEntitlement) refreshedEntitlement).getSubscriptionBase();
         } else {
-            try {
-                subscriptionBase = subscriptionInternalApi.getBaseSubscription(refreshedEntitlement.getBundleId(), internalCallContext);
-            } catch (SubscriptionBaseApiException e) {
-                throw new EntitlementApiException(e);
-            }
+            throw new IllegalStateException("We only support DefaultEntitlement implementations");
         }
     }
 
