@@ -505,8 +505,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // Get the latest state from disk (we just got cancelled or changed plan)
         refresh(context, internalCallContext);
 
+        final DateTime now = clock.getUTCNow();
+
         // null means immediate
-        final DateTime effectiveDate = effectiveDateOrNull == null ? clock.getUTCNow() : effectiveDateOrNull;
+        final DateTime effectiveDate = effectiveDateOrNull == null ? now : effectiveDateOrNull;
 
         final boolean isBaseEntitlementCancelled = EntitlementState.CANCELLED.equals(state);
 
@@ -515,7 +517,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // (e.g. base plan cancellation): future entitlement cancellations for add-ons on disk always reflect
         // an explicit cancellation. This trick lets us determine what to do when un-cancelling.
         // This mirror the behavior in subscription base (see DefaultSubscriptionBaseApiService).
-        final DateTime now = clock.getUTCNow();
         if (effectiveDate.compareTo(now) > 0) {
             // Note that usually we record the notification from the DAO. We cannot do it here because not all calls
             // go through the DAO (e.g. change)
