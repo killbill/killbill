@@ -47,6 +47,7 @@ import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
 import com.ning.billing.entitlement.engine.core.EntitlementUtils;
+import com.ning.billing.entitlement.engine.core.EventsStream;
 import com.ning.billing.entity.EntityBase;
 import com.ning.billing.junction.DefaultBlockingState;
 import com.ning.billing.notificationq.api.NotificationEvent;
@@ -83,6 +84,15 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     protected LocalDate effectiveEndDate;
     protected String externalKey;
     protected DateTimeZone accountTimeZone;
+
+    public DefaultEntitlement(final EntitlementDateHelper dateHelper, final EventsStream eventsStream,
+                              final AccountInternalApi accountApi, final EntitlementApi entitlementApi, final SubscriptionBaseInternalApi subscriptionInternalApi, final InternalCallContextFactory internalCallContextFactory,
+                              final BlockingStateDao blockingStateDao, final Clock clock, final BlockingChecker checker, final NotificationQueueService notificationQueueService,
+                              final EntitlementUtils entitlementUtils) {
+        this(dateHelper, eventsStream.getSubscription(), eventsStream.getAccount().getId(), eventsStream.getBundle().getExternalKey(),
+             eventsStream.getEntitlementState(), eventsStream.getEntitlementEffectiveEndDate(), eventsStream.getAccount().getTimeZone(),
+             accountApi, entitlementApi, subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker, notificationQueueService, entitlementUtils);
+    }
 
     public DefaultEntitlement(final EntitlementDateHelper dateHelper, final SubscriptionBase subscriptionBase, final UUID accountId,
                               final String externalKey, final EntitlementState state, final LocalDate effectiveEndDate, final DateTimeZone accountTimeZone,

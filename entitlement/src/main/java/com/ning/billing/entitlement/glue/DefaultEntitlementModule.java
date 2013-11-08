@@ -30,6 +30,7 @@ import com.ning.billing.entitlement.block.DefaultBlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.dao.DefaultBlockingStateDao;
 import com.ning.billing.entitlement.engine.core.EntitlementUtils;
+import com.ning.billing.entitlement.engine.core.EventsStreamBuilder;
 import com.ning.billing.glue.EntitlementModule;
 import com.ning.billing.junction.BlockingInternalApi;
 
@@ -50,6 +51,7 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
         installBlockingChecker();
         bind(EntitlementService.class).to(DefaultEntitlementService.class).asEagerSingleton();
         bind(EntitlementUtils.class).asEagerSingleton();
+        bind(EventsStreamBuilder.class).asEagerSingleton();
     }
 
     @Override
