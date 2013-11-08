@@ -23,7 +23,6 @@ import org.joda.time.LocalDate;
 
 public class DefaultSubscription extends DefaultEntitlement implements Subscription {
 
-
     private final List<BlockingState> blockingStates;
 
     DefaultSubscription(final DefaultEntitlement entitlement, final List<BlockingState> blockingStates) {
@@ -33,18 +32,18 @@ public class DefaultSubscription extends DefaultEntitlement implements Subscript
 
     @Override
     public LocalDate getBillingStartDate() {
-        return new LocalDate(subscriptionBase.getStartDate(), accountTimeZone);
+        return new LocalDate(getSubscriptionBase().getStartDate(), getAccount().getTimeZone());
     }
 
     @Override
     public LocalDate getBillingEndDate() {
-        final DateTime futureOrCurrentEndDate = subscriptionBase.getEndDate() != null ? subscriptionBase.getEndDate() : subscriptionBase.getFutureEndDate();
-        return futureOrCurrentEndDate != null ? new LocalDate(futureOrCurrentEndDate, accountTimeZone) : null;
+        final DateTime futureOrCurrentEndDate = getSubscriptionBase().getEndDate() != null ? getSubscriptionBase().getEndDate() : getSubscriptionBase().getFutureEndDate();
+        return futureOrCurrentEndDate != null ? new LocalDate(futureOrCurrentEndDate, getAccount().getTimeZone()) : null;
     }
 
     @Override
     public LocalDate getChargedThroughDate() {
-        return subscriptionBase.getChargedThroughDate() != null ? new LocalDate(subscriptionBase.getChargedThroughDate(), accountTimeZone) : null;
+        return getSubscriptionBase().getChargedThroughDate() != null ? new LocalDate(getSubscriptionBase().getChargedThroughDate(), getAccount().getTimeZone()) : null;
     }
 
     @Override

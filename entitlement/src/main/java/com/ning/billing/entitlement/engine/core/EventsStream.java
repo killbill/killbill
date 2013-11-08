@@ -23,8 +23,8 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.callcontext.InternalTenantContext;
-import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.DefaultEntitlementApi;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.block.BlockingChecker.BlockingAggregator;
@@ -45,6 +45,7 @@ public class EventsStream {
     private final List<BlockingState> bundleEntitlementStates;
     private final List<BlockingState> accountEntitlementStates;
     private final BlockingAggregator blockingAggregator;
+    private final SubscriptionBase baseSubscription;
     private final SubscriptionBase subscription;
     private final InternalTenantContext internalTenantContext;
     private final DateTime utcNow;
@@ -56,13 +57,15 @@ public class EventsStream {
     public EventsStream(final Account account, final SubscriptionBaseBundle bundle,
                         final List<BlockingState> subscriptionEntitlementStates, final List<BlockingState> bundleEntitlementStates,
                         final List<BlockingState> accountEntitlementStates, final BlockingAggregator blockingAggregator,
-                        final SubscriptionBase subscription, final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {
+                        final SubscriptionBase baseSubscription, final SubscriptionBase subscription,
+                        final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {
         this.account = account;
         this.bundle = bundle;
         this.subscriptionEntitlementStates = subscriptionEntitlementStates;
         this.bundleEntitlementStates = bundleEntitlementStates;
         this.accountEntitlementStates = accountEntitlementStates;
         this.blockingAggregator = blockingAggregator;
+        this.baseSubscription = baseSubscription;
         this.subscription = subscription;
         this.internalTenantContext = contextWithValidAccountRecordId;
         this.utcNow = utcNow;
@@ -114,15 +117,46 @@ public class EventsStream {
         return entitlementState == EntitlementState.CANCELLED;
     }
 
-    public SubscriptionBaseTransition getPendingSubscriptionEvents(final SubscriptionBaseTransitionType... types) {
+    public boolean isSubscriptionCancelled() {
+        return subscription.getState() == EntitlementState.CANCELLED;
+    }
+
+    public Iterable<BlockingState> getPendingEntitlementCancellationEvents() {
+        return getPendingEntitlementEvents(DefaultEntitlementApi.ENT_STATE_CANCELLED);
+    }
+
+    public Iterable<BlockingState> getPendingEntitlementEvents(final String... types) {
+        final List<String> typeList = ImmutableList.<String>copyOf(types);
+        return Iterables.<BlockingState>filter(subscriptionEntitlementStates,
+                                               new Predicate<BlockingState>() {
+                                                   @Override
+                                                   public boolean apply(final BlockingState input) {
+                                                       return input.getEffectiveDate().isAfter(utcNow) &&
+                                                              typeList.contains(input.getStateName()) &&
+                                                              (
+                                                                      // ... for that subscription
+                                                                      BlockingStateType.SUBSCRIPTION.equals(input.getType()) && input.getBlockedId().equals(subscription.getId()) ||
+                                                                      // ... for the associated base subscription
+                                                                      BlockingStateType.SUBSCRIPTION.equals(input.getType()) && input.getBlockedId().equals(baseSubscription.getId()) ||
+                                                                      // ... for that bundle
+                                                                      BlockingStateType.SUBSCRIPTION_BUNDLE.equals(input.getType()) && input.getBlockedId().equals(bundle.getId()) ||
+                                                                      // ... for that account
+                                                                      BlockingStateType.ACCOUNT.equals(input.getType()) && input.getBlockedId().equals(account.getId())
+                                                              );
+                                                   }
+                                               });
+    }
+
+    public Iterable<SubscriptionBaseTransition> getPendingSubscriptionEvents(final SubscriptionBaseTransitionType... types) {
         final List<SubscriptionBaseTransitionType> typeList = ImmutableList.<SubscriptionBaseTransitionType>copyOf(types);
-        return Iterables.<SubscriptionBaseTransition>tryFind(subscription.getAllTransitions(),
-                                                             new Predicate<SubscriptionBaseTransition>() {
-                                                                 @Override
-                                                                 public boolean apply(final SubscriptionBaseTransition input) {
-                                                                     return input.getEffectiveTransitionTime().isAfter(utcNow) && typeList.contains(input.getTransitionType());
-                                                                 }
-                                                             }).orNull();
+        return Iterables.<SubscriptionBaseTransition>filter(subscription.getAllTransitions(),
+                                                            new Predicate<SubscriptionBaseTransition>() {
+                                                                @Override
+                                                                public boolean apply(final SubscriptionBaseTransition input) {
+                                                                    return input.getEffectiveTransitionTime().isAfter(utcNow) &&
+                                                                           typeList.contains(input.getTransitionType());
+                                                                }
+                                                            });
     }
 
     private void setup() {
@@ -160,8 +194,7 @@ public class EventsStream {
                                                                   new Predicate<BlockingState>() {
                                                                       @Override
                                                                       public boolean apply(final BlockingState input) {
-                                                                          return EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) &&
-                                                                                 DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName());
+                                                                          return DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName());
                                                                       }
                                                                   }).orNull();
     }

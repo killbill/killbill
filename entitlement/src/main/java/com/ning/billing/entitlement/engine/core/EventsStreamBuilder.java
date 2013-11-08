@@ -63,6 +63,10 @@ public class EventsStreamBuilder {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
+    public EventsStream refresh(final EventsStream eventsStream, final TenantContext tenantContext) throws EntitlementApiException {
+        return buildForEntitlement(eventsStream.getSubscription().getId(), tenantContext);
+    }
+
     public EventsStream buildForBaseSubscription(final UUID bundleId, final TenantContext tenantContext) throws EntitlementApiException {
         final SubscriptionBaseBundle bundle;
         final SubscriptionBase subscription;
@@ -74,24 +78,26 @@ public class EventsStreamBuilder {
             throw new EntitlementApiException(e);
         }
 
-        return buildForEntitlement(bundle, subscription, tenantContext);
+        return buildForEntitlement(bundle, subscription, subscription, tenantContext);
     }
 
     public EventsStream buildForEntitlement(final UUID entitlementId, final TenantContext tenantContext) throws EntitlementApiException {
+        final SubscriptionBase baseSubscription;
         final SubscriptionBase subscription;
         final SubscriptionBaseBundle bundle;
         try {
             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
             subscription = subscriptionInternalApi.getSubscriptionFromId(entitlementId, internalTenantContext);
             bundle = subscriptionInternalApi.getBundleFromId(subscription.getBundleId(), internalTenantContext);
+            baseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), internalTenantContext);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
 
-        return buildForEntitlement(bundle, subscription, tenantContext);
+        return buildForEntitlement(bundle, baseSubscription, subscription, tenantContext);
     }
 
-    private EventsStream buildForEntitlement(final SubscriptionBaseBundle bundle, final SubscriptionBase subscription, final TenantContext tenantContext) throws EntitlementApiException {
+    private EventsStream buildForEntitlement(final SubscriptionBaseBundle bundle, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final TenantContext tenantContext) throws EntitlementApiException {
         final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(bundle.getAccountId(), tenantContext);
 
         final Account account;
@@ -118,6 +124,7 @@ public class EventsStreamBuilder {
                                 bundleEntitlementStates,
                                 accountEntitlementStates,
                                 blockingAggregator,
+                                baseSubscription,
                                 subscription,
                                 contextWithValidAccountRecordId,
                                 clock.getUTCNow());

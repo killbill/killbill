@@ -42,7 +42,6 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.EntitlementTransitionType;
-import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.engine.core.EntitlementUtils;
@@ -111,17 +110,16 @@ public class DefaultEntitlementApi implements EntitlementApi {
     public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final LocalDate effectiveDate, final CallContext callContext) throws EntitlementApiException {
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         try {
-            final Account account = accountApi.getAccountById(accountId, contextWithValidAccountRecordId);
             final SubscriptionBaseBundle bundle = subscriptionInternalApi.createBundleForAccount(accountId, externalKey, contextWithValidAccountRecordId);
 
             final DateTime referenceTime = clock.getUTCNow();
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, referenceTime, contextWithValidAccountRecordId);
             final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(bundle.getId(), planPhaseSpecifier, requestedDate, contextWithValidAccountRecordId);
-            return new DefaultEntitlement(dateHelper, subscription, accountId, bundle.getExternalKey(), EntitlementState.ACTIVE, null, account.getTimeZone(), accountApi, this,
-                                          subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker, notificationQueueService, entitlementUtils);
+
+            return new DefaultEntitlement(subscription.getId(), eventsStreamBuilder, this,
+                                          blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
+                                          entitlementUtils, dateHelper, clock, internalCallContextFactory, callContext);
         } catch (SubscriptionBaseApiException e) {
-            throw new EntitlementApiException(e);
-        } catch (AccountApiException e) {
             throw new EntitlementApiException(e);
         }
     }
@@ -146,8 +144,9 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(callContext);
             final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(bundleId, planPhaseSpecifier, requestedDate, context);
 
-            return new DefaultEntitlement(dateHelper, subscription, eventsStreamForBaseSubscription.getAccount().getId(), eventsStreamForBaseSubscription.getBundle().getExternalKey(), EntitlementState.ACTIVE, null, eventsStreamForBaseSubscription.getAccount().getTimeZone(),
-                                          accountApi, this, subscriptionInternalApi, internalCallContextFactory, blockingStateDao, clock, checker, notificationQueueService, entitlementUtils);
+            return new DefaultEntitlement(subscription.getId(), eventsStreamBuilder, this,
+                                          blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
+                                          entitlementUtils, dateHelper, clock, internalCallContextFactory, callContext);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -171,8 +170,9 @@ public class DefaultEntitlementApi implements EntitlementApi {
     @Override
     public Entitlement getEntitlementForId(final UUID uuid, final TenantContext tenantContext) throws EntitlementApiException {
         final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(uuid, tenantContext);
-        return new DefaultEntitlement(dateHelper, eventsStream, accountApi, this, subscriptionInternalApi, internalCallContextFactory,
-                                      blockingStateDao, clock, checker, notificationQueueService, entitlementUtils);
+        return new DefaultEntitlement(eventsStream, eventsStreamBuilder, this,
+                                      blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
+                                      entitlementUtils, dateHelper, clock, internalCallContextFactory);
     }
 
     @Override
