@@ -96,22 +96,29 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 if (effectivedComp != 0) {
                     return effectivedComp;
                 }
-                final int createdDateComp = o1.getCreatedDate().compareTo(o2.getCreatedDate());
-                if (createdDateComp != 0) {
-                    return createdDateComp;
+                // For the same effectiveDate we want to first return ENTITLEMENT events
+                final int serviceNameComp = o1.getService().compareTo(o2.getService());
+                if (serviceNameComp != 0) {
+                    if (o1.getService().equals(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME)) {
+                        return -1;
+                    } else if (o2.getService().equals(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME)) {
+                        return 1;
+                    } else {
+                        return serviceNameComp;
+                    }
                 }
                 final int uuidComp = o1.getId().compareTo(o2.getId());
                 if (uuidComp != 0) {
                     return uuidComp;
                 }
                 // Same effectiveDate, createdDate and for the same object, we sort first by serviceName and then serviceState
-                final int serviceNameComp = o1.getService().compareTo(o2.getService());
-                if (serviceNameComp != 0) {
-                    return serviceNameComp;
-                }
                 final int serviceStateComp = o1.getStateName().compareTo(o2.getStateName());
                 if (serviceStateComp != 0) {
                     return serviceStateComp;
+                }
+                final int createdDateComp = o1.getCreatedDate().compareTo(o2.getCreatedDate());
+                if (createdDateComp != 0) {
+                    return createdDateComp;
                 }
                 // Underministic-- not sure that will ever happen.
                 return 0;
@@ -122,9 +129,20 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
 
             final List<SubscriptionEvent> newEvents = new ArrayList<SubscriptionEvent>();
             int index = insertFromBlockingEvent(accountTimeZone, allEntitlementUUIDs, result, bs, bs.getEffectiveDate(), newEvents);
-            result.addAll(index, newEvents);
+            insertAfterIndex(result, newEvents, index);
         }
         return result;
+    }
+
+
+    private void insertAfterIndex(final LinkedList<SubscriptionEvent> original,  List<SubscriptionEvent> newEvents,  int index) {
+        if (index == original.size() -1) {
+            for (final SubscriptionEvent cur : newEvents) {
+                original.addLast(cur);
+            }
+        } else {
+            original.addAll(index + 1, newEvents);
+        }
     }
 
     private int insertFromBlockingEvent(final DateTimeZone accountTimeZone, final Set<UUID> allEntitlementUUIDs, final LinkedList<SubscriptionEvent> result, final BlockingState bs, final DateTime bsEffectiveDate, final List<SubscriptionEvent> newEvents) {
@@ -145,14 +163,12 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         DefaultSubscriptionEvent curInsertion = null;
         while (it.hasNext()) {
             DefaultSubscriptionEvent cur = (DefaultSubscriptionEvent) it.next();
-            index++;
-
             final int compEffectiveDate = bsEffectiveDate.compareTo(cur.getEffectiveDateTime());
-            final boolean shouldContinue = (compEffectiveDate > 0 ||
-                                            (compEffectiveDate == 0 && bs.getCreatedDate().compareTo(cur.getCreatedDate()) >= 0));
+            final boolean shouldContinue = (compEffectiveDate >= 0);
             if (!shouldContinue) {
                 break;
             }
+            index++;
 
             final TargetState curTargetState = targetStates.get(cur.getEntitlementId());
             switch (cur.getSubscriptionEventType()) {
