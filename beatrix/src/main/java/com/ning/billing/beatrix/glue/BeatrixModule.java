@@ -17,7 +17,6 @@
 package com.ning.billing.beatrix.glue;
 
 import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.beatrix.DefaultBeatrixService;
 import com.ning.billing.beatrix.bus.api.BeatrixService;
@@ -28,7 +27,6 @@ import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBusConfig;
 import com.ning.billing.util.glue.BusProvider;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
@@ -57,8 +55,8 @@ public class BeatrixModule extends AbstractModule {
         bind(BeatrixService.class).to(DefaultBeatrixService.class);
         bind(DefaultBeatrixService.class).asEagerSingleton();
 
-        final PersistentBusConfig extBusConfig = new ConfigurationObjectFactory(configSource).buildWithReplacements(PersistentBusConfig.class,
-                                                                                                                    ImmutableMap.<String, String>of("instanceName", "external"));
+        final PersistentBusConfig extBusConfig = new ExternalPersistentBusConfig(configSource);
+
         bind(BusProvider.class).annotatedWith(Names.named(EXTERNAL_BUS)).toInstance(new BusProvider(extBusConfig));
         bind(PersistentBus.class).annotatedWith(Names.named(EXTERNAL_BUS)).toProvider(Key.get(BusProvider.class, Names.named(EXTERNAL_BUS))).asEagerSingleton();
 
