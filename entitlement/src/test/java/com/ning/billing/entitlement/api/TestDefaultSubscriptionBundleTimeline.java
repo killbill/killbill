@@ -332,8 +332,8 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
         assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.PHASE);
         assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.PAUSE_ENTITLEMENT);
-        assertEquals(events.get(4).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
-        assertEquals(events.get(5).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        assertEquals(events.get(4).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        assertEquals(events.get(5).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
         assertEquals(events.get(0).getPrevPhase(), null);
         assertEquals(events.get(0).getNextPhase().getName(), "trial");
@@ -437,8 +437,8 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(5).getSubscriptionEventType(), SubscriptionEventType.PAUSE_ENTITLEMENT);
         assertEquals(events.get(6).getSubscriptionEventType(), SubscriptionEventType.PAUSE_ENTITLEMENT);
 
-        assertEquals(events.get(7).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
-        assertEquals(events.get(8).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        assertEquals(events.get(7).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        assertEquals(events.get(8).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
         assertEquals(events.get(0).getPrevPhase(), null);
         assertEquals(events.get(0).getNextPhase().getName(), "trial1");
@@ -564,8 +564,8 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(4).getSubscriptionEventType(), SubscriptionEventType.PAUSE_BILLING);
         assertEquals(events.get(5).getSubscriptionEventType(), SubscriptionEventType.RESUME_ENTITLEMENT);
         assertEquals(events.get(6).getSubscriptionEventType(), SubscriptionEventType.RESUME_BILLING);
-        assertEquals(events.get(7).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
-        assertEquals(events.get(8).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        assertEquals(events.get(7).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        assertEquals(events.get(8).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
         assertEquals(events.get(9).getSubscriptionEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
         assertEquals(events.get(10).getSubscriptionEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
 

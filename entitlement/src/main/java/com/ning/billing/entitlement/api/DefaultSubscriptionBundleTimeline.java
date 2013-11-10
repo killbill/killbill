@@ -33,6 +33,8 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
@@ -42,16 +44,19 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.DefaultEntitlementService;
 import com.ning.billing.entitlement.block.BlockingChecker.BlockingAggregator;
 import com.ning.billing.entitlement.block.DefaultBlockingChecker.DefaultBlockingAggregator;
+import com.ning.billing.junction.DefaultBlockingState;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
-import com.ning.billing.junction.DefaultBlockingState;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
 public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTimeline {
+
+
+    private final Logger logger = LoggerFactory.getLogger(DefaultSubscriptionBundleTimeline.class);
 
     public static final String BILLING_SERVICE_NAME = "billing-service";
     public static final String ENT_BILLING_SERVICE_NAME = "entitlement+billing-service";
@@ -107,7 +112,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                         return serviceNameComp;
                     }
                 }
-                final int uuidComp = o1.getId().compareTo(o2.getId());
+                final int uuidComp = o1.getBlockedId().compareTo(o2.getBlockedId());
                 if (uuidComp != 0) {
                     return uuidComp;
                 }
@@ -131,14 +136,40 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             int index = insertFromBlockingEvent(accountTimeZone, allEntitlementUUIDs, result, bs, bs.getEffectiveDate(), newEvents);
             insertAfterIndex(result, newEvents, index);
         }
+        return reOrderSubscriptionEventsOnSameDateByType(result);
+    }
+
+    private LinkedList<SubscriptionEvent> reOrderSubscriptionEventsOnSameDateByType(final LinkedList<SubscriptionEvent> events) {
+
+        final LinkedList<SubscriptionEvent> result = new LinkedList<SubscriptionEvent>();
+        for (final SubscriptionEvent e : events) {
+            final DefaultSubscriptionEvent cur = (DefaultSubscriptionEvent) e;
+            final DefaultSubscriptionEvent prev = result.size() > 0 ? (DefaultSubscriptionEvent) result.getLast() : null;
+            // If we already inserted an event for that subscription at that specific time, reorder so it follows enum SubscriptionEventType
+            if (prev != null &&
+                prev.getEffectiveDateTime().compareTo(cur.getEffectiveDateTime()) == 0 &&
+                prev.getEntitlementId().equals(cur.getEntitlementId()) &&
+                prev.getSubscriptionEventType().ordinal() > cur.getSubscriptionEventType().ordinal()) {
+                result.add(result.size() - 1, cur);
+            } else {
+                result.add(cur);
+            }
+        }
         return result;
     }
 
 
-    private void insertAfterIndex(final LinkedList<SubscriptionEvent> original,  List<SubscriptionEvent> newEvents,  int index) {
-        if (index == original.size() -1) {
+    private void insertAfterIndex(final LinkedList<SubscriptionEvent> original, final List<SubscriptionEvent> newEvents, int index) {
+
+        final boolean firstPosition = (index == -1);
+        final boolean lastPosition = (index == original.size() - 1);
+        if (lastPosition || firstPosition) {
             for (final SubscriptionEvent cur : newEvents) {
-                original.addLast(cur);
+                if (lastPosition) {
+                    original.addLast(cur);
+                } else {
+                    original.addFirst(cur);
+                }
             }
         } else {
             original.addAll(index + 1, newEvents);
@@ -294,20 +325,23 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 break;
             } else if (compEffectiveDate == 0) {
 
-                int compCreatedDate = ((DefaultSubscriptionEvent) event).getCreatedDate().compareTo(((DefaultSubscriptionEvent) cur).getCreatedDate());
-                if (compCreatedDate < 0) {
-                    // Same EffectiveDate but CreatedDate is less than cur -> insert here
+                int compUUID = event.getEntitlementId().compareTo(cur.getEntitlementId());
+                if (compUUID < 0) {
+                    // Same EffectiveDate but then order by subscriptionId;
                     break;
-                } else if (compCreatedDate == 0) {
-                    int compUUID = event.getId().compareTo(cur.getId());
-                    if (compUUID < 0) {
-                        // Same EffectiveDate and CreatedDate but order by ID
+                } else if (compUUID == 0) {
+
+                    int eventOrder = event.getSubscriptionEventType().ordinal() - cur.getSubscriptionEventType().ordinal();
+                    if (eventOrder < 0) {
+                        // Same EffectiveDate but same subscription, order by eventId;
                         break;
-                    } else if (compUUID == 0) {
-                        if (event.getSubscriptionEventType().ordinal() < cur.getSubscriptionEventType().ordinal()) {
-                            // Same EffectiveDate, CreatedDate and ID, but event type is lower -- as described in enum
-                            break;
-                        }
+                    }
+
+                    // Two identical event for the same subscription at the same time, this sounds like some data issue
+                    if (eventOrder == 0) {
+                        logger.warn("Detected identical events type = "  + event.getSubscriptionEventType() + " ids = " +
+                                    event.getId() + ", " + cur.getId() + " for subscription " + cur.getEntitlementId());
+                        break;
                     }
                 }
             }
@@ -340,7 +374,6 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                             in.getCreatedDate(),
                                             accountTimeZone);
     }
-
 
 
     private SubscriptionEvent toSubscriptionEvent(final SubscriptionBaseTransition in, final SubscriptionEventType eventType, final DateTimeZone accountTimeZone) {
