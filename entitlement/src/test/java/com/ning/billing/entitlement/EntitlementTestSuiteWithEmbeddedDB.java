@@ -44,6 +44,7 @@ import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.engine.core.EntitlementUtils;
+import com.ning.billing.entitlement.engine.core.EventsStreamBuilder;
 import com.ning.billing.entitlement.glue.TestEntitlementModuleWithEmbeddedDB;
 import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.mock.MockAccountBuilder;
@@ -102,6 +103,8 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected EntitlementService entitlementService;
     @Inject
     protected EntitlementUtils entitlementUtils;
+    @Inject
+    protected EventsStreamBuilder eventsStreamBuilder;
 
     protected Catalog catalog;
 

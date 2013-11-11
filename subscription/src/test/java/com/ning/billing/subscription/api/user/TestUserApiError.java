@@ -33,6 +33,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.subscription.SubscriptionTestSuiteNoDB;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
@@ -157,7 +158,9 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
             assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
         }
 
-        assertNull(subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, BillingActionPolicy.IMMEDIATE, callContext));
+        // Assume the call takes less than a second
+        assertEquals(DefaultClock.truncateMs(subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, BillingActionPolicy.IMMEDIATE, callContext)),
+                     DefaultClock.truncateMs(clock.getUTCNow()));
         assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
     }
 

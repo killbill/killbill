@@ -52,17 +52,17 @@ public interface SubscriptionBaseApiService {
     public boolean uncancel(DefaultSubscriptionBase subscription, CallContext context)
             throws SubscriptionBaseApiException;
 
-    // Return the effective date of the change, null for immediate
+    // Return the effective date of the change
     public DateTime changePlan(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
                                String priceList, CallContext context)
             throws SubscriptionBaseApiException;
 
-    // Return the effective date of the change, null for immediate
+    // Return the effective date of the change
     public DateTime changePlanWithRequestedDate(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
                                                 String priceList, DateTime requestedDate, CallContext context)
             throws SubscriptionBaseApiException;
 
-    // Return the effective date of the change, null for immediate
+    // Return the effective date of the change
     public DateTime changePlanWithPolicy(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
                                          String priceList, BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;

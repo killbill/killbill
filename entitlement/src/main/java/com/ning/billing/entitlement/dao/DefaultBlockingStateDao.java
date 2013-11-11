@@ -21,30 +21,17 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
 
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
-import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
-import com.ning.billing.entitlement.api.EntitlementApiException;
-import com.ning.billing.entitlement.engine.core.EntitlementUtils;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -53,14 +40,12 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
 public class DefaultBlockingStateDao implements BlockingStateDao {
 
+    // Assume the input is blocking states for a single blockable id
     private static final Ordering<BlockingStateModelDao> BLOCKING_STATE_MODEL_DAO_ORDERING = Ordering.<BlockingStateModelDao>from(new Comparator<BlockingStateModelDao>() {
         @Override
         public int compare(final BlockingStateModelDao o1, final BlockingStateModelDao o2) {
@@ -75,20 +60,11 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
         }
     });
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultBlockingStateDao.class);
-
-    // Lame to rely on the API at this (low) level, but we need information from subscription to insert events not on disk
-    private final SubscriptionBaseInternalApi subscriptionInternalApi;
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final Clock clock;
-    private final EntitlementUtils entitlementUtils;
 
-    @Inject
-    public DefaultBlockingStateDao(final SubscriptionBaseInternalApi subscriptionBaseInternalApi, final IDBI dbi, final Clock clock,
-                                   final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao,
-                                   final EntitlementUtils entitlementUtils) {
-        this.subscriptionInternalApi = subscriptionBaseInternalApi;
-        this.entitlementUtils = entitlementUtils;
+    public DefaultBlockingStateDao(final IDBI dbi, final Clock clock,
+                                   final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
         this.clock = clock;
     }
@@ -131,14 +107,13 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
-                final List<BlockingStateModelDao> modelsOnDisk = sqlDao.getBlockingHistoryForService(blockableId, serviceName, context);
-                final List<BlockingStateModelDao> allModels = addBlockingStatesNotOnDisk(blockableId, modelsOnDisk, sqlDao, context);
-                return new ArrayList<BlockingState>(Collections2.transform(allModels, new Function<BlockingStateModelDao, BlockingState>() {
-                    @Override
-                    public BlockingState apply(@Nullable final BlockingStateModelDao src) {
-                        return BlockingStateModelDao.toBlockingState(src);
-                    }
-                }));
+                return new ArrayList<BlockingState>(Collections2.transform(sqlDao.getBlockingHistoryForService(blockableId, serviceName, context),
+                                                                           new Function<BlockingStateModelDao, BlockingState>() {
+                                                                               @Override
+                                                                               public BlockingState apply(@Nullable final BlockingStateModelDao src) {
+                                                                                   return BlockingStateModelDao.toBlockingState(src);
+                                                                               }
+                                                                           }));
             }
         });
     }
@@ -149,14 +124,13 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
-                final List<BlockingStateModelDao> modelsOnDisk = sqlDao.getBlockingAll(blockableId, context);
-                final List<BlockingStateModelDao> allModels = addBlockingStatesNotOnDisk(blockableId, modelsOnDisk, sqlDao, context);
-                return new ArrayList<BlockingState>(Collections2.transform(allModels, new Function<BlockingStateModelDao, BlockingState>() {
-                    @Override
-                    public BlockingState apply(@Nullable final BlockingStateModelDao src) {
-                        return BlockingStateModelDao.toBlockingState(src);
-                    }
-                }));
+                return new ArrayList<BlockingState>(Collections2.transform(sqlDao.getBlockingAll(blockableId, context),
+                                                                           new Function<BlockingStateModelDao, BlockingState>() {
+                                                                               @Override
+                                                                               public BlockingState apply(@Nullable final BlockingStateModelDao src) {
+                                                                                   return BlockingStateModelDao.toBlockingState(src);
+                                                                               }
+                                                                           }));
             }
         });
     }
@@ -167,14 +141,13 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
-                final List<BlockingStateModelDao> modelsOnDisk = sqlDao.getByAccountRecordId(context);
-                final List<BlockingStateModelDao> allModels = addBlockingStatesNotOnDisk(null, modelsOnDisk, sqlDao, context);
-                return new ArrayList<BlockingState>(Collections2.transform(allModels, new Function<BlockingStateModelDao, BlockingState>() {
-                    @Override
-                    public BlockingState apply(@Nullable final BlockingStateModelDao src) {
-                        return BlockingStateModelDao.toBlockingState(src);
-                    }
-                }));
+                return new ArrayList<BlockingState>(Collections2.transform(sqlDao.getByAccountRecordId(context),
+                                                                           new Function<BlockingStateModelDao, BlockingState>() {
+                                                                               @Override
+                                                                               public BlockingState apply(@Nullable final BlockingStateModelDao src) {
+                                                                                   return BlockingStateModelDao.toBlockingState(src);
+                                                                               }
+                                                                           }));
             }
         });
     }
@@ -239,75 +212,5 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
                 return null;
             }
         });
-    }
-
-    // Add blocking states for add-ons, which would be impacted by a future cancellation or change of their base plan
-    // See DefaultEntitlement#blockAddOnsIfRequired
-    private List<BlockingStateModelDao> addBlockingStatesNotOnDisk(@Nullable final UUID blockableId,
-                                                                   final List<BlockingStateModelDao> blockingStatesOnDisk,
-                                                                   final BlockingStateSqlDao sqlDao,
-                                                                   final InternalTenantContext context) {
-        final Collection<BlockingStateModelDao> blockingStatesOnDiskCopy = new LinkedList<BlockingStateModelDao>(blockingStatesOnDisk);
-
-        // Find all base entitlements that we care about (for which we want to find future cancelled add-ons)
-        final Iterable<SubscriptionBase> baseSubscriptionsToConsider;
-        try {
-            if (blockableId == null) {
-                // We're coming from getBlockingAllForAccountRecordId
-                final Iterable<SubscriptionBase> subscriptions = Iterables.<SubscriptionBase>concat(subscriptionInternalApi.getSubscriptionsForAccount(context).values());
-                baseSubscriptionsToConsider = Iterables.<SubscriptionBase>filter(subscriptions,
-                                                                                 new Predicate<SubscriptionBase>() {
-                                                                                     @Override
-                                                                                     public boolean apply(final SubscriptionBase input) {
-                                                                                         return ProductCategory.BASE.equals(input.getCategory()) &&
-                                                                                                !EntitlementState.CANCELLED.equals(input.getState());
-                                                                                     }
-                                                                                 });
-            } else {
-                // We're coming from getBlockingHistoryForService / getBlockingAll, but we don't know the blocking type
-                final SubscriptionBase addOnSubscription;
-                try {
-                    addOnSubscription = subscriptionInternalApi.getSubscriptionFromId(blockableId, context);
-                } catch (SubscriptionBaseApiException ignored) {
-                    // blockable id points to an account or bundle, in which case there are no extra blocking states to add
-                    return blockingStatesOnDisk;
-                }
-
-                // blockable id points to a subscription, but make sure it's an add-on
-                if (ProductCategory.ADD_ON.equals(addOnSubscription.getCategory())) {
-                    final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(addOnSubscription.getBundleId(), context);
-                    baseSubscriptionsToConsider = ImmutableList.<SubscriptionBase>of(baseSubscription);
-                } else {
-                    // blockable id points to a base or standalone subscription, there is nothing to do
-                    return blockingStatesOnDisk;
-                }
-            }
-        } catch (SubscriptionBaseApiException e) {
-            log.error("Error retrieving subscriptions for account record id " + context.getAccountRecordId(), e);
-            throw new RuntimeException(e);
-        }
-
-        final DateTime now = clock.getUTCNow();
-        for (final SubscriptionBase subscriptionBase : baseSubscriptionsToConsider) {
-            final Collection<BlockingState> blockingStates;
-            try {
-                blockingStates = entitlementUtils.computeFutureBlockingStatesForAssociatedAddons(sqlDao.getBlockingHistoryForService(subscriptionBase.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, context),
-                                                                                                 subscriptionBase,
-                                                                                                 now,
-                                                                                                 context);
-            } catch (EntitlementApiException e) {
-                log.error("Error computing blocking states for addons for account record id " + context.getAccountRecordId(), e);
-                throw new RuntimeException(e);
-            }
-
-            // Inject the extra blocking states into the stream
-            for (final BlockingState blockingState : blockingStates) {
-                final BlockingStateModelDao blockingStateModelDao = new BlockingStateModelDao(blockingState, now, now);
-                blockingStatesOnDiskCopy.add(blockingStateModelDao);
-            }
-        }
-
-        // Return the sorted list
-        return BLOCKING_STATE_MODEL_DAO_ORDERING.immutableSortedCopy(blockingStatesOnDiskCopy);
     }
 }

@@ -104,7 +104,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, addOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime);
         // and for the "write" path (which will be exercised when the future notification kicks in).
         // Note that no event are computed because the add-on is not cancelled yet
-        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, addOnEntitlement, null);
+        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, addOnEntitlement, null, false);
         // Verify also the blocking states DAO adds events not on disk
         checkBlockingStatesDAO(baseEntitlement, addOnEntitlement, baseEffectiveCancellationOrChangeDate, true);
 
@@ -121,14 +121,14 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkFutureBlockingStatesToCancel(cancelledAddOnEntitlement, null, null);
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, null);
         // ...and for the "write" path (which has been exercised when the notification kicked in).
-        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime);
+        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime, false);
         // Verify also the blocking states API doesn't add too many events (now on disk)
         checkBlockingStatesDAO(cancelledBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveCancellationOrChangeDate, true);
     }
 
     @Test(groups = "slow", description = "Verify add-ons blocking states are not impacted by IMM cancellations")
     public void testCancellationIMM() throws Exception {
-        // A bit fragile? The blocking state check (checkBlockingStatesDAO) could be a bit off
+        // Approximate check, as the blocking state check (checkBlockingStatesDAO) could be a bit off
         final DateTime cancellationDateTime = clock.getUTCNow();
         final LocalDate cancellationDate = clock.getUTCToday();
 
@@ -145,7 +145,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkFutureBlockingStatesToCancel(cancelledAddOnEntitlement, null, null);
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, null);
         // ...and for the "write" path (which has been exercised in the cancel call above).
-        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, cancellationDateTime);
+        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, cancellationDateTime, true);
         // Verify also the blocking states DAO doesn't add too many events (all on disk)
         checkBlockingStatesDAO(cancelledBaseEntitlement, cancelledAddOnEntitlement, cancellationDate, true);
 
@@ -156,7 +156,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, null, null);
         checkFutureBlockingStatesToCancel(cancelledAddOnEntitlement, null, null);
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, null);
-        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, cancellationDateTime);
+        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, cancellationDateTime, true);
         checkBlockingStatesDAO(cancelledBaseEntitlement, cancelledAddOnEntitlement, cancellationDate, true);
     }
 
@@ -172,7 +172,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, addOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime);
         // ...and for the "write" path (which will be exercised when the future notification kicks in).
         // Note that no event are computed because the add-on is not cancelled yet
-        checkActualBlockingStatesToCancel(changedBaseEntitlement, addOnEntitlement, null);
+        checkActualBlockingStatesToCancel(changedBaseEntitlement, addOnEntitlement, null, false);
         // Verify also the blocking states DAO adds events not on disk
         checkBlockingStatesDAO(changedBaseEntitlement, addOnEntitlement, baseEffectiveCancellationOrChangeDate, false);
 
@@ -189,14 +189,14 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkFutureBlockingStatesToCancel(cancelledAddOnEntitlement, null, null);
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, null);
         // ...and for the "write" path (which has been exercised when the notification kicked in).
-        checkActualBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime);
+        checkActualBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime, false);
         // Verify also the blocking states API doesn't add too many events (now on disk)
         checkBlockingStatesDAO(changedBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveCancellationOrChangeDate, false);
     }
 
     @Test(groups = "slow", description = "Verify add-ons blocking states are added for IMM change plans")
     public void testChangePlanIMM() throws Exception {
-        // A bit fragile? The blocking state check (checkBlockingStatesDAO) could be a bit off
+        // Approximate check, as the blocking state check (checkBlockingStatesDAO) could be a bit off
         final DateTime changeDateTime = clock.getUTCNow();
         final LocalDate changeDate = clock.getUTCToday();
 
@@ -213,7 +213,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkFutureBlockingStatesToCancel(cancelledAddOnEntitlement, null, null);
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, null);
         // ...and for the "write" path (which has been exercised in the change call above).
-        checkActualBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, changeDateTime);
+        checkActualBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, changeDateTime, true);
         // Verify also the blocking states DAO doesn't add too many events (all on disk)
         checkBlockingStatesDAO(changedBaseEntitlement, cancelledAddOnEntitlement, changeDate, false);
 
@@ -224,7 +224,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, null, null);
         checkFutureBlockingStatesToCancel(cancelledAddOnEntitlement, null, null);
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, null);
-        checkActualBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, changeDateTime);
+        checkActualBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, changeDateTime, true);
         checkBlockingStatesDAO(changedBaseEntitlement, cancelledAddOnEntitlement, changeDate, false);
     }
 
@@ -245,7 +245,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     // Test the "write" path
-    private void checkActualBlockingStatesToCancel(final DefaultEntitlement baseEntitlement, final DefaultEntitlement addOnEntitlement, @Nullable final DateTime effectiveCancellationDateTime) throws EntitlementApiException {
+    private void checkActualBlockingStatesToCancel(final DefaultEntitlement baseEntitlement, final DefaultEntitlement addOnEntitlement, @Nullable final DateTime effectiveCancellationDateTime, final boolean approximateDateCheck) throws EntitlementApiException {
         final Collection<BlockingState> blockingStatesForCancellation = computeBlockingStatesForAssociatedAddons(baseEntitlement, effectiveCancellationDateTime);
         if (effectiveCancellationDateTime == null) {
             Assert.assertEquals(blockingStatesForCancellation.size(), 0);
@@ -253,7 +253,12 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
             Assert.assertEquals(blockingStatesForCancellation.size(), 1);
             final BlockingState blockingState = blockingStatesForCancellation.iterator().next();
             Assert.assertEquals(blockingState.getBlockedId(), addOnEntitlement.getId());
-            Assert.assertEquals(blockingState.getEffectiveDate(), effectiveCancellationDateTime);
+            if (approximateDateCheck) {
+                Assert.assertEquals(blockingState.getEffectiveDate().toLocalDate(), effectiveCancellationDateTime.toLocalDate());
+                Assert.assertEquals(blockingState.getEffectiveDate().getMinuteOfDay(), effectiveCancellationDateTime.getMinuteOfDay());
+            } else {
+                Assert.assertEquals(blockingState.getEffectiveDate(), effectiveCancellationDateTime);
+            }
             Assert.assertEquals(blockingState.getType(), BlockingStateType.SUBSCRIPTION);
             Assert.assertEquals(blockingState.getService(), EntitlementService.ENTITLEMENT_SERVICE_NAME);
             Assert.assertEquals(blockingState.getStateName(), DefaultEntitlementApi.ENT_STATE_CANCELLED);
@@ -282,13 +287,12 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     private Collection<BlockingState> computeFutureBlockingStatesForAssociatedAddons(final DefaultEntitlement baseEntitlement) throws EntitlementApiException {
-        return entitlementUtils.computeFutureBlockingStatesForAssociatedAddons(sqlDao.getBlockingHistoryForService(baseEntitlement.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, internalCallContext),
-                                                                               baseEntitlement.getSubscriptionBase(),
-                                                                               clock.getUTCNow(),
-                                                                               internalCallContext);
+        final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(baseEntitlement.getId(), callContext);
+        return eventsStream.computeAddonsBlockingStatesForFutureSubscriptionBaseEvents();
     }
 
     private Collection<BlockingState> computeBlockingStatesForAssociatedAddons(final DefaultEntitlement baseEntitlement, final DateTime effectiveDate) throws EntitlementApiException {
-        return entitlementUtils.computeBlockingStatesForAssociatedAddons(baseEntitlement.getSubscriptionBase(), effectiveDate, internalCallContext);
+        final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(baseEntitlement.getId(), callContext);
+        return eventsStream.computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate);
     }
 }

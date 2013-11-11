@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -318,15 +316,20 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
         }
 
+        // Make sure to compute the entitlement effective date first to avoid timing issues for IMM cancellations
+        // (we don't want an entitlement cancel date one second or so after the subscription cancel date or add-ons cancellations
+        // computations won't work).
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+        final LocalDate effectiveLocalDate = new LocalDate(localCancelDate, eventsStream.getAccount().getTimeZone());
+        final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(effectiveLocalDate, getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
+
         try {
+            // Cancel subscription base first, to correctly compute the add-ons entitlements we need to cancel (see below)
             getSubscriptionBase().cancelWithPolicy(billingPolicy, callContext);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
 
-        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-        final LocalDate effectiveLocalDate = new LocalDate(localCancelDate, eventsStream.getAccount().getTimeZone());
-        final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(effectiveLocalDate, getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
         final BlockingState newBlockingState = new DefaultBlockingState(getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, effectiveDate);
         entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(newBlockingState, contextWithValidAccountRecordId);
 
@@ -438,7 +441,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         eventsStream = eventsStreamBuilder.refresh(eventsStream, context);
     }
 
-    public void blockAddOnsIfRequired(@Nullable final DateTime effectiveDateOrNull, final TenantContext context, final InternalCallContext internalCallContext) throws EntitlementApiException {
+    public void blockAddOnsIfRequired(final DateTime effectiveDate, final TenantContext context, final InternalCallContext internalCallContext) throws EntitlementApiException {
         // Optimization - bail early
         if (!ProductCategory.BASE.equals(getSubscriptionBase().getCategory())) {
             // Only base subscriptions have add-ons
@@ -448,27 +451,22 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // Get the latest state from disk (we just got cancelled or changed plan)
         refresh(context);
 
-        final DateTime now = clock.getUTCNow();
-
-        // null means immediate
-        final DateTime effectiveDate = effectiveDateOrNull == null ? now : effectiveDateOrNull;
-
-        final boolean isBaseEntitlementCancelled = eventsStream.isEntitlementCancelled();
-
         // If cancellation/change occurs in the future, do nothing for now but add a notification entry.
         // This is to distinguish whether a future cancellation was requested by the user, or was a side effect
         // (e.g. base plan cancellation): future entitlement cancellations for add-ons on disk always reflect
         // an explicit cancellation. This trick lets us determine what to do when un-cancelling.
         // This mirror the behavior in subscription base (see DefaultSubscriptionBaseApiService).
+        final DateTime now = clock.getUTCNow();
         if (effectiveDate.compareTo(now) > 0) {
             // Note that usually we record the notification from the DAO. We cannot do it here because not all calls
             // go through the DAO (e.g. change)
+            final boolean isBaseEntitlementCancelled = eventsStream.isEntitlementCancelled();
             final NotificationEvent notificationEvent = new EntitlementNotificationKey(getId(), isBaseEntitlementCancelled ? EntitlementNotificationKeyAction.CANCEL : EntitlementNotificationKeyAction.CHANGE, effectiveDate);
             recordFutureNotification(effectiveDate, notificationEvent, internalCallContext);
             return;
         }
 
-        final Collection<BlockingState> addOnsBlockingStates = entitlementUtils.computeBlockingStatesForAssociatedAddons(getSubscriptionBase(), effectiveDate, internalCallContext);
+        final Collection<BlockingState> addOnsBlockingStates = eventsStream.computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate);
         for (final BlockingState addOnBlockingState : addOnsBlockingStates) {
             entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(addOnBlockingState, internalCallContext);
         }

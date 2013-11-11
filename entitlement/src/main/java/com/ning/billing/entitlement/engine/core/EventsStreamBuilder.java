@@ -22,10 +22,12 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.api.BlockingApiException;
@@ -40,6 +42,9 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 @Singleton
 public class EventsStreamBuilder {
@@ -68,52 +73,64 @@ public class EventsStreamBuilder {
     }
 
     public EventsStream buildForBaseSubscription(final UUID bundleId, final TenantContext tenantContext) throws EntitlementApiException {
-        final SubscriptionBaseBundle bundle;
-        final SubscriptionBase subscription;
+        final SubscriptionBase baseSubscription;
         try {
             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
-            bundle = subscriptionInternalApi.getBundleFromId(bundleId, internalTenantContext);
-            subscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalTenantContext);
+            baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalTenantContext);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
 
-        return buildForEntitlement(bundle, subscription, subscription, tenantContext);
+        return buildForEntitlement(baseSubscription.getId(), tenantContext);
     }
 
     public EventsStream buildForEntitlement(final UUID entitlementId, final TenantContext tenantContext) throws EntitlementApiException {
-        final SubscriptionBase baseSubscription;
-        final SubscriptionBase subscription;
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
+        return buildForEntitlement(entitlementId, internalTenantContext);
+    }
+
+    public EventsStream buildForEntitlement(final UUID entitlementId, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         final SubscriptionBaseBundle bundle;
+        final SubscriptionBase subscription;
+        final List<SubscriptionBase> allSubscriptionsForBundle;
+        final SubscriptionBase baseSubscription;
         try {
-            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
             subscription = subscriptionInternalApi.getSubscriptionFromId(entitlementId, internalTenantContext);
             bundle = subscriptionInternalApi.getBundleFromId(subscription.getBundleId(), internalTenantContext);
-            baseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), internalTenantContext);
+            allSubscriptionsForBundle = subscriptionInternalApi.getSubscriptionsForBundle(subscription.getBundleId(), internalTenantContext);
+            baseSubscription = Iterables.<SubscriptionBase>tryFind(allSubscriptionsForBundle,
+                                                                   new Predicate<SubscriptionBase>() {
+                                                                       @Override
+                                                                       public boolean apply(final SubscriptionBase input) {
+                                                                           return ProductCategory.BASE.equals(input.getLastActiveProduct().getCategory());
+                                                                       }
+                                                                   }).orNull(); // null for standalone subscriptions
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
 
-        return buildForEntitlement(bundle, baseSubscription, subscription, tenantContext);
+        return buildForEntitlement(bundle, baseSubscription, subscription, allSubscriptionsForBundle, internalTenantContext);
     }
 
-    private EventsStream buildForEntitlement(final SubscriptionBaseBundle bundle, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final TenantContext tenantContext) throws EntitlementApiException {
-        final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(bundle.getAccountId(), tenantContext);
-
+    private EventsStream buildForEntitlement(final SubscriptionBaseBundle bundle,
+                                             final SubscriptionBase baseSubscription,
+                                             final SubscriptionBase subscription,
+                                             final List<SubscriptionBase> allSubscriptionsForBundle,
+                                             final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         final Account account;
         try {
-            account = accountInternalApi.getAccountById(bundle.getAccountId(), contextWithValidAccountRecordId);
+            account = accountInternalApi.getAccountById(bundle.getAccountId(), internalTenantContext);
         } catch (AccountApiException e) {
             throw new EntitlementApiException(e);
         }
 
-        final List<BlockingState> subscriptionEntitlementStates = blockingStateDao.getBlockingHistoryForService(subscription.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
-        final List<BlockingState> bundleEntitlementStates = blockingStateDao.getBlockingHistoryForService(bundle.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
-        final List<BlockingState> accountEntitlementStates = blockingStateDao.getBlockingHistoryForService(account.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
+        final List<BlockingState> subscriptionEntitlementStates = blockingStateDao.getBlockingHistoryForService(subscription.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
+        final List<BlockingState> bundleEntitlementStates = blockingStateDao.getBlockingHistoryForService(bundle.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
+        final List<BlockingState> accountEntitlementStates = blockingStateDao.getBlockingHistoryForService(account.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
 
         final BlockingAggregator blockingAggregator;
         try {
-            blockingAggregator = checker.getBlockedStatus(subscription, contextWithValidAccountRecordId);
+            blockingAggregator = checker.getBlockedStatus(subscription, internalTenantContext);
         } catch (BlockingApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -126,7 +143,8 @@ public class EventsStreamBuilder {
                                 blockingAggregator,
                                 baseSubscription,
                                 subscription,
-                                contextWithValidAccountRecordId,
+                                allSubscriptionsForBundle,
+                                internalTenantContext,
                                 clock.getUTCNow());
     }
 }

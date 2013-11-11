@@ -399,7 +399,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final boolean isChangeImmediate = subscription.getCurrentPlan().getProduct().getName().equals(newProductName) &&
                                           subscription.getCurrentPlan().getBillingPeriod() == newBillingPeriod;
-        return isChangeImmediate ? null : effectiveDate;
+        return effectiveDate;
     }
 
 
