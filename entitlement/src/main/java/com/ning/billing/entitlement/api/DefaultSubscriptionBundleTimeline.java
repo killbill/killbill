@@ -177,10 +177,12 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 while (currentIndex >= 1) {
                     final DefaultSubscriptionEvent revCur = (DefaultSubscriptionEvent) events.get(currentIndex);
                     final DefaultSubscriptionEvent other = (DefaultSubscriptionEvent) events.get(currentIndex - 1);
-                    if (!shouldSwap(revCur, other, false)) {
+                    if (shouldSwap(revCur, other, false)) {
+                        Collections.swap(events, currentIndex, currentIndex - 1);
+                    }
+                    if (revCur.getEffectiveDate().compareTo(other.getEffectiveDate()) != 0) {
                         break;
                     }
-                    Collections.swap(events, currentIndex, currentIndex - 1);
                     currentIndex--;
                 }
             }
@@ -190,10 +192,15 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
 
     private boolean shouldSwap(DefaultSubscriptionEvent cur, DefaultSubscriptionEvent other, boolean isAscending) {
 
-        return (cur.getEffectiveDateTime().compareTo(other.getEffectiveDateTime()) == 0 &&
-                cur.getEntitlementId().equals(other.getEntitlementId()) &&
-                ((isAscending && cur.getSubscriptionEventType().ordinal() > other.getSubscriptionEventType().ordinal()) ||
-                 (!isAscending && cur.getSubscriptionEventType().ordinal() < other.getSubscriptionEventType().ordinal())));
+        // For a given date, order by subscriptionId, and within subscription by event type
+        final int idComp = cur.getEntitlementId().compareTo(other.getEntitlementId());
+        return (cur.getEffectiveDate().compareTo(other.getEffectiveDate()) == 0 &&
+                ((isAscending &&
+                  ((idComp > 0) ||
+                   (idComp == 0 && cur.getSubscriptionEventType().ordinal() > other.getSubscriptionEventType().ordinal()))) ||
+                (!isAscending &&
+                   ((idComp < 0) ||
+                    (idComp == 0 && cur.getSubscriptionEventType().ordinal() < other.getSubscriptionEventType().ordinal())))));
     }
 
 

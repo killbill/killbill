@@ -152,6 +152,61 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
 
     @Test(groups = "fast")
+    public void testReOrderSubscriptionEventsOnInvalidOrderAndDifferentSubscriptionsSameDates1() {
+        TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, null, new ArrayList<Entitlement>(), new ArrayList<BlockingState>());
+
+        final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>();
+        final UUID subscriptionId = UUID.fromString("60b64e0c-cefd-48c3-8de9-c731a9558165");
+
+        final UUID otherSubscriptionId = UUID.fromString("35b3b340-31b2-46ea-b062-e9fc9fab3bc9");
+        final DateTime effectiveDate = clock.getUTCNow();
+
+        events.add(timeline.createEvent(subscriptionId, SubscriptionEventType.START_ENTITLEMENT, effectiveDate));
+        events.add(timeline.createEvent(subscriptionId, SubscriptionEventType.START_BILLING, effectiveDate));
+        events.add(timeline.createEvent(subscriptionId, SubscriptionEventType.STOP_BILLING, effectiveDate));
+        events.add(timeline.createEvent(otherSubscriptionId, SubscriptionEventType.STOP_BILLING, effectiveDate));
+        events.add(timeline.createEvent(subscriptionId, SubscriptionEventType.STOP_ENTITLEMENT, effectiveDate));
+
+        timeline.reOrderSubscriptionEventsOnSameDateByType(events);
+
+        Assert.assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
+        Assert.assertEquals(events.get(0).getEntitlementId(), otherSubscriptionId);
+        Assert.assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        Assert.assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        Assert.assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        Assert.assertEquals(events.get(4).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
+        Assert.assertEquals(events.get(4).getEntitlementId(), subscriptionId);
+    }
+
+    @Test(groups = "fast")
+    public void testReOrderSubscriptionEventsOnInvalidOrderAndDifferentSubscriptionsSameDates2() {
+        TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, null, new ArrayList<Entitlement>(), new ArrayList<BlockingState>());
+
+        final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>();
+        final UUID subscriptionId = UUID.fromString("35b3b340-31b2-46ea-b062-e9fc9fab3bc9");
+        final UUID otherSubscriptionId = UUID.fromString("60b64e0c-cefd-48c3-8de9-c731a9558165");
+
+        final DateTime effectiveDate = clock.getUTCNow();
+
+        events.add(timeline.createEvent(subscriptionId, SubscriptionEventType.START_ENTITLEMENT, effectiveDate));
+        events.add(timeline.createEvent(subscriptionId, SubscriptionEventType.START_BILLING, effectiveDate));
+        events.add(timeline.createEvent(subscriptionId, SubscriptionEventType.STOP_BILLING, effectiveDate));
+        events.add(timeline.createEvent(otherSubscriptionId, SubscriptionEventType.STOP_BILLING, effectiveDate));
+        events.add(timeline.createEvent(subscriptionId, SubscriptionEventType.STOP_ENTITLEMENT, effectiveDate));
+
+        timeline.reOrderSubscriptionEventsOnSameDateByType(events);
+
+        Assert.assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        Assert.assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        Assert.assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        Assert.assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
+        Assert.assertEquals(events.get(3).getEntitlementId(), subscriptionId);
+        Assert.assertEquals(events.get(4).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
+        Assert.assertEquals(events.get(4).getEntitlementId(), otherSubscriptionId);
+
+    }
+
+    @Test(groups = "fast")
     public void testReOrderSubscriptionEventsOnInvalidOrderAndDifferentSubscriptionsDates() {
         TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, null, new ArrayList<Entitlement>(), new ArrayList<BlockingState>());
 
