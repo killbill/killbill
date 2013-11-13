@@ -266,8 +266,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         testListener.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
         entitlementApi.pause(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
-        // TODO
-        //assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         // Verify blocking state
         final Entitlement baseEntitlement2 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
@@ -303,8 +302,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         testListener.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
         entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
-        // TODO
-        //assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         // Verify call is idempotent
         entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);

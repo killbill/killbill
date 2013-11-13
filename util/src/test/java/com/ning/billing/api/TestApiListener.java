@@ -114,9 +114,11 @@ public class TestApiListener {
         switch (eventEffective.getTransitionType()) {
             case BLOCK_BUNDLE:
                 assertEqualsNicely(NextEvent.PAUSE);
+                notifyIfStackEmpty();
                 break;
             case UNBLOCK_BUNDLE:
                 assertEqualsNicely(NextEvent.RESUME);
+                notifyIfStackEmpty();
                 break;
         }
     }
@@ -130,7 +132,6 @@ public class TestApiListener {
 
     @Subscribe
     public void handleSubscriptionEvents(final EffectiveSubscriptionInternalEvent eventEffective) {
-
         log.info(String.format("Got subscription event %s", eventEffective.toString()));
         switch (eventEffective.getTransitionType()) {
             case TRANSFER:
