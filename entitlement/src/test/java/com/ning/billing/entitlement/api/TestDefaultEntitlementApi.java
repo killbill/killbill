@@ -50,15 +50,20 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         clock.setDay(initialDate);
 
         final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
+        testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        assertTrue(testListener.isCompleted(DELAY));
 
         // Add ADD_ON
         // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement addOnEntitlement = entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, initialDate, callContext);
+        assertTrue(testListener.isCompleted(DELAY));
 
         /*
         // TODO It looks like we don't check if there is a future cancellation. Maybe we should?
@@ -72,7 +77,9 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         clock.addDays(3);
 
         // Cancelling the base entitlement will cancel the add-on
+        testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK);
         entitlement.cancelEntitlementWithDateOverrideBillingPolicy(clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, callContext);
+        assertTrue(testListener.isCompleted(DELAY));
 
         try {
             entitlement.cancelEntitlementWithDateOverrideBillingPolicy(clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, callContext);
@@ -113,7 +120,9 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         // Create entitlement and check each field
+        testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        assertTrue(testListener.isCompleted(DELAY));
         assertEquals(entitlement.getAccountId(), account.getId());
         assertEquals(entitlement.getExternalKey(), account.getExternalKey());
 
@@ -203,11 +212,15 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         // Create entitlement and check each field
+        testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        assertTrue(testListener.isCompleted(DELAY));
 
         // Add ADD_ON
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement telescopicEntitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, initialDate, callContext);
+        assertTrue(testListener.isCompleted(DELAY));
 
         assertEquals(telescopicEntitlement.getAccountId(), account.getId());
         assertEquals(telescopicEntitlement.getExternalKey(), account.getExternalKey());
@@ -238,16 +251,24 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         // Create entitlement and check each field
+        testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        assertTrue(testListener.isCompleted(DELAY));
 
         clock.addDays(1);
         final LocalDate effectiveDateSpec1 = new LocalDate(clock.getUTCNow(), account.getTimeZone());
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement telescopicEntitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, effectiveDateSpec1, callContext);
+        assertTrue(testListener.isCompleted(DELAY));
 
         // Block all entitlement in the bundle
         clock.addDays(5);
+
+        testListener.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
         entitlementApi.pause(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
+        // TODO
+        //assertTrue(testListener.isCompleted(DELAY));
 
         // Verify blocking state
         final Entitlement baseEntitlement2 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
@@ -280,7 +301,11 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         }
 
         clock.addDays(3);
+
+        testListener.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
         entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
+        // TODO
+        //assertTrue(testListener.isCompleted(DELAY));
 
         // Verify call is idempotent
         entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
@@ -305,26 +330,27 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         clock.setDay(initialDate);
 
         final Account accountSrc = accountApi.createAccount(getAccountData(7), callContext);
-
         final Account accountDesc = accountApi.createAccount(getAccountData(15), callContext);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         // Create entitlement
+        testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(accountSrc.getId(), spec, accountSrc.getExternalKey(), initialDate, callContext);
+        assertTrue(testListener.isCompleted(DELAY));
 
         final DateTime ctd = clock.getUTCNow().plusDays(30).plusMonths(1);
         testListener.pushExpectedEvent(NextEvent.PHASE);
         clock.addDays(32);
         // Set manually since no invoice
         subscriptionInternalApi.setChargedThroughDate(baseEntitlement.getId(), ctd, internalCallContext);
-        assertTrue(testListener.isCompleted(5000));
+        assertTrue(testListener.isCompleted(DELAY));
 
         // Transfer bundle to dest account
         final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), accountSrc.getTimeZone());
-        testListener.pushExpectedEvent(NextEvent.TRANSFER);
+        testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.BLOCK);
         final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(accountSrc.getId(), accountDesc.getId(), baseEntitlement.getExternalKey(), effectiveDate, BillingActionPolicy.END_OF_TERM, callContext);
-        assertTrue(testListener.isCompleted(5000));
+        assertTrue(testListener.isCompleted(DELAY));
 
         final Entitlement oldBaseEntitlement = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(accountSrc.getId(), accountSrc.getExternalKey(), callContext).get(0);
         assertEquals(oldBaseEntitlement.getEffectiveEndDate(), effectiveDate);

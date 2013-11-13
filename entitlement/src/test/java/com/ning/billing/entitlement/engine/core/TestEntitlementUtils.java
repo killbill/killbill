@@ -177,7 +177,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkBlockingStatesDAO(changedBaseEntitlement, addOnEntitlement, baseEffectiveCancellationOrChangeDate, false);
 
         // Verify the notification kicks in
-        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        testListener.pushExpectedEvents(NextEvent.CHANGE, NextEvent.CANCEL, NextEvent.BLOCK);
         clock.addDays(30);
         assertTrue(testListener.isCompleted(DELAY));
 
@@ -201,7 +201,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         final LocalDate changeDate = clock.getUTCToday();
 
         // Change plan IMM (upgrade) to Assault-Rifle (Telescopic-Scope is included)
-        testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
+        testListener.pushExpectedEvents(NextEvent.CHANGE, NextEvent.CANCEL, NextEvent.BLOCK);
         final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, callContext);
         assertTrue(testListener.isCompleted(DELAY));
 
