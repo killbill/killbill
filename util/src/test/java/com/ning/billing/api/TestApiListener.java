@@ -249,7 +249,7 @@ public class TestApiListener {
         synchronized (this) {
             final Joiner joiner = Joiner.on(" ");
             nextExpectedEvent.add(next);
-            log.info("Stacking expected event {}, got [{}]", next, joiner.join(nextExpectedEvent));
+            log.debug("Stacking expected event {}, got [{}]", next, joiner.join(nextExpectedEvent));
             completed = false;
         }
     }
@@ -323,7 +323,7 @@ public class TestApiListener {
                     it.remove();
                     foundIt = true;
                     if (!nonExpectedMode) {
-                        log.info("Found expected event {}. Yeah!", received);
+                        log.debug("Found expected event {}. Yeah!", received);
                     } else {
                         log.error("Found non expected event {}. Boohh! ", received);
                     }

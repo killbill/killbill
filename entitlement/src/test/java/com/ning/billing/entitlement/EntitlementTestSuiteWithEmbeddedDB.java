@@ -150,7 +150,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
                                    final BusService busService,
                                    final SubscriptionBaseService subscriptionBaseService,
                                    final EntitlementService entitlementService) throws Exception {
-        log.warn("STARTING TEST FRAMEWORK");
+        log.debug("STARTING TEST FRAMEWORK");
 
         resetTestListener(testListener, testListenerStatus);
 
@@ -161,7 +161,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         restartSubscriptionService(subscriptionBaseService);
         restartEntitlementService(entitlementService);
 
-        log.warn("STARTED TEST FRAMEWORK");
+        log.debug("STARTED TEST FRAMEWORK");
     }
 
 
@@ -169,11 +169,11 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
                                    final BusService busService,
                                    final SubscriptionBaseService subscriptionBaseService,
                                    final EntitlementService entitlementService) throws Exception {
-        log.warn("STOPPING TEST FRAMEWORK");
+        log.debug("STOPPING TEST FRAMEWORK");
         stopBusAndUnregisterListener(busService, testListener);
         stopSubscriptionService(subscriptionBaseService);
         stopEntitlementService(entitlementService);
-        log.warn("STOPPED TEST FRAMEWORK");
+        log.debug("STOPPED TEST FRAMEWORK");
     }
 
     private void resetTestListener(final TestApiListener testListener, final TestListenerStatus testListenerStatus) {
