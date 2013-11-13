@@ -101,4 +101,66 @@ public class DefaultEffectiveEntitlementEvent extends BusEventBase implements Ef
     public BusInternalEventType getBusEventType() {
         return BusInternalEventType.ENTITLEMENT_TRANSITION;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultEffectiveEntitlementEvent{");
+        sb.append("id=").append(id);
+        sb.append(", entitlementId=").append(entitlementId);
+        sb.append(", bundleId=").append(bundleId);
+        sb.append(", accountId=").append(accountId);
+        sb.append(", transitionType=").append(transitionType);
+        sb.append(", effectiveTransitionTime=").append(effectiveTransitionTime);
+        sb.append(", requestedTransitionTime=").append(requestedTransitionTime);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final DefaultEffectiveEntitlementEvent that = (DefaultEffectiveEntitlementEvent) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (effectiveTransitionTime != null ? effectiveTransitionTime.compareTo(that.effectiveTransitionTime) != 0 : that.effectiveTransitionTime != null) {
+            return false;
+        }
+        if (entitlementId != null ? !entitlementId.equals(that.entitlementId) : that.entitlementId != null) {
+            return false;
+        }
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
+        if (requestedTransitionTime != null ? requestedTransitionTime.compareTo(that.requestedTransitionTime) != 0 : that.requestedTransitionTime != null) {
+            return false;
+        }
+        if (transitionType != that.transitionType) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (entitlementId != null ? entitlementId.hashCode() : 0);
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (transitionType != null ? transitionType.hashCode() : 0);
+        result = 31 * result + (effectiveTransitionTime != null ? effectiveTransitionTime.hashCode() : 0);
+        result = 31 * result + (requestedTransitionTime != null ? requestedTransitionTime.hashCode() : 0);
+        return result;
+    }
 }
