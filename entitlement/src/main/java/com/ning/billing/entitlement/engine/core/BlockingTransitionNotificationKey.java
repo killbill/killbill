@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BlockingTransitionNotificationKey implements NotificationEvent {
 
+    private final UUID blockingStateId;
     private final UUID blockableId;
     private final BlockingStateType blockingType;
     private final Boolean isTransitionToBlockedBilling;
@@ -34,19 +35,25 @@ public class BlockingTransitionNotificationKey implements NotificationEvent {
     private final Boolean isTransitionToUnblockedEntitlement;
 
     @JsonCreator
-    public BlockingTransitionNotificationKey(@JsonProperty("blockableId") final UUID blockableId,
+    public BlockingTransitionNotificationKey(@JsonProperty("blockingStateId") final UUID blockingStateId,
+                                             @JsonProperty("blockableId") final UUID blockableId,
                                              @JsonProperty("type") final BlockingStateType blockingType,
                                              @JsonProperty("isTransitionToBlockedBilling") final Boolean isTransitionToBlockedBilling,
                                              @JsonProperty("isTransitionToUnblockedBilling") final Boolean isTransitionToUnblockedBilling,
                                              @JsonProperty("isTransitionToBlockedEntitlement") final Boolean isTransitionToBlockedEntitlement,
                                              @JsonProperty("isTransitionToUnblockedEntitlement") final Boolean isTransitionToUnblockedEntitlement) {
 
+        this.blockingStateId = blockingStateId;
         this.blockableId = blockableId;
         this.blockingType = blockingType;
         this.isTransitionToBlockedBilling = isTransitionToBlockedBilling;
         this.isTransitionToUnblockedBilling = isTransitionToUnblockedBilling;
         this.isTransitionToBlockedEntitlement = isTransitionToBlockedEntitlement;
         this.isTransitionToUnblockedEntitlement = isTransitionToUnblockedEntitlement;
+    }
+
+    public UUID getBlockingStateId() {
+        return blockingStateId;
     }
 
     public UUID getBlockableId() {
@@ -80,7 +87,8 @@ public class BlockingTransitionNotificationKey implements NotificationEvent {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("BlockingTransitionNotificationKey{");
-        sb.append("blockableId=").append(blockableId);
+        sb.append("blockingStateId=").append(blockingStateId);
+        sb.append(", blockableId=").append(blockableId);
         sb.append(", blockingType=").append(blockingType);
         sb.append(", isTransitionToBlockedBilling=").append(isTransitionToBlockedBilling);
         sb.append(", isTransitionToUnblockedBilling=").append(isTransitionToUnblockedBilling);
@@ -101,6 +109,9 @@ public class BlockingTransitionNotificationKey implements NotificationEvent {
 
         final BlockingTransitionNotificationKey that = (BlockingTransitionNotificationKey) o;
 
+        if (blockingStateId != null ? !blockingStateId.equals(that.blockingStateId) : that.blockingStateId != null) {
+            return false;
+        }
         if (blockableId != null ? !blockableId.equals(that.blockableId) : that.blockableId != null) {
             return false;
         }
@@ -125,7 +136,8 @@ public class BlockingTransitionNotificationKey implements NotificationEvent {
 
     @Override
     public int hashCode() {
-        int result = blockableId != null ? blockableId.hashCode() : 0;
+        int result = blockingStateId != null ? blockingStateId.hashCode() : 0;
+        result = 31 * result + (blockableId != null ? blockableId.hashCode() : 0);
         result = 31 * result + (blockingType != null ? blockingType.hashCode() : 0);
         result = 31 * result + (isTransitionToBlockedBilling != null ? isTransitionToBlockedBilling.hashCode() : 0);
         result = 31 * result + (isTransitionToUnblockedBilling != null ? isTransitionToUnblockedBilling.hashCode() : 0);

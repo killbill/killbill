@@ -28,12 +28,15 @@ import javax.annotation.Nullable;
 
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -43,7 +46,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Ordering;
 
-public class DefaultBlockingStateDao implements BlockingStateDao {
+public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao, BlockingState, EntitlementApiException> implements BlockingStateDao {
 
     // Assume the input is blocking states for a single blockable id
     private static final Ordering<BlockingStateModelDao> BLOCKING_STATE_MODEL_DAO_ORDERING = Ordering.<BlockingStateModelDao>from(new Comparator<BlockingStateModelDao>() {
@@ -60,13 +63,17 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
         }
     });
 
-    private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final Clock clock;
 
     public DefaultBlockingStateDao(final IDBI dbi, final Clock clock,
                                    final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), BlockingStateSqlDao.class);
         this.clock = clock;
+    }
+
+    @Override
+    protected EntitlementApiException generateAlreadyExistsException(final BlockingStateModelDao blockingStateModelDao, final InternalCallContext context) {
+        return new EntitlementApiException(ErrorCode.ENT_ALREADY_BLOCKED, blockingStateModelDao.getBlockableId());
     }
 
     @Override
@@ -194,7 +201,7 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
 
                 // Create the state, if needed
                 if (!blockingStatesToRemove.contains(newBlockingStateModelDao.getId())) {
-                    sqlDao.create(new BlockingStateModelDao(state, context), context);
+                    sqlDao.create(newBlockingStateModelDao, context);
                 }
 
                 return null;

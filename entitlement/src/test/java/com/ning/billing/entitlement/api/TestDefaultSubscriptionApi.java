@@ -32,7 +32,6 @@ import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -51,7 +50,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, externalKey, initialDate, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
         assertEquals(entitlement.getAccountId(), account.getId());
         assertEquals(entitlement.getExternalKey(), externalKey);
 
@@ -65,7 +64,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         clock.addDays(3);
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         entitlement.cancelEntitlementWithDate(new LocalDate(clock.getUTCNow(), account.getTimeZone()), true, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         clock.addDays(1);
         // Re-create a new bundle with same externalKey
@@ -74,7 +73,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec2, externalKey, new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
         assertEquals(entitlement2.getAccountId(), account.getId());
         assertEquals(entitlement2.getExternalKey(), externalKey);
 
@@ -105,7 +104,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.CANCEL, NextEvent.BLOCK);
         entitlementApi.transferEntitlements(account.getId(), account2.getId(), externalKey, new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         final List<SubscriptionBundle> bundles3 = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, callContext);
         assertEquals(bundles3.size(), 3);

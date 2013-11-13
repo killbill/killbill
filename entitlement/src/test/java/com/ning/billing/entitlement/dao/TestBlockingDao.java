@@ -27,8 +27,8 @@ import org.testng.annotations.Test;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 
 public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 

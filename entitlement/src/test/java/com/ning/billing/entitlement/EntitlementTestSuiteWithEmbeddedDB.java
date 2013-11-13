@@ -61,6 +61,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
@@ -234,5 +235,10 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
                                        .paymentMethodId(UUID.randomUUID())
                                        .timeZone(DateTimeZone.UTC)
                                        .build();
+    }
+
+    protected void assertListenerStatus() {
+        assertTrue(testListener.isCompleted(DELAY));
+        ((EntitlementTestListenerStatus) testListenerStatus).assertListenerStatus();
     }
 }

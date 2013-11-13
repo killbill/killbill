@@ -21,12 +21,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
+import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.glue.TestEntitlementModuleNoDB;
-import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.tag.TagInternalApi;
@@ -54,9 +54,7 @@ public abstract class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoD
     protected TagDao tagDao;
     @Inject
     protected TagInternalApi tagInternalApi;
-
     @Inject
-
     protected BlockingChecker blockingChecker;
 
     @BeforeClass(groups = "fast")
@@ -74,6 +72,4 @@ public abstract class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoD
     public void afterMethod() {
         bus.stop();
     }
-
-
 }

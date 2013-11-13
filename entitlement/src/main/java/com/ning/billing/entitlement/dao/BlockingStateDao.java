@@ -23,8 +23,10 @@ import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.EntitlementApiException;
+import com.ning.billing.util.entity.dao.EntityDao;
 
-public interface BlockingStateDao {
+public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, BlockingState, EntitlementApiException> {
 
     /**
      * Returns the current state for that specific service

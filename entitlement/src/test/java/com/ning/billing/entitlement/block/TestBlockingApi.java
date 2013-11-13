@@ -28,10 +28,8 @@ import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.junction.DefaultBlockingState;
-
-import static org.testng.Assert.assertTrue;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 
 public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -52,9 +50,9 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final boolean blockBilling = false;
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
-        final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT,overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
+        final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingInternalApi.setBlockingState(state1, internalCallContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
@@ -62,7 +60,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingInternalApi.setBlockingState(state2, internalCallContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
@@ -84,7 +82,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingInternalApi.setBlockingState(state1, internalCallContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
@@ -92,7 +90,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingInternalApi.setBlockingState(state2, internalCallContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);

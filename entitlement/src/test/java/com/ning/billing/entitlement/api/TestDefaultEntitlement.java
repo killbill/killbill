@@ -32,7 +32,6 @@ import com.ning.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -48,7 +47,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
         clock.addDays(5);
@@ -56,7 +55,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         final LocalDate cancelDate = new LocalDate(clock.getUTCNow());
         entitlement.cancelEntitlementWithDate(cancelDate, true, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
@@ -75,7 +74,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
         clock.addDays(5);
@@ -90,7 +89,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         clock.addDays(1);
 
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         final Entitlement entitlement3 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement3.getState(), EntitlementState.CANCELLED);
@@ -109,7 +108,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
         clock.addDays(5);
@@ -123,7 +122,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvents(NextEvent.UNCANCEL);
         entitlement2.uncancelEntitlement(callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         clock.addDays(1);
         final Entitlement entitlement3 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
@@ -142,11 +141,11 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         final Entitlement cancelledEntitlement = entitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
         assertEquals(cancelledEntitlement.getState(), EntitlementState.CANCELLED);
         assertEquals(cancelledEntitlement.getEffectiveEndDate(), initialDate);
 
@@ -167,7 +166,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         final DateTime ctd = clock.getUTCNow().plusDays(30).plusMonths(1);
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -175,13 +174,13 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         clock.addDays(32);
         // Set manually since no invoice
         subscriptionInternalApi.setChargedThroughDate(entitlement.getId(), ctd, internalCallContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final Entitlement entitlement3 = entitlement2.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
         assertEquals(entitlement3.getState(), EntitlementState.CANCELLED);
         assertEquals(entitlement3.getEffectiveEndDate(), new LocalDate(2013, 9, 8));
 
@@ -191,7 +190,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.CANCEL);
         clock.addMonths(1);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         final Entitlement entitlement4 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement4.getState(), EntitlementState.CANCELLED);
@@ -210,14 +209,14 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         final DateTime ctd = clock.getUTCNow().plusDays(30).plusMonths(1);
         testListener.pushExpectedEvent(NextEvent.PHASE);
         clock.addDays(32);
         // Set manually since no invoice
         subscriptionInternalApi.setChargedThroughDate(entitlement.getId(), ctd, internalCallContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
 
@@ -231,7 +230,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         clock.addMonths(1);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         final Entitlement entitlement4 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement4.getState(), EntitlementState.CANCELLED);
@@ -250,12 +249,12 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         // Immediate change during trial
         testListener.pushExpectedEvent(NextEvent.CHANGE);
         entitlement.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         // Verify the change is immediate
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
@@ -263,7 +262,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         final Entitlement cancelledEntitlement = entitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
         assertEquals(cancelledEntitlement.getState(), EntitlementState.CANCELLED);
         assertEquals(cancelledEntitlement.getEffectiveEndDate(), initialDate);
 

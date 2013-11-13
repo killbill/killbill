@@ -24,16 +24,18 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.ning.billing.clock.Clock;
-import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.EntitlementApiException;
+import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
-public class MockBlockingStateDao implements BlockingStateDao {
+public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDao, BlockingState, EntitlementApiException> implements BlockingStateDao {
 
     private final Map<UUID, List<BlockingState>> blockingStates = new HashMap<UUID, List<BlockingState>>();
 
@@ -61,7 +63,7 @@ public class MockBlockingStateDao implements BlockingStateDao {
             return new ArrayList<BlockingState>();
         }
 
-        final Map<String, BlockingState> tmp  = new HashMap<String, BlockingState>();
+        final Map<String, BlockingState> tmp = new HashMap<String, BlockingState>();
         for (BlockingState cur : blockingStatesForId) {
             final BlockingState curStateForService = tmp.get(cur.getService());
             if (curStateForService == null || curStateForService.getEffectiveDate().compareTo(cur.getEffectiveDate()) < 0) {

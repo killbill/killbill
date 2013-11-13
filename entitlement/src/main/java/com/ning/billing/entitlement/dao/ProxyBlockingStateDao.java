@@ -45,6 +45,7 @@ import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.entity.Pagination;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -88,6 +89,46 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         this.subscriptionInternalApi = subscriptionBaseInternalApi;
         this.clock = clock;
         this.delegate = new DefaultBlockingStateDao(dbi, clock, cacheControllerDispatcher, nonEntityDao);
+    }
+
+    @Override
+    public void create(final BlockingStateModelDao entity, final InternalCallContext context) throws EntitlementApiException {
+        delegate.create(entity, context);
+    }
+
+    @Override
+    public Long getRecordId(final UUID id, final InternalTenantContext context) {
+        return delegate.getRecordId(id, context);
+    }
+
+    @Override
+    public BlockingStateModelDao getByRecordId(final Long recordId, final InternalTenantContext context) {
+        return delegate.getByRecordId(recordId, context);
+    }
+
+    @Override
+    public BlockingStateModelDao getById(final UUID id, final InternalTenantContext context) {
+        return delegate.getById(id, context);
+    }
+
+    @Override
+    public Pagination<BlockingStateModelDao> getAll(final InternalTenantContext context) {
+        return delegate.getAll(context);
+    }
+
+    @Override
+    public Pagination<BlockingStateModelDao> get(final Long offset, final Long limit, final InternalTenantContext context) {
+        return delegate.get(offset, limit, context);
+    }
+
+    @Override
+    public Long getCount(final InternalTenantContext context) {
+        return delegate.getCount(context);
+    }
+
+    @Override
+    public void test(final InternalTenantContext context) {
+        delegate.test(context);
     }
 
     @Override

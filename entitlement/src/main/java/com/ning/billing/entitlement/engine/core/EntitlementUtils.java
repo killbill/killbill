@@ -77,7 +77,7 @@ public class EntitlementUtils {
 
         final BlockingAggregator currentState = getBlockingStateFor(state.getBlockedId(), state.getType(), context);
         if (previousState != null && currentState != null) {
-            postBlockingTransitionEvent(state.getEffectiveDate(), state.getBlockedId(), state.getType(), previousState, currentState, context);
+            postBlockingTransitionEvent(state.getId(), state.getEffectiveDate(), state.getBlockedId(), state.getType(), previousState, currentState, context);
         }
     }
 
@@ -90,7 +90,7 @@ public class EntitlementUtils {
         }
     }
 
-    private void postBlockingTransitionEvent(final DateTime effectiveDate, final UUID blockableId, final BlockingStateType type,
+    private void postBlockingTransitionEvent(final UUID blockingStateId, final DateTime effectiveDate, final UUID blockableId, final BlockingStateType type,
                                              final BlockingAggregator previousState, final BlockingAggregator currentState,
                                              final InternalCallContext context) {
         final boolean isTransitionToBlockedBilling = !previousState.isBlockBilling() && currentState.isBlockBilling();
@@ -101,7 +101,7 @@ public class EntitlementUtils {
 
         if (effectiveDate.compareTo(clock.getUTCNow()) > 0) {
             // Add notification entry to send the bus event at the effective date
-            final NotificationEvent notificationEvent = new BlockingTransitionNotificationKey(blockableId, type,
+            final NotificationEvent notificationEvent = new BlockingTransitionNotificationKey(blockingStateId, blockableId, type,
                                                                                               isTransitionToBlockedBilling, isTransitionToUnblockedBilling,
                                                                                               isTransitionToBlockedEntitlement, isTransitionToUnblockedEntitlement);
             recordFutureNotification(effectiveDate, notificationEvent, context);

@@ -45,8 +45,6 @@ import com.ning.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.dao.BlockingStateSqlDao;
 
-import static org.testng.Assert.assertTrue;
-
 public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     private BlockingStateSqlDao sqlDao;
@@ -82,7 +80,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE);
         // Phase for the base plan is 2013/09/07 (30 days trial) but it's 2013/09/08 for the add-on (1 month discount)
         clock.setDay(new LocalDate(2013, 9, 8));
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         // Note! Make sure to align CTD and cancellation/change effective time with the phase event effective time to avoid timing issues in comparisons
         baseEffectiveEOTCancellationOrChangeDateTime = baseEntitlement.getSubscriptionBase().getAllTransitions().get(1).getEffectiveTransitionTime().plusMonths(1);
@@ -97,7 +95,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Cancel the base plan
         final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.END_OF_TERM, callContext);
         // No blocking event (EOT)
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(addOnEntitlement, null, null);
@@ -111,7 +109,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Verify the notification kicks in
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK);
         clock.addDays(30);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         // Refresh the state
         final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
@@ -135,7 +133,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Cancel the base plan
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK);
         final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         // Refresh the add-on state
         final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
@@ -151,7 +149,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
         clock.addDays(30);
         // No new event
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, null, null);
         checkFutureBlockingStatesToCancel(cancelledAddOnEntitlement, null, null);
@@ -165,7 +163,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Change plan EOT to Assault-Rifle (Telescopic-Scope is included)
         final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, new LocalDate(2013, 10, 7), callContext);
         // No blocking event (EOT)
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(addOnEntitlement, null, null);
@@ -179,7 +177,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Verify the notification kicks in
         testListener.pushExpectedEvents(NextEvent.CHANGE, NextEvent.CANCEL, NextEvent.BLOCK);
         clock.addDays(30);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         // Refresh the state
         final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
@@ -203,7 +201,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Change plan IMM (upgrade) to Assault-Rifle (Telescopic-Scope is included)
         testListener.pushExpectedEvents(NextEvent.CHANGE, NextEvent.CANCEL, NextEvent.BLOCK);
         final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, callContext);
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         // Refresh the add-on state
         final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
@@ -219,7 +217,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
         clock.addDays(30);
         // No new event
-        assertTrue(testListener.isCompleted(DELAY));
+        assertListenerStatus();
 
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, null, null);
         checkFutureBlockingStatesToCancel(cancelledAddOnEntitlement, null, null);

@@ -27,12 +27,12 @@ import com.ning.billing.bus.api.BusEvent;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.DefaultBlockingTransitionInternalEvent;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.entitlement.api.Entitlement;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
+import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.engine.core.BlockingTransitionNotificationKey;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
@@ -58,8 +58,8 @@ public class DefaultEntitlementService implements EntitlementService {
     private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementService.class);
 
     private final EntitlementApi entitlementApi;
+    private final BlockingStateDao blockingStateDao;
     private final NonEntityDao nonEntityDao;
-    private final Clock clock;
     private final PersistentBus eventBus;
     private final NotificationQueueService notificationQueueService;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -68,14 +68,14 @@ public class DefaultEntitlementService implements EntitlementService {
 
     @Inject
     public DefaultEntitlementService(final EntitlementApi entitlementApi,
+                                     final BlockingStateDao blockingStateDao,
                                      final NonEntityDao nonEntityDao,
-                                     final Clock clock,
                                      final PersistentBus eventBus,
                                      final NotificationQueueService notificationQueueService,
                                      final InternalCallContextFactory internalCallContextFactory) {
         this.entitlementApi = entitlementApi;
+        this.blockingStateDao = blockingStateDao;
         this.nonEntityDao = nonEntityDao;
-        this.clock = clock;
         this.eventBus = eventBus;
         this.notificationQueueService = notificationQueueService;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -141,6 +141,12 @@ public class DefaultEntitlementService implements EntitlementService {
     }
 
     private void processBlockingNotification(final BlockingTransitionNotificationKey key, final InternalCallContext internalCallContext) {
+        // Check if the blocking state has been deleted since
+        if (blockingStateDao.getById(key.getBlockingStateId(), internalCallContext) == null) {
+            log.debug("BlockingState {} has been deleted, not sending a bus event", key.getBlockingStateId());
+            return;
+        }
+
         final BusEvent event = new DefaultBlockingTransitionInternalEvent(key.getBlockableId(), key.getBlockingType(),
                                                                           key.isTransitionedToBlockedBilling(), key.isTransitionedToUnblockedBilling(),
                                                                           key.isTransitionedToBlockedEntitlement(), key.isTransitionToUnblockedEntitlement(),

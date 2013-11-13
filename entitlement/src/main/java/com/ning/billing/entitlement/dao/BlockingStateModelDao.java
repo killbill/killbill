@@ -20,13 +20,13 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.util.dao.TableName;
 import com.ning.billing.entity.EntityBase;
-import com.ning.billing.util.entity.dao.EntityModelDao;
 import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.util.dao.TableName;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class BlockingStateModelDao extends EntityBase implements EntityModelDao<BlockingState>{
 
