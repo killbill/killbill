@@ -42,7 +42,6 @@ import static org.testng.Assert.assertTrue;
 
 public class TestSubscription extends TestIntegrationBase {
 
-
     @Test(groups = "slow")
     public void testForcePolicy() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
@@ -69,7 +68,6 @@ public class TestSubscription extends TestIntegrationBase {
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.addDays(40);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);

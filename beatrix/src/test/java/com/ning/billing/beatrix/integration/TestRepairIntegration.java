@@ -97,7 +97,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
         }
         clock.addDeltaFromReality(it.toDurationMillis());
         if (!inTrial) {
-            assertTrue(busHandler.isCompleted(DELAY));
+            assertListenerStatus();
         }
         final boolean ifRepair = false;
         if (ifRepair) {
@@ -131,7 +131,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
             busHandler.pushExpectedEvent(NextEvent.PAYMENT);
             busHandler.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
             repairApi.repairBundle(bundleRepair, false, callContext);
-            assertTrue(busHandler.isCompleted(DELAY));
+            assertListenerStatus();
 
 
             final DefaultSubscriptionBase newAoSubscription = (DefaultSubscriptionBase) aoEntitlement1.getSubscriptionBase();

@@ -423,7 +423,6 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(28));
         clock.addDays(28);// 26 / 5
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         busHandler.pushExpectedEvent(NextEvent.PHASE);
@@ -431,24 +430,20 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(3));
         clock.addDays(3);// 29 / 5
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(10));
         clock.addDays(10);// 8 / 6
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(18));
         clock.addDays(18);// 26 / 6
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(3));
         clock.addDays(3);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
     }
 
@@ -470,7 +465,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL);
         baseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         final String newProductName = "Pistol";
         final DefaultEntitlement newBaseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", newProductName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
@@ -528,16 +523,16 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
 
         // PAUSE THE ENTITLEMENT
         DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
-        busHandler.pushExpectedEvent(NextEvent.PAUSE);
+        busHandler.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
         busHandler.pushExpectedEvent(NextEvent.INVOICE_ADJUSTMENT);
         entitlementApi.pause(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
@@ -551,10 +546,10 @@ public class TestIntegration extends TestIntegrationBase {
         // MOVE CLOCK FORWARD ADN CHECK THERE IS NO NEW INVOICE
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
 
-        busHandler.pushExpectedEvent(NextEvent.RESUME);
+        busHandler.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         entitlementApi.resume(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -589,7 +584,7 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
         invoices = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 2);
@@ -599,14 +594,14 @@ public class TestIntegration extends TestIntegrationBase {
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
             busHandler.pushExpectedEvent(NextEvent.PAYMENT);
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
-            assertTrue(busHandler.isCompleted(DELAY));
+            assertListenerStatus();
         }
 
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
         assertNotNull(invoices);
@@ -617,7 +612,7 @@ public class TestIntegration extends TestIntegrationBase {
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
             busHandler.pushExpectedEvent(NextEvent.PAYMENT);
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
-            assertTrue(busHandler.isCompleted(DELAY));
+            assertListenerStatus();
         }
 
         invoices = invoiceUserApi.getInvoicesByAccount(accountId, callContext);

@@ -74,7 +74,6 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     @Test(groups = {"slow"}, enabled = true)
     public void testAutoInvoiceOffAccount() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
-        busHandler.pushExpectedEvents(NextEvent.TAG);
         add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
         // set next invoice to fail and create network
@@ -85,21 +84,21 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         assertEquals(invoices.size(), 0);
 
         clock.addDays(10); // DAY 10 still in trial
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 0);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(30); // DAY 40 out of trial
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 0);
 
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.INVOICE, NextEvent.PAYMENT);
         remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);
@@ -121,7 +120,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(40); // DAY 40 out of trial
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1); //No additional invoices generated
@@ -147,19 +146,19 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.addDays(40); // DAY 40 out of trial
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 3); // Only one additional invoice generated
     }
 
-
     private void add_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        busHandler.pushExpectedEvent(NextEvent.TAG);
         tagApi.addTag(id, type, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
+        assertListenerStatus();
         final List<Tag> tags = tagApi.getTagsForObject(id, type, callContext);
         assertEquals(tags.size(), 1);
     }
-
 
     private void remove_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
         tagApi.removeTag(id, type, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);

@@ -95,7 +95,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addDays(40); // After trial
 
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
@@ -108,7 +108,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
         remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
         addDelayBceauseOfLackOfCorrectSynchro();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
@@ -139,7 +139,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addDays(40); // After trial
 
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
@@ -153,7 +153,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         paymentPlugin.makeNextPaymentFailWithError();
         busHandler.pushExpectedEvents(NextEvent.PAYMENT_ERROR);
         remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
         addDelayBceauseOfLackOfCorrectSynchro();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
@@ -171,7 +171,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         // MOVE TIME FOR RETRY TO HAPPEN
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
         clock.addDays(nbDaysBeforeRetry + 1);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         for (Invoice cur : invoices) {
@@ -201,7 +201,6 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addDays(31); // After trial
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
@@ -217,7 +216,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         paymentPlugin.makeNextPaymentFailWithError();
         busHandler.pushExpectedEvents(NextEvent.PAYMENT_ERROR);
         remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
         addDelayBceauseOfLackOfCorrectSynchro();
 
 
@@ -237,7 +236,6 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         // MOVE TIME FOR RETRY TO HAPPEN -> WILL BE DISCARDED SINCE AUTO_PAY_OFF IS SET
         clock.addDays(nbDaysBeforeRetry + 1);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
@@ -254,13 +252,13 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         // REMOVE AUTO_PAY_OFF -> WILL SCHEDULE A PAYMENT_RETRY
         paymentPlugin.clear();
         remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
         addDelayBceauseOfLackOfCorrectSynchro();
 
         //
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
         clock.addDays(nbDaysBeforeRetry + 1);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
@@ -279,7 +277,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
     private void add_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
         busHandler.pushExpectedEvent(NextEvent.TAG);
         tagApi.addTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         final List<Tag> tags = tagApi.getTagsForObject(id, type, callContext);
         assertEquals(tags.size(), 1);
@@ -288,7 +286,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
     private void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
         busHandler.pushExpectedEvent(NextEvent.TAG);
         tagApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
     }
 
 

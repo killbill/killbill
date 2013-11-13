@@ -54,11 +54,11 @@ public class TestTagApi extends TestIntegrationBase {
     public void testApiTagOnAccount() throws Exception {
         busHandler.pushExpectedEvents(NextEvent.TAG);
         tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.TAG);
         tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         List<Tag> tags = tagUserApi.getTagsForAccount(account.getId(), callContext);
         Assert.assertEquals(tags.size(), 2);
@@ -97,18 +97,18 @@ public class TestTagApi extends TestIntegrationBase {
         //
         busHandler.pushExpectedEvents(NextEvent.TAG_DEFINITION);
         final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         //
         // Add 2 Tags on the invoice (1 control tag and 1 user tag)
         //
         busHandler.pushExpectedEvents(NextEvent.TAG);
         tagUserApi.addTag(invoice.getId(), ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.TAG);
         tagUserApi.addTag(invoice.getId(), ObjectType.INVOICE, tagDefinition.getId(), callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         List<Tag> tags = tagUserApi.getTagsForAccount(account.getId(), callContext);
         Assert.assertEquals(tags.size(), 2);
@@ -127,7 +127,7 @@ public class TestTagApi extends TestIntegrationBase {
         //
         busHandler.pushExpectedEvents(NextEvent.TAG);
         tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
         tags = tagUserApi.getTagsForAccount(account.getId(), callContext);
         Assert.assertEquals(tags.size(), 3);

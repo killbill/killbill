@@ -72,7 +72,6 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         clock.addDays(40);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         // BUNDLE TRANSFER
@@ -82,7 +81,6 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", clock.getUTCNow(), false, false, callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), callContext);
@@ -125,7 +123,6 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         clock.addDays(32);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         // BUNDLE TRANSFER
@@ -135,7 +132,6 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", clock.getUTCNow(), false, false, callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         // Verify the BCD of the new account
@@ -186,7 +182,6 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         clock.addDays(32);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         // BUNDLE TRANSFER
@@ -198,7 +193,6 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE_ADJUSTMENT);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", clock.getUTCNow(), false, true, callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);

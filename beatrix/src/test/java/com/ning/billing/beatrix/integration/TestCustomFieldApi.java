@@ -129,7 +129,7 @@ public class TestCustomFieldApi extends TestIntegrationBase {
         List<CustomField> fields = new ArrayList<CustomField>();
         fields.add(f);
         customFieldApi.addCustomFields(fields, callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
 
     }
 

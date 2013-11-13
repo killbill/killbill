@@ -98,7 +98,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         // Move the clock to 2012-05-02
         clock.addDays(31);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -118,7 +117,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoices.get(1).getId(), invoices.get(1).getInvoiceItems().get(0).getId(), clock.getUTCToday(),
                                                    BigDecimal.TEN, account.getCurrency(), callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -190,7 +188,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         // Move the clock to 2012-04-04
         clock.addDays(3);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         //
@@ -215,7 +212,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         // Move the clock to 2012-05-02
         clock.addDays(28);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -304,7 +300,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         // Move the clock to 2012-06-08
         clock.addMonths(1);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -347,7 +342,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         // Move the clock to 2012-07-08
         clock.addMonths(1);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -417,7 +411,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.addDays(30);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -450,7 +443,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -474,7 +466,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -531,7 +522,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.addDays(40);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -545,7 +535,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.MONTHLY, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
 
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -569,7 +558,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -596,7 +584,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -637,7 +624,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.addDays(40);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -659,7 +645,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("10.00"));
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -700,7 +685,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
-        assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);

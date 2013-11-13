@@ -210,7 +210,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected IDBI idbi;
 
-    @javax.inject.Inject
+    @Inject
     protected CacheControllerDispatcher controlCacheDispatcher;
 
     protected TestApiListener busHandler;
@@ -231,6 +231,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected void assertListenerStatus() {
+        assertTrue(busHandler.isCompleted(DELAY));
         if (isListenerFailed) {
             log.error(listenerFailedMsg);
             Assert.fail(listenerFailedMsg);
