@@ -24,6 +24,8 @@
     <currencies>
         <currency>USD</currency>
         <currency>GBP</currency>
+        <currency>EUR</currency>
+        <currency>JPY</currency>
     </currencies>
 
     <products>
@@ -120,10 +122,6 @@
             </billingAlignmentCase>
             <billingAlignmentCase>
                 <billingPeriod>ANNUAL</billingPeriod>
-                <alignment>ACCOUNT</alignment>
-            </billingAlignmentCase>
-            <billingAlignmentCase>
-                <billingPeriod>ANNUAL</billingPeriod>
                 <alignment>SUBSCRIPTION</alignment>
             </billingAlignmentCase>
             <billingAlignmentCase>
@@ -146,6 +144,44 @@
     </rules>
 
     <plans>
+        <plan name="standard-annual">
+            <product>Standard</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice> <!-- empty price implies $0 -->
+                    </fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price>
+                        <currency>GBP</currency>
+                        <value>750.00</value>
+                    </price>
+                    <price>
+                        <currency>EUR</currency>
+                        <value>850.00</value>
+                    </price>
+                    <price>
+                        <currency>USD</currency>
+                        <value>1000.00</value>
+                    </price>
+                    <price>
+                        <currency>JPY</currency>
+                        <value>100.00</value>
+                    </price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
         <plan name="standard-monthly">
             <product>Standard</product>
             <initialPhases>
@@ -170,8 +206,16 @@
                         <value>75.00</value>
                     </price>
                     <price>
+                        <currency>EUR</currency>
+                        <value>85.00</value>
+                    </price>
+                    <price>
                         <currency>USD</currency>
                         <value>100.00</value>
+                    </price>
+                    <price>
+                        <currency>JPY</currency>
+                        <value>10.00</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -200,8 +244,16 @@
                         <value>375.00</value>
                     </price>
                     <price>
+                        <currency>EUR</currency>
+                        <value>425.00</value>
+                    </price>
+                    <price>
                         <currency>USD</currency>
                         <value>500.00</value>
+                    </price>
+                    <price>
+                        <currency>JPY</currency>
+                        <value>50.00</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -230,8 +282,16 @@
                         <value>750.00</value>
                     </price>
                     <price>
+                        <currency>EUR</currency>
+                        <value>850.00</value>
+                    </price>
+                    <price>
                         <currency>USD</currency>
                         <value>1000.00</value>
+                    </price>
+                    <price>
+                        <currency>JPY</currency>
+                        <value>100.00</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -260,8 +320,16 @@
                             <value>50.00</value>
                         </price>
                         <price>
+                            <currency>EUR</currency>
+                            <value>60.00</value>
+                        </price>
+                        <price>
                             <currency>USD</currency>
                             <value>66.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>6.60</value>
                         </price>
                     </recurringPrice>
                 </phase>
@@ -277,8 +345,16 @@
                         <value>75.00</value>
                     </price>
                     <price>
+                        <currency>EUR</currency>
+                        <value>85.00</value>
+                    </price>
+                    <price>
                         <currency>USD</currency>
                         <value>100.00</value>
+                    </price>
+                    <price>
+                        <currency>JPY</currency>
+                        <value>10.00</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -307,8 +383,16 @@
                             <value>250.00</value>
                         </price>
                         <price>
+                            <currency>EUR</currency>
+                            <value>300.00</value>
+                        </price>
+                        <price>
                             <currency>USD</currency>
                             <value>333.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>33.30</value>
                         </price>
                     </recurringPrice>
                 </phase>
@@ -324,8 +408,16 @@
                         <value>375.00</value>
                     </price>
                     <price>
+                        <currency>EUR</currency>
+                        <value>425.00</value>
+                    </price>
+                    <price>
                         <currency>USD</currency>
                         <value>500.00</value>
+                    </price>
+                    <price>
+                        <currency>JPY</currency>
+                        <value>50.00</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -354,8 +446,16 @@
                             <value>500.00</value>
                         </price>
                         <price>
+                            <currency>EUR</currency>
+                            <value>600.00</value>
+                        </price>
+                        <price>
                             <currency>USD</currency>
                             <value>666.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>66.60</value>
                         </price>
                     </recurringPrice>
                 </phase>
@@ -371,14 +471,49 @@
                         <value>750.00</value>
                     </price>
                     <price>
+                        <currency>EUR</currency>
+                        <value>850.00</value>
+                    </price>
+                    <price>
                         <currency>USD</currency>
                         <value>1000.00</value>
+                    </price>
+                    <price>
+                        <currency>JPY</currency>
+                        <value>100.00</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
         </plan>
         <plan name="oilslick-monthly">
             <product>OilSlick</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>1</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>2.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>3.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>4.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>0.40</value>
+                        </price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
@@ -393,11 +528,42 @@
                         <currency>USD</currency>
                         <value>7.95</value>
                     </price>
+                    <price>
+                        <currency>JPY</currency>
+                        <value>0.80</value>
+                    </price>
                 </recurringPrice>
             </finalPhase>
         </plan>
         <plan name="remotecontrol-monthly">
             <product>RemoteControl</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>1</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>5.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>7.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>8.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>0.80</value>
+                        </price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
@@ -409,8 +575,16 @@
                         <value>15.95</value>
                     </price>
                     <price>
+                        <currency>EUR</currency>
+                        <value>16.95</value>
+                    </price>
+                    <price>
                         <currency>USD</currency>
                         <value>17.95</value>
+                    </price>
+                    <price>
+                        <currency>JPY</currency>
+                        <value>1.79</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -419,6 +593,7 @@
     <priceLists>
         <defaultPriceList name="DEFAULT">
             <plans>
+                <plan>standard-annual</plan>
                 <plan>standard-monthly</plan>
                 <plan>sports-monthly</plan>
                 <plan>super-monthly</plan>
