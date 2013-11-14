@@ -175,7 +175,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // SET CTD TO CANCEL IN FUTURE
             final DateTime expectedPhaseTrialChange = TestSubscriptionHelper.addDuration(subscription.getStartDate(), trialPhase.getDuration());

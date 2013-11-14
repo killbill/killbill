@@ -79,12 +79,12 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             final DateTime futureNow = clock.getUTCNow();
             final DateTime nextExpectedPhaseChange = TestSubscriptionHelper.addDuration(subscription.getStartDate(), currentPhase.getDuration());
             assertTrue(futureNow.isAfter(nextExpectedPhaseChange));
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // CHANGE PLAN
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan(toProd, toTerm, toPlanSet, callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // CHECK CHANGE PLAN
             currentPhase = subscription.getCurrentPhase();
@@ -114,7 +114,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
@@ -147,7 +147,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
             currentPhase = subscription.getCurrentPhase();
@@ -179,7 +179,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             subscription.changePlan(toProd, toTerm, toPlanSet, callContext);
             checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.TRIAL);
 
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             final PlanPhase currentPhase = subscription.getCurrentPhase();
             final DateTime nextExpectedPhaseChange = TestSubscriptionHelper.addDuration(subscription.getStartDate(), currentPhase.getDuration());
@@ -192,7 +192,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             final DateTime futureNow = clock.getUTCNow();
 
             assertTrue(futureNow.isAfter(nextExpectedPhaseChange));
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             assertListenerStatus();
         } catch (SubscriptionBaseApiException e) {
@@ -221,7 +221,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
             clock.addDeltaFromReality(it.toDurationMillis());
             currentTime = clock.getUTCNow();
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // SET CTD
             final Duration ctd = testUtil.getDurationMonth(1);
@@ -251,7 +251,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());
             currentTime = clock.getUTCNow();
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // CHECK CORRECT PRODUCT, PHASE, PLAN SET
             final String currentProduct = subscription.getCurrentPlan().getProduct().getName();
@@ -279,7 +279,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             clock.addDeltaFromReality(it.toDurationMillis());
 
             currentTime = clock.getUTCNow();
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             assertListenerStatus();
         } catch (SubscriptionBaseApiException e) {
@@ -299,7 +299,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
             clock.addDeltaFromReality(it.toDurationMillis());
 
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // SET CTD
             final List<Duration> durationList = new ArrayList<Duration>();
@@ -321,7 +321,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             // CHANGE
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             final Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
@@ -349,7 +349,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // SET CTD
             final List<Duration> durationList = new ArrayList<Duration>();
@@ -390,7 +390,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());
 
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
@@ -406,7 +406,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(6));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
             subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
             currentPlan = subscription.getCurrentPlan();
@@ -441,7 +441,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
             testListener.reset();
 
             // CHECK EVERYTHING LOOKS CORRECT
@@ -459,7 +459,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(30));
             clock.addDeltaFromReality(it.toDurationMillis());
 
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.DISCOUNT);

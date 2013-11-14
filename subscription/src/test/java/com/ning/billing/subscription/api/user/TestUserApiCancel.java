@@ -107,7 +107,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
             clock.addDeltaFromReality(it.toDurationMillis());
 
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
             trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.EVERGREEN);
 
@@ -143,7 +143,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());
             final DateTime future = clock.getUTCNow();
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             assertTrue(futureEndDate.compareTo(subscription.getEndDate()) == 0);
 
@@ -184,7 +184,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
             final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
             trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.EVERGREEN);
 
@@ -192,7 +192,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
             // CANCEL
             subscription.cancel(callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             final PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNull(currentPhase);
@@ -227,7 +227,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
@@ -246,7 +246,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.UNCANCEL);
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             final Plan currentPlan = subscription.getCurrentPlan();
             assertEquals(currentPlan.getProduct().getName(), prod);

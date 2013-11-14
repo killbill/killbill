@@ -35,6 +35,7 @@ import org.testng.Assert;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
+import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
@@ -43,6 +44,8 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.subscription.SubscriptionTestListenerStatus;
+import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.BundleMigration;
@@ -80,15 +83,18 @@ public class TestSubscriptionHelper {
 
     private final TestApiListener testListener;
 
+    private final TestListenerStatus testListenerStatus;
+
     private final SubscriptionDao dao;
 
 
     @Inject
-    public TestSubscriptionHelper(final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final SubscriptionDao dao) {
+    public TestSubscriptionHelper(final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final TestListenerStatus testListenerStatus, final SubscriptionDao dao) {
         this.subscriptionApi = subscriptionApi;
         this.clock = clock;
         this.callContext = callContext;
         this.testListener = testListener;
+        this.testListenerStatus = testListenerStatus;
         this.dao = dao;
     }
 
@@ -111,7 +117,9 @@ public class TestSubscriptionHelper {
                                                                                                    requestedDate == null ? clock.getUTCNow() : requestedDate, callContext);
         assertNotNull(subscription);
 
-        assertTrue(testListener.isCompleted(5000));
+        assertTrue(testListener.isCompleted(SubscriptionTestSuiteWithEmbeddedDB.DELAY));
+        ((SubscriptionTestListenerStatus) testListenerStatus).assertListenerStatus();
+
         return subscription;
     }
 

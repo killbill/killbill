@@ -75,7 +75,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
         assertEquals(subscription.getStartDate(), requestedDate);
         assertEquals(productName, subscription.getCurrentPlan().getProduct().getName());
 
-        assertTrue(testListener.isCompleted(5000));
+        assertListenerStatus();
 
         // CREATE (AGAIN) WITH NEW PRODUCT
         productName = "Pistol";

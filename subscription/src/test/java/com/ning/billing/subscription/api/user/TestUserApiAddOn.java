@@ -68,7 +68,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final DateTime now = clock.getUTCNow();
             aoSubscription.cancel(callContext);
 
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
             aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), EntitlementState.CANCELLED);
 
@@ -100,7 +100,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
 
             // SET CTD TO CANCEL IN FUTURE
@@ -141,7 +141,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
 
             testListener.pushExpectedEvent(NextEvent.UNCANCEL);
             aoSubscription.uncancel(callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             aoTransitions =  aoSubscription.getAllTransitions();
@@ -183,7 +183,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // SET CTD TO CANCEL IN FUTURE
             final DateTime now = clock.getUTCNow();
@@ -208,7 +208,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
 
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS CANCELLED
             aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
@@ -245,7 +245,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // SET CTD TO CANCEL IN FUTURE
             final DateTime now = clock.getUTCNow();
@@ -268,7 +268,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.UNCANCEL);
             baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
             baseSubscription.uncancel(callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), EntitlementState.ACTIVE);
@@ -320,7 +320,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
             final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // SET CTD TO CHANGE IN FUTURE
             final DateTime now = clock.getUTCNow();
@@ -348,7 +348,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList,  callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
             aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
@@ -383,7 +383,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // SET CTD TO CANCEL IN FUTURE
             final DateTime now = clock.getUTCNow();
@@ -420,7 +420,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
             aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
@@ -526,7 +526,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             // MOVE THROUGH TIME TO GO INTO EVERGREEN
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(33));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             // CHECK EVERYTHING AGAIN
             aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);

@@ -34,6 +34,7 @@ import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.clock.ClockMock;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
@@ -43,16 +44,19 @@ import com.ning.billing.subscription.api.user.TestSubscriptionHelper;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.glue.TestDefaultSubscriptionModuleWithEmbeddedDB;
 import com.ning.billing.util.config.SubscriptionConfig;
-import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
+import static org.testng.Assert.assertTrue;
+
 public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
     protected static final Logger log = LoggerFactory.getLogger(SubscriptionTestSuiteWithEmbeddedDB.class);
+
+    public static final Long DELAY = 10000L;
 
     @Inject
     protected SubscriptionBaseService subscriptionBaseService;
@@ -114,14 +118,21 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService);
         this.accountData = subscriptionTestInitializer.initAccountData();
         this.bundle = subscriptionTestInitializer.initBundle(subscriptionInternalApi, internalCallContext);
+
+        // Make sure we start with a clean state
+        assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        // Make sure we finish in a clean state
+        assertListenerStatus();
+
         subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
     }
 
     protected void assertListenerStatus() {
+        assertTrue(testListener.isCompleted(DELAY));
         ((SubscriptionTestListenerStatus) testListenerStatus).assertListenerStatus();
     }
 }

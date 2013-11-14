@@ -158,7 +158,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         final BundleBaseTimeline realRunBundleRepair = repairApi.repairBundle(bundleRepair, dryRun, callContext);
-        assertTrue(testListener.isCompleted(5000));
+        assertListenerStatus();
 
         aoRepair = testUtil.getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 2);
@@ -218,7 +218,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
 
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
         clock.addDeltaFromReality(it.toDurationMillis());
-        assertTrue(testListener.isCompleted(7000));
+        assertListenerStatus();
 
         BundleBaseTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
         testUtil.sortEventsOnBundle(bundleRepair);
@@ -287,7 +287,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         final BundleBaseTimeline realRunBundleRepair = repairApi.repairBundle(bundleRepair, dryRun, callContext);
-        assertTrue(testListener.isCompleted(5000));
+        assertListenerStatus();
 
         aoRepair = testUtil.getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 3);
@@ -337,7 +337,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
 
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(40));
         clock.addDeltaFromReality(it.toDurationMillis());
-        assertTrue(testListener.isCompleted(7000));
+        assertListenerStatus();
 
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
@@ -408,7 +408,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         final BundleBaseTimeline realRunBundleRepair = repairApi.repairBundle(bundleRepair, dryRun, callContext);
-        assertTrue(testListener.isCompleted(5000));
+        assertListenerStatus();
 
         aoRepair = testUtil.getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 3);
@@ -508,7 +508,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         final BundleBaseTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
-        assertTrue(testListener.isCompleted(5000));
+        assertListenerStatus();
 
         aoRepair = testUtil.getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 2);
@@ -594,7 +594,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         final BundleBaseTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
-        assertTrue(testListener.isCompleted(5000));
+        assertListenerStatus();
 
         aoRepair = testUtil.getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 2);
@@ -685,7 +685,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         final BundleBaseTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
-        assertTrue(testListener.isCompleted(5000));
+        assertListenerStatus();
 
         aoRepair = testUtil.getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 3);
@@ -718,7 +718,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
 
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(60));
         clock.addDeltaFromReality(it.toDurationMillis());
-        assertTrue(testListener.isCompleted(5000));
+        assertListenerStatus();
 
         newAoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         currentPhase = newAoSubscription.getCurrentPhase();

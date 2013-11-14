@@ -72,7 +72,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(40));
                 clock.addDeltaFromReality(it.toDurationMillis());
 
-                assertTrue(testListener.isCompleted(5000));
+                assertListenerStatus();
 
                 final BundleBaseTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 testUtil.sortEventsOnBundle(bundleRepair);
@@ -100,13 +100,13 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 testListener.pushExpectedEvent(NextEvent.CHANGE);
                 final DateTime changeTime = clock.getUTCNow();
                 baseSubscription.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, callContext);
-                assertTrue(testListener.isCompleted(5000));
+                assertListenerStatus();
 
                 // MOVE AFTER TRIAL
                 testListener.pushExpectedEvent(NextEvent.PHASE);
                 it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(40));
                 clock.addDeltaFromReality(it.toDurationMillis());
-                assertTrue(testListener.isCompleted(5000));
+                assertListenerStatus();
 
                 final BundleBaseTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 testUtil.sortEventsOnBundle(bundleRepair);
@@ -152,7 +152,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 testListener.pushExpectedEvent(NextEvent.PHASE);
                 final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(40));
                 clock.addDeltaFromReality(it.toDurationMillis());
-                assertTrue(testListener.isCompleted(5000));
+                assertListenerStatus();
 
                 final BundleBaseTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 testUtil.sortEventsOnBundle(bundleRepair);
@@ -181,7 +181,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 testListener.pushExpectedEvent(NextEvent.PHASE);
                 final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(40));
                 clock.addDeltaFromReality(it.toDurationMillis());
-                assertTrue(testListener.isCompleted(5000));
+                assertListenerStatus();
 
                 final BundleBaseTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 testUtil.sortEventsOnBundle(bundleRepair);
@@ -292,7 +292,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
 
                 final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
                 clock.addDeltaFromReality(it.toDurationMillis());
-                //assertTrue(testListener.isCompleted(5000));
+                //assertListenerStatus();
 
                 final DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, "Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
@@ -387,7 +387,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 // MOVE CLOCK -- RIGHT OUT OF TRIAL
                 testListener.pushExpectedEvent(NextEvent.PHASE);                
                 clock.addDeltaFromReality(getDurationDay(5));
-                assertTrue(testListener.isCompleted(5000));
+                assertListenerStatus();
 
                 DateTime requestedChange = clock.getUTCNow();
                 baseSubscription.changePlanWithRequestedDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, callcontext);

@@ -56,7 +56,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
@@ -91,7 +91,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
@@ -139,7 +139,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
@@ -162,7 +162,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
             final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusYears(1));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
             assertNotNull(subscription.getEndDate());
@@ -185,7 +185,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
@@ -208,7 +208,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
             final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(30));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             assertEquals(subscription.getStartDate(), trialDate);
             assertEquals(subscription.getEndDate(), null);
@@ -233,7 +233,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, callContext);
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
@@ -254,7 +254,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
             final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());
-            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
 
             //assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
             assertEquals(subscription.getEndDate(), null);
@@ -281,7 +281,6 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, callContext);
-            assertTrue(testListener.isCompleted(5000));
             assertListenerStatus();
 
             final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
@@ -304,7 +303,9 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(billingTransitions.get(0), initialMigrateBilling);
 
             // Now make an IMMEDIATE change of plan
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
+            assertListenerStatus();
 
             final List<SubscriptionBaseTransition> newTransitions = subscription.getAllTransitions();
             assertEquals(newTransitions.size(), 3);
