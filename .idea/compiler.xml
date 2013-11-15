@@ -26,6 +26,7 @@
         <module name="killbill-account" />
         <module name="killbill-beatrix" />
         <module name="killbill-catalog" />
+        <module name="killbill-currency" />
         <module name="killbill-entitlement" />
         <module name="killbill-internal-api" />
         <module name="killbill-invoice" />
@@ -54,6 +55,7 @@
       <module name="killbill-account" target="1.6" />
       <module name="killbill-beatrix" target="1.6" />
       <module name="killbill-catalog" target="1.6" />
+      <module name="killbill-currency" target="1.6" />
       <module name="killbill-entitlement" target="1.6" />
       <module name="killbill-internal-api" target="1.6" />
       <module name="killbill-invoice" target="1.6" />
