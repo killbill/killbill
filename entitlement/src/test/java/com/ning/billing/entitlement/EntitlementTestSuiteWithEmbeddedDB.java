@@ -128,10 +128,16 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         super.beforeMethod();
         startTestFamework(testListener, testListenerStatus, clock, busService, subscriptionBaseService, entitlementService);
         this.catalog = initCatalog(catalogService);
+
+        // Make sure we start with a clean state
+        assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        // Make sure we finish in a clean state
+        assertListenerStatus();
+
         stopTestFramework(testListener, busService, subscriptionBaseService, entitlementService);
     }
 
