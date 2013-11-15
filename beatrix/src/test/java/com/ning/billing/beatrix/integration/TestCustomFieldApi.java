@@ -32,8 +32,8 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.customfield.CustomField;
@@ -42,10 +42,8 @@ import com.ning.billing.util.customfield.StringCustomField;
 import com.google.inject.Inject;
 
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestCustomFieldApi extends TestIntegrationBase {
-
 
     private Account account;
 
@@ -53,7 +51,7 @@ public class TestCustomFieldApi extends TestIntegrationBase {
     private CustomFieldUserApi customFieldApi;
 
     @Override
-    @BeforeMethod(groups = {"slow"})
+    @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
@@ -75,7 +73,6 @@ public class TestCustomFieldApi extends TestIntegrationBase {
         Assert.assertEquals(fields.size(), 2);
     }
 
-
     @Test(groups = "slow")
     public void testCustomFieldForInvoice() throws CustomFieldApiException, SubscriptionBaseApiException {
 
@@ -94,7 +91,6 @@ public class TestCustomFieldApi extends TestIntegrationBase {
 
         final Invoice invoice = invoices.get(0);
         Assert.assertEquals(invoice.getAccountId(), account.getId());
-
 
         addCustomField("name1", "value1", invoice.getId(), ObjectType.INVOICE, clock.getUTCNow());
         addCustomField("name2", "value2", invoice.getId(), ObjectType.INVOICE, clock.getUTCNow());
@@ -130,7 +126,5 @@ public class TestCustomFieldApi extends TestIntegrationBase {
         fields.add(f);
         customFieldApi.addCustomFields(fields, callContext);
         assertListenerStatus();
-
     }
-
 }

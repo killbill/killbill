@@ -26,7 +26,6 @@ import com.ning.billing.beatrix.BeatrixTestSuite;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
 import com.ning.billing.util.jackson.ObjectMapper;
 
-
 public class TestEventJson extends BeatrixTestSuite {
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -47,5 +46,4 @@ public class TestEventJson extends BeatrixTestSuite {
         final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
     }
-
 }

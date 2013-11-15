@@ -35,30 +35,28 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
-import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionEvents;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.DeletedEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
-import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
+import com.ning.billing.subscription.api.user.SubscriptionEvents;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestRepairIntegration extends TestIntegrationBase {
 
-
-    @Test(groups = {"slow"}, enabled = false)
+    @Test(groups = "slow", enabled = false)
     public void testRepairChangeBPWithAddonIncludedIntrial() throws Exception {
         log.info("Starting testRepairChangeBPWithAddonIncludedIntrial");
         testRepairChangeBPWithAddonIncluded(true);
     }
 
-    @Test(groups = {"slow"}, enabled = false)
+    @Test(groups = "slow", enabled = false)
     public void testRepairChangeBPWithAddonIncludedOutOfTrial() throws Exception {
         log.info("Starting testRepairChangeBPWithAddonIncludedOutOfTrial");
         testRepairChangeBPWithAddonIncluded(false);
@@ -82,8 +80,8 @@ public class TestRepairIntegration extends TestIntegrationBase {
         Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
         clock.addDeltaFromReality(it.toDurationMillis());
 
-        final DefaultEntitlement aoEntitlement1 = addAOEntitlementAndCheckForCompletion(bpEntitlement.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        final DefaultEntitlement aoEntitlement2 = addAOEntitlementAndCheckForCompletion(bpEntitlement.getBundleId(), "Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        final DefaultEntitlement aoEntitlement1 = addAOEntitlementAndCheckForCompletion(bpEntitlement.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        final DefaultEntitlement aoEntitlement2 = addAOEntitlementAndCheckForCompletion(bpEntitlement.getBundleId(), "Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
         // MOVE CLOCK A LITTLE BIT MORE -- EITHER STAY IN TRIAL OR GET OUT
         final int duration = inTrial ? 3 : 35;
@@ -133,7 +131,6 @@ public class TestRepairIntegration extends TestIntegrationBase {
             repairApi.repairBundle(bundleRepair, false, callContext);
             assertListenerStatus();
 
-
             final DefaultSubscriptionBase newAoSubscription = (DefaultSubscriptionBase) aoEntitlement1.getSubscriptionBase();
             assertEquals(newAoSubscription.getState(), EntitlementState.CANCELLED);
             assertEquals(newAoSubscription.getAllTransitions().size(), 2);
@@ -143,7 +140,6 @@ public class TestRepairIntegration extends TestIntegrationBase {
             assertEquals(newAoSubscription2.getState(), EntitlementState.ACTIVE);
             assertEquals(newAoSubscription2.getAllTransitions().size(), 2);
             assertEquals(newAoSubscription2.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
-
 
             final DefaultSubscriptionBase newBaseSubscription = (DefaultSubscriptionBase) bpEntitlement.getSubscriptionBase();
             assertEquals(newBaseSubscription.getState(), EntitlementState.ACTIVE);
@@ -192,7 +188,6 @@ public class TestRepairIntegration extends TestIntegrationBase {
             }
         };
     }
-
 
     protected BundleBaseTimeline createBundleRepair(final UUID bundleId, final String viewId, final List<SubscriptionBaseTimeline> subscriptionRepair) {
         return new BundleBaseTimeline() {

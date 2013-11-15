@@ -16,7 +16,6 @@
 
 package com.ning.billing.beatrix.util;
 
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -38,7 +37,6 @@ import com.google.inject.Inject;
 public class PaymentChecker {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentChecker.class);
-
 
     private final PaymentApi paymentApi;
     private final AuditChecker auditChecker;
@@ -64,7 +62,7 @@ public class PaymentChecker {
     private void checkPayment(final UUID accountId, final Payment payment, final CallContext context, final ExpectedPaymentCheck expected) {
         Assert.assertEquals(payment.getAccountId(), accountId);
         Assert.assertTrue(payment.getAmount().compareTo(expected.getAmount()) == 0);
-        Assert.assertEquals(payment.getPaymentStatus(),expected.getStatus());
+        Assert.assertEquals(payment.getPaymentStatus(), expected.getStatus());
         Assert.assertEquals(payment.getInvoiceId(), expected.getInvoiceId());
         Assert.assertEquals(payment.getCurrency(), expected.getCurrency());
         auditChecker.checkPaymentCreated(payment, context);
@@ -73,7 +71,7 @@ public class PaymentChecker {
     private void checkPaymentNoAuditForRuntimeException(final UUID accountId, final Payment payment, final CallContext context, final ExpectedPaymentCheck expected) {
         Assert.assertEquals(payment.getAccountId(), accountId);
         Assert.assertTrue(payment.getAmount().compareTo(expected.getAmount()) == 0);
-        Assert.assertEquals(payment.getPaymentStatus(),expected.getStatus());
+        Assert.assertEquals(payment.getPaymentStatus(), expected.getStatus());
         Assert.assertEquals(payment.getInvoiceId(), expected.getInvoiceId());
         Assert.assertEquals(payment.getCurrency(), expected.getCurrency());
     }

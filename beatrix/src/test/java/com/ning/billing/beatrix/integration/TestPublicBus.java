@@ -37,12 +37,10 @@ import com.google.common.eventbus.Subscribe;
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestPublicBus extends TestIntegrationBase {
 
     private PublicListener publicListener;
-
 
     private AtomicInteger externalBusCount;
 
@@ -63,8 +61,7 @@ public class TestPublicBus extends TestIntegrationBase {
 
         publicListener = new PublicListener();
 
-        log.warn("\n");
-        log.warn("RESET TEST FRAMEWORK\n\n");
+        log.debug("RESET TEST FRAMEWORK");
 
         clock.resetDeltaFromReality();
         resetTestListenerStatus();
@@ -78,7 +75,6 @@ public class TestPublicBus extends TestIntegrationBase {
 
         this.externalBusCount = new AtomicInteger(0);
     }
-
 
     @Test(groups = "{slow}")
     public void testSimple() throws Exception {

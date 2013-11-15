@@ -43,7 +43,6 @@ import static org.testng.Assert.assertTrue;
 
 public class TestBundleTransfer extends TestIntegrationBase {
 
-
     @Test(groups = "slow")
     public void testBundleTransferWithBPAnnualOnly() throws Exception {
 
@@ -198,14 +197,12 @@ public class TestBundleTransfer extends TestIntegrationBase {
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
 
-
         // CHECK OLD ACCOUNTS ITEMS
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 9), InvoiceItemType.RECURRING, new BigDecimal("66.66")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 5, 9), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-49.99")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 5, 3), InvoiceItemType.CBA_ADJ, new BigDecimal("49.99")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
 
         // CHECK NEW ACCOUNT ITEMS
         invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), callContext);

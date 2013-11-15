@@ -30,8 +30,8 @@ import org.testng.Assert;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -46,7 +46,6 @@ public class RefundChecker {
 
     private static final Logger log = LoggerFactory.getLogger(RefundChecker.class);
 
-
     private final PaymentApi paymentApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final AuditChecker auditChecker;
@@ -60,12 +59,12 @@ public class RefundChecker {
         this.invoiceUserApi = invoiceApi;
     }
 
-    public Refund checkRefund(final UUID paymentId,  final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
+    public Refund checkRefund(final UUID paymentId, final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
 
         final List<Refund> refunds = paymentApi.getPaymentRefunds(paymentId, context);
         Assert.assertEquals(refunds.size(), 1);
 
-        final InvoicePayment refundInvoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.REFUND , context);
+        final InvoicePayment refundInvoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.REFUND, context);
         final InvoicePayment invoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.ATTEMPT, context);
 
         final Refund refund = refunds.get(0);
@@ -84,9 +83,8 @@ public class RefundChecker {
         return refund;
     }
 
-
     private InvoicePayment getInvoicePaymentEntry(final UUID paymentId, final InvoicePaymentType type, final CallContext context) {
-        final List<InvoicePayment> invoicePayments =  invoicePaymentApi.getInvoicePayments(paymentId, context);
+        final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePayments(paymentId, context);
         final Collection<InvoicePayment> refundInvoicePayments = Collections2.filter(invoicePayments, new Predicate<InvoicePayment>() {
             @Override
             public boolean apply(@Nullable final InvoicePayment invoicePayment) {
@@ -96,7 +94,6 @@ public class RefundChecker {
         Assert.assertEquals(refundInvoicePayments.size(), 1);
         return refundInvoicePayments.iterator().next();
     }
-
 
     public static class ExpectedRefundCheck {
 

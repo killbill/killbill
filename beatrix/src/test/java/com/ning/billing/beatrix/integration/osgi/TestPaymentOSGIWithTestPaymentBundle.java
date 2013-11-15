@@ -113,7 +113,6 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
         Assert.assertTrue(gotException);
     }
 
-
     @Test(groups = "slow")
     public void testIntegrationOK() throws Exception {
         setupIntegration(null, null);
@@ -130,7 +129,6 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
         final RuntimeException e = new RuntimeException("test-error");
         setupIntegration(null, e);
     }
-
 
     private void setupIntegration(final PaymentPluginApiException expectedException, final RuntimeException expectedRuntimeException) throws Exception {
 
@@ -166,7 +164,6 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
         final DefaultEntitlement aoEntitlement = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
                                                                                        expectedEvents.toArray(new NextEvent[expectedEvents.size()]));
 
-
         Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
 
         if (expectedException == null && expectedRuntimeException == null) {
@@ -177,7 +174,6 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
             paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), PaymentStatus.PLUGIN_FAILURE, invoice.getId(), Currency.USD));
         }
     }
-
 
     private PaymentPluginApiWithTestControl getTestPluginPaymentApi() {
         PaymentPluginApiWithTestControl result = (PaymentPluginApiWithTestControl) paymentPluginApiOSGIServiceRegistration.getServiceForName(BeatrixIntegrationModule.OSGI_PLUGIN_NAME);

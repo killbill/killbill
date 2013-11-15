@@ -41,7 +41,6 @@ import com.google.common.collect.SetMultimap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-
 public class DefaultLifecycle implements Lifecycle {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultLifecycle.class);
@@ -67,7 +66,6 @@ public class DefaultLifecycle implements Lifecycle {
 
         init();
     }
-
 
     @Override
     public void fireStartupSequencePriorEventRegistration() {
@@ -141,7 +139,6 @@ public class DefaultLifecycle implements Lifecycle {
 
     }
 
-
     // Used to disable valid injection failure from unit tests
     protected void logWarn(final String msg, final Exception e) {
         log.warn(msg, e);
@@ -162,6 +159,7 @@ public class DefaultLifecycle implements Lifecycle {
     }
 
     private final class LifecycleHandler<T> {
+
         private final T target;
         private final Method method;
 

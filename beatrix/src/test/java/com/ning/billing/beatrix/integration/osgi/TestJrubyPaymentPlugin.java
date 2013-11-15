@@ -34,9 +34,9 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
-import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
+import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 
@@ -55,7 +55,6 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
 
-
         // OSGIDataSourceConfig
         super.beforeClass();
 
@@ -67,7 +66,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
 
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testProcessPayment() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -75,9 +74,8 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(4));
 
         final DateTime beforeCall = new DateTime().toDateTime(DateTimeZone.UTC).minusSeconds(1);
-        PaymentInfoPlugin res = api.processPayment(account.getId(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, Currency.USD,  callContext);
+        PaymentInfoPlugin res = api.processPayment(account.getId(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, Currency.USD, callContext);
         final DateTime afterCall = new DateTime().toDateTime(DateTimeZone.UTC).plusSeconds(1);
-
 
         Assert.assertTrue(res.getAmount().compareTo(BigDecimal.TEN) == 0);
         Assert.assertTrue(res.getCreatedDate().compareTo(beforeCall) >= 0);
@@ -92,7 +90,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         assertEquals(res.getStatus(), PaymentPluginStatus.PROCESSED);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testGetPaymentInfo() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -100,7 +98,6 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         final DateTime beforeCall = new DateTime().toDateTime(DateTimeZone.UTC).minusSeconds(1);
         PaymentInfoPlugin res = api.getPaymentInfo(UUID.randomUUID(), UUID.randomUUID(), callContext);
         final DateTime afterCall = new DateTime().toDateTime(DateTimeZone.UTC).plusSeconds(1);
-
 
         Assert.assertTrue(res.getAmount().compareTo(BigDecimal.ZERO) == 0);
         Assert.assertTrue(res.getCreatedDate().compareTo(beforeCall) >= 0);
@@ -115,8 +112,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         assertEquals(res.getStatus(), PaymentPluginStatus.PROCESSED);
     }
 
-
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testProcessRefund() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -124,7 +120,6 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         final DateTime beforeCall = new DateTime().toDateTime(DateTimeZone.UTC).minusSeconds(1);
         RefundInfoPlugin res = api.processRefund(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, Currency.USD, callContext);
         final DateTime afterCall = new DateTime().toDateTime(DateTimeZone.UTC).plusSeconds(1);
-
 
         Assert.assertTrue(res.getAmount().compareTo(BigDecimal.TEN) == 0);
         Assert.assertTrue(res.getCreatedDate().compareTo(beforeCall) >= 0);
@@ -139,7 +134,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         assertEquals(res.getStatus(), RefundPluginStatus.PROCESSED);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testAddPaymentMethod() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -150,15 +145,14 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         final DateTime afterCall = new DateTime().toDateTime(DateTimeZone.UTC).plusSeconds(1);
     }
 
-
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testDeletePaymentMethod() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
         api.deletePaymentMethod(UUID.randomUUID(), UUID.randomUUID(), callContext);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testGetPaymentMethodDetail() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -173,7 +167,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         assertEquals(res.getProperties().get(1).getValue(), "value2");
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testSetDefaultPaymentMethod() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -181,7 +175,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         api.setDefaultPaymentMethod(UUID.randomUUID(), UUID.randomUUID(), callContext);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testGetPaymentMethods() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -197,7 +191,6 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         assertEquals(res0.getPaymentMethodId(), kbAccountId);
     }
 
-
     private PaymentPluginApi getTestPluginPaymentApi() {
         int retry = 5;
 
@@ -209,7 +202,8 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
                 try {
                     log.info("Waiting for Killbill initialization to complete time = " + clock.getUTCNow());
                     Thread.sleep(1000);
-                } catch (InterruptedException ignore) {}
+                } catch (InterruptedException ignore) {
+                }
             }
         } while (result == null && retry-- > 0);
         Assert.assertNotNull(result);

@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-
 public class DefaultBusExternalEvent implements ExtBusEvent, BusEvent {
 
     private final UUID objectId;
@@ -100,7 +99,6 @@ public class DefaultBusExternalEvent implements ExtBusEvent, BusEvent {
     public UUID getUserToken() {
         return userToken;
     }
-
 
     @Override
     public boolean equals(final Object o) {

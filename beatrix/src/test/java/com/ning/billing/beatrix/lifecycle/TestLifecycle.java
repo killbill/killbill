@@ -34,6 +34,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 
 public class TestLifecycle extends BeatrixTestSuite {
+
     private static final Logger log = LoggerFactory.getLogger(TestLifecycle.class);
 
     private Service1 s1;
@@ -42,6 +43,7 @@ public class TestLifecycle extends BeatrixTestSuite {
     private DefaultLifecycle lifecycle;
 
     public static class ServiceBase {
+
         private int count = 0;
 
         public ServiceBase() {
@@ -66,6 +68,7 @@ public class TestLifecycle extends BeatrixTestSuite {
     }
 
     public static class Service1 extends ServiceBase implements TestService1Interface {
+
         @LifecycleHandlerType(LifecycleLevel.INIT_BUS)
         public void initBus() {
             log.info("Service1 : got INIT_BUS");
@@ -95,6 +98,7 @@ public class TestLifecycle extends BeatrixTestSuite {
     }
 
     public static class Service2 extends ServiceBase implements TestService2Interface {
+
         @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)
         public void loadCatalog() {
             log.info("Service2 : got LOAD_CATALOG");
@@ -157,6 +161,7 @@ public class TestLifecycle extends BeatrixTestSuite {
     }
 
     public static class LifecycleNoWarn extends DefaultLifecycle {
+
         @Inject
         public LifecycleNoWarn(final Injector injector) {
             super(injector);
@@ -168,6 +173,7 @@ public class TestLifecycle extends BeatrixTestSuite {
     }
 
     public static class TestLifecycleModule extends AbstractModule {
+
         @Override
         protected void configure() {
             bind(DefaultLifecycle.class).to(LifecycleNoWarn.class).asEagerSingleton();

@@ -121,7 +121,6 @@ public class TestPaymentRefund extends TestIntegrationBase {
                                                                                                                              new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.83")));
         payment = paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 3, 2), new BigDecimal("233.83"), PaymentStatus.SUCCESS, invoice.getId(), Currency.USD));
 
-
         // Filter and extract UUId from all Recuring invoices
         invoiceItems = new HashSet<UUID>(Collections2.transform(Collections2.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
             @Override

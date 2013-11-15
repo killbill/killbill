@@ -17,9 +17,6 @@
 package com.ning.billing.beatrix.integration.osgi;
 
 import com.ning.billing.beatrix.integration.TestIntegrationBase;
-import com.ning.billing.util.config.OSGIConfig;
-
-import com.google.inject.Inject;
 
 public class TestOSGIBase extends TestIntegrationBase {
 

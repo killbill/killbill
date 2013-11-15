@@ -39,6 +39,7 @@ import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.api.TestApiListener;
@@ -71,7 +72,7 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.invoice.model.InvoicingConfiguration;
+import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
@@ -91,8 +92,6 @@ import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.config.OSGIConfig;
-import com.ning.billing.account.api.AccountInternalApi;
-import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.common.base.Function;
@@ -109,19 +108,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     protected static final DateTimeZone testTimeZone = DateTimeZone.UTC;
 
-    protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
-    protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
-
-    protected static final BigDecimal ONE = new BigDecimal("1.0000").setScale(NUMBER_OF_DECIMALS);
-    protected static final BigDecimal TWENTY_NINE = new BigDecimal("29.0000").setScale(NUMBER_OF_DECIMALS);
-    protected static final BigDecimal THIRTY = new BigDecimal("30.0000").setScale(NUMBER_OF_DECIMALS);
-    protected static final BigDecimal THIRTY_ONE = new BigDecimal("31.0000").setScale(NUMBER_OF_DECIMALS);
-
-    protected static final Logger log = LoggerFactory.getLogger(TestIntegration.class);
+    protected static final Logger log = LoggerFactory.getLogger(TestIntegrationBase.class);
     protected static long AT_LEAST_ONE_MONTH_MS = 32L * 24L * 3600L * 1000L;
 
     protected static final long DELAY = 10000;
-
 
     @Inject
     protected Lifecycle lifecycle;
@@ -188,9 +178,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected AccountChecker accountChecker;
 
     @Inject
-    protected
-    @javax.inject.Named(BeatrixModule.EXTERNAL_BUS)
-    PersistentBus externalBus;
+    @Named(BeatrixModule.EXTERNAL_BUS)
+    protected PersistentBus externalBus;
 
     @Inject
     protected RefundChecker refundChecker;
@@ -246,20 +235,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion("whatever", osgiConfig, "whatever");
         setupTest.cleanBundleInstallDir();
-
     }
-
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
-
         super.beforeMethod();
 
-        log.info("beforeMethod callcontext classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
+        log.debug("beforeMethod callcontext classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
         //Thread.currentThread().setContextClassLoader(null);
 
-        log.warn("\n");
-        log.warn("RESET TEST FRAMEWORK\n\n");
+        log.debug("RESET TEST FRAMEWORK");
 
         controlCacheDispatcher.clearAll();
 
@@ -287,9 +272,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();
 
-        log.info("afterMethod callcontext classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
+        log.debug("afterMethod callcontext classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
 
-        log.warn("DONE WITH TEST\n");
+        log.debug("DONE WITH TEST");
     }
 
     protected void verifyTestResult(final UUID accountId, final UUID subscriptionId,
@@ -533,13 +518,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }, events);
     }
 
-
     protected DefaultEntitlement changeEntitlementAndCheckForCompletion(final Entitlement entitlement,
                                                                         final String productName,
                                                                         final BillingPeriod billingPeriod,
                                                                         final BillingActionPolicy billingPolicy,
                                                                         final NextEvent... events) {
-         return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
+        return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
             @Override
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
@@ -569,7 +553,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithDate(requestedDate.toLocalDate(), false, callContext);
-                    return  refreshedEntitlement;
+                    return refreshedEntitlement;
                 } catch (EntitlementApiException e) {
                     fail(e.getMessage());
                     return null;
@@ -609,17 +593,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     private <T> T doCallAndCheckForCompletion(Function<Void, T> f, final NextEvent... events) {
-
         Joiner joiner = Joiner.on(", ");
-        log.info("            ************    STARTING BUS HANDLER CHECK : {} ********************", joiner.join(events));
+        log.debug("            ************    STARTING BUS HANDLER CHECK : {} ********************", joiner.join(events));
 
         busHandler.pushExpectedEvents(events);
 
         final T result = f.apply(null);
         assertListenerStatus();
 
-
-        log.info("            ************    DONE WITH BUS HANDLER CHECK    ********************");
+        log.debug("            ************    DONE WITH BUS HANDLER CHECK    ********************");
         return result;
     }
 }

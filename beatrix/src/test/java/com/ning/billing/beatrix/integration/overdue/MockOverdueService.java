@@ -18,17 +18,19 @@ package com.ning.billing.beatrix.integration.overdue;
 
 import javax.inject.Named;
 
-import com.google.inject.Inject;
-import com.ning.billing.overdue.notification.OverdueNotifier;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.listener.OverdueListener;
+import com.ning.billing.overdue.notification.OverdueNotifier;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
+import com.google.inject.Inject;
+
 public class MockOverdueService extends DefaultOverdueService {
+
     @Inject
     public MockOverdueService(final OverdueUserApi userApi, final OverdueProperties properties,
                               @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED) final OverdueNotifier checkNotifier,

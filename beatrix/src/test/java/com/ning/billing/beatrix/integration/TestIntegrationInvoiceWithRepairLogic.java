@@ -50,13 +50,11 @@ import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
     @Inject
     private DefaultInvoiceGeneratorWithSwitchRepairLogic invoiceGenerator;
-
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
@@ -77,7 +75,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String pricelistName = PriceListSet.DEFAULT_PRICELIST_NAME;
-
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
@@ -426,7 +423,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
 
-
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 3);
 
@@ -540,7 +536,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 3);
 
-
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2399.95")),
@@ -595,7 +590,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         invoiceChecker.checkInvoice(invoices.get(4).getId(), callContext, toBeChecked);
     }
 
-
     @Test(groups = "slow")
     public void testInvoiceLogicWithFullRepairFollowedByPartialRepairWithItemAdjustment() throws Exception {
 
@@ -640,7 +634,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), PaymentStatus.SUCCESS, invoice1.getId(), Currency.USD);
         final Payment payment1 = payments.get(0);
 
-
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
         iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("10.00"));
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
@@ -650,13 +643,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
 
-
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                 // TODO SETPH the  ITEM_ADJ seems to be created with the callcontext getCreatedDate()
                 new ExpectedInvoiceItemCheck(callContext.getCreatedDate().toLocalDate(), callContext.getCreatedDate().toLocalDate(), InvoiceItemType.ITEM_ADJ, new BigDecimal("-10.00")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
 
         //
         // FORCE AN IMMEDIATE CHANGE OF THE BILLING PERIOD
@@ -665,7 +656,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 3);
-
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),

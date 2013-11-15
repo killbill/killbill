@@ -27,18 +27,13 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.bus.api.BusEvent;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
-import com.ning.billing.entitlement.EntitlementTransitionType;
-import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.notification.plugin.api.ExtBusEventType;
-import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.entitlement.EntitlementTransitionType;
 import com.ning.billing.events.AccountChangeInternalEvent;
 import com.ning.billing.events.AccountCreationInternalEvent;
 import com.ning.billing.events.BusInternalEvent;
@@ -56,17 +51,19 @@ import com.ning.billing.events.PaymentInfoInternalEvent;
 import com.ning.billing.events.SubscriptionInternalEvent;
 import com.ning.billing.events.UserTagCreationInternalEvent;
 import com.ning.billing.events.UserTagDeletionInternalEvent;
-import com.ning.billing.account.api.AccountInternalApi;
+import com.ning.billing.notification.plugin.api.ExtBusEventType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.dao.NonEntityDao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.eventbus.Subscribe;
 
-public class
-
-
-        BeatrixListener {
+public class BeatrixListener {
 
     private static final Logger log = LoggerFactory.getLogger(BeatrixListener.class);
 
@@ -105,13 +102,11 @@ public class
         }
     }
 
-
     private BusEvent computeExtBusEventEntryFromBusInternalEvent(final BusInternalEvent event, final InternalCallContext context) {
 
         ObjectType objectType = null;
         UUID objectId = null;
         ExtBusEventType eventBusType = null;
-
 
         switch (event.getBusEventType()) {
             case ACCOUNT_CREATE:
@@ -260,6 +255,5 @@ public class
             return null;
         }
     }
-
 
 }

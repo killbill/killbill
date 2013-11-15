@@ -50,7 +50,6 @@ import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
-
     @Inject
     private InvoiceUserApi invoiceApi;
 
@@ -60,16 +59,14 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
     @Inject
     private PaymentConfig paymentConfig;
 
-
     private Account account;
     private SubscriptionBaseBundle bundle;
     private String productName;
     private BillingPeriod term;
     private String planSetName;
 
-
     @Override
-    @BeforeMethod(groups = {"slow"})
+    @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
@@ -79,11 +76,10 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
     }
 
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testAutoPayOff() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-
 
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
@@ -123,8 +119,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         assertListenerStatus();
     }
 
-
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testAutoPayOffWithPaymentFailure() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
@@ -185,8 +180,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
     }
 
-
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testAutoPayOffWithPaymentFailureOn_AUTO_PAY_OFF() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
@@ -218,7 +212,6 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
         assertListenerStatus();
         addDelayBceauseOfLackOfCorrectSynchro();
-
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
@@ -260,7 +253,6 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.addDays(nbDaysBeforeRetry + 1);
         assertListenerStatus();
 
-
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -272,7 +264,6 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         assertListenerStatus();
 
     }
-
 
     private void add_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
         busHandler.pushExpectedEvent(NextEvent.TAG);
@@ -288,7 +279,6 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         tagApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
         assertListenerStatus();
     }
-
 
     private void addDelayBceauseOfLackOfCorrectSynchro() {
         // TODO When removing the tag, the payment system will schedule retries for payments that are in non terminal state

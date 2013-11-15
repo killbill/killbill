@@ -271,7 +271,6 @@ public class TestIntegration extends TestIntegrationBase {
         DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
         DefaultSubscriptionBase subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
 
-
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
@@ -341,7 +340,6 @@ public class TestIntegration extends TestIntegrationBase {
 
         log.info("TEST PASSED !");
 
-
     }
 
     @Test(groups = {"stress"}, enabled = false)
@@ -399,9 +397,7 @@ public class TestIntegration extends TestIntegrationBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
-
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
@@ -411,10 +407,8 @@ public class TestIntegration extends TestIntegrationBase {
         final DefaultEntitlement aoEntitlement1 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
                                                                                         NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
-
         final DefaultEntitlement aoEntitlement2 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
                                                                                         NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
-
 
         // MOVE CLOCK A LITTLE BIT MORE -- EITHER STAY IN TRIAL OR GET OUT
         busHandler.pushExpectedEvent(NextEvent.PHASE);
@@ -446,7 +440,6 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDays(3);
         assertListenerStatus();
     }
-
 
     @Test(groups = "slow")
     public void testCreateMultipleBPWithSameExternalKey() throws Exception {
@@ -482,9 +475,7 @@ public class TestIntegration extends TestIntegrationBase {
         assertEquals(newBaseEntitlement.getState(), EntitlementState.ACTIVE);
     }
 
-
-
-        @Test(groups = "slow")
+    @Test(groups = "slow")
     public void testWithPauseResume() throws Exception {
         final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         final int billingDay = 2;
@@ -539,7 +530,6 @@ public class TestIntegration extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 4), new LocalDate(2012, 4, 2), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-233.83")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 4), new LocalDate(2012, 3, 4), InvoiceItemType.CBA_ADJ, new BigDecimal("233.83")));
 
-
         entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
         Assert.assertEquals(entitlement.getState(), EntitlementState.BLOCKED);
 
@@ -550,7 +540,6 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         entitlementApi.resume(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), callContext);
         assertListenerStatus();
-
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 5), new LocalDate(2012, 5, 2), InvoiceItemType.RECURRING, new BigDecimal("224.96")),
@@ -572,9 +561,7 @@ public class TestIntegration extends TestIntegrationBase {
         final String productName = "Blowdart";
         final String planSetName = "DEFAULT";
 
-
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
-
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
         assertNotNull(invoices);

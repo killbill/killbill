@@ -34,7 +34,6 @@ import com.ning.billing.util.tag.ControlTagType;
 @Test(groups = "slow")
 public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
 
-
     @Override
     public String getOverdueConfig() {
         final String configXml = "<overdueConfig>" +
@@ -97,7 +96,6 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
         checkODState("OD1");
     }
 
-
     @Test(groups = "slow")
     public void testOverdueAccountWithOverdueEnforcementOffTag() throws Exception {
 
@@ -134,7 +132,7 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now remove OVERDUE_ENFORCEMENT_OFF tag
-        busHandler.pushExpectedEvents(NextEvent.TAG,  NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.BLOCK);
         tagUserApi.removeTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId(), callContext);
         assertListenerStatus();
 

@@ -41,7 +41,6 @@ import com.ning.billing.DBTestingHelper;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.commons.embeddeddb.EmbeddedDB;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.osgi.glue.OSGIDataSourceConfig;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
@@ -150,7 +149,6 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
             }, "Plugin did not create the payment");
         }
 
-
         private void assertWithCallback(final AwaitCallback callback, final String error) {
             try {
                 await().atMost(5000000, TimeUnit.SECONDS).until(new Callable<Boolean>() {
@@ -170,7 +168,6 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
                    expectedPaymentMethodId.equals(test.getPaymentMethodId()) &&
                    expectedAmount.compareTo(test.getAmount()) == 0;
         }
-
 
         private boolean isPluginInitialized() {
             TestModel test = getTestModelFirstRecord();
@@ -194,7 +191,6 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
             return test;
         }
     }
-
 
     private final static class TestModel {
 
@@ -234,7 +230,6 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
 
     }
 
-
     private static class TestMapper implements ResultSetMapper<TestModel> {
 
         @Override
@@ -250,6 +245,7 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
     }
 
     private interface AwaitCallback {
+
         boolean isSuccess();
     }
 }

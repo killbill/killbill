@@ -16,7 +16,6 @@
 
 package com.ning.billing.beatrix.lifecycle;
 
-
 public interface Lifecycle {
 
     public void fireStartupSequencePriorEventRegistration();

@@ -29,7 +29,6 @@ import com.ning.billing.beatrix.integration.TestIntegrationBase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.overdue.OverdueService;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
@@ -41,12 +40,10 @@ import static org.testng.Assert.assertNotNull;
 
 public abstract class TestOverdueBase extends TestIntegrationBase {
 
-
     protected Account account;
     protected SubscriptionBundle bundle;
     protected String productName;
     protected BillingPeriod term;
-
 
     public abstract String getOverdueConfig();
 
@@ -69,7 +66,6 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         term = BillingPeriod.MONTHLY;
         paymentPlugin.clear();
     }
-
 
     protected void checkODState(final String expected) {
         try {

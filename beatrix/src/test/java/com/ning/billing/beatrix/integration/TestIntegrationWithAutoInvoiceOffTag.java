@@ -28,12 +28,10 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
@@ -44,7 +42,6 @@ import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
@@ -55,23 +52,20 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     private TagUserApi tagApi;
 
     private Account account;
-    private SubscriptionBaseBundle bundle;
     private String productName;
     private BillingPeriod term;
-    private String planSetName;
 
     @Override
-    @BeforeMethod(groups = {"slow"})
+    @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
-        planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
     }
 
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testAutoInvoiceOffAccount() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
@@ -104,7 +98,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         assertEquals(invoices.size(), 1);
     }
 
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testAutoInvoiceOffSingleSubscription() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -115,7 +109,6 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1); // first invoice is generated immediately after creation can't reliably stop it
 
-
         add_AUTO_INVOICING_OFF_Tag(bpEntitlement.getSubscriptionBase().getBundleId(), ObjectType.BUNDLE);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE);
@@ -124,11 +117,9 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1); //No additional invoices generated
-
     }
 
-
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testAutoInvoiceOffMultipleSubscriptions() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 

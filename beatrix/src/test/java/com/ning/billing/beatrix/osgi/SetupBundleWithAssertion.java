@@ -57,7 +57,6 @@ public class SetupBundleWithAssertion {
         this.rootInstallDir = new File(config.getRootInstallationDir());
     }
 
-
     public void setupJrubyBundle() {
 
         try {
@@ -66,7 +65,6 @@ public class SetupBundleWithAssertion {
 
             final URL resourceUrl = Resources.getResource(bundleName);
             final File unzippedRubyPlugin = unGzip(new File(resourceUrl.getFile()), rootInstallDir);
-
 
             final StringBuilder tmp = new StringBuilder(rootInstallDir.getAbsolutePath());
             tmp.append("/plugins/")
@@ -155,7 +153,6 @@ public class SetupBundleWithAssertion {
         }
     }
 
-
     private void installJrubyJar() throws IOException {
 
         final String resourceName = JRUBY_BUNDLE_RESOURCE + "-" + killbillVersion + ".jar";
@@ -170,7 +167,6 @@ public class SetupBundleWithAssertion {
         final File rubyJarDestination = new File(platform, "jruby.jar");
         ByteStreams.copy(new FileInputStream(rubyJarInput), new FileOutputStream(rubyJarDestination));
     }
-
 
     private PluginJavaConfig extractJavaBundleTestResource() {
 
@@ -234,7 +230,6 @@ public class SetupBundleWithAssertion {
             }
         };
     }
-
 
     private static void unTar(final File inputFile, final File outputDir) throws IOException, ArchiveException {
 

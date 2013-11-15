@@ -35,15 +35,15 @@ import com.ning.billing.account.dao.AccountSqlDao;
 import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.entitlement.api.SubscriptionApiException;
 import com.ning.billing.entitlement.api.SubscriptionBundle;
-import com.ning.billing.subscription.engine.dao.BundleSqlDao;
-import com.ning.billing.subscription.engine.dao.SubscriptionEventSqlDao;
-import com.ning.billing.subscription.engine.dao.SubscriptionSqlDao;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.dao.PaymentSqlDao;
+import com.ning.billing.subscription.engine.dao.BundleSqlDao;
+import com.ning.billing.subscription.engine.dao.SubscriptionEventSqlDao;
+import com.ning.billing.subscription.engine.dao.SubscriptionSqlDao;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.audit.AuditLog;
@@ -59,7 +59,6 @@ import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 public class AuditChecker {
@@ -72,7 +71,6 @@ public class AuditChecker {
     private final InternalCallContextFactory callContextFactory;
     private final NonEntityDao nonEntityDao;
 
-
     @Inject
     public AuditChecker(final AuditUserApi auditUserApi, final IDBI dbi, final SubscriptionApi subscriptionApi, final InternalCallContextFactory callContextFactory, final NonEntityDao nonEntityDao) {
         this.auditUserApi = auditUserApi;
@@ -81,7 +79,6 @@ public class AuditChecker {
         this.callContextFactory = callContextFactory;
         this.nonEntityDao = nonEntityDao;
     }
-
 
     /**
      * ********************************************  ACCOUNT *******************************************************
@@ -92,7 +89,6 @@ public class AuditChecker {
         checkAuditLog(ChangeType.INSERT, context, result.getAccountAuditLogs().get(0), account.getId(), AccountSqlDao.class, true, true);
         checkAuditLog(ChangeType.UPDATE, context, result.getAccountAuditLogs().get(1), account.getId(), AccountSqlDao.class, true, true);
     }
-
 
     public void checkPaymentCreated(final Payment payment, final CallContext context) {
         AuditLogsForPayments result = getAuditLogsForPayment(payment, context);
@@ -106,7 +102,6 @@ public class AuditChecker {
     /**
      * ********************************************  BUNDLE *******************************************************
      */
-
 
     // Pass the call callcontext used to create the bundle
     public void checkBundleCreated(final UUID bundleId, final CallContext context) {
@@ -153,15 +148,12 @@ public class AuditChecker {
         checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(0), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
     }
 
-
-
     // Pass the call callcontext used to update the subscription event
     public void checkSubscriptionEventUpdated(final UUID bundleId, final UUID subscriptionEventId, final CallContext context) {
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         checkAuditLog(ChangeType.INSERT, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(0));
         checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(1), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
     }
-
 
     /**
      * ********************************************  PAYMENT *******************************************************
@@ -191,7 +183,6 @@ public class AuditChecker {
         }
     }
 
-
     private AuditLogsForBundles getAuditLogsForBundle(final UUID bundleId, final CallContext context) {
         try {
             final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, context);
@@ -206,11 +197,9 @@ public class AuditChecker {
         return auditUserApi.getAuditLogsForInvoices(Collections.singletonList(invoice), AuditLevel.FULL, context);
     }
 
-
     private void checkAuditLog(final ChangeType insert, final AuditLog auditLog) {
         checkAuditLog(insert, null, auditLog, null, EntitySqlDao.class, false, false);
     }
-
 
     private <T extends EntitySqlDao<M, E>, M extends EntityModelDao<E>, E extends Entity> void checkAuditLog(final ChangeType changeType, @Nullable final CallContext context, final AuditLog auditLog, final UUID entityId, Class<T> sqlDao,
                                                                                                              boolean useHistory, boolean checkContext) {
@@ -228,9 +217,7 @@ public class AuditChecker {
 
     }
 
-
     private <T extends EntitySqlDao<M, E>, M extends EntityModelDao<E>, E extends Entity> M extractEntityModelFromEntityWithTargetRecordId(final UUID entityId, final UUID auditLogId, final Class<T> sqlDao, final CallContext context, final boolean useHistory) {
-
 
         final M modelDaoThatGivesMeTableName = dbi.onDemand(sqlDao).getById(entityId.toString(), callContextFactory.createInternalCallContext(context));
 

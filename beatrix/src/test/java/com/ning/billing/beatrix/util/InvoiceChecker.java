@@ -152,7 +152,6 @@ public class InvoiceChecker {
         private final InvoiceItemType type;
         private final BigDecimal Amount;
 
-
         public ExpectedInvoiceItemCheck(final InvoiceItemType type, final BigDecimal amount) {
             this.checkDates = false;
             this.type = type;

@@ -126,7 +126,7 @@ public class ServiceFinder {
                     throw new ClassNotFoundException("Bad classpath. Error: " + mue.getMessage());
                 } catch (IOException io) {
                     throw new ClassNotFoundException("jar file '" + classPath.getName() +
-                                                             "' could not be instantiate from file path. Error: " + io.getMessage());
+                                                     "' could not be instantiate from file path. Error: " + io.getMessage());
                 }
                 if (!failed) {
                     files = module.entries();
@@ -180,7 +180,7 @@ public class ServiceFinder {
                     module.close();
                 } catch (IOException ioe) {
                     throw new ClassNotFoundException("The module jar file '" + classPath.getName() +
-                                                             "' could not be closed. Error: " + ioe.getMessage());
+                                                     "' could not be closed. Error: " + ioe.getMessage());
                 }
             }
         }

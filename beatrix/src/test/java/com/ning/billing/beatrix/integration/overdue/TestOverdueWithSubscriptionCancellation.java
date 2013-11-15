@@ -28,14 +28,13 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.subscription.api.SubscriptionBase;
 
-import static junit.framework.Assert.assertTrue;
+import static org.testng.Assert.assertTrue;
 
 @Test(groups = "slow")
 public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
-
 
     @Override
     public String getOverdueConfig() {

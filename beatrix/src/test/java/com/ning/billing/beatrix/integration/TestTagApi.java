@@ -36,7 +36,6 @@ import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestTagApi extends TestIntegrationBase {
 
