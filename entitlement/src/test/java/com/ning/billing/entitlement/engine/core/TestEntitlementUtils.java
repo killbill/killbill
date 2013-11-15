@@ -158,6 +158,41 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkBlockingStatesDAO(cancelledBaseEntitlement, cancelledAddOnEntitlement, cancellationDate, true);
     }
 
+    // See https://github.com/killbill/killbill/issues/121
+    @Test(groups = "slow", description = "Verify add-ons blocking states are not impacted by EOT billing cancellations")
+    public void testCancellationIMMBillingEOT() throws Exception {
+        // Approximate check, as the blocking state check (checkBlockingStatesDAO) could be a bit off
+        final DateTime cancellationDateTime = clock.getUTCNow();
+        final LocalDate cancellationDate = clock.getUTCToday();
+
+        // Cancel the base plan
+        testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.BLOCK);
+        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.END_OF_TERM, callContext);
+        assertListenerStatus();
+
+        // Refresh the add-on state
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
+
+        // Verify we compute the right blocking states for the "read" path...
+        checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, null, null);
+        checkFutureBlockingStatesToCancel(cancelledAddOnEntitlement, null, null);
+        checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, null);
+        // ...and for the "write" path (which has been exercised in the cancel call above).
+        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, cancellationDateTime, true);
+        // Verify also the blocking states DAO doesn't add too many events (all on disk)
+        checkBlockingStatesDAO(cancelledBaseEntitlement, cancelledAddOnEntitlement, cancellationDate, true);
+
+        testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, null, null);
+        checkFutureBlockingStatesToCancel(cancelledAddOnEntitlement, null, null);
+        checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, null);
+        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, cancellationDateTime, true);
+        checkBlockingStatesDAO(cancelledBaseEntitlement, cancelledAddOnEntitlement, cancellationDate, true);
+    }
+
     @Test(groups = "slow", description = "Verify add-ons blocking states are added for EOT change plans")
     public void testChangePlanEOT() throws Exception {
         // Change plan EOT to Assault-Rifle (Telescopic-Scope is included)

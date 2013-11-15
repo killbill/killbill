@@ -123,6 +123,10 @@ public class EventsStream {
         return entitlementCancelEvent != null && entitlementCancelEvent.getEffectiveDate().isAfter(utcNow);
     }
 
+    public boolean isEntitlementFutureChanged() {
+        return getPendingSubscriptionEvents(utcNow, SubscriptionBaseTransitionType.CHANGE).iterator().hasNext();
+    }
+
     public boolean isEntitlementActive() {
         return entitlementState == EntitlementState.ACTIVE;
     }
@@ -190,14 +194,7 @@ public class EventsStream {
     }
 
     public Collection<BlockingState> computeAddonsBlockingStatesForNextSubscriptionBaseEvent(final DateTime effectiveDate) {
-        // Compute the transition trigger
-        final Iterable<SubscriptionBaseTransition> pendingSubscriptionBaseTransitions = getPendingSubscriptionEvents(effectiveDate, SubscriptionBaseTransitionType.CHANGE, SubscriptionBaseTransitionType.CANCEL);
-        if (!pendingSubscriptionBaseTransitions.iterator().hasNext()) {
-            return ImmutableList.<BlockingState>of();
-        }
-
-        final SubscriptionBaseTransition subscriptionBaseTransitionTrigger = pendingSubscriptionBaseTransitions.iterator().next();
-        return computeAddonsBlockingStatesForSubscriptionBaseEvent(subscriptionBaseTransitionTrigger);
+        return computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate, false);
     }
 
     // Compute future blocking states not on disk for add-ons associated to this (base) events stream
@@ -213,15 +210,31 @@ public class EventsStream {
             // Note that in theory we could always only look subscription base as we assume entitlement cancel means subscription base cancel
             // but we want to use the effective date of the entitlement cancel event to create the add-on cancel event
             final BlockingState futureEntitlementCancelEvent = getEntitlementCancellationEvent(subscription.getId());
-            return computeAddonsBlockingStatesForNextSubscriptionBaseEvent(futureEntitlementCancelEvent.getEffectiveDate());
-        } else {
+            return computeAddonsBlockingStatesForNextSubscriptionBaseEvent(futureEntitlementCancelEvent.getEffectiveDate(), false);
+        } else if (isEntitlementFutureChanged()) {
             // ...or a subscription change (i.e. a change plan where the new plan has an impact on the existing add-on).
             // We need to go back to subscription base as entitlement doesn't know about these
-            return computeAddonsBlockingStatesForNextSubscriptionBaseEvent(utcNow);
+            return computeAddonsBlockingStatesForNextSubscriptionBaseEvent(utcNow, true);
+        } else {
+            return ImmutableList.of();
         }
     }
 
-    private Collection<BlockingState> computeAddonsBlockingStatesForSubscriptionBaseEvent(final SubscriptionBaseTransition subscriptionBaseTransitionTrigger) {
+    private Collection<BlockingState> computeAddonsBlockingStatesForNextSubscriptionBaseEvent(final DateTime effectiveDate,
+                                                                                              final boolean useBillingEffectiveDate) {
+        // Compute the transition trigger
+        final Iterable<SubscriptionBaseTransition> pendingSubscriptionBaseTransitions = getPendingSubscriptionEvents(effectiveDate, SubscriptionBaseTransitionType.CHANGE, SubscriptionBaseTransitionType.CANCEL);
+        if (!pendingSubscriptionBaseTransitions.iterator().hasNext()) {
+            return ImmutableList.<BlockingState>of();
+        }
+
+        final SubscriptionBaseTransition subscriptionBaseTransitionTrigger = pendingSubscriptionBaseTransitions.iterator().next();
+        return computeAddonsBlockingStatesForSubscriptionBaseEvent(subscriptionBaseTransitionTrigger,
+                                                                   useBillingEffectiveDate ? subscriptionBaseTransitionTrigger.getEffectiveTransitionTime() : effectiveDate);
+    }
+
+    private Collection<BlockingState> computeAddonsBlockingStatesForSubscriptionBaseEvent(final SubscriptionBaseTransition subscriptionBaseTransitionTrigger,
+                                                                                          final DateTime blockingStateEffectiveDate) {
         if (baseSubscription == null || baseSubscription.getLastActivePlan() == null || !ProductCategory.BASE.equals(baseSubscription.getLastActivePlan().getProduct().getCategory())) {
             return ImmutableList.<BlockingState>of();
         }
@@ -284,7 +297,7 @@ public class EventsStream {
                                                                                                                true,
                                                                                                                true,
                                                                                                                false,
-                                                                                                               subscriptionBaseTransitionTrigger.getEffectiveTransitionTime());
+                                                                                                               blockingStateEffectiveDate);
                                                                            }
                                                                        });
     }
