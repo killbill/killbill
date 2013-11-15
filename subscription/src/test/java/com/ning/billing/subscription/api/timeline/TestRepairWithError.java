@@ -34,17 +34,16 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.SubscriptionTestSuiteNoDB;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
-import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
-import com.ning.billing.subscription.api.user.TestSubscriptionHelper.TestWithException;
-import com.ning.billing.subscription.api.user.TestSubscriptionHelper.TestWithExceptionCallback;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.DeletedEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
-import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.subscription.api.user.TestSubscriptionHelper.TestWithException;
+import com.ning.billing.subscription.api.user.TestSubscriptionHelper.TestWithExceptionCallback;
 
-import static org.testng.Assert.assertTrue;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.Assert.assertEquals;
 
 public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
 
@@ -53,7 +52,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
     private SubscriptionBase baseSubscription;
 
     @Override
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         test = new TestWithException();

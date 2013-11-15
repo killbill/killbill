@@ -36,6 +36,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.api.TestListenerStatus;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
@@ -44,27 +45,26 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.subscription.SubscriptionTestListenerStatus;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.BundleMigration;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.SubscriptionMigration;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.SubscriptionMigrationCase;
+import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairException;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.DeletedEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
-import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.DeletedEvent;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -87,7 +87,6 @@ public class TestSubscriptionHelper {
 
     private final SubscriptionDao dao;
 
-
     @Inject
     public TestSubscriptionHelper(final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final TestListenerStatus testListenerStatus, final SubscriptionDao dao) {
         this.subscriptionApi = subscriptionApi;
@@ -97,7 +96,6 @@ public class TestSubscriptionHelper {
         this.testListenerStatus = testListenerStatus;
         this.dao = dao;
     }
-
 
     public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws SubscriptionBaseApiException {
@@ -113,8 +111,8 @@ public class TestSubscriptionHelper {
             throws SubscriptionBaseApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionApi.createSubscription(bundleId,
-                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
-                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, callContext);
+                                                                                                                  new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
+                                                                                                                  requestedDate == null ? clock.getUTCNow() : requestedDate, callContext);
         assertNotNull(subscription);
 
         assertTrue(testListener.isCompleted(SubscriptionTestSuiteWithEmbeddedDB.DELAY));
@@ -395,7 +393,6 @@ public class TestSubscriptionHelper {
         return createAccountForMigrationTest(input);
     }
 
-
     public SubscriptionBaseTimeline createSubscriptionRepair(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
         return new SubscriptionBaseTimeline() {
             @Override
@@ -517,17 +514,17 @@ public class TestSubscriptionHelper {
     }
 
     public void validateExistingEventForAssertion(final ExistingEvent expected, final ExistingEvent input) {
-        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName()));
+        log.debug(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName()));
         assertEquals(input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName());
-        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType()));
+        log.debug(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType()));
         assertEquals(input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType());
-        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory()));
+        log.debug(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory()));
         assertEquals(input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory());
-        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName()));
+        log.debug(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName()));
         assertEquals(input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName());
-        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod()));
+        log.debug(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod()));
         assertEquals(input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod());
-        log.info(String.format("Got %s -> Expected %s", input.getEffectiveDate(), expected.getEffectiveDate()));
+        log.debug(String.format("Got %s -> Expected %s", input.getEffectiveDate(), expected.getEffectiveDate()));
         assertEquals(input.getEffectiveDate(), expected.getEffectiveDate());
     }
 
@@ -591,7 +588,6 @@ public class TestSubscriptionHelper {
         });
     }
 
-
     public static DateTime addOrRemoveDuration(final DateTime input, final List<Duration> durations, final boolean add) {
         DateTime result = input;
         for (final Duration cur : durations) {
@@ -635,7 +631,6 @@ public class TestSubscriptionHelper {
         return addOrRemoveDuration(input, list, false);
     }
 
-
     public static class SubscriptionMigrationCaseWithCTD implements SubscriptionMigrationCase {
 
         private final PlanPhaseSpecifier pps;
@@ -669,7 +664,6 @@ public class TestSubscriptionHelper {
             return ctd;
         }
     }
-
 
     public interface TestWithExceptionCallback {
 

@@ -33,12 +33,11 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
-import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApiException;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.SubscriptionBase;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
@@ -50,75 +49,64 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     protected static final Logger log = LoggerFactory.getLogger(TestTransfer.class);
 
-
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testTransferMigratedSubscriptionWithCTDInFuture() throws Exception {
-
         final UUID newAccountId = UUID.randomUUID();
 
-        try {
-            final DateTime startDate = clock.getUTCNow().minusMonths(2);
-            final DateTime beforeMigration = clock.getUTCNow();
-            final AccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlan(startDate);
-            final DateTime afterMigration = clock.getUTCNow();
+        final DateTime startDate = clock.getUTCNow().minusMonths(2);
+        final DateTime beforeMigration = clock.getUTCNow();
+        final AccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlan(startDate);
+        final DateTime afterMigration = clock.getUTCNow();
 
-            testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated, callContext);
-            assertListenerStatus();
+        testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
+        migrationApi.migrate(toBeMigrated, callContext);
+        assertListenerStatus();
 
-            final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
-            assertEquals(bundles.size(), 1);
-            final SubscriptionBaseBundle bundle = bundles.get(0);
+        final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
+        assertEquals(bundles.size(), 1);
+        final SubscriptionBaseBundle bundle = bundles.get(0);
 
-            final DateTime bundleCreatedDate = bundle.getCreatedDate();
+        final DateTime bundleCreatedDate = bundle.getCreatedDate();
 
-            final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
-            assertEquals(subscriptions.size(), 1);
-            final SubscriptionBase subscription = subscriptions.get(0);
-            testUtil.assertDateWithin(subscription.getStartDate(), beforeMigration.minusMonths(2), afterMigration.minusMonths(2));
-            assertEquals(subscription.getEndDate(), null);
-            assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-            assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
-            assertEquals(subscription.getState(), EntitlementState.ACTIVE);
-            assertEquals(subscription.getCurrentPlan().getName(), "shotgun-annual");
-            assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
-            // WE should see MIGRATE_ENTITLEMENT and then MIGRATE_BILLING in the future
-            assertEquals(subscriptionInternalApi.getBillingTransitions(subscription, internalCallContext).size(), 1);
-            assertEquals(subscriptionInternalApi.getBillingTransitions(subscription, internalCallContext).get(0).getTransitionType(), SubscriptionBaseTransitionType.MIGRATE_BILLING);
-            assertTrue(subscriptionInternalApi.getBillingTransitions(subscription, internalCallContext).get(0).getEffectiveTransitionTime().compareTo(clock.getUTCNow()) > 0);
-            assertListenerStatus();
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+        assertEquals(subscriptions.size(), 1);
+        final SubscriptionBase subscription = subscriptions.get(0);
+        testUtil.assertDateWithin(subscription.getStartDate(), beforeMigration.minusMonths(2), afterMigration.minusMonths(2));
+        assertEquals(subscription.getEndDate(), null);
+        assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
+        assertEquals(subscription.getState(), EntitlementState.ACTIVE);
+        assertEquals(subscription.getCurrentPlan().getName(), "shotgun-annual");
+        assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
+        // WE should see MIGRATE_ENTITLEMENT and then MIGRATE_BILLING in the future
+        assertEquals(subscriptionInternalApi.getBillingTransitions(subscription, internalCallContext).size(), 1);
+        assertEquals(subscriptionInternalApi.getBillingTransitions(subscription, internalCallContext).get(0).getTransitionType(), SubscriptionBaseTransitionType.MIGRATE_BILLING);
+        assertTrue(subscriptionInternalApi.getBillingTransitions(subscription, internalCallContext).get(0).getEffectiveTransitionTime().compareTo(clock.getUTCNow()) > 0);
+        assertListenerStatus();
 
+        // MOVE A LITTLE, STILL IN TRIAL
+        clock.addDays(20);
 
-            // MOVE A LITTLE, STILL IN TRIAL
-            clock.addDays(20);
+        final DateTime transferRequestedDate = clock.getUTCNow();
 
-            final DateTime transferRequestedDate = clock.getUTCNow();
+        testListener.pushExpectedEvent(NextEvent.TRANSFER);
+        testListener.pushExpectedEvent(NextEvent.CANCEL);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, false, true, callContext);
+        assertListenerStatus();
 
-            testListener.pushExpectedEvent(NextEvent.TRANSFER);
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
-            transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, false, true, callContext);
-            assertListenerStatus();
+        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), internalCallContext);
+        assertTrue(oldBaseSubscription.getState() == EntitlementState.CANCELLED);
+        // The MIGRATE_BILLING event should have been invalidated
+        assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).size(), 0);
+        //assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).get(0).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
 
-            final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), internalCallContext);
-            assertTrue(oldBaseSubscription.getState() == EntitlementState.CANCELLED);
-            // The MIGRATE_BILLING event should have been invalidated
-            assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).size(), 0);
-            //assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).get(0).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
-
-            final SubscriptionBaseBundle newBundle = subscriptionInternalApi.getActiveBundleForKey(bundle.getExternalKey(), internalCallContext);
-            assertNotEquals(newBundle.getId(), bundle.getId());
-            assertEquals(newBundle.getOriginalCreatedDate().compareTo(bundleCreatedDate), 0);
-
-        } catch (SubscriptionBaseMigrationApiException e) {
-            Assert.fail("", e);
-        }
-
-
+        final SubscriptionBaseBundle newBundle = subscriptionInternalApi.getActiveBundleForKey(bundle.getExternalKey(), internalCallContext);
+        assertNotEquals(newBundle.getId(), bundle.getId());
+        assertEquals(newBundle.getOriginalCreatedDate().compareTo(bundleCreatedDate), 0);
     }
 
     @Test(groups = "slow")
     public void testTransferBPInTrialWithNoCTD() throws Exception {
-
         final UUID newAccountId = UUID.randomUUID();
 
         final String baseProduct = "Shotgun";
@@ -168,10 +156,8 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(newBaseSubscription.getCurrentPhase().getPhaseType(), PhaseType.TRIAL);
     }
 
-
     @Test(groups = "slow")
     public void testTransferBPInTrialWithCTD() throws Exception {
-
         final UUID newAccountId = UUID.randomUUID();
 
         final String baseProduct = "Shotgun";
@@ -220,10 +206,8 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(newBaseSubscription.getCurrentPhase().getPhaseType(), PhaseType.TRIAL);
     }
 
-
     @Test(groups = "slow")
     public void testTransferBPNoTrialWithNoCTD() throws Exception {
-
         final UUID newAccountId = UUID.randomUUID();
 
         final String baseProduct = "Shotgun";
@@ -273,7 +257,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testTransferBPNoTrialWithCTD() throws Exception {
-
         final UUID newAccountId = UUID.randomUUID();
 
         final String baseProduct = "Shotgun";
@@ -291,7 +274,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // SET CTD
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
         subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
-
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
@@ -326,7 +308,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final String newBaseProduct1 = "Assault-Rifle";
         final BillingPeriod newBaseTerm1 = BillingPeriod.ANNUAL;
-        final DateTime changeDate1 = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.CHANGE);
         newBaseSubscription.changePlan(newBaseProduct1, newBaseTerm1, basePriceList, callContext);
         assertListenerStatus();
@@ -344,20 +325,18 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final String newBaseProduct2 = "Pistol";
         final BillingPeriod newBaseTerm2 = BillingPeriod.ANNUAL;
-        final DateTime changeDate2 = clock.getUTCNow();
         newBaseSubscriptionWithCtd.changePlan(newBaseProduct2, newBaseTerm2, basePriceList, callContext);
 
         newPlan = newBaseSubscriptionWithCtd.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);
         assertEquals(newBaseSubscriptionWithCtd.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
 
-        assertNotNull(((DefaultSubscriptionBase) newBaseSubscriptionWithCtd).getPendingTransition());
-        assertEquals(((DefaultSubscriptionBase) newBaseSubscriptionWithCtd).getPendingTransition().getEffectiveTransitionTime(), newCtd);
+        assertNotNull(newBaseSubscriptionWithCtd.getPendingTransition());
+        assertEquals(newBaseSubscriptionWithCtd.getPendingTransition().getEffectiveTransitionTime(), newCtd);
     }
 
     @Test(groups = "slow")
     public void testTransferWithAO() throws Exception {
-
         final UUID newAccountId = UUID.randomUUID();
 
         final String baseProduct = "Shotgun";
@@ -415,15 +394,15 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
             if (curProduct.getName().equals(baseProduct)) {
                 foundBP = true;
                 assertTrue(((DefaultSubscriptionBase) cur).getAlignStartDate().compareTo(((DefaultSubscriptionBase) baseSubscription).getAlignStartDate()) == 0);
-                assertNull(((DefaultSubscriptionBase) cur).getPendingTransition());
+                assertNull(cur.getPendingTransition());
             } else if (curProduct.getName().equals(aoProduct1)) {
                 foundAO1 = true;
                 assertTrue(((DefaultSubscriptionBase) cur).getAlignStartDate().compareTo((aoSubscription1).getAlignStartDate()) == 0);
-                assertNull(((DefaultSubscriptionBase) cur).getPendingTransition());
+                assertNull(cur.getPendingTransition());
             } else if (curProduct.getName().equals(aoProduct2)) {
                 foundAO2 = true;
                 assertTrue(((DefaultSubscriptionBase) cur).getAlignStartDate().compareTo((aoSubscription2).getAlignStartDate()) == 0);
-                assertNotNull(((DefaultSubscriptionBase) cur).getPendingTransition());
+                assertNotNull(cur.getPendingTransition());
             } else {
                 Assert.fail("Unexpected product " + curProduct.getName());
             }
@@ -449,13 +428,10 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         transferApi.transferBundle(newBundle.getAccountId(), finalNewAccountId, newBundle.getExternalKey(), newTransferRequestedDate, true, false, callContext);
         assertListenerStatus();
-
     }
-
 
     @Test(groups = "slow")
     public void testTransferWithAOCancelled() throws Exception {
-
         final UUID newAccountId = UUID.randomUUID();
 
         final String baseProduct = "Shotgun";
@@ -506,7 +482,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testTransferWithUncancel() throws Exception {
-
         final UUID newAccountId = UUID.randomUUID();
 
         final String baseProduct = "Shotgun";
@@ -523,7 +498,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // SET CTD TO TRIGGER CANCELLATION EOT
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
         subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
-
 
         // CANCEL BP
         baseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);

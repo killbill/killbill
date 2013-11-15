@@ -17,8 +17,6 @@
 package com.ning.billing.subscription.api.user;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -33,28 +31,16 @@ import static org.testng.Assert.assertTrue;
 
 public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
-    private static final Logger log = LoggerFactory.getLogger(TestUserApiRecreate.class);
-
     @Test(groups = "slow")
-    public void testRecreateWithBPCanceledThroughSubscription() {
-        try {
-            testCreateAndRecreate(false);
-            assertListenerStatus();
-        } catch (SubscriptionBaseApiException e) {
-            log.error("Unexpected exception", e);
-            Assert.fail(e.getMessage());
-        }
+    public void testRecreateWithBPCanceledThroughSubscription() throws SubscriptionBaseApiException {
+        testCreateAndRecreate(false);
+        assertListenerStatus();
     }
 
     @Test(groups = "slow")
-    public void testCreateWithBPCanceledFromUserApi() {
-        try {
-            testCreateAndRecreate(true);
-            assertListenerStatus();
-        } catch (SubscriptionBaseApiException e) {
-            log.error("Unexpected exception", e);
-            Assert.fail(e.getMessage());
-        }
+    public void testCreateWithBPCanceledFromUserApi() throws SubscriptionBaseApiException {
+        testCreateAndRecreate(true);
+        assertListenerStatus();
     }
 
     private DefaultSubscriptionBase testCreateAndRecreate(final boolean fromUserAPi) throws SubscriptionBaseApiException {
@@ -68,7 +54,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.CREATE);
         DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                             testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
+                                                                                                                    testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
         assertNotNull(subscription);
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(subscription.getBundleId(), bundle.getId());
@@ -82,10 +68,9 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
         term = BillingPeriod.MONTHLY;
         planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
         try {
-
             if (fromUserAPi) {
                 subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                    testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
+                                                                                                    testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
             } else {
                 subscription.recreate(testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             }
@@ -110,7 +95,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
 
         if (fromUserAPi) {
             subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
+                                                                                                testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
         } else {
             subscription.recreate(testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
         }

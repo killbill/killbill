@@ -36,7 +36,6 @@ public class TestDefaultSubscriptionModule extends DefaultSubscriptionModule {
         super(configSource);
     }
 
-
     @Override
     protected void configure() {
         super.configure();

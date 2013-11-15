@@ -26,17 +26,17 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.clock.ClockMock;
 import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import static org.testng.Assert.assertNotNull;
@@ -79,18 +79,17 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
 
     public SubscriptionBaseBundle initBundle(final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception {
         final UUID accountId = UUID.randomUUID();
-        final SubscriptionBaseBundle bundle = subscriptionApi.createBundleForAccount(accountId, DEFAULT_BUNDLE_KEY,  callContext);
+        final SubscriptionBaseBundle bundle = subscriptionApi.createBundleForAccount(accountId, DEFAULT_BUNDLE_KEY, callContext);
         assertNotNull(bundle);
         return bundle;
     }
-
 
     public void startTestFamework(final TestApiListener testListener,
                                   final TestListenerStatus testListenerStatus,
                                   final ClockMock clock,
                                   final BusService busService,
                                   final SubscriptionBaseService subscriptionBaseService) throws Exception {
-        log.warn("STARTING TEST FRAMEWORK");
+        log.debug("STARTING TEST FRAMEWORK");
 
         resetTestListener(testListener, testListenerStatus);
 
@@ -100,20 +99,19 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
 
         restartSubscriptionService(subscriptionBaseService);
 
-        log.warn("STARTED TEST FRAMEWORK");
+        log.debug("STARTED TEST FRAMEWORK");
     }
 
     public void stopTestFramework(final TestApiListener testListener,
                                   final BusService busService,
                                   final SubscriptionBaseService subscriptionBaseService) throws Exception {
-        log.warn("STOPPING TEST FRAMEWORK");
+        log.debug("STOPPING TEST FRAMEWORK");
         stopBusAndUnregisterListener(busService, testListener);
 
         stopSubscriptionService(subscriptionBaseService);
 
-        log.warn("STOPPED TEST FRAMEWORK");
+        log.debug("STOPPED TEST FRAMEWORK");
     }
-
 
     private void resetTestListener(final TestApiListener testListener, final TestListenerStatus testListenerStatus) {
         // RESET LIST OF EXPECTED EVENTS

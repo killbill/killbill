@@ -175,10 +175,10 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         // Create the transitions
         final DefaultSubscriptionBase defaultSubscriptionBase = new DefaultSubscriptionBase(builder, null, clock);
         final SubscriptionBaseEvent event = createSubscriptionEvent(builder.getAlignStartDate(),
-                                                                productName,
-                                                                phaseType,
-                                                                ApiEventType.CREATE,
-                                                                defaultSubscriptionBase.getActiveVersion());
+                                                                    productName,
+                                                                    phaseType,
+                                                                    ApiEventType.CREATE,
+                                                                    defaultSubscriptionBase.getActiveVersion());
         defaultSubscriptionBase.rebuildTransitions(ImmutableList.<SubscriptionBaseEvent>of(event), catalogService.getFullCatalog());
 
         Assert.assertEquals(defaultSubscriptionBase.getAllTransitions().size(), 1);
@@ -194,15 +194,15 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
                                     final String newProductName,
                                     final PhaseType commonPhaseType) {
         final SubscriptionBaseEvent previousEvent = createSubscriptionEvent(defaultSubscriptionBase.getStartDate(),
-                                                                        previousProductName,
-                                                                        commonPhaseType,
-                                                                        ApiEventType.CREATE,
-                                                                        defaultSubscriptionBase.getActiveVersion());
+                                                                            previousProductName,
+                                                                            commonPhaseType,
+                                                                            ApiEventType.CREATE,
+                                                                            defaultSubscriptionBase.getActiveVersion());
         final SubscriptionBaseEvent event = createSubscriptionEvent(effectiveChangeDate,
-                                                                newProductName,
-                                                                commonPhaseType,
-                                                                ApiEventType.CHANGE,
-                                                                defaultSubscriptionBase.getActiveVersion());
+                                                                    newProductName,
+                                                                    commonPhaseType,
+                                                                    ApiEventType.CHANGE,
+                                                                    defaultSubscriptionBase.getActiveVersion());
 
         defaultSubscriptionBase.rebuildTransitions(ImmutableList.<SubscriptionBaseEvent>of(previousEvent, event), catalogService.getFullCatalog());
 
@@ -214,10 +214,10 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
     }
 
     private SubscriptionBaseEvent createSubscriptionEvent(final DateTime effectiveDate,
-                                                      final String productName,
-                                                      final PhaseType phaseType,
-                                                      final ApiEventType apiEventType,
-                                                      final long activeVersion) {
+                                                          final String productName,
+                                                          final PhaseType phaseType,
+                                                          final ApiEventType apiEventType,
+                                                          final long activeVersion) {
         final ApiEventBuilder eventBuilder = new ApiEventBuilder();
         eventBuilder.setEffectiveDate(effectiveDate);
         eventBuilder.setEventPlan(productName);
