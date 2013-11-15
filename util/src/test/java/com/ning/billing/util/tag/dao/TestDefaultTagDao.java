@@ -38,23 +38,6 @@ import static org.testng.Assert.assertEquals;
 
 public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
 
-    private TestApiListener eventsListener;
-
-    @Override
-    @BeforeMethod(groups = "slow")
-    public void beforeMethod() throws Exception {
-        super.beforeMethod();
-        eventsListener = new TestApiListener(null, idbi);
-        eventBus.register(eventsListener);
-    }
-
-    @Override
-    @AfterMethod(groups = "slow")
-    public void afterMethod() throws Exception {
-        eventBus.unregister(eventsListener);
-        super.afterMethod();
-    }
-
     @Test(groups = "slow")
     public void testGetByIds() throws TagDefinitionApiException {
         final List<UUID> uuids = new ArrayList<UUID>();
@@ -63,11 +46,19 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         List<TagDefinitionModelDao> result = tagDefinitionDao.getByIds(uuids, internalCallContext);
         assertEquals(result.size(), 0);
 
+        eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
         final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", internalCallContext);
+        assertListenerStatus();
         uuids.add(defYo.getId());
+
+        eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
         final TagDefinitionModelDao defBah = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion bah", internalCallContext);
+        assertListenerStatus();
         uuids.add(defBah.getId());
+
+        eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
         final TagDefinitionModelDao defZoo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion zoo", internalCallContext);
+        assertListenerStatus();
         uuids.add(defZoo.getId());
 
         result = tagDefinitionDao.getByIds(uuids, internalCallContext);
@@ -85,7 +76,10 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testGetById() throws TagDefinitionApiException {
         // User Tag
+        eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
         final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", internalCallContext);
+        assertListenerStatus();
+
         final TagDefinitionModelDao resDefYo = tagDefinitionDao.getById(defYo.getId(), internalCallContext);
         assertEquals(defYo, resDefYo);
 
@@ -104,7 +98,10 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testGetByName() throws TagDefinitionApiException {
         // User Tag
+        eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
         final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", internalCallContext);
+        assertListenerStatus();
+
         final TagDefinitionModelDao resDefYo = tagDefinitionDao.getByName(defYo.getName(), internalCallContext);
         assertEquals(defYo, resDefYo);
 
@@ -132,13 +129,13 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         final TagDefinitionModelDao createdTagDefinition = tagDefinitionDao.create(definitionName, description, internalCallContext);
         Assert.assertEquals(createdTagDefinition.getName(), definitionName);
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
-        Assert.assertTrue(eventsListener.isCompleted(2000));
+        assertListenerStatus();
 
         // Make sure we can create a tag
         eventsListener.pushExpectedEvent(NextEvent.TAG);
         final Tag tag = new DescriptiveTag(createdTagDefinition.getId(), objectType, objectId, internalCallContext.getCreatedDate());
         tagDao.create(new TagModelDao(tag), internalCallContext);
-        Assert.assertTrue(eventsListener.isCompleted(2000));
+        assertListenerStatus();
 
         // Make sure we can retrieve it via the DAO
         final List<TagModelDao> foundTags = tagDao.getTagsForObject(objectId, objectType, internalCallContext);
@@ -158,7 +155,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         // Delete the tag
         eventsListener.pushExpectedEvent(NextEvent.TAG);
         tagDao.deleteTag(objectId, objectType, createdTagDefinition.getId(), internalCallContext);
-        Assert.assertTrue(eventsListener.isCompleted(2000));
+        assertListenerStatus();
 
         // Make sure the tag is deleted
         Assert.assertEquals(tagDao.getTagsForObject(objectId, objectType, internalCallContext).size(), 0);

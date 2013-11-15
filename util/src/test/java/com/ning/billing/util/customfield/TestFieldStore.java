@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.customfield.dao.CustomFieldModelDao;
@@ -36,11 +37,15 @@ public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
         String fieldValue = "Kitty Hawk";
 
         final CustomField field = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
+        eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
         customFieldDao.create(new CustomFieldModelDao(field), internalCallContext);
+        assertListenerStatus();
 
         fieldName = "TestField2";
         fieldValue = "Cape Canaveral";
         final CustomField field2 = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
+        eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
         customFieldDao.create(new CustomFieldModelDao(field2), internalCallContext);
+        assertListenerStatus();
     }
 }

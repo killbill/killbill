@@ -35,25 +35,6 @@ import com.google.common.eventbus.Subscribe;
 
 public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
 
-    private TestApiListener eventsListener;
-
-
-    @Override
-    @BeforeMethod(groups = "slow")
-    public void beforeMethod() throws Exception {
-        super.beforeMethod();
-        eventsListener = new TestApiListener(null, idbi);
-        eventBus.register(eventsListener);
-    }
-
-    @Override
-    @AfterMethod(groups = "slow")
-    public void afterMethod() throws Exception {
-        eventBus.unregister(eventsListener);
-        super.afterMethod();
-    }
-
-
     @Test(groups = "slow")
     public void testCatchEventsOnCreateAndDelete() throws Exception {
         final String definitionName = UUID.randomUUID().toString().substring(0, 5);
@@ -64,8 +45,7 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         final TagDefinitionModelDao createdTagDefinition = tagDefinitionDao.create(definitionName, description, internalCallContext);
         Assert.assertEquals(createdTagDefinition.getName(), definitionName);
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
-
-        Assert.assertTrue(eventsListener.isCompleted(2000));
+        assertListenerStatus();
 
         // Make sure we can retrieve it via the DAO
         final TagDefinitionModelDao foundTagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
@@ -84,7 +64,7 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         // Delete the tag definition
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
         tagDefinitionDao.deleteById(foundTagDefinition.getId(), internalCallContext);
-        Assert.assertTrue(eventsListener.isCompleted(2000));
+        assertListenerStatus();
 
         // Make sure the tag definition is deleted
         Assert.assertNull(tagDefinitionDao.getByName(definitionName, internalCallContext));

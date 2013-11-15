@@ -21,6 +21,7 @@ import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
@@ -36,7 +37,9 @@ public class TestPagination extends UtilTestSuiteWithEmbeddedDB {
         for (int i = 0; i < 10; i++) {
             final String definitionName = "name-" + i;
             final String description = "description-" + i;
+            eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
             tagDefinitionDao.create(definitionName, description, internalCallContext);
+            assertListenerStatus();
         }
 
         // Tests via SQL dao directly

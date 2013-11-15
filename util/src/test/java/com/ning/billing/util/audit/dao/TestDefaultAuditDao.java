@@ -24,6 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.TagApiException;
@@ -72,7 +73,10 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(firstAuditLogs.size(), 1);
         Assert.assertEquals(firstAuditLogs.get(0).getChangeType(), ChangeType.INSERT);
 
+        eventsListener.pushExpectedEvent(NextEvent.TAG);
         tagDao.deleteTag(tag.getObjectId(), tag.getObjectType(), tag.getTagDefinitionId(), internalCallContext);
+        assertListenerStatus();
+
         final List<AuditLog> secondAuditLogs = auditDao.getAuditLogsForId(TableName.TAG, tag.getId(), AuditLevel.FULL, internalCallContext);
         Assert.assertEquals(secondAuditLogs.size(), 2);
         Assert.assertEquals(secondAuditLogs.get(0).getChangeType(), ChangeType.INSERT);
@@ -81,9 +85,12 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
 
     private void addTag() throws TagDefinitionApiException, TagApiException {
         // Create a tag definition
+        eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
         final TagDefinitionModelDao tagDefinition = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5),
                                                                             UUID.randomUUID().toString().substring(0, 5),
                                                                             internalCallContext);
+        assertListenerStatus();
+
         Assert.assertEquals(tagDefinitionDao.getById(tagDefinition.getId(), internalCallContext), tagDefinition);
 
         // Create a tag
@@ -91,7 +98,10 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
 
         final Tag theTag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, clock.getUTCNow());
 
+        eventsListener.pushExpectedEvent(NextEvent.TAG);
         tagDao.create(new TagModelDao(theTag), internalCallContext);
+        assertListenerStatus();
+
         final List<TagModelDao> tags = tagDao.getTagsForObject(objectId, ObjectType.ACCOUNT, internalCallContext);
         Assert.assertEquals(tags.size(), 1);
         tag = tags.get(0);
