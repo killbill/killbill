@@ -68,7 +68,7 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
         // Set the OVERDUE_ENFORCEMENT_OFF tag (we set the clear state, hence the blocking event)
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.BLOCK);
         tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId(), callContext);
-        busHandler.isCompleted(DELAY);
+        assertListenerStatus();
 
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
@@ -91,9 +91,9 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now remove OVERDUE_ENFORCEMENT_OFF tag
-        busHandler.pushExpectedEvent(NextEvent.TAG);
+        busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.BLOCK);
         tagUserApi.removeTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId(), callContext);
-        busHandler.isCompleted(DELAY);
+        assertListenerStatus();
         checkODState("OD1");
     }
 
@@ -118,23 +118,25 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // DAY 36 -- RIGHT AFTER OD1
+        busHandler.pushExpectedEvent(NextEvent.BLOCK);
         addDaysAndCheckForCompletion(6);
+        assertListenerStatus();
 
         // Account should be in overdue
         checkODState("OD1");
 
         // Set the OVERDUE_ENFORCEMENT_OFF tag
-        busHandler.pushExpectedEvent(NextEvent.TAG);
+        busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.BLOCK);
         tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId(), callContext);
-        busHandler.isCompleted(DELAY);
+        assertListenerStatus();
 
         // Should now be in clear state
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now remove OVERDUE_ENFORCEMENT_OFF tag
-        busHandler.pushExpectedEvent(NextEvent.TAG);
+        busHandler.pushExpectedEvents(NextEvent.TAG,  NextEvent.BLOCK);
         tagUserApi.removeTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId(), callContext);
-        busHandler.isCompleted(DELAY);
+        assertListenerStatus();
 
         // Account should be back in overdue
         checkODState("OD1");

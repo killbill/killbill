@@ -273,10 +273,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         lifecycle.fireStartupSequencePostEventRegistration();
 
         paymentPlugin.clear();
+
+        // Make sure we start with a clean state
+        assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        // Make sure we finish in a clean state
+        assertListenerStatus();
+
         lifecycle.fireShutdownSequencePriorEventUnRegistration();
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();
@@ -610,7 +616,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         busHandler.pushExpectedEvents(events);
 
         final T result = f.apply(null);
-        assertTrue(busHandler.isCompleted(DELAY), "Were expecting events " + joiner.join(events));
         assertListenerStatus();
 
 

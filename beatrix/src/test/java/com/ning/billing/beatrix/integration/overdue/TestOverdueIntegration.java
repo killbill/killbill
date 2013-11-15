@@ -721,7 +721,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // Pay the invoice
         final Invoice externalChargeInvoice = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
-        createExternalPaymentAndCheckForCompletion(account, externalChargeInvoice, NextEvent.PAYMENT);
+        createExternalPaymentAndCheckForCompletion(account, externalChargeInvoice, NextEvent.PAYMENT, NextEvent.BLOCK);
         // We should be clear now
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
@@ -853,7 +853,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Pay the first one via an external payment - we should then be 5 days apart from the second invoice
         // (which is the earliest unpaid one) and hence come back to a clear state (see configuration)
         final Invoice firstNonZeroInvoice = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
-        createExternalPaymentAndCheckForCompletion(account, firstNonZeroInvoice, NextEvent.PAYMENT);
+        createExternalPaymentAndCheckForCompletion(account, firstNonZeroInvoice, NextEvent.PAYMENT, NextEvent.BLOCK);
         // We should be clear now
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
