@@ -33,6 +33,9 @@
         </XML>
         <codeStyleSettings language="JAVA">
           <option name="KEEP_FIRST_COLUMN_COMMENT" value="false" />
+          <option name="KEEP_BLANK_LINES_IN_DECLARATIONS" value="1" />
+          <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />
+          <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="1" />
           <option name="BLANK_LINES_BEFORE_PACKAGE" value="1" />
           <option name="BLANK_LINES_AFTER_CLASS_HEADER" value="1" />
           <option name="ALIGN_MULTILINE_CHAINED_METHODS" value="true" />
