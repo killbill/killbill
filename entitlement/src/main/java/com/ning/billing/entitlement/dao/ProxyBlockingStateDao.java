@@ -226,10 +226,15 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
             final Collection<BlockingState> blockingStatesNotOnDisk = eventsStream.computeAddonsBlockingStatesForFutureSubscriptionBaseEvents();
 
-            // Inject the extra blocking states into the stream
+            // Inject the extra blocking states into the stream if needed
             for (final BlockingState blockingState : blockingStatesNotOnDisk) {
-                final BlockingStateModelDao blockingStateModelDao = new BlockingStateModelDao(blockingState, now, now);
-                blockingStatesOnDiskCopy.add(BlockingStateModelDao.toBlockingState(blockingStateModelDao));
+                // In case we're coming from getBlockingHistoryForService / getBlockingAll, make sure we don't add
+                // blocking states for other add-ons on that base subscription
+                if (blockingStateType == null ||
+                    (BlockingStateType.SUBSCRIPTION.equals(blockingStateType) && blockingState.getBlockedId().equals(blockableId))) {
+                    final BlockingStateModelDao blockingStateModelDao = new BlockingStateModelDao(blockingState, now, now);
+                    blockingStatesOnDiskCopy.add(BlockingStateModelDao.toBlockingState(blockingStateModelDao));
+                }
             }
         }
 

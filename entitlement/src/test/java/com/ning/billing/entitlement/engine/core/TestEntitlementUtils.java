@@ -69,7 +69,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         baseEntitlement = (DefaultEntitlement) entitlementApi.createBaseEntitlement(account.getId(), baseSpec, account.getExternalKey(), initialDate, callContext);
 
         // Add ADD_ON
-        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         addOnEntitlement = (DefaultEntitlement) entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec, initialDate, callContext);
 
         // Verify the initial state
@@ -225,6 +225,26 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkActualBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime, false);
         // Verify also the blocking states API doesn't add too many events (now on disk)
         checkBlockingStatesDAO(changedBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveCancellationOrChangeDate, false);
+    }
+
+    @Test(groups = "slow", description = "Verify we don't mix add-ons for EOT changes")
+    public void testChangePlanEOTWith2AddOns() throws Exception {
+        // Add a second ADD_ON (Laser-Scope is available, not included)
+        testListener.pushExpectedEvents(NextEvent.CREATE);
+        final PlanPhaseSpecifier secondAddOnSpec = new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final DefaultEntitlement secondAddOnEntitlement = (DefaultEntitlement) entitlementApi.addEntitlement(baseEntitlement.getBundleId(), secondAddOnSpec, clock.getUTCToday(), callContext);
+        assertListenerStatus();
+
+        // Change plan EOT to Assault-Rifle (Telescopic-Scope is included)
+        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, new LocalDate(2013, 10, 7), callContext);
+        // No blocking event (EOT)
+        assertListenerStatus();
+
+        // Verify the blocking states DAO adds events not on disk for the first add-on...
+        checkBlockingStatesDAO(changedBaseEntitlement, addOnEntitlement, baseEffectiveCancellationOrChangeDate, false);
+        // ...but not for the second one
+        final List<BlockingState> blockingStatesForSecondAddOn = blockingStateDao.getBlockingAll(secondAddOnEntitlement.getId(), BlockingStateType.SUBSCRIPTION, internalCallContext);
+        Assert.assertEquals(blockingStatesForSecondAddOn.size(), 0);
     }
 
     @Test(groups = "slow", description = "Verify add-ons blocking states are added for IMM change plans")
