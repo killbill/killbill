@@ -221,19 +221,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
-    @PUT
-    @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
-    @Produces(APPLICATION_JSON)
-    public Response uncancelEntitlementPlan(@PathParam("subscriptionId") final String subscriptionId,
-                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                            @HeaderParam(HDR_REASON) final String reason,
-                                            @HeaderParam(HDR_COMMENT) final String comment,
-                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
-        final UUID uuid = UUID.fromString(subscriptionId);
-        final Entitlement current = entitlementApi.getEntitlementForId(uuid, context.createContext(createdBy, reason, comment, request));
-        current.uncancelEntitlement(context.createContext(createdBy, reason, comment, request));
-        return Response.status(Status.OK).build();
-    }
+
 
     @DELETE
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")

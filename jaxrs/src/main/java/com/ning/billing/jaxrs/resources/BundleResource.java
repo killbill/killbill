@@ -16,11 +16,9 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -45,13 +43,11 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
-import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.entitlement.api.SubscriptionApiException;
 import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.jaxrs.json.BundleJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
-import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.AuditUserApi;
@@ -62,8 +58,6 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -103,7 +97,6 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-
     @GET
     @Produces(APPLICATION_JSON)
     public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
@@ -111,6 +104,44 @@ public class BundleResource extends JaxRsResourceBase {
         final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, context.createContext(request));
         final BundleJson json = new BundleJson(bundle, null, null, null);
         return Response.status(Status.OK).entity(json).build();
+    }
+
+    @PUT
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + PAUSE)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response pauseBundle(@PathParam(ID_PARAM_NAME) final String id,
+                                @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                @HeaderParam(HDR_REASON) final String reason,
+                                @HeaderParam(HDR_COMMENT) final String comment,
+                                @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException {
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID bundleId = UUID.fromString(id);
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
+        final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
+        entitlementApi.pause(bundleId, inputLocalDate, callContext);
+        return Response.status(Status.OK).build();
+    }
+
+    @PUT
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + RESUME)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response resumeBundle(@PathParam(ID_PARAM_NAME) final String id,
+                                @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                @HeaderParam(HDR_REASON) final String reason,
+                                @HeaderParam(HDR_COMMENT) final String comment,
+                                @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException {
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID bundleId = UUID.fromString(id);
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
+        final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
+        entitlementApi.resume(bundleId, inputLocalDate, callContext);
+        return Response.status(Status.OK).build();
     }
 
     @GET

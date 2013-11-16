@@ -167,4 +167,8 @@ public interface JaxrsResource {
     public static final String PLUGINS_PATH = "/" + PLUGINS;
 
     public static final String CBA_REBALANCING = "cbaRebalancing";
+
+    public static final String PAUSE = "pause";
+    public static final String RESUME = "resume";
+
 }
