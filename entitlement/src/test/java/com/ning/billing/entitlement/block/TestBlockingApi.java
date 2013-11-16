@@ -19,7 +19,6 @@ package com.ning.billing.entitlement.block;
 import java.util.List;
 import java.util.UUID;
 
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -29,7 +28,10 @@ import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.junction.DefaultBlockingState;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -62,11 +64,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         blockingInternalApi.setBlockingState(state2, internalCallContext);
         assertListenerStatus();
 
-        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
-        Mockito.when(bundle.getId()).thenReturn(uuid);
-
-        Assert.assertEquals(blockingInternalApi.getBlockingStateForService(bundle, service, internalCallContext).getStateName(), overdueStateName2);
-        Assert.assertEquals(blockingInternalApi.getBlockingStateForService(bundle.getId(), service, internalCallContext).getStateName(), overdueStateName2);
+        Assert.assertEquals(blockingInternalApi.getBlockingStateForService(uuid, BlockingStateType.ACCOUNT, service, internalCallContext).getStateName(), overdueStateName2);
     }
 
     @Test(groups = "slow")
@@ -92,18 +90,17 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         blockingInternalApi.setBlockingState(state2, internalCallContext);
         assertListenerStatus();
 
-        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
-        Mockito.when(bundle.getId()).thenReturn(uuid);
+        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAll(uuid, BlockingStateType.ACCOUNT, internalCallContext);
+        final List<BlockingState> history = ImmutableList.<BlockingState>copyOf(Collections2.<BlockingState>filter(blockingAll,
+                                                                                                                   new Predicate<BlockingState>() {
+                                                                                                                       @Override
+                                                                                                                       public boolean apply(final BlockingState input) {
+                                                                                                                           return input.getService().equals(service);
+                                                                                                                       }
+                                                                                                                   }));
 
-        final List<BlockingState> history1 = blockingInternalApi.getBlockingHistoryForService(bundle, service, internalCallContext);
-        final List<BlockingState> history2 = blockingInternalApi.getBlockingHistoryForService(bundle.getId(), service, internalCallContext);
-
-        Assert.assertEquals(history1.size(), 2);
-        Assert.assertEquals(history1.get(0).getStateName(), overdueStateName);
-        Assert.assertEquals(history1.get(1).getStateName(), overdueStateName2);
-
-        Assert.assertEquals(history2.size(), 2);
-        Assert.assertEquals(history2.get(0).getStateName(), overdueStateName);
-        Assert.assertEquals(history2.get(1).getStateName(), overdueStateName2);
+        Assert.assertEquals(history.size(), 2);
+        Assert.assertEquals(history.get(0).getStateName(), overdueStateName);
+        Assert.assertEquals(history.get(1).getStateName(), overdueStateName2);
     }
 }

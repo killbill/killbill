@@ -69,7 +69,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         baseEntitlement = (DefaultEntitlement) entitlementApi.createBaseEntitlement(account.getId(), baseSpec, account.getExternalKey(), initialDate, callContext);
 
         // Add ADD_ON
-        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         addOnEntitlement = (DefaultEntitlement) entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec, initialDate, callContext);
 
         // Verify the initial state
@@ -227,6 +227,26 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkBlockingStatesDAO(changedBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveCancellationOrChangeDate, false);
     }
 
+    @Test(groups = "slow", description = "Verify we don't mix add-ons for EOT changes")
+    public void testChangePlanEOTWith2AddOns() throws Exception {
+        // Add a second ADD_ON (Laser-Scope is available, not included)
+        testListener.pushExpectedEvents(NextEvent.CREATE);
+        final PlanPhaseSpecifier secondAddOnSpec = new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final DefaultEntitlement secondAddOnEntitlement = (DefaultEntitlement) entitlementApi.addEntitlement(baseEntitlement.getBundleId(), secondAddOnSpec, clock.getUTCToday(), callContext);
+        assertListenerStatus();
+
+        // Change plan EOT to Assault-Rifle (Telescopic-Scope is included)
+        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, new LocalDate(2013, 10, 7), callContext);
+        // No blocking event (EOT)
+        assertListenerStatus();
+
+        // Verify the blocking states DAO adds events not on disk for the first add-on...
+        checkBlockingStatesDAO(changedBaseEntitlement, addOnEntitlement, baseEffectiveCancellationOrChangeDate, false);
+        // ...but not for the second one
+        final List<BlockingState> blockingStatesForSecondAddOn = blockingStateDao.getBlockingAll(secondAddOnEntitlement.getId(), BlockingStateType.SUBSCRIPTION, internalCallContext);
+        Assert.assertEquals(blockingStatesForSecondAddOn.size(), 0);
+    }
+
     @Test(groups = "slow", description = "Verify add-ons blocking states are added for IMM change plans")
     public void testChangePlanIMM() throws Exception {
         // Approximate check, as the blocking state check (checkBlockingStatesDAO) could be a bit off
@@ -300,7 +320,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     // Test the DAO
     private void checkBlockingStatesDAO(final Entitlement baseEntitlement, final Entitlement addOnEntitlement, final LocalDate effectiveCancellationDate, final boolean isBaseCancelled) {
-        final List<BlockingState> blockingStatesForBaseEntitlement = blockingStateDao.getBlockingAll(baseEntitlement.getId(), internalCallContext);
+        final List<BlockingState> blockingStatesForBaseEntitlement = blockingStateDao.getBlockingAll(baseEntitlement.getId(), BlockingStateType.SUBSCRIPTION, internalCallContext);
         Assert.assertEquals(blockingStatesForBaseEntitlement.size(), isBaseCancelled ? 1 : 0);
         if (isBaseCancelled) {
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getBlockedId(), baseEntitlement.getId());
@@ -310,7 +330,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getStateName(), DefaultEntitlementApi.ENT_STATE_CANCELLED);
         }
 
-        final List<BlockingState> blockingStatesForAddOn = blockingStateDao.getBlockingAll(addOnEntitlement.getId(), internalCallContext);
+        final List<BlockingState> blockingStatesForAddOn = blockingStateDao.getBlockingAll(addOnEntitlement.getId(), BlockingStateType.SUBSCRIPTION, internalCallContext);
         Assert.assertEquals(blockingStatesForAddOn.size(), 1);
         Assert.assertEquals(blockingStatesForAddOn.get(0).getBlockedId(), addOnEntitlement.getId());
         Assert.assertEquals(blockingStatesForAddOn.get(0).getEffectiveDate().toLocalDate(), effectiveCancellationDate);

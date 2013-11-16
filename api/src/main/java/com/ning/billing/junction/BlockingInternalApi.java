@@ -21,23 +21,14 @@ import java.util.UUID;
 
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 
 public interface BlockingInternalApi {
 
-    public BlockingState getBlockingStateForService(Blockable blockable, String serviceName, InternalTenantContext context);
+    public BlockingState getBlockingStateForService(UUID blockableId, BlockingStateType blockingStateType, String serviceName, InternalTenantContext context);
 
-    public BlockingState getBlockingStateForService(UUID blockableId, String serviceName, InternalTenantContext context);
-
-    public List<BlockingState> getBlockingHistoryForService(Blockable blockable, String serviceName, InternalTenantContext context);
-
-    public List<BlockingState> getBlockingHistoryForService(UUID blockableId, String serviceName, InternalTenantContext context);
-
-    public List<BlockingState> getBlockingAll(Blockable blockable, InternalTenantContext context);
-
-    public List<BlockingState> getBlockingAll(UUID blockableId, InternalTenantContext context);
+    public List<BlockingState> getBlockingAll(UUID blockableId, BlockingStateType blockingStateType, InternalTenantContext context);
 
     public void setBlockingState(BlockingState state, InternalCallContext context);
-
 }

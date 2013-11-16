@@ -24,9 +24,16 @@ import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.api.Account;
+import com.ning.billing.api.TestApiListener.NextEvent;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
+import com.ning.billing.entitlement.api.Entitlement;
 import com.ning.billing.junction.DefaultBlockingState;
 
 public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbeddedDB {
@@ -36,20 +43,25 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         // This is a simple smoke test at the dao level only to make sure we do sane
         // things in case there are no future add-on cancellation events to add in the stream.
         // See TestEntitlementUtils for a more comprehensive test
-        final UUID blockableId = UUID.randomUUID();
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), clock.getUTCToday(), callContext);
+        assertListenerStatus();
+
         final BlockingStateType type = BlockingStateType.SUBSCRIPTION;
         final String state = "state";
         final String service = "service";
 
         // Verify initial state
-        Assert.assertEquals(blockingStateDao.getBlockingAll(blockableId, internalCallContext).size(), 0);
+        Assert.assertEquals(blockingStateDao.getBlockingAll(entitlement.getId(), type, internalCallContext).size(), 0);
 
         // Set a state
         final DateTime stateDateTime = new DateTime(2013, 5, 6, 10, 11, 12, DateTimeZone.UTC);
-        final BlockingState blockingState = new DefaultBlockingState(blockableId, type, state, service, false, false, false, stateDateTime);
+        final BlockingState blockingState = new DefaultBlockingState(entitlement.getId(), type, state, service, false, false, false, stateDateTime);
         blockingStateDao.setBlockingState(blockingState, clock, internalCallContext);
 
-        Assert.assertEquals(blockingStateDao.getBlockingAll(blockableId, internalCallContext).size(), 1);
+        Assert.assertEquals(blockingStateDao.getBlockingAll(entitlement.getId(), type, internalCallContext).size(), 1);
     }
 
     // See https://github.com/killbill/killbill/issues/111
@@ -63,7 +75,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         final String serviceB = "service-B";
 
         // Verify initial state
-        Assert.assertEquals(blockingStateDao.getBlockingAll(blockableId, internalCallContext).size(), 0);
+        Assert.assertEquals(blockingStateDao.getBlockingAll(blockableId, type, internalCallContext).size(), 0);
 
         // Note: the checkers below rely on record_id ordering, not effective date
 
@@ -71,7 +83,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         final DateTime stateDateTime = new DateTime(2013, 5, 6, 10, 11, 12, DateTimeZone.UTC);
         final BlockingState blockingState1 = new DefaultBlockingState(blockableId, type, state, serviceA, false, false, false, stateDateTime);
         blockingStateDao.setBlockingState(blockingState1, clock, internalCallContext);
-        final List<BlockingState> blockingStates1 = blockingStateDao.getBlockingAll(blockableId, internalCallContext);
+        final List<BlockingState> blockingStates1 = blockingStateDao.getBlockingAll(blockableId, type, internalCallContext);
         Assert.assertEquals(blockingStates1.size(), 1);
         Assert.assertEquals(blockingStates1.get(0).getBlockedId(), blockableId);
         Assert.assertEquals(blockingStates1.get(0).getStateName(), state);
@@ -80,7 +92,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
 
         // Set the same state again - no change
         blockingStateDao.setBlockingState(blockingState1, clock, internalCallContext);
-        final List<BlockingState> blockingStates2 = blockingStateDao.getBlockingAll(blockableId, internalCallContext);
+        final List<BlockingState> blockingStates2 = blockingStateDao.getBlockingAll(blockableId, type, internalCallContext);
         Assert.assertEquals(blockingStates2.size(), 1);
         Assert.assertEquals(blockingStates2.get(0).getBlockedId(), blockableId);
         Assert.assertEquals(blockingStates2.get(0).getStateName(), state);
@@ -90,7 +102,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         // Set the state for service B
         final BlockingState blockingState2 = new DefaultBlockingState(blockableId, type, state, serviceB, false, false, false, stateDateTime);
         blockingStateDao.setBlockingState(blockingState2, clock, internalCallContext);
-        final List<BlockingState> blockingStates3 = blockingStateDao.getBlockingAll(blockableId, internalCallContext);
+        final List<BlockingState> blockingStates3 = blockingStateDao.getBlockingAll(blockableId, type, internalCallContext);
         Assert.assertEquals(blockingStates3.size(), 2);
         Assert.assertEquals(blockingStates3.get(0).getBlockedId(), blockableId);
         Assert.assertEquals(blockingStates3.get(0).getStateName(), state);
@@ -105,7 +117,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         final DateTime stateDateTime2 = new DateTime(2013, 6, 6, 10, 11, 12, DateTimeZone.UTC);
         final BlockingState blockingState3 = new DefaultBlockingState(blockableId, type, state, serviceA, false, false, false, stateDateTime2);
         blockingStateDao.setBlockingState(blockingState3, clock, internalCallContext);
-        final List<BlockingState> blockingStates4 = blockingStateDao.getBlockingAll(blockableId, internalCallContext);
+        final List<BlockingState> blockingStates4 = blockingStateDao.getBlockingAll(blockableId, type, internalCallContext);
         Assert.assertEquals(blockingStates4.size(), 2);
         Assert.assertEquals(blockingStates4.get(0).getBlockedId(), blockableId);
         Assert.assertEquals(blockingStates4.get(0).getStateName(), state);
@@ -120,7 +132,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         final DateTime stateDateTime3 = new DateTime(2013, 2, 6, 10, 11, 12, DateTimeZone.UTC);
         final BlockingState blockingState4 = new DefaultBlockingState(blockableId, type, state, serviceA, false, false, false, stateDateTime3);
         blockingStateDao.setBlockingState(blockingState4, clock, internalCallContext);
-        final List<BlockingState> blockingStates5 = blockingStateDao.getBlockingAll(blockableId, internalCallContext);
+        final List<BlockingState> blockingStates5 = blockingStateDao.getBlockingAll(blockableId, type, internalCallContext);
         Assert.assertEquals(blockingStates5.size(), 2);
         Assert.assertEquals(blockingStates5.get(0).getBlockedId(), blockableId);
         Assert.assertEquals(blockingStates5.get(0).getStateName(), state);
@@ -135,7 +147,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         final DateTime state2DateTime = new DateTime(2013, 12, 6, 10, 11, 12, DateTimeZone.UTC);
         final BlockingState blockingState5 = new DefaultBlockingState(blockableId, type, state2, serviceA, false, false, false, state2DateTime);
         blockingStateDao.setBlockingState(blockingState5, clock, internalCallContext);
-        final List<BlockingState> blockingStates6 = blockingStateDao.getBlockingAll(blockableId, internalCallContext);
+        final List<BlockingState> blockingStates6 = blockingStateDao.getBlockingAll(blockableId, type, internalCallContext);
         Assert.assertEquals(blockingStates6.size(), 3);
         Assert.assertEquals(blockingStates6.get(0).getBlockedId(), blockableId);
         Assert.assertEquals(blockingStates6.get(0).getStateName(), state);

@@ -199,7 +199,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     private Subscription fromEntitlement(final Entitlement entitlement, final InternalTenantContext internalTenantContext) {
 
-        final List<BlockingState> states = blockingStateDao.getBlockingState(entitlement.getId(), internalTenantContext);
+        final List<BlockingState> states = blockingStateDao.getBlockingState(entitlement.getId(), BlockingStateType.SUBSCRIPTION, internalTenantContext);
         final Subscription result = new DefaultSubscription((DefaultEntitlement) entitlement, states);
         return result;
     }

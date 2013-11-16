@@ -23,6 +23,7 @@ import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.util.entity.dao.EntityDao;
 
@@ -31,64 +32,67 @@ public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, Block
     /**
      * Returns the current state for that specific service
      *
-     * @param blockableId
-     * @param serviceName
-     * @param context
-     * @return
+     * @param blockableId       id of the blockable object
+     * @param blockingStateType blockable object type
+     * @param serviceName       name of the service
+     * @param context           call context
+     * @return current blocking state for that blockable object and service
      */
-    public BlockingState getBlockingStateForService(UUID blockableId, String serviceName, InternalTenantContext context);
+    public BlockingState getBlockingStateForService(UUID blockableId, BlockingStateType blockingStateType, String serviceName, InternalTenantContext context);
 
     /**
      * Returns the current state across all the services
      *
-     * @param blockableId
-     * @param context
-     * @return
+     * @param blockableId       id of the blockable object
+     * @param blockingStateType blockable object type
+     * @param context           call context
+     * @return list of current blocking states for that blockable object
      */
-    public List<BlockingState> getBlockingState(UUID blockableId, InternalTenantContext context);
+    public List<BlockingState> getBlockingState(UUID blockableId, BlockingStateType blockingStateType, InternalTenantContext context);
 
     /**
-     * Returns the state history  for that specific service
+     * Returns the state history for that specific service
      *
-     * @param blockableId
-     * @param serviceName
-     * @param context
-     * @return
+     * @param blockableId       id of the blockable object
+     * @param blockingStateType blockable object type
+     * @param serviceName       name of the service
+     * @param context           call context
+     * @return list of blocking states for that blockable object and service
      */
-    public List<BlockingState> getBlockingHistoryForService(UUID blockableId, String serviceName, InternalTenantContext context);
+    public List<BlockingState> getBlockingHistoryForService(UUID blockableId, BlockingStateType blockingStateType, String serviceName, InternalTenantContext context);
 
     /**
      * Return all the events (past and future) across all services
      *
-     * @param blockableId
-     * @param context
-     * @return
+     * @param blockableId       id of the blockable object
+     * @param blockingStateType blockable object type
+     * @param context           call context
+     * @return list of blocking states for that blockable object
      */
-    public List<BlockingState> getBlockingAll(UUID blockableId, InternalTenantContext context);
-
+    public List<BlockingState> getBlockingAll(UUID blockableId, BlockingStateType blockingStateType, InternalTenantContext context);
 
     /**
      * Return all events (past and future) across all services) for a given callcontext (account_record_id)
      *
-     * @param context
-     * @return
+     * @param context call context
+     * @return list of all blocking states for that account
      */
     public List<BlockingState> getBlockingAllForAccountRecordId(InternalTenantContext context);
 
     /**
      * Sets a new state for a specific service.
      *
-     * @param state
-     * @param clock
-     * @param context
+     * @param state   blocking state to set
+     * @param clock   system clock
+     * @param context call context
      */
     public void setBlockingState(BlockingState state, Clock clock, InternalCallContext context);
 
     /**
      * Unactive the blocking state
      *
-     * @param blockableId
-     * @param context
+     * @param blockableId blockable id to unactivate
+     * @param context     call context
      */
     public void unactiveBlockingState(UUID blockableId, final InternalCallContext context);
 

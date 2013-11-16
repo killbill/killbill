@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -28,13 +27,11 @@ import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.junction.DefaultBlockingState;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 
 public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testDao() {
-
 
         final UUID uuid = UUID.randomUUID();
         final String overdueStateName = "WayPassedItMan";
@@ -55,18 +52,14 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingStateDao.setBlockingState(state2, clock, internalCallContext);
 
-        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
-        Mockito.when(bundle.getId()).thenReturn(uuid);
+        Assert.assertEquals(blockingStateDao.getBlockingStateForService(uuid, BlockingStateType.ACCOUNT, service, internalCallContext).getStateName(), state2.getStateName());
 
-        Assert.assertEquals(blockingStateDao.getBlockingStateForService(uuid, service, internalCallContext).getStateName(), state2.getStateName());
-
-        final List<BlockingState> states = blockingStateDao.getBlockingHistoryForService(uuid, service, internalCallContext);
+        final List<BlockingState> states = blockingStateDao.getBlockingHistoryForService(uuid, BlockingStateType.ACCOUNT, service, internalCallContext);
         Assert.assertEquals(states.size(), 2);
 
         Assert.assertEquals(states.get(0).getStateName(), overdueStateName);
         Assert.assertEquals(states.get(1).getStateName(), overdueStateName2);
     }
-
 
     @Test(groups = "slow")
     public void testDaoHistory() throws Exception {
@@ -88,10 +81,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service2, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingStateDao.setBlockingState(state2, clock, internalCallContext);
 
-        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
-        Mockito.when(bundle.getId()).thenReturn(uuid);
-
-        final List<BlockingState> history2 = blockingStateDao.getBlockingAll(bundle.getId(), internalCallContext);
+        final List<BlockingState> history2 = blockingStateDao.getBlockingAll(uuid, BlockingStateType.ACCOUNT, internalCallContext);
         Assert.assertEquals(history2.size(), 2);
         Assert.assertEquals(history2.get(0).getStateName(), overdueStateName);
         Assert.assertEquals(history2.get(1).getStateName(), overdueStateName2);
