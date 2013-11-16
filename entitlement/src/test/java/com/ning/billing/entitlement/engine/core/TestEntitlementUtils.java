@@ -40,7 +40,6 @@ import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.entitlement.api.DefaultEntitlementApi;
-import com.ning.billing.entitlement.api.Entitlement;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.dao.BlockingStateSqlDao;
@@ -122,6 +121,22 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkActualBlockingStatesToCancel(cancelledBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime, false);
         // Verify also the blocking states API doesn't add too many events (now on disk)
         checkBlockingStatesDAO(cancelledBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveCancellationOrChangeDate, true);
+    }
+
+    @Test(groups = "slow", description = "Verify add-ons blocking states are not impacted for add-on IMM cancellations")
+    public void testCancellationBaseEOTAddOnIMM() throws Exception {
+        // Cancel the base plan
+        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.END_OF_TERM, callContext);
+        // No blocking event (EOT)
+        assertListenerStatus();
+
+        // Cancel the add-on
+        testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) addOnEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, callContext);
+        assertListenerStatus();
+
+        // Verify the blocking states API doesn't mix the dates (all blocking states are on disk)
+        checkBlockingStatesDAO(cancelledBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveCancellationOrChangeDate, clock.getUTCToday(), true);
     }
 
     @Test(groups = "slow", description = "Verify add-ons blocking states are not impacted by IMM cancellations")
@@ -319,12 +334,17 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     // Test the DAO
-    private void checkBlockingStatesDAO(final Entitlement baseEntitlement, final Entitlement addOnEntitlement, final LocalDate effectiveCancellationDate, final boolean isBaseCancelled) {
+    private void checkBlockingStatesDAO(final DefaultEntitlement baseEntitlement, final DefaultEntitlement addOnEntitlement, final LocalDate effectiveCancellationDate, final boolean isBaseCancelled) {
+        checkBlockingStatesDAO(baseEntitlement, addOnEntitlement, effectiveCancellationDate, effectiveCancellationDate, isBaseCancelled);
+    }
+
+    // Test the DAO
+    private void checkBlockingStatesDAO(final DefaultEntitlement baseEntitlement, final DefaultEntitlement addOnEntitlement, final LocalDate effectiveBaseCancellationDate, final LocalDate effectiveAddOnCancellationDate, final boolean isBaseCancelled) {
         final List<BlockingState> blockingStatesForBaseEntitlement = blockingStateDao.getBlockingAll(baseEntitlement.getId(), BlockingStateType.SUBSCRIPTION, internalCallContext);
         Assert.assertEquals(blockingStatesForBaseEntitlement.size(), isBaseCancelled ? 1 : 0);
         if (isBaseCancelled) {
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getBlockedId(), baseEntitlement.getId());
-            Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getEffectiveDate().toLocalDate(), effectiveCancellationDate);
+            Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getEffectiveDate().toLocalDate(), effectiveBaseCancellationDate);
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getType(), BlockingStateType.SUBSCRIPTION);
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getService(), EntitlementService.ENTITLEMENT_SERVICE_NAME);
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getStateName(), DefaultEntitlementApi.ENT_STATE_CANCELLED);
@@ -333,7 +353,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         final List<BlockingState> blockingStatesForAddOn = blockingStateDao.getBlockingAll(addOnEntitlement.getId(), BlockingStateType.SUBSCRIPTION, internalCallContext);
         Assert.assertEquals(blockingStatesForAddOn.size(), 1);
         Assert.assertEquals(blockingStatesForAddOn.get(0).getBlockedId(), addOnEntitlement.getId());
-        Assert.assertEquals(blockingStatesForAddOn.get(0).getEffectiveDate().toLocalDate(), effectiveCancellationDate);
+        Assert.assertEquals(blockingStatesForAddOn.get(0).getEffectiveDate().toLocalDate(), effectiveAddOnCancellationDate);
         Assert.assertEquals(blockingStatesForAddOn.get(0).getType(), BlockingStateType.SUBSCRIPTION);
         Assert.assertEquals(blockingStatesForAddOn.get(0).getService(), EntitlementService.ENTITLEMENT_SERVICE_NAME);
         Assert.assertEquals(blockingStatesForAddOn.get(0).getStateName(), DefaultEntitlementApi.ENT_STATE_CANCELLED);

@@ -35,8 +35,10 @@ import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
+import com.ning.billing.entitlement.api.DefaultEntitlementApi;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.engine.core.EventsStream;
@@ -228,10 +230,12 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
             // Inject the extra blocking states into the stream if needed
             for (final BlockingState blockingState : blockingStatesNotOnDisk) {
-                // In case we're coming from getBlockingHistoryForService / getBlockingAll, make sure we don't add
-                // blocking states for other add-ons on that base subscription
-                if (blockingStateType == null ||
-                    (BlockingStateType.SUBSCRIPTION.equals(blockingStateType) && blockingState.getBlockedId().equals(blockableId))) {
+                if ((blockingStateType == null ||
+                     // In case we're coming from getBlockingHistoryForService / getBlockingAll, make sure we don't add
+                     // blocking states for other add-ons on that base subscription
+                     (BlockingStateType.SUBSCRIPTION.equals(blockingStateType) && blockingState.getBlockedId().equals(blockableId))) &&
+                    // If this entitlement is actually already cancelled, don't add the cancellation event we computed from subscription events (wrong)
+                    !isEntitlementCancelled(blockingState.getBlockedId(), blockingStatesOnDiskCopy)) {
                     final BlockingStateModelDao blockingStateModelDao = new BlockingStateModelDao(blockingState, now, now);
                     blockingStatesOnDiskCopy.add(BlockingStateModelDao.toBlockingState(blockingStateModelDao));
                 }
@@ -240,5 +244,20 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
         // Return the sorted list
         return BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStatesOnDiskCopy);
+    }
+
+    private boolean isEntitlementCancelled(final UUID blockedId, final Iterable<BlockingState> blockingStates) {
+        // If this entitlement is already cancelled, there is nothing to do
+        return Iterables.<BlockingState>tryFind(blockingStates,
+                                                new Predicate<BlockingState>() {
+                                                    @Override
+                                                    public boolean apply(final BlockingState input) {
+                                                        return input.getBlockedId().equals(blockedId) &&
+                                                               BlockingStateType.SUBSCRIPTION.equals(input.getType()) &&
+                                                               EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) &&
+                                                               DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName());
+                                                    }
+                                                })
+                        .orNull() != null;
     }
 }
