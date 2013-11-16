@@ -56,6 +56,11 @@ import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.entitlement.api.SubscriptionApiException;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.events.InvoiceCreationInternalEvent;
+import com.ning.billing.events.NullInvoiceInternalEvent;
+import com.ning.billing.events.PaymentErrorInternalEvent;
+import com.ning.billing.events.PaymentInfoInternalEvent;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -68,11 +73,6 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.events.InvoiceCreationInternalEvent;
-import com.ning.billing.events.NullInvoiceInternalEvent;
-import com.ning.billing.events.PaymentErrorInternalEvent;
-import com.ning.billing.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.userrequest.CompletionUserRequestBase;
 
 import com.google.inject.Inject;
@@ -137,7 +137,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                                        ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
 
-
                 final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
                 final LocalDate inputLocalDate = toLocalDate(accountId, requestedDate, callContext);
                 final UUID bundleId = entitlement.getBundleId() != null ? UUID.fromString(entitlement.getBundleId()) : null;
@@ -159,6 +158,20 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         final EntitlementCallCompletion<Entitlement> callCompletionCreation = new EntitlementCallCompletion<Entitlement>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
+    }
+
+    @PUT
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
+    @Produces(APPLICATION_JSON)
+    public Response uncancelEntitlementPlan(@PathParam("subscriptionId") final String subscriptionId,
+                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                            @HeaderParam(HDR_REASON) final String reason,
+                                            @HeaderParam(HDR_COMMENT) final String comment,
+                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
+        final UUID uuid = UUID.fromString(subscriptionId);
+        final Entitlement current = entitlementApi.getEntitlementForId(uuid, context.createContext(createdBy, reason, comment, request));
+        current.uncancelEntitlement(context.createContext(createdBy, reason, comment, request));
+        return Response.status(Status.OK).build();
     }
 
     @PUT
@@ -220,8 +233,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final EntitlementCallCompletion<Response> callCompletionCreation = new EntitlementCallCompletion<Response>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
-
-
 
     @DELETE
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
