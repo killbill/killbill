@@ -27,6 +27,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 import com.ning.billing.beatrix.integration.TestIntegrationBase;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.config.OverdueConfig;
@@ -77,11 +78,11 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
             await().atMost(10, SECONDS).until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
-                    return expected.equals(blockingApi.getBlockingStateForService(account, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName());
+                    return expected.equals(blockingApi.getBlockingStateForService(account.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName());
                 }
             });
         } catch (Exception e) {
-            Assert.assertEquals(blockingApi.getBlockingStateForService(account, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName(), expected, "Got exception: " + e.toString());
+            Assert.assertEquals(blockingApi.getBlockingStateForService(account.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName(), expected, "Got exception: " + e.toString());
         }
     }
 }

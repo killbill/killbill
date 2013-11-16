@@ -98,7 +98,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
     private DefaultBlockingAggregator getBlockedStateSubscription(final SubscriptionBase subscription, final InternalTenantContext context) throws BlockingApiException {
         final DefaultBlockingAggregator result = new DefaultBlockingAggregator();
         if (subscription != null) {
-            final DefaultBlockingAggregator subscriptionState = getBlockedStateForId(subscription.getId(), context);
+            final DefaultBlockingAggregator subscriptionState = getBlockedStateForId(subscription.getId(), BlockingStateType.SUBSCRIPTION, context);
             if (subscriptionState != null) {
                 result.or(subscriptionState);
             }
@@ -125,7 +125,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
 
     private DefaultBlockingAggregator getBlockedStateBundle(final SubscriptionBaseBundle bundle, final InternalTenantContext context) {
         final DefaultBlockingAggregator result = getBlockedStateAccountId(bundle.getAccountId(), context);
-        final DefaultBlockingAggregator bundleState = getBlockedStateForId(bundle.getId(), context);
+        final DefaultBlockingAggregator bundleState = getBlockedStateForId(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, context);
         if (bundleState != null) {
             result.or(bundleState);
         }
@@ -134,20 +134,20 @@ public class DefaultBlockingChecker implements BlockingChecker {
 
     private DefaultBlockingAggregator getBlockedStateAccount(final Account account, final InternalTenantContext context) {
         if (account != null) {
-            return getBlockedStateForId(account.getId(), context);
+            return getBlockedStateForId(account.getId(), BlockingStateType.ACCOUNT, context);
         }
         return new DefaultBlockingAggregator();
     }
 
     private DefaultBlockingAggregator getBlockedStateAccountId(final UUID accountId, final InternalTenantContext context) {
-        return getBlockedStateForId(accountId, context);
+        return getBlockedStateForId(accountId, BlockingStateType.ACCOUNT, context);
     }
 
-    private DefaultBlockingAggregator getBlockedStateForId(final UUID blockableId, final InternalTenantContext context) {
+    private DefaultBlockingAggregator getBlockedStateForId(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
         final DefaultBlockingAggregator result = new DefaultBlockingAggregator();
         if (blockableId != null) {
             // Last states across services
-            final List<BlockingState> blockableState = dao.getBlockingState(blockableId, context);
+            final List<BlockingState> blockableState = dao.getBlockingState(blockableId, blockingStateType, context);
             for (BlockingState cur : blockableState) {
                 result.or(cur);
             }

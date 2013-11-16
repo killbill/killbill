@@ -28,6 +28,7 @@ import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 
@@ -42,8 +43,8 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     // TODO This mock class should also check that events are past or present except for getBlockingAll
 
     @Override
-    public BlockingState getBlockingStateForService(final UUID blockableId, final String serviceName, final InternalTenantContext context) {
-        final List<BlockingState> states = getBlockingAll(blockableId, context);
+    public BlockingState getBlockingStateForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
+        final List<BlockingState> states = getBlockingAll(blockableId, blockingStateType, context);
         if (states == null) {
             return null;
         }
@@ -57,7 +58,7 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     }
 
     @Override
-    public List<BlockingState> getBlockingState(final UUID blockableId, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingState(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
         final List<BlockingState> blockingStatesForId = blockingStates.get(blockableId);
         if (blockingStatesForId == null) {
             return new ArrayList<BlockingState>();
@@ -74,7 +75,7 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     }
 
     @Override
-    public List<BlockingState> getBlockingHistoryForService(final UUID overdueableId, final String serviceName, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingHistoryForService(final UUID overdueableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
         final List<BlockingState> states = blockingStates.get(overdueableId);
         if (states == null) {
             return new ArrayList<BlockingState>();
@@ -91,7 +92,7 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     }
 
     @Override
-    public List<BlockingState> getBlockingAll(final UUID blockableId, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingAll(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
         final List<BlockingState> states = blockingStates.get(blockableId);
         // Note! The returned list cannot be immutable!
         return states == null ? new ArrayList<BlockingState>() : states;

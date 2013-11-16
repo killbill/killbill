@@ -36,6 +36,7 @@ import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.engine.core.EventsStream;
@@ -132,31 +133,31 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public BlockingState getBlockingStateForService(final UUID blockableId, final String serviceName, final InternalTenantContext context) {
-        return delegate.getBlockingStateForService(blockableId, serviceName, context);
+    public BlockingState getBlockingStateForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
+        return delegate.getBlockingStateForService(blockableId, blockingStateType, serviceName, context);
     }
 
     @Override
-    public List<BlockingState> getBlockingState(final UUID blockableId, final InternalTenantContext context) {
-        return delegate.getBlockingState(blockableId, context);
+    public List<BlockingState> getBlockingState(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
+        return delegate.getBlockingState(blockableId, blockingStateType, context);
     }
 
     @Override
-    public List<BlockingState> getBlockingHistoryForService(final UUID blockableId, final String serviceName, final InternalTenantContext context) {
-        final List<BlockingState> statesOnDisk = delegate.getBlockingHistoryForService(blockableId, serviceName, context);
-        return addBlockingStatesNotOnDisk(blockableId, statesOnDisk, context);
+    public List<BlockingState> getBlockingHistoryForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
+        final List<BlockingState> statesOnDisk = delegate.getBlockingHistoryForService(blockableId, blockingStateType, serviceName, context);
+        return addBlockingStatesNotOnDisk(blockableId, blockingStateType, statesOnDisk, context);
     }
 
     @Override
-    public List<BlockingState> getBlockingAll(final UUID blockableId, final InternalTenantContext context) {
-        final List<BlockingState> statesOnDisk = delegate.getBlockingAll(blockableId, context);
-        return addBlockingStatesNotOnDisk(blockableId, statesOnDisk, context);
+    public List<BlockingState> getBlockingAll(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
+        final List<BlockingState> statesOnDisk = delegate.getBlockingAll(blockableId, blockingStateType, context);
+        return addBlockingStatesNotOnDisk(blockableId, blockingStateType, statesOnDisk, context);
     }
 
     @Override
     public List<BlockingState> getBlockingAllForAccountRecordId(final InternalTenantContext context) {
         final List<BlockingState> statesOnDisk = delegate.getBlockingAllForAccountRecordId(context);
-        return addBlockingStatesNotOnDisk(null, statesOnDisk, context);
+        return addBlockingStatesNotOnDisk(null, null, statesOnDisk, context);
     }
 
     @Override
@@ -172,6 +173,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     // Add blocking states for add-ons, which would be impacted by a future cancellation or change of their base plan
     // See DefaultEntitlement#blockAddOnsIfRequired
     private List<BlockingState> addBlockingStatesNotOnDisk(@Nullable final UUID blockableId,
+                                                           @Nullable final BlockingStateType blockingStateType,
                                                            final List<BlockingState> blockingStatesOnDisk,
                                                            final InternalTenantContext context) {
         final Collection<BlockingState> blockingStatesOnDiskCopy = new LinkedList<BlockingState>(blockingStatesOnDisk);
@@ -179,7 +181,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         // Find all base entitlements that we care about (for which we want to find future cancelled add-ons)
         final Iterable<SubscriptionBase> baseSubscriptionsToConsider;
         try {
-            if (blockableId == null) {
+            if (blockingStateType == null) {
                 // We're coming from getBlockingAllForAccountRecordId
                 final Iterable<SubscriptionBase> subscriptions = Iterables.<SubscriptionBase>concat(subscriptionInternalApi.getSubscriptionsForAccount(context).values());
                 baseSubscriptionsToConsider = Iterables.<SubscriptionBase>filter(subscriptions,
@@ -190,24 +192,21 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                                                                                                 !EntitlementState.CANCELLED.equals(input.getState());
                                                                                      }
                                                                                  });
-            } else {
-                // We're coming from getBlockingHistoryForService / getBlockingAll, but we don't know the blocking type
-                final SubscriptionBase addOnSubscription;
-                try {
-                    addOnSubscription = subscriptionInternalApi.getSubscriptionFromId(blockableId, context);
-                } catch (SubscriptionBaseApiException ignored) {
-                    // blockable id points to an account or bundle, in which case there are no extra blocking states to add
-                    return blockingStatesOnDisk;
-                }
+            } else if (BlockingStateType.SUBSCRIPTION.equals(blockingStateType)) {
+                // We're coming from getBlockingHistoryForService / getBlockingAll
+                final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(blockableId, context);
 
                 // blockable id points to a subscription, but make sure it's an add-on
-                if (ProductCategory.ADD_ON.equals(addOnSubscription.getCategory())) {
-                    final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(addOnSubscription.getBundleId(), context);
+                if (ProductCategory.ADD_ON.equals(subscription.getCategory())) {
+                    final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(subscription.getBundleId(), context);
                     baseSubscriptionsToConsider = ImmutableList.<SubscriptionBase>of(baseSubscription);
                 } else {
                     // blockable id points to a base or standalone subscription, there is nothing to do
                     return blockingStatesOnDisk;
                 }
+            } else {
+                // blockable id points to an account or bundle, in which case there are no extra blocking states to add
+                return blockingStatesOnDisk;
             }
         } catch (SubscriptionBaseApiException e) {
             log.error("Error retrieving subscriptions for account record id " + context.getAccountRecordId(), e);

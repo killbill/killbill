@@ -300,7 +300,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     // Test the DAO
     private void checkBlockingStatesDAO(final Entitlement baseEntitlement, final Entitlement addOnEntitlement, final LocalDate effectiveCancellationDate, final boolean isBaseCancelled) {
-        final List<BlockingState> blockingStatesForBaseEntitlement = blockingStateDao.getBlockingAll(baseEntitlement.getId(), internalCallContext);
+        final List<BlockingState> blockingStatesForBaseEntitlement = blockingStateDao.getBlockingAll(baseEntitlement.getId(), BlockingStateType.SUBSCRIPTION, internalCallContext);
         Assert.assertEquals(blockingStatesForBaseEntitlement.size(), isBaseCancelled ? 1 : 0);
         if (isBaseCancelled) {
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getBlockedId(), baseEntitlement.getId());
@@ -310,7 +310,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getStateName(), DefaultEntitlementApi.ENT_STATE_CANCELLED);
         }
 
-        final List<BlockingState> blockingStatesForAddOn = blockingStateDao.getBlockingAll(addOnEntitlement.getId(), internalCallContext);
+        final List<BlockingState> blockingStatesForAddOn = blockingStateDao.getBlockingAll(addOnEntitlement.getId(), BlockingStateType.SUBSCRIPTION, internalCallContext);
         Assert.assertEquals(blockingStatesForAddOn.size(), 1);
         Assert.assertEquals(blockingStatesForAddOn.get(0).getBlockedId(), addOnEntitlement.getId());
         Assert.assertEquals(blockingStatesForAddOn.get(0).getEffectiveDate().toLocalDate(), effectiveCancellationDate);

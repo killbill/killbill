@@ -32,6 +32,7 @@ import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.block.BlockingChecker.BlockingAggregator;
@@ -124,9 +125,9 @@ public class EventsStreamBuilder {
             throw new EntitlementApiException(e);
         }
 
-        final List<BlockingState> subscriptionEntitlementStates = blockingStateDao.getBlockingHistoryForService(subscription.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
-        final List<BlockingState> bundleEntitlementStates = blockingStateDao.getBlockingHistoryForService(bundle.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
-        final List<BlockingState> accountEntitlementStates = blockingStateDao.getBlockingHistoryForService(account.getId(), EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
+        final List<BlockingState> subscriptionEntitlementStates = blockingStateDao.getBlockingHistoryForService(subscription.getId(), BlockingStateType.SUBSCRIPTION, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
+        final List<BlockingState> bundleEntitlementStates = blockingStateDao.getBlockingHistoryForService(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
+        final List<BlockingState> accountEntitlementStates = blockingStateDao.getBlockingHistoryForService(account.getId(), BlockingStateType.ACCOUNT, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
 
         final BlockingAggregator blockingAggregator;
         try {

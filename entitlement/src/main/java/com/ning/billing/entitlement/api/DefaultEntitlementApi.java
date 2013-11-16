@@ -224,7 +224,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
     public void pause(final UUID bundleId, final LocalDate localEffectiveDate, final CallContext context) throws EntitlementApiException {
         try {
             final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
-            final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
+            final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
             if (currentState != null && currentState.getStateName().equals(ENT_STATE_BLOCKED)) {
                 throw new EntitlementApiException(ErrorCode.ENT_ALREADY_BLOCKED, bundleId);
             }
@@ -266,7 +266,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
     public void resume(final UUID bundleId, final LocalDate localEffectiveDate, final CallContext context) throws EntitlementApiException {
         try {
             final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
-            final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
+            final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
             if (currentState == null || currentState.getStateName().equals(ENT_STATE_CLEAR)) {
                 // Nothing to do.
                 return;

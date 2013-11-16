@@ -33,6 +33,7 @@ import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.NonEntityDao;
@@ -43,6 +44,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Ordering;
 
@@ -77,28 +79,28 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
     }
 
     @Override
-    public BlockingState getBlockingStateForService(final UUID blockableId, final String serviceName, final InternalTenantContext context) {
+    public BlockingState getBlockingStateForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<BlockingState>() {
             @Override
             public BlockingState inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 // Upper bound time limit is now
                 final Date upTo = clock.getUTCNow().toDate();
                 final BlockingStateModelDao model = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingStateForService(blockableId, serviceName, upTo, context);
-                return BlockingStateModelDao.toBlockingState(model);
-
+                return (model != null && model.getType().equals(blockingStateType)) ? BlockingStateModelDao.toBlockingState(model) : null;
             }
         });
     }
 
     @Override
-    public List<BlockingState> getBlockingState(final UUID blockableId, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingState(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 // Upper bound time limit is now
                 final Date upTo = clock.getUTCNow().toDate();
                 final List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingState(blockableId, upTo, context);
-                return new ArrayList<BlockingState>(Collections2.transform(models, new Function<BlockingStateModelDao, BlockingState>() {
+                final Collection<BlockingStateModelDao> modelsFiltered = filterBlockingStates(models, blockingStateType);
+                return new ArrayList<BlockingState>(Collections2.transform(modelsFiltered, new Function<BlockingStateModelDao, BlockingState>() {
                     @Override
                     public BlockingState apply(@Nullable final BlockingStateModelDao src) {
                         return BlockingStateModelDao.toBlockingState(src);
@@ -109,12 +111,14 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
     }
 
     @Override
-    public List<BlockingState> getBlockingHistoryForService(final UUID blockableId, final String serviceName, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingHistoryForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
-                return new ArrayList<BlockingState>(Collections2.transform(sqlDao.getBlockingHistoryForService(blockableId, serviceName, context),
+                final List<BlockingStateModelDao> models = sqlDao.getBlockingHistoryForService(blockableId, serviceName, context);
+                final Collection<BlockingStateModelDao> modelsFiltered = filterBlockingStates(models, blockingStateType);
+                return new ArrayList<BlockingState>(Collections2.transform(modelsFiltered,
                                                                            new Function<BlockingStateModelDao, BlockingState>() {
                                                                                @Override
                                                                                public BlockingState apply(@Nullable final BlockingStateModelDao src) {
@@ -126,12 +130,14 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
     }
 
     @Override
-    public List<BlockingState> getBlockingAll(final UUID blockableId, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingAll(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
-                return new ArrayList<BlockingState>(Collections2.transform(sqlDao.getBlockingAll(blockableId, context),
+                final List<BlockingStateModelDao> models = sqlDao.getBlockingAll(blockableId, context);
+                final Collection<BlockingStateModelDao> modelsFiltered = filterBlockingStates(models, blockingStateType);
+                return new ArrayList<BlockingState>(Collections2.transform(modelsFiltered,
                                                                            new Function<BlockingStateModelDao, BlockingState>() {
                                                                                @Override
                                                                                public BlockingState apply(@Nullable final BlockingStateModelDao src) {
@@ -219,5 +225,15 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
                 return null;
             }
         });
+    }
+
+    private Collection<BlockingStateModelDao> filterBlockingStates(final Collection<BlockingStateModelDao> models, final BlockingStateType blockingStateType) {
+        return Collections2.<BlockingStateModelDao>filter(models,
+                                                          new Predicate<BlockingStateModelDao>() {
+                                                              @Override
+                                                              public boolean apply(final BlockingStateModelDao input) {
+                                                                  return input.getType().equals(blockingStateType);
+                                                              }
+                                                          });
     }
 }

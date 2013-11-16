@@ -19,13 +19,11 @@ package com.ning.billing.overdue.glue;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-
-import com.ning.billing.entitlement.api.Blockable;
-import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.clock.ClockMock;
+import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.junction.DefaultBlockingState;
 
@@ -47,107 +45,23 @@ public class ApplicatorMockJunctionModule extends AbstractModule {
         }
 
         @Override
-        public BlockingState getBlockingStateForService(final Blockable blockable, final String serviceName, final InternalTenantContext context) {
-            return new BlockingState() {
-
-                @Override
-                public UUID getBlockedId() {
-                    return blockable.getId();
-                }
-
-                @Override
-                public String getStateName() {
-                    return DefaultBlockingState.CLEAR_STATE_NAME;
-                }
-
-                @Override
-                public BlockingStateType getType() {
-                    return BlockingStateType.ACCOUNT;
-                }
-
-                @Override
-                public DateTime getEffectiveDate() {
-                    return null;
-                }
-
-                @Override
-                public boolean isBlockChange() {
-                    return false;
-                }
-
-                @Override
-                public boolean isBlockEntitlement() {
-                    return false;
-                }
-
-                @Override
-                public boolean isBlockBilling() {
-                    return false;
-                }
-
-                @Override
-                public int compareTo(final BlockingState arg0) {
-                    return 0;
-                }
-
-                @Override
-                public String getDescription() {
-                    return null;
-                }
-
-                @Override
-                public String getService() {
-                    return "whatever";
-                }
-
-                @Override
-                public UUID getId() {
-                    return UUID.randomUUID();
-                }
-
-                @Override
-                public DateTime getCreatedDate() {
-                    return null;
-                }
-
-                @Override
-                public DateTime getUpdatedDate() {
-                    return null;
-                }
-            };
+        public BlockingState getBlockingStateForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
+            if (blockingState != null && blockingState.getBlockedId().equals(blockableId)) {
+                return blockingState;
+            } else {
+                return DefaultBlockingState.getClearState(blockingStateType, serviceName, new ClockMock());
+            }
         }
 
         @Override
-        public BlockingState getBlockingStateForService(final UUID blockableId, final String serviceName, final InternalTenantContext context) {
+        public List<BlockingState> getBlockingAll(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
             throw new UnsupportedOperationException();
         }
-
-        @Override
-        public List<BlockingState> getBlockingHistoryForService(final Blockable blockable, final String serviceName, final InternalTenantContext context) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<BlockingState> getBlockingHistoryForService(final UUID blockableId, final String serviceName, final InternalTenantContext context) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<BlockingState> getBlockingAll(final Blockable blockable, final InternalTenantContext context) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<BlockingState> getBlockingAll(final UUID blockableId, final InternalTenantContext context) {
-            throw new UnsupportedOperationException();
-        }
-
 
         @Override
         public void setBlockingState(final BlockingState state, final InternalCallContext context) {
             blockingState = state;
         }
-
     }
 
     public void installBlockingApi() {
