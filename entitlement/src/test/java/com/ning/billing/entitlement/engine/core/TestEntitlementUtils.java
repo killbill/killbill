@@ -44,6 +44,8 @@ import com.ning.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.dao.BlockingStateSqlDao;
 
+import com.google.common.base.Objects;
+
 public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     private BlockingStateSqlDao sqlDao;
@@ -53,11 +55,12 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     private DateTime baseEffectiveEOTCancellationOrChangeDateTime;
     private LocalDate baseEffectiveCancellationOrChangeDate;
 
+    private final LocalDate initialDate = new LocalDate(2013, 8, 8);
+
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         sqlDao = dbi.onDemand(BlockingStateSqlDao.class);
 
-        final LocalDate initialDate = new LocalDate(2013, 8, 8);
         clock.setDay(initialDate);
         final Account account = accountApi.createAccount(getAccountData(7), callContext);
 
@@ -100,8 +103,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkFutureBlockingStatesToCancel(addOnEntitlement, null, null);
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, addOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime);
         // and for the "write" path (which will be exercised when the future notification kicks in).
-        // Note that no event are computed because the add-on is not cancelled yet
-        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, addOnEntitlement, null, false);
+        checkActualBlockingStatesToCancel(cancelledBaseEntitlement, addOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime, false);
         // Verify also the blocking states DAO adds events not on disk
         checkBlockingStatesDAO(baseEntitlement, addOnEntitlement, baseEffectiveCancellationOrChangeDate, true);
 
@@ -137,6 +139,17 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Verify the blocking states API doesn't mix the dates (all blocking states are on disk)
         checkBlockingStatesDAO(cancelledBaseEntitlement, cancelledAddOnEntitlement, baseEffectiveCancellationOrChangeDate, clock.getUTCToday(), true);
+    }
+
+    @Test(groups = "slow", description = "Verify add-ons blocking states are added for IMM billing / EOT entitlement cancellations")
+    public void testCancellationBillingIMMEntitlementEOT() throws Exception {
+        // Cancel the base plan
+        testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL);
+        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.IMMEDIATE, callContext);
+        assertListenerStatus();
+
+        // Verify the blocking states API sees the EOT cancellation (add-on blocking state not on disk)
+        checkBlockingStatesDAO(cancelledBaseEntitlement, addOnEntitlement, baseEffectiveCancellationOrChangeDate, true);
     }
 
     @Test(groups = "slow", description = "Verify add-ons blocking states are not impacted by IMM cancellations")
@@ -219,8 +232,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkFutureBlockingStatesToCancel(addOnEntitlement, null, null);
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, addOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime);
         // ...and for the "write" path (which will be exercised when the future notification kicks in).
-        // Note that no event are computed because the add-on is not cancelled yet
-        checkActualBlockingStatesToCancel(changedBaseEntitlement, addOnEntitlement, null, false);
+        checkActualBlockingStatesToCancel(changedBaseEntitlement, addOnEntitlement, baseEffectiveEOTCancellationOrChangeDateTime, false);
         // Verify also the blocking states DAO adds events not on disk
         checkBlockingStatesDAO(changedBaseEntitlement, addOnEntitlement, baseEffectiveCancellationOrChangeDate, false);
 
@@ -314,7 +326,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     // Test the "write" path
     private void checkActualBlockingStatesToCancel(final DefaultEntitlement baseEntitlement, final DefaultEntitlement addOnEntitlement, @Nullable final DateTime effectiveCancellationDateTime, final boolean approximateDateCheck) throws EntitlementApiException {
-        final Collection<BlockingState> blockingStatesForCancellation = computeBlockingStatesForAssociatedAddons(baseEntitlement, effectiveCancellationDateTime);
+        final Collection<BlockingState> blockingStatesForCancellation = computeBlockingStatesForAssociatedAddons(baseEntitlement, Objects.firstNonNull(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
         if (effectiveCancellationDateTime == null) {
             Assert.assertEquals(blockingStatesForCancellation.size(), 0);
         } else {

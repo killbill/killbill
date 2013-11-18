@@ -20,6 +20,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -222,24 +224,35 @@ public class EventsStream {
 
     private Collection<BlockingState> computeAddonsBlockingStatesForNextSubscriptionBaseEvent(final DateTime effectiveDate,
                                                                                               final boolean useBillingEffectiveDate) {
-        // Compute the transition trigger
-        final Iterable<SubscriptionBaseTransition> pendingSubscriptionBaseTransitions = getPendingSubscriptionEvents(effectiveDate, SubscriptionBaseTransitionType.CHANGE, SubscriptionBaseTransitionType.CANCEL);
-        if (!pendingSubscriptionBaseTransitions.iterator().hasNext()) {
-            return ImmutableList.<BlockingState>of();
+        SubscriptionBaseTransition subscriptionBaseTransitionTrigger = null;
+        if (!isEntitlementFutureCancelled()) {
+            // Compute the transition trigger (either subscription cancel or change)
+            final Iterable<SubscriptionBaseTransition> pendingSubscriptionBaseTransitions = getPendingSubscriptionEvents(effectiveDate, SubscriptionBaseTransitionType.CHANGE, SubscriptionBaseTransitionType.CANCEL);
+            if (!pendingSubscriptionBaseTransitions.iterator().hasNext()) {
+                return ImmutableList.<BlockingState>of();
+            }
+
+            subscriptionBaseTransitionTrigger = pendingSubscriptionBaseTransitions.iterator().next();
         }
 
-        final SubscriptionBaseTransition subscriptionBaseTransitionTrigger = pendingSubscriptionBaseTransitions.iterator().next();
-        return computeAddonsBlockingStatesForSubscriptionBaseEvent(subscriptionBaseTransitionTrigger,
-                                                                   useBillingEffectiveDate ? subscriptionBaseTransitionTrigger.getEffectiveTransitionTime() : effectiveDate);
+        final Product baseTransitionTriggerNextProduct;
+        final DateTime blockingStateEffectiveDate;
+        if (subscriptionBaseTransitionTrigger == null) {
+            baseTransitionTriggerNextProduct = null;
+            blockingStateEffectiveDate = effectiveDate;
+        } else {
+            baseTransitionTriggerNextProduct = (EntitlementState.CANCELLED.equals(subscriptionBaseTransitionTrigger.getNextState()) ? null : subscriptionBaseTransitionTrigger.getNextPlan().getProduct());
+            blockingStateEffectiveDate = useBillingEffectiveDate ? subscriptionBaseTransitionTrigger.getEffectiveTransitionTime() : effectiveDate;
+        }
+
+        return computeAddonsBlockingStatesForSubscriptionBaseEvent(baseTransitionTriggerNextProduct, blockingStateEffectiveDate);
     }
 
-    private Collection<BlockingState> computeAddonsBlockingStatesForSubscriptionBaseEvent(final SubscriptionBaseTransition subscriptionBaseTransitionTrigger,
+    private Collection<BlockingState> computeAddonsBlockingStatesForSubscriptionBaseEvent(@Nullable final Product baseTransitionTriggerNextProduct,
                                                                                           final DateTime blockingStateEffectiveDate) {
         if (baseSubscription == null || baseSubscription.getLastActivePlan() == null || !ProductCategory.BASE.equals(baseSubscription.getLastActivePlan().getProduct().getCategory())) {
             return ImmutableList.<BlockingState>of();
         }
-
-        final Product baseTransitionTriggerNextProduct = EntitlementState.CANCELLED.equals(subscriptionBaseTransitionTrigger.getNextState()) ? null : subscriptionBaseTransitionTrigger.getNextPlan().getProduct();
 
         // Compute included and available addons for the new product
         final Collection<String> includedAddonsForProduct;
