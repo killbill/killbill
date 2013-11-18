@@ -305,7 +305,6 @@ public class DefaultEntitlementApi implements EntitlementApi {
         }
     }
 
-
     @Override
     public UUID transferEntitlements(final UUID sourceAccountId, final UUID destAccountId, final String externalKey, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
         return transferEntitlementsOverrideBillingPolicy(sourceAccountId, destAccountId, externalKey, effectiveDate, BillingActionPolicy.IMMEDIATE, context);
@@ -336,8 +335,12 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);
             final SubscriptionBaseBundle newBundle = subscriptionTransferApi.transferBundle(sourceAccountId, destAccountId, externalKey, requestedDate, true, cancelImm, context);
 
-            final BlockingState newBlockingState = new DefaultBlockingState(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, requestedDate);
-            entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(newBlockingState, contextWithValidAccountRecordId);
+            // Block all associated subscriptions - TODO Do we want to block the bundle as well (this will add an extra STOP_ENTITLEMENT event in the bundle timeline stream)?
+            // Note that there is no un-transfer at the moment, so we effectively add a blocking state on disk for all subscriptions
+            for (final SubscriptionBase subscriptionBase : subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), contextWithValidAccountRecordId)) {
+                final BlockingState blockingState = new DefaultBlockingState(subscriptionBase.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, requestedDate);
+                entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingState, contextWithValidAccountRecordId);
+            }
 
             return newBundle.getId();
         } catch (SubscriptionBaseTransferApiException e) {

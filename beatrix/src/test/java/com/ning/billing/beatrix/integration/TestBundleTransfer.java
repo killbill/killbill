@@ -18,22 +18,30 @@ package com.ning.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
+import com.ning.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
+import com.ning.billing.entitlement.api.Entitlement;
+import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
+import com.ning.billing.payment.api.PaymentStatus;
 
 import com.google.common.collect.ImmutableList;
 
@@ -211,5 +219,94 @@ public class TestBundleTransfer extends TestIntegrationBase {
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("99.98")));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
+    }
+
+    @Test(groups = "slow", description = "Test entitlement-level transfer with add-on")
+    public void testBundleTransferWithAddOn() throws Exception {
+        final LocalDate startDate = new LocalDate(2012, 4, 1);
+        clock.setDay(startDate);
+
+        // Share the BCD on both accounts for simplicity
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        final Account newAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String bpProductName = "Shotgun";
+        final String aoProductName = "Telescopic-Scope";
+
+        // Create the base plan
+        final String bundleExternalKey = UUID.randomUUID().toString();
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), bundleExternalKey, bpProductName, ProductCategory.BASE, term,
+                                                                                            NextEvent.CREATE, NextEvent.INVOICE);
+        subscriptionChecker.checkSubscriptionCreated(bpEntitlement.getId(), internalCallContext);
+        final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+
+        // Create the add-on
+        final DefaultEntitlement aoEntitlement = addAOEntitlementAndCheckForCompletion(bpEntitlement.getBundleId(), aoProductName, ProductCategory.ADD_ON, term,
+                                                                                       NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        final Invoice secondInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
+        paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), PaymentStatus.SUCCESS, secondInvoice.getId(), Currency.USD));
+
+        // Move past the phase for simplicity
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+        final Invoice thirdInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("999.95")),
+                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        paymentChecker.checkPayment(account.getId(), 2, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 5, 1), new BigDecimal("1249.90"), PaymentStatus.SUCCESS, thirdInvoice.getId(), Currency.USD));
+
+        // Align the transfer on the BCD to make pro-rations easier
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        // Move a bit the time to make sure notifications kick in
+        clock.setTime(new DateTime(2012, 6, 1, 1, 0, DateTimeZone.UTC));
+        assertListenerStatus();
+        final Invoice fourthInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("999.95")),
+                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        paymentChecker.checkPayment(account.getId(), 3, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 6, 1), new BigDecimal("1249.90"), PaymentStatus.SUCCESS, fourthInvoice.getId(), Currency.USD));
+
+        final DateTime now = clock.getUTCNow();
+        final LocalDate transferDay = now.toLocalDate();
+
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.TRANSFER, NextEvent.TRANSFER, NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE, NextEvent.PAYMENT);
+        final UUID newBundleId = entitlementApi.transferEntitlements(account.getId(), newAccount.getId(), bundleExternalKey, transferDay, callContext);
+        assertListenerStatus();
+
+        // Check the last invoice on the old account
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("999.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-999.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-249.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 6, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("1249.90")));
+
+        // Check the first invoice and payment on the new account
+        final Invoice firstInvoiceNewAccount = invoiceChecker.checkInvoice(newAccount.getId(), 1, callContext,
+                                                                           new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("999.95")),
+                                                                           new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        paymentChecker.checkPayment(newAccount.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 6, 1), new BigDecimal("1249.90"), PaymentStatus.SUCCESS, firstInvoiceNewAccount.getId(), Currency.USD));
+
+        // Check entitlements and subscriptions on the old account
+        final List<Entitlement> oldEntitlements = entitlementApi.getAllEntitlementsForBundle(bpEntitlement.getBundleId(), callContext);
+        Assert.assertEquals(oldEntitlements.size(), 2);
+        for (final Entitlement entitlement : oldEntitlements) {
+            final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+            Assert.assertEquals(subscription.getEffectiveStartDate(), startDate);
+            Assert.assertEquals(subscription.getEffectiveEndDate(), transferDay);
+            Assert.assertEquals(subscription.getBillingStartDate(), startDate);
+            Assert.assertEquals(subscription.getBillingEndDate(), transferDay);
+        }
+
+        // Check entitlements and subscriptions on the new account
+        final List<Entitlement> newEntitlements = entitlementApi.getAllEntitlementsForBundle(newBundleId, callContext);
+        Assert.assertEquals(newEntitlements.size(), 2);
+        for (final Entitlement entitlement : newEntitlements) {
+            final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+            Assert.assertEquals(subscription.getEffectiveStartDate(), transferDay);
+            Assert.assertNull(subscription.getEffectiveEndDate());
+            Assert.assertEquals(subscription.getBillingStartDate(), transferDay);
+            Assert.assertNull(subscription.getBillingEndDate());
+        }
     }
 }

@@ -23,12 +23,14 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionApiBase;
 import com.ning.billing.subscription.api.SubscriptionBaseApiService;
@@ -36,6 +38,9 @@ import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMi
 import com.ning.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import com.ning.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
 import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairException;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
@@ -49,14 +54,8 @@ import com.ning.billing.subscription.events.user.ApiEventCancel;
 import com.ning.billing.subscription.events.user.ApiEventChange;
 import com.ning.billing.subscription.events.user.ApiEventTransfer;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairException;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
-
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.clock.Clock;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -226,27 +225,29 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 }
                 final List<ExistingEvent> existingEvents = cur.getExistingEvents();
                 final ProductCategory productCategory = existingEvents.get(0).getPlanPhaseSpecifier().getProductCategory();
-                if (productCategory == ProductCategory.ADD_ON) {
-                    if (!transferAddOn) {
-                        continue;
-                    }
-                } else {
 
-                    // If BP or STANDALONE subscription, create the cancelWithRequestedDate event on effectiveCancelDate
+                // For future add-on cancellations, don't add a cancellation on disk right away (mirror the behavior
+                // on base plan cancellations, even though we don't support un-transfer today)
+                if (productCategory != ProductCategory.ADD_ON || cancelImmediately) {
+                    // Create the cancelWithRequestedDate event on effectiveCancelDate
                     final DateTime effectiveCancelDate = !cancelImmediately && oldSubscription.getChargedThroughDate() != null &&
                                                          effectiveTransferDate.isBefore(oldSubscription.getChargedThroughDate()) ?
                                                          oldSubscription.getChargedThroughDate() : effectiveTransferDate;
 
                     final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
-                                                                                    .setSubscriptionId(cur.getId())
-                                                                                    .setActiveVersion(cur.getActiveVersion())
-                                                                                    .setProcessedDate(clock.getUTCNow())
-                                                                                    .setEffectiveDate(effectiveCancelDate)
-                                                                                    .setRequestedDate(effectiveTransferDate)
-                                                                                    .setFromDisk(true));
+                                                                                         .setSubscriptionId(cur.getId())
+                                                                                         .setActiveVersion(cur.getActiveVersion())
+                                                                                         .setProcessedDate(clock.getUTCNow())
+                                                                                         .setEffectiveDate(effectiveCancelDate)
+                                                                                         .setRequestedDate(effectiveTransferDate)
+                                                                                         .setFromDisk(true));
 
                     TransferCancelData cancelData = new TransferCancelData(oldSubscription, cancelEvent);
                     transferCancelDataList.add(cancelData);
+                }
+
+                if (productCategory == ProductCategory.ADD_ON && !transferAddOn) {
+                    continue;
                 }
 
                 // We Align with the original subscription
@@ -257,12 +258,12 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
                 // Create the new subscription for the new bundle on the new account
                 final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
-                                                                                              .setId(UUID.randomUUID())
-                                                                                              .setBundleId(subscriptionBundleData.getId())
-                                                                                              .setCategory(productCategory)
-                                                                                              .setBundleStartDate(effectiveTransferDate)
-                                                                                              .setAlignStartDate(subscriptionAlignStartDate),
-                                                                                      ImmutableList.<SubscriptionBaseEvent>of());
+                                                                                                            .setId(UUID.randomUUID())
+                                                                                                            .setBundleId(subscriptionBundleData.getId())
+                                                                                                            .setCategory(productCategory)
+                                                                                                            .setBundleStartDate(effectiveTransferDate)
+                                                                                                            .setAlignStartDate(subscriptionAlignStartDate),
+                                                                                                    ImmutableList.<SubscriptionBaseEvent>of());
 
                 final List<SubscriptionBaseEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate, context);
                 final SubscriptionMigrationData curData = new SubscriptionMigrationData(defaultSubscriptionBase, events, null);
