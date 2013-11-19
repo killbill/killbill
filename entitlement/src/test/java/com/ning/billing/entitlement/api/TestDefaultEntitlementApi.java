@@ -40,7 +40,6 @@ import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
-
 public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
@@ -283,7 +282,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             assertEquals(e.getCode(), ErrorCode.ENT_ALREADY_BLOCKED.getCode());
         }
 
-
         final List<Entitlement> bundleEntitlements2 = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement2.getBundleId(), callContext);
         assertEquals(bundleEntitlements2.size(), 2);
         for (final Entitlement cur : bundleEntitlements2) {
@@ -319,6 +317,51 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         for (Entitlement cur : bundleEntitlements3) {
             assertEquals(cur.getState(), EntitlementState.ACTIVE);
         }
+    }
+
+    @Test(groups = "slow", description = "Test pause / unpause in the future")
+    public void testPauseUnpauseInTheFuture() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        // Create entitlement
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        assertListenerStatus();
+
+        // Get the phase event out of the way
+        testListener.pushExpectedEvents(NextEvent.PHASE);
+        clock.setDay(new LocalDate(2013, 9, 7));
+        assertListenerStatus();
+
+        final LocalDate pauseDate = new LocalDate(2013, 9, 17);
+        entitlementApi.pause(baseEntitlement.getBundleId(), pauseDate, callContext);
+        // No event yet
+        assertListenerStatus();
+
+        final LocalDate resumeDate = new LocalDate(2013, 12, 24);
+        entitlementApi.resume(baseEntitlement.getBundleId(), resumeDate, callContext);
+        // No event yet
+        assertListenerStatus();
+
+        testListener.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
+        clock.setDay(pauseDate.plusDays(1));
+        assertListenerStatus();
+
+        // Verify blocking state
+        final Entitlement baseEntitlementPaused = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        assertEquals(baseEntitlementPaused.getState(), EntitlementState.BLOCKED);
+
+        testListener.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
+        clock.setDay(resumeDate.plusDays(1));
+        assertListenerStatus();
+
+        // Verify blocking state
+        final Entitlement baseEntitlementUnpaused = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        assertEquals(baseEntitlementUnpaused.getState(), EntitlementState.ACTIVE);
     }
 
     @Test(groups = "slow")

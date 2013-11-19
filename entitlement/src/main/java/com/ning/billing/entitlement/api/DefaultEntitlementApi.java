@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.api;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,15 +41,21 @@ import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.DefaultEntitlementService;
 import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.EntitlementTransitionType;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
+import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
+import com.ning.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
 import com.ning.billing.entitlement.engine.core.EntitlementUtils;
 import com.ning.billing.entitlement.engine.core.EventsStream;
 import com.ning.billing.entitlement.engine.core.EventsStreamBuilder;
 import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.notificationq.api.NotificationEvent;
+import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
@@ -84,7 +91,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
     private final PersistentBus eventBus;
     private final EventsStreamBuilder eventsStreamBuilder;
     private final EntitlementUtils entitlementUtils;
-    protected final NotificationQueueService notificationQueueService;
+    private final NotificationQueueService notificationQueueService;
 
     @Inject
     public DefaultEntitlementApi(final PersistentBus eventBus, final InternalCallContextFactory internalCallContextFactory,
@@ -234,9 +241,9 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, contextWithValidAccountRecordId);
             final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(localEffectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);
 
-            // STEPH TODO implement ability to pause in the future
             if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone())) {
-                throw new UnsupportedOperationException("Pausing with a future date has not been implemented yet");
+                recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, true, contextWithValidAccountRecordId);
+                return;
             }
 
             final BlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, true, effectiveDate);
@@ -266,20 +273,22 @@ public class DefaultEntitlementApi implements EntitlementApi {
     public void resume(final UUID bundleId, final LocalDate localEffectiveDate, final CallContext context) throws EntitlementApiException {
         try {
             final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
-            final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
-            if (currentState == null || currentState.getStateName().equals(ENT_STATE_CLEAR)) {
-                // Nothing to do.
-                return;
-            }
             final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, contextWithValidAccountRecordId);
             final Account account = accountApi.getAccountById(bundle.getAccountId(), contextWithValidAccountRecordId);
             final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, contextWithValidAccountRecordId);
 
             final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(localEffectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);
 
-            // STEPH TODO implement ability to pause in the future
             if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone())) {
-                throw new UnsupportedOperationException("Resuming with a future date has not been implemented yet");
+                recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, false, contextWithValidAccountRecordId);
+                return;
+            }
+
+            final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
+            if (currentState == null || currentState.getStateName().equals(ENT_STATE_CLEAR)) {
+                // Nothing to do.
+                log.warn("Current state is {}, nothing to resume", currentState);
+                return;
             }
 
             final BlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, effectiveDate);
@@ -347,6 +356,23 @@ public class DefaultEntitlementApi implements EntitlementApi {
             throw new EntitlementApiException(e);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
+        }
+    }
+
+    private void recordPauseResumeNotificationEntry(final UUID entitlementId, final UUID bundleId, final DateTime effectiveDate, final boolean isPause, final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
+        final NotificationEvent notificationEvent = new EntitlementNotificationKey(entitlementId,
+                                                                                   bundleId,
+                                                                                   isPause ? EntitlementNotificationKeyAction.PAUSE : EntitlementNotificationKeyAction.RESUME,
+                                                                                   effectiveDate);
+
+        try {
+            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                                                           DefaultEntitlementService.NOTIFICATION_QUEUE_NAME);
+            subscriptionEventQueue.recordFutureNotification(effectiveDate, notificationEvent, contextWithValidAccountRecordId.getUserToken(), contextWithValidAccountRecordId.getAccountRecordId(), contextWithValidAccountRecordId.getTenantRecordId());
+        } catch (final NoSuchNotificationQueue e) {
+            throw new EntitlementApiException(e, ErrorCode.__UNKNOWN_ERROR_CODE);
+        } catch (final IOException e) {
+            throw new EntitlementApiException(e, ErrorCode.__UNKNOWN_ERROR_CODE);
         }
     }
 }

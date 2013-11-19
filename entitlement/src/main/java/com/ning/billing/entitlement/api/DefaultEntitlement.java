@@ -233,7 +233,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         return getSubscriptionBase().getLastActiveCategory();
     }
 
-
     @Override
     public Entitlement cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementPolicy, final CallContext callContext) throws EntitlementApiException {
         // Get the latest state from disk - required to have the latest CTD
@@ -461,7 +460,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             // Note that usually we record the notification from the DAO. We cannot do it here because not all calls
             // go through the DAO (e.g. change)
             final boolean isBaseEntitlementCancelled = eventsStream.isEntitlementCancelled();
-            final NotificationEvent notificationEvent = new EntitlementNotificationKey(getId(), isBaseEntitlementCancelled ? EntitlementNotificationKeyAction.CANCEL : EntitlementNotificationKeyAction.CHANGE, effectiveDate);
+            final NotificationEvent notificationEvent = new EntitlementNotificationKey(getId(), getBundleId(), isBaseEntitlementCancelled ? EntitlementNotificationKeyAction.CANCEL : EntitlementNotificationKeyAction.CHANGE, effectiveDate);
             recordFutureNotification(effectiveDate, notificationEvent, internalCallContext);
             return;
         }

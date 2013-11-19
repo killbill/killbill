@@ -28,20 +28,27 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class EntitlementNotificationKey implements NotificationEvent {
 
     private final UUID entitlementId;
+    private final UUID bundleId;
     private final EntitlementNotificationKeyAction entitlementNotificationKeyAction;
     private final DateTime effectiveDate;
 
     @JsonCreator
     public EntitlementNotificationKey(@JsonProperty("entitlementId") final UUID entitlementId,
+                                      @JsonProperty("bundleId") final UUID bundleId,
                                       @JsonProperty("entitlementNotificationKeyAction") final EntitlementNotificationKeyAction entitlementNotificationKeyAction,
                                       @JsonProperty("effectiveDate") final DateTime effectiveDate) {
         this.entitlementId = entitlementId;
+        this.bundleId = bundleId;
         this.entitlementNotificationKeyAction = entitlementNotificationKeyAction;
         this.effectiveDate = effectiveDate;
     }
 
     public UUID getEntitlementId() {
         return entitlementId;
+    }
+
+    public UUID getBundleId() {
+        return bundleId;
     }
 
     public EntitlementNotificationKeyAction getEntitlementNotificationKeyAction() {
@@ -56,6 +63,7 @@ public class EntitlementNotificationKey implements NotificationEvent {
     public String toString() {
         final StringBuilder sb = new StringBuilder("EntitlementNotificationKey{");
         sb.append("entitlementId=").append(entitlementId);
+        sb.append(", bundleId=").append(bundleId);
         sb.append(", entitlementNotificationKeyAction=").append(entitlementNotificationKeyAction);
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append('}');
@@ -76,6 +84,9 @@ public class EntitlementNotificationKey implements NotificationEvent {
         if (entitlementId != null ? !entitlementId.equals(that.entitlementId) : that.entitlementId != null) {
             return false;
         }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
         if (entitlementNotificationKeyAction != that.entitlementNotificationKeyAction) {
             return false;
         }
@@ -89,6 +100,7 @@ public class EntitlementNotificationKey implements NotificationEvent {
     @Override
     public int hashCode() {
         int result = entitlementId != null ? entitlementId.hashCode() : 0;
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (entitlementNotificationKeyAction != null ? entitlementNotificationKeyAction.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         return result;

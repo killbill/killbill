@@ -18,5 +18,7 @@ package com.ning.billing.entitlement.engine.core;
 
 public enum EntitlementNotificationKeyAction {
     CANCEL,
-    CHANGE
+    CHANGE,
+    PAUSE,
+    RESUME
 }
