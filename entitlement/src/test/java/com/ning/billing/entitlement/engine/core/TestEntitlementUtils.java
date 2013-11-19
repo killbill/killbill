@@ -40,6 +40,7 @@ import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.entitlement.api.DefaultEntitlementApi;
+import com.ning.billing.entitlement.api.Entitlement;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.dao.BlockingStateSqlDao;
@@ -49,6 +50,7 @@ import com.google.common.base.Objects;
 public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     private BlockingStateSqlDao sqlDao;
+    private Account account;
     private DefaultEntitlement baseEntitlement;
     private DefaultEntitlement addOnEntitlement;
     // Dates for the base plan only
@@ -62,7 +64,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         sqlDao = dbi.onDemand(BlockingStateSqlDao.class);
 
         clock.setDay(initialDate);
-        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        account = accountApi.createAccount(getAccountData(7), callContext);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE);
 
@@ -306,6 +308,42 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, null);
         checkActualBlockingStatesToCancel(changedBaseEntitlement, cancelledAddOnEntitlement, changeDateTime, true);
         checkBlockingStatesDAO(changedBaseEntitlement, cancelledAddOnEntitlement, changeDate, false);
+    }
+
+    @Test(groups = "slow", description = "Verify add-ons are not active after base entitlement is cancelled")
+    public void testCancelAddonsWhenBaseEntitlementIsCancelled() throws Exception {
+        // Add a second ADD_ON
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.PHASE);
+        final PlanPhaseSpecifier addOn2Spec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final Entitlement addOn2Entitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOn2Spec, initialDate, callContext);
+        assertListenerStatus();
+
+        final LocalDate baseCancellationDate = new LocalDate(2013, 10, 10);
+        baseEntitlement.cancelEntitlementWithDate(baseCancellationDate, true, callContext);
+
+        // Date prior to the base cancellation date to verify it is not impacted by the base cancellation (in contrary to the second add-on)
+        final LocalDate addOn1CancellationDate = new LocalDate(2013, 9, 9);
+        addOnEntitlement.cancelEntitlementWithDate(addOn1CancellationDate, true, callContext);
+
+        final LocalDate addOn2CancellationDate = new LocalDate(2013, 11, 11);
+        addOn2Entitlement.cancelEntitlementWithDate(addOn2CancellationDate, true, callContext);
+
+        // No further event yet
+        assertListenerStatus();
+
+        // Verify the cancellation dates
+        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
+        Assert.assertEquals(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext).getEffectiveEndDate(), addOn1CancellationDate);
+        Assert.assertEquals(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate(), addOn2CancellationDate);
+
+        testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK);
+        clock.setDay(new LocalDate(2013, 10, 30));
+        assertListenerStatus();
+
+        // Verify the cancellation dates
+        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
+        Assert.assertEquals(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext).getEffectiveEndDate(), addOn1CancellationDate);
+        Assert.assertEquals(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
     }
 
     // Test the "read" path
