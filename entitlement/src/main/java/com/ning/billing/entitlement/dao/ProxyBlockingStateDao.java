@@ -215,6 +215,9 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
             throw new RuntimeException(e);
         }
 
+        // Retrieve the cancellation blocking state on disk, if it exists (will be used later)
+        final BlockingState cancellationBlockingStateOnDisk = findEntitlementCancellationBlockingState(blockableId, blockingStatesOnDiskCopy);
+
         // Compute the blocking states not on disk for all base subscriptions
         final DateTime now = clock.getUTCNow();
         for (final SubscriptionBase baseSubscription : baseSubscriptionsToConsider) {
@@ -226,18 +229,31 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                 throw new RuntimeException(e);
             }
 
+            // First, check to see if the base entitlement is cancelled. If so, cancel the
             final Collection<BlockingState> blockingStatesNotOnDisk = eventsStream.computeAddonsBlockingStatesForFutureSubscriptionBaseEvents();
 
             // Inject the extra blocking states into the stream if needed
             for (final BlockingState blockingState : blockingStatesNotOnDisk) {
-                if ((blockingStateType == null ||
-                     // In case we're coming from getBlockingHistoryForService / getBlockingAll, make sure we don't add
-                     // blocking states for other add-ons on that base subscription
-                     (BlockingStateType.SUBSCRIPTION.equals(blockingStateType) && blockingState.getBlockedId().equals(blockableId))) &&
-                    // If this entitlement is actually already cancelled, don't add the cancellation event we computed from subscription events (wrong)
-                    !isEntitlementCancelled(blockingState.getBlockedId(), blockingStatesOnDiskCopy)) {
+                // If this entitlement is actually already cancelled, add the cancellation event we computed
+                // only if it's prior to the blocking state on disk (e.g. add-on future cancelled but base plan cancelled earlier).
+                final boolean overrideCancellationBlockingStateOnDisk = cancellationBlockingStateOnDisk != null &&
+                                                                        isEntitlementCancellationBlockingState(blockingState) &&
+                                                                        blockingState.getEffectiveDate().isBefore(cancellationBlockingStateOnDisk.getEffectiveDate());
+
+                if ((
+                            blockingStateType == null ||
+                            // In case we're coming from getBlockingHistoryForService / getBlockingAll, make sure we don't add
+                            // blocking states for other add-ons on that base subscription
+                            (BlockingStateType.SUBSCRIPTION.equals(blockingStateType) && blockingState.getBlockedId().equals(blockableId))
+                    ) && (
+                            cancellationBlockingStateOnDisk == null || overrideCancellationBlockingStateOnDisk
+                    )) {
                     final BlockingStateModelDao blockingStateModelDao = new BlockingStateModelDao(blockingState, now, now);
                     blockingStatesOnDiskCopy.add(BlockingStateModelDao.toBlockingState(blockingStateModelDao));
+
+                    if (overrideCancellationBlockingStateOnDisk) {
+                        blockingStatesOnDiskCopy.remove(cancellationBlockingStateOnDisk);
+                    }
                 }
             }
         }
@@ -246,18 +262,25 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         return BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStatesOnDiskCopy);
     }
 
-    private boolean isEntitlementCancelled(final UUID blockedId, final Iterable<BlockingState> blockingStates) {
-        // If this entitlement is already cancelled, there is nothing to do
-        return Iterables.<BlockingState>tryFind(blockingStates,
+    private BlockingState findEntitlementCancellationBlockingState(@Nullable final UUID blockedId, final Iterable<BlockingState> blockingStatesOnDisk) {
+        if (blockedId == null) {
+            return null;
+        }
+
+        return Iterables.<BlockingState>tryFind(blockingStatesOnDisk,
                                                 new Predicate<BlockingState>() {
                                                     @Override
                                                     public boolean apply(final BlockingState input) {
                                                         return input.getBlockedId().equals(blockedId) &&
-                                                               BlockingStateType.SUBSCRIPTION.equals(input.getType()) &&
-                                                               EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) &&
-                                                               DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName());
+                                                               isEntitlementCancellationBlockingState(input);
                                                     }
                                                 })
-                        .orNull() != null;
+                        .orNull();
+    }
+
+    private static boolean isEntitlementCancellationBlockingState(final BlockingState blockingState) {
+        return BlockingStateType.SUBSCRIPTION.equals(blockingState.getType()) &&
+               EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(blockingState.getService()) &&
+               DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(blockingState.getStateName());
     }
 }

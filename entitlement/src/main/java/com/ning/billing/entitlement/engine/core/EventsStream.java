@@ -97,6 +97,10 @@ public class EventsStream {
         return bundle;
     }
 
+    public SubscriptionBase getBaseSubscription() {
+        return baseSubscription;
+    }
+
     public SubscriptionBase getSubscription() {
         return subscription;
     }
