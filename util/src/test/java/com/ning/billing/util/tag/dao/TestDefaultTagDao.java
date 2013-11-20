@@ -21,12 +21,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagDefinitionApiException;
@@ -141,17 +138,10 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         final List<TagModelDao> foundTags = tagDao.getTagsForObject(objectId, objectType, internalCallContext);
         Assert.assertEquals(foundTags.size(), 1);
         Assert.assertEquals(foundTags.get(0).getTagDefinitionId(), createdTagDefinition.getId());
+        final List<TagModelDao> foundTagsForAccount = tagDao.getTagsForAccount(internalCallContext);
+        Assert.assertEquals(foundTagsForAccount.size(), 1);
+        Assert.assertEquals(foundTagsForAccount.get(0).getTagDefinitionId(), createdTagDefinition.getId());
 
-/*
-        TODO verify that event content matches what we expect
-        // Verify we caught an event on the bus -  we got 2 total (one for the tag definition, one for the tag)
-        Assert.assertEquals(tagFirstEventReceived.getObjectId(), objectId);
-        Assert.assertEquals(tagFirstEventReceived.getObjectType(), objectType);
-        Assert.assertEquals(tagFirstEventReceived.getTagDefinition().getName(), createdTagDefinition.getName());
-        Assert.assertEquals(tagFirstEventReceived.getTagDefinition().getDescription(), createdTagDefinition.getDescription());
-        Assert.assertEquals(tagFirstEventReceived.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAG_CREATION);
-        Assert.assertEquals(tagFirstEventReceived.getUserToken(), internalCallContext.getUserToken());
-*/
         // Delete the tag
         eventsListener.pushExpectedEvent(NextEvent.TAG);
         tagDao.deleteTag(objectId, objectType, createdTagDefinition.getId(), internalCallContext);
@@ -159,15 +149,6 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
 
         // Make sure the tag is deleted
         Assert.assertEquals(tagDao.getTagsForObject(objectId, objectType, internalCallContext).size(), 0);
-
-        /*
-        final TagInternalEvent tagSecondEventReceived = eventsListener.getTagEvents().get(1);
-        Assert.assertEquals(tagSecondEventReceived.getObjectId(), objectId);
-        Assert.assertEquals(tagSecondEventReceived.getObjectType(), objectType);
-        Assert.assertEquals(tagSecondEventReceived.getTagDefinition().getName(), createdTagDefinition.getName());
-        Assert.assertEquals(tagSecondEventReceived.getTagDefinition().getDescription(), createdTagDefinition.getDescription());
-        Assert.assertEquals(tagSecondEventReceived.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAG_DELETION);
-        Assert.assertEquals(tagSecondEventReceived.getUserToken(), internalCallContext.getUserToken());
-        */
+        Assert.assertEquals(tagDao.getTagsForAccount(internalCallContext).size(), 0);
     }
 }

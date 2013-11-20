@@ -84,7 +84,7 @@ public class MockTagDao implements TagDao {
     }
 
     @Override
-    public List<TagModelDao> getTagsForAccount(final UUID accountId, final InternalTenantContext internalTenantContext) {
+    public List<TagModelDao> getTagsForAccount(final InternalTenantContext internalTenantContext) {
         throw new UnsupportedOperationException();
     }
 

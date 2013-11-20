@@ -80,7 +80,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     @Override
     public List<TagModelDao> getTagsForAccountType(final UUID accountId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
 
-        final List<TagModelDao> allTags = getTagsForAccount(accountId, internalTenantContext);
+        final List<TagModelDao> allTags = getTagsForAccount(internalTenantContext);
         return ImmutableList.<TagModelDao>copyOf(Collections2.filter(allTags, new Predicate<TagModelDao>() {
             @Override
             public boolean apply(@Nullable final TagModelDao input) {
@@ -90,8 +90,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     }
 
     @Override
-    public List<TagModelDao> getTagsForAccount(final UUID accountId, final InternalTenantContext internalTenantContext) {
-
+    public List<TagModelDao> getTagsForAccount(final InternalTenantContext internalTenantContext) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagModelDao>>() {
             @Override
             public List<TagModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
@@ -99,7 +98,6 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
             }
         });
     }
-
 
     @Override
     protected void postBusEventFromTransaction(final TagModelDao tag, final TagModelDao savedTag, final ChangeType changeType,

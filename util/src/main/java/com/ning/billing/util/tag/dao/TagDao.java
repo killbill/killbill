@@ -36,5 +36,5 @@ public interface TagDao {
 
     List<TagModelDao> getTagsForAccountType(UUID accountId, ObjectType objectType, InternalTenantContext internalTenantContext);
 
-    List<TagModelDao> getTagsForAccount(UUID accountId, InternalTenantContext internalTenantContext);
+    List<TagModelDao> getTagsForAccount(InternalTenantContext internalTenantContext);
 }
