@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountInternalApi;
@@ -92,6 +93,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
     public UUID addPaymentMethod(final String paymentPluginServiceName, final Account account,
                                  final boolean setDefault, final PaymentMethodPlugin paymentMethodProps, final InternalCallContext context)
             throws PaymentApiException {
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
 
         return new WithAccountLock<UUID>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<UUID>() {
 
@@ -102,7 +104,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 try {
                     pluginApi = getPaymentPluginApi(paymentPluginServiceName);
                     pm = new DefaultPaymentMethod(account.getId(), paymentPluginServiceName, paymentMethodProps);
-                    pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, context.toCallContext());
+                    pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, context.toCallContext(tenantId));
                     final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
                                                                                     pm.getAccountId(), pm.getPluginName(), pm.isActive());
                     paymentDao.insertPaymentMethod(pmModel, context);
@@ -327,6 +329,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
     public void deletedPaymentMethod(final Account account, final UUID paymentMethodId,
                                      final boolean deleteDefaultPaymentMethodWithAutoPayOff, final InternalCallContext context)
             throws PaymentApiException {
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
 
         new WithAccountLock<Void>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void>() {
 
@@ -352,7 +355,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                         }
                     }
                     final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, context);
-                    pluginApi.deletePaymentMethod(account.getId(), paymentMethodId, context.toCallContext());
+                    pluginApi.deletePaymentMethod(account.getId(), paymentMethodId, context.toCallContext(tenantId));
                     paymentDao.deletedPaymentMethod(paymentMethodId, context);
                     return null;
                 } catch (PaymentPluginApiException e) {
@@ -367,6 +370,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
 
     public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final InternalCallContext context)
             throws PaymentApiException {
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
 
         new WithAccountLock<Void>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void>() {
 
@@ -380,7 +384,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 try {
                     final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, context);
 
-                    pluginApi.setDefaultPaymentMethod(account.getId(), paymentMethodId, context.toCallContext());
+                    pluginApi.setDefaultPaymentMethod(account.getId(), paymentMethodId, context.toCallContext(tenantId));
                     accountInternalApi.updatePaymentMethod(account.getId(), paymentMethodId, context);
                     return null;
                 } catch (PaymentPluginApiException e) {
@@ -413,13 +417,13 @@ public class PaymentMethodProcessor extends ProcessorBase {
      * @throws PaymentApiException
      */
     public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final InternalCallContext context) throws PaymentApiException {
-
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
 
         // Don't hold the account lock while fetching the payment methods from the gateway as those could change anyway
         final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
         final List<PaymentMethodInfoPlugin> pluginPms;
         try {
-            pluginPms = pluginApi.getPaymentMethods(account.getId(), true, context.toCallContext());
+            pluginPms = pluginApi.getPaymentMethods(account.getId(), true, context.toCallContext(tenantId));
             // The method should never return null by convention, but let's not trust the plugin...
             if (pluginPms == null) {
                 log.debug("No payment methods defined on the account {} for plugin {}", account.getId(), pluginName);

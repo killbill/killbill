@@ -106,6 +106,7 @@ public class RefundProcessor extends ProcessorBase {
     public Refund createRefund(final Account account, final UUID paymentId, @Nullable final BigDecimal specifiedRefundAmount,
                                final boolean isAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final InternalCallContext context)
             throws PaymentApiException {
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
 
         return new WithAccountLock<Refund>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Refund>() {
 
@@ -124,7 +125,7 @@ public class RefundProcessor extends ProcessorBase {
                     paymentDao.insertRefund(refundInfo, context);
 
                     final PaymentPluginApi plugin = getPaymentProviderPlugin(payment.getPaymentMethodId(), context);
-                    final RefundInfoPlugin refundInfoPlugin = plugin.processRefund(account.getId(), paymentId, refundAmount, account.getCurrency(), context.toCallContext());
+                    final RefundInfoPlugin refundInfoPlugin = plugin.processRefund(account.getId(), paymentId, refundAmount, account.getCurrency(), context.toCallContext(tenantId));
 
                     if (refundInfoPlugin.getStatus() == RefundPluginStatus.PROCESSED) {
                         paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, refundInfoPlugin.getAmount(), refundInfoPlugin.getCurrency(), context);

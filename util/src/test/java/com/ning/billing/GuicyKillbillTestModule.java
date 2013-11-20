@@ -40,7 +40,7 @@ public class GuicyKillbillTestModule extends AbstractModule {
                                                                                     UserType.TEST, "Testing", "This is a test",
                                                                                     GuicyKillbillTestSuite.getClock().getUTCNow(), GuicyKillbillTestSuite.getClock().getUTCNow());
 
-    private final CallContext callContext = internalCallContext.toCallContext();
+    private final CallContext callContext = internalCallContext.toCallContext(null);
 
 
 

@@ -257,8 +257,10 @@ public class OverdueStateApplicator {
             }
             final List<Entitlement> toBeCancelled = new LinkedList<Entitlement>();
             computeEntitlementsToCancel(account, toBeCancelled, context);
+
+            final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
             for (final Entitlement cur : toBeCancelled) {
-                cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, context.toCallContext());
+                cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, context.toCallContext(tenantId));
             }
         } catch (EntitlementApiException e) {
             // If subscription has already been cancelled, there is nothing to do so we can ignore

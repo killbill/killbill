@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.ObjectType;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
@@ -61,6 +62,7 @@ import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
+import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -72,15 +74,18 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     private final Logger log = LoggerFactory.getLogger(DefaultSubscriptionInternalApi.class);
 
     private final AddonUtils addonUtils;
+    private final NonEntityDao nonEntityDao;
 
     @Inject
     public DefaultSubscriptionInternalApi(final SubscriptionDao dao,
                                           final DefaultSubscriptionBaseApiService apiService,
                                           final Clock clock,
                                           final CatalogService catalogService,
-                                          final AddonUtils addonUtils) {
+                                          final AddonUtils addonUtils,
+                                          final NonEntityDao nonEntityDao) {
         super(dao, apiService, clock, catalogService);
         this.addonUtils = addonUtils;
+        this.nonEntityDao = nonEntityDao;
     }
 
     @Override
@@ -141,13 +146,14 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                                   plan.getProduct().getCategory().toString()));
             }
 
+            final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
             return apiService.createPlan(new SubscriptionBuilder()
                                                  .setId(UUID.randomUUID())
                                                  .setBundleId(bundleId)
                                                  .setCategory(plan.getProduct().getCategory())
                                                  .setBundleStartDate(bundleStartDate)
                                                  .setAlignStartDate(effectiveDate),
-                                         plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now, context.toCallContext());
+                                         plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now, context.toCallContext(tenantId));
         } catch (CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }

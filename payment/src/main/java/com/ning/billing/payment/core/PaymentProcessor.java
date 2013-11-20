@@ -20,6 +20,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
@@ -509,7 +510,7 @@ public class PaymentProcessor extends ProcessorBase {
     private Payment processPaymentWithAccountLocked(final PaymentPluginApi plugin, final Account account, final Invoice invoice,
                                                     final PaymentModelDao paymentInput, final PaymentAttemptModelDao attemptInput, final boolean isInstantPayment, final InternalCallContext context)
             throws PaymentApiException {
-
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
 
         List<PaymentAttemptModelDao> allAttempts = null;
         if (paymentConfig.isPaymentOff()) {
@@ -526,7 +527,7 @@ public class PaymentProcessor extends ProcessorBase {
         try {
             try {
                 paymentPluginInfo = plugin.processPayment(account.getId(), paymentInput.getId(), attemptInput.getPaymentMethodId(),
-                                                          attemptInput.getRequestedAmount(), account.getCurrency(), context.toCallContext());
+                                                          attemptInput.getRequestedAmount(), account.getCurrency(), context.toCallContext(tenantId));
             } catch (RuntimeException e) {
                 // Handle case of plugin RuntimeException to be handled the same as a Plugin failure (PaymentPluginApiException)
                 final String formatError = String.format("Plugin threw RuntimeException for payment %s", paymentInput.getId());

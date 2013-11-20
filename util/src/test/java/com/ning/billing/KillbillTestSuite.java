@@ -46,7 +46,7 @@ public class KillbillTestSuite {
                                                                                       UUID.randomUUID().toString(), CallOrigin.TEST,
                                                                                       UserType.TEST, "Testing", "This is a test",
                                                                                       clock.getUTCNow(), clock.getUTCNow());
-    protected final CallContext callContext = internalCallContext.toCallContext();
+    protected final CallContext callContext = internalCallContext.toCallContext(null);
 
     @BeforeMethod(alwaysRun = true)
     public void startTestSuite(final Method method) throws Exception {
