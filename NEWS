@@ -1,3 +1,17 @@
+0.8.2
+    Lots of subscription & entitlement bugfixes
+    https://github.com/killbill/killbill/issues/121
+    https://github.com/killbill/killbill/issues/124
+    https://github.com/killbill/killbill/issues/126
+    https://github.com/killbill/killbill/issues/128
+
+0.8.1
+    https://github.com/killbill/killbill/issues/94
+    https://github.com/killbill/killbill/issues/116
+
+0.8.0
+    Add missing audit columns in blocking_states
+
 0.7.1
     Add support for currency conversion plugin type
     Allow payments/refund to be processed by plugin in a different currency than the one on the account
