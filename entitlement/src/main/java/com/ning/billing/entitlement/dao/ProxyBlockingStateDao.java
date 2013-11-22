@@ -60,7 +60,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
     private static final Logger log = LoggerFactory.getLogger(ProxyBlockingStateDao.class);
 
-    private static final Ordering<BlockingState> BLOCKING_STATE_ORDERING = Ordering.<BlockingState>from(new Comparator<BlockingState>() {
+    public static final Ordering<BlockingState> BLOCKING_STATE_ORDERING = Ordering.<BlockingState>from(new Comparator<BlockingState>() {
         @Override
         public int compare(final BlockingState o1, final BlockingState o2) {
             final int blockableIdComparison = o1.getBlockedId().compareTo(o2.getBlockedId());

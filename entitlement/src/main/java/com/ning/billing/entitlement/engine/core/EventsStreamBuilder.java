@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.joda.time.DateTime;
+import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
@@ -40,11 +41,12 @@ import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.block.BlockingChecker.BlockingAggregator;
-import com.ning.billing.entitlement.dao.BlockingStateDao;
+import com.ning.billing.entitlement.dao.DefaultBlockingStateDao;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.NonEntityDao;
@@ -53,28 +55,32 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import static com.ning.billing.entitlement.dao.ProxyBlockingStateDao.BLOCKING_STATE_ORDERING;
+
 @Singleton
 public class EventsStreamBuilder {
 
     private final AccountInternalApi accountInternalApi;
     private final SubscriptionBaseInternalApi subscriptionInternalApi;
     private final BlockingChecker checker;
-    private final BlockingStateDao blockingStateDao;
+    private final DefaultBlockingStateDao blockingStateDao;
     private final Clock clock;
     private final NonEntityDao nonEntityDao;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public EventsStreamBuilder(final AccountInternalApi accountInternalApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
-                               final BlockingChecker checker, final BlockingStateDao blockingStateDao,
-                               final Clock clock, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
+                               final BlockingChecker checker, final IDBI dbi, final Clock clock,
+                               final CacheControllerDispatcher cacheControllerDispatcher,
+                               final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.accountInternalApi = accountInternalApi;
         this.subscriptionInternalApi = subscriptionInternalApi;
         this.checker = checker;
-        this.blockingStateDao = blockingStateDao;
         this.clock = clock;
         this.nonEntityDao = nonEntityDao;
         this.internalCallContextFactory = internalCallContextFactory;
+
+        this.blockingStateDao = new DefaultBlockingStateDao(dbi, clock, cacheControllerDispatcher, nonEntityDao);
     }
 
     public EventsStream refresh(final EventsStream eventsStream, final TenantContext tenantContext) throws EntitlementApiException {
@@ -124,7 +130,7 @@ public class EventsStreamBuilder {
         }
 
         // Retrieve the blocking states
-        final List<BlockingState> blockingStatesForAccount = blockingStateDao.getBlockingAllForAccountRecordId(internalTenantContext);
+        final List<BlockingState> blockingStatesForAccount = BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStateDao.getBlockingAllForAccountRecordId(internalTenantContext));
         // Copy fully the list (avoid lazy loading)
         final List<BlockingState> accountEntitlementStates = ImmutableList.<BlockingState>copyOf(Iterables.<BlockingState>filter(blockingStatesForAccount,
                                                                                                                                  new Predicate<BlockingState>() {
@@ -213,9 +219,9 @@ public class EventsStreamBuilder {
             throw new EntitlementApiException(e);
         }
 
-        final List<BlockingState> bundleEntitlementStates = blockingStateDao.getBlockingHistoryForService(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
-        final List<BlockingState> accountEntitlementStates = blockingStateDao.getBlockingHistoryForService(account.getId(), BlockingStateType.ACCOUNT, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
-        final List<BlockingState> subscriptionEntitlementStates = blockingStateDao.getBlockingHistoryForService(subscription.getId(), BlockingStateType.SUBSCRIPTION, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
+        final List<BlockingState> bundleEntitlementStates = BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStateDao.getBlockingHistoryForService(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext));
+        final List<BlockingState> accountEntitlementStates = BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStateDao.getBlockingHistoryForService(account.getId(), BlockingStateType.ACCOUNT, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext));
+        final List<BlockingState> subscriptionEntitlementStates = BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStateDao.getBlockingHistoryForService(subscription.getId(), BlockingStateType.SUBSCRIPTION, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext));
 
         return buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, subscriptionEntitlementStates, bundleEntitlementStates, accountEntitlementStates, internalTenantContext);
     }
