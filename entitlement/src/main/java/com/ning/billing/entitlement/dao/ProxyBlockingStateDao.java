@@ -218,16 +218,30 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         // Retrieve the cancellation blocking state on disk, if it exists (will be used later)
         final BlockingState cancellationBlockingStateOnDisk = findEntitlementCancellationBlockingState(blockableId, blockingStatesOnDiskCopy);
 
+        final List<EventsStream> eventsStreams;
+        try {
+            if (blockingStateType == null) {
+                // We're coming from getBlockingAllForAccountRecordId
+                eventsStreams = eventsStreamBuilder.buildForAccount(context);
+            } else {
+                // We're coming from getBlockingHistoryForService / getBlockingAll
+                eventsStreams = ImmutableList.<EventsStream>of(eventsStreamBuilder.buildForEntitlement(baseSubscriptionsToConsider.iterator().next().getId(), context));
+            }
+        } catch (EntitlementApiException e) {
+            log.error("Error computing blocking states for addons for account record id " + context.getAccountRecordId(), e);
+            throw new RuntimeException(e);
+        }
+
         // Compute the blocking states not on disk for all base subscriptions
         final DateTime now = clock.getUTCNow();
         for (final SubscriptionBase baseSubscription : baseSubscriptionsToConsider) {
-            final EventsStream eventsStream;
-            try {
-                eventsStream = eventsStreamBuilder.buildForEntitlement(baseSubscription.getId(), context);
-            } catch (EntitlementApiException e) {
-                log.error("Error computing blocking states for addons for account record id " + context.getAccountRecordId(), e);
-                throw new RuntimeException(e);
-            }
+            final EventsStream eventsStream = Iterables.<EventsStream>find(eventsStreams,
+                                                                           new Predicate<EventsStream>() {
+                                                                               @Override
+                                                                               public boolean apply(final EventsStream input) {
+                                                                                   return input.getSubscription().getId().equals(baseSubscription.getId());
+                                                                               }
+                                                                           });
 
             // First, check to see if the base entitlement is cancelled. If so, cancel the
             final Collection<BlockingState> blockingStatesNotOnDisk = eventsStream.computeAddonsBlockingStatesForFutureSubscriptionBaseEvents();

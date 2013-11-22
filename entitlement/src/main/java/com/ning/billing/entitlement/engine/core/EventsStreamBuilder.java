@@ -16,11 +16,16 @@
 
 package com.ning.billing.entitlement.engine.core;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import org.joda.time.DateTime;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
@@ -30,7 +35,6 @@ import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.EntitlementService;
-import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.EntitlementApiException;
@@ -43,8 +47,10 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 @Singleton
@@ -55,17 +61,19 @@ public class EventsStreamBuilder {
     private final BlockingChecker checker;
     private final BlockingStateDao blockingStateDao;
     private final Clock clock;
+    private final NonEntityDao nonEntityDao;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public EventsStreamBuilder(final AccountInternalApi accountInternalApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
                                final BlockingChecker checker, final BlockingStateDao blockingStateDao,
-                               final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
+                               final Clock clock, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.accountInternalApi = accountInternalApi;
         this.subscriptionInternalApi = subscriptionInternalApi;
         this.checker = checker;
         this.blockingStateDao = blockingStateDao;
         this.clock = clock;
+        this.nonEntityDao = nonEntityDao;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -88,6 +96,86 @@ public class EventsStreamBuilder {
     public EventsStream buildForEntitlement(final UUID entitlementId, final TenantContext tenantContext) throws EntitlementApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
         return buildForEntitlement(entitlementId, internalTenantContext);
+    }
+
+    public List<EventsStream> buildForAccount(final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+        // Retrieve the subscriptions (map bundle id -> subscriptions)
+        final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(internalTenantContext);
+        if (subscriptions.isEmpty()) {
+            // Bail early
+            return ImmutableList.<EventsStream>of();
+        }
+
+        // Retrieve the account
+        final UUID accountId = nonEntityDao.retrieveIdFromObject(internalTenantContext.getAccountRecordId(), ObjectType.ACCOUNT);
+        final Account account;
+        try {
+            account = accountInternalApi.getAccountById(accountId, internalTenantContext);
+        } catch (AccountApiException e) {
+            throw new EntitlementApiException(e);
+        }
+
+        // Retrieve the bundles
+        final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(accountId, internalTenantContext);
+        // Map bundle id -> bundles
+        final Map<UUID, SubscriptionBaseBundle> bundlesPerId = new HashMap<UUID, SubscriptionBaseBundle>();
+        for (final SubscriptionBaseBundle bundle : bundles) {
+            bundlesPerId.put(bundle.getId(), bundle);
+        }
+
+        // Retrieve the blocking states
+        final List<BlockingState> blockingStatesForAccount = blockingStateDao.getBlockingAllForAccountRecordId(internalTenantContext);
+        // Copy fully the list (avoid lazy loading)
+        final List<BlockingState> accountEntitlementStates = ImmutableList.<BlockingState>copyOf(Iterables.<BlockingState>filter(blockingStatesForAccount,
+                                                                                                                                 new Predicate<BlockingState>() {
+                                                                                                                                     @Override
+                                                                                                                                     public boolean apply(final BlockingState input) {
+                                                                                                                                         return BlockingStateType.ACCOUNT.equals(input.getType()) &&
+                                                                                                                                                EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) &&
+                                                                                                                                                accountId.equals(input.getBlockedId());
+                                                                                                                                     }
+                                                                                                                                 }));
+
+        // Build the EventsStream objects
+        final List<EventsStream> results = new LinkedList<EventsStream>();
+        for (final UUID bundleId : subscriptions.keySet()) {
+            final SubscriptionBaseBundle bundle = bundlesPerId.get(bundleId);
+            final List<SubscriptionBase> allSubscriptionsForBundle = subscriptions.get(bundleId);
+            final SubscriptionBase baseSubscription = Iterables.<SubscriptionBase>tryFind(allSubscriptionsForBundle,
+                                                                                          new Predicate<SubscriptionBase>() {
+                                                                                              @Override
+                                                                                              public boolean apply(final SubscriptionBase input) {
+                                                                                                  return ProductCategory.BASE.equals(input.getLastActiveProduct().getCategory());
+                                                                                              }
+                                                                                          }).orNull();
+            // Copy fully the list (avoid lazy loading)
+            final List<BlockingState> bundleEntitlementStates = ImmutableList.<BlockingState>copyOf(Iterables.<BlockingState>filter(blockingStatesForAccount,
+                                                                                                                                    new Predicate<BlockingState>() {
+                                                                                                                                        @Override
+                                                                                                                                        public boolean apply(final BlockingState input) {
+                                                                                                                                            return BlockingStateType.SUBSCRIPTION_BUNDLE.equals(input.getType()) &&
+                                                                                                                                                   EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) &&
+                                                                                                                                                   bundle.getId().equals(input.getBlockedId());
+                                                                                                                                        }
+                                                                                                                                    }));
+
+            for (final SubscriptionBase subscriptionBase : allSubscriptionsForBundle) {
+                // Copy fully the list (avoid lazy loading)
+                final List<BlockingState> subscriptionEntitlementStates = ImmutableList.<BlockingState>copyOf(Iterables.<BlockingState>filter(blockingStatesForAccount,
+                                                                                                                                              new Predicate<BlockingState>() {
+                                                                                                                                                  @Override
+                                                                                                                                                  public boolean apply(final BlockingState input) {
+                                                                                                                                                      return BlockingStateType.SUBSCRIPTION.equals(input.getType()) &&
+                                                                                                                                                             EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) &&
+                                                                                                                                                             subscriptionBase.getId().equals(input.getBlockedId());
+                                                                                                                                                  }
+                                                                                                                                              }));
+
+                results.add(buildForEntitlement(account, bundle, baseSubscription, subscriptionBase, allSubscriptionsForBundle, subscriptionEntitlementStates, bundleEntitlementStates, accountEntitlementStates, internalTenantContext));
+            }
+        }
+
+        return results;
     }
 
     public EventsStream buildForEntitlement(final UUID entitlementId, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
@@ -125,16 +213,26 @@ public class EventsStreamBuilder {
             throw new EntitlementApiException(e);
         }
 
-        final List<BlockingState> subscriptionEntitlementStates = blockingStateDao.getBlockingHistoryForService(subscription.getId(), BlockingStateType.SUBSCRIPTION, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
         final List<BlockingState> bundleEntitlementStates = blockingStateDao.getBlockingHistoryForService(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
         final List<BlockingState> accountEntitlementStates = blockingStateDao.getBlockingHistoryForService(account.getId(), BlockingStateType.ACCOUNT, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
+        final List<BlockingState> subscriptionEntitlementStates = blockingStateDao.getBlockingHistoryForService(subscription.getId(), BlockingStateType.SUBSCRIPTION, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext);
 
-        final BlockingAggregator blockingAggregator;
-        try {
-            blockingAggregator = checker.getBlockedStatus(subscription, internalTenantContext);
-        } catch (BlockingApiException e) {
-            throw new EntitlementApiException(e);
-        }
+        return buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, subscriptionEntitlementStates, bundleEntitlementStates, accountEntitlementStates, internalTenantContext);
+    }
+
+    private EventsStream buildForEntitlement(final Account account,
+                                             final SubscriptionBaseBundle bundle,
+                                             final SubscriptionBase baseSubscription,
+                                             final SubscriptionBase subscription,
+                                             final List<SubscriptionBase> allSubscriptionsForBundle,
+                                             final List<BlockingState> subscriptionEntitlementStates,
+                                             final List<BlockingState> bundleEntitlementStates,
+                                             final List<BlockingState> accountEntitlementStates,
+                                             final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+        final BlockingAggregator blockingAggregator = checker.getBlockedStatus(filterCurrentBlockableStatePerService(accountEntitlementStates),
+                                                                               filterCurrentBlockableStatePerService(bundleEntitlementStates),
+                                                                               filterCurrentBlockableStatePerService(subscriptionEntitlementStates),
+                                                                               internalTenantContext);
 
         return new EventsStream(account,
                                 bundle,
@@ -147,5 +245,23 @@ public class EventsStreamBuilder {
                                 allSubscriptionsForBundle,
                                 internalTenantContext,
                                 clock.getUTCNow());
+    }
+
+    private List<BlockingState> filterCurrentBlockableStatePerService(final Iterable<BlockingState> allBlockingStates) {
+        final DateTime now = clock.getUTCNow();
+
+        final Map<String, BlockingState> currentBlockingStatePerService = new HashMap<String, BlockingState>();
+        for (final BlockingState blockingState : allBlockingStates) {
+            if (blockingState.getEffectiveDate().isAfter(now)) {
+                continue;
+            }
+
+            if (currentBlockingStatePerService.get(blockingState.getService()) == null ||
+                currentBlockingStatePerService.get(blockingState.getService()).getEffectiveDate().isBefore(blockingState.getEffectiveDate())) {
+                currentBlockingStatePerService.put(blockingState.getService(), blockingState);
+            }
+        }
+
+        return ImmutableList.<BlockingState>copyOf(currentBlockingStatePerService.values());
     }
 }

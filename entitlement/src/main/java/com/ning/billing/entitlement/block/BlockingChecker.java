@@ -16,11 +16,13 @@
 
 package com.ning.billing.entitlement.block;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
+import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 
 public interface BlockingChecker {
@@ -33,15 +35,17 @@ public interface BlockingChecker {
     public static final Object ACTION_ENTITLEMENT = "Entitlement";
     public static final Object ACTION_BILLING = "Billing";
 
-
     public interface BlockingAggregator {
+
         public boolean isBlockChange();
+
         public boolean isBlockEntitlement();
+
         public boolean isBlockBilling();
     }
 
-    // Only throws if we can't find the blockable enties
-    public BlockingAggregator getBlockedStatus(Blockable blockable, InternalTenantContext context) throws BlockingApiException;
+    public BlockingAggregator getBlockedStatus(List<BlockingState> currentAccountEntitlementStatePerService, List<BlockingState> currentBundleEntitlementStatePerService,
+                                               List<BlockingState> currentSubscriptionEntitlementStatePerService, InternalTenantContext internalTenantContext);
 
     public BlockingAggregator getBlockedStatus(final UUID blockableId, final BlockingStateType type, final InternalTenantContext context) throws BlockingApiException;
 

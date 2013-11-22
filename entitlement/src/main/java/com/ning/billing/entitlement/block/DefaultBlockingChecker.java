@@ -19,6 +19,8 @@ package com.ning.billing.entitlement.block;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.callcontext.InternalTenantContext;
@@ -32,6 +34,7 @@ import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class DefaultBlockingChecker implements BlockingChecker {
@@ -110,7 +113,6 @@ public class DefaultBlockingChecker implements BlockingChecker {
         return result;
     }
 
-
     private DefaultBlockingAggregator getBlockedStateBundleId(final UUID bundleId, final InternalTenantContext context) throws BlockingApiException {
 
         final SubscriptionBaseBundle bundle;
@@ -121,7 +123,6 @@ public class DefaultBlockingChecker implements BlockingChecker {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
-
 
     private DefaultBlockingAggregator getBlockedStateBundle(final SubscriptionBaseBundle bundle, final InternalTenantContext context) {
         final DefaultBlockingAggregator result = getBlockedStateAccountId(bundle.getAccountId(), context);
@@ -143,14 +144,21 @@ public class DefaultBlockingChecker implements BlockingChecker {
         return getBlockedStateForId(accountId, BlockingStateType.ACCOUNT, context);
     }
 
-    private DefaultBlockingAggregator getBlockedStateForId(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
-        final DefaultBlockingAggregator result = new DefaultBlockingAggregator();
+    private DefaultBlockingAggregator getBlockedStateForId(@Nullable final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
+        // Last states across services
+        final List<BlockingState> blockableState;
         if (blockableId != null) {
-            // Last states across services
-            final List<BlockingState> blockableState = dao.getBlockingState(blockableId, blockingStateType, context);
-            for (BlockingState cur : blockableState) {
-                result.or(cur);
-            }
+            blockableState = dao.getBlockingState(blockableId, blockingStateType, context);
+        } else {
+            blockableState = ImmutableList.<BlockingState>of();
+        }
+        return getBlockedState(blockableState);
+    }
+
+    private DefaultBlockingAggregator getBlockedState(final Iterable<BlockingState> currentBlockableStatePerService) {
+        final DefaultBlockingAggregator result = new DefaultBlockingAggregator();
+        for (final BlockingState cur : currentBlockableStatePerService) {
+            result.or(cur);
         }
         return result;
     }
@@ -167,14 +175,11 @@ public class DefaultBlockingChecker implements BlockingChecker {
     }
 
     @Override
-    public BlockingAggregator getBlockedStatus(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
-            if (blockable instanceof SubscriptionBase) {
-                return getBlockedStateSubscription((SubscriptionBase) blockable, context);
-            } else if (blockable instanceof SubscriptionBaseBundle) {
-                return getBlockedStateBundle((SubscriptionBaseBundle) blockable, context);
-            } else { //(blockable instanceof Account) {
-                return getBlockedStateAccount((Account) blockable, context);
-            }
+    public BlockingAggregator getBlockedStatus(final List<BlockingState> accountEntitlementStates, final List<BlockingState> bundleEntitlementStates, final List<BlockingState> subscriptionEntitlementStates, final InternalTenantContext internalTenantContext) {
+        final DefaultBlockingAggregator result = getBlockedState(subscriptionEntitlementStates);
+        result.or(getBlockedState(bundleEntitlementStates));
+        result.or(getBlockedState(accountEntitlementStates));
+        return result;
     }
 
     @Override
