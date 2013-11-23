@@ -72,7 +72,7 @@ public class EventsStream {
     public EventsStream(final Account account, final SubscriptionBaseBundle bundle,
                         final List<BlockingState> subscriptionEntitlementStates, final List<BlockingState> bundleEntitlementStates,
                         final List<BlockingState> accountEntitlementStates, final BlockingAggregator blockingAggregator,
-                        final SubscriptionBase baseSubscription, final SubscriptionBase subscription,
+                        @Nullable final SubscriptionBase baseSubscription, final SubscriptionBase subscription,
                         final List<SubscriptionBase> allSubscriptionsForBundle, final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {
         this.account = account;
         this.bundle = bundle;
