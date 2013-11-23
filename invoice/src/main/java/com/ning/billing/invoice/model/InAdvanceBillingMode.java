@@ -110,8 +110,7 @@ public class InAdvanceBillingMode implements BillingMode {
             }
 
             // Make sure to align the end date with the BCD
-            final LocalDate servicePeriodEndDate = billingIntervalDetail.getFirstBillingCycleDate().plusMonths((i + 1) * numberOfMonthsPerBillingPeriod);
-
+            final LocalDate servicePeriodEndDate =  billingIntervalDetail.getFutureBillingDateFor(i + 1);
             results.add(new RecurringInvoiceItemData(servicePeriodStartDate, servicePeriodEndDate, BigDecimal.ONE));
         }
 

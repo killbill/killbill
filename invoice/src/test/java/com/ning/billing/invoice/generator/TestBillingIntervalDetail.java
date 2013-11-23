@@ -66,7 +66,6 @@ public class TestBillingIntervalDetail {
     @Test(groups = "fast")
     public void testLastBCDShouldNotBeBeforePreviousBCD() throws Exception {
         final LocalDate start = new LocalDate("2012-07-16");
-        final LocalDate previousBCD = new LocalDate("2012-08-15");
         final int bcdLocal = 15;
 
         final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, start, bcdLocal, BillingPeriod.MONTHLY);
