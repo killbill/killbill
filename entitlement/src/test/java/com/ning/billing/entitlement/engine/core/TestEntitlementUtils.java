@@ -29,7 +29,6 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -38,6 +37,7 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
+import com.ning.billing.entitlement.EventsStream;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
@@ -440,7 +440,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     private Collection<BlockingState> computeFutureBlockingStatesForAssociatedAddonsViaAccount(final DefaultEntitlement baseEntitlement) throws EntitlementApiException {
         final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(baseEntitlement.getAccountId(), callContext);
-        final EventsStream eventsStream = Iterables.<EventsStream>find(eventsStreamBuilder.buildForAccount(context),
+        final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(context).getEventsStreams().values()),
                                                                        new Predicate<EventsStream>() {
                                                                            @Override
                                                                            public boolean apply(final EventsStream input) {
@@ -457,7 +457,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     private Collection<BlockingState> computeBlockingStatesForAssociatedAddonsViaAccount(final DefaultEntitlement baseEntitlement, final DateTime effectiveDate) throws EntitlementApiException {
         final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(baseEntitlement.getAccountId(), callContext);
-        final EventsStream eventsStream = Iterables.<EventsStream>find(eventsStreamBuilder.buildForAccount(context),
+        final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(context).getEventsStreams().values()),
                                                                        new Predicate<EventsStream>() {
                                                                            @Override
                                                                            public boolean apply(final EventsStream input) {

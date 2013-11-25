@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -36,12 +37,12 @@ import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.EntitlementService;
+import com.ning.billing.entitlement.EventsStream;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.DefaultEntitlementApi;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.api.EntitlementApiException;
-import com.ning.billing.entitlement.engine.core.EventsStream;
 import com.ning.billing.entitlement.engine.core.EventsStreamBuilder;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -79,10 +80,11 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         }
     });
 
-    private final EventsStreamBuilder eventsStreamBuilder;
     private final SubscriptionBaseInternalApi subscriptionInternalApi;
     private final Clock clock;
-    private final DefaultBlockingStateDao delegate;
+
+    protected final EventsStreamBuilder eventsStreamBuilder;
+    protected final DefaultBlockingStateDao delegate;
 
     @Inject
     public ProxyBlockingStateDao(final EventsStreamBuilder eventsStreamBuilder, final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
@@ -182,11 +184,12 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
         // Find all base entitlements that we care about (for which we want to find future cancelled add-ons)
         final Iterable<SubscriptionBase> baseSubscriptionsToConsider;
+        final Iterable<EventsStream> eventsStreams;
         try {
             if (blockingStateType == null) {
                 // We're coming from getBlockingAllForAccountRecordId
-                final Iterable<SubscriptionBase> subscriptions = Iterables.<SubscriptionBase>concat(subscriptionInternalApi.getSubscriptionsForAccount(context).values());
-                baseSubscriptionsToConsider = Iterables.<SubscriptionBase>filter(subscriptions,
+                final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(context);
+                baseSubscriptionsToConsider = Iterables.<SubscriptionBase>filter(Iterables.<SubscriptionBase>concat(subscriptions.values()),
                                                                                  new Predicate<SubscriptionBase>() {
                                                                                      @Override
                                                                                      public boolean apply(final SubscriptionBase input) {
@@ -194,6 +197,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                                                                                                 !EntitlementState.CANCELLED.equals(input.getState());
                                                                                      }
                                                                                  });
+                eventsStreams = Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(subscriptions, context).getEventsStreams().values());
             } else if (BlockingStateType.SUBSCRIPTION.equals(blockingStateType)) {
                 // We're coming from getBlockingHistoryForService / getBlockingAll
                 final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(blockableId, context);
@@ -202,6 +206,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                 if (ProductCategory.ADD_ON.equals(subscription.getCategory())) {
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(subscription.getBundleId(), context);
                     baseSubscriptionsToConsider = ImmutableList.<SubscriptionBase>of(baseSubscription);
+                    eventsStreams = ImmutableList.<EventsStream>of(eventsStreamBuilder.buildForEntitlement(baseSubscription, context));
                 } else {
                     // blockable id points to a base or standalone subscription, there is nothing to do
                     return blockingStatesOnDisk;
@@ -213,24 +218,21 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         } catch (SubscriptionBaseApiException e) {
             log.error("Error retrieving subscriptions for account record id " + context.getAccountRecordId(), e);
             throw new RuntimeException(e);
-        }
-
-        // Retrieve the cancellation blocking state on disk, if it exists (will be used later)
-        final BlockingState cancellationBlockingStateOnDisk = findEntitlementCancellationBlockingState(blockableId, blockingStatesOnDiskCopy);
-
-        final List<EventsStream> eventsStreams;
-        try {
-            if (blockingStateType == null) {
-                // We're coming from getBlockingAllForAccountRecordId
-                eventsStreams = eventsStreamBuilder.buildForAccount(context);
-            } else {
-                // We're coming from getBlockingHistoryForService / getBlockingAll
-                eventsStreams = ImmutableList.<EventsStream>of(eventsStreamBuilder.buildForEntitlement(baseSubscriptionsToConsider.iterator().next().getId(), context));
-            }
         } catch (EntitlementApiException e) {
             log.error("Error computing blocking states for addons for account record id " + context.getAccountRecordId(), e);
             throw new RuntimeException(e);
         }
+
+        return addBlockingStatesNotOnDisk(blockableId, blockingStateType, blockingStatesOnDiskCopy, baseSubscriptionsToConsider, eventsStreams);
+    }
+
+    protected List<BlockingState> addBlockingStatesNotOnDisk(@Nullable final UUID blockableId,
+                                                             @Nullable final BlockingStateType blockingStateType,
+                                                             final Collection<BlockingState> blockingStatesOnDiskCopy,
+                                                             final Iterable<SubscriptionBase> baseSubscriptionsToConsider,
+                                                             final Iterable<EventsStream> eventsStreams) {
+        // Retrieve the cancellation blocking state on disk, if it exists (will be used later)
+        final BlockingState cancellationBlockingStateOnDisk = findEntitlementCancellationBlockingState(blockableId, blockingStatesOnDiskCopy);
 
         // Compute the blocking states not on disk for all base subscriptions
         final DateTime now = clock.getUTCNow();

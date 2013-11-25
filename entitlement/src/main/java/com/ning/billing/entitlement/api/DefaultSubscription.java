@@ -16,29 +16,32 @@
 
 package com.ning.billing.entitlement.api;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+
 public class DefaultSubscription extends DefaultEntitlement implements Subscription {
 
-    private final List<BlockingState> blockingStates;
+    private final Collection<BlockingState> currentSubscriptionBlockingStatesForServices;
 
-    DefaultSubscription(final DefaultEntitlement entitlement, final List<BlockingState> blockingStates) {
+    DefaultSubscription(final DefaultEntitlement entitlement) {
         super(entitlement);
-        this.blockingStates = blockingStates;
+        this.currentSubscriptionBlockingStatesForServices = eventsStream.getCurrentSubscriptionEntitlementBlockingStatesForServices();
     }
 
     @Override
     public LocalDate getBillingStartDate() {
-        return new LocalDate(getSubscriptionBase().getStartDate(), getAccount().getTimeZone());
+        return new LocalDate(getSubscriptionBase().getStartDate(), getAccountTimeZone());
     }
 
     @Override
     public LocalDate getBillingEndDate() {
         final DateTime futureOrCurrentEndDateForSubscription = getSubscriptionBase().getEndDate() != null ? getSubscriptionBase().getEndDate() : getSubscriptionBase().getFutureEndDate();
-        final DateTime futureOrCurrentEndDateForBaseSubscription = getEventsStream().getBaseSubscription().getEndDate() != null ? getEventsStream().getBaseSubscription().getEndDate() : getEventsStream().getBaseSubscription().getFutureEndDate();
+        final DateTime futureOrCurrentEndDateForBaseSubscription = getBaseSubscription().getEndDate() != null ? getBaseSubscription().getEndDate() : getBaseSubscription().getFutureEndDate();
 
         final DateTime futureOrCurrentEndDate;
         if (futureOrCurrentEndDateForBaseSubscription != null && futureOrCurrentEndDateForBaseSubscription.isBefore(futureOrCurrentEndDateForSubscription)) {
@@ -47,25 +50,27 @@ public class DefaultSubscription extends DefaultEntitlement implements Subscript
             futureOrCurrentEndDate = futureOrCurrentEndDateForSubscription;
         }
 
-        return futureOrCurrentEndDate != null ? new LocalDate(futureOrCurrentEndDate, getAccount().getTimeZone()) : null;
+        return futureOrCurrentEndDate != null ? new LocalDate(futureOrCurrentEndDate, getAccountTimeZone()) : null;
     }
 
     @Override
     public LocalDate getChargedThroughDate() {
-        return getSubscriptionBase().getChargedThroughDate() != null ? new LocalDate(getSubscriptionBase().getChargedThroughDate(), getAccount().getTimeZone()) : null;
+        return getSubscriptionBase().getChargedThroughDate() != null ? new LocalDate(getSubscriptionBase().getChargedThroughDate(), getAccountTimeZone()) : null;
     }
 
     @Override
     public String getCurrentStateForService(final String serviceName) {
-
-        if (blockingStates == null) {
+        if (currentSubscriptionBlockingStatesForServices == null) {
             return null;
+        } else {
+            final BlockingState blockingState = Iterables.<BlockingState>tryFind(currentSubscriptionBlockingStatesForServices,
+                                                                                 new Predicate<BlockingState>() {
+                                                                                     @Override
+                                                                                     public boolean apply(final BlockingState input) {
+                                                                                         return serviceName.equals(input.getService());
+                                                                                     }
+                                                                                 }).orNull();
+            return blockingState == null ? null : blockingState.getService();
         }
-        for (BlockingState cur : blockingStates) {
-            if (cur.getService().equals(serviceName)) {
-                return cur.getStateName();
-            }
-        }
-        return null;
     }
 }

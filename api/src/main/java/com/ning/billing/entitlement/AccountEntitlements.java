@@ -14,17 +14,24 @@
  * under the License.
  */
 
-package com.ning.billing.glue;
+package com.ning.billing.entitlement;
 
-public interface SubscriptionModule {
+import java.util.Collection;
+import java.util.Map;
+import java.util.UUID;
 
-    public void installSubscriptionService();
+import com.ning.billing.account.api.Account;
+import com.ning.billing.entitlement.api.Entitlement;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 
-    public void installSubscriptionTransferApi();
+// Wrapper object to save on DAO calls
+public interface AccountEntitlements {
 
-    public void installSubscriptionMigrationApi();
+    public Account getAccount();
 
-    public void installSubscriptionInternalApi();
+    // Map bundle id -> bundle
+    public Map<UUID, SubscriptionBaseBundle> getBundles();
 
-    public void installSubscriptionTimelineApi();
+    // Map bundle id -> entitlements
+    public Map<UUID, Collection<Entitlement>> getEntitlements();
 }
