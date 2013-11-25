@@ -14,17 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.glue;
+package com.ning.billing.entitlement;
 
-public interface SubscriptionModule {
+import java.util.UUID;
 
-    public void installSubscriptionService();
+import com.ning.billing.entitlement.api.EntitlementApiException;
+import com.ning.billing.util.callcontext.TenantContext;
 
-    public void installSubscriptionTransferApi();
+public interface EntitlementInternalApi {
 
-    public void installSubscriptionMigrationApi();
-
-    public void installSubscriptionInternalApi();
-
-    public void installSubscriptionTimelineApi();
+    public AccountEntitlements getAllEntitlementsForAccountId(UUID accountId, TenantContext context) throws EntitlementApiException;
 }
