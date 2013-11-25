@@ -37,6 +37,6 @@ public class OverdueApiExceptionMapper extends ExceptionMapperBase implements Ex
 
     @Override
     public Response toResponse(final OverdueApiException exception) {
-        return buildBadRequestResponse(exception, uriInfo);
+        return fallback(exception, uriInfo);
     }
 }

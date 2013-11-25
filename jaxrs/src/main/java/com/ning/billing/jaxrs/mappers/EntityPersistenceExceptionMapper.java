@@ -37,6 +37,6 @@ public class EntityPersistenceExceptionMapper extends ExceptionMapperBase implem
 
     @Override
     public Response toResponse(final EntityPersistenceException exception) {
-        return buildInternalErrorResponse(exception, uriInfo);
+        return fallback(exception, uriInfo);
     }
 }

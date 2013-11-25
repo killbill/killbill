@@ -54,8 +54,10 @@ public class AccountApiExceptionMapper extends ExceptionMapperBase implements Ex
             return buildBadRequestResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.ACCOUNT_UPDATE_FAILED.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_RECORD_ID.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
         } else {
-            return buildBadRequestResponse(exception, uriInfo);
+            return fallback(exception, uriInfo);
         }
     }
 }

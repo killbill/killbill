@@ -95,7 +95,7 @@ public class TestBundle extends TestJaxrsBase {
         queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "56566");
         uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.BUNDLES;
         response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.BUNDLES;
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);

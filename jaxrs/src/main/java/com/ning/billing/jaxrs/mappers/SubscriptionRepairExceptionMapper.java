@@ -69,7 +69,7 @@ public class SubscriptionRepairExceptionMapper extends ExceptionMapperBase imple
         } else if (exception.getCode() == ErrorCode.SUB_REPAIR_VIEW_CHANGED.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
         } else {
-            return buildBadRequestResponse(exception, uriInfo);
+            return fallback(exception, uriInfo);
         }
     }
 }
