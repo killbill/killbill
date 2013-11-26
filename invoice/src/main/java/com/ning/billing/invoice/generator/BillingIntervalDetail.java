@@ -150,7 +150,7 @@ public class BillingIntervalDetail {
         final int lastDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
 
         int proposedBillCycleDate = proposedDate.getDayOfMonth();
-        if (proposedDate.getDayOfMonth() < billingCycleDay && billingCycleDay <= lastDayOfMonth) {
+        if (proposedBillCycleDate < billingCycleDay && billingCycleDay <= lastDayOfMonth) {
             proposedBillCycleDate = billingCycleDay;
         }
         return new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), proposedBillCycleDate, proposedDate.getChronology());
