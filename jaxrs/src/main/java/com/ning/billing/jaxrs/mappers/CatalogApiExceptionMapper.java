@@ -37,6 +37,6 @@ public class CatalogApiExceptionMapper extends ExceptionMapperBase implements Ex
 
     @Override
     public Response toResponse(final CatalogApiException exception) {
-        return buildBadRequestResponse(exception, uriInfo);
+        return fallback(exception, uriInfo);
     }
 }

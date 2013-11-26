@@ -37,6 +37,6 @@ public class SubscriptionBillingApiExceptionMapper extends ExceptionMapperBase i
 
     @Override
     public Response toResponse(final SubscriptionBillingApiException exception) {
-        return buildBadRequestResponse(exception, uriInfo);
+        return fallback(exception, uriInfo);
     }
 }

@@ -37,6 +37,6 @@ public class EmailApiExceptionMapper extends ExceptionMapperBase implements Exce
 
     @Override
     public Response toResponse(final EmailApiException exception) {
-        return buildInternalErrorResponse(exception, uriInfo);
+        return fallback(exception, uriInfo);
     }
 }
