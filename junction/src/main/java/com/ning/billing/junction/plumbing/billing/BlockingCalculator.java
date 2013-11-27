@@ -25,22 +25,23 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.entitlement.api.BlockingStateType;
-import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.junction.BillingEvent;
 import com.ning.billing.junction.BillingModeType;
 import com.ning.billing.junction.BlockingInternalApi;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -52,8 +53,9 @@ public class BlockingCalculator {
     private final BlockingInternalApi blockingApi;
 
     protected static class DisabledDuration {
+
         private final DateTime start;
-        private final DateTime end;
+        private DateTime end;
 
         public DisabledDuration(final DateTime start, final DateTime end) {
             this.start = start;
@@ -68,6 +70,9 @@ public class BlockingCalculator {
             return end;
         }
 
+        public void setEnd(final DateTime end) {
+            this.end = end;
+        }
     }
 
     @Inject
@@ -92,11 +97,9 @@ public class BlockingCalculator {
         final SortedSet<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
         final SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
 
+        final List<BlockingState> blockingEvents = blockingApi.getBlockingAllForAccount(context);
+        final List<DisabledDuration> blockingDurations = createBlockingDurations(blockingEvents);
         for (final UUID bundleId : bundleMap.keySet()) {
-            final List<BlockingState> blockingEvents = blockingApi.getBlockingAll(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, context);
-            blockingEvents.addAll(blockingApi.getBlockingAll(account.getId(), BlockingStateType.ACCOUNT, context));
-            final List<DisabledDuration> blockingDurations = createBlockingDurations(blockingEvents);
-
             for (final SubscriptionBase subscription : bundleMap.get(bundleId)) {
                 billingEventsToAdd.addAll(createNewEvents(blockingDurations, billingEvents, account, subscription));
                 billingEventsToRemove.addAll(eventsToRemove(blockingDurations, billingEvents, subscription));
@@ -252,29 +255,54 @@ public class BlockingCalculator {
         return result;
     }
 
-
     // In ascending order
-    protected List<DisabledDuration> createBlockingDurations(final List<BlockingState> overdueBundleEvents) {
+    protected List<DisabledDuration> createBlockingDurations(final Iterable<BlockingState> overdueBundleEvents) {
         final List<DisabledDuration> result = new ArrayList<BlockingCalculator.DisabledDuration>();
         // Earliest blocking event
         BlockingState first = null;
 
+        int blockedNesting = 0;
+        BlockingState lastOne = null;
         for (final BlockingState e : overdueBundleEvents) {
-            if (e.isBlockBilling() && first == null) {
+            lastOne = e;
+            if (e.isBlockBilling() && blockedNesting == 0) {
                 // First blocking event of contiguous series of blocking events
                 first = e;
-            } else if (first != null && !e.isBlockBilling()) {
-                // End of the interval
-                result.add(new DisabledDuration(first.getEffectiveDate(), e.getEffectiveDate()));
-                first = null;
+                blockedNesting++;
+            } else if (e.isBlockBilling() && blockedNesting > 0) {
+                // Nest blocking states
+                blockedNesting++;
+            } else if (!e.isBlockBilling() && blockedNesting > 0) {
+                blockedNesting--;
+                if (blockedNesting == 0) {
+                    // End of the interval
+                    addDisabledDuration(result, first, e);
+                    first = null;
+                }
             }
         }
 
         if (first != null) { // found a transition to disabled with no terminating event
-            result.add(new DisabledDuration(first.getEffectiveDate(), null));
+            addDisabledDuration(result, first, lastOne.isBlockBilling() ? null : lastOne);
         }
 
         return result;
+    }
+
+    private void addDisabledDuration(final List<DisabledDuration> result, final BlockingState firstBlocking, @Nullable final BlockingState firstNonBlocking) {
+        final DisabledDuration lastOne;
+        if (!result.isEmpty()) {
+            lastOne = result.get(result.size() - 1);
+        } else {
+            lastOne = null;
+        }
+
+        final DateTime endDate = firstNonBlocking == null ? null : firstNonBlocking.getEffectiveDate();
+        if (lastOne != null && lastOne.getEnd().compareTo(firstBlocking.getEffectiveDate()) == 0) {
+            lastOne.setEnd(endDate);
+        } else {
+            result.add(new DisabledDuration(firstBlocking.getEffectiveDate(), endDate));
+        }
     }
 
     @VisibleForTesting

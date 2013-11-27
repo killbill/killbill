@@ -50,7 +50,7 @@ and effective_date \<= :effectiveDate
 and is_active
 <AND_CHECK_TENANT()>
 -- We want the current state, hence the order desc and limit 1
-order by record_id desc
+order by effective_date desc, record_id desc
 limit 1
 ;
 >>
@@ -71,7 +71,7 @@ getBlockingState() ::= <<
          group by service
  ) tmp
  on t.record_id = tmp.record_id
- order by t.record_id asc
+ order by t.effective_date, t.record_id asc
  ;
  >>
 
@@ -84,7 +84,7 @@ where blockable_id = :blockableId
 and service = :service
 and is_active
 <AND_CHECK_TENANT()>
-order by record_id asc
+order by effective_date, record_id asc
 ;
 >>
 
@@ -96,7 +96,7 @@ from
 where blockable_id = :blockableId
 and is_active
 <AND_CHECK_TENANT()>
-order by record_id asc
+order by effective_date, record_id asc
 ;
 >>
 

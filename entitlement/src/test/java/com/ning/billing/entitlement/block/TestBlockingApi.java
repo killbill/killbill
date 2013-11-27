@@ -90,7 +90,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         blockingInternalApi.setBlockingState(state2, internalCallContext);
         assertListenerStatus();
 
-        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAll(uuid, BlockingStateType.ACCOUNT, internalCallContext);
+        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAllForAccount(internalCallContext);
         final List<BlockingState> history = ImmutableList.<BlockingState>copyOf(Collections2.<BlockingState>filter(blockingAll,
                                                                                                                    new Predicate<BlockingState>() {
                                                                                                                        @Override

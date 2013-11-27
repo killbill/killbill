@@ -136,12 +136,12 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         Assert.assertEquals(blockingStates5.size(), 2);
         Assert.assertEquals(blockingStates5.get(0).getBlockedId(), blockableId);
         Assert.assertEquals(blockingStates5.get(0).getStateName(), state);
-        Assert.assertEquals(blockingStates5.get(0).getService(), serviceB);
-        Assert.assertEquals(blockingStates5.get(0).getEffectiveDate(), stateDateTime);
+        Assert.assertEquals(blockingStates5.get(0).getService(), serviceA);
+        Assert.assertEquals(blockingStates5.get(0).getEffectiveDate(), stateDateTime3);
         Assert.assertEquals(blockingStates5.get(1).getBlockedId(), blockableId);
         Assert.assertEquals(blockingStates5.get(1).getStateName(), state);
-        Assert.assertEquals(blockingStates5.get(1).getService(), serviceA);
-        Assert.assertEquals(blockingStates5.get(1).getEffectiveDate(), stateDateTime3);
+        Assert.assertEquals(blockingStates5.get(1).getService(), serviceB);
+        Assert.assertEquals(blockingStates5.get(1).getEffectiveDate(), stateDateTime);
 
         // Set a new state for service A
         final DateTime state2DateTime = new DateTime(2013, 12, 6, 10, 11, 12, DateTimeZone.UTC);
@@ -151,12 +151,12 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         Assert.assertEquals(blockingStates6.size(), 3);
         Assert.assertEquals(blockingStates6.get(0).getBlockedId(), blockableId);
         Assert.assertEquals(blockingStates6.get(0).getStateName(), state);
-        Assert.assertEquals(blockingStates6.get(0).getService(), serviceB);
-        Assert.assertEquals(blockingStates6.get(0).getEffectiveDate(), stateDateTime);
+        Assert.assertEquals(blockingStates6.get(0).getService(), serviceA);
+        Assert.assertEquals(blockingStates6.get(0).getEffectiveDate(), stateDateTime3);
         Assert.assertEquals(blockingStates6.get(1).getBlockedId(), blockableId);
         Assert.assertEquals(blockingStates6.get(1).getStateName(), state);
-        Assert.assertEquals(blockingStates6.get(1).getService(), serviceA);
-        Assert.assertEquals(blockingStates6.get(1).getEffectiveDate(), stateDateTime3);
+        Assert.assertEquals(blockingStates6.get(1).getService(), serviceB);
+        Assert.assertEquals(blockingStates6.get(1).getEffectiveDate(), stateDateTime);
         Assert.assertEquals(blockingStates6.get(2).getBlockedId(), blockableId);
         Assert.assertEquals(blockingStates6.get(2).getStateName(), state2);
         Assert.assertEquals(blockingStates6.get(2).getService(), serviceA);

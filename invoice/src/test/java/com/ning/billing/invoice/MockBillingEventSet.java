@@ -36,11 +36,6 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
     }
 
     @Override
-    public boolean isLast(final BillingEvent event) {
-        return event == last();
-    }
-
-    @Override
     public boolean isAccountAutoInvoiceOff() {
         return isAccountInvoiceOff;
     }

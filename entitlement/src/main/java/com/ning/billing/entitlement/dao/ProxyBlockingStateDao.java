@@ -60,21 +60,38 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
     private static final Logger log = LoggerFactory.getLogger(ProxyBlockingStateDao.class);
 
+    // Ordering is critical here, especially for Junction
     private static final Ordering<BlockingState> BLOCKING_STATE_ORDERING = Ordering.<BlockingState>from(new Comparator<BlockingState>() {
         @Override
         public int compare(final BlockingState o1, final BlockingState o2) {
-            final int blockableIdComparison = o1.getBlockedId().compareTo(o2.getBlockedId());
-            if (blockableIdComparison == 0) {
-                // effective_date column NOT NULL
-                final int comparison = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
-                if (comparison == 0) {
-                    // Keep a stable ordering for ties
-                    return o1.getCreatedDate().compareTo(o2.getCreatedDate());
-                } else {
-                    return comparison;
-                }
+            // effective_date column NOT NULL
+            final int effectiveDateComparison = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
+            if (effectiveDateComparison != 0) {
+                return effectiveDateComparison;
             } else {
-                return blockableIdComparison;
+                final int blockableIdComparison = o1.getBlockedId().compareTo(o2.getBlockedId());
+                if (blockableIdComparison != 0) {
+                    return blockableIdComparison;
+                } else {
+                    // Same date, same blockable id - make sure billing transitions are respected first (assume block -> clear transitions)
+                    if (!o1.isBlockBilling() && o2.isBlockBilling()) {
+                        return 1;
+                    } else if (o1.isBlockBilling() && !o2.isBlockBilling()) {
+                        return -1;
+                    }
+
+                    // Then respect other blocking states
+                    if ((!o1.isBlockChange() && o2.isBlockChange()) ||
+                        (!o1.isBlockEntitlement() && o2.isBlockEntitlement())) {
+                        return 1;
+                    } else if ((o1.isBlockChange() && !o2.isBlockChange()) ||
+                               (o1.isBlockEntitlement() && !o2.isBlockEntitlement())) {
+                        return -1;
+                    }
+
+                    // Otherwise, just respect the created date
+                    return o1.getCreatedDate().compareTo(o2.getCreatedDate());
+                }
             }
         }
     });
@@ -204,11 +221,13 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                     baseSubscriptionsToConsider = ImmutableList.<SubscriptionBase>of(baseSubscription);
                 } else {
                     // blockable id points to a base or standalone subscription, there is nothing to do
-                    return blockingStatesOnDisk;
+                    // Simply return the sorted list
+                    return BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStatesOnDisk);
                 }
             } else {
                 // blockable id points to an account or bundle, in which case there are no extra blocking states to add
-                return blockingStatesOnDisk;
+                // Simply return the sorted list
+                return BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStatesOnDisk);
             }
         } catch (SubscriptionBaseApiException e) {
             log.error("Error retrieving subscriptions for account record id " + context.getAccountRecordId(), e);

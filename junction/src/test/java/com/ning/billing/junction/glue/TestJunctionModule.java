@@ -18,19 +18,16 @@ package com.ning.billing.junction.glue;
 
 import org.skife.config.ConfigSource;
 
-import com.ning.billing.catalog.MockCatalogModule;
 import com.ning.billing.entitlement.api.svcs.DefaultInternalBlockingApi;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.block.MockBlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.dao.MockBlockingStateDao;
-import com.ning.billing.mock.glue.MockAccountModule;
+import com.ning.billing.junction.BlockingInternalApi;
 import com.ning.billing.mock.glue.MockEntitlementModule;
-import com.ning.billing.mock.glue.MockSubscriptionModule;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.MetricsModule;
-import com.ning.billing.junction.BlockingInternalApi;
 
 public class TestJunctionModule extends DefaultJunctionModule {
 
@@ -45,10 +42,6 @@ public class TestJunctionModule extends DefaultJunctionModule {
         install(new MetricsModule());
         install(new CacheModule(configSource));
         install(new CallContextModule());
-        install(new MockAccountModule());
-        install(new MockCatalogModule());
-        install(new MockSubscriptionModule());
-        install(new MockEntitlementModuleForJunction());
     }
 
     public class MockEntitlementModuleForJunction extends MockEntitlementModule {
@@ -67,6 +60,5 @@ public class TestJunctionModule extends DefaultJunctionModule {
         public void installBlockingChecker() {
             bind(BlockingChecker.class).to(MockBlockingChecker.class).asEagerSingleton();
         }
-
     }
 }
