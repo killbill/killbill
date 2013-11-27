@@ -29,6 +29,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -36,6 +37,7 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
+import com.ning.billing.entitlement.EventsStream;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
@@ -46,6 +48,8 @@ import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.dao.BlockingStateSqlDao;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -354,7 +358,14 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     // Test the "read" path
     private void checkFutureBlockingStatesToCancel(final DefaultEntitlement baseEntitlement, @Nullable final DefaultEntitlement addOnEntitlement, @Nullable final DateTime effectiveCancellationDateTime) throws EntitlementApiException {
-        final Collection<BlockingState> blockingStatesForCancellation = computeFutureBlockingStatesForAssociatedAddons(baseEntitlement);
+        final Collection<BlockingState> blockingStatesForCancellationViaEntitlement = computeFutureBlockingStatesForAssociatedAddonsViaEntitlement(baseEntitlement);
+        doCheckFutureBlockingStatesToCancel(addOnEntitlement, effectiveCancellationDateTime, blockingStatesForCancellationViaEntitlement);
+
+        final Collection<BlockingState> blockingStatesForCancellationViaAccount = computeFutureBlockingStatesForAssociatedAddonsViaAccount(baseEntitlement);
+        doCheckFutureBlockingStatesToCancel(addOnEntitlement, effectiveCancellationDateTime, blockingStatesForCancellationViaAccount);
+    }
+
+    private void doCheckFutureBlockingStatesToCancel(final DefaultEntitlement addOnEntitlement, final DateTime effectiveCancellationDateTime, final Collection<BlockingState> blockingStatesForCancellation) {
         if (addOnEntitlement == null || effectiveCancellationDateTime == null) {
             Assert.assertEquals(blockingStatesForCancellation.size(), 0);
         } else {
@@ -370,7 +381,14 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     // Test the "write" path
     private void checkActualBlockingStatesToCancel(final DefaultEntitlement baseEntitlement, final DefaultEntitlement addOnEntitlement, @Nullable final DateTime effectiveCancellationDateTime, final boolean approximateDateCheck) throws EntitlementApiException {
-        final Collection<BlockingState> blockingStatesForCancellation = computeBlockingStatesForAssociatedAddons(baseEntitlement, Objects.firstNonNull(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
+        final Collection<BlockingState> blockingStatesForCancellationViaEntitlement = computeBlockingStatesForAssociatedAddonsViaEntitlement(baseEntitlement, Objects.firstNonNull(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
+        doCheckActualBlockingStatesToCancel(addOnEntitlement, effectiveCancellationDateTime, approximateDateCheck, blockingStatesForCancellationViaEntitlement);
+
+        final Collection<BlockingState> blockingStatesForCancellationViaAccount = computeBlockingStatesForAssociatedAddonsViaAccount(baseEntitlement, Objects.firstNonNull(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
+        doCheckActualBlockingStatesToCancel(addOnEntitlement, effectiveCancellationDateTime, approximateDateCheck, blockingStatesForCancellationViaAccount);
+    }
+
+    private void doCheckActualBlockingStatesToCancel(final DefaultEntitlement addOnEntitlement, final DateTime effectiveCancellationDateTime, final boolean approximateDateCheck, final Collection<BlockingState> blockingStatesForCancellation) {
         if (effectiveCancellationDateTime == null) {
             Assert.assertEquals(blockingStatesForCancellation.size(), 0);
         } else {
@@ -415,13 +433,37 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertEquals(blockingStatesForAddOn.get(0).getStateName(), DefaultEntitlementApi.ENT_STATE_CANCELLED);
     }
 
-    private Collection<BlockingState> computeFutureBlockingStatesForAssociatedAddons(final DefaultEntitlement baseEntitlement) throws EntitlementApiException {
+    private Collection<BlockingState> computeFutureBlockingStatesForAssociatedAddonsViaEntitlement(final DefaultEntitlement baseEntitlement) throws EntitlementApiException {
         final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(baseEntitlement.getId(), callContext);
         return eventsStream.computeAddonsBlockingStatesForFutureSubscriptionBaseEvents();
     }
 
-    private Collection<BlockingState> computeBlockingStatesForAssociatedAddons(final DefaultEntitlement baseEntitlement, final DateTime effectiveDate) throws EntitlementApiException {
+    private Collection<BlockingState> computeFutureBlockingStatesForAssociatedAddonsViaAccount(final DefaultEntitlement baseEntitlement) throws EntitlementApiException {
+        final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(baseEntitlement.getAccountId(), callContext);
+        final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(context).getEventsStreams().values()),
+                                                                       new Predicate<EventsStream>() {
+                                                                           @Override
+                                                                           public boolean apply(final EventsStream input) {
+                                                                               return input.getSubscription().getId().equals(baseEntitlement.getId());
+                                                                           }
+                                                                       });
+        return eventsStream.computeAddonsBlockingStatesForFutureSubscriptionBaseEvents();
+    }
+
+    private Collection<BlockingState> computeBlockingStatesForAssociatedAddonsViaEntitlement(final DefaultEntitlement baseEntitlement, final DateTime effectiveDate) throws EntitlementApiException {
         final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(baseEntitlement.getId(), callContext);
+        return eventsStream.computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate);
+    }
+
+    private Collection<BlockingState> computeBlockingStatesForAssociatedAddonsViaAccount(final DefaultEntitlement baseEntitlement, final DateTime effectiveDate) throws EntitlementApiException {
+        final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(baseEntitlement.getAccountId(), callContext);
+        final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(context).getEventsStreams().values()),
+                                                                       new Predicate<EventsStream>() {
+                                                                           @Override
+                                                                           public boolean apply(final EventsStream input) {
+                                                                               return input.getSubscription().getId().equals(baseEntitlement.getId());
+                                                                           }
+                                                                       });
         return eventsStream.computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate);
     }
 }

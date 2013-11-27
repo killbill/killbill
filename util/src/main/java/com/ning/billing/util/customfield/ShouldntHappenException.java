@@ -14,17 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.glue;
+package com.ning.billing.util.customfield;
 
-public interface SubscriptionModule {
+public class ShouldntHappenException extends RuntimeException {
 
-    public void installSubscriptionService();
-
-    public void installSubscriptionTransferApi();
-
-    public void installSubscriptionMigrationApi();
-
-    public void installSubscriptionInternalApi();
-
-    public void installSubscriptionTimelineApi();
+    public ShouldntHappenException(final String message) {
+        super(message);
+    }
 }

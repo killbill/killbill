@@ -25,7 +25,6 @@ import javax.ws.rs.ext.Provider;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.SubscriptionApiException;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 
 @Singleton
 @Provider
@@ -81,10 +80,10 @@ public class SubscriptionApiExceptionMapper extends ExceptionMapperBase implemen
             return buildNotFoundResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.SUB_RECREATE_BAD_STATE.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
-        }  else if (exception.getCode() == ErrorCode.SUB_UNCANCEL_BAD_STATE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_UNCANCEL_BAD_STATE.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
         } else {
-            return buildBadRequestResponse(exception, uriInfo);
+            return fallback(exception, uriInfo);
         }
     }
 }

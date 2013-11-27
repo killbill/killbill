@@ -23,6 +23,7 @@ import com.ning.billing.glue.SubscriptionModule;
 import com.ning.billing.subscription.alignment.MigrationPlanAligner;
 import com.ning.billing.subscription.alignment.PlanAligner;
 import com.ning.billing.subscription.api.SubscriptionBaseApiService;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.api.migration.DefaultSubscriptionBaseMigrationApi;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
@@ -40,7 +41,6 @@ import com.ning.billing.subscription.engine.dao.DefaultSubscriptionDao;
 import com.ning.billing.subscription.engine.dao.RepairSubscriptionDao;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.util.config.SubscriptionConfig;
-import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -68,7 +68,6 @@ public class DefaultSubscriptionModule extends AbstractModule implements Subscri
     }
 
     protected void installSubscriptionCore() {
-
         bind(SubscriptionBaseApiService.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
         bind(SubscriptionBaseApiService.class).to(DefaultSubscriptionBaseApiService.class).asEagerSingleton();
 
@@ -105,7 +104,6 @@ public class DefaultSubscriptionModule extends AbstractModule implements Subscri
     public void installSubscriptionMigrationApi() {
         bind(SubscriptionBaseMigrationApi.class).to(DefaultSubscriptionBaseMigrationApi.class).asEagerSingleton();
     }
-
 
     @Override
     public void installSubscriptionInternalApi() {

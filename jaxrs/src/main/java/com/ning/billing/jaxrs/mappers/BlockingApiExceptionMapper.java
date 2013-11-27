@@ -37,6 +37,6 @@ public class BlockingApiExceptionMapper extends ExceptionMapperBase implements E
 
     @Override
     public Response toResponse(final BlockingApiException exception) {
-        return buildBadRequestResponse(exception, uriInfo);
+        return fallback(exception, uriInfo);
     }
 }

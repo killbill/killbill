@@ -16,17 +16,19 @@
 
 package com.ning.billing.entitlement.block;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
+import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 
 public class MockBlockingChecker implements BlockingChecker {
 
     @Override
-    public BlockingAggregator getBlockedStatus(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
+    public BlockingAggregator getBlockedStatus(final List<BlockingState> accountEntitlementStates, final List<BlockingState> bundleEntitlementStates, final List<BlockingState> subscriptionEntitlementStates, final InternalTenantContext internalTenantContext) {
         return null;
     }
 

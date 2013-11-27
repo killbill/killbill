@@ -21,10 +21,10 @@ import java.util.Collection;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.Account;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -36,12 +36,12 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.DefaultEntitlementService;
 import com.ning.billing.entitlement.EntitlementService;
+import com.ning.billing.entitlement.EventsStream;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
 import com.ning.billing.entitlement.engine.core.EntitlementUtils;
-import com.ning.billing.entitlement.engine.core.EventsStream;
 import com.ning.billing.entitlement.engine.core.EventsStreamBuilder;
 import com.ning.billing.entity.EntityBase;
 import com.ning.billing.junction.DefaultBlockingState;
@@ -88,7 +88,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                               final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
                               final NotificationQueueService notificationQueueService, final EntitlementUtils entitlementUtils,
                               final EntitlementDateHelper dateHelper, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
-        super(eventsStream.getSubscription().getId(), eventsStream.getSubscription().getCreatedDate(), eventsStream.getSubscription().getUpdatedDate());
+        super(eventsStream.getEntitlementId(), eventsStream.getSubscription().getCreatedDate(), eventsStream.getSubscription().getUpdatedDate());
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.eventsStream = eventsStream;
         this.dateHelper = dateHelper;
@@ -116,16 +116,20 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
              in.getInternalCallContextFactory());
     }
 
-    public Account getAccount() {
-        return eventsStream.getAccount();
-    }
-
     public EventsStream getEventsStream() {
         return eventsStream;
     }
 
+    public DateTimeZone getAccountTimeZone() {
+        return eventsStream.getAccountTimeZone();
+    }
+
     public SubscriptionBase getSubscriptionBase() {
         return eventsStream.getSubscription();
+    }
+
+    public SubscriptionBase getBaseSubscription() {
+        return eventsStream.getBaseSubscription();
     }
 
     public EventsStreamBuilder getEventsStreamBuilder() {
@@ -170,22 +174,22 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public UUID getBaseEntitlementId() {
-        return eventsStream.getSubscription().getId();
+        return eventsStream.getEntitlementId();
     }
 
     @Override
     public UUID getBundleId() {
-        return eventsStream.getSubscription().getBundleId();
+        return eventsStream.getBundleId();
     }
 
     @Override
     public UUID getAccountId() {
-        return eventsStream.getAccount().getId();
+        return eventsStream.getAccountId();
     }
 
     @Override
     public String getExternalKey() {
-        return eventsStream.getBundle().getExternalKey();
+        return eventsStream.getBundleExternalKey();
     }
 
     @Override
@@ -200,7 +204,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public LocalDate getEffectiveStartDate() {
-        return new LocalDate(getSubscriptionBase().getStartDate(), eventsStream.getAccount().getTimeZone());
+        return new LocalDate(getSubscriptionBase().getStartDate(), eventsStream.getAccountTimeZone());
     }
 
     @Override
@@ -319,7 +323,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // (we don't want an entitlement cancel date one second or so after the subscription cancel date or add-ons cancellations
         // computations won't work).
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-        final LocalDate effectiveLocalDate = new LocalDate(localCancelDate, eventsStream.getAccount().getTimeZone());
+        final LocalDate effectiveLocalDate = new LocalDate(localCancelDate, eventsStream.getAccountTimeZone());
         final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(effectiveLocalDate, getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
 
         try {
@@ -341,10 +345,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final LocalDate cancellationDate;
         switch (entitlementPolicy) {
             case IMMEDIATE:
-                cancellationDate = new LocalDate(clock.getUTCNow(), eventsStream.getAccount().getTimeZone());
+                cancellationDate = new LocalDate(clock.getUTCNow(), eventsStream.getAccountTimeZone());
                 break;
             case END_OF_TERM:
-                cancellationDate = getSubscriptionBase().getChargedThroughDate() != null ? new LocalDate(getSubscriptionBase().getChargedThroughDate(), eventsStream.getAccount().getTimeZone()) : new LocalDate(clock.getUTCNow(), eventsStream.getAccount().getTimeZone());
+                cancellationDate = getSubscriptionBase().getChargedThroughDate() != null ? new LocalDate(getSubscriptionBase().getChargedThroughDate(), eventsStream.getAccountTimeZone()) : new LocalDate(clock.getUTCNow(), eventsStream.getAccountTimeZone());
                 break;
             default:
                 throw new RuntimeException("Unsupported policy " + entitlementPolicy);

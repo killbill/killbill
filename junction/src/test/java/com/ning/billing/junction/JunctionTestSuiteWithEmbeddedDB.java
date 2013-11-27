@@ -47,6 +47,7 @@ import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Guice;
@@ -88,6 +89,8 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     protected SubscriptionBaseService subscriptionBaseService;
     @Inject
     protected EntitlementService entitlementService;
+    @Inject
+    protected InternalCallContextFactory internalCallContextFactory;
 
     protected Catalog catalog;
 

@@ -19,11 +19,13 @@ package com.ning.billing.entitlement.glue;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.entitlement.DefaultEntitlementService;
+import com.ning.billing.entitlement.EntitlementInternalApi;
 import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.api.DefaultEntitlementApi;
 import com.ning.billing.entitlement.api.DefaultSubscriptionApi;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.SubscriptionApi;
+import com.ning.billing.entitlement.api.svcs.DefaultEntitlementInternalApi;
 import com.ning.billing.entitlement.api.svcs.DefaultInternalBlockingApi;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.block.DefaultBlockingChecker;
@@ -38,7 +40,6 @@ import com.google.inject.AbstractModule;
 
 public class DefaultEntitlementModule extends AbstractModule implements EntitlementModule {
 
-
     public DefaultEntitlementModule(final ConfigSource configSource) {
     }
 
@@ -47,6 +48,7 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
         installBlockingStateDao();
         installBlockingApi();
         installEntitlementApi();
+        installEntitlementInternalApi();
         installSubscriptionApi();
         installBlockingChecker();
         bind(EntitlementService.class).to(DefaultEntitlementService.class).asEagerSingleton();
@@ -67,6 +69,11 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
     @Override
     public void installEntitlementApi() {
         bind(EntitlementApi.class).to(DefaultEntitlementApi.class).asEagerSingleton();
+    }
+
+    @Override
+    public void installEntitlementInternalApi() {
+        bind(EntitlementInternalApi.class).to(DefaultEntitlementInternalApi.class).asEagerSingleton();
     }
 
     @Override
