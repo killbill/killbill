@@ -31,6 +31,10 @@ andCheckSoftDeletionWithComma(prefix) ::= ""
 /** Add extra fields for SELECT queries **/
 extraTableFieldsWithComma(prefix) ::= ""
 
+defaultOrderBy(prefix) ::= <<
+order by <recordIdField(prefix)> ASC
+>>
+
 /******************   To override in each EntitySqlDao template file <end>  *****************************/
 
 
@@ -143,6 +147,7 @@ select
 from <tableName()> t
 where <CHECK_TENANT("t.")>
 <andCheckSoftDeletionWithComma("t.")>
+<defaultOrderBy("t.")>
 ;
 >>
 
@@ -194,6 +199,7 @@ from <tableName()> t
 where <accountRecordIdField("t.")> \<=\> :accountRecordId
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
 ;
 >>
 
@@ -334,7 +340,7 @@ where t.target_record_id = :targetRecordId
 and t.table_name = :tableName
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
-order by <recordIdField("t.")> ASC
+<defaultOrderBy("t.")>
 ;
 >>
 
@@ -352,7 +358,7 @@ join (
 ) history_record_ids on t.target_record_id = history_record_ids.record_id
 where t.table_name = :tableName
 <AND_CHECK_TENANT("t.")>
-order by <recordIdField("t.")> ASC
+<defaultOrderBy("t.")>
 ;
 >>
 
