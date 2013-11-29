@@ -75,7 +75,7 @@ getBlockingState() ::= <<
          group by service
  ) tmp
  on t.record_id = tmp.record_id
- <defaultOrderBy()>
+ <defaultOrderBy("t.")>
   ;
  >>
 
