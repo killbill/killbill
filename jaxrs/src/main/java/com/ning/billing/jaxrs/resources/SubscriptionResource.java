@@ -61,6 +61,7 @@ import com.ning.billing.events.InvoiceCreationInternalEvent;
 import com.ning.billing.events.NullInvoiceInternalEvent;
 import com.ning.billing.events.PaymentErrorInternalEvent;
 import com.ning.billing.events.PaymentInfoInternalEvent;
+import com.ning.billing.events.PaymentPluginErrorInternalEvent;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -339,6 +340,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
         @Override
         public void onPaymentError(final PaymentErrorInternalEvent event) {
             log.info(String.format("Got event PaymentError token = %s ", event.getUserToken()));
+            notifyForCompletion();
+        }
+
+        @Override
+        public void onPaymentPluginError(final PaymentPluginErrorInternalEvent event) {
+            log.info(String.format("Got event PaymentPluginError token = %s ", event.getUserToken()));
             notifyForCompletion();
         }
     }

@@ -65,7 +65,7 @@ public class DefaultPaymentPluginErrorEvent extends BusEventBase implements Paym
     @JsonIgnore
     @Override
     public BusInternalEventType getBusEventType() {
-        return BusInternalEventType.PAYMENT_ERROR;
+        return BusInternalEventType.PAYMENT_PLUGIN_ERROR;
     }
 
     @Override
