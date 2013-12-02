@@ -46,8 +46,8 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final Account account = accountApi.createAccount(getAccountData(7), callContext);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement1 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), initialDate, callContext);
-        final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), initialDate, callContext);
+        final Entitlement entitlement1 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.fromString("d87c78b4-c6de-4387-8a3b-4a5850dc29fc").toString(), initialDate, callContext);
+        final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.fromString("c56245e7-11a5-4a41-8854-3d31e24bcdcc").toString(), initialDate, callContext);
         entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "stateName", "service", false, false, false, clock.getUTCNow()),
                                                                         internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
         assertListenerStatus();
