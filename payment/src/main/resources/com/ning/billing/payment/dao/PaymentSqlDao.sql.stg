@@ -5,6 +5,10 @@ extraTableFieldsWithComma(prefix) ::= <<
 , <prefix>record_id as payment_number
 >>
 
+defaultOrderBy(prefix) ::= <<
+order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
+>>
+
 tableFields(prefix) ::= <<
   <prefix>account_id
 , <prefix>invoice_id
@@ -48,6 +52,7 @@ select <allTableFields()>
 from payments
 where account_id = :accountId
 <AND_CHECK_TENANT()>
+<defaultOrderBy()>
 ;
 >>
 
@@ -57,6 +62,7 @@ select <allTableFields()>
 from payments
 where invoice_id = :invoiceId
 <AND_CHECK_TENANT()>
+<defaultOrderBy()>
 ;
 >>
 

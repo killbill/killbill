@@ -56,7 +56,7 @@ where pa.payment_id = :paymentId
 and p.id = :paymentId
 <AND_CHECK_TENANT("pa.")>
 <AND_CHECK_TENANT("p.")>
-order by effective_date asc
+<defaultOrderBy("pa.")>
 ;
 >>
 

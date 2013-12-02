@@ -35,6 +35,7 @@ where
 object_id = :objectId
 and object_type = :objectType
 <AND_CHECK_TENANT()>
+<defaultOrderBy()>
 ;
 >>
 
