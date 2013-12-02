@@ -60,11 +60,8 @@ public interface EventsStream {
 
     Collection<BlockingState> getPendingEntitlementCancellationEvents();
 
-    Collection<BlockingState> getSubscriptionEntitlementStates();
-
-    Collection<BlockingState> getBundleEntitlementStates();
-
-    Collection<BlockingState> getAccountEntitlementStates();
+    // All blocking states for the account, associated bundle or subscription
+    Collection<BlockingState> getBlockingStates();
 
     Collection<BlockingState> computeAddonsBlockingStatesForNextSubscriptionBaseEvent(DateTime effectiveDate);
 

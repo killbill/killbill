@@ -73,9 +73,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     public DefaultSubscriptionBundleTimeline(final DateTimeZone accountTimeZone, final UUID accountId, final UUID bundleId, final String externalKey, final Collection<Entitlement> entitlements) {
         final Collection<BlockingState> blockingStates = new HashSet<BlockingState>();
         for (final Entitlement entitlement : entitlements) {
-            blockingStates.addAll(((DefaultEntitlement) entitlement).getEventsStream().getSubscriptionEntitlementStates());
-            blockingStates.addAll(((DefaultEntitlement) entitlement).getEventsStream().getBundleEntitlementStates());
-            blockingStates.addAll(((DefaultEntitlement) entitlement).getEventsStream().getAccountEntitlementStates());
+            blockingStates.addAll(((DefaultEntitlement) entitlement).getEventsStream().getBlockingStates());
         }
         this.accountId = accountId;
         this.bundleId = bundleId;
