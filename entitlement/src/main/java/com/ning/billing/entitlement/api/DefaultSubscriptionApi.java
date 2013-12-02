@@ -17,6 +17,7 @@
 package com.ning.billing.entitlement.api;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,8 +47,27 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 
 public class DefaultSubscriptionApi implements SubscriptionApi {
+
+    private static final Comparator<SubscriptionBundle> SUBSCRIPTION_BUNDLE_COMPARATOR = new Comparator<SubscriptionBundle>() {
+        @Override
+        public int compare(final SubscriptionBundle o1, final SubscriptionBundle o2) {
+            final int compared = o1.getOriginalCreatedDate().compareTo(o2.getOriginalCreatedDate());
+            if (compared != 0) {
+                return compared;
+            } else {
+                final int compared2 = o1.getUpdatedDate().compareTo(o2.getUpdatedDate());
+                if (compared2 != 0) {
+                    return compared2;
+                } else {
+                    // Default, stable, ordering
+                    return o1.getId().compareTo(o2.getId());
+                }
+            }
+        }
+    };
 
     private final EntitlementInternalApi entitlementInternalApi;
     private final SubscriptionBaseInternalApi subscriptionInternalApi;
@@ -188,7 +208,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             bundles.add(subscriptionBundle);
         }
 
-        return bundles;
+        // Sort the results for predictability
+        return Ordering.<SubscriptionBundle>from(SUBSCRIPTION_BUNDLE_COMPARATOR).sortedCopy(bundles);
     }
 
     private Map<UUID, List<Subscription>> buildSubscriptionsFromEntitlements(final AccountEntitlements accountEntitlements) {

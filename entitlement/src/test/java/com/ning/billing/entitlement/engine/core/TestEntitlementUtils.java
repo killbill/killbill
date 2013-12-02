@@ -70,6 +70,9 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         clock.setDay(initialDate);
         account = accountApi.createAccount(getAccountData(7), callContext);
 
+        // Override the context with the right account record id
+        internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE);
 
         // Create base entitlement

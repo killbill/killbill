@@ -57,9 +57,8 @@ public class DefaultEventsStream implements EventsStream {
 
     private final Account account;
     private final SubscriptionBaseBundle bundle;
-    private final List<BlockingState> subscriptionEntitlementStates;
-    private final List<BlockingState> bundleEntitlementStates;
-    private final List<BlockingState> accountEntitlementStates;
+    // All blocking states for the account, associated bundle or subscription
+    private final List<BlockingState> blockingStates;
     private final BlockingChecker blockingChecker;
     // Base subscription for the bundle if it exists, null otherwise
     private final SubscriptionBase baseSubscription;
@@ -71,23 +70,23 @@ public class DefaultEventsStream implements EventsStream {
     private final DateTime utcNow;
 
     private BlockingAggregator blockingAggregator;
+    private List<BlockingState> subscriptionEntitlementStates;
+    private List<BlockingState> bundleEntitlementStates;
+    private List<BlockingState> accountEntitlementStates;
     private List<BlockingState> currentSubscriptionEntitlementBlockingStatesForServices;
     private List<BlockingState> currentBundleEntitlementBlockingStatesForServices;
-    private List<BlockingState> currentAccountEntitlementBlockingStateForServices;
+    private List<BlockingState> currentAccountEntitlementBlockingStatesForServices;
     private LocalDate entitlementEffectiveEndDate;
     private BlockingState entitlementCancelEvent;
     private EntitlementState entitlementState;
 
     public DefaultEventsStream(final Account account, final SubscriptionBaseBundle bundle,
-                               final List<BlockingState> subscriptionEntitlementStates, final List<BlockingState> bundleEntitlementStates,
-                               final List<BlockingState> accountEntitlementStates, final BlockingChecker blockingChecker,
+                               final List<BlockingState> blockingStates, final BlockingChecker blockingChecker,
                                @Nullable final SubscriptionBase baseSubscription, final SubscriptionBase subscription,
                                final List<SubscriptionBase> allSubscriptionsForBundle, final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {
         this.account = account;
         this.bundle = bundle;
-        this.subscriptionEntitlementStates = subscriptionEntitlementStates;
-        this.bundleEntitlementStates = bundleEntitlementStates;
-        this.accountEntitlementStates = accountEntitlementStates;
+        this.blockingStates = blockingStates;
         this.blockingChecker = blockingChecker;
         this.baseSubscription = baseSubscription;
         this.subscription = subscription;
@@ -96,10 +95,6 @@ public class DefaultEventsStream implements EventsStream {
         this.utcNow = utcNow;
 
         setup();
-    }
-
-    public Account getAccount() {
-        return account;
     }
 
     @Override
@@ -127,10 +122,6 @@ public class DefaultEventsStream implements EventsStream {
         return subscription.getId();
     }
 
-    public SubscriptionBaseBundle getBundle() {
-        return bundle;
-    }
-
     @Override
     public SubscriptionBase getBaseSubscription() {
         return baseSubscription;
@@ -151,17 +142,9 @@ public class DefaultEventsStream implements EventsStream {
         return entitlementEffectiveEndDate;
     }
 
-    public BlockingState getEntitlementCancelEvent() {
-        return entitlementCancelEvent;
-    }
-
     @Override
     public EntitlementState getEntitlementState() {
         return entitlementState;
-    }
-
-    public BlockingAggregator getCurrentBlockingAggregator() {
-        return blockingAggregator;
     }
 
     @Override
@@ -198,18 +181,8 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     @Override
-    public Collection<BlockingState> getSubscriptionEntitlementStates() {
-        return subscriptionEntitlementStates;
-    }
-
-    @Override
-    public Collection<BlockingState> getBundleEntitlementStates() {
-        return bundleEntitlementStates;
-    }
-
-    @Override
-    public Collection<BlockingState> getAccountEntitlementStates() {
-        return accountEntitlementStates;
+    public Collection<BlockingState> getBlockingStates() {
+        return blockingStates;
     }
 
     @Override
@@ -248,10 +221,6 @@ public class DefaultEventsStream implements EventsStream {
                                                                input.getBlockedId().equals(subscriptionId);
                                                     }
                                                 }).orNull();
-    }
-
-    public Iterable<SubscriptionBaseTransition> getPendingSubscriptionEvents(final SubscriptionBaseTransitionType... types) {
-        return getPendingSubscriptionEvents(utcNow, types);
     }
 
     public Iterable<SubscriptionBaseTransition> getPendingSubscriptionEvents(final DateTime effectiveDatetime, final SubscriptionBaseTransitionType... types) {
@@ -390,6 +359,7 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     private void setup() {
+        computeEntitlementBlockingStates();
         computeBlockingAggregator();
         computeEntitlementEffectiveEndDate();
         computeEntitlementCancelEvent();
@@ -397,9 +367,9 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     private void computeBlockingAggregator() {
-        final List<BlockingState> currentAccountEntitlementBlockingStatesForServices = filterCurrentBlockableStatePerService(accountEntitlementStates);
-        final List<BlockingState> currentBundleEntitlementBlockingStatesForServices = filterCurrentBlockableStatePerService(bundleEntitlementStates);
-        final List<BlockingState> currentSubscriptionEntitlementBlockingStatesForServices = filterCurrentBlockableStatePerService(subscriptionEntitlementStates);
+        currentAccountEntitlementBlockingStatesForServices = filterCurrentBlockableStatePerService(accountEntitlementStates);
+        currentBundleEntitlementBlockingStatesForServices = filterCurrentBlockableStatePerService(bundleEntitlementStates);
+        currentSubscriptionEntitlementBlockingStatesForServices = filterCurrentBlockableStatePerService(subscriptionEntitlementStates);
         blockingAggregator = blockingChecker.getBlockedStatus(currentAccountEntitlementBlockingStatesForServices,
                                                               currentBundleEntitlementBlockingStatesForServices,
                                                               currentSubscriptionEntitlementBlockingStatesForServices,
@@ -464,5 +434,23 @@ public class DefaultEventsStream implements EventsStream {
             // Gather states across all services and check if one of them is set to 'blockEntitlement'
             entitlementState = (blockingAggregator != null && blockingAggregator.isBlockEntitlement() ? EntitlementState.BLOCKED : EntitlementState.ACTIVE);
         }
+    }
+
+    private void computeEntitlementBlockingStates() {
+        subscriptionEntitlementStates = filterBlockingStatesForEntitlementService(BlockingStateType.SUBSCRIPTION, subscription.getId());
+        bundleEntitlementStates = filterBlockingStatesForEntitlementService(BlockingStateType.SUBSCRIPTION_BUNDLE, subscription.getBundleId());
+        accountEntitlementStates = filterBlockingStatesForEntitlementService(BlockingStateType.ACCOUNT, account.getId());
+    }
+
+    private List<BlockingState> filterBlockingStatesForEntitlementService(final BlockingStateType blockingStateType, @Nullable final UUID blockableId) {
+        return ImmutableList.<BlockingState>copyOf(Iterables.<BlockingState>filter(blockingStates,
+                                                                                   new Predicate<BlockingState>() {
+                                                                                       @Override
+                                                                                       public boolean apply(final BlockingState input) {
+                                                                                           return blockingStateType.equals(input.getType()) &&
+                                                                                                  EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) &&
+                                                                                                  input.getBlockedId().equals(blockableId);
+                                                                                       }
+                                                                                   }));
     }
 }

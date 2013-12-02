@@ -48,12 +48,12 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
     }
 
     // Special signature for EventsStreamBuilder to save some DAO calls
-    public List<BlockingState> getBlockingHistoryForService(final List<BlockingState> blockingStatesOnDisk,
-                                                            final SubscriptionBaseBundle bundle,
-                                                            @Nullable final SubscriptionBase baseSubscription,
-                                                            final SubscriptionBase subscription,
-                                                            final List<SubscriptionBase> allSubscriptionsForBundle,
-                                                            final InternalTenantContext context) throws EntitlementApiException {
+    public List<BlockingState> getBlockingHistory(final List<BlockingState> blockingStatesOnDisk,
+                                                  final SubscriptionBaseBundle bundle,
+                                                  @Nullable final SubscriptionBase baseSubscription,
+                                                  final SubscriptionBase subscription,
+                                                  final List<SubscriptionBase> allSubscriptionsForBundle,
+                                                  final InternalTenantContext context) throws EntitlementApiException {
         // blockable id points to a subscription, but make sure it's an add-on
         if (!ProductCategory.ADD_ON.equals(subscription.getCategory())) {
             // blockable id points to a base or standalone subscription, there is nothing to do

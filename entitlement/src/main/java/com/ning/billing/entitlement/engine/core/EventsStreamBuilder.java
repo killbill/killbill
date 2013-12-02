@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.engine.core;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,6 @@ import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.AccountEventsStreams;
-import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.EventsStream;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
@@ -144,28 +144,26 @@ public class EventsStreamBuilder {
         }
 
         // Retrieve the blocking states
-        final List<BlockingState> blockingStatesForAccount = BLOCKING_STATE_ORDERING.immutableSortedCopy(defaultBlockingStateDao.getBlockingAllForAccountRecordId(internalTenantContext));
+        final List<BlockingState> blockingStatesForAccount = defaultBlockingStateDao.getBlockingAllForAccountRecordId(internalTenantContext);
 
-        // Optimization: build lookup tables for entitlement states
-        final List<BlockingState> accountEntitlementStates = new LinkedList<BlockingState>();
-        final Map<UUID, List<BlockingState>> entitlementStatesPerSubscription = new HashMap<UUID, List<BlockingState>>();
-        final Map<UUID, List<BlockingState>> entitlementStatesPerBundle = new HashMap<UUID, List<BlockingState>>();
+        // Optimization: build lookup tables for blocking states states
+        final Collection<BlockingState> accountBlockingStates = new LinkedList<BlockingState>();
+        final Map<UUID, List<BlockingState>> blockingStatesPerSubscription = new HashMap<UUID, List<BlockingState>>();
+        final Map<UUID, List<BlockingState>> blockingStatesPerBundle = new HashMap<UUID, List<BlockingState>>();
         for (final BlockingState blockingState : blockingStatesForAccount) {
-            if (!EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(blockingState.getService())) {
-                continue;
-            } else if (BlockingStateType.SUBSCRIPTION.equals(blockingState.getType())) {
-                if (entitlementStatesPerSubscription.get(blockingState.getBlockedId()) == null) {
-                    entitlementStatesPerSubscription.put(blockingState.getBlockedId(), new LinkedList<BlockingState>());
+            if (BlockingStateType.SUBSCRIPTION.equals(blockingState.getType())) {
+                if (blockingStatesPerSubscription.get(blockingState.getBlockedId()) == null) {
+                    blockingStatesPerSubscription.put(blockingState.getBlockedId(), new LinkedList<BlockingState>());
                 }
-                entitlementStatesPerSubscription.get(blockingState.getBlockedId()).add(blockingState);
+                blockingStatesPerSubscription.get(blockingState.getBlockedId()).add(blockingState);
             } else if (BlockingStateType.SUBSCRIPTION_BUNDLE.equals(blockingState.getType())) {
-                if (entitlementStatesPerBundle.get(blockingState.getBlockedId()) == null) {
-                    entitlementStatesPerBundle.put(blockingState.getBlockedId(), new LinkedList<BlockingState>());
+                if (blockingStatesPerBundle.get(blockingState.getBlockedId()) == null) {
+                    blockingStatesPerBundle.put(blockingState.getBlockedId(), new LinkedList<BlockingState>());
                 }
-                entitlementStatesPerBundle.get(blockingState.getBlockedId()).add(blockingState);
+                blockingStatesPerBundle.get(blockingState.getBlockedId()).add(blockingState);
             } else if (BlockingStateType.ACCOUNT.equals(blockingState.getType()) &&
                        account.getId().equals(blockingState.getBlockedId())) {
-                accountEntitlementStates.add(blockingState);
+                accountBlockingStates.add(blockingState);
             }
         }
 
@@ -181,29 +179,39 @@ public class EventsStreamBuilder {
                                                                                                   return ProductCategory.BASE.equals(input.getLastActiveProduct().getCategory());
                                                                                               }
                                                                                           }).orNull();
-            final List<BlockingState> bundleEntitlementStates = Objects.firstNonNull(entitlementStatesPerBundle.get(bundleId), ImmutableList.<BlockingState>of());
+            final List<BlockingState> bundleBlockingStates = Objects.firstNonNull(blockingStatesPerBundle.get(bundleId), ImmutableList.<BlockingState>of());
 
             if (entitlementsPerBundle.get(bundleId) == null) {
                 entitlementsPerBundle.put(bundleId, new LinkedList<EventsStream>());
             }
 
             for (final SubscriptionBase subscription : allSubscriptionsForBundle) {
-                final List<BlockingState> subscriptionBlockingStatesOnDisk = Objects.firstNonNull(entitlementStatesPerSubscription.get(subscription.getId()), ImmutableList.<BlockingState>of());
+                final List<BlockingState> subscriptionBlockingStatesOnDisk = Objects.firstNonNull(blockingStatesPerSubscription.get(subscription.getId()), ImmutableList.<BlockingState>of());
 
-                // We cannot use blockingStatesForAccount here: we need subscriptionEntitlementStates to contain the events not on disk when building an EventsStream
+                // We cannot always use blockingStatesForAccount here: we need subscriptionBlockingStates to contain the events not on disk when building an EventsStream
                 // for an add-on - which means going through the magic of ProxyBlockingStateDao, which will recursively
                 // create EventsStream objects. To avoid an infinite recursion, bypass ProxyBlockingStateDao when it's not
                 // needed, i.e. if this EventStream is for a standalone or a base subscription
-                final List<BlockingState> subscriptionEntitlementStates = (baseSubscription == null || subscription.getId().equals(baseSubscription.getId())) ?
-                                                                          subscriptionBlockingStatesOnDisk :
-                                                                          blockingStateDao.getBlockingHistoryForService(subscriptionBlockingStatesOnDisk,
-                                                                                                                        bundle,
-                                                                                                                        baseSubscription,
-                                                                                                                        subscription,
-                                                                                                                        allSubscriptionsForBundle,
-                                                                                                                        internalTenantContext);
+                final List<BlockingState> subscriptionBlockingStates;
+                if (baseSubscription == null || subscription.getId().equals(baseSubscription.getId())) {
+                    subscriptionBlockingStates = subscriptionBlockingStatesOnDisk;
+                } else {
+                    subscriptionBlockingStates = blockingStateDao.getBlockingHistory(subscriptionBlockingStatesOnDisk,
+                                                                                     bundle,
+                                                                                     baseSubscription,
+                                                                                     subscription,
+                                                                                     allSubscriptionsForBundle,
+                                                                                     internalTenantContext);
 
-                final EventsStream eventStream = buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, subscriptionEntitlementStates, bundleEntitlementStates, accountEntitlementStates, internalTenantContext);
+                }
+
+                // Merge the BlockingStates
+                final Collection<BlockingState> blockingStateSet = new LinkedHashSet<BlockingState>(accountBlockingStates);
+                blockingStateSet.addAll(bundleBlockingStates);
+                blockingStateSet.addAll(subscriptionBlockingStates);
+                final List<BlockingState> blockingStates = BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStateSet);
+
+                final EventsStream eventStream = buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, blockingStates, internalTenantContext);
                 entitlementsPerBundle.get(bundleId).add(eventStream);
             }
         }
@@ -267,24 +275,56 @@ public class EventsStreamBuilder {
             throw new EntitlementApiException(e);
         }
 
-        final List<BlockingState> bundleEntitlementStates = BLOCKING_STATE_ORDERING.immutableSortedCopy(defaultBlockingStateDao.getBlockingHistoryForService(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext));
-        final List<BlockingState> accountEntitlementStates = BLOCKING_STATE_ORDERING.immutableSortedCopy(defaultBlockingStateDao.getBlockingHistoryForService(account.getId(), BlockingStateType.ACCOUNT, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext));
-        final ImmutableList<BlockingState> subscriptionEntitlementStatesOnDisk = BLOCKING_STATE_ORDERING.immutableSortedCopy(defaultBlockingStateDao.getBlockingHistoryForService(subscription.getId(), BlockingStateType.SUBSCRIPTION, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalTenantContext));
+        // Retrieve the blocking states
+        final Collection<BlockingState> blockingStatesForAccount = defaultBlockingStateDao.getBlockingAllForAccountRecordId(internalTenantContext);
 
-        // We need subscriptionEntitlementStates to contain the events not on disk when building an EventsStream
+        // Optimization: build lookup tables for blocking states states
+        final Collection<BlockingState> accountBlockingStates = new LinkedList<BlockingState>();
+        final Map<UUID, List<BlockingState>> blockingStatesPerSubscription = new HashMap<UUID, List<BlockingState>>();
+        final Map<UUID, List<BlockingState>> blockingStatesPerBundle = new HashMap<UUID, List<BlockingState>>();
+        for (final BlockingState blockingState : blockingStatesForAccount) {
+            if (BlockingStateType.SUBSCRIPTION.equals(blockingState.getType())) {
+                if (blockingStatesPerSubscription.get(blockingState.getBlockedId()) == null) {
+                    blockingStatesPerSubscription.put(blockingState.getBlockedId(), new LinkedList<BlockingState>());
+                }
+                blockingStatesPerSubscription.get(blockingState.getBlockedId()).add(blockingState);
+            } else if (BlockingStateType.SUBSCRIPTION_BUNDLE.equals(blockingState.getType())) {
+                if (blockingStatesPerBundle.get(blockingState.getBlockedId()) == null) {
+                    blockingStatesPerBundle.put(blockingState.getBlockedId(), new LinkedList<BlockingState>());
+                }
+                blockingStatesPerBundle.get(blockingState.getBlockedId()).add(blockingState);
+            } else if (BlockingStateType.ACCOUNT.equals(blockingState.getType()) &&
+                       account.getId().equals(blockingState.getBlockedId())) {
+                accountBlockingStates.add(blockingState);
+            }
+        }
+
+        final List<BlockingState> bundleBlockingStates = Objects.firstNonNull(blockingStatesPerBundle.get(subscription.getBundleId()), ImmutableList.<BlockingState>of());
+        final List<BlockingState> subscriptionBlockingStatesOnDisk = Objects.firstNonNull(blockingStatesPerSubscription.get(subscription.getId()), ImmutableList.<BlockingState>of());
+
+        // We cannot always use blockingStatesForAccount here: we need subscriptionBlockingStates to contain the events not on disk when building an EventsStream
         // for an add-on - which means going through the magic of ProxyBlockingStateDao, which will recursively
         // create EventsStream objects. To avoid an infinite recursion, bypass ProxyBlockingStateDao when it's not
         // needed, i.e. if this EventStream is for a standalone or a base subscription
-        final List<BlockingState> subscriptionEntitlementStates = (baseSubscription == null || subscription.getId().equals(baseSubscription.getId())) ?
-                                                                  subscriptionEntitlementStatesOnDisk :
-                                                                  blockingStateDao.getBlockingHistoryForService(subscriptionEntitlementStatesOnDisk,
-                                                                                                                bundle,
-                                                                                                                baseSubscription,
-                                                                                                                subscription,
-                                                                                                                allSubscriptionsForBundle,
-                                                                                                                internalTenantContext);
+        final Collection<BlockingState> subscriptionBlockingStates;
+        if (baseSubscription == null || subscription.getId().equals(baseSubscription.getId())) {
+            subscriptionBlockingStates = subscriptionBlockingStatesOnDisk;
+        } else {
+            subscriptionBlockingStates = blockingStateDao.getBlockingHistory(ImmutableList.<BlockingState>copyOf(subscriptionBlockingStatesOnDisk),
+                                                                             bundle,
+                                                                             baseSubscription,
+                                                                             subscription,
+                                                                             allSubscriptionsForBundle,
+                                                                             internalTenantContext);
+        }
 
-        return buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, subscriptionEntitlementStates, bundleEntitlementStates, accountEntitlementStates, internalTenantContext);
+        // Merge the BlockingStates
+        final Collection<BlockingState> blockingStateSet = new LinkedHashSet<BlockingState>(accountBlockingStates);
+        blockingStateSet.addAll(bundleBlockingStates);
+        blockingStateSet.addAll(subscriptionBlockingStates);
+        final List<BlockingState> blockingStates = BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStateSet);
+
+        return buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, blockingStates, internalTenantContext);
     }
 
     private EventsStream buildForEntitlement(final Account account,
@@ -292,15 +332,11 @@ public class EventsStreamBuilder {
                                              @Nullable final SubscriptionBase baseSubscription,
                                              final SubscriptionBase subscription,
                                              final List<SubscriptionBase> allSubscriptionsForBundle,
-                                             final List<BlockingState> subscriptionEntitlementStates,
-                                             final List<BlockingState> bundleEntitlementStates,
-                                             final List<BlockingState> accountEntitlementStates,
+                                             final List<BlockingState> blockingStates,
                                              final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         return new DefaultEventsStream(account,
                                        bundle,
-                                       subscriptionEntitlementStates,
-                                       bundleEntitlementStates,
-                                       accountEntitlementStates,
+                                       blockingStates,
                                        checker,
                                        baseSubscription,
                                        subscription,
