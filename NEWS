@@ -1,3 +1,13 @@
+0.8.4
+    Subscription base speedups
+    Fix regression in bundle timeline API
+    Fix ClassCastException in Beatrix
+    https://github.com/killbill/killbill/issues/123
+    https://github.com/killbill/killbill/issues/132
+
+0.8.3
+    Entitlement speedups
+
 0.8.2
     Lots of subscription & entitlement bugfixes
     https://github.com/killbill/killbill/issues/121
