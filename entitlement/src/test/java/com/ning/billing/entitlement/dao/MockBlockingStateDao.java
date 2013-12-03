@@ -42,11 +42,11 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     private final Map<UUID, List<BlockingState>> blockingStates = new HashMap<UUID, List<BlockingState>>();
     private final Map<Long, List<BlockingState>> blockingStatesPerAccountRecordId = new HashMap<Long, List<BlockingState>>();
 
-    // TODO This mock class should also check that events are past or present except for getBlockingAll
+    // TODO This mock class should also check that events are past or present
 
     @Override
     public BlockingState getBlockingStateForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
-        final List<BlockingState> states = getBlockingAll(blockableId, blockingStateType, context);
+        final List<BlockingState> states = blockingStates.get(blockableId);
         if (states == null) {
             return null;
         }
@@ -74,30 +74,6 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
             }
         }
         return new ArrayList<BlockingState>(tmp.values());
-    }
-
-    @Override
-    public List<BlockingState> getBlockingHistoryForService(final UUID overdueableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
-        final List<BlockingState> states = blockingStates.get(overdueableId);
-        if (states == null) {
-            return new ArrayList<BlockingState>();
-        }
-        final ImmutableList<BlockingState> filtered = ImmutableList.<BlockingState>copyOf(Collections2.filter(states, new Predicate<BlockingState>() {
-            @Override
-            public boolean apply(@Nullable final BlockingState input) {
-                return input.getService().equals(serviceName);
-            }
-        }));
-
-        // Note! The returned list cannot be immutable!
-        return states == null ? new ArrayList<BlockingState>() : new ArrayList<BlockingState>(filtered);
-    }
-
-    @Override
-    public List<BlockingState> getBlockingAll(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
-        final List<BlockingState> states = blockingStates.get(blockableId);
-        // Note! The returned list cannot be immutable!
-        return states == null ? new ArrayList<BlockingState>() : states;
     }
 
     @Override

@@ -126,10 +126,6 @@ public class EventsStreamBuilder {
             throw new EntitlementApiException(e);
         }
 
-        return buildForAccount(account, subscriptions, internalTenantContext);
-    }
-
-    private AccountEventsStreams buildForAccount(final Account account, final Map<UUID, List<SubscriptionBase>> subscriptions, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         if (subscriptions.isEmpty()) {
             // Bail early
             return new DefaultAccountEventsStreams(account);
@@ -197,6 +193,8 @@ public class EventsStreamBuilder {
                     subscriptionBlockingStates = subscriptionBlockingStatesOnDisk;
                 } else {
                     subscriptionBlockingStates = blockingStateDao.getBlockingHistory(subscriptionBlockingStatesOnDisk,
+                                                                                     blockingStatesForAccount,
+                                                                                     account,
                                                                                      bundle,
                                                                                      baseSubscription,
                                                                                      subscription,
@@ -239,35 +237,6 @@ public class EventsStreamBuilder {
             throw new EntitlementApiException(e);
         }
 
-        return buildForEntitlement(bundle, baseSubscription, subscription, allSubscriptionsForBundle, internalTenantContext);
-    }
-
-    // Special signature for ProxyBlockingStateDao to save some DAO calls
-    public EventsStream buildForEntitlement(final SubscriptionBase subscription, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
-        final SubscriptionBaseBundle bundle;
-        try {
-            bundle = subscriptionInternalApi.getBundleFromId(subscription.getBundleId(), internalTenantContext);
-        } catch (SubscriptionBaseApiException e) {
-            throw new EntitlementApiException(e);
-        }
-
-        final List<SubscriptionBase> allSubscriptionsForBundle = subscriptionInternalApi.getSubscriptionsForBundle(subscription.getBundleId(), internalTenantContext);
-        return buildForEntitlement(bundle, subscription, subscription, allSubscriptionsForBundle, internalTenantContext);
-    }
-
-    // Special signature for OptimizedProxyBlockingStateDao to save some DAO calls
-    public EventsStream buildForEntitlement(final SubscriptionBaseBundle bundle,
-                                            final SubscriptionBase subscription,
-                                            final List<SubscriptionBase> allSubscriptionsForBundle,
-                                            final InternalTenantContext internalTenantContext) throws EntitlementApiException {
-        return buildForEntitlement(bundle, subscription, subscription, allSubscriptionsForBundle, internalTenantContext);
-    }
-
-    private EventsStream buildForEntitlement(final SubscriptionBaseBundle bundle,
-                                             @Nullable final SubscriptionBase baseSubscription,
-                                             final SubscriptionBase subscription,
-                                             final List<SubscriptionBase> allSubscriptionsForBundle,
-                                             final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         final Account account;
         try {
             account = accountInternalApi.getAccountById(bundle.getAccountId(), internalTenantContext);
@@ -276,8 +245,28 @@ public class EventsStreamBuilder {
         }
 
         // Retrieve the blocking states
-        final Collection<BlockingState> blockingStatesForAccount = defaultBlockingStateDao.getBlockingAllForAccountRecordId(internalTenantContext);
+        final List<BlockingState> blockingStatesForAccount = defaultBlockingStateDao.getBlockingAllForAccountRecordId(internalTenantContext);
 
+        return buildForEntitlement(blockingStatesForAccount, account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, internalTenantContext);
+    }
+
+    // Special signature for OptimizedProxyBlockingStateDao to save some DAO calls
+    public EventsStream buildForEntitlement(final List<BlockingState> blockingStatesForAccount,
+                                            final Account account,
+                                            final SubscriptionBaseBundle bundle,
+                                            final SubscriptionBase baseSubscription,
+                                            final List<SubscriptionBase> allSubscriptionsForBundle,
+                                            final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+        return buildForEntitlement(blockingStatesForAccount, account, bundle, baseSubscription, baseSubscription, allSubscriptionsForBundle, internalTenantContext);
+    }
+
+    private EventsStream buildForEntitlement(final List<BlockingState> blockingStatesForAccount,
+                                             final Account account,
+                                             final SubscriptionBaseBundle bundle,
+                                             @Nullable final SubscriptionBase baseSubscription,
+                                             final SubscriptionBase subscription,
+                                             final List<SubscriptionBase> allSubscriptionsForBundle,
+                                             final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         // Optimization: build lookup tables for blocking states states
         final Collection<BlockingState> accountBlockingStates = new LinkedList<BlockingState>();
         final Map<UUID, List<BlockingState>> blockingStatesPerSubscription = new HashMap<UUID, List<BlockingState>>();
@@ -308,9 +297,13 @@ public class EventsStreamBuilder {
         // needed, i.e. if this EventStream is for a standalone or a base subscription
         final Collection<BlockingState> subscriptionBlockingStates;
         if (baseSubscription == null || subscription.getId().equals(baseSubscription.getId())) {
+            // Note: we come here during the recursion from OptimizedProxyBlockingStateDao#getBlockingHistory
+            // (called by blockingStateDao.getBlockingHistory below)
             subscriptionBlockingStates = subscriptionBlockingStatesOnDisk;
         } else {
             subscriptionBlockingStates = blockingStateDao.getBlockingHistory(ImmutableList.<BlockingState>copyOf(subscriptionBlockingStatesOnDisk),
+                                                                             blockingStatesForAccount,
+                                                                             account,
                                                                              bundle,
                                                                              baseSubscription,
                                                                              subscription,

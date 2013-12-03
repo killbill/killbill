@@ -92,18 +92,6 @@ and is_active
 ;
 >>
 
-getBlockingAll() ::= <<
-select
-<allTableFields()>
-from
-<tableName()>
-where blockable_id = :blockableId
-and is_active
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
-;
->>
-
 unactiveEvent() ::= <<
 update
 <tableName()>
