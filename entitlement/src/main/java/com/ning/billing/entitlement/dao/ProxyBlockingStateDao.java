@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.dao;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -41,12 +42,12 @@ import com.ning.billing.entitlement.EventsStream;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.DefaultEntitlementApi;
-import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.engine.core.EventsStreamBuilder;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
+import com.ning.billing.util.customfield.ShouldntHappenException;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.Pagination;
 
@@ -60,7 +61,101 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     private static final Logger log = LoggerFactory.getLogger(ProxyBlockingStateDao.class);
 
     // Ordering is critical here, especially for Junction
-    public static final Ordering<BlockingState> BLOCKING_STATE_ORDERING = Ordering.<BlockingState>from(new Comparator<BlockingState>() {
+    public static List<BlockingState> sortedCopy(final Iterable<BlockingState> blockingStates) {
+        final List<BlockingState> blockingStatesSomewhatSorted = BLOCKING_STATE_ORDERING_WITH_TIES_UNHANDLED.immutableSortedCopy(blockingStates);
+
+        final List<BlockingState> result = new LinkedList<BlockingState>();
+
+        // Take care of the ties
+        final Iterator<BlockingState> iterator = blockingStatesSomewhatSorted.iterator();
+        BlockingState prev = null;
+        while (iterator.hasNext()) {
+            final BlockingState current = iterator.next();
+            if (iterator.hasNext()) {
+                final BlockingState next = iterator.next();
+                if (prev != null && current.getEffectiveDate().equals(next.getEffectiveDate()) && current.getBlockedId().equals(next.getBlockedId())) {
+                    // Same date, same blockable id
+
+                    // Make sure block billing transitions are respected first
+                    BlockingState prevCandidate = insertTiedBlockingStatesInTheRightOrder(result, current, next, prev.isBlockBilling(), current.isBlockBilling(), next.isBlockBilling());
+                    if (prevCandidate == null) {
+                        // Then respect block entitlement transitions
+                        prevCandidate = insertTiedBlockingStatesInTheRightOrder(result, current, next, prev.isBlockEntitlement(), current.isBlockEntitlement(), next.isBlockEntitlement());
+                        if (prevCandidate == null) {
+                            // And finally block changes transitions
+                            prevCandidate = insertTiedBlockingStatesInTheRightOrder(result, current, next, prev.isBlockChange(), current.isBlockChange(), next.isBlockChange());
+                            if (prevCandidate == null) {
+                                // Trust the creation date (see BLOCKING_STATE_ORDERING_WITH_TIES_UNHANDLED below)
+                                result.add(current);
+                                result.add(next);
+                                prev = next;
+                            } else {
+                                prev = prevCandidate;
+                            }
+                        } else {
+                            prev = prevCandidate;
+                        }
+                    } else {
+                        prev = prevCandidate;
+                    }
+                } else {
+                    result.add(current);
+                    result.add(next);
+                    prev = next;
+                }
+            } else {
+                // End of the list
+                result.add(current);
+            }
+        }
+
+        return result;
+    }
+
+    private static BlockingState insertTiedBlockingStatesInTheRightOrder(final Collection<BlockingState> result,
+                                                                         final BlockingState current,
+                                                                         final BlockingState next,
+                                                                         final boolean prevBlocked,
+                                                                         final boolean currentBlocked,
+                                                                         final boolean nextBlocked) {
+        final BlockingState prev;
+
+        if (prevBlocked && currentBlocked && nextBlocked) {
+            // Tricky use case, bail
+            return null;
+        } else if (prevBlocked && currentBlocked && !nextBlocked) {
+            result.add(next);
+            result.add(current);
+            prev = current;
+        } else if (prevBlocked && !currentBlocked && nextBlocked) {
+            result.add(current);
+            result.add(next);
+            prev = next;
+        } else if (prevBlocked && !currentBlocked && !nextBlocked) {
+            // Tricky use case, bail
+            return null;
+        } else if (!prevBlocked && currentBlocked && nextBlocked) {
+            // Tricky use case, bail
+            return null;
+        } else if (!prevBlocked && currentBlocked && !nextBlocked) {
+            result.add(current);
+            result.add(next);
+            prev = next;
+        } else if (!prevBlocked && !currentBlocked && nextBlocked) {
+            result.add(next);
+            result.add(current);
+            prev = current;
+        } else if (!prevBlocked && !currentBlocked && !nextBlocked) {
+            // Tricky use case, bail
+            return null;
+        } else {
+            throw new ShouldntHappenException("Marker exception for code clarity");
+        }
+
+        return prev;
+    }
+
+    private static final Ordering<BlockingState> BLOCKING_STATE_ORDERING_WITH_TIES_UNHANDLED = Ordering.<BlockingState>from(new Comparator<BlockingState>() {
         @Override
         public int compare(final BlockingState o1, final BlockingState o2) {
             // effective_date column NOT NULL
@@ -72,23 +167,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                 if (blockableIdComparison != 0) {
                     return blockableIdComparison;
                 } else {
-                    // Same date, same blockable id - make sure billing transitions are respected first (assume block -> clear transitions)
-                    if (!o1.isBlockBilling() && o2.isBlockBilling()) {
-                        return 1;
-                    } else if (o1.isBlockBilling() && !o2.isBlockBilling()) {
-                        return -1;
-                    }
-
-                    // Then respect other blocking states
-                    if ((!o1.isBlockChange() && o2.isBlockChange()) ||
-                        (!o1.isBlockEntitlement() && o2.isBlockEntitlement())) {
-                        return 1;
-                    } else if ((o1.isBlockChange() && !o2.isBlockChange()) ||
-                               (o1.isBlockEntitlement() && !o2.isBlockEntitlement())) {
-                        return -1;
-                    }
-
-                    // Otherwise, just respect the created date
+                    // Same date, same blockable id, just respect the created date for now (see sortedCopyOf method above)
                     return o1.getCreatedDate().compareTo(o2.getCreatedDate());
                 }
             }
@@ -254,7 +333,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         }
 
         // Return the sorted list
-        return BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStatesOnDiskCopy);
+        return sortedCopy(blockingStatesOnDiskCopy);
     }
 
     private BlockingState findEntitlementCancellationBlockingState(@Nullable final UUID blockedId, final Iterable<BlockingState> blockingStatesOnDisk) {

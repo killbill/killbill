@@ -46,6 +46,7 @@ import com.ning.billing.entitlement.api.svcs.DefaultAccountEventsStreams;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.dao.DefaultBlockingStateDao;
 import com.ning.billing.entitlement.dao.OptimizedProxyBlockingStateDao;
+import com.ning.billing.entitlement.dao.ProxyBlockingStateDao;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -59,8 +60,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
-import static com.ning.billing.entitlement.dao.ProxyBlockingStateDao.BLOCKING_STATE_ORDERING;
 
 @Singleton
 public class EventsStreamBuilder {
@@ -207,7 +206,7 @@ public class EventsStreamBuilder {
                 final Collection<BlockingState> blockingStateSet = new LinkedHashSet<BlockingState>(accountBlockingStates);
                 blockingStateSet.addAll(bundleBlockingStates);
                 blockingStateSet.addAll(subscriptionBlockingStates);
-                final List<BlockingState> blockingStates = BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStateSet);
+                final List<BlockingState> blockingStates = ProxyBlockingStateDao.sortedCopy(blockingStateSet);
 
                 final EventsStream eventStream = buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, blockingStates, internalTenantContext);
                 entitlementsPerBundle.get(bundleId).add(eventStream);
@@ -315,7 +314,7 @@ public class EventsStreamBuilder {
         final Collection<BlockingState> blockingStateSet = new LinkedHashSet<BlockingState>(accountBlockingStates);
         blockingStateSet.addAll(bundleBlockingStates);
         blockingStateSet.addAll(subscriptionBlockingStates);
-        final List<BlockingState> blockingStates = BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStateSet);
+        final List<BlockingState> blockingStates = ProxyBlockingStateDao.sortedCopy(blockingStateSet);
 
         return buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, blockingStates, internalTenantContext);
     }
