@@ -60,7 +60,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     private final Logger logger = LoggerFactory.getLogger(DefaultSubscriptionBundleTimeline.class);
 
     // STEPH This is added to give us confidence the timeline we generate behaves as expected. Could be removed at some point
-    private final static String TIMELINE_WARN_LOG = "Sanity Timeline: ";
+    private static final String TIMELINE_WARN_LOG = "Sanity Timeline: ";
 
     public static final String BILLING_SERVICE_NAME = "billing-service";
     public static final String ENT_BILLING_SERVICE_NAME = "entitlement+billing-service";
@@ -81,7 +81,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         this.events = computeEvents(entitlements, new LinkedList<BlockingState>(blockingStates), accountTimeZone);
     }
 
-    public DefaultSubscriptionBundleTimeline(final DateTimeZone accountTimeZone, final UUID accountId, final UUID bundleId, final String externalKey, final List<Entitlement> entitlements, List<BlockingState> allBlockingStates) {
+    public DefaultSubscriptionBundleTimeline(final DateTimeZone accountTimeZone, final UUID accountId, final UUID bundleId, final String externalKey, final List<Entitlement> entitlements, final List<BlockingState> allBlockingStates) {
         this.accountId = accountId;
         this.bundleId = bundleId;
         this.externalKey = externalKey;
@@ -94,7 +94,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     // - base subscription events are already ordered for each Entitlement and so when we reorder at the bundle level we try not to break that initial ordering
     // - blocking state events occur at various level (account, bundle and subscription) so for higher level, we need to dispatch that on each subscription.
     //
-    private List<SubscriptionEvent> computeEvents(final Collection<Entitlement> entitlements, List<BlockingState> allBlockingStates, final DateTimeZone accountTimeZone) {
+    private List<SubscriptionEvent> computeEvents(final Collection<Entitlement> entitlements, final List<BlockingState> allBlockingStates, final DateTimeZone accountTimeZone) {
 
         // Extract ids for all entitlement in the list
         final Set<UUID> allEntitlementUUIDs = new TreeSet(Collections2.transform(entitlements, new Function<Entitlement, UUID>() {
@@ -147,10 +147,9 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             }
         });
 
-        for (BlockingState bs : allBlockingStates) {
-
+        for (final BlockingState bs : allBlockingStates) {
             final List<SubscriptionEvent> newEvents = new ArrayList<SubscriptionEvent>();
-            int index = insertFromBlockingEvent(accountTimeZone, allEntitlementUUIDs, result, bs, bs.getEffectiveDate(), newEvents);
+            final int index = insertFromBlockingEvent(accountTimeZone, allEntitlementUUIDs, result, bs, bs.getEffectiveDate(), newEvents);
             insertAfterIndex(result, newEvents, index);
         }
         reOrderSubscriptionEventsOnSameDateByType(result);
@@ -172,8 +171,8 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     protected void reOrderSubscriptionEventsOnSameDateByType(final List<SubscriptionEvent> events) {
         final int size = events.size();
         for (int i = 0; i < size; i++) {
-            final DefaultSubscriptionEvent cur = (DefaultSubscriptionEvent) events.get(i);
-            final DefaultSubscriptionEvent next = (i < (size - 1)) ? (DefaultSubscriptionEvent) events.get(i + 1) : null;
+            final SubscriptionEvent cur = events.get(i);
+            final SubscriptionEvent next = (i < (size - 1)) ? events.get(i + 1) : null;
 
             final boolean shouldSwap = (next != null && shouldSwap(cur, next, true));
             final boolean shouldReverseSort = (next == null || shouldSwap);
@@ -184,8 +183,8 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             }
             if (shouldReverseSort) {
                 while (currentIndex >= 1) {
-                    final DefaultSubscriptionEvent revCur = (DefaultSubscriptionEvent) events.get(currentIndex);
-                    final DefaultSubscriptionEvent other = (DefaultSubscriptionEvent) events.get(currentIndex - 1);
+                    final SubscriptionEvent revCur = events.get(currentIndex);
+                    final SubscriptionEvent other = events.get(currentIndex - 1);
                     if (shouldSwap(revCur, other, false)) {
                         Collections.swap(events, currentIndex, currentIndex - 1);
                     }
@@ -198,8 +197,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         }
     }
 
-    private boolean shouldSwap(DefaultSubscriptionEvent cur, DefaultSubscriptionEvent other, boolean isAscending) {
-
+    private boolean shouldSwap(final SubscriptionEvent cur, final SubscriptionEvent other, final boolean isAscending) {
         // For a given date, order by subscriptionId, and within subscription by event type
         final int idComp = cur.getEntitlementId().compareTo(other.getEntitlementId());
         return (cur.getEffectiveDate().compareTo(other.getEffectiveDate()) == 0 &&
@@ -211,8 +209,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                    (idComp == 0 && cur.getSubscriptionEventType().ordinal() < other.getSubscriptionEventType().ordinal())))));
     }
 
-    private void insertAfterIndex(final LinkedList<SubscriptionEvent> original, final List<SubscriptionEvent> newEvents, int index) {
-
+    private void insertAfterIndex(final LinkedList<SubscriptionEvent> original, final List<SubscriptionEvent> newEvents, final int index) {
         final boolean firstPosition = (index == -1);
         final boolean lastPosition = (index == original.size() - 1);
         if (lastPosition || firstPosition) {
@@ -233,10 +230,9 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     // reOrderSubscriptionEventsOnSameDateByType would reorder them anyway if this was not the case.
     //
     private int insertFromBlockingEvent(final DateTimeZone accountTimeZone, final Set<UUID> allEntitlementUUIDs, final List<SubscriptionEvent> result, final BlockingState bs, final DateTime bsEffectiveDate, final List<SubscriptionEvent> newEvents) {
-
         // Keep the current state per entitlement
         final Map<UUID, TargetState> targetStates = new HashMap<UUID, TargetState>();
-        for (UUID cur : allEntitlementUUIDs) {
+        for (final UUID cur : allEntitlementUUIDs) {
             targetStates.put(cur, new TargetState());
         }
 
@@ -248,7 +244,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         // Where we need to insert in that stream
         DefaultSubscriptionEvent curInsertion = null;
         while (it.hasNext()) {
-            DefaultSubscriptionEvent cur = (DefaultSubscriptionEvent) it.next();
+            final DefaultSubscriptionEvent cur = (DefaultSubscriptionEvent) it.next();
             final int compEffectiveDate = bsEffectiveDate.compareTo(cur.getEffectiveDateTime());
             final boolean shouldContinue = (compEffectiveDate >= 0);
             if (!shouldContinue) {
@@ -283,13 +279,13 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                                 ImmutableList.<UUID>copyOf(allEntitlementUUIDs);
 
         // For each target compute the new events that should be inserted in the stream
-        for (UUID target : targetEntitlementIds) {
+        for (final UUID target : targetEntitlementIds) {
 
             final SubscriptionEvent[] prevNext = findPrevNext(result, target, curInsertion);
             final TargetState curTargetState = targetStates.get(target);
 
             final List<SubscriptionEventType> eventTypes = curTargetState.addStateAndReturnEventTypes(bs);
-            for (SubscriptionEventType t : eventTypes) {
+            for (final SubscriptionEventType t : eventTypes) {
                 newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], target, bs, t, accountTimeZone));
             }
         }
@@ -298,12 +294,11 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
 
     // Extract prev and next events in the stream events for that particular target subscription from the insertionEvent
     private SubscriptionEvent[] findPrevNext(final List<SubscriptionEvent> events, final UUID targetEntitlementId, final SubscriptionEvent insertionEvent) {
-
         // Find prev/next event for the same entitlement
         final SubscriptionEvent[] result = new DefaultSubscriptionEvent[2];
         if (insertionEvent == null) {
             result[0] = null;
-            result[1] = events.size() > 0 ? events.get(0) : null;
+            result[1] = !events.isEmpty() ? events.get(0) : null;
             return result;
         }
 
@@ -376,22 +371,22 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         }
     }
 
-    private void insertSubscriptionEvent(final SubscriptionEvent event, final LinkedList<SubscriptionEvent> result) {
+    private void insertSubscriptionEvent(final SubscriptionEvent event, final List<SubscriptionEvent> result) {
         int index = 0;
-        for (SubscriptionEvent cur : result) {
-            int compEffectiveDate = event.getEffectiveDate().compareTo(cur.getEffectiveDate());
+        for (final SubscriptionEvent cur : result) {
+            final int compEffectiveDate = event.getEffectiveDate().compareTo(cur.getEffectiveDate());
             if (compEffectiveDate < 0) {
                 // EffectiveDate is less than cur -> insert here
                 break;
             } else if (compEffectiveDate == 0) {
 
-                int compUUID = event.getEntitlementId().compareTo(cur.getEntitlementId());
+                final int compUUID = event.getEntitlementId().compareTo(cur.getEntitlementId());
                 if (compUUID < 0) {
                     // Same EffectiveDate but subscription are different, no need top sort further just return something deterministic
                     break;
                 } else if (compUUID == 0) {
 
-                    int eventOrder = event.getSubscriptionEventType().ordinal() - cur.getSubscriptionEventType().ordinal();
+                    final int eventOrder = event.getSubscriptionEventType().ordinal() - cur.getSubscriptionEventType().ordinal();
                     if (eventOrder < 0) {
                         // Same EffectiveDate and same subscription, order by SubscriptionEventType;
                         break;
@@ -533,7 +528,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     //
     // Internal class to keep the state associated with each subscription
     //
-    private final static class TargetState {
+    private static final class TargetState {
 
         private boolean isEntitlementStarted;
         private boolean isEntitlementStopped;
@@ -629,7 +624,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
 
         private BlockingAggregator getState() {
             final DefaultBlockingAggregator aggrBefore = new DefaultBlockingAggregator();
-            for (BlockingState cur : perServiceBlockingState.values()) {
+            for (final BlockingState cur : perServiceBlockingState.values()) {
                 aggrBefore.or(cur);
             }
             return aggrBefore;
@@ -704,7 +699,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             this.accountTimeZone = accountTimeZone;
         }
 
-        private DefaultSubscriptionEvent(DefaultSubscriptionEvent copy, SubscriptionEventType newEventType) {
+        private DefaultSubscriptionEvent(final DefaultSubscriptionEvent copy, final SubscriptionEventType newEventType) {
             this(copy.getId(),
                  copy.getEntitlementId(),
                  copy.getEffectiveDateTime(),
