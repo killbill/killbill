@@ -158,7 +158,7 @@ public class DefaultPayment extends EntityBase implements Payment {
 
         BigDecimal result = amount;
         for (RefundModelDao cur : refunds) {
-            if (cur.getRefundStatus() != RefundStatus.CREATED) {
+            if (cur.getRefundStatus() == RefundStatus.COMPLETED) {
                 result = result.subtract(cur.getAmount());
             }
         }
