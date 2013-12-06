@@ -25,15 +25,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +95,6 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     // - blocking state events occur at various level (account, bundle and subscription) so for higher level, we need to dispatch that on each subscription.
     //
     private List<SubscriptionEvent> computeEvents(final Collection<Entitlement> entitlements, final List<BlockingState> allBlockingStates, final DateTimeZone accountTimeZone) {
-
         // Extract ids for all entitlement in the list
         final Set<UUID> allEntitlementUUIDs = new TreeSet(Collections2.transform(entitlements, new Function<Entitlement, UUID>() {
             @Override
@@ -152,8 +151,31 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             final int index = insertFromBlockingEvent(accountTimeZone, allEntitlementUUIDs, result, bs, bs.getEffectiveDate(), newEvents);
             insertAfterIndex(result, newEvents, index);
         }
+
         reOrderSubscriptionEventsOnSameDateByType(result);
+
+        removeOverlappingSubscriptionEvents(result);
+
         return result;
+    }
+
+    // Make sure the argument supports the remove operation - hence expect a LinkedList, not a List
+    private void removeOverlappingSubscriptionEvents(final LinkedList<SubscriptionEvent> events) {
+        final Iterator<SubscriptionEvent> iterator = events.iterator();
+        final Map<String, DefaultSubscriptionEvent> prevPerService = new HashMap<String, DefaultSubscriptionEvent>();
+        while (iterator.hasNext()) {
+            final DefaultSubscriptionEvent current = (DefaultSubscriptionEvent) iterator.next();
+            final DefaultSubscriptionEvent prev = prevPerService.get(current.getServiceName());
+            if (prev != null) {
+                if (current.overlaps(prev)) {
+                    iterator.remove();
+                } else {
+                    prevPerService.put(current.getServiceName(), current);
+                }
+            } else {
+                prevPerService.put(current.getServiceName(), current);
+            }
+        }
     }
 
     //
@@ -280,7 +302,6 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
 
         // For each target compute the new events that should be inserted in the stream
         for (final UUID target : targetEntitlementIds) {
-
             final SubscriptionEvent[] prevNext = findPrevNext(result, target, curInsertion);
             final TargetState curTargetState = targetStates.get(target);
 
@@ -339,36 +360,8 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 }
             }
         }
-        sanitizeForBaseRecreateEvents(result);
+
         return result;
-    }
-
-    //
-    // Old version of code would use CANCEL/RE_CREATE to simulate PAUSE_BILLING/RESUME_BILLING
-    // (Relies on the assumption that there is no blocking_state event matching that CACNEL event so:
-    // 1. The STOP_BILLING (coming from the row CANCEL event) should be transformed into a PAUSE_BILLING
-    // 2. We also add a PAUSE_ENTITLEMENT at the same time as the PAUSE_BILLING
-    //
-    private void sanitizeForBaseRecreateEvents(final LinkedList<SubscriptionEvent> input) {
-        final Collection<UUID> guiltyEntitlementIds = new TreeSet<UUID>();
-        final ListIterator<SubscriptionEvent> it = input.listIterator(input.size());
-        while (it.hasPrevious()) {
-            final SubscriptionEvent cur = it.previous();
-            if (cur.getSubscriptionEventType() == SubscriptionEventType.RESUME_BILLING) {
-                guiltyEntitlementIds.add(cur.getEntitlementId());
-                continue;
-            }
-            if (cur.getSubscriptionEventType() == SubscriptionEventType.STOP_BILLING &&
-                guiltyEntitlementIds.contains(cur.getEntitlementId())) {
-                guiltyEntitlementIds.remove(cur.getEntitlementId());
-                final SubscriptionEvent correctedBillingEvent = new DefaultSubscriptionEvent((DefaultSubscriptionEvent) cur, SubscriptionEventType.PAUSE_BILLING);
-                it.set(correctedBillingEvent);
-
-                // Old versions of the code won't have an associated event in blocking_states - we need to add one on the fly
-                final SubscriptionEvent correctedEntitlementEvent = new DefaultSubscriptionEvent((DefaultSubscriptionEvent) cur, SubscriptionEventType.PAUSE_ENTITLEMENT);
-                it.add(correctedEntitlementEvent);
-            }
-        }
     }
 
     private void insertSubscriptionEvent(final SubscriptionEvent event, final List<SubscriptionEvent> result) {
@@ -405,7 +398,66 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         result.add(index, event);
     }
 
-    private SubscriptionEvent toSubscriptionEvent(final SubscriptionEvent prev, final SubscriptionEvent next, final UUID entitlementId, final BlockingState in, final SubscriptionEventType eventType, final DateTimeZone accountTimeZone) {
+    private SubscriptionEvent toSubscriptionEvent(@Nullable final SubscriptionEvent prev, @Nullable final SubscriptionEvent next,
+                                                  final UUID entitlementId, final BlockingState in, final SubscriptionEventType eventType, final DateTimeZone accountTimeZone) {
+        final Product prevProduct;
+        final Plan prevPlan;
+        final PlanPhase prevPlanPhase;
+        final PriceList prevPriceList;
+        final BillingPeriod prevBillingPeriod;
+        // Enforce prev = null for start events
+        if (prev == null || SubscriptionEventType.START_ENTITLEMENT.equals(eventType) || SubscriptionEventType.START_BILLING.equals(eventType)) {
+            prevProduct = null;
+            prevPlan = null;
+            prevPlanPhase = null;
+            prevPriceList = null;
+            prevBillingPeriod = null;
+        } else {
+            // We look for the next for the 'prev' meaning we we are headed to, but if this is null -- for example on cancellation we get the prev which gives the correct state.
+            prevProduct = (prev.getNextProduct() != null ? prev.getNextProduct() : prev.getPrevProduct());
+            prevPlan = (prev.getNextPlan() != null ? prev.getNextPlan() : prev.getPrevPlan());
+            prevPlanPhase = (prev.getNextPhase() != null ? prev.getNextPhase() : prev.getPrevPhase());
+            prevPriceList = (prev.getNextPriceList() != null ? prev.getNextPriceList() : prev.getPrevPriceList());
+            prevBillingPeriod = (prev.getNextBillingPeriod() != null ? prev.getNextBillingPeriod() : prev.getPrevBillingPeriod());
+        }
+
+        final Product nextProduct;
+        final Plan nextPlan;
+        final PlanPhase nextPlanPhase;
+        final PriceList nextPriceList;
+        final BillingPeriod nextBillingPeriod;
+        if (SubscriptionEventType.PAUSE_ENTITLEMENT.equals(eventType) || SubscriptionEventType.PAUSE_BILLING.equals(eventType) ||
+            SubscriptionEventType.RESUME_ENTITLEMENT.equals(eventType) || SubscriptionEventType.RESUME_BILLING.equals(eventType) ||
+            (SubscriptionEventType.SERVICE_STATE_CHANGE.equals(eventType) && (prev == null || (!SubscriptionEventType.STOP_ENTITLEMENT.equals(prev.getSubscriptionEventType()) && !SubscriptionEventType.STOP_BILLING.equals(prev.getSubscriptionEventType()))))) {
+            // Enforce next = prev for pause/resume events as well as service changes
+            nextProduct = prevProduct;
+            nextPlan = prevPlan;
+            nextPlanPhase = prevPlanPhase;
+            nextPriceList = prevPriceList;
+            nextBillingPeriod = prevBillingPeriod;
+        } else if (next == null) {
+            // Enforce next = null for stop events
+            if (prev == null || SubscriptionEventType.STOP_ENTITLEMENT.equals(eventType) || SubscriptionEventType.STOP_BILLING.equals(eventType)) {
+                nextProduct = null;
+                nextPlan = null;
+                nextPlanPhase = null;
+                nextPriceList = null;
+                nextBillingPeriod = null;
+            } else {
+                nextProduct = prev.getNextProduct();
+                nextPlan = prev.getNextPlan();
+                nextPlanPhase = prev.getNextPhase();
+                nextPriceList = prev.getNextPriceList();
+                nextBillingPeriod = prev.getNextBillingPeriod();
+            }
+        } else {
+            nextProduct = next.getNextProduct();
+            nextPlan = next.getNextPlan();
+            nextPlanPhase = next.getNextPhase();
+            nextPriceList = next.getNextPriceList();
+            nextBillingPeriod = next.getNextBillingPeriod();
+        }
+
         return new DefaultSubscriptionEvent(in.getId(),
                                             entitlementId,
                                             in.getEffectiveDate(),
@@ -415,17 +467,16 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                             in.isBlockBilling(),
                                             in.getService(),
                                             in.getStateName(),
-                                            // We look for the next for the 'prev' meaning we we are headed to, but if this is null -- for example on cancellation we get the prev which gives the correct state.
-                                            prev != null ? (prev.getNextProduct() != null ? prev.getNextProduct() : prev.getPrevProduct()) : null,
-                                            prev != null ? (prev.getNextPlan() != null ? prev.getNextPlan() : prev.getPrevPlan()) : null,
-                                            prev != null ? (prev.getNextPhase() != null ? prev.getNextPhase() : prev.getPrevPhase()) : null,
-                                            prev != null ? (prev.getNextPriceList() != null ? prev.getNextPriceList() : prev.getPrevPriceList()) : null,
-                                            prev != null ? (prev.getNextBillingPeriod() != null ? prev.getNextBillingPeriod() : prev.getPrevBillingPeriod()) : null,
-                                            next != null ? next.getPrevProduct() : null,
-                                            next != null ? next.getPrevPlan() : null,
-                                            next != null ? next.getPrevPhase() : null,
-                                            next != null ? next.getPrevPriceList() : null,
-                                            next != null ? next.getPrevBillingPeriod() : null,
+                                            prevProduct,
+                                            prevPlan,
+                                            prevPlanPhase,
+                                            prevPriceList,
+                                            prevBillingPeriod,
+                                            nextProduct,
+                                            nextPlan,
+                                            nextPlanPhase,
+                                            nextPriceList,
+                                            nextBillingPeriod,
                                             in.getCreatedDate(),
                                             accountTimeZone);
     }
@@ -487,11 +538,6 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.STOP_BILLING);
             case PHASE:
                 return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.PHASE);
-            // This is the old way of pausing billing; not used any longer, but kept for compatibility reason. We return both RESUME_ENTITLEMENT and RESUME_BILLING
-            // and will rely on the sanitizeForBaseRecreateEvents method to transform the STOP_BILLING (coming from CANCEL) into the correct events.
-            //
-            case RE_CREATE:
-                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.RESUME_ENTITLEMENT, SubscriptionEventType.RESUME_BILLING);
             /*
              * Those can be ignored:
              */
@@ -572,7 +618,6 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         // From the current state of that subscription, compute the effect of the new state based on the incoming blockingState event
         //
         private List<SubscriptionEventType> addStateAndReturnEventTypes(final BlockingState bs) {
-
             // Turn off isBlockedEntitlement and isBlockedBilling if there was not start event
             final BlockingState fixedBlockingState = new DefaultBlockingState(bs.getBlockedId(),
                                                                               bs.getType(),
@@ -628,310 +673,6 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 aggrBefore.or(cur);
             }
             return aggrBefore;
-        }
-    }
-
-    protected static final class DefaultSubscriptionEvent implements SubscriptionEvent {
-
-        private final UUID id;
-        private final UUID entitlementId;
-        private final DateTime effectiveDate;
-        private final DateTime requestedDate;
-        private final SubscriptionEventType eventType;
-        private final boolean isBlockingEntitlement;
-        private final boolean isBlockingBilling;
-        private final String serviceName;
-        private final String serviceStateName;
-        private final Product prevProduct;
-        private final Plan prevPlan;
-        private final PlanPhase prevPlanPhase;
-        private final PriceList prevPriceList;
-        private final BillingPeriod prevBillingPeriod;
-        private final Product nextProduct;
-        private final Plan nextPlan;
-        private final PlanPhase nextPlanPhase;
-        private final PriceList nextPriceList;
-        private final BillingPeriod nextBillingPeriod;
-        private final DateTime createdDate;
-        private final DateTimeZone accountTimeZone;
-
-        public DefaultSubscriptionEvent(final UUID id,
-                                        final UUID entitlementId,
-                                        final DateTime effectiveDate,
-                                        final DateTime requestedDate,
-                                        final SubscriptionEventType eventType,
-                                        final boolean blockingEntitlement,
-                                        final boolean blockingBilling,
-                                        final String serviceName,
-                                        final String serviceStateName,
-                                        final Product prevProduct,
-                                        final Plan prevPlan,
-                                        final PlanPhase prevPlanPhase,
-                                        final PriceList prevPriceList,
-                                        final BillingPeriod prevBillingPeriod,
-                                        final Product nextProduct,
-                                        final Plan nextPlan,
-                                        final PlanPhase nextPlanPhase,
-                                        final PriceList nextPriceList,
-                                        final BillingPeriod nextBillingPeriod,
-                                        final DateTime createDate,
-                                        final DateTimeZone accountTimeZone) {
-            this.id = id;
-            this.entitlementId = entitlementId;
-            this.effectiveDate = effectiveDate;
-            this.requestedDate = requestedDate;
-            this.eventType = eventType;
-            this.isBlockingEntitlement = blockingEntitlement;
-            this.isBlockingBilling = blockingBilling;
-            this.serviceName = serviceName;
-            this.serviceStateName = serviceStateName;
-            this.prevProduct = prevProduct;
-            this.prevPlan = prevPlan;
-            this.prevPlanPhase = prevPlanPhase;
-            this.prevPriceList = prevPriceList;
-            this.prevBillingPeriod = prevBillingPeriod;
-            this.nextProduct = nextProduct;
-            this.nextPlan = nextPlan;
-            this.nextPlanPhase = nextPlanPhase;
-            this.nextPriceList = nextPriceList;
-            this.nextBillingPeriod = nextBillingPeriod;
-            this.createdDate = createDate;
-            this.accountTimeZone = accountTimeZone;
-        }
-
-        private DefaultSubscriptionEvent(final DefaultSubscriptionEvent copy, final SubscriptionEventType newEventType) {
-            this(copy.getId(),
-                 copy.getEntitlementId(),
-                 copy.getEffectiveDateTime(),
-                 copy.getRequestedDateTime(),
-                 newEventType,
-                 copy.isBlockedEntitlement(),
-                 copy.isBlockedBilling(),
-                 copy.getServiceName(),
-                 copy.getServiceStateName(),
-                 copy.getPrevProduct(),
-                 copy.getPrevPlan(),
-                 copy.getPrevPhase(),
-                 copy.getPrevPriceList(),
-                 copy.getPrevBillingPeriod(),
-                 copy.getNextProduct(),
-                 copy.getNextPlan(),
-                 copy.getNextPhase(),
-                 copy.getNextPriceList(),
-                 copy.getNextBillingPeriod(),
-                 copy.getCreatedDate(),
-                 copy.getAccountTimeZone());
-        }
-
-        public DateTimeZone getAccountTimeZone() {
-            return accountTimeZone;
-        }
-
-        public DateTime getEffectiveDateTime() {
-            return effectiveDate;
-        }
-
-        public DateTime getRequestedDateTime() {
-            return requestedDate;
-        }
-
-        @Override
-        public UUID getId() {
-            return id;
-        }
-
-        @Override
-        public UUID getEntitlementId() {
-            return entitlementId;
-        }
-
-        @Override
-        public LocalDate getEffectiveDate() {
-            return effectiveDate != null ? new LocalDate(effectiveDate, accountTimeZone) : null;
-        }
-
-        @Override
-        public LocalDate getRequestedDate() {
-            return requestedDate != null ? new LocalDate(requestedDate, accountTimeZone) : null;
-        }
-
-        @Override
-        public SubscriptionEventType getSubscriptionEventType() {
-            return eventType;
-        }
-
-        @Override
-        public boolean isBlockedBilling() {
-            return isBlockingBilling;
-        }
-
-        @Override
-        public boolean isBlockedEntitlement() {
-            return isBlockingEntitlement;
-        }
-
-        @Override
-        public String getServiceName() {
-            return serviceName;
-        }
-
-        @Override
-        public String getServiceStateName() {
-            return serviceStateName;
-        }
-
-        @Override
-        public Product getPrevProduct() {
-            return prevProduct;
-        }
-
-        @Override
-        public Plan getPrevPlan() {
-            return prevPlan;
-        }
-
-        @Override
-        public PlanPhase getPrevPhase() {
-            return prevPlanPhase;
-        }
-
-        @Override
-        public PriceList getPrevPriceList() {
-            return prevPriceList;
-        }
-
-        @Override
-        public BillingPeriod getPrevBillingPeriod() {
-            return prevBillingPeriod;
-        }
-
-        @Override
-        public Product getNextProduct() {
-            return nextProduct;
-        }
-
-        @Override
-        public Plan getNextPlan() {
-            return nextPlan;
-        }
-
-        @Override
-        public PlanPhase getNextPhase() {
-            return nextPlanPhase;
-        }
-
-        @Override
-        public PriceList getNextPriceList() {
-            return nextPriceList;
-        }
-
-        @Override
-        public BillingPeriod getNextBillingPeriod() {
-            return nextBillingPeriod;
-        }
-
-        public DateTime getCreatedDate() {
-            return createdDate;
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            final DefaultSubscriptionEvent that = (DefaultSubscriptionEvent) o;
-
-            if (isBlockingBilling != that.isBlockingBilling) {
-                return false;
-            }
-            if (isBlockingEntitlement != that.isBlockingEntitlement) {
-                return false;
-            }
-            if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
-                return false;
-            }
-            if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
-                return false;
-            }
-            if (entitlementId != null ? !entitlementId.equals(that.entitlementId) : that.entitlementId != null) {
-                return false;
-            }
-            if (eventType != that.eventType) {
-                return false;
-            }
-            if (id != null ? !id.equals(that.id) : that.id != null) {
-                return false;
-            }
-            if (nextBillingPeriod != that.nextBillingPeriod) {
-                return false;
-            }
-            if (nextPlan != null ? !nextPlan.equals(that.nextPlan) : that.nextPlan != null) {
-                return false;
-            }
-            if (nextPlanPhase != null ? !nextPlanPhase.equals(that.nextPlanPhase) : that.nextPlanPhase != null) {
-                return false;
-            }
-            if (nextPriceList != null ? !nextPriceList.equals(that.nextPriceList) : that.nextPriceList != null) {
-                return false;
-            }
-            if (nextProduct != null ? !nextProduct.equals(that.nextProduct) : that.nextProduct != null) {
-                return false;
-            }
-            if (prevBillingPeriod != that.prevBillingPeriod) {
-                return false;
-            }
-            if (prevPlan != null ? !prevPlan.equals(that.prevPlan) : that.prevPlan != null) {
-                return false;
-            }
-            if (prevPlanPhase != null ? !prevPlanPhase.equals(that.prevPlanPhase) : that.prevPlanPhase != null) {
-                return false;
-            }
-            if (prevPriceList != null ? !prevPriceList.equals(that.prevPriceList) : that.prevPriceList != null) {
-                return false;
-            }
-            if (prevProduct != null ? !prevProduct.equals(that.prevProduct) : that.prevProduct != null) {
-                return false;
-            }
-            if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
-                return false;
-            }
-            if (serviceName != null ? !serviceName.equals(that.serviceName) : that.serviceName != null) {
-                return false;
-            }
-            if (serviceStateName != null ? !serviceStateName.equals(that.serviceStateName) : that.serviceStateName != null) {
-                return false;
-            }
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = id != null ? id.hashCode() : 0;
-            result = 31 * result + (entitlementId != null ? entitlementId.hashCode() : 0);
-            result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
-            result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
-            result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
-            result = 31 * result + (isBlockingEntitlement ? 1 : 0);
-            result = 31 * result + (isBlockingBilling ? 1 : 0);
-            result = 31 * result + (serviceName != null ? serviceName.hashCode() : 0);
-            result = 31 * result + (serviceStateName != null ? serviceStateName.hashCode() : 0);
-            result = 31 * result + (prevProduct != null ? prevProduct.hashCode() : 0);
-            result = 31 * result + (prevPlan != null ? prevPlan.hashCode() : 0);
-            result = 31 * result + (prevPlanPhase != null ? prevPlanPhase.hashCode() : 0);
-            result = 31 * result + (prevPriceList != null ? prevPriceList.hashCode() : 0);
-            result = 31 * result + (prevBillingPeriod != null ? prevBillingPeriod.hashCode() : 0);
-            result = 31 * result + (nextProduct != null ? nextProduct.hashCode() : 0);
-            result = 31 * result + (nextPlan != null ? nextPlan.hashCode() : 0);
-            result = 31 * result + (nextPlanPhase != null ? nextPlanPhase.hashCode() : 0);
-            result = 31 * result + (nextPriceList != null ? nextPriceList.hashCode() : 0);
-            result = 31 * result + (nextBillingPeriod != null ? nextBillingPeriod.hashCode() : 0);
-            result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
-            return result;
         }
     }
 }
