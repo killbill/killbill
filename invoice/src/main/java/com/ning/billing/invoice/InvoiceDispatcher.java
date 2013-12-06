@@ -169,11 +169,11 @@ public class InvoiceDispatcher {
 
             // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
             final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, context);
-            final Account account = accountApi.getAccountById(accountId, context);
 
+            final Account account = accountApi.getAccountById(accountId, context);
             final DateAndTimeZoneContext dateAndTimeZoneContext = billingEvents.iterator().hasNext() ?
                                                                   new DateAndTimeZoneContext(billingEvents.iterator().next().getEffectiveDate(), account.getTimeZone(), clock) :
-                                                                  new DateAndTimeZoneContext(null, account.getTimeZone(), clock);
+                                                                  null;
 
 
             List<Invoice> invoices = new ArrayList<Invoice>();
@@ -189,8 +189,8 @@ public class InvoiceDispatcher {
 
             final Currency targetCurrency = account.getCurrency();
 
-            final LocalDate targetDate = dateAndTimeZoneContext.computeTargetDate(targetDateTime);
-            final Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency);
+            final LocalDate targetDate = dateAndTimeZoneContext != null ? dateAndTimeZoneContext.computeTargetDate(targetDateTime) : null;
+            final Invoice invoice = targetDate != null ? generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency) : null;
             if (invoice == null) {
                 log.info("Generated null invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
                 if (!dryRun) {
