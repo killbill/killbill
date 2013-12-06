@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.engine.core;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -49,6 +50,7 @@ import com.ning.billing.entitlement.dao.BlockingStateSqlDao;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
@@ -279,7 +281,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Verify the blocking states DAO adds events not on disk for the first add-on...
         checkBlockingStatesDAO(changedBaseEntitlement, addOnEntitlement, baseEffectiveCancellationOrChangeDate, false);
         // ...but not for the second one
-        final List<BlockingState> blockingStatesForSecondAddOn = blockingStateDao.getBlockingAll(secondAddOnEntitlement.getId(), BlockingStateType.SUBSCRIPTION, internalCallContext);
+        final List<BlockingState> blockingStatesForSecondAddOn = blockingStatesForBlockedId(secondAddOnEntitlement.getId());
         Assert.assertEquals(blockingStatesForSecondAddOn.size(), 0);
     }
 
@@ -417,7 +419,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     // Test the DAO
     private void checkBlockingStatesDAO(final DefaultEntitlement baseEntitlement, final DefaultEntitlement addOnEntitlement, final LocalDate effectiveBaseCancellationDate, final LocalDate effectiveAddOnCancellationDate, final boolean isBaseCancelled) {
-        final List<BlockingState> blockingStatesForBaseEntitlement = blockingStateDao.getBlockingAll(baseEntitlement.getId(), BlockingStateType.SUBSCRIPTION, internalCallContext);
+        final List<BlockingState> blockingStatesForBaseEntitlement = blockingStatesForBlockedId(baseEntitlement.getId());
         Assert.assertEquals(blockingStatesForBaseEntitlement.size(), isBaseCancelled ? 1 : 0);
         if (isBaseCancelled) {
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getBlockedId(), baseEntitlement.getId());
@@ -427,7 +429,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(0).getStateName(), DefaultEntitlementApi.ENT_STATE_CANCELLED);
         }
 
-        final List<BlockingState> blockingStatesForAddOn = blockingStateDao.getBlockingAll(addOnEntitlement.getId(), BlockingStateType.SUBSCRIPTION, internalCallContext);
+        final List<BlockingState> blockingStatesForAddOn = blockingStatesForBlockedId(addOnEntitlement.getId());
         Assert.assertEquals(blockingStatesForAddOn.size(), 1);
         Assert.assertEquals(blockingStatesForAddOn.get(0).getBlockedId(), addOnEntitlement.getId());
         Assert.assertEquals(blockingStatesForAddOn.get(0).getEffectiveDate().toLocalDate(), effectiveAddOnCancellationDate);
@@ -468,5 +470,15 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
                                                                            }
                                                                        });
         return eventsStream.computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate);
+    }
+
+    private List<BlockingState> blockingStatesForBlockedId(final UUID blockedId) {
+        return ImmutableList.<BlockingState>copyOf(Iterables.<BlockingState>filter(blockingStateDao.getBlockingAllForAccountRecordId(internalCallContext),
+                                                                                   new Predicate<BlockingState>() {
+                                                                                       @Override
+                                                                                       public boolean apply(final BlockingState input) {
+                                                                                           return input.getBlockedId().equals(blockedId);
+                                                                                       }
+                                                                                   }));
     }
 }
