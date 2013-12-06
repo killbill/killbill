@@ -30,7 +30,7 @@ import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
+import com.ning.billing.payment.api.RefundStatus;
 import com.ning.billing.util.entity.Pagination;
 
 import com.google.common.collect.ImmutableList;
@@ -185,6 +185,7 @@ public class MockPaymentDao implements PaymentDao {
     public RefundModelDao insertRefund(final RefundModelDao refundInfo, final InternalCallContext context) {
         return null;
     }
+
 
     @Override
     public void updateRefundStatus(final UUID refundId, final RefundStatus status, final BigDecimal processedAmount, final Currency processedCurrency, final InternalCallContext context) {

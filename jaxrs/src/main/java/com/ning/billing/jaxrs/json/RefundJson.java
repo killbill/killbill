@@ -42,6 +42,7 @@ public class RefundJson extends JsonBase {
     private final Boolean isAdjusted;
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
+    private final String status;
     private final List<InvoiceItemJson> adjustments;
 
     @JsonCreator
@@ -49,6 +50,7 @@ public class RefundJson extends JsonBase {
                       @JsonProperty("paymentId") final String paymentId,
                       @JsonProperty("amount") final BigDecimal amount,
                       @JsonProperty("currency") final String currency,
+                      @JsonProperty("status") final String status,
                       @JsonProperty("adjusted") final Boolean isAdjusted,
                       @JsonProperty("requestedDate") final DateTime requestedDate,
                       @JsonProperty("effectiveDate") final DateTime effectiveDate,
@@ -59,6 +61,7 @@ public class RefundJson extends JsonBase {
         this.paymentId = paymentId;
         this.amount = amount;
         this.currency = currency;
+        this.status = status;
         this.isAdjusted = isAdjusted;
         this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
@@ -71,7 +74,7 @@ public class RefundJson extends JsonBase {
 
     public RefundJson(final Refund refund, @Nullable final List<InvoiceItem> adjustments, @Nullable final List<AuditLog> auditLogs) {
         this(refund.getId().toString(), refund.getPaymentId().toString(), refund.getRefundAmount(), refund.getCurrency().toString(),
-             refund.isAdjusted(), refund.getEffectiveDate(), refund.getEffectiveDate(),
+             refund.getRefundStatus().toString(), refund.isAdjusted(), refund.getEffectiveDate(), refund.getEffectiveDate(),
              adjustments == null ? null : ImmutableList.<InvoiceItemJson>copyOf(Collections2.transform(adjustments, new Function<InvoiceItem, InvoiceItemJson>() {
                  @Override
                  public InvoiceItemJson apply(@Nullable final InvoiceItem input) {
@@ -113,6 +116,8 @@ public class RefundJson extends JsonBase {
         return adjustments;
     }
 
+    public String getStatus() { return status; }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -121,6 +126,7 @@ public class RefundJson extends JsonBase {
         sb.append(", paymentId='").append(paymentId).append('\'');
         sb.append(", amount=").append(amount);
         sb.append(", currency=").append(currency);
+        sb.append(", status=").append(status);
         sb.append(", isAdjusted=").append(isAdjusted);
         sb.append(", requestedDate=").append(requestedDate);
         sb.append(", effectiveDate=").append(effectiveDate);
@@ -135,6 +141,7 @@ public class RefundJson extends JsonBase {
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (isAdjusted != null ? isAdjusted.hashCode() : 0);
         result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
@@ -219,6 +226,14 @@ public class RefundJson extends JsonBase {
                 return false;
             }
         } else if (!currency.equals(other.currency)) {
+            return false;
+        }
+
+        if (status == null) {
+            if (other.status != null) {
+                return false;
+            }
+        } else if (!status.equals(other.status)) {
             return false;
         }
 

@@ -24,9 +24,10 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.payment.api.Refund;
-import com.ning.billing.util.dao.TableName;
 import com.ning.billing.entity.EntityBase;
+import com.ning.billing.payment.api.Refund;
+import com.ning.billing.payment.api.RefundStatus;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class RefundModelDao extends EntityBase implements EntityModelDao<Refund> {
@@ -98,13 +99,6 @@ public class RefundModelDao extends EntityBase implements EntityModelDao<Refund>
 
     public boolean isAdjusted() {
         return isAdjusted;
-    }
-
-    public enum RefundStatus {
-        CREATED,
-        PLUGIN_COMPLETED,
-        COMPLETED,
-        PLUGIN_ERRORED
     }
 
     @Override

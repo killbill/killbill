@@ -30,6 +30,7 @@ import com.ning.billing.jaxrs.json.InvoiceJson;
 import com.ning.billing.jaxrs.json.PaymentJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
+import com.ning.billing.payment.api.RefundStatus;
 
 public class TestPayment extends TestJaxrsBase {
 
@@ -177,6 +178,7 @@ public class TestPayment extends TestJaxrsBase {
         Assert.assertEquals(refundJsonCheck.getPaymentId(), paymentJson.getPaymentId());
         Assert.assertEquals(refundJsonCheck.getAmount().setScale(2, RoundingMode.HALF_UP), refundAmount.setScale(2, RoundingMode.HALF_UP));
         Assert.assertEquals(refundJsonCheck.getCurrency(), DEFAULT_CURRENCY);
+        Assert.assertEquals(refundJsonCheck.getStatus(), RefundStatus.COMPLETED.toString());
         Assert.assertEquals(refundJsonCheck.getEffectiveDate().getYear(), clock.getUTCNow().getYear());
         Assert.assertEquals(refundJsonCheck.getEffectiveDate().getMonthOfYear(), clock.getUTCNow().getMonthOfYear());
         Assert.assertEquals(refundJsonCheck.getEffectiveDate().getDayOfMonth(), clock.getUTCNow().getDayOfMonth());
