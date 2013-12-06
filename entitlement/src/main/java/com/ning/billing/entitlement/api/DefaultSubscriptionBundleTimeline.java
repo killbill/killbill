@@ -59,9 +59,6 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
 
     private final Logger logger = LoggerFactory.getLogger(DefaultSubscriptionBundleTimeline.class);
 
-    // STEPH This is added to give us confidence the timeline we generate behaves as expected. Could be removed at some point
-    private static final String TIMELINE_WARN_LOG = "Sanity Timeline: ";
-
     public static final String BILLING_SERVICE_NAME = "billing-service";
     public static final String ENT_BILLING_SERVICE_NAME = "entitlement+billing-service";
 
@@ -139,9 +136,8 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 if (createdDateComp != 0) {
                     return createdDateComp;
                 }
-                logger.warn(TIMELINE_WARN_LOG + "Detected two identical blockingStates events for blockableId = " + o1.getBlockedId() +
-                            ", type = " + o1.getType() + ", ");
-                // Underministic-- not sure that will ever happen. Once we are confident this never happens we should thrown IllegalException
+
+                // Non deterministic -- not sure that will ever happen. Once we are confident this never happens, we should throw ShouldntHappenException
                 return 0;
             }
         });
@@ -372,24 +368,23 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 // EffectiveDate is less than cur -> insert here
                 break;
             } else if (compEffectiveDate == 0) {
-
                 final int compUUID = event.getEntitlementId().compareTo(cur.getEntitlementId());
                 if (compUUID < 0) {
                     // Same EffectiveDate but subscription are different, no need top sort further just return something deterministic
                     break;
                 } else if (compUUID == 0) {
-
                     final int eventOrder = event.getSubscriptionEventType().ordinal() - cur.getSubscriptionEventType().ordinal();
                     if (eventOrder < 0) {
                         // Same EffectiveDate and same subscription, order by SubscriptionEventType;
                         break;
                     }
 
-                    // Two identical event for the same subscription at the same time, this sounds like some data issue
+                    // Two identical events for the same subscription in the same day, trust createdDate
                     if (eventOrder == 0) {
-                        logger.warn(TIMELINE_WARN_LOG + "Detected identical events type = " + event.getSubscriptionEventType() + " ids = " +
-                                    event.getId() + ", " + cur.getId() + " for subscription " + cur.getEntitlementId());
-                        break;
+                        final int compCreatedDate = (((DefaultSubscriptionEvent) event).getCreatedDate()).compareTo(((DefaultSubscriptionEvent) cur).getCreatedDate());
+                        if (compCreatedDate <= 0) {
+                            break;
+                        }
                     }
                 }
             }
