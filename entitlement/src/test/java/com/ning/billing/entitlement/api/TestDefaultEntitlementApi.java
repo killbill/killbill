@@ -62,15 +62,12 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final Entitlement addOnEntitlement = entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, initialDate, callContext);
         assertListenerStatus();
-
-        /*
-        // TODO It looks like we don't check if there is a future cancellation. Maybe we should?
         try {
             entitlement.uncancelEntitlement(callContext);
             Assert.fail("Entitlement hasn't been cancelled yet");
         } catch (final EntitlementApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.SUB_CANCEL_BAD_STATE.getCode());
-        }*/
+        }
 
         clock.addDays(3);
 
@@ -106,6 +103,40 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         } catch (final EntitlementApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.SUB_CANCEL_BAD_STATE.getCode());
         }
+    }
+
+
+    @Test(groups = "slow")
+    public void testUncancelEffectiveCancelledEntitlement() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        assertListenerStatus();
+
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        clock.addDays(30);
+        assertListenerStatus();
+        subscriptionInternalApi.setChargedThroughDate(entitlement.getId(), clock.getUTCNow().plusMonths(1), internalCallContext);
+
+        final LocalDate entitlementCancelledDate = clock.getToday(account.getTimeZone());
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final Entitlement cancelledEntitlement = entitlement.cancelEntitlementWithDateOverrideBillingPolicy(clock.getToday(account.getTimeZone()), BillingActionPolicy.END_OF_TERM, callContext);
+        assertListenerStatus();
+        Assert.assertEquals(cancelledEntitlement.getEffectiveEndDate(), entitlementCancelledDate);
+
+        testListener.pushExpectedEvent(NextEvent.UNCANCEL);
+        cancelledEntitlement.uncancelEntitlement(callContext);
+        assertListenerStatus();
+
+        final Entitlement reactivatedEntitlement = entitlementApi.getEntitlementForId(cancelledEntitlement.getId(), callContext);
+        Assert.assertNull(reactivatedEntitlement.getEffectiveEndDate());
     }
 
     @Test(groups = "slow")

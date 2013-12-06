@@ -20,13 +20,11 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.api.RefundStatus;
 import com.ning.billing.util.entity.Pagination;
 
 public interface PaymentDao {

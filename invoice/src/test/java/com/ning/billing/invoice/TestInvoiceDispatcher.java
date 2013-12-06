@@ -194,7 +194,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final LocalDate endDate = new LocalDate("2012-11-26");
 
 
-        ((ClockMock) clock).setTime(new DateTime(2012, 10, 26, 1, 12, 23, DateTimeZone.UTC));
+        ((ClockMock) clock).setTime(new DateTime(2012, 10, 13, 1, 12, 23, DateTimeZone.UTC));
 
         final DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.forID("Pacific/Pitcairn"), clock);
 
@@ -217,10 +217,6 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final LocalDate receivedTargetDate = new LocalDate(receivedDate, DateTimeZone.forID("Pacific/Pitcairn"));
         Assert.assertEquals(receivedTargetDate, endDate);
 
-        Assert.assertTrue(receivedDate.compareTo(new DateTime(2012, 11, 26, 9 /* 1 + 8 for Pitcairn */, 12, 23, DateTimeZone.UTC)) >= 0);
-        Assert.assertTrue(receivedDate.compareTo(new DateTime(2012, 11, 26, 9, 13, 0, DateTimeZone.UTC)) <= 0);
-
+        Assert.assertTrue(receivedDate.compareTo(new DateTime(2012, 11, 27, 1, 12, 23, DateTimeZone.UTC)) <= 0);
     }
-
-    //MDW add a test to cover when the account auto-invoice-off tag is present
 }

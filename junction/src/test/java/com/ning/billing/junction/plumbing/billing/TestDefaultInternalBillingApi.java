@@ -48,7 +48,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
     //
     // Pierre, why do we have invocationCount > 0 here?
     //
-    // This test will exercise ProxyBlockingStateDao#BLOCKING_STATE_ORDERING - unfortunately, for some reason,
+    // This test will exercise ProxyBlockingStateDao#BLOCKING_STATE_ORDERING_WITH_TIES_UNHANDLED - unfortunately, for some reason,
     // the ordering doesn't seem deterministic. In some scenarii,
     // BlockingState(idA, effectiveDate1, BLOCK), BlockingState(idA, effectiveDate2, CLEAR), BlockingState(idB, effectiveDate2, BLOCK), BlockingState(idB, effectiveDate3, CLEAR)
     // is ordered
@@ -199,5 +199,71 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         Assert.assertEquals(events.get(5).getEffectiveDate(), block3Date);
         Assert.assertEquals(events.get(6).getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
         Assert.assertEquals(events.get(6).getEffectiveDate(), block5Date);
+    }
+
+    // See https://github.com/killbill/killbill/commit/92042843e38a67f75495b207385e4c1f9ca60990#commitcomment-4749967
+    @Test(groups = "slow", description = "Check unblock then block states with same effective date are correctly handled", invocationCount = 10)
+    public void testUnblockThenBlockBlockingStatesWithSameEffectiveDate() throws Exception {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlement.getId(), internalCallContext);
+        assertListenerStatus();
+
+        final DateTime block1Date = clock.getUTCNow();
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        final DefaultBlockingState state1 = new DefaultBlockingState(account.getId(),
+                                                                     BlockingStateType.ACCOUNT,
+                                                                     DefaultEntitlementApi.ENT_STATE_BLOCKED,
+                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     true,
+                                                                     true,
+                                                                     true,
+                                                                     block1Date);
+        blockingInternalApi.setBlockingState(state1, internalCallContext);
+
+        clock.addDays(1);
+
+        final DateTime block2Date = clock.getUTCNow();
+        testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.BLOCK);
+        final DefaultBlockingState state2 = new DefaultBlockingState(account.getId(),
+                                                                     BlockingStateType.ACCOUNT,
+                                                                     DefaultEntitlementApi.ENT_STATE_CLEAR,
+                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     false,
+                                                                     false,
+                                                                     false,
+                                                                     block2Date);
+        blockingInternalApi.setBlockingState(state2, internalCallContext);
+        // Same date
+        final DefaultBlockingState state3 = new DefaultBlockingState(account.getId(),
+                                                                     BlockingStateType.ACCOUNT,
+                                                                     DefaultEntitlementApi.ENT_STATE_BLOCKED,
+                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     true,
+                                                                     true,
+                                                                     true,
+                                                                     block2Date);
+        blockingInternalApi.setBlockingState(state3, internalCallContext);
+        assertListenerStatus();
+
+        // Nothing should happen
+        clock.addDays(3);
+        assertListenerStatus();
+
+        // Expected blocking duration:
+        // * 2013-08-07 to now [2013-08-07 to 2013-08-08 then 2013-08-08 to now]
+        final List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext));
+        Assert.assertEquals(events.size(), 2);
+        Assert.assertEquals(events.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        Assert.assertEquals(events.get(0).getEffectiveDate(), subscription.getStartDate());
+        Assert.assertEquals(events.get(1).getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
+        Assert.assertEquals(events.get(1).getEffectiveDate(), block1Date);
     }
 }

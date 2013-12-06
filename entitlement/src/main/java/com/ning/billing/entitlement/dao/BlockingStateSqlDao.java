@@ -57,22 +57,15 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
                                                                  @Bind("effectiveDate") Date effectiveDate,
                                                                  @BindBean final InternalTenantContext context);
 
-
     @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingHistoryForService(@Bind("blockableId") UUID blockableId,
                                                                              @Bind("service") String serviceName,
                                                                              @BindBean final InternalTenantContext context);
 
-    @SqlQuery
-    public abstract List<BlockingStateModelDao> getBlockingAll(@Bind("blockableId") UUID blockableId,
-                                                               @BindBean final InternalTenantContext context);
-
-
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     public void unactiveEvent(@Bind("id") String id,
                               @BindBean final InternalCallContext context);
-
 
     public class BlockingHistorySqlMapper extends MapperBase implements ResultSetMapper<BlockingStateModelDao> {
 
