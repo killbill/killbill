@@ -60,6 +60,8 @@ public interface EventsStream {
 
     Collection<BlockingState> getPendingEntitlementCancellationEvents();
 
+    BlockingState getEntitlementCancellationEvent();
+
     // All blocking states for the account, associated bundle or subscription
     Collection<BlockingState> getBlockingStates();
 

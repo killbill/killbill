@@ -289,15 +289,28 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // Get the latest state from disk
         refresh(callContext);
 
-        if (eventsStream.isEntitlementCancelled() || eventsStream.isSubscriptionCancelled()) {
+        if (eventsStream.isSubscriptionCancelled()) {
             throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
         }
 
-        // Reactivate entitlements
-        // See also https://github.com/killbill/killbill/issues/111
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-        for (final BlockingState futureCancellation : eventsStream.getPendingEntitlementCancellationEvents()) {
-            blockingStateDao.unactiveBlockingState(futureCancellation.getId(), contextWithValidAccountRecordId);
+        final Collection<BlockingState> pendingEntitlementCancellationEvents = eventsStream.getPendingEntitlementCancellationEvents();
+        if (eventsStream.isEntitlementCancelled()) {
+            final BlockingState cancellationEvent = eventsStream.getEntitlementCancellationEvent();
+            blockingStateDao.unactiveBlockingState(cancellationEvent.getId(), contextWithValidAccountRecordId);
+        } else if (pendingEntitlementCancellationEvents.size() > 0) {
+            // Reactivate entitlements
+            // See also https://github.com/killbill/killbill/issues/111
+            //
+            // Today we only support cancellation at SUBSCRIPTION level (Not ACCOUNT or BUNDLE), so we should really have only
+            // one future event in the list
+            //
+            for (final BlockingState futureCancellation : pendingEntitlementCancellationEvents) {
+                blockingStateDao.unactiveBlockingState(futureCancellation.getId(), contextWithValidAccountRecordId);
+            }
+        } else {
+            // Entitlement is NOT cancelled (or future cancelled), there is nothing to do
+            throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
         }
 
         // If billing was previously cancelled, reactivate

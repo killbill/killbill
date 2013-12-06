@@ -59,6 +59,7 @@ import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.json.TenantJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
+import com.ning.billing.payment.api.RefundStatus;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
@@ -370,13 +371,11 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         assertEquals(fifthResponse.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
     }
 
-
-
     protected SubscriptionJson createEntitlement(final String accountId, final String bundleExternalKey, final String productName, final String productCategory, final String billingPeriod, final boolean waitCompletion) throws Exception {
 
-        final SubscriptionJson input =  new SubscriptionJson(accountId, null, null, bundleExternalKey, null ,productName, productCategory,
-                                                                            billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null, null, null, null, null,
-                                                                            null, null, null);
+        final SubscriptionJson input = new SubscriptionJson(accountId, null, null, bundleExternalKey, null, productName, productCategory,
+                                                            billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null, null, null, null, null,
+                                                            null, null, null);
         String baseJson = mapper.writeValueAsString(input);
 
         final Map<String, String> queryParams = waitCompletion ? getQueryParamsForCallCompletion("5") : DEFAULT_EMPTY_QUERY;
@@ -542,25 +541,25 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         }
 
         final InvoiceItemJson adjustment = new InvoiceItemJson(invoiceItemId, null, null, accountId, null, null, null, null,
-                                                                           null, null, null, null, amount, currency, null);
+                                                               null, null, null, null, amount, currency, null);
         final String adjustmentJson = mapper.writeValueAsString(adjustment);
         final Response response = doPost(uri, adjustmentJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
     }
 
     protected InvoiceJson createExternalCharge(final String accountId, final BigDecimal amount, @Nullable final String bundleId,
-                                                        @Nullable final Currency currency, @Nullable final DateTime requestedDate, final Boolean autoPay) throws Exception {
+                                               @Nullable final Currency currency, @Nullable final DateTime requestedDate, final Boolean autoPay) throws Exception {
         return doCreateExternalCharge(accountId, null, bundleId, amount, currency, requestedDate, autoPay, JaxrsResource.CHARGES_PATH);
     }
 
     protected InvoiceJson createExternalChargeForInvoice(final String accountId, final String invoiceId, @Nullable final String bundleId, final BigDecimal amount,
-                                                                  @Nullable final Currency currency, @Nullable final DateTime requestedDate, final Boolean autoPay) throws Exception {
+                                                         @Nullable final Currency currency, @Nullable final DateTime requestedDate, final Boolean autoPay) throws Exception {
         final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.CHARGES;
         return doCreateExternalCharge(accountId, invoiceId, bundleId, amount, currency, requestedDate, autoPay, uri);
     }
 
     private InvoiceJson doCreateExternalCharge(final String accountId, @Nullable final String invoiceId, @Nullable final String bundleId, @Nullable final BigDecimal amount,
-                                                        @Nullable final Currency currency, final DateTime requestedDate, final Boolean autoPay, final String uri) throws IOException {
+                                               @Nullable final Currency currency, final DateTime requestedDate, final Boolean autoPay, final String uri) throws IOException {
         final Map<String, String> queryParams = new HashMap<String, String>();
         if (requestedDate != null) {
             queryParams.put(JaxrsResource.QUERY_REQUESTED_DT, requestedDate.toDateTimeISO().toString());
@@ -570,7 +569,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         }
 
         final InvoiceItemJson externalCharge = new InvoiceItemJson(null, invoiceId, null, accountId, bundleId, null, null, null,
-                                                                               null, null, null, null, amount, currency, null);
+                                                                   null, null, null, null, amount, currency, null);
         final String externalChargeJson = mapper.writeValueAsString(externalCharge);
         final Response response = doPost(uri, externalChargeJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -691,7 +690,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected void payAllInvoices(final AccountJson accountJson, final Boolean externalPayment) throws IOException {
         final PaymentJson payment = new PaymentJson(null, null, accountJson.getAccountId(), null, null, null, null,
-                                                                null, null, 0, null, null, null, null, null, null, null, null);
+                                                    null, null, 0, null, null, null, null, null, null, null, null);
         final String postJson = mapper.writeValueAsString(payment);
 
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENTS;
@@ -700,7 +699,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected List<PaymentJson> createInstaPayment(final AccountJson accountJson, final InvoiceJson invoice) throws IOException {
         final PaymentJson payment = new PaymentJson(invoice.getAmount(), BigDecimal.ZERO, accountJson.getAccountId(),
-                                                                invoice.getInvoiceId(), null, null, null, null, null, 0, null, null, null, null, null, null, null, null);
+                                                    invoice.getInvoiceId(), null, null, null, null, null, 0, null, null, null, null, null, null, null, null);
         final String postJson = mapper.writeValueAsString(payment);
 
         final String uri = JaxrsResource.INVOICES_PATH + "/" + invoice.getInvoiceId() + "/" + JaxrsResource.PAYMENTS;
@@ -711,8 +710,8 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected List<PaymentJson> createExternalPayment(final AccountJson accountJson, final String invoiceId, final BigDecimal paidAmount) throws IOException {
         final PaymentJson payment = new PaymentJson(paidAmount, BigDecimal.ZERO, accountJson.getAccountId(),
-                                                                invoiceId, null, null, null, null, null, 0,
-                                                                null, null, null, null, null, null, null, null);
+                                                    invoiceId, null, null, null, null, null, 0,
+                                                    null, null, null, null, null, null, null, null);
         final String postJson = mapper.writeValueAsString(payment);
 
         final String paymentURI = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.PAYMENTS;
@@ -791,9 +790,9 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final List<InvoiceItemJson> adjustments = new ArrayList<InvoiceItemJson>();
         for (final String itemId : itemAdjustments.keySet()) {
             adjustments.add(new InvoiceItemJson(itemId, null, null, null, null, null, null, null, null, null, null, null,
-                                                      itemAdjustments.get(itemId), null, null));
+                                                itemAdjustments.get(itemId), null, null));
         }
-        final RefundJson refundJson = new RefundJson(null, paymentId, amount, DEFAULT_CURRENCY, adjusted, null, null, adjustments, null);
+        final RefundJson refundJson = new RefundJson(null, paymentId, amount, DEFAULT_CURRENCY, RefundStatus.COMPLETED.toString(), adjusted, null, null, adjustments, null);
         final String baseJson = mapper.writeValueAsString(refundJson);
         final Response response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -866,7 +865,6 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     //
     // OVERDUE
     //
-
 
     protected OverdueStateJson getOverdueStateForAccount(final String accountId) throws Exception {
         final String overdueURI = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + OVERDUE;

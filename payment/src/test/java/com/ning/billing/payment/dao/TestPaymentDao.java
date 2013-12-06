@@ -27,13 +27,12 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
+import com.ning.billing.payment.api.RefundStatus;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
@@ -204,7 +203,6 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(lastPayment.getCurrency(), currency);
         assertEquals(lastPayment.getEffectiveDate().compareTo(effectiveDate), 0);
         assertEquals(lastPayment.getPaymentStatus(), PaymentStatus.UNKNOWN);
-
 
         clock.addDays(3);
         final DateTime newEffectiveDate = clock.getUTCNow();

@@ -190,6 +190,11 @@ public class DefaultEventsStream implements EventsStream {
         return getPendingEntitlementEvents(DefaultEntitlementApi.ENT_STATE_CANCELLED);
     }
 
+    @Override
+    public BlockingState getEntitlementCancellationEvent() {
+        return entitlementCancelEvent;
+    }
+
     public Collection<BlockingState> getPendingEntitlementEvents(final String... types) {
         final List<String> typeList = ImmutableList.<String>copyOf(types);
         return Collections2.<BlockingState>filter(subscriptionEntitlementStates,

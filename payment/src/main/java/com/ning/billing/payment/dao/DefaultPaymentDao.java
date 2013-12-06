@@ -32,7 +32,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
+import com.ning.billing.payment.api.RefundStatus;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.DefaultPagination;

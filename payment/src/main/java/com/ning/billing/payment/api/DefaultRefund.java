@@ -24,8 +24,8 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.entity.EntityBase;
+import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 
 public class DefaultRefund extends EntityBase implements Refund {
 
@@ -34,16 +34,18 @@ public class DefaultRefund extends EntityBase implements Refund {
     private final Currency currency;
     private final boolean isAdjusted;
     private final DateTime effectiveDate;
+    private final RefundStatus refundStatus;
 
     public DefaultRefund(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                          final UUID paymentId, final BigDecimal amount,
-                         final Currency currency, final boolean isAdjusted, final DateTime effectiveDate) {
+                         final Currency currency, final boolean isAdjusted, final DateTime effectiveDate, final RefundStatus refundStatus) {
         super(id, createdDate, updatedDate);
         this.paymentId = paymentId;
         this.amount = amount;
         this.currency = currency;
         this.isAdjusted = isAdjusted;
         this.effectiveDate = effectiveDate;
+        this.refundStatus = refundStatus;
     }
 
     @Override
@@ -72,6 +74,11 @@ public class DefaultRefund extends EntityBase implements Refund {
     }
 
     @Override
+    public RefundStatus getRefundStatus() {
+        return refundStatus;
+    }
+
+    @Override
     public RefundInfoPlugin getPluginDetail() {
         // TODO not implemented
         return null;
@@ -85,6 +92,7 @@ public class DefaultRefund extends EntityBase implements Refund {
         sb.append(", amount=").append(amount);
         sb.append(", currency=").append(currency);
         sb.append(", isAdjusted=").append(isAdjusted);
+        sb.append(", status=").append(refundStatus);
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append('}');
         return sb.toString();
@@ -113,6 +121,9 @@ public class DefaultRefund extends EntityBase implements Refund {
         if (currency != that.currency) {
             return false;
         }
+        if (refundStatus != that.refundStatus) {
+            return false;
+        }
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
@@ -125,6 +136,7 @@ public class DefaultRefund extends EntityBase implements Refund {
         int result = paymentId != null ? paymentId.hashCode() : 0;
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (refundStatus != null ? refundStatus.hashCode() : 0);
         result = 31 * result + (isAdjusted ? 1 : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         return result;
