@@ -453,6 +453,14 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             nextBillingPeriod = next.getNextBillingPeriod();
         }
 
+        // See https://github.com/killbill/killbill/issues/135
+        final String serviceName;
+        if (DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(in.getService())) {
+            serviceName = getServiceName(eventType);
+        } else {
+            serviceName = in.getService();
+        }
+
         return new DefaultSubscriptionEvent(in.getId(),
                                             entitlementId,
                                             in.getEffectiveDate(),
@@ -460,7 +468,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                             eventType,
                                             in.isBlockEntitlement(),
                                             in.isBlockBilling(),
-                                            in.getService(),
+                                            serviceName,
                                             in.getStateName(),
                                             prevProduct,
                                             prevPlan,
@@ -606,7 +614,6 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                                                      e.getServiceStateName(), e.getServiceName(), false, e.isBlockedEntitlement(), e.isBlockedBilling(),
                                                                      ((DefaultSubscriptionEvent) e).getEffectiveDateTime());
             perServiceBlockingState.put(converted.getService(), converted);
-
         }
 
         //
@@ -635,7 +642,15 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
             // across all services
             //
             final BlockingAggregator stateBefore = getState();
-            perServiceBlockingState.put(fixedBlockingState.getService(), fixedBlockingState);
+            if (DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(fixedBlockingState.getService())) {
+                // Some blocking states will be added as entitlement-service and billing-service via addEntitlementEvent
+                // (see above). Because of it, we need to multiplex entitlement events here.
+                // TODO - this is magic and fragile. We should revisit how we create this state machine.
+                perServiceBlockingState.put(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME, fixedBlockingState);
+                perServiceBlockingState.put(DefaultSubscriptionBundleTimeline.BILLING_SERVICE_NAME, fixedBlockingState);
+            } else {
+                perServiceBlockingState.put(fixedBlockingState.getService(), fixedBlockingState);
+            }
             final BlockingAggregator stateAfter = getState();
 
             final boolean shouldResumeEntitlement = isEntitlementStarted && !isEntitlementStopped && stateBefore.isBlockEntitlement() && !stateAfter.isBlockEntitlement();
