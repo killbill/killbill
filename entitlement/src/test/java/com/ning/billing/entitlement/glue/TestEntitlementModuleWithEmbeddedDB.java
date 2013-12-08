@@ -25,6 +25,7 @@ import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.EntitlementTestListenerStatus;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
+import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.MetricsModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
@@ -49,6 +50,7 @@ public class TestEntitlementModuleWithEmbeddedDB extends TestEntitlementModule {
         install(new CatalogModule(configSource));
         install(new NotificationQueueModule(configSource));
         install(new DefaultSubscriptionModule(configSource));
+        install(new AuditModule());
 
         bind(TestListenerStatus.class).to(EntitlementTestListenerStatus.class).asEagerSingleton();
         bind(TestApiListener.class).asEagerSingleton();
