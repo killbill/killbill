@@ -1,3 +1,9 @@
+0.8.5
+    https://github.com/killbill/killbill/issues/134
+    https://github.com/killbill/killbill/issues/135
+    https://github.com/killbill/killbill/issues/136
+    https://github.com/killbill/killbill/issues/140
+
 0.8.4
     Subscription base speedups
     Fix regression in bundle timeline API
