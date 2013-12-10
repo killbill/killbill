@@ -119,6 +119,38 @@ public class InvoiceModelDao extends EntityBase implements EntityModelDao<Invoic
         return migrated;
     }
 
+    public void setAccountId(final UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public void setInvoiceNumber(final Integer invoiceNumber) {
+        this.invoiceNumber = invoiceNumber;
+    }
+
+    public void setInvoiceDate(final LocalDate invoiceDate) {
+        this.invoiceDate = invoiceDate;
+    }
+
+    public void setTargetDate(final LocalDate targetDate) {
+        this.targetDate = targetDate;
+    }
+
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
+    }
+
+    public void setMigrated(final boolean migrated) {
+        this.migrated = migrated;
+    }
+
+    public void setInvoiceItems(final List<InvoiceItemModelDao> invoiceItems) {
+        this.invoiceItems = invoiceItems;
+    }
+
+    public void setInvoicePayments(final List<InvoicePaymentModelDao> invoicePayments) {
+        this.invoicePayments = invoicePayments;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

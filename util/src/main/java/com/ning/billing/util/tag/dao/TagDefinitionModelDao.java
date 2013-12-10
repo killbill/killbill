@@ -66,6 +66,18 @@ public class TagDefinitionModelDao extends EntityBase implements EntityModelDao<
         return isActive;
     }
 
+    public void setName(final String name) {
+        this.name = name;
+    }
+
+    public void setDescription(final String description) {
+        this.description = description;
+    }
+
+    public void setIsActive(final Boolean isActive) {
+        this.isActive = isActive;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

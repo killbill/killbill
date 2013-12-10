@@ -119,6 +119,46 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         return requestedCurrency;
     }
 
+    public void setAccountId(final UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public void setInvoiceId(final UUID invoiceId) {
+        this.invoiceId = invoiceId;
+    }
+
+    public void setPaymentId(final UUID paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    public void setPaymentMethodId(final UUID paymentMethodId) {
+        this.paymentMethodId = paymentMethodId;
+    }
+
+    public void setProcessingStatus(final PaymentStatus processingStatus) {
+        this.processingStatus = processingStatus;
+    }
+
+    public void setEffectiveDate(final DateTime effectiveDate) {
+        this.effectiveDate = effectiveDate;
+    }
+
+    public void setGatewayErrorCode(final String gatewayErrorCode) {
+        this.gatewayErrorCode = gatewayErrorCode;
+    }
+
+    public void setGatewayErrorMsg(final String gatewayErrorMsg) {
+        this.gatewayErrorMsg = gatewayErrorMsg;
+    }
+
+    public void setRequestedAmount(final BigDecimal requestedAmount) {
+        this.requestedAmount = requestedAmount;
+    }
+
+    public void setRequestedCurrency(final Currency requestedCurrency) {
+        this.requestedCurrency = requestedCurrency;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

@@ -101,6 +101,38 @@ public class RefundModelDao extends EntityBase implements EntityModelDao<Refund>
         return isAdjusted;
     }
 
+    public void setAccountId(final UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public void setPaymentId(final UUID paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    public void setAmount(final BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
+    }
+
+    public void setProcessedAmount(final BigDecimal processedAmount) {
+        this.processedAmount = processedAmount;
+    }
+
+    public void setProcessedCurrency(final Currency processedCurrency) {
+        this.processedCurrency = processedCurrency;
+    }
+
+    public void setIsAdjusted(final boolean isAdjusted) {
+        this.isAdjusted = isAdjusted;
+    }
+
+    public void setRefundStatus(final RefundStatus refundStatus) {
+        this.refundStatus = refundStatus;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

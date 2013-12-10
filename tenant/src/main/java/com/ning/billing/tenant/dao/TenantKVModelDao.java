@@ -53,6 +53,18 @@ public class TenantKVModelDao extends EntityBase implements EntityModelDao<Tenan
         return isActive;
     }
 
+    public void setTenantKey(final String tenantKey) {
+        this.tenantKey = tenantKey;
+    }
+
+    public void setTenantValue(final String tenantValue) {
+        this.tenantValue = tenantValue;
+    }
+
+    public void setIsActive(final Boolean isActive) {
+        this.isActive = isActive;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

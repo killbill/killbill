@@ -27,9 +27,9 @@ import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class EntityHistoryModelDao<M extends EntityModelDao<E>, E extends Entity> extends EntityBase {
 
-    private final Long targetRecordId;
-    private final M entity;
-    private final ChangeType changeType;
+    private Long targetRecordId;
+    private M entity;
+    private ChangeType changeType;
 
     public EntityHistoryModelDao(final UUID id, final M src, final Long targetRecordId, final ChangeType type, final DateTime createdDate) {
         super(id, createdDate, createdDate);
@@ -52,5 +52,17 @@ public class EntityHistoryModelDao<M extends EntityModelDao<E>, E extends Entity
 
     public Long getTargetRecordId() {
         return targetRecordId;
+    }
+
+    public void setTargetRecordId(final Long targetRecordId) {
+        this.targetRecordId = targetRecordId;
+    }
+
+    public void setEntity(final M entity) {
+        this.entity = entity;
+    }
+
+    public void setChangeType(final ChangeType changeType) {
+        this.changeType = changeType;
     }
 }

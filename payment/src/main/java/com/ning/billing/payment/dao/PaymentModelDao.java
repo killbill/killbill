@@ -131,6 +131,54 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Paymen
         return extSecondPaymentRefId;
     }
 
+    public void setAccountId(final UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public void setInvoiceId(final UUID invoiceId) {
+        this.invoiceId = invoiceId;
+    }
+
+    public void setPaymentMethodId(final UUID paymentMethodId) {
+        this.paymentMethodId = paymentMethodId;
+    }
+
+    public void setAmount(final BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
+    }
+
+    public void setProcessedAmount(final BigDecimal processedAmount) {
+        this.processedAmount = processedAmount;
+    }
+
+    public void setProcessedCurrency(final Currency processedCurrency) {
+        this.processedCurrency = processedCurrency;
+    }
+
+    public void setEffectiveDate(final DateTime effectiveDate) {
+        this.effectiveDate = effectiveDate;
+    }
+
+    public void setPaymentNumber(final Integer paymentNumber) {
+        this.paymentNumber = paymentNumber;
+    }
+
+    public void setPaymentStatus(final PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    public void setExtFirstPaymentRefId(final String extFirstPaymentRefId) {
+        this.extFirstPaymentRefId = extFirstPaymentRefId;
+    }
+
+    public void setExtSecondPaymentRefId(final String extSecondPaymentRefId) {
+        this.extSecondPaymentRefId = extSecondPaymentRefId;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

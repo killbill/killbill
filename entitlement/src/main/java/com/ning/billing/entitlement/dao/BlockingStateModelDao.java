@@ -30,14 +30,14 @@ import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class BlockingStateModelDao extends EntityBase implements EntityModelDao<BlockingState>{
 
-    private final UUID blockableId;
-    private final BlockingStateType type;
-    private final String state;
-    private final String service;
-    private final Boolean blockChange;
-    private final Boolean blockEntitlement;
-    private final Boolean blockBilling;
-    private final DateTime effectiveDate;
+    private UUID blockableId;
+    private BlockingStateType type;
+    private String state;
+    private String service;
+    private Boolean blockChange;
+    private Boolean blockEntitlement;
+    private Boolean blockBilling;
+    private DateTime effectiveDate;
     private boolean isActive;
 
     public BlockingStateModelDao(final UUID id, final UUID blockableId, final BlockingStateType blockingStateType, final String state, final String service, final Boolean blockChange, final Boolean blockEntitlement,
@@ -93,6 +93,42 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
 
     public DateTime getEffectiveDate() {
         return effectiveDate;
+    }
+
+    public void setBlockableId(final UUID blockableId) {
+        this.blockableId = blockableId;
+    }
+
+    public void setType(final BlockingStateType type) {
+        this.type = type;
+    }
+
+    public void setState(final String state) {
+        this.state = state;
+    }
+
+    public void setService(final String service) {
+        this.service = service;
+    }
+
+    public void setBlockChange(final Boolean blockChange) {
+        this.blockChange = blockChange;
+    }
+
+    public void setBlockEntitlement(final Boolean blockEntitlement) {
+        this.blockEntitlement = blockEntitlement;
+    }
+
+    public void setBlockBilling(final Boolean blockBilling) {
+        this.blockBilling = blockBilling;
+    }
+
+    public void setEffectiveDate(final DateTime effectiveDate) {
+        this.effectiveDate = effectiveDate;
+    }
+
+    public void setIsActive(final boolean isActive) {
+        this.isActive = isActive;
     }
 
     // TODO required for jdbi binder
