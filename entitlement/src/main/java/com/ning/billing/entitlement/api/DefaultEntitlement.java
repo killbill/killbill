@@ -124,10 +124,12 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         return eventsStream.getAccountTimeZone();
     }
 
+    // Subscription associated with this entitlement (equals to baseSubscription for base subscriptions)
     public SubscriptionBase getSubscriptionBase() {
         return eventsStream.getSubscription();
     }
 
+    // Base subscription for the bundle if it exists, null otherwise
     public SubscriptionBase getBaseSubscription() {
         return eventsStream.getBaseSubscription();
     }
