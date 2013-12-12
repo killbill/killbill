@@ -66,6 +66,30 @@ public class RolledUpUsageModelDao {
         return amount;
     }
 
+    public void setId(final UUID id) {
+        this.id = id;
+    }
+
+    public void setSubscriptionId(final UUID subscriptionId) {
+        this.subscriptionId = subscriptionId;
+    }
+
+    public void setUnitType(final String unitType) {
+        this.unitType = unitType;
+    }
+
+    public void setStartTime(final DateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(final DateTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public void setAmount(final BigDecimal amount) {
+        this.amount = amount;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

@@ -85,6 +85,34 @@ public class SubscriptionModelDao extends EntityBase implements EntityModelDao<S
         return paidThroughDate;
     }
 
+    public void setBundleId(final UUID bundleId) {
+        this.bundleId = bundleId;
+    }
+
+    public void setCategory(final ProductCategory category) {
+        this.category = category;
+    }
+
+    public void setStartDate(final DateTime startDate) {
+        this.startDate = startDate;
+    }
+
+    public void setBundleStartDate(final DateTime bundleStartDate) {
+        this.bundleStartDate = bundleStartDate;
+    }
+
+    public void setActiveVersion(final long activeVersion) {
+        this.activeVersion = activeVersion;
+    }
+
+    public void setChargedThroughDate(final DateTime chargedThroughDate) {
+        this.chargedThroughDate = chargedThroughDate;
+    }
+
+    public void setPaidThroughDate(final DateTime paidThroughDate) {
+        this.paidThroughDate = paidThroughDate;
+    }
+
     public static SubscriptionBase toSubscription(final SubscriptionModelDao src) {
         if (src == null) {
             return null;

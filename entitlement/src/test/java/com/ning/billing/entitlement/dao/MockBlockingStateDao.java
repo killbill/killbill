@@ -32,6 +32,7 @@ import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -39,12 +40,13 @@ import com.google.common.collect.ImmutableList;
 public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDao, BlockingState, EntitlementApiException> implements BlockingStateDao {
 
     private final Map<UUID, List<BlockingState>> blockingStates = new HashMap<UUID, List<BlockingState>>();
+    private final Map<Long, List<BlockingState>> blockingStatesPerAccountRecordId = new HashMap<Long, List<BlockingState>>();
 
-    // TODO This mock class should also check that events are past or present except for getBlockingAll
+    // TODO This mock class should also check that events are past or present
 
     @Override
     public BlockingState getBlockingStateForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
-        final List<BlockingState> states = getBlockingAll(blockableId, blockingStateType, context);
+        final List<BlockingState> states = blockingStates.get(blockableId);
         if (states == null) {
             return null;
         }
@@ -75,32 +77,8 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     }
 
     @Override
-    public List<BlockingState> getBlockingHistoryForService(final UUID overdueableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
-        final List<BlockingState> states = blockingStates.get(overdueableId);
-        if (states == null) {
-            return new ArrayList<BlockingState>();
-        }
-        final ImmutableList<BlockingState> filtered = ImmutableList.<BlockingState>copyOf(Collections2.filter(states, new Predicate<BlockingState>() {
-            @Override
-            public boolean apply(@Nullable final BlockingState input) {
-                return input.getService().equals(serviceName);
-            }
-        }));
-
-        // Note! The returned list cannot be immutable!
-        return states == null ? new ArrayList<BlockingState>() : new ArrayList<BlockingState>(filtered);
-    }
-
-    @Override
-    public List<BlockingState> getBlockingAll(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
-        final List<BlockingState> states = blockingStates.get(blockableId);
-        // Note! The returned list cannot be immutable!
-        return states == null ? new ArrayList<BlockingState>() : states;
-    }
-
-    @Override
     public List<BlockingState> getBlockingAllForAccountRecordId(final InternalTenantContext context) {
-        throw new UnsupportedOperationException();
+        return Objects.firstNonNull(blockingStatesPerAccountRecordId.get(context.getAccountRecordId()), ImmutableList.<BlockingState>of());
     }
 
     @Override
@@ -109,6 +87,11 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
             blockingStates.put(state.getBlockedId(), new ArrayList<BlockingState>());
         }
         blockingStates.get(state.getBlockedId()).add(state);
+
+        if (blockingStatesPerAccountRecordId.get(context.getAccountRecordId()) == null) {
+            blockingStatesPerAccountRecordId.put(context.getAccountRecordId(), new ArrayList<BlockingState>());
+        }
+        blockingStatesPerAccountRecordId.get(context.getAccountRecordId()).add(state);
     }
 
     @Override
@@ -116,11 +99,8 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
         throw new UnsupportedOperationException();
     }
 
-    public synchronized void setBlockingStates(final UUID blockedId, final List<BlockingState> states) {
-        blockingStates.put(blockedId, states);
-    }
-
     public synchronized void clear() {
         blockingStates.clear();
+        blockingStatesPerAccountRecordId.clear();
     }
 }

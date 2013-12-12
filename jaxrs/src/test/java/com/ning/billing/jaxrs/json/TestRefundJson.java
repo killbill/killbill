@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
+import com.ning.billing.payment.api.RefundStatus;
 
 import com.google.common.collect.ImmutableList;
 
@@ -43,9 +44,10 @@ public class TestRefundJson extends JaxrsTestSuiteNoDB {
         final boolean isAdjusted = true;
         final DateTime requestedDate = clock.getUTCNow();
         final DateTime effectiveDate = clock.getUTCNow();
+        final RefundStatus status = RefundStatus.COMPLETED;
         final List<InvoiceItemJson> adjustments = ImmutableList.<InvoiceItemJson>of(createInvoiceItemJson());
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final RefundJson refundJson = new RefundJson(refundId, paymentId, amount, currency, isAdjusted, requestedDate,
+        final RefundJson refundJson = new RefundJson(refundId, paymentId, amount, currency, status.toString(), isAdjusted, requestedDate,
                                                      effectiveDate, adjustments, auditLogs);
         Assert.assertEquals(refundJson.getRefundId(), refundId);
         Assert.assertEquals(refundJson.getPaymentId(), paymentId);

@@ -29,6 +29,7 @@ import com.ning.billing.events.InvoiceCreationInternalEvent;
 import com.ning.billing.events.NullInvoiceInternalEvent;
 import com.ning.billing.events.PaymentErrorInternalEvent;
 import com.ning.billing.events.PaymentInfoInternalEvent;
+import com.ning.billing.events.PaymentPluginErrorInternalEvent;
 
 public class CompletionUserRequestBase implements CompletionUserRequest {
 
@@ -123,6 +124,9 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
             case PAYMENT_ERROR:
                 onPaymentError((PaymentErrorInternalEvent) curEvent);
                 break;
+            case PAYMENT_PLUGIN_ERROR:
+                onPaymentPluginError((PaymentPluginErrorInternalEvent) curEvent);
+                break;
             default:
                 throw new RuntimeException("Unexpected event type " + curEvent.getBusEventType());
         }
@@ -157,4 +161,7 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
     public void onPaymentError(final PaymentErrorInternalEvent curEvent) {
     }
 
+    @Override
+    public void onPaymentPluginError(final PaymentPluginErrorInternalEvent curEvent) {
+    }
 }

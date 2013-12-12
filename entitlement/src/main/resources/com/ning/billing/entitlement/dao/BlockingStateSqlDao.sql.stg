@@ -5,6 +5,10 @@ tableName() ::= "blocking_states"
 
 andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
 
+defaultOrderBy(prefix) ::= <<
+order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
+>>
+
 tableFields(prefix) ::= <<
   <prefix>blockable_id
 , <prefix>type
@@ -50,7 +54,7 @@ and effective_date \<= :effectiveDate
 and is_active
 <AND_CHECK_TENANT()>
 -- We want the current state, hence the order desc and limit 1
-order by record_id desc
+order by effective_date desc, record_id desc
 limit 1
 ;
 >>
@@ -71,8 +75,8 @@ getBlockingState() ::= <<
          group by service
  ) tmp
  on t.record_id = tmp.record_id
- order by t.record_id asc
- ;
+ <defaultOrderBy("t.")>
+  ;
  >>
 
 getBlockingHistoryForService() ::= <<
@@ -84,19 +88,7 @@ where blockable_id = :blockableId
 and service = :service
 and is_active
 <AND_CHECK_TENANT()>
-order by record_id asc
-;
->>
-
-getBlockingAll() ::= <<
-select
-<allTableFields()>
-from
-<tableName()>
-where blockable_id = :blockableId
-and is_active
-<AND_CHECK_TENANT()>
-order by record_id asc
+<defaultOrderBy()>
 ;
 >>
 

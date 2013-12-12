@@ -64,6 +64,22 @@ public class SubscriptionBundleModelDao extends EntityBase implements EntityMode
         return originalCreatedDate;
     }
 
+    public void setExternalKey(final String externalKey) {
+        this.externalKey = externalKey;
+    }
+
+    public void setAccountId(final UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public void setLastSysUpdateDate(final DateTime lastSysUpdateDate) {
+        this.lastSysUpdateDate = lastSysUpdateDate;
+    }
+
+    public void setOriginalCreatedDate(final DateTime originalCreatedDate) {
+        this.originalCreatedDate = originalCreatedDate;
+    }
+
     public static SubscriptionBaseBundle toSubscriptionbundle(final SubscriptionBundleModelDao src) {
         if (src == null) {
             return null;

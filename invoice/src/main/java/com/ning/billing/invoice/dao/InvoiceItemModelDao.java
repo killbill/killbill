@@ -133,6 +133,58 @@ public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<In
         return linkedItemId;
     }
 
+    public void setType(final InvoiceItemType type) {
+        this.type = type;
+    }
+
+    public void setInvoiceId(final UUID invoiceId) {
+        this.invoiceId = invoiceId;
+    }
+
+    public void setAccountId(final UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public void setBundleId(final UUID bundleId) {
+        this.bundleId = bundleId;
+    }
+
+    public void setSubscriptionId(final UUID subscriptionId) {
+        this.subscriptionId = subscriptionId;
+    }
+
+    public void setPlanName(final String planName) {
+        this.planName = planName;
+    }
+
+    public void setPhaseName(final String phaseName) {
+        this.phaseName = phaseName;
+    }
+
+    public void setStartDate(final LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public void setEndDate(final LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public void setAmount(final BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public void setRate(final BigDecimal rate) {
+        this.rate = rate;
+    }
+
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
+    }
+
+    public void setLinkedItemId(final UUID linkedItemId) {
+        this.linkedItemId = linkedItemId;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

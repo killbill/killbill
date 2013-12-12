@@ -37,6 +37,7 @@ select
 from <tableName()>
 where bundle_id = :bundleId
 <AND_CHECK_TENANT()>
+<defaultOrderBy()>
 ;
 >>
 

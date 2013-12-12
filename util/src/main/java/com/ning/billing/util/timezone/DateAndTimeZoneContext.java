@@ -18,6 +18,7 @@ package com.ning.billing.util.timezone;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 
@@ -31,6 +32,7 @@ import com.ning.billing.clock.Clock;
 public final class DateAndTimeZoneContext {
 
     private final LocalTime referenceTime;
+    private final int offsetFromUtc;
     private final DateTimeZone accountTimeZone;
     private final Clock clock;
 
@@ -38,6 +40,13 @@ public final class DateAndTimeZoneContext {
         this.clock = clock;
         this.referenceTime = effectiveDateTime != null ? effectiveDateTime.toLocalTime() : null;
         this.accountTimeZone = accountTimeZone;
+        this.offsetFromUtc = computeOffsetFromUtc(effectiveDateTime, accountTimeZone);
+    }
+
+    static int computeOffsetFromUtc(final DateTime effectiveDateTime, final DateTimeZone accountTimeZone) {
+        final LocalDate localDateInAccountTimeZone = new LocalDate(effectiveDateTime, accountTimeZone);
+        final LocalDate localDateInUTC = new LocalDate(effectiveDateTime, DateTimeZone.UTC);
+        return Days.daysBetween(localDateInUTC, localDateInAccountTimeZone).getDays();
     }
 
     public LocalDate computeTargetDate(final DateTime targetDateTime) {
@@ -50,9 +59,9 @@ public final class DateAndTimeZoneContext {
         // Since we create the targetDate for next invoice using the date from the notificationQ, we need to make sure
         // that this datetime once transformed into a LocalDate points to the correct day.
         //
-        // e.g If accountTimeZone is -8 and we want to invoice on the 16, with a toDateTimeAtCurrentTime = 00:00:23,
-        // we will generate a datetime that is 16T08:00:23 => LocalDate in that timeZone stays on the 16.
-        //
+        // All we need to do is figure is the transformation from DateTime (point in time) to LocalDate (date in account time zone)
+        // changed the day; if so, when we recompute a UTC date from LocalDate (date in account time zone), we can simply chose a reference
+        // time and apply the offset backward to end up on the right day
         //
         // We use clock.getUTCNow() to get the offset with account timezone but that may not be correct
         // when we transition from standard time and daylight saving time. We could end up with a result
@@ -60,9 +69,7 @@ public final class DateAndTimeZoneContext {
         // We will fix that by re-inserting ourselves in the notificationQ if we detect that there is no invoice
         // and yet the subscription is recurring and not cancelled.
         //
-        final int utcOffest = accountTimeZone.getOffset(clock.getUTCNow());
-        final int localToUTCOffest = -1 * utcOffest;
-        return invoiceItemEndDate.toDateTime(referenceTime, DateTimeZone.UTC).plusMillis(localToUTCOffest);
+        return invoiceItemEndDate.toDateTime(referenceTime, DateTimeZone.UTC).plusDays(-offsetFromUtc);
     }
 
     public DateTime computeUTCDateTimeFromNow() {

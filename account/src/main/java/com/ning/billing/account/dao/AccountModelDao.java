@@ -176,6 +176,82 @@ public class AccountModelDao extends EntityBase implements EntityModelDao<Accoun
         return isNotifiedForInvoices;
     }
 
+    public void setExternalKey(final String externalKey) {
+        this.externalKey = externalKey;
+    }
+
+    public void setEmail(final String email) {
+        this.email = email;
+    }
+
+    public void setName(final String name) {
+        this.name = name;
+    }
+
+    public void setFirstNameLength(final Integer firstNameLength) {
+        this.firstNameLength = firstNameLength;
+    }
+
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
+    }
+
+    public void setBillingCycleDayLocal(final int billingCycleDayLocal) {
+        this.billingCycleDayLocal = billingCycleDayLocal;
+    }
+
+    public void setPaymentMethodId(final UUID paymentMethodId) {
+        this.paymentMethodId = paymentMethodId;
+    }
+
+    public void setTimeZone(final DateTimeZone timeZone) {
+        this.timeZone = timeZone;
+    }
+
+    public void setLocale(final String locale) {
+        this.locale = locale;
+    }
+
+    public void setAddress1(final String address1) {
+        this.address1 = address1;
+    }
+
+    public void setAddress2(final String address2) {
+        this.address2 = address2;
+    }
+
+    public void setCompanyName(final String companyName) {
+        this.companyName = companyName;
+    }
+
+    public void setCity(final String city) {
+        this.city = city;
+    }
+
+    public void setStateOrProvince(final String stateOrProvince) {
+        this.stateOrProvince = stateOrProvince;
+    }
+
+    public void setCountry(final String country) {
+        this.country = country;
+    }
+
+    public void setPostalCode(final String postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    public void setPhone(final String phone) {
+        this.phone = phone;
+    }
+
+    public void setMigrated(final Boolean migrated) {
+        this.migrated = migrated;
+    }
+
+    public void setIsNotifiedForInvoices(final Boolean isNotifiedForInvoices) {
+        this.isNotifiedForInvoices = isNotifiedForInvoices;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

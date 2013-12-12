@@ -65,6 +65,22 @@ public class CustomFieldModelDao extends EntityBase implements EntityModelDao<Cu
         return objectType;
     }
 
+    public void setFieldName(final String fieldName) {
+        this.fieldName = fieldName;
+    }
+
+    public void setFieldValue(final String fieldValue) {
+        this.fieldValue = fieldValue;
+    }
+
+    public void setObjectId(final UUID objectId) {
+        this.objectId = objectId;
+    }
+
+    public void setObjectType(final ObjectType objectType) {
+        this.objectType = objectType;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

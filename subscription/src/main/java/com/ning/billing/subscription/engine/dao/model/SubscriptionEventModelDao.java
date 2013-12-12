@@ -142,6 +142,50 @@ public class SubscriptionEventModelDao extends EntityBase implements EntityModel
         return isActive;
     }
 
+    public void setTotalOrdering(final long totalOrdering) {
+        this.totalOrdering = totalOrdering;
+    }
+
+    public void setEventType(final EventType eventType) {
+        this.eventType = eventType;
+    }
+
+    public void setUserType(final ApiEventType userType) {
+        this.userType = userType;
+    }
+
+    public void setRequestedDate(final DateTime requestedDate) {
+        this.requestedDate = requestedDate;
+    }
+
+    public void setEffectiveDate(final DateTime effectiveDate) {
+        this.effectiveDate = effectiveDate;
+    }
+
+    public void setSubscriptionId(final UUID subscriptionId) {
+        this.subscriptionId = subscriptionId;
+    }
+
+    public void setPlanName(final String planName) {
+        this.planName = planName;
+    }
+
+    public void setPhaseName(final String phaseName) {
+        this.phaseName = phaseName;
+    }
+
+    public void setPriceListName(final String priceListName) {
+        this.priceListName = priceListName;
+    }
+
+    public void setCurrentVersion(final long currentVersion) {
+        this.currentVersion = currentVersion;
+    }
+
+    public void setIsActive(final boolean isActive) {
+        this.isActive = isActive;
+    }
+
     public static SubscriptionBaseEvent toSubscriptionEvent(final SubscriptionEventModelDao src) {
 
         if (src == null) {

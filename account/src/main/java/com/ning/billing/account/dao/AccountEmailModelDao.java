@@ -54,6 +54,18 @@ public class AccountEmailModelDao extends EntityBase implements EntityModelDao<A
         return isActive;
     }
 
+    public void setAccountId(final UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public void setEmail(final String email) {
+        this.email = email;
+    }
+
+    public void setIsActive(final Boolean isActive) {
+        this.isActive = isActive;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

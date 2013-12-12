@@ -25,7 +25,4 @@ public interface BillingEventSet extends SortedSet<BillingEvent> {
     public abstract boolean isAccountAutoInvoiceOff();
 
     public abstract List<UUID> getSubscriptionIdsWithAutoInvoiceOff();
-
-    public boolean isLast(BillingEvent event);
-
 }

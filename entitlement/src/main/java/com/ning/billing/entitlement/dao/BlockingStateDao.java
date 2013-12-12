@@ -51,27 +51,6 @@ public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, Block
     public List<BlockingState> getBlockingState(UUID blockableId, BlockingStateType blockingStateType, InternalTenantContext context);
 
     /**
-     * Returns the state history for that specific service
-     *
-     * @param blockableId       id of the blockable object
-     * @param blockingStateType blockable object type
-     * @param serviceName       name of the service
-     * @param context           call context
-     * @return list of blocking states for that blockable object and service
-     */
-    public List<BlockingState> getBlockingHistoryForService(UUID blockableId, BlockingStateType blockingStateType, String serviceName, InternalTenantContext context);
-
-    /**
-     * Return all the events (past and future) across all services
-     *
-     * @param blockableId       id of the blockable object
-     * @param blockingStateType blockable object type
-     * @param context           call context
-     * @return list of blocking states for that blockable object
-     */
-    public List<BlockingState> getBlockingAll(UUID blockableId, BlockingStateType blockingStateType, InternalTenantContext context);
-
-    /**
      * Return all events (past and future) across all services) for a given callcontext (account_record_id)
      *
      * @param context call context

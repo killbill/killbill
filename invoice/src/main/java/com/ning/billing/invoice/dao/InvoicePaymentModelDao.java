@@ -99,6 +99,42 @@ public class InvoicePaymentModelDao extends EntityBase implements EntityModelDao
         return linkedInvoicePaymentId;
     }
 
+    public void setType(final InvoicePaymentType type) {
+        this.type = type;
+    }
+
+    public void setInvoiceId(final UUID invoiceId) {
+        this.invoiceId = invoiceId;
+    }
+
+    public void setPaymentId(final UUID paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    public void setPaymentDate(final DateTime paymentDate) {
+        this.paymentDate = paymentDate;
+    }
+
+    public void setAmount(final BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
+    }
+
+    public void setProcessedCurrency(final Currency processedCurrency) {
+        this.processedCurrency = processedCurrency;
+    }
+
+    public void setPaymentCookieId(final UUID paymentCookieId) {
+        this.paymentCookieId = paymentCookieId;
+    }
+
+    public void setLinkedInvoicePaymentId(final UUID linkedInvoicePaymentId) {
+        this.linkedInvoicePaymentId = linkedInvoicePaymentId;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

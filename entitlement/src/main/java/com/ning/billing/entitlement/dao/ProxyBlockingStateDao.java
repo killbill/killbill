@@ -18,8 +18,10 @@ package com.ning.billing.entitlement.dao;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -36,22 +38,20 @@ import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.EntitlementService;
+import com.ning.billing.entitlement.EventsStream;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.DefaultEntitlementApi;
-import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.api.EntitlementApiException;
-import com.ning.billing.entitlement.engine.core.EventsStream;
 import com.ning.billing.entitlement.engine.core.EventsStreamBuilder;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
+import com.ning.billing.util.customfield.ShouldntHappenException;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.Pagination;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
@@ -60,29 +60,125 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
     private static final Logger log = LoggerFactory.getLogger(ProxyBlockingStateDao.class);
 
-    public static final Ordering<BlockingState> BLOCKING_STATE_ORDERING = Ordering.<BlockingState>from(new Comparator<BlockingState>() {
-        @Override
-        public int compare(final BlockingState o1, final BlockingState o2) {
-            final int blockableIdComparison = o1.getBlockedId().compareTo(o2.getBlockedId());
-            if (blockableIdComparison == 0) {
-                // effective_date column NOT NULL
-                final int comparison = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
-                if (comparison == 0) {
-                    // Keep a stable ordering for ties
-                    return o1.getCreatedDate().compareTo(o2.getCreatedDate());
+    // Ordering is critical here, especially for Junction
+    public static List<BlockingState> sortedCopy(final Iterable<BlockingState> blockingStates) {
+        final List<BlockingState> blockingStatesSomewhatSorted = BLOCKING_STATE_ORDERING_WITH_TIES_UNHANDLED.immutableSortedCopy(blockingStates);
+
+        final List<BlockingState> result = new LinkedList<BlockingState>();
+
+        // Take care of the ties
+        final Iterator<BlockingState> iterator = blockingStatesSomewhatSorted.iterator();
+        BlockingState prev = null;
+        while (iterator.hasNext()) {
+            final BlockingState current = iterator.next();
+            if (iterator.hasNext()) {
+                final BlockingState next = iterator.next();
+                if (prev != null && current.getEffectiveDate().equals(next.getEffectiveDate()) && current.getBlockedId().equals(next.getBlockedId())) {
+                    // Same date, same blockable id
+
+                    // Make sure block billing transitions are respected first
+                    BlockingState prevCandidate = insertTiedBlockingStatesInTheRightOrder(result, current, next, prev.isBlockBilling(), current.isBlockBilling(), next.isBlockBilling());
+                    if (prevCandidate == null) {
+                        // Then respect block entitlement transitions
+                        prevCandidate = insertTiedBlockingStatesInTheRightOrder(result, current, next, prev.isBlockEntitlement(), current.isBlockEntitlement(), next.isBlockEntitlement());
+                        if (prevCandidate == null) {
+                            // And finally block changes transitions
+                            prevCandidate = insertTiedBlockingStatesInTheRightOrder(result, current, next, prev.isBlockChange(), current.isBlockChange(), next.isBlockChange());
+                            if (prevCandidate == null) {
+                                // Trust the creation date (see BLOCKING_STATE_ORDERING_WITH_TIES_UNHANDLED below)
+                                result.add(current);
+                                result.add(next);
+                                prev = next;
+                            } else {
+                                prev = prevCandidate;
+                            }
+                        } else {
+                            prev = prevCandidate;
+                        }
+                    } else {
+                        prev = prevCandidate;
+                    }
                 } else {
-                    return comparison;
+                    result.add(current);
+                    result.add(next);
+                    prev = next;
                 }
             } else {
-                return blockableIdComparison;
+                // End of the list
+                result.add(current);
+            }
+        }
+
+        return result;
+    }
+
+    private static BlockingState insertTiedBlockingStatesInTheRightOrder(final Collection<BlockingState> result,
+                                                                         final BlockingState current,
+                                                                         final BlockingState next,
+                                                                         final boolean prevBlocked,
+                                                                         final boolean currentBlocked,
+                                                                         final boolean nextBlocked) {
+        final BlockingState prev;
+
+        if (prevBlocked && currentBlocked && nextBlocked) {
+            // Tricky use case, bail
+            return null;
+        } else if (prevBlocked && currentBlocked && !nextBlocked) {
+            result.add(next);
+            result.add(current);
+            prev = current;
+        } else if (prevBlocked && !currentBlocked && nextBlocked) {
+            result.add(current);
+            result.add(next);
+            prev = next;
+        } else if (prevBlocked && !currentBlocked && !nextBlocked) {
+            // Tricky use case, bail
+            return null;
+        } else if (!prevBlocked && currentBlocked && nextBlocked) {
+            // Tricky use case, bail
+            return null;
+        } else if (!prevBlocked && currentBlocked && !nextBlocked) {
+            result.add(current);
+            result.add(next);
+            prev = next;
+        } else if (!prevBlocked && !currentBlocked && nextBlocked) {
+            result.add(next);
+            result.add(current);
+            prev = current;
+        } else if (!prevBlocked && !currentBlocked && !nextBlocked) {
+            // Tricky use case, bail
+            return null;
+        } else {
+            throw new ShouldntHappenException("Marker exception for code clarity");
+        }
+
+        return prev;
+    }
+
+    private static final Ordering<BlockingState> BLOCKING_STATE_ORDERING_WITH_TIES_UNHANDLED = Ordering.<BlockingState>from(new Comparator<BlockingState>() {
+        @Override
+        public int compare(final BlockingState o1, final BlockingState o2) {
+            // effective_date column NOT NULL
+            final int effectiveDateComparison = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
+            if (effectiveDateComparison != 0) {
+                return effectiveDateComparison;
+            } else {
+                final int blockableIdComparison = o1.getBlockedId().compareTo(o2.getBlockedId());
+                if (blockableIdComparison != 0) {
+                    return blockableIdComparison;
+                } else {
+                    // Same date, same blockable id, just respect the created date for now (see sortedCopyOf method above)
+                    return o1.getCreatedDate().compareTo(o2.getCreatedDate());
+                }
             }
         }
     });
 
-    private final EventsStreamBuilder eventsStreamBuilder;
     private final SubscriptionBaseInternalApi subscriptionInternalApi;
     private final Clock clock;
-    private final DefaultBlockingStateDao delegate;
+
+    protected final EventsStreamBuilder eventsStreamBuilder;
+    protected final DefaultBlockingStateDao delegate;
 
     @Inject
     public ProxyBlockingStateDao(final EventsStreamBuilder eventsStreamBuilder, final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
@@ -145,21 +241,9 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public List<BlockingState> getBlockingHistoryForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
-        final List<BlockingState> statesOnDisk = delegate.getBlockingHistoryForService(blockableId, blockingStateType, serviceName, context);
-        return addBlockingStatesNotOnDisk(blockableId, blockingStateType, statesOnDisk, context);
-    }
-
-    @Override
-    public List<BlockingState> getBlockingAll(final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
-        final List<BlockingState> statesOnDisk = delegate.getBlockingAll(blockableId, blockingStateType, context);
-        return addBlockingStatesNotOnDisk(blockableId, blockingStateType, statesOnDisk, context);
-    }
-
-    @Override
     public List<BlockingState> getBlockingAllForAccountRecordId(final InternalTenantContext context) {
         final List<BlockingState> statesOnDisk = delegate.getBlockingAllForAccountRecordId(context);
-        return addBlockingStatesNotOnDisk(null, null, statesOnDisk, context);
+        return addBlockingStatesNotOnDisk(statesOnDisk, context);
     }
 
     @Override
@@ -174,64 +258,37 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
     // Add blocking states for add-ons, which would be impacted by a future cancellation or change of their base plan
     // See DefaultEntitlement#blockAddOnsIfRequired
-    private List<BlockingState> addBlockingStatesNotOnDisk(@Nullable final UUID blockableId,
-                                                           @Nullable final BlockingStateType blockingStateType,
-                                                           final List<BlockingState> blockingStatesOnDisk,
+    private List<BlockingState> addBlockingStatesNotOnDisk(final List<BlockingState> blockingStatesOnDisk,
                                                            final InternalTenantContext context) {
         final Collection<BlockingState> blockingStatesOnDiskCopy = new LinkedList<BlockingState>(blockingStatesOnDisk);
 
         // Find all base entitlements that we care about (for which we want to find future cancelled add-ons)
         final Iterable<SubscriptionBase> baseSubscriptionsToConsider;
+        final Iterable<EventsStream> eventsStreams;
         try {
-            if (blockingStateType == null) {
-                // We're coming from getBlockingAllForAccountRecordId
-                final Iterable<SubscriptionBase> subscriptions = Iterables.<SubscriptionBase>concat(subscriptionInternalApi.getSubscriptionsForAccount(context).values());
-                baseSubscriptionsToConsider = Iterables.<SubscriptionBase>filter(subscriptions,
-                                                                                 new Predicate<SubscriptionBase>() {
-                                                                                     @Override
-                                                                                     public boolean apply(final SubscriptionBase input) {
-                                                                                         return ProductCategory.BASE.equals(input.getCategory()) &&
-                                                                                                !EntitlementState.CANCELLED.equals(input.getState());
-                                                                                     }
-                                                                                 });
-            } else if (BlockingStateType.SUBSCRIPTION.equals(blockingStateType)) {
-                // We're coming from getBlockingHistoryForService / getBlockingAll
-                final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(blockableId, context);
-
-                // blockable id points to a subscription, but make sure it's an add-on
-                if (ProductCategory.ADD_ON.equals(subscription.getCategory())) {
-                    final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(subscription.getBundleId(), context);
-                    baseSubscriptionsToConsider = ImmutableList.<SubscriptionBase>of(baseSubscription);
-                } else {
-                    // blockable id points to a base or standalone subscription, there is nothing to do
-                    return blockingStatesOnDisk;
-                }
-            } else {
-                // blockable id points to an account or bundle, in which case there are no extra blocking states to add
-                return blockingStatesOnDisk;
-            }
-        } catch (SubscriptionBaseApiException e) {
-            log.error("Error retrieving subscriptions for account record id " + context.getAccountRecordId(), e);
-            throw new RuntimeException(e);
-        }
-
-        // Retrieve the cancellation blocking state on disk, if it exists (will be used later)
-        final BlockingState cancellationBlockingStateOnDisk = findEntitlementCancellationBlockingState(blockableId, blockingStatesOnDiskCopy);
-
-        final List<EventsStream> eventsStreams;
-        try {
-            if (blockingStateType == null) {
-                // We're coming from getBlockingAllForAccountRecordId
-                eventsStreams = eventsStreamBuilder.buildForAccount(context);
-            } else {
-                // We're coming from getBlockingHistoryForService / getBlockingAll
-                eventsStreams = ImmutableList.<EventsStream>of(eventsStreamBuilder.buildForEntitlement(baseSubscriptionsToConsider.iterator().next().getId(), context));
-            }
+            final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(context);
+            baseSubscriptionsToConsider = Iterables.<SubscriptionBase>filter(Iterables.<SubscriptionBase>concat(subscriptions.values()),
+                                                                             new Predicate<SubscriptionBase>() {
+                                                                                 @Override
+                                                                                 public boolean apply(final SubscriptionBase input) {
+                                                                                     return ProductCategory.BASE.equals(input.getCategory());
+                                                                                 }
+                                                                             });
+            eventsStreams = Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(subscriptions, context).getEventsStreams().values());
         } catch (EntitlementApiException e) {
             log.error("Error computing blocking states for addons for account record id " + context.getAccountRecordId(), e);
             throw new RuntimeException(e);
         }
 
+        return addBlockingStatesNotOnDisk(null, null, blockingStatesOnDiskCopy, baseSubscriptionsToConsider, eventsStreams);
+    }
+
+    // Special signature for OptimizedProxyBlockingStateDao
+    protected List<BlockingState> addBlockingStatesNotOnDisk(@Nullable final UUID blockableId,
+                                                             @Nullable final BlockingStateType blockingStateType,
+                                                             final Collection<BlockingState> blockingStatesOnDiskCopy,
+                                                             final Iterable<SubscriptionBase> baseSubscriptionsToConsider,
+                                                             final Iterable<EventsStream> eventsStreams) {
         // Compute the blocking states not on disk for all base subscriptions
         final DateTime now = clock.getUTCNow();
         for (final SubscriptionBase baseSubscription : baseSubscriptionsToConsider) {
@@ -243,20 +300,23 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                                                                                }
                                                                            });
 
-            // First, check to see if the base entitlement is cancelled. If so, cancel the
+            // First, check to see if the base entitlement is cancelled
             final Collection<BlockingState> blockingStatesNotOnDisk = eventsStream.computeAddonsBlockingStatesForFutureSubscriptionBaseEvents();
 
             // Inject the extra blocking states into the stream if needed
             for (final BlockingState blockingState : blockingStatesNotOnDisk) {
                 // If this entitlement is actually already cancelled, add the cancellation event we computed
                 // only if it's prior to the blocking state on disk (e.g. add-on future cancelled but base plan cancelled earlier).
-                final boolean overrideCancellationBlockingStateOnDisk = cancellationBlockingStateOnDisk != null &&
-                                                                        isEntitlementCancellationBlockingState(blockingState) &&
-                                                                        blockingState.getEffectiveDate().isBefore(cancellationBlockingStateOnDisk.getEffectiveDate());
+                BlockingState cancellationBlockingStateOnDisk = null;
+                boolean overrideCancellationBlockingStateOnDisk = false;
+                if (isEntitlementCancellationBlockingState(blockingState)) {
+                    cancellationBlockingStateOnDisk = findEntitlementCancellationBlockingState(blockingState.getBlockedId(), blockingStatesOnDiskCopy);
+                    overrideCancellationBlockingStateOnDisk = cancellationBlockingStateOnDisk != null && blockingState.getEffectiveDate().isBefore(cancellationBlockingStateOnDisk.getEffectiveDate());
+                }
 
                 if ((
                             blockingStateType == null ||
-                            // In case we're coming from getBlockingHistoryForService / getBlockingAll, make sure we don't add
+                            // In case we're coming from OptimizedProxyBlockingStateDao, make sure we don't add
                             // blocking states for other add-ons on that base subscription
                             (BlockingStateType.SUBSCRIPTION.equals(blockingStateType) && blockingState.getBlockedId().equals(blockableId))
                     ) && (
@@ -273,7 +333,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         }
 
         // Return the sorted list
-        return BLOCKING_STATE_ORDERING.immutableSortedCopy(blockingStatesOnDiskCopy);
+        return sortedCopy(blockingStatesOnDiskCopy);
     }
 
     private BlockingState findEntitlementCancellationBlockingState(@Nullable final UUID blockedId, final Iterable<BlockingState> blockingStatesOnDisk) {

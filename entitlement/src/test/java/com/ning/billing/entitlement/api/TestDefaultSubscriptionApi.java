@@ -17,8 +17,10 @@
 package com.ning.billing.entitlement.api;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -29,12 +31,56 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
+import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.util.api.AuditLevel;
+import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.audit.ChangeType;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
 public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbeddedDB {
 
+    @Test(groups = "slow", description = "Verify blocking states are exposed in SubscriptionBundle")
+    public void testBlockingStatesInTimelineApi() throws Exception {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.BLOCK);
+        final Entitlement entitlement1 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), initialDate, callContext);
+        // Sleep 1 sec so created date are apparts from each other and ordering in the bundle does not default on the UUID which is random.
+        try {Thread.sleep(1000); } catch (InterruptedException ignore) {};
+        final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), initialDate, callContext);
+        entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "stateName", "service", false, false, false, clock.getUTCNow()),
+                                                                        internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
+        assertListenerStatus();
+
+        final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), callContext);
+        Assert.assertEquals(bundles.size(), 2);
+
+        // This will test the ordering as well
+        subscriptionBundleChecker(bundles, initialDate, entitlement1, 0);
+        subscriptionBundleChecker(bundles, initialDate, entitlement2, 1);
+    }
+
+    private void subscriptionBundleChecker(final List<SubscriptionBundle> bundles, final LocalDate initialDate, final Entitlement entitlement, final int idx) {
+        Assert.assertEquals(bundles.get(idx).getId(), entitlement.getBundleId());
+        Assert.assertEquals(bundles.get(idx).getSubscriptions().size(), 1);
+        Assert.assertEquals(bundles.get(idx).getSubscriptions().get(0).getId(), entitlement.getId());
+        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().size(), 4);
+        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(0).getEffectiveDate(), initialDate);
+        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(1).getEffectiveDate(), initialDate);
+        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getEffectiveDate(), initialDate);
+        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getSubscriptionEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
+        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getServiceName(), "service");
+        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getServiceStateName(), "stateName");
+        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(3).getEffectiveDate(), new LocalDate(2013, 9, 6));
+        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(3).getSubscriptionEventType(), SubscriptionEventType.PHASE);
+    }
 
     @Test(groups = "slow")
     public void testWithMultipleBundle() throws AccountApiException, SubscriptionApiException, EntitlementApiException {
@@ -131,5 +177,57 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertNull(thirdBundle.getSubscriptions().get(0).getEffectiveEndDate());
         assertNull(thirdBundle.getSubscriptions().get(0).getBillingEndDate());
         assertEquals(thirdBundle.getOriginalCreatedDate().compareTo(firstbundle.getCreatedDate()), 0);
+    }
+
+    @Test(groups = "slow", description = "Test for https://github.com/killbill/killbill/issues/136")
+    public void testAuditLogsForEntitlementAndSubscriptionBaseObjects() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        // Create entitlement
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        assertListenerStatus();
+
+        // Get the phase event out of the way
+        testListener.pushExpectedEvents(NextEvent.PHASE);
+        clock.setDay(new LocalDate(2013, 9, 7));
+        assertListenerStatus();
+
+        final LocalDate pauseDate = new LocalDate(2013, 9, 17);
+        entitlementApi.pause(baseEntitlement.getBundleId(), pauseDate, callContext);
+
+        final LocalDate resumeDate = new LocalDate(2013, 12, 24);
+        entitlementApi.resume(baseEntitlement.getBundleId(), resumeDate, callContext);
+
+        final LocalDate cancelDate = new LocalDate(2013, 12, 27);
+        baseEntitlement.cancelEntitlementWithDate(cancelDate, true, callContext);
+
+        testListener.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK, NextEvent.RESUME, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK);
+        clock.setDay(cancelDate.plusDays(1));
+        assertListenerStatus();
+
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
+        final List<SubscriptionEvent> transitions = bundle.getTimeline().getSubscriptionEvents();
+        assertEquals(transitions.size(), 9);
+        checkSubscriptionEventAuditLog(transitions, 0, SubscriptionEventType.START_ENTITLEMENT);
+        checkSubscriptionEventAuditLog(transitions, 1, SubscriptionEventType.START_BILLING);
+        checkSubscriptionEventAuditLog(transitions, 2, SubscriptionEventType.PHASE);
+        checkSubscriptionEventAuditLog(transitions, 3, SubscriptionEventType.PAUSE_ENTITLEMENT);
+        checkSubscriptionEventAuditLog(transitions, 4, SubscriptionEventType.PAUSE_BILLING);
+        checkSubscriptionEventAuditLog(transitions, 5, SubscriptionEventType.RESUME_ENTITLEMENT);
+        checkSubscriptionEventAuditLog(transitions, 6, SubscriptionEventType.RESUME_BILLING);
+        checkSubscriptionEventAuditLog(transitions, 7, SubscriptionEventType.STOP_ENTITLEMENT);
+        checkSubscriptionEventAuditLog(transitions, 8, SubscriptionEventType.STOP_BILLING);
+    }
+
+    private void checkSubscriptionEventAuditLog(final List<SubscriptionEvent> transitions, final int idx, final SubscriptionEventType expectedType) {
+        assertEquals(transitions.get(idx).getSubscriptionEventType(), expectedType);
+        final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(transitions.get(idx).getId(), transitions.get(idx).getSubscriptionEventType().getObjectType(), AuditLevel.FULL, callContext);
+        assertEquals(auditLogs.size(), 1);
+        assertEquals(auditLogs.get(0).getChangeType(), ChangeType.INSERT);
     }
 }

@@ -43,10 +43,10 @@ import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultRefund;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.Refund;
+import com.ning.billing.payment.api.RefundStatus;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
 import com.ning.billing.payment.dao.RefundModelDao;
-import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
@@ -136,7 +136,7 @@ public class RefundProcessor extends ProcessorBase {
 
                         return new DefaultRefund(refundInfo.getId(), refundInfo.getCreatedDate(), refundInfo.getUpdatedDate(),
                                                  paymentId, refundInfo.getAmount(), account.getCurrency(),
-                                                 isAdjusted, refundInfo.getCreatedDate());
+                                                 isAdjusted, refundInfo.getCreatedDate(), RefundStatus.COMPLETED);
                     } else {
                         paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_ERRORED, refundAmount, account.getCurrency(), context);
                         throw new PaymentPluginApiException("Refund error for RefundInfo: " + refundInfo.toString(),
@@ -208,7 +208,7 @@ public class RefundProcessor extends ProcessorBase {
         }
         return new DefaultRefund(result.getId(), result.getCreatedDate(), result.getUpdatedDate(),
                                  result.getPaymentId(), result.getAmount(), result.getCurrency(),
-                                 result.isAdjusted(), result.getCreatedDate());
+                                 result.isAdjusted(), result.getCreatedDate(), result.getRefundStatus());
     }
 
     public List<Refund> getAccountRefunds(final Account account, final InternalTenantContext context)
@@ -237,7 +237,7 @@ public class RefundProcessor extends ProcessorBase {
             public Refund apply(final RefundModelDao cur) {
                 return new DefaultRefund(cur.getId(), cur.getCreatedDate(), cur.getUpdatedDate(),
                                          cur.getPaymentId(), cur.getAmount(), cur.getCurrency(),
-                                         cur.isAdjusted(), cur.getCreatedDate());
+                                         cur.isAdjusted(), cur.getCreatedDate(), cur.getRefundStatus());
             }
         }));
     }

@@ -64,6 +64,22 @@ public class TenantModelDao extends EntityBase implements EntityModelDao<Tenant>
         return apiSalt;
     }
 
+    public void setExternalKey(final String externalKey) {
+        this.externalKey = externalKey;
+    }
+
+    public void setApiKey(final String apiKey) {
+        this.apiKey = apiKey;
+    }
+
+    public void setApiSecret(final String apiSecret) {
+        this.apiSecret = apiSecret;
+    }
+
+    public void setApiSalt(final String apiSalt) {
+        this.apiSalt = apiSalt;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

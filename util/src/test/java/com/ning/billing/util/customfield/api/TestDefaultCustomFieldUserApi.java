@@ -27,6 +27,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
@@ -34,7 +35,6 @@ import com.ning.billing.util.customfield.StringCustomField;
 import com.google.common.collect.ImmutableList;
 
 public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
-
 
     @Test(groups = "slow")
     public void testSaveCustomFieldWithAccountRecordId() throws Exception {
@@ -53,7 +53,9 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
         });
 
         final CustomField customField = new StringCustomField(UUID.randomUUID().toString().substring(1, 4), UUID.randomUUID().toString().substring(1, 4), ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
+        eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
         customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField), callContext);
+        assertListenerStatus();
 
         // Verify the field was saved
         final List<CustomField> customFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);

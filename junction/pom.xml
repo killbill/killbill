@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill</artifactId>
         <groupId>com.ning.billing</groupId>
-        <version>0.8.3-SNAPSHOT</version>
+        <version>0.8.6-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-junction</artifactId>
@@ -47,6 +47,11 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.jayway.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -78,6 +83,11 @@
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-internal-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-subscription</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>

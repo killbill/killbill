@@ -27,8 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.invoice.generator.BillingIntervalDetail;
 
+import static com.ning.billing.invoice.generator.InvoiceDateUtils.calculateBillingCycleDateOnOrAfter;
+import static com.ning.billing.invoice.generator.InvoiceDateUtils.calculateEffectiveEndDate;
+import static com.ning.billing.invoice.generator.InvoiceDateUtils.calculateLastBillingCycleDateBefore;
 import static com.ning.billing.invoice.generator.InvoiceDateUtils.calculateNumberOfWholeBillingPeriods;
 import static com.ning.billing.invoice.generator.InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate;
 import static com.ning.billing.invoice.generator.InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod;
@@ -50,8 +52,7 @@ public class InAdvanceBillingMode implements BillingMode {
 
         final List<RecurringInvoiceItemData> results = new ArrayList<RecurringInvoiceItemData>();
 
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod);
-
+        final LocalDate firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDayLocal);
 
         // We are not billing for less than a day (we could...)
         if (endDate != null && endDate.equals(startDate)) {
@@ -61,7 +62,7 @@ public class InAdvanceBillingMode implements BillingMode {
         // If there is an endDate and that endDate is before our first coming firstBillingCycleDate, all we have to do
         // is to charge for that period
         //
-        if (endDate != null && !endDate.isAfter(billingIntervalDetail.getFirstBillingCycleDate())) {
+        if (endDate != null && !endDate.isAfter(firstBillingCycleDate)) {
             final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, endDate, billingPeriod);
             final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, endDate, leadingProRationPeriods);
             results.add(itemData);
@@ -73,11 +74,11 @@ public class InAdvanceBillingMode implements BillingMode {
         // i) The first firstBillingCycleDate is strictly after our start date AND
         // ii) The endDate is is not null and is strictly after our firstBillingCycleDate (previous check)
         //
-        if (billingIntervalDetail.getFirstBillingCycleDate().isAfter(startDate)) {
-            final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, billingIntervalDetail.getFirstBillingCycleDate(), billingPeriod);
+        if (firstBillingCycleDate.isAfter(startDate)) {
+            final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, firstBillingCycleDate, billingPeriod);
             if (leadingProRationPeriods != null && leadingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
                 // Not common - add info in the logs for debugging purposes
-                final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, billingIntervalDetail.getFirstBillingCycleDate(), leadingProRationPeriods);
+                final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, firstBillingCycleDate, leadingProRationPeriods);
                 log.info("Adding pro-ration: {}", itemData);
                 results.add(itemData);
             }
@@ -88,13 +89,18 @@ public class InAdvanceBillingMode implements BillingMode {
         // - If endDate != null and targetDate is after endDate => this is the endDate and will lead to a trailing pro-ration
         // - If not, this is the last billingCycleDate calculation right after the targetDate
         //
-        final LocalDate effectiveEndDate = billingIntervalDetail.getEffectiveEndDate();
+        final LocalDate effectiveEndDate;
+        if (endDate != null) {
+            effectiveEndDate = calculateEffectiveEndDate(firstBillingCycleDate, targetDate, endDate, billingPeriod);
+        } else {
+            effectiveEndDate = calculateEffectiveEndDate(firstBillingCycleDate, targetDate, billingPeriod);
+        }
 
         //
         // Based on what we calculated previously, code recompute one more time the numberOfWholeBillingPeriods
         //
-        final LocalDate lastBillingCycleDate = billingIntervalDetail.getLastBillingCycleDate();
-        final int numberOfWholeBillingPeriods = calculateNumberOfWholeBillingPeriods(billingIntervalDetail.getFirstBillingCycleDate(), lastBillingCycleDate, billingPeriod);
+        final LocalDate lastBillingCycleDate = calculateLastBillingCycleDateBefore(effectiveEndDate, firstBillingCycleDate, billingCycleDayLocal, billingPeriod);
+        final int numberOfWholeBillingPeriods = calculateNumberOfWholeBillingPeriods(firstBillingCycleDate, lastBillingCycleDate, billingPeriod);
         final int numberOfMonthsPerBillingPeriod = billingPeriod.getNumberOfMonths();
 
         for (int i = 0; i < numberOfWholeBillingPeriods; i++) {

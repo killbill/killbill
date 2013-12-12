@@ -52,6 +52,8 @@ import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import com.ning.billing.tag.TagInternalApi;
+import com.ning.billing.util.api.AuditUserApi;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.tag.dao.TagDao;
 
@@ -106,6 +108,10 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected EntitlementUtils entitlementUtils;
     @Inject
     protected EventsStreamBuilder eventsStreamBuilder;
+    @Inject
+    protected AuditUserApi auditUserApi;
+    @Inject
+    protected InternalCallContextFactory internalCallContextFactory;
 
     protected Catalog catalog;
 

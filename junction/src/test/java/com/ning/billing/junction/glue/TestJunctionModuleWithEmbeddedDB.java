@@ -19,9 +19,17 @@ package com.ning.billing.junction.glue;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import com.ning.billing.account.glue.DefaultAccountModule;
+import com.ning.billing.api.TestApiListener;
+import com.ning.billing.api.TestListenerStatus;
+import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
+import com.ning.billing.junction.JunctionTestListenerStatus;
+import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.MetricsModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
+import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
 public class TestJunctionModuleWithEmbeddedDB extends TestJunctionModule {
@@ -36,8 +44,16 @@ public class TestJunctionModuleWithEmbeddedDB extends TestJunctionModule {
 
         install(new GuicyKillbillTestWithEmbeddedDBModule());
         install(new NonEntityDaoModule());
+        install(new CatalogModule(configSource));
+        install(new DefaultAccountModule(configSource));
+        install(new DefaultEntitlementModule(configSource));
+        install(new NotificationQueueModule(configSource));
+        install(new DefaultSubscriptionModule(configSource));
         install(new BusModule(configSource));
         install(new MetricsModule());
         install(new TagStoreModule());
+
+        bind(TestListenerStatus.class).to(JunctionTestListenerStatus.class).asEagerSingleton();
+        bind(TestApiListener.class).asEagerSingleton();
     }
 }

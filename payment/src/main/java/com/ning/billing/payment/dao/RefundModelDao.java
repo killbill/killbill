@@ -24,9 +24,10 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.payment.api.Refund;
-import com.ning.billing.util.dao.TableName;
 import com.ning.billing.entity.EntityBase;
+import com.ning.billing.payment.api.Refund;
+import com.ning.billing.payment.api.RefundStatus;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class RefundModelDao extends EntityBase implements EntityModelDao<Refund> {
@@ -100,11 +101,36 @@ public class RefundModelDao extends EntityBase implements EntityModelDao<Refund>
         return isAdjusted;
     }
 
-    public enum RefundStatus {
-        CREATED,
-        PLUGIN_COMPLETED,
-        COMPLETED,
-        PLUGIN_ERRORED
+    public void setAccountId(final UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public void setPaymentId(final UUID paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    public void setAmount(final BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
+    }
+
+    public void setProcessedAmount(final BigDecimal processedAmount) {
+        this.processedAmount = processedAmount;
+    }
+
+    public void setProcessedCurrency(final Currency processedCurrency) {
+        this.processedCurrency = processedCurrency;
+    }
+
+    public void setIsAdjusted(final boolean isAdjusted) {
+        this.isAdjusted = isAdjusted;
+    }
+
+    public void setRefundStatus(final RefundStatus refundStatus) {
+        this.refundStatus = refundStatus;
     }
 
     @Override

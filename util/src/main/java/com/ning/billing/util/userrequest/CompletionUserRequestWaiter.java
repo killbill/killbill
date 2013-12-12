@@ -27,6 +27,7 @@ import com.ning.billing.events.InvoiceCreationInternalEvent;
 import com.ning.billing.events.NullInvoiceInternalEvent;
 import com.ning.billing.events.PaymentErrorInternalEvent;
 import com.ning.billing.events.PaymentInfoInternalEvent;
+import com.ning.billing.events.PaymentPluginErrorInternalEvent;
 
 public interface CompletionUserRequestWaiter {
 
@@ -45,4 +46,6 @@ public interface CompletionUserRequestWaiter {
     public void onPaymentInfo(final PaymentInfoInternalEvent curEvent);
 
     public void onPaymentError(final PaymentErrorInternalEvent curEvent);
+
+    public void onPaymentPluginError(final PaymentPluginErrorInternalEvent curEvent);
 }

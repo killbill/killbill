@@ -69,6 +69,22 @@ public class TagModelDao extends EntityBase implements EntityModelDao<Tag> {
         return isActive;
     }
 
+    public void setTagDefinitionId(final UUID tagDefinitionId) {
+        this.tagDefinitionId = tagDefinitionId;
+    }
+
+    public void setObjectId(final UUID objectId) {
+        this.objectId = objectId;
+    }
+
+    public void setObjectType(final ObjectType objectType) {
+        this.objectType = objectType;
+    }
+
+    public void setIsActive(final Boolean isActive) {
+        this.isActive = isActive;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

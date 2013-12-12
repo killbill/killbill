@@ -16,30 +16,6 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.catalog.MockPlan;
-import com.ning.billing.catalog.MockPlanPhase;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.entitlement.api.BlockingStateType;
-import com.ning.billing.entitlement.dao.MockBlockingStateDao;
-import com.ning.billing.junction.JunctionTestSuiteNoDB;
-import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
-import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.junction.BillingEvent;
-import com.ning.billing.junction.BillingModeType;
-import com.ning.billing.junction.DefaultBlockingState;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.mockito.Mockito;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -48,6 +24,31 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.mockito.Mockito;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import com.ning.billing.account.api.Account;
+import com.ning.billing.catalog.MockPlan;
+import com.ning.billing.catalog.MockPlanPhase;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
+import com.ning.billing.entitlement.dao.MockBlockingStateDao;
+import com.ning.billing.junction.BillingEvent;
+import com.ning.billing.junction.BillingModeType;
+import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.junction.JunctionTestSuiteNoDB;
+import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -114,9 +115,9 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
         blockingStates.add(new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now));
-        blockingStates.add(new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE,  "test", false, false, false, now.plusDays(2)));
+        blockingStates.add(new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2)));
 
-        setBlockingStates(bundleId1, blockingStates);
+        setBlockingStates(blockingStates);
 
         blockingCalculator.insertBlockingEvents(billingEvents, internalCallContext);
 
@@ -516,7 +517,6 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertNotNull(minus5andAHalf);
         assertEquals(minus5andAHalf.getEffectiveDate(), now.minusDays(6));
 
-
     }
 
     protected BillingEvent createRealEvent(final DateTime effectiveDate, final SubscriptionBase subscription) {
@@ -538,9 +538,9 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final DateTimeZone tz = DateTimeZone.UTC;
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
-                fixedPrice, recurringPrice, currency,
-                billingPeriod, billCycleDay, billingModeType,
-                description, totalOrdering, type, tz);
+                                       fixedPrice, recurringPrice, currency,
+                                       billingPeriod, billCycleDay, billingModeType,
+                                       description, totalOrdering, type, tz);
     }
 
     @Test(groups = "fast")
@@ -610,7 +610,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         public MockBillingEvent() {
             super(account, subscription1, clock.getUTCNow(), null, null, BigDecimal.ZERO, BigDecimal.TEN, Currency.USD, BillingPeriod.ANNUAL,
-                    4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionBaseTransitionType.CREATE, DateTimeZone.UTC);
+                  4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionBaseTransitionType.CREATE, DateTimeZone.UTC);
         }
     }
 
@@ -642,9 +642,10 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     public void testCreateDisablePairs() {
         List<BlockingState> blockingEvents;
         final UUID ovdId = UUID.randomUUID();
+        final UUID ovdId2 = UUID.randomUUID();
         final DateTime now = clock.getUTCNow();
 
-        //simple events open clear -> disabled
+        // Simple events open clear -> disabled
         blockingEvents = new ArrayList<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now));
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1)));
@@ -655,7 +656,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
         assertNull(pairs.get(0).getEnd());
 
-        //simple events closed clear -> disabled
+        // Simple events closed clear -> disabled
         blockingEvents = new ArrayList<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now));
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1)));
@@ -668,7 +669,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertNotNull(pairs.get(0).getEnd());
         assertEquals(pairs.get(0).getEnd(), now.plusDays(2));
 
-        //simple BUNDLE events closed clear -> disabled
+        // Simple BUNDLE events closed clear -> disabled
         blockingEvents = new ArrayList<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now));
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1)));
@@ -681,7 +682,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertNotNull(pairs.get(0).getEnd());
         assertEquals(pairs.get(0).getEnd(), now.plusDays(2));
 
-        //two or more disableds in a row
+        // Two or more disabled in a row
         blockingEvents = new ArrayList<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now));
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1)));
@@ -708,6 +709,30 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
         assertNotNull(pairs.get(0).getEnd());
         assertEquals(pairs.get(0).getEnd(), now.plusDays(4));
+
+        // Verify ordering at the same effective date doesn't matter. This is to work around nondeterministic ordering
+        // behavior in ProxyBlockingStateDao#BLOCKING_STATE_ORDERING_WITH_TIES_UNHANDLED. See also TestDefaultInternalBillingApi.
+        blockingEvents = new ArrayList<BlockingState>();
+        blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2)));
+        blockingEvents.add(new DefaultBlockingState(ovdId2, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(2)));
+        blockingEvents.add(new DefaultBlockingState(ovdId2, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(3)));
+
+        pairs = blockingCalculator.createBlockingDurations(blockingEvents);
+        assertEquals(pairs.size(), 1);
+        assertEquals(pairs.get(0).getStart(), now.plusDays(1));
+        assertEquals(pairs.get(0).getEnd(), now.plusDays(3));
+
+        blockingEvents = new ArrayList<BlockingState>();
+        blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1)));
+        blockingEvents.add(new DefaultBlockingState(ovdId2, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(2)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2)));
+        blockingEvents.add(new DefaultBlockingState(ovdId2, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(3)));
+
+        pairs = blockingCalculator.createBlockingDurations(blockingEvents);
+        assertEquals(pairs.size(), 1);
+        assertEquals(pairs.get(0).getStart(), now.plusDays(1));
+        assertEquals(pairs.get(0).getEnd(), now.plusDays(3));
     }
 
     @Test(groups = "fast")
@@ -728,7 +753,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
 
-        setBlockingStates(bundleId1, blockingEvents);
+        setBlockingStates(blockingEvents);
 
         blockingCalculator.insertBlockingEvents(billingEvents, internalCallContext);
 
@@ -746,7 +771,9 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(events.get(4).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
     }
 
-    private void setBlockingStates(final UUID blockedId, final List<BlockingState> blockingStates) {
-        ((MockBlockingStateDao) blockingStateDao).setBlockingStates(blockedId, blockingStates);
+    private void setBlockingStates(final List<BlockingState> blockingStates) {
+        for (final BlockingState blockingState : blockingStates) {
+            blockingStateDao.setBlockingState(blockingState, clock, internalCallContext);
+        }
     }
 }

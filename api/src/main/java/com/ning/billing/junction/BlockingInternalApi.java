@@ -28,7 +28,7 @@ public interface BlockingInternalApi {
 
     public BlockingState getBlockingStateForService(UUID blockableId, BlockingStateType blockingStateType, String serviceName, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingAll(UUID blockableId, BlockingStateType blockingStateType, InternalTenantContext context);
+    public List<BlockingState> getBlockingAllForAccount(InternalTenantContext context);
 
     public void setBlockingState(BlockingState state, InternalCallContext context);
 }

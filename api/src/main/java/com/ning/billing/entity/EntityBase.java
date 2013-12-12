@@ -24,9 +24,9 @@ import com.ning.billing.util.entity.Entity;
 
 public abstract class EntityBase implements Entity {
 
-    protected final UUID id;
-    protected final DateTime createdDate;
-    protected final DateTime updatedDate;
+    protected UUID id;
+    protected DateTime createdDate;
+    protected DateTime updatedDate;
 
     // used to hydrate objects
     public EntityBase(final UUID id) {
@@ -63,6 +63,18 @@ public abstract class EntityBase implements Entity {
     @Override
     public DateTime getUpdatedDate() {
         return updatedDate;
+    }
+
+    public void setId(final UUID id) {
+        this.id = id;
+    }
+
+    public void setCreatedDate(final DateTime createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public void setUpdatedDate(final DateTime updatedDate) {
+        this.updatedDate = updatedDate;
     }
 
     @Override

@@ -23,11 +23,15 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.junction.DefaultBlockingState;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -77,6 +81,9 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final boolean blockEntitlement = false;
         final boolean blockBilling = false;
 
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), "TestBlockingApi", CallOrigin.TEST, UserType.SYSTEM, UUID.randomUUID());
+
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingInternalApi.setBlockingState(state1, internalCallContext);
@@ -90,7 +97,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         blockingInternalApi.setBlockingState(state2, internalCallContext);
         assertListenerStatus();
 
-        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAll(uuid, BlockingStateType.ACCOUNT, internalCallContext);
+        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAllForAccount(internalCallContext);
         final List<BlockingState> history = ImmutableList.<BlockingState>copyOf(Collections2.<BlockingState>filter(blockingAll,
                                                                                                                    new Predicate<BlockingState>() {
                                                                                                                        @Override

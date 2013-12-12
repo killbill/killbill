@@ -27,5 +27,4 @@ public interface SubscriptionModule {
     public void installSubscriptionInternalApi();
 
     public void installSubscriptionTimelineApi();
-
 }

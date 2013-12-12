@@ -20,7 +20,10 @@ import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
+import com.ning.billing.catalog.MockCatalogModule;
+import com.ning.billing.mock.glue.MockAccountModule;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
+import com.ning.billing.mock.glue.MockSubscriptionModule;
 import com.ning.billing.mock.glue.MockTagModule;
 import com.ning.billing.notificationq.MockNotificationQueueService;
 import com.ning.billing.notificationq.api.NotificationQueueConfig;
@@ -42,6 +45,10 @@ public class TestJunctionModuleNoDB extends TestJunctionModule {
         install(new GuicyKillbillTestNoDBModule());
         install(new MockNonEntityDaoModule());
         install(new InMemoryBusModule(configSource));
+        install(new MockAccountModule());
+        install(new MockCatalogModule());
+        install(new MockSubscriptionModule());
+        install(new MockEntitlementModuleForJunction());
         install(new MockTagModule());
         installNotificationQueue();
     }

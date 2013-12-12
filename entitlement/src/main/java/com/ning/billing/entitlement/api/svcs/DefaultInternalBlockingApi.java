@@ -55,8 +55,8 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
     }
 
     @Override
-    public List<BlockingState> getBlockingAll(final UUID overdueableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
-        return dao.getBlockingAll(overdueableId, blockingStateType, context);
+    public List<BlockingState> getBlockingAllForAccount(final InternalTenantContext context) {
+        return dao.getBlockingAllForAccountRecordId(context);
     }
 
     @Override

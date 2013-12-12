@@ -48,6 +48,7 @@ import com.ning.billing.events.InvoiceCreationInternalEvent;
 import com.ning.billing.events.OverdueChangeInternalEvent;
 import com.ning.billing.events.PaymentErrorInternalEvent;
 import com.ning.billing.events.PaymentInfoInternalEvent;
+import com.ning.billing.events.PaymentPluginErrorInternalEvent;
 import com.ning.billing.events.SubscriptionInternalEvent;
 import com.ning.billing.events.UserTagCreationInternalEvent;
 import com.ning.billing.events.UserTagDeletionInternalEvent;
@@ -179,6 +180,13 @@ public class BeatrixListener {
                 PaymentErrorInternalEvent realEventPayErr = (PaymentErrorInternalEvent) event;
                 objectType = ObjectType.PAYMENT;
                 objectId = realEventPayErr.getPaymentId();
+                eventBusType = ExtBusEventType.PAYMENT_FAILED;
+                break;
+
+            case PAYMENT_PLUGIN_ERROR:
+                PaymentPluginErrorInternalEvent realEventPayPluginErr = (PaymentPluginErrorInternalEvent) event;
+                objectType = ObjectType.PAYMENT;
+                objectId = realEventPayPluginErr.getPaymentId();
                 eventBusType = ExtBusEventType.PAYMENT_FAILED;
                 break;
 

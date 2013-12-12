@@ -17,9 +17,7 @@
 package com.ning.billing.entitlement.api;
 
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -41,15 +39,16 @@ import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.AccountEventsStreams;
 import com.ning.billing.entitlement.DefaultEntitlementService;
 import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.EntitlementTransitionType;
+import com.ning.billing.entitlement.EventsStream;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
 import com.ning.billing.entitlement.engine.core.EntitlementUtils;
-import com.ning.billing.entitlement.engine.core.EventsStream;
 import com.ning.billing.entitlement.engine.core.EventsStreamBuilder;
 import com.ning.billing.junction.DefaultBlockingState;
 import com.ning.billing.notificationq.api.NotificationEvent;
@@ -141,8 +140,8 @@ public class DefaultEntitlementApi implements EntitlementApi {
         }
 
         // Check the base entitlement state is not blocked
-        if (eventsStreamForBaseSubscription.getCurrentBlockingAggregator().isBlockChange()) {
-            throw new EntitlementApiException(new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, BlockingChecker.ACTION_CHANGE, BlockingChecker.TYPE_SUBSCRIPTION, eventsStreamForBaseSubscription.getSubscription().getId().toString()));
+        if (eventsStreamForBaseSubscription.isBlockChange()) {
+            throw new EntitlementApiException(new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, BlockingChecker.ACTION_CHANGE, BlockingChecker.TYPE_SUBSCRIPTION, eventsStreamForBaseSubscription.getEntitlementId().toString()));
         }
 
         final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, eventsStreamForBaseSubscription.getSubscription().getStartDate(), eventsStreamForBaseSubscription.getInternalTenantContext());
@@ -184,8 +183,21 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
     @Override
     public List<Entitlement> getAllEntitlementsForBundle(final UUID bundleId, final TenantContext tenantContext) throws EntitlementApiException {
-        final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(tenantContext);
-        return getAllEntitlementsForBundle(subscriptionInternalApi.getSubscriptionsForBundle(bundleId, context), tenantContext);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
+        final UUID accountId;
+        try {
+            accountId = subscriptionInternalApi.getBundleFromId(bundleId, internalContext).getAccountId();
+        } catch (SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
+
+        return ImmutableList.<Entitlement>copyOf(Iterables.<Entitlement>filter(getAllEntitlementsForAccountId(accountId, tenantContext),
+                                                                               new Predicate<Entitlement>() {
+                                                                                   @Override
+                                                                                   public boolean apply(final Entitlement input) {
+                                                                                       return bundleId.equals(input.getBundleId());
+                                                                                   }
+                                                                               }));
     }
 
     @Override
@@ -202,29 +214,20 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
     @Override
     public List<Entitlement> getAllEntitlementsForAccountId(final UUID accountId, final TenantContext tenantContext) throws EntitlementApiException {
+        final EntitlementApi entitlementApi = this;
         final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
-        final Map<UUID, List<SubscriptionBase>> subscriptionsPerBundle = subscriptionInternalApi.getSubscriptionsForAccount(context);
 
-        final List<Entitlement> result = new LinkedList<Entitlement>();
-        for (final UUID bundleId : subscriptionsPerBundle.keySet()) {
-            final List<Entitlement> entitlements = getAllEntitlementsForBundle(subscriptionsPerBundle.get(bundleId), tenantContext);
-            result.addAll(entitlements);
-        }
-        return result;
-    }
-
-    private List<Entitlement> getAllEntitlementsForBundle(final List<SubscriptionBase> subscriptions, final TenantContext context) {
-        return Lists.transform(subscriptions,
-                               new Function<SubscriptionBase, Entitlement>() {
-                                   @Override
-                                   public Entitlement apply(final SubscriptionBase input) {
-                                       try {
-                                           return getEntitlementForId(input.getId(), context);
-                                       } catch (EntitlementApiException e) {
-                                           throw new RuntimeException("Failed to extract blocking state for subscription " + input.getId().toString());
-                                       }
-                                   }
-                               });
+        final AccountEventsStreams accountEventsStreams = eventsStreamBuilder.buildForAccount(context);
+        final List<EventsStream> eventsStreams = ImmutableList.<EventsStream>copyOf(Iterables.<EventsStream>concat(accountEventsStreams.getEventsStreams().values()));
+        return Lists.<EventsStream, Entitlement>transform(eventsStreams,
+                                                          new Function<EventsStream, Entitlement>() {
+                                                              @Override
+                                                              public Entitlement apply(final EventsStream eventsStream) {
+                                                                  return new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi,
+                                                                                                blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
+                                                                                                entitlementUtils, dateHelper, clock, internalCallContextFactory);
+                                                              }
+                                                          });
     }
 
     @Override

@@ -18,6 +18,7 @@ package com.ning.billing.mock.glue;
 
 import org.mockito.Mockito;
 
+import com.ning.billing.entitlement.EntitlementInternalApi;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.glue.EntitlementModule;
@@ -29,6 +30,7 @@ public class MockEntitlementModule extends AbstractModule implements Entitlement
 
     private final BlockingInternalApi blockingApi = Mockito.mock(BlockingInternalApi.class);
     private final EntitlementApi entitlementApi = Mockito.mock(EntitlementApi.class);
+    private final EntitlementInternalApi entitlementInternalApi = Mockito.mock(EntitlementInternalApi.class);
     private final SubscriptionApi subscriptionApi = Mockito.mock(SubscriptionApi.class);
 
     @Override
@@ -54,6 +56,11 @@ public class MockEntitlementModule extends AbstractModule implements Entitlement
     }
 
     @Override
+    public void installEntitlementInternalApi() {
+        bind(EntitlementInternalApi.class).toInstance(entitlementInternalApi);
+    }
+
+    @Override
     public void installSubscriptionApi() {
         bind(SubscriptionApi.class).toInstance(subscriptionApi);
     }
@@ -61,5 +68,4 @@ public class MockEntitlementModule extends AbstractModule implements Entitlement
     @Override
     public void installBlockingChecker() {
     }
-
 }

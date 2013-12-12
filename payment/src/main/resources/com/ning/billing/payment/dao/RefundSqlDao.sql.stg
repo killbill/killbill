@@ -49,6 +49,7 @@ select <allTableFields()>
 from <tableName()>
 where payment_id = :paymentId
 <AND_CHECK_TENANT()>
+<defaultOrderBy()>
 ;
 >>
 
@@ -57,5 +58,6 @@ select <allTableFields()>
 from <tableName()>
 where account_id = :accountId
 <AND_CHECK_TENANT()>
+<defaultOrderBy()>
 ;
 >>

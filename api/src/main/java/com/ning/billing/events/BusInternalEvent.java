@@ -38,6 +38,7 @@ public interface BusInternalEvent extends BusEvent {
         INVOICE_EMPTY,
         OVERDUE_CHANGE,
         PAYMENT_ERROR,
+        PAYMENT_PLUGIN_ERROR,
         PAYMENT_INFO,
         SUBSCRIPTION_TRANSITION,
         USER_TAGDEFINITION_CREATION,
