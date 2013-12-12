@@ -144,7 +144,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
             throw new EntitlementApiException(new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, BlockingChecker.ACTION_CHANGE, BlockingChecker.TYPE_SUBSCRIPTION, eventsStreamForBaseSubscription.getEntitlementId().toString()));
         }
 
-        final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, eventsStreamForBaseSubscription.getSubscription().getStartDate(), eventsStreamForBaseSubscription.getInternalTenantContext());
+        final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, eventsStreamForBaseSubscription.getSubscriptionBase().getStartDate(), eventsStreamForBaseSubscription.getInternalTenantContext());
 
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(callContext);

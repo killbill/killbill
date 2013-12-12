@@ -44,9 +44,9 @@ public interface EventsStream {
 
     LocalDate getEntitlementEffectiveEndDate();
 
-    SubscriptionBase getSubscription();
+    SubscriptionBase getSubscriptionBase();
 
-    SubscriptionBase getBaseSubscription();
+    SubscriptionBase getBasePlanSubscriptionBase();
 
     boolean isEntitlementActive();
 

@@ -296,7 +296,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                                                                            new Predicate<EventsStream>() {
                                                                                @Override
                                                                                public boolean apply(final EventsStream input) {
-                                                                                   return input.getSubscription().getId().equals(baseSubscription.getId());
+                                                                                   return input.getSubscriptionBase().getId().equals(baseSubscription.getId());
                                                                                }
                                                                            });
 

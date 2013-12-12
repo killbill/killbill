@@ -449,7 +449,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
                                                                        new Predicate<EventsStream>() {
                                                                            @Override
                                                                            public boolean apply(final EventsStream input) {
-                                                                               return input.getSubscription().getId().equals(baseEntitlement.getId());
+                                                                               return input.getSubscriptionBase().getId().equals(baseEntitlement.getId());
                                                                            }
                                                                        });
         return eventsStream.computeAddonsBlockingStatesForFutureSubscriptionBaseEvents();
@@ -466,7 +466,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
                                                                        new Predicate<EventsStream>() {
                                                                            @Override
                                                                            public boolean apply(final EventsStream input) {
-                                                                               return input.getSubscription().getId().equals(baseEntitlement.getId());
+                                                                               return input.getSubscriptionBase().getId().equals(baseEntitlement.getId());
                                                                            }
                                                                        });
         return eventsStream.computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate);

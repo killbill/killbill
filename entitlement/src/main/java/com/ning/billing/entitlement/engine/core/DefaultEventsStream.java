@@ -123,12 +123,12 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     @Override
-    public SubscriptionBase getBaseSubscription() {
+    public SubscriptionBase getBasePlanSubscriptionBase() {
         return baseSubscription;
     }
 
     @Override
-    public SubscriptionBase getSubscription() {
+    public SubscriptionBase getSubscriptionBase() {
         return subscription;
     }
 

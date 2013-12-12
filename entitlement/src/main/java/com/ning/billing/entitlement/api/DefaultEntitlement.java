@@ -88,7 +88,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                               final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
                               final NotificationQueueService notificationQueueService, final EntitlementUtils entitlementUtils,
                               final EntitlementDateHelper dateHelper, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
-        super(eventsStream.getEntitlementId(), eventsStream.getSubscription().getCreatedDate(), eventsStream.getSubscription().getUpdatedDate());
+        super(eventsStream.getEntitlementId(), eventsStream.getSubscriptionBase().getCreatedDate(), eventsStream.getSubscriptionBase().getUpdatedDate());
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.eventsStream = eventsStream;
         this.dateHelper = dateHelper;
@@ -126,12 +126,12 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     // Subscription associated with this entitlement (equals to baseSubscription for base subscriptions)
     public SubscriptionBase getSubscriptionBase() {
-        return eventsStream.getSubscription();
+        return eventsStream.getSubscriptionBase();
     }
 
     // Base subscription for the bundle if it exists, null otherwise
-    public SubscriptionBase getBaseSubscription() {
-        return eventsStream.getBaseSubscription();
+    public SubscriptionBase getBasePlanSubscriptionBase() {
+        return eventsStream.getBasePlanSubscriptionBase();
     }
 
     public EventsStreamBuilder getEventsStreamBuilder() {

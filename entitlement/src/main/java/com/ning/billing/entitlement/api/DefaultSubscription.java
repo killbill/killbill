@@ -42,10 +42,10 @@ public class DefaultSubscription extends DefaultEntitlement implements Subscript
     public LocalDate getBillingEndDate() {
         final DateTime futureOrCurrentEndDateForSubscription = getSubscriptionBase().getEndDate() != null ? getSubscriptionBase().getEndDate() : getSubscriptionBase().getFutureEndDate();
         final DateTime futureOrCurrentEndDateForBaseSubscription;
-        if (getBaseSubscription() == null) {
+        if (getBasePlanSubscriptionBase() == null) {
             futureOrCurrentEndDateForBaseSubscription = null;
         } else {
-            futureOrCurrentEndDateForBaseSubscription = getBaseSubscription().getEndDate() != null ? getBaseSubscription().getEndDate() : getBaseSubscription().getFutureEndDate();
+            futureOrCurrentEndDateForBaseSubscription = getBasePlanSubscriptionBase().getEndDate() != null ? getBasePlanSubscriptionBase().getEndDate() : getBasePlanSubscriptionBase().getFutureEndDate();
         }
 
         final DateTime futureOrCurrentEndDate;
