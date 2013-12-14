@@ -215,16 +215,67 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         }
     }
 
+    private int compareSubscriptionEventsForSameEffectiveDateAndEntitlementId(final SubscriptionEvent first, final SubscriptionEvent second) {
+        // For consistency, make sure entitlement-service and billing-service events always happen in a
+        // deterministic order (e.g. after other services for STOP events and before for START events)
+        if ((DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(first.getServiceName()) ||
+             DefaultSubscriptionBundleTimeline.BILLING_SERVICE_NAME.equals(first.getServiceName())) &&
+            !(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(second.getServiceName()) ||
+              DefaultSubscriptionBundleTimeline.BILLING_SERVICE_NAME.equals(second.getServiceName()))) {
+            // first is an entitlement-service or billing-service event, but not second
+            if (first.getSubscriptionEventType().equals(SubscriptionEventType.START_ENTITLEMENT) ||
+                first.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING) ||
+                first.getSubscriptionEventType().equals(SubscriptionEventType.RESUME_ENTITLEMENT) ||
+                first.getSubscriptionEventType().equals(SubscriptionEventType.RESUME_BILLING) ||
+                first.getSubscriptionEventType().equals(SubscriptionEventType.PHASE) ||
+                first.getSubscriptionEventType().equals(SubscriptionEventType.CHANGE)) {
+                return -1;
+            } else if (first.getSubscriptionEventType().equals(SubscriptionEventType.PAUSE_ENTITLEMENT) ||
+                       first.getSubscriptionEventType().equals(SubscriptionEventType.PAUSE_BILLING) ||
+                       first.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT) ||
+                       first.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)) {
+                return 1;
+            } else {
+                // Default behavior
+                return -1;
+            }
+        } else if ((DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(second.getServiceName()) ||
+                    DefaultSubscriptionBundleTimeline.BILLING_SERVICE_NAME.equals(second.getServiceName())) &&
+                   !(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(first.getServiceName()) ||
+                     DefaultSubscriptionBundleTimeline.BILLING_SERVICE_NAME.equals(first.getServiceName()))) {
+            // second is an entitlement-service or billing-service event, but not first
+            if (second.getSubscriptionEventType().equals(SubscriptionEventType.START_ENTITLEMENT) ||
+                second.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING) ||
+                second.getSubscriptionEventType().equals(SubscriptionEventType.RESUME_ENTITLEMENT) ||
+                second.getSubscriptionEventType().equals(SubscriptionEventType.RESUME_BILLING) ||
+                second.getSubscriptionEventType().equals(SubscriptionEventType.PHASE) ||
+                second.getSubscriptionEventType().equals(SubscriptionEventType.CHANGE)) {
+                return 1;
+            } else if (second.getSubscriptionEventType().equals(SubscriptionEventType.PAUSE_ENTITLEMENT) ||
+                       second.getSubscriptionEventType().equals(SubscriptionEventType.PAUSE_BILLING) ||
+                       second.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT) ||
+                       second.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)) {
+                return -1;
+            } else {
+                // Default behavior
+                return 1;
+            }
+        } else {
+            // Respect enum ordering
+            return ((Integer) first.getSubscriptionEventType().ordinal()).compareTo(second.getSubscriptionEventType().ordinal());
+        }
+    }
+
     private boolean shouldSwap(final SubscriptionEvent cur, final SubscriptionEvent other, final boolean isAscending) {
         // For a given date, order by subscriptionId, and within subscription by event type
         final int idComp = cur.getEntitlementId().compareTo(other.getEntitlementId());
         return (cur.getEffectiveDate().compareTo(other.getEffectiveDate()) == 0 &&
                 ((isAscending &&
                   ((idComp > 0) ||
-                   (idComp == 0 && cur.getSubscriptionEventType().ordinal() > other.getSubscriptionEventType().ordinal()))) ||
+                   (idComp == 0 && compareSubscriptionEventsForSameEffectiveDateAndEntitlementId(cur, other) > 0))) ||
                  (!isAscending &&
                   ((idComp < 0) ||
-                   (idComp == 0 && cur.getSubscriptionEventType().ordinal() < other.getSubscriptionEventType().ordinal())))));
+                   (idComp == 0 && compareSubscriptionEventsForSameEffectiveDateAndEntitlementId(cur, other) < 0)))));
     }
 
     private void insertAfterIndex(final LinkedList<SubscriptionEvent> original, final List<SubscriptionEvent> newEvents, final int index) {
@@ -297,13 +348,13 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                                 ImmutableList.<UUID>copyOf(allEntitlementUUIDs);
 
         // For each target compute the new events that should be inserted in the stream
-        for (final UUID target : targetEntitlementIds) {
-            final SubscriptionEvent[] prevNext = findPrevNext(result, target, curInsertion);
-            final TargetState curTargetState = targetStates.get(target);
+        for (final UUID targetEntitlementId : targetEntitlementIds) {
+            final SubscriptionEvent[] prevNext = findPrevNext(result, targetEntitlementId, curInsertion);
+            final TargetState curTargetState = targetStates.get(targetEntitlementId);
 
             final List<SubscriptionEventType> eventTypes = curTargetState.addStateAndReturnEventTypes(bs);
             for (final SubscriptionEventType t : eventTypes) {
-                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], target, bs, t, accountTimeZone));
+                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], targetEntitlementId, bs, t, accountTimeZone));
             }
         }
         return index;
@@ -333,7 +384,9 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                     break;
                 }
             }
-            if (tmp.getId().equals(insertionEvent.getId())) {
+            // Check both the id and the event type because of multiplexing
+            if (tmp.getId().equals(insertionEvent.getId()) &&
+                tmp.getSubscriptionEventType().equals(insertionEvent.getSubscriptionEventType())) {
                 foundCur = true;
             }
         }

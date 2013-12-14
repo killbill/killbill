@@ -96,30 +96,6 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         this.accountTimeZone = accountTimeZone;
     }
 
-    public DefaultSubscriptionEvent(final DefaultSubscriptionEvent copy, final SubscriptionEventType newEventType) {
-        this(copy.getId(),
-             copy.getEntitlementId(),
-             copy.getEffectiveDateTime(),
-             copy.getRequestedDateTime(),
-             newEventType,
-             copy.isBlockedEntitlement(),
-             copy.isBlockedBilling(),
-             copy.getServiceName(),
-             copy.getServiceStateName(),
-             copy.getPrevProduct(),
-             copy.getPrevPlan(),
-             copy.getPrevPhase(),
-             copy.getPrevPriceList(),
-             copy.getPrevBillingPeriod(),
-             copy.getNextProduct(),
-             copy.getNextPlan(),
-             copy.getNextPhase(),
-             copy.getNextPriceList(),
-             copy.getNextBillingPeriod(),
-             copy.getCreatedDate(),
-             copy.getAccountTimeZone());
-    }
-
     public DateTimeZone getAccountTimeZone() {
         return accountTimeZone;
     }
