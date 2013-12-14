@@ -48,13 +48,6 @@ public class DefaultInvoiceGeneratorWithSwitchRepairLogic extends DefaultInvoice
     }
 
     @Override
-    protected void removeProposedRepareeForPartialrepair(final InvoiceItem repairedItem, final List<InvoiceItem> proposedItems) {
-        if (repairtLogic == REPAIR_INVOICE_LOGIC.PARTIAL_REPAIR) {
-            super.removeProposedRepareeForPartialrepair(repairedItem, proposedItems);
-        }
-    }
-
-    @Override
     void addRepairItem(final InvoiceItem repairedItem, final RepairAdjInvoiceItem candidateRepairItem, final List<InvoiceItem> proposedItems) {
         if (repairtLogic == REPAIR_INVOICE_LOGIC.PARTIAL_REPAIR) {
             super.addRepairItem(repairedItem, candidateRepairItem, proposedItems);
