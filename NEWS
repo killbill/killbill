@@ -1,3 +1,14 @@
+0.8.7
+    DDL: remove unused paid_through_date column
+
+0.8.6
+    Partial fix for https://github.com/killbill/killbill/issues/141
+    https://github.com/killbill/killbill/issues/143
+    https://github.com/killbill/killbill/issues/145
+    https://github.com/killbill/killbill/issues/147
+    https://github.com/killbill/killbill/issues/148
+    DDL: remove unused billing_cycle_day_utc column
+
 0.8.5
     https://github.com/killbill/killbill/issues/134
     https://github.com/killbill/killbill/issues/135
