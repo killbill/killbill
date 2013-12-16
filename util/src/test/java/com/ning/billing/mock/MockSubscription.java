@@ -166,11 +166,6 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public DateTime getPaidThroughDate() {
-        return sub.getPaidThroughDate();
-    }
-
-    @Override
     public ProductCategory getCategory() {
         return sub.getCategory();
     }

@@ -25,6 +25,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 
 public class SubscriptionBuilder {
+
     private UUID id;
     private UUID bundleId;
     private DateTime createdDate;
@@ -34,7 +35,6 @@ public class SubscriptionBuilder {
     private Long activeVersion;
     private ProductCategory category;
     private DateTime chargedThroughDate;
-    private DateTime paidThroughDate;
 
     public SubscriptionBuilder() {
         this.activeVersion = SubscriptionEvents.INITIAL_VERSION;
@@ -48,7 +48,6 @@ public class SubscriptionBuilder {
         this.category = original.getCategory();
         this.activeVersion = original.getActiveVersion();
         this.chargedThroughDate = original.getChargedThroughDate();
-        this.paidThroughDate = original.getPaidThroughDate();
     }
 
     public SubscriptionBuilder setId(final UUID id) {
@@ -88,11 +87,6 @@ public class SubscriptionBuilder {
 
     public SubscriptionBuilder setChargedThroughDate(final DateTime chargedThroughDate) {
         this.chargedThroughDate = chargedThroughDate;
-        return this;
-    }
-
-    public SubscriptionBuilder setPaidThroughDate(final DateTime paidThroughDate) {
-        this.paidThroughDate = paidThroughDate;
         return this;
     }
 
@@ -137,21 +131,17 @@ public class SubscriptionBuilder {
         return chargedThroughDate;
     }
 
-    public DateTime getPaidThroughDate() {
-        return paidThroughDate;
-    }
-
     private void checkAllFieldsSet() {
         for (final Field cur : SubscriptionBuilder.class.getDeclaredFields()) {
             try {
                 final Object value = cur.get(this);
                 if (value == null) {
                     throw new SubscriptionBaseError(String.format("Field %s has not been set for SubscriptionBase",
-                                                             cur.getName()));
+                                                                  cur.getName()));
                 }
             } catch (IllegalAccessException e) {
                 throw new SubscriptionBaseError(String.format("Failed to access value for field %s for SubscriptionBase",
-                                                         cur.getName()), e);
+                                                              cur.getName()), e);
             }
         }
     }

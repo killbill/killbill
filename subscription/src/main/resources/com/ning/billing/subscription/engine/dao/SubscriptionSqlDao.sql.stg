@@ -9,7 +9,6 @@ tableFields(prefix) ::= <<
 , <prefix>bundle_start_date
 , <prefix>active_version
 , <prefix>charged_through_date
-, <prefix>paid_through_date
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -23,7 +22,6 @@ tableValues() ::= <<
 , :bundleStartDate
 , :activeVersion
 , :chargedThroughDate
-, :paidThroughDate
 , :createdBy
 , :createdDate
 , :updatedBy

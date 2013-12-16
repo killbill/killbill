@@ -78,7 +78,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     //
     private final long activeVersion;
     private final DateTime chargedThroughDate;
-    private final DateTime paidThroughDate;
 
     //
     // User APIs (create, change, cancelWithRequestedDate,...) will recompute those each time,
@@ -110,7 +109,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.category = builder.getCategory();
         this.activeVersion = builder.getActiveVersion();
         this.chargedThroughDate = builder.getChargedThroughDate();
-        this.paidThroughDate = builder.getPaidThroughDate();
     }
 
     // Used for API to make sure we have a clock and an apiService set before we return the object
@@ -124,7 +122,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.category = internalSubscription.getCategory();
         this.activeVersion = internalSubscription.getActiveVersion();
         this.chargedThroughDate = internalSubscription.getChargedThroughDate();
-        this.paidThroughDate = internalSubscription.getPaidThroughDate();
         this.transitions = new LinkedList<SubscriptionBaseTransition>(internalSubscription.getAllTransitions());
         this.events = internalSubscription.getEvents();
     }
@@ -346,11 +343,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     @Override
     public DateTime getChargedThroughDate() {
         return chargedThroughDate;
-    }
-
-    @Override
-    public DateTime getPaidThroughDate() {
-        return paidThroughDate;
     }
 
     @Override

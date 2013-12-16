@@ -273,8 +273,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                       DateTime chargedThruDate, InternalCallContext context) {
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(subscriptionId, context);
         final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
-                .setChargedThroughDate(chargedThruDate)
-                .setPaidThroughDate(subscription.getPaidThroughDate());
+                .setChargedThroughDate(chargedThruDate);
 
         dao.updateChargedThroughDate(new DefaultSubscriptionBase(builder), context);
     }
