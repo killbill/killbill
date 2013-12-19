@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
@@ -52,6 +53,9 @@ import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class EntitlementUtils {
 
@@ -102,16 +106,15 @@ public class EntitlementUtils {
      */
     public UUID getFirstActiveSubscriptionIdForKeyOrNull(final String externalKey, final InternalTenantContext tenantContext)  {
 
-        final List<UUID> nonAddonUUIDs = subscriptionBaseInternalApi.getNonAOSubscriptionIdsForKey(externalKey, tenantContext);
-        for (final UUID cur : nonAddonUUIDs) {
-            final BlockingState state = dao.getBlockingStateForService(cur, BlockingStateType.SUBSCRIPTION, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME, tenantContext);
-            if (state == null || !state.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED)) {
-                return cur;
+        final Iterable<UUID> nonAddonUUIDs = subscriptionBaseInternalApi.getNonAOSubscriptionIdsForKey(externalKey, tenantContext);
+        return Iterables.tryFind(nonAddonUUIDs, new Predicate<UUID>() {
+            @Override
+            public boolean apply(final UUID input) {
+                final BlockingState state = dao.getBlockingStateForService(input, BlockingStateType.SUBSCRIPTION, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME, tenantContext);
+                return (state == null || !state.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED));
             }
-        }
-        return null;
+        }).orNull();
     }
-
 
 
     private BlockingAggregator getBlockingStateFor(final UUID blockableId, final BlockingStateType type, final InternalCallContext context) {

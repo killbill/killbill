@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -182,16 +183,16 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
     }
 
     @Override
-    public List<UUID> getNonAOSubscriptionIdsForKey(final String bundleKey, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<UUID>>() {
+    public Iterable<UUID> getNonAOSubscriptionIdsForKey(final String bundleKey, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Iterable<UUID>>() {
             @Override
-            public List<UUID> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Iterable<UUID> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
 
                 final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
 
                 final List<SubscriptionBundleModelDao> bundles = bundleSqlDao.getBundlesForKey(bundleKey, context);
 
-                final List<UUID> result = new ArrayList<UUID>();
+                Iterable<UUID> result = Collections.emptyList();
                 final SubscriptionSqlDao subscriptionSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
                 for (SubscriptionBundleModelDao cur : bundles) {
                     final List<SubscriptionModelDao> subscriptions = subscriptionSqlDao.getSubscriptionsFromBundleId(cur.getId().toString(), context);
@@ -202,16 +203,14 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
                             return input.getCategory() != ProductCategory.ADD_ON;
                         }
                     });
-                    if (nonAddonSubscriptions.iterator().hasNext()) {
 
-                        final Iterable nonAddonSubscriptionIds = Iterables.transform(nonAddonSubscriptions, new Function<SubscriptionModelDao, UUID>() {
-                            @Override
-                            public UUID apply(@Nullable final SubscriptionModelDao input) {
-                                return input.getId();
-                            }
-                        });
-                        result.addAll(Lists.newArrayList(nonAddonSubscriptionIds));
-                    }
+                    final Iterable nonAddonSubscriptionIds = Iterables.transform(nonAddonSubscriptions, new Function<SubscriptionModelDao, UUID>() {
+                        @Override
+                        public UUID apply(@Nullable final SubscriptionModelDao input) {
+                            return input.getId();
+                        }
+                    });
+                    result = Iterables.concat(result, nonAddonSubscriptionIds);
                 }
                 return result;
             }
