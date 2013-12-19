@@ -52,6 +52,11 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
         testDao.insertProcessedPayment(kbPaymentId, kbPaymentMethodId, amount);
         return new PaymentInfoPlugin() {
             @Override
+            public UUID getKbPaymentId() {
+                return kbPaymentId;
+            }
+
+            @Override
             public BigDecimal getAmount() {
                 return amount;
             }
@@ -101,6 +106,36 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
     @Override
     public PaymentInfoPlugin getPaymentInfo(final UUID kbAccountId, final UUID kbPaymentId, final TenantContext context) throws PaymentPluginApiException {
         return null;
+    }
+
+    @Override
+    public Pagination<PaymentInfoPlugin> searchPayments(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return new Pagination<PaymentInfoPlugin>() {
+            @Override
+            public Long getCurrentOffset() {
+                return 0L;
+            }
+
+            @Override
+            public Long getNextOffset() {
+                return null;
+            }
+
+            @Override
+            public Long getMaxNbRecords() {
+                return 0L;
+            }
+
+            @Override
+            public Long getTotalNbRecords() {
+                return 0L;
+            }
+
+            @Override
+            public Iterator<PaymentInfoPlugin> iterator() {
+                return null;
+            }
+        };
     }
 
     @Override
@@ -164,7 +199,6 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
             }
         };
     }
-
 
     @Override
     public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {

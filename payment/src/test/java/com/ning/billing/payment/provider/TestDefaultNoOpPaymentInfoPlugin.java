@@ -31,21 +31,22 @@ public class TestDefaultNoOpPaymentInfoPlugin extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEquals() throws Exception {
+        final UUID kbPaymentId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal("1.394810E-3");
         final DateTime effectiveDate = clock.getUTCNow().plusDays(1);
         final DateTime createdDate = clock.getUTCNow();
         final PaymentPluginStatus status = PaymentPluginStatus.UNDEFINED;
         final String error = UUID.randomUUID().toString();
 
-        final DefaultNoOpPaymentInfoPlugin info = new DefaultNoOpPaymentInfoPlugin(amount, Currency.USD, effectiveDate, createdDate,
+        final DefaultNoOpPaymentInfoPlugin info = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, amount, Currency.USD, effectiveDate, createdDate,
                                                                                    status, error);
         Assert.assertEquals(info, info);
 
-        final DefaultNoOpPaymentInfoPlugin sameInfo = new DefaultNoOpPaymentInfoPlugin(amount, Currency.USD, effectiveDate, createdDate,
+        final DefaultNoOpPaymentInfoPlugin sameInfo = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, amount, Currency.USD, effectiveDate, createdDate,
                                                                                        status, error);
         Assert.assertEquals(sameInfo, info);
 
-        final DefaultNoOpPaymentInfoPlugin otherInfo = new DefaultNoOpPaymentInfoPlugin(amount, Currency.USD, effectiveDate, createdDate,
+        final DefaultNoOpPaymentInfoPlugin otherInfo = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, amount, Currency.USD, effectiveDate, createdDate,
                                                                                         status, UUID.randomUUID().toString());
         Assert.assertNotEquals(otherInfo, info);
     }

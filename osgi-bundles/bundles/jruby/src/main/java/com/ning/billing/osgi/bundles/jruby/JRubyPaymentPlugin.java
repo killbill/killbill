@@ -40,7 +40,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.entity.Pagination;
 
-public  class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi {
+public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi {
 
     private volatile ServiceRegistration<PaymentPluginApi> paymentInfoPluginRegistration;
 
@@ -85,6 +85,16 @@ public  class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi
             @Override
             public PaymentInfoPlugin doCall(final Ruby runtime) throws PaymentPluginApiException {
                 return ((PaymentPluginApi) pluginInstance).getPaymentInfo(kbAccountId, kbPaymentId, context);
+            }
+        });
+    }
+
+    @Override
+    public Pagination<PaymentInfoPlugin> searchPayments(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
+            @Override
+            public Pagination<PaymentInfoPlugin> doCall(final Ruby runtime) throws PaymentPluginApiException {
+                return ((PaymentPluginApi) pluginInstance).searchPayments(searchKey, offset, limit, tenantContext);
             }
         });
     }

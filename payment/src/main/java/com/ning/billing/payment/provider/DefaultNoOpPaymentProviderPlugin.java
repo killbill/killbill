@@ -96,7 +96,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
         }
 
         final PaymentPluginStatus status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
-        final PaymentInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, null);
+        final PaymentInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, null);
         payments.put(kbPaymentId.toString(), result);
         return result;
     }
@@ -108,6 +108,29 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
             throw new PaymentPluginApiException("", "No payment found for payment id " + kbPaymentId.toString());
         }
         return payment;
+    }
+
+    @Override
+    public Pagination<PaymentInfoPlugin> searchPayments(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        final ImmutableList<PaymentInfoPlugin> allResults = ImmutableList.<PaymentInfoPlugin>copyOf(Iterables.<PaymentInfoPlugin>filter(Iterables.<PaymentInfoPlugin>concat(payments.values()), new Predicate<PaymentInfoPlugin>() {
+            @Override
+            public boolean apply(final PaymentInfoPlugin input) {
+                return (input.getKbPaymentId() != null && input.getKbPaymentId().toString().equals(searchKey)) ||
+                       (input.getFirstPaymentReferenceId() != null && input.getFirstPaymentReferenceId().contains(searchKey)) ||
+                       (input.getSecondPaymentReferenceId() != null && input.getSecondPaymentReferenceId().contains(searchKey));
+            }
+        }));
+
+        final List<PaymentInfoPlugin> results;
+        if (offset >= allResults.size()) {
+            results = ImmutableList.<PaymentInfoPlugin>of();
+        } else if (offset + limit > allResults.size()) {
+            results = allResults.subList(offset.intValue(), allResults.size());
+        } else {
+            results = allResults.subList(offset.intValue(), offset.intValue() + limit.intValue());
+        }
+
+        return new DefaultPagination<PaymentInfoPlugin>(offset, limit, (long) results.size(), (long) payments.values().size(), results.iterator());
     }
 
     @Override

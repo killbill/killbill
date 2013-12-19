@@ -102,7 +102,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         }
 
         final PaymentPluginStatus status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
-        final PaymentInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, null);
+        final PaymentInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, null);
         payments.put(kbPaymentId.toString(), result);
         return result;
     }
@@ -116,6 +116,18 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         return payment;
     }
 
+    @Override
+    public Pagination<PaymentInfoPlugin> searchPayments(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        final ImmutableList<PaymentInfoPlugin> results = ImmutableList.<PaymentInfoPlugin>copyOf(Iterables.<PaymentInfoPlugin>filter(payments.values(), new Predicate<PaymentInfoPlugin>() {
+            @Override
+            public boolean apply(final PaymentInfoPlugin input) {
+                return (input.getKbPaymentId() != null && input.getKbPaymentId().equals(searchKey)) ||
+                       (input.getFirstPaymentReferenceId() != null && input.getFirstPaymentReferenceId().contains(searchKey)) ||
+                       (input.getSecondPaymentReferenceId() != null && input.getSecondPaymentReferenceId().contains(searchKey));
+            }
+        }));
+        return DefaultPagination.<PaymentInfoPlugin>build(offset, limit, results);
+    }
 
     @Override
     public void addPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {

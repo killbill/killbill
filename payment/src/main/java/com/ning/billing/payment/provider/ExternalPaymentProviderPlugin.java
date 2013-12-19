@@ -60,12 +60,17 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public PaymentInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(amount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, amount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
     }
 
     @Override
     public PaymentInfoPlugin getPaymentInfo(final UUID kbAccountId, final UUID kbPaymentId, final TenantContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(BigDecimal.ZERO, null, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, BigDecimal.ZERO, null, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
+    }
+
+    @Override
+    public Pagination<PaymentInfoPlugin> searchPayments(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return new DefaultPagination<PaymentInfoPlugin>(offset, limit, 0L, 0L, Iterators.<PaymentInfoPlugin>emptyIterator());
     }
 
     @Override
