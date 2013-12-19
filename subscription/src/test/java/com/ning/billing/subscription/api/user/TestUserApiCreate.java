@@ -57,14 +57,6 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
         assertNotNull(subscription);
 
-        try {
-            final SubscriptionBaseBundle newBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, internalCallContext);
-
-            Assert.fail("Unexpected success to create a bundle");
-        } catch (SubscriptionBaseApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode());
-        }
-
         testListener.pushExpectedEvent(NextEvent.CANCEL);
         subscription.cancelWithDate(clock.getUTCNow(), callContext);
         assertListenerStatus();

@@ -33,6 +33,10 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.entitlement.AccountEntitlements;
 import com.ning.billing.entitlement.EntitlementInternalApi;
+import com.ning.billing.entitlement.EventsStream;
+import com.ning.billing.entitlement.api.svcs.DefaultEntitlementInternalApi;
+import com.ning.billing.entitlement.engine.core.EntitlementUtils;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
@@ -70,18 +74,20 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     };
 
     private final EntitlementInternalApi entitlementInternalApi;
-    private final SubscriptionBaseInternalApi subscriptionInternalApi;
+    private final SubscriptionBaseInternalApi subscriptionBaseInternalApi;
     private final InternalCallContextFactory internalCallContextFactory;
     private final NonEntityDao nonEntityDao;
     private final CacheControllerDispatcher cacheControllerDispatcher;
+    private final EntitlementUtils entitlementUtils;
 
     @Inject
     public DefaultSubscriptionApi(final EntitlementInternalApi entitlementInternalApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
-                                  final InternalCallContextFactory internalCallContextFactory, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
+                                  final InternalCallContextFactory internalCallContextFactory, final EntitlementUtils entitlementUtils, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
         this.entitlementInternalApi = entitlementInternalApi;
-        this.subscriptionInternalApi = subscriptionInternalApi;
+        this.subscriptionBaseInternalApi = subscriptionInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
         this.nonEntityDao = nonEntityDao;
+        this.entitlementUtils = entitlementUtils;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
 
@@ -144,8 +150,12 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     public SubscriptionBundle getActiveSubscriptionBundleForExternalKey(final String externalKey, final TenantContext context) throws SubscriptionApiException {
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
         try {
-            final SubscriptionBaseBundle baseBundle = subscriptionInternalApi.getActiveBundleForKey(externalKey, internalContext);
-            return getSubscriptionBundle(baseBundle.getId(), context);
+            final UUID activeSubscriptionIdForKey = entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(externalKey, internalContext);
+            if (activeSubscriptionIdForKey == null) {
+                throw new SubscriptionApiException(new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, externalKey));
+            }
+            final SubscriptionBase subscriptionBase = subscriptionBaseInternalApi.getSubscriptionFromId(activeSubscriptionIdForKey, internalContext);
+            return getSubscriptionBundle(subscriptionBase.getBundleId(), context);
         } catch (SubscriptionBaseApiException e) {
             throw new SubscriptionApiException(e);
         }
@@ -154,7 +164,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     @Override
     public List<SubscriptionBundle> getSubscriptionBundlesForExternalKey(final String externalKey, final TenantContext context) throws SubscriptionApiException {
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
-        final List<SubscriptionBaseBundle> baseBundles = subscriptionInternalApi.getBundlesForKey(externalKey, internalContext);
+        final List<SubscriptionBaseBundle> baseBundles = subscriptionBaseInternalApi.getBundlesForKey(externalKey, internalContext);
 
         final List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>(baseBundles.size());
         for (final SubscriptionBaseBundle cur : baseBundles) {

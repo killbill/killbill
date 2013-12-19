@@ -93,8 +93,9 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 public class DefaultSubscriptionDao implements SubscriptionDao {
@@ -181,6 +182,43 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
     }
 
     @Override
+    public List<UUID> getNonAOSubscriptionIdsForKey(final String bundleKey, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<UUID>>() {
+            @Override
+            public List<UUID> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+
+                final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
+
+                final List<SubscriptionBundleModelDao> bundles = bundleSqlDao.getBundlesForKey(bundleKey, context);
+
+                final List<UUID> result = new ArrayList<UUID>();
+                final SubscriptionSqlDao subscriptionSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
+                for (SubscriptionBundleModelDao cur : bundles) {
+                    final List<SubscriptionModelDao> subscriptions = subscriptionSqlDao.getSubscriptionsFromBundleId(cur.getId().toString(), context);
+
+                    final Iterable nonAddonSubscriptions = Iterables.filter(subscriptions, new Predicate<SubscriptionModelDao>() {
+                        @Override
+                        public boolean apply(final SubscriptionModelDao input) {
+                            return input.getCategory() != ProductCategory.ADD_ON;
+                        }
+                    });
+                    if (nonAddonSubscriptions.iterator().hasNext()) {
+
+                        final Iterable nonAddonSubscriptionIds = Iterables.transform(nonAddonSubscriptions, new Function<SubscriptionModelDao, UUID>() {
+                            @Override
+                            public UUID apply(@Nullable final SubscriptionModelDao input) {
+                                return input.getId();
+                            }
+                        });
+                        result.addAll(Lists.newArrayList(nonAddonSubscriptionIds));
+                    }
+                }
+                return result;
+            }
+        });
+    }
+
+    @Override
     public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final InternalCallContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<SubscriptionBaseBundle>() {
             @Override
@@ -259,7 +297,6 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
         });
     }
 
-
     @Override
     public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final InternalTenantContext context) {
         final Map<UUID, List<SubscriptionBase>> subscriptionsFromAccountId = getSubscriptionsFromAccountId(context);
@@ -279,7 +316,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
             final Multimap<UUID, SubscriptionBaseEvent> eventsForSubscriptions = ArrayListMultimap.create();
 
             for (final SubscriptionBase cur : subscriptionsForBundle) {
-                final Collection<SubscriptionBaseEvent> events= Collections2.filter(eventsForAccount, new Predicate<SubscriptionBaseEvent>() {
+                final Collection<SubscriptionBaseEvent> events = Collections2.filter(eventsForAccount, new Predicate<SubscriptionBaseEvent>() {
                     @Override
                     public boolean apply(final SubscriptionBaseEvent input) {
                         return input.getSubscriptionId().equals(cur.getId());
@@ -289,7 +326,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
                 eventsForSubscriptions.putAll(cur.getId(), ImmutableList.copyOf(events));
             }
 
-            result.put(bundleId, buildBundleSubscriptions(subscriptionsForBundle, eventsForSubscriptions,context));
+            result.put(bundleId, buildBundleSubscriptions(subscriptionsForBundle, eventsForSubscriptions, context));
         }
         return result;
     }
@@ -378,7 +415,6 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
             }
         });
     }
-
 
     @Override
     public Map<UUID, List<SubscriptionBaseEvent>> getEventsForBundle(final UUID bundleId, final InternalTenantContext context) {
@@ -799,7 +835,6 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
         SubscriptionBaseEvent futureBaseEvent = null;
         final List<SubscriptionBase> result = new ArrayList<SubscriptionBase>(input.size());
         for (final SubscriptionBase cur : input) {
-
 
             final List<SubscriptionBaseEvent> events = eventsForSubscription != null ?
                                                        (List<SubscriptionBaseEvent>) eventsForSubscription.get(cur.getId()) :

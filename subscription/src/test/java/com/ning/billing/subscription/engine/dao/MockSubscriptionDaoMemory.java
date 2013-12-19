@@ -114,6 +114,11 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
+    public List<UUID> getNonAOSubscriptionIdsForKey(final String bundleKey, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public SubscriptionBaseBundle getSubscriptionBundleFromId(final UUID bundleId, final InternalTenantContext context) {
         for (final SubscriptionBaseBundle cur : bundles) {
             if (cur.getId().equals(bundleId)) {

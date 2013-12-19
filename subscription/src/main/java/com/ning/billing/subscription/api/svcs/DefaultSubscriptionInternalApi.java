@@ -163,10 +163,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final InternalCallContext context) throws SubscriptionBaseApiException {
 
         final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
-        final SubscriptionBaseBundle result = getActiveBundleForKeyNotException(existingBundles, dao, clock, context);
-        if (result != null) {
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, bundleKey);
-        }
         final DateTime now = clock.getUTCNow();
         final DateTime originalCreatedDate = existingBundles.size() > 0 ? existingBundles.get(0).getCreatedDate() : now;
         final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, originalCreatedDate, now, now);
@@ -191,14 +187,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBaseBundle getActiveBundleForKey(final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException  {
-        final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
-
-        final SubscriptionBaseBundle result =  getActiveBundleForKeyNotException(existingBundles, dao, clock, context);
-        if (result == null) {
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, bundleKey);
-        }
-        return result;
+    public List<UUID> getNonAOSubscriptionIdsForKey(final String bundleKey, final InternalTenantContext context) {
+        return dao.getNonAOSubscriptionIdsForKey(bundleKey, context);
     }
 
     public static SubscriptionBaseBundle getActiveBundleForKeyNotException(final List<SubscriptionBaseBundle> existingBundles, final SubscriptionDao dao, final Clock clock, final InternalTenantContext context)  {
