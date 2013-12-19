@@ -192,27 +192,29 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
 
                 final List<SubscriptionBundleModelDao> bundles = bundleSqlDao.getBundlesForKey(bundleKey, context);
 
-                Iterable<UUID> result = Collections.emptyList();
                 final SubscriptionSqlDao subscriptionSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
-                for (SubscriptionBundleModelDao cur : bundles) {
-                    final List<SubscriptionModelDao> subscriptions = subscriptionSqlDao.getSubscriptionsFromBundleId(cur.getId().toString(), context);
+                return Iterables.concat(Iterables.transform(bundles, new Function<SubscriptionBundleModelDao, Iterable<UUID>>() {
 
-                    final Iterable nonAddonSubscriptions = Iterables.filter(subscriptions, new Predicate<SubscriptionModelDao>() {
-                        @Override
-                        public boolean apply(final SubscriptionModelDao input) {
-                            return input.getCategory() != ProductCategory.ADD_ON;
-                        }
-                    });
+                    @Override
+                    public Iterable<UUID> apply(final SubscriptionBundleModelDao cur) {
 
-                    final Iterable nonAddonSubscriptionIds = Iterables.transform(nonAddonSubscriptions, new Function<SubscriptionModelDao, UUID>() {
-                        @Override
-                        public UUID apply(@Nullable final SubscriptionModelDao input) {
-                            return input.getId();
-                        }
-                    });
-                    result = Iterables.concat(result, nonAddonSubscriptionIds);
-                }
-                return result;
+                        final List<SubscriptionModelDao> subscriptions = subscriptionSqlDao.getSubscriptionsFromBundleId(cur.getId().toString(), context);
+
+                        final Iterable<SubscriptionModelDao> nonAddonSubscriptions = Iterables.filter(subscriptions, new Predicate<SubscriptionModelDao>() {
+                            @Override
+                            public boolean apply(final SubscriptionModelDao input) {
+                                return input.getCategory() != ProductCategory.ADD_ON;
+                            }
+                        });
+
+                        return Iterables.transform(nonAddonSubscriptions, new Function<SubscriptionModelDao, UUID>() {
+                            @Override
+                            public UUID apply(final SubscriptionModelDao input) {
+                                return input.getId();
+                            }
+                        });
+                    }
+                }));
             }
         });
     }
