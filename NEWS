@@ -1,5 +1,6 @@
 0.8.7
     DDL: remove unused paid_through_date column
+    Add API to retrieve deleted tags
 
 0.8.6
     Partial fix for https://github.com/killbill/killbill/issues/141

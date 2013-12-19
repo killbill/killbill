@@ -24,9 +24,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.api.TagApiException;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -65,7 +65,7 @@ public class MockTagDao implements TagDao {
     }
 
     @Override
-    public List<TagModelDao> getTagsForObject(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
+    public List<TagModelDao> getTagsForObject(final UUID objectId, final ObjectType objectType, final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
         if (tagStore.get(objectId) == null) {
             return ImmutableList.<TagModelDao>of();
         }
@@ -79,12 +79,12 @@ public class MockTagDao implements TagDao {
     }
 
     @Override
-    public List<TagModelDao> getTagsForAccountType(final UUID accountId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
+    public List<TagModelDao> getTagsForAccountType(final UUID accountId, final ObjectType objectType, final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<TagModelDao> getTagsForAccount(final InternalTenantContext internalTenantContext) {
+    public List<TagModelDao> getTagsForAccount(final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
         throw new UnsupportedOperationException();
     }
 

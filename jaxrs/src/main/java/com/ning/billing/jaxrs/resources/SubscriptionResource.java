@@ -431,8 +431,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), auditMode, context.createContext(request));
+        return super.getTags(UUID.fromString(id), auditMode, includedDeleted, context.createContext(request));
     }
 
     @POST

@@ -25,9 +25,9 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
@@ -45,4 +45,9 @@ public interface TagSqlDao extends EntitySqlDao<TagModelDao, Tag> {
     List<TagModelDao> getTagsForObject(@Bind("objectId") UUID objectId,
                                        @Bind("objectType") ObjectType objectType,
                                        @BindBean InternalTenantContext internalTenantContext);
+
+    @SqlQuery
+    List<TagModelDao> getTagsForObjectIncludedDeleted(@Bind("objectId") UUID objectId,
+                                                      @Bind("objectType") ObjectType objectType,
+                                                      @BindBean InternalTenantContext internalTenantContext);
 }

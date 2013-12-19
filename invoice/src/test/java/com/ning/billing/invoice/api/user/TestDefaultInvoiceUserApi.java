@@ -346,12 +346,12 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
     public void testAddRemoveWrittenOffTag() throws InvoiceApiException, TagApiException {
         invoiceUserApi.tagInvoiceAsWrittenOff(invoiceId, callContext);
 
-        List<Tag> tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, callContext);
+        List<Tag> tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, false, callContext);
         assertEquals(tags.size(), 1);
         assertEquals(tags.get(0).getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
 
         invoiceUserApi.tagInvoiceAsNotWrittenOff(invoiceId, callContext);
-        tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, callContext);
+        tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, false, callContext);
         assertEquals(tags.size(), 0);
     }
 }

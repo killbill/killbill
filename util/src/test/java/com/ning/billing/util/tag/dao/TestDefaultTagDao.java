@@ -135,10 +135,10 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Make sure we can retrieve it via the DAO
-        final List<TagModelDao> foundTags = tagDao.getTagsForObject(objectId, objectType, internalCallContext);
+        final List<TagModelDao> foundTags = tagDao.getTagsForObject(objectId, objectType, false, internalCallContext);
         Assert.assertEquals(foundTags.size(), 1);
         Assert.assertEquals(foundTags.get(0).getTagDefinitionId(), createdTagDefinition.getId());
-        final List<TagModelDao> foundTagsForAccount = tagDao.getTagsForAccount(internalCallContext);
+        final List<TagModelDao> foundTagsForAccount = tagDao.getTagsForAccount(false, internalCallContext);
         Assert.assertEquals(foundTagsForAccount.size(), 1);
         Assert.assertEquals(foundTagsForAccount.get(0).getTagDefinitionId(), createdTagDefinition.getId());
 
@@ -148,7 +148,9 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Make sure the tag is deleted
-        Assert.assertEquals(tagDao.getTagsForObject(objectId, objectType, internalCallContext).size(), 0);
-        Assert.assertEquals(tagDao.getTagsForAccount(internalCallContext).size(), 0);
+        Assert.assertEquals(tagDao.getTagsForObject(objectId, objectType, false, internalCallContext).size(), 0);
+        Assert.assertEquals(tagDao.getTagsForAccount(false, internalCallContext).size(), 0);
+        Assert.assertEquals(tagDao.getTagsForObject(objectId, objectType, true, internalCallContext).size(), 1);
+        Assert.assertEquals(tagDao.getTagsForAccount(true, internalCallContext).size(), 1);
     }
 }

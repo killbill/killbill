@@ -18,8 +18,6 @@ package com.ning.billing.jaxrs.resources;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,7 +36,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,7 +106,6 @@ public class InvoiceResource extends JaxRsResourceBase {
         this.invoiceNotifier = invoiceNotifier;
     }
 
-
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
@@ -127,11 +123,11 @@ public class InvoiceResource extends JaxRsResourceBase {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         } else {
             final InvoiceJson json = withItems ?
-                                           new InvoiceJson(invoice,
-                                                                    invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
-                                                                    invoicesAuditLogs.getInvoiceItemsAuditLogs()) :
-                                           new InvoiceJson(invoice,
-                                                                 invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()));
+                                     new InvoiceJson(invoice,
+                                                     invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
+                                                     invoicesAuditLogs.getInvoiceItemsAuditLogs()) :
+                                     new InvoiceJson(invoice,
+                                                     invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()));
             return Response.status(Status.OK).entity(json).build();
         }
     }
@@ -153,11 +149,11 @@ public class InvoiceResource extends JaxRsResourceBase {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceNumber);
         } else {
             final InvoiceJson json = withItems ?
-                                           new InvoiceJson(invoice,
-                                                                    invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
-                                                                    invoicesAuditLogs.getInvoiceItemsAuditLogs()) :
-                                           new InvoiceJson(invoice,
-                                                                 invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()));
+                                     new InvoiceJson(invoice,
+                                                     invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
+                                                     invoicesAuditLogs.getInvoiceItemsAuditLogs()) :
+                                     new InvoiceJson(invoice,
+                                                     invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()));
             return Response.status(Status.OK).entity(json).build();
         }
     }
@@ -250,7 +246,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @POST
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
-    @Path("/" +CHARGES)
+    @Path("/" + CHARGES)
     public Response createExternalCharge(final InvoiceItemJson externalChargeJson,
                                          @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                          @QueryParam(QUERY_PAY_INVOICE) @DefaultValue("false") final Boolean payInvoice,
@@ -430,16 +426,17 @@ public class InvoiceResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path("/{invoiceId:"  + UUID_PATTERN + "}/" + TAGS)
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), auditMode, context.createContext(request));
+        return super.getTags(UUID.fromString(id), auditMode, includedDeleted, context.createContext(request));
     }
 
     @POST
-    @Path("/{invoiceId:"  + UUID_PATTERN + "}/" + TAGS)
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
@@ -454,7 +451,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path("/{invoiceId:"  + UUID_PATTERN + "}/" + TAGS)
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,

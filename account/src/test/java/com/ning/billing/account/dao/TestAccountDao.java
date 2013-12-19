@@ -129,7 +129,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, account.getId(), internalCallContext.getCreatedDate());
         tagDao.create(new TagModelDao(tag), internalCallContext);
 
-        final List<TagModelDao> tags = tagDao.getTagsForObject(account.getId(), ObjectType.ACCOUNT, internalCallContext);
+        final List<TagModelDao> tags = tagDao.getTagsForObject(account.getId(), ObjectType.ACCOUNT, false, internalCallContext);
         Assert.assertEquals(tags.size(), 1);
         Assert.assertEquals(tags.get(0).getTagDefinitionId(), tagDefinition.getId());
         Assert.assertEquals(tags.get(0).getObjectId(), account.getId());

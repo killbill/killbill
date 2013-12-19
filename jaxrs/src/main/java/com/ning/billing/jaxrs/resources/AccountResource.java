@@ -392,7 +392,6 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-
     /*
      * ************************** INVOICE CBA REBALANCING ********************************
      */
@@ -430,7 +429,6 @@ public class AccountResource extends JaxRsResourceBase {
 
         // Verify the account exists
         accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
-
 
         final List<Invoice> invoices = unpaidInvoicesOnly ?
                                        new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(UUID.fromString(accountId), null, tenantContext)) :
@@ -499,7 +497,6 @@ public class AccountResource extends JaxRsResourceBase {
         }
         return Response.status(Status.OK).build();
     }
-
 
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
@@ -580,7 +577,6 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-
     /*
      * ************************** CHARGEBACKS ********************************
      */
@@ -597,7 +593,6 @@ public class AccountResource extends JaxRsResourceBase {
         }
         return Response.status(Response.Status.OK).entity(chargebacksJson).build();
     }
-
 
     /*
      * ************************** REFUNDS ********************************
@@ -621,7 +616,6 @@ public class AccountResource extends JaxRsResourceBase {
 
         return Response.status(Status.OK).entity(result).build();
     }
-
 
     /*
      * ************************** OVERDUE ********************************
@@ -689,8 +683,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), auditMode, context.createContext(request));
+        return super.getTags(UUID.fromString(id), auditMode, includedDeleted, context.createContext(request));
     }
 
     @POST

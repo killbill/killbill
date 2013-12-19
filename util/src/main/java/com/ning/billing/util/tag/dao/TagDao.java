@@ -20,9 +20,9 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.api.TagApiException;
 
 public interface TagDao {
 
@@ -32,9 +32,9 @@ public interface TagDao {
 
     TagModelDao getById(UUID tagId, InternalTenantContext context);
 
-    List<TagModelDao> getTagsForObject(UUID objectId, ObjectType objectType, InternalTenantContext internalTenantContext);
+    List<TagModelDao> getTagsForObject(UUID objectId, ObjectType objectType, boolean includedDeleted, InternalTenantContext internalTenantContext);
 
-    List<TagModelDao> getTagsForAccountType(UUID accountId, ObjectType objectType, InternalTenantContext internalTenantContext);
+    List<TagModelDao> getTagsForAccountType(UUID accountId, ObjectType objectType, boolean includedDeleted, InternalTenantContext internalTenantContext);
 
-    List<TagModelDao> getTagsForAccount(InternalTenantContext internalTenantContext);
+    List<TagModelDao> getTagsForAccount(boolean includedDeleted, InternalTenantContext internalTenantContext);
 }

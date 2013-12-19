@@ -130,11 +130,11 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response resumeBundle(@PathParam(ID_PARAM_NAME) final String id,
-                                @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                @HeaderParam(HDR_REASON) final String reason,
-                                @HeaderParam(HDR_COMMENT) final String comment,
-                                @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException {
+                                 @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                 @HeaderParam(HDR_REASON) final String reason,
+                                 @HeaderParam(HDR_COMMENT) final String comment,
+                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
@@ -186,8 +186,9 @@ public class BundleResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), auditMode, context.createContext(request));
+        return super.getTags(UUID.fromString(id), auditMode, includedDeleted, context.createContext(request));
     }
 
     @PUT

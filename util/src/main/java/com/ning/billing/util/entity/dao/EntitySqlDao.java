@@ -61,6 +61,8 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
     @SqlQuery
     public List<M> getByAccountRecordId(@BindBean final InternalTenantContext context);
 
+    @SqlQuery
+    public List<M> getByAccountRecordIdIncludedDeleted(@BindBean final InternalTenantContext context);
 
     @SqlQuery
     @Cachable(CacheType.RECORD_ID)

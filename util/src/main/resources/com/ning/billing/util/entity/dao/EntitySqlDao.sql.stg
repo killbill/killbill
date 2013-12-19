@@ -203,6 +203,15 @@ where <accountRecordIdField("t.")> \<=\> :accountRecordId
 ;
 >>
 
+getByAccountRecordIdIncludedDeleted(accountRecordId) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <accountRecordIdField("t.")> \<=\> :accountRecordId
+<AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
+;
+>>
 
 getHistoryTargetRecordId(recordId) ::= <<
 select

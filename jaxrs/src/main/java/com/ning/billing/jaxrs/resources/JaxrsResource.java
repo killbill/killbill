@@ -82,6 +82,7 @@ public interface JaxrsResource {
     public static final String QUERY_PAYMENT_WITH_REFUNDS_AND_CHARGEBACKS = "withRefundsAndChargebacks";
 
     public static final String QUERY_TAGS = "tagList";
+    public static final String QUERY_TAGS_INCLUDED_DELETED = "includedDeleted";
     public static final String QUERY_CUSTOM_FIELDS = "customFieldList";
 
     public static final String QUERY_PAYMENT_METHOD_PLUGIN_NAME = "pluginName";
