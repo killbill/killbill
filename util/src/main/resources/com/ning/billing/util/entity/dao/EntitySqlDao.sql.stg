@@ -341,6 +341,29 @@ values (
 ;
 >>
 
+getAuditLogsForAccountRecordId() ::= <<
+select
+  <auditTableFields("t.")>
+from <auditTableName()> t
+where <accountRecordIdField("t.")> = :accountRecordId
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>
+order by t.table_name, <recordIdField("t.")> ASC
+;
+>>
+
+getAuditLogsForTableNameAndAccountRecordId() ::= <<
+select
+  <auditTableFields("t.")>
+from <auditTableName()> t
+where <accountRecordIdField("t.")> = :accountRecordId
+and t.table_name = :tableName
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
+;
+>>
+
 getAuditLogsForTargetRecordId() ::= <<
 select
   <auditTableFields("t.")>

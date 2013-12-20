@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,56 +16,76 @@
 
 package com.ning.billing.util.audit;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.dao.EntityAudit;
+import com.ning.billing.ObjectType;
+import com.ning.billing.entity.EntityBase;
+import com.ning.billing.util.audit.dao.AuditLogModelDao;
 
-public class DefaultAuditLog extends EntityAudit implements AuditLog {
+public class DefaultAuditLog extends EntityBase implements AuditLog {
 
-    private final CallContext callContext;
+    private final AuditLogModelDao auditLogModelDao;
+    private final ObjectType objectType;
+    private final UUID auditedEntityId;
 
-    public DefaultAuditLog(final EntityAudit entityAudit, final CallContext callContext) {
-        super(entityAudit.getId(), entityAudit.getTableName(), entityAudit.getTargetRecordId(), entityAudit.getChangeType(), entityAudit.getCreatedDate());
-        this.callContext = callContext;
+    public DefaultAuditLog(final AuditLogModelDao auditLogModelDao, final ObjectType objectType, final UUID auditedEntityId) {
+        super(auditLogModelDao);
+        this.auditLogModelDao = auditLogModelDao;
+        this.objectType = objectType;
+        this.auditedEntityId = auditedEntityId;
     }
 
+    @Override
+    public UUID getAuditedEntityId() {
+        return auditedEntityId;
+    }
+
+    @Override
+    public ObjectType getAuditedObjectType() {
+        return objectType;
+    }
+
+    @Override
+    public ChangeType getChangeType() {
+        return auditLogModelDao.getChangeType();
+    }
 
     @Override
     public String getUserName() {
-        return callContext.getUserName();
+        return auditLogModelDao.getCallContext().getUserName();
     }
 
     @Override
     public DateTime getCreatedDate() {
-        return callContext.getCreatedDate();
+        return auditLogModelDao.getCallContext().getCreatedDate();
     }
 
     @Override
     public String getReasonCode() {
-        return callContext.getReasonCode();
+        return auditLogModelDao.getCallContext().getReasonCode();
     }
 
     @Override
     public String getUserToken() {
-        if (callContext.getUserToken() == null) {
+        if (auditLogModelDao.getCallContext().getUserToken() == null) {
             return null;
         } else {
-            return callContext.getUserToken().toString();
+            return auditLogModelDao.getCallContext().getUserToken().toString();
         }
     }
 
     @Override
     public String getComment() {
-        return callContext.getComments();
+        return auditLogModelDao.getCallContext().getComments();
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("DefaultAuditLog {");
-        sb.append(super.toString());
-        sb.append(", callcontext=").append(callContext);
+        final StringBuilder sb = new StringBuilder("DefaultAuditLog{");
+        sb.append("auditLogModelDao=").append(auditLogModelDao);
+        sb.append(", auditedEntityId=").append(auditedEntityId);
         sb.append('}');
         return sb.toString();
     }
@@ -84,7 +104,10 @@ public class DefaultAuditLog extends EntityAudit implements AuditLog {
 
         final DefaultAuditLog that = (DefaultAuditLog) o;
 
-        if (callContext != null ? !callContext.equals(that.callContext) : that.callContext != null) {
+        if (auditLogModelDao != null ? !auditLogModelDao.equals(that.auditLogModelDao) : that.auditLogModelDao != null) {
+            return false;
+        }
+        if (auditedEntityId != null ? !auditedEntityId.equals(that.auditedEntityId) : that.auditedEntityId != null) {
             return false;
         }
 
@@ -94,7 +117,8 @@ public class DefaultAuditLog extends EntityAudit implements AuditLog {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (callContext != null ? callContext.hashCode() : 0);
+        result = 31 * result + (auditLogModelDao != null ? auditLogModelDao.hashCode() : 0);
+        result = 31 * result + (auditedEntityId != null ? auditedEntityId.hashCode() : 0);
         return result;
     }
 }

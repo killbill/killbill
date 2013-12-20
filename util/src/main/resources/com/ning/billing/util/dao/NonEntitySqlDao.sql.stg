@@ -73,3 +73,13 @@ where record_id = :recordId
 ;
 >>
 
+getIdFromHistoryRecordId(tableName, historyTableName) ::= <<
+select
+  t.id
+from <tableName> t
+join <historyTableName> ht on ht.target_record_id = t.record_id
+where ht.record_id = :historyRecordId
+limit 1
+;
+>>
+

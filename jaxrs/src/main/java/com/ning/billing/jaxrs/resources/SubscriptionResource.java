@@ -74,6 +74,7 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.userrequest.CompletionUserRequestBase;
 
 import com.google.inject.Inject;
@@ -114,7 +115,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(uuid, context.createContext(request));
-        final SubscriptionJson json = new SubscriptionJson(subscription, null, null, null);
+        final SubscriptionJson json = new SubscriptionJson(subscription, null, null);
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -429,11 +430,14 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String subscriptionIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
-                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), auditMode, includedDeleted, context.createContext(request));
+                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, SubscriptionApiException {
+        final UUID subscriptionId = UUID.fromString(subscriptionIdString);
+        final TenantContext tenantContext = context.createContext(request);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, tenantContext);
+        return super.getTags(subscription.getAccountId(), subscriptionId, auditMode, includedDeleted, tenantContext);
     }
 
     @POST

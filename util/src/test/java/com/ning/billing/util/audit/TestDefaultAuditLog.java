@@ -21,12 +21,14 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ObjectType;
+import com.ning.billing.callcontext.DefaultCallContext;
+import com.ning.billing.clock.ClockMock;
 import com.ning.billing.util.UtilTestSuiteNoDB;
+import com.ning.billing.util.audit.dao.AuditLogModelDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.clock.ClockMock;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.TableName;
 
@@ -47,7 +49,7 @@ public class TestDefaultAuditLog extends UtilTestSuiteNoDB {
         final ClockMock clock = new ClockMock();
         final CallContext callContext = new DefaultCallContext(tenantId, userName, callOrigin, userType, userToken, clock);
 
-        final AuditLog auditLog = new DefaultAuditLog(entityAudit, callContext);
+        final AuditLog auditLog = new DefaultAuditLog(new AuditLogModelDao(entityAudit, callContext), ObjectType.ACCOUNT_EMAIL, UUID.randomUUID());
         Assert.assertEquals(auditLog.getChangeType(), changeType);
         Assert.assertNull(auditLog.getComment());
         Assert.assertNotNull(auditLog.getCreatedDate());
@@ -71,15 +73,15 @@ public class TestDefaultAuditLog extends UtilTestSuiteNoDB {
         final ClockMock clock = new ClockMock();
         final CallContext callContext = new DefaultCallContext(tenantId, userName, callOrigin, userType, userToken, clock);
 
-        final AuditLog auditLog = new DefaultAuditLog(entityAudit, callContext);
+        final AuditLogModelDao auditLog = new AuditLogModelDao(entityAudit, callContext);
         Assert.assertEquals(auditLog, auditLog);
 
-        final AuditLog sameAuditLog = new DefaultAuditLog(entityAudit, callContext);
+        final AuditLogModelDao sameAuditLog = new AuditLogModelDao(entityAudit, callContext);
         Assert.assertEquals(sameAuditLog, auditLog);
 
         clock.addMonths(1);
         final CallContext otherCallContext = new DefaultCallContext(tenantId, userName, callOrigin, userType, userToken, clock);
-        final AuditLog otherAuditLog = new DefaultAuditLog(entityAudit, otherCallContext);
+        final AuditLogModelDao otherAuditLog = new AuditLogModelDao(entityAudit, otherCallContext);
         Assert.assertNotEquals(otherAuditLog, auditLog);
     }
 }

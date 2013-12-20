@@ -27,6 +27,7 @@ import org.skife.jdbi.v2.tweak.TransactionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.util.dao.AuditLogModelDaoMapper;
 import com.ning.billing.util.dao.DateTimeArgumentFactory;
 import com.ning.billing.util.dao.DateTimeZoneArgumentFactory;
 import com.ning.billing.util.dao.EnumArgumentFactory;
@@ -71,6 +72,7 @@ public class DBIProvider implements Provider<DBI> {
         dbi.registerArgumentFactory(new LocalDateArgumentFactory());
         dbi.registerArgumentFactory(new EnumArgumentFactory());
         dbi.registerMapper(new UuidMapper());
+        dbi.registerMapper(new AuditLogModelDaoMapper());
 
         if (sqlLog != null) {
             dbi.setSQLLog(sqlLog);

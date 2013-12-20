@@ -265,11 +265,14 @@ public class PaymentResource extends JaxRsResourceBase {
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String paymentIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
-                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), auditMode, includedDeleted, context.createContext(request));
+                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
+        final UUID paymentId = UUID.fromString(paymentIdString);
+        final TenantContext tenantContext = context.createContext(request);
+        final Payment payment = paymentApi.getPayment(paymentId, false, tenantContext);
+        return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
     }
 
     @POST

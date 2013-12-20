@@ -18,15 +18,13 @@ package com.ning.billing.jaxrs.json;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.entitlement.api.SubscriptionEvent;
-import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -71,26 +69,21 @@ public class BundleJson extends JsonBase {
         return externalKey;
     }
 
-    public BundleJson(final SubscriptionBundle bundle, final List<AuditLog> auditLogs,
-                      final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
-        super(toAuditLogJson(auditLogs));
+    public BundleJson(final SubscriptionBundle bundle, @Nullable final AccountAuditLogs accountAuditLogs) {
+        super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForBundle(bundle.getId())));
         this.accountId = bundle.getAccountId().toString();
         this.bundleId = bundle.getId().toString();
         this.externalKey = bundle.getExternalKey();
 
         this.subscriptions = new LinkedList<SubscriptionJson>();
         for (final Subscription cur : bundle.getSubscriptions()) {
-
             final ImmutableList<SubscriptionEvent> events = ImmutableList.<SubscriptionEvent>copyOf(Collections2.filter(bundle.getTimeline().getSubscriptionEvents(), new Predicate<SubscriptionEvent>() {
                 @Override
                 public boolean apply(@Nullable final SubscriptionEvent input) {
                     return input.getEntitlementId().equals(cur.getId());
                 }
             }));
-            this.subscriptions.add(new SubscriptionJson(cur,
-                                                        events,
-                                                        (subscriptionsAuditLogs != null ? subscriptionsAuditLogs.get(cur.getId()) : null),
-                                                        subscriptionEventsAuditLogs));
+            this.subscriptions.add(new SubscriptionJson(cur, events, accountAuditLogs));
         }
     }
 

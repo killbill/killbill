@@ -50,6 +50,7 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.audit.AccountAuditLogsForObjectType;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
@@ -100,8 +101,9 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return null;
     }
 
-    protected Response getTags(final UUID taggedObjectId, final AuditMode auditMode, final boolean includeDeleted, final TenantContext context) throws TagDefinitionApiException {
+    protected Response getTags(final UUID accountId, final UUID taggedObjectId, final AuditMode auditMode, final boolean includeDeleted, final TenantContext context) throws TagDefinitionApiException {
         final List<Tag> tags = tagUserApi.getTagsForObject(taggedObjectId, getObjectType(), includeDeleted, context);
+        final AccountAuditLogsForObjectType tagsAuditLogs = auditUserApi.getAccountAuditLogs(accountId, ObjectType.TAG, auditMode.getLevel(), context);
 
         final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<UUID, TagDefinition>();
         final Collection<TagJson> result = new LinkedList<TagJson>();
@@ -111,8 +113,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             }
             final TagDefinition tagDefinition = tagDefinitionsCache.get(tag.getTagDefinitionId());
 
-            // TODO PIERRE - Bulk API
-            final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tag.getId(), ObjectType.TAG, auditMode.getLevel(), context);
+            final List<AuditLog> auditLogs = tagsAuditLogs.getAuditLogs(tag.getId());
             result.add(new TagJson(tagDefinition, auditLogs));
         }
 

@@ -54,4 +54,9 @@ public interface NonEntitySqlDao extends Transactional<NonEntitySqlDao>, CloseMe
 
     @SqlQuery
     public Long getHistoryTargetRecordId(@Bind("recordId") Long recordId, @Define("tableName") final String tableName);
+
+    @SqlQuery
+    public UUID getIdFromHistoryRecordId(@Bind("historyRecordId") Long historyRecordId,
+                                         @Define("tableName") String tableName,
+                                         @Define("historyTableName") String historyTableName);
 }

@@ -19,8 +19,6 @@ package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -28,6 +26,7 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.audit.AccountAuditLogs;
 import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -80,6 +79,9 @@ public class InvoiceJson extends JsonBase {
         this.items = items;
     }
 
+    public InvoiceJson(final Invoice input) {
+        this(input, null, null, null);
+    }
 
     public InvoiceJson(final Invoice input, @Nullable final List<AuditLog> auditLogs) {
         this(input, null, null, auditLogs);
@@ -91,11 +93,11 @@ public class InvoiceJson extends JsonBase {
              input.getBalance(), input.getAccountId().toString(), bundleKeys, credits, null, toAuditLogJson(auditLogs));
     }
 
-    public InvoiceJson(final Invoice input, @Nullable final List<AuditLog> invoiceAuditLogs, @Nullable final Map<UUID, List<AuditLog>> invoiceItemsAuditLogs) {
-        super(toAuditLogJson(invoiceAuditLogs));
+    public InvoiceJson(final Invoice input, final AccountAuditLogs accountAuditLogs) {
+        super(toAuditLogJson(accountAuditLogs.getAuditLogsForInvoice(input.getId())));
         this.items = new ArrayList<InvoiceItemJson>(input.getInvoiceItems().size());
         for (final InvoiceItem item : input.getInvoiceItems()) {
-            this.items.add(new InvoiceItemJson(item, invoiceItemsAuditLogs == null ? null : invoiceItemsAuditLogs.get(item.getId())));
+            this.items.add(new InvoiceItemJson(item, accountAuditLogs.getAuditLogsForInvoiceItem(item.getId())));
         }
         this.amount = input.getChargedAmount();
         this.currency = input.getCurrency().toString();
@@ -199,7 +201,7 @@ public class InvoiceJson extends JsonBase {
         if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
             return false;
         }
-        if (balance != null ? balance.compareTo(that.balance) != 0: that.balance != null) {
+        if (balance != null ? balance.compareTo(that.balance) != 0 : that.balance != null) {
             return false;
         }
         if (bundleKeys != null ? !bundleKeys.equals(that.bundleKeys) : that.bundleKeys != null) {
@@ -226,7 +228,7 @@ public class InvoiceJson extends JsonBase {
         if (items != null ? !items.equals(that.items) : that.items != null) {
             return false;
         }
-        if (refundAdj != null ? refundAdj.compareTo(that.refundAdj) != 0: that.refundAdj != null) {
+        if (refundAdj != null ? refundAdj.compareTo(that.refundAdj) != 0 : that.refundAdj != null) {
             return false;
         }
         if (targetDate != null ? targetDate.compareTo(that.targetDate) != 0 : that.targetDate != null) {

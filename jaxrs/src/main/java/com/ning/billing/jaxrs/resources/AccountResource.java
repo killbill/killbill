@@ -90,11 +90,7 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.audit.AuditLogsForBundles;
-import com.ning.billing.util.audit.AuditLogsForInvoicePayments;
-import com.ning.billing.util.audit.AuditLogsForInvoices;
-import com.ning.billing.util.audit.AuditLogsForPayments;
-import com.ning.billing.util.audit.AuditLogsForRefunds;
+import com.ning.billing.util.audit.AccountAuditLogs;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.entity.Pagination;
@@ -231,7 +227,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
             @Override
             public BundleJson apply(final SubscriptionBundle input) {
-                return new BundleJson(input, null, null, null);
+                return new BundleJson(input, null);
             }
         });
         return Response.status(Status.OK).entity(result).build();
@@ -322,15 +318,12 @@ public class AccountResource extends JaxRsResourceBase {
 
         // Get the invoices
         final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), tenantContext);
-        final AuditLogsForInvoices invoicesAuditLogs = auditUserApi.getAuditLogsForInvoices(invoices, auditMode.getLevel(), tenantContext);
 
         // Get the payments
         final List<Payment> payments = paymentApi.getAccountPayments(accountId, tenantContext);
-        final AuditLogsForPayments paymentsAuditLogs = auditUserApi.getAuditLogsForPayments(payments, auditMode.getLevel(), tenantContext);
 
         // Get the refunds
         final List<Refund> refunds = paymentApi.getAccountRefunds(account, tenantContext);
-        final AuditLogsForRefunds refundsAuditLogs = auditUserApi.getAuditLogsForRefunds(refunds, auditMode.getLevel(), tenantContext);
         final Multimap<UUID, Refund> refundsByPayment = ArrayListMultimap.<UUID, Refund>create();
         for (final Refund refund : refunds) {
             refundsByPayment.put(refund.getPaymentId(), refund);
@@ -338,7 +331,6 @@ public class AccountResource extends JaxRsResourceBase {
 
         // Get the chargebacks
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(accountId, tenantContext);
-        final AuditLogsForInvoicePayments chargebacksAuditLogs = auditUserApi.getAuditLogsForInvoicePayments(chargebacks, auditMode.getLevel(), tenantContext);
         final Multimap<UUID, InvoicePayment> chargebacksByPayment = ArrayListMultimap.<UUID, InvoicePayment>create();
         for (final InvoicePayment chargeback : chargebacks) {
             chargebacksByPayment.put(chargeback.getPaymentId(), chargeback);
@@ -346,12 +338,13 @@ public class AccountResource extends JaxRsResourceBase {
 
         // Get the bundles
         final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), tenantContext);
-        final AuditLogsForBundles bundlesAuditLogs = auditUserApi.getAuditLogsForBundles(bundles, auditMode.getLevel(), tenantContext);
+
+        // Get all audit logs
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
 
         final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundles,
                                                                  refundsByPayment, chargebacksByPayment,
-                                                                 invoicesAuditLogs, paymentsAuditLogs, refundsAuditLogs,
-                                                                 chargebacksAuditLogs, bundlesAuditLogs);
+                                                                 accountAuditLogs);
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -420,7 +413,7 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICES)
     @Produces(APPLICATION_JSON)
-    public Response getInvoices(@PathParam("accountId") final String accountId,
+    public Response getInvoices(@PathParam("accountId") final String accountIdString,
                                 @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
                                 @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -428,28 +421,26 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         // Verify the account exists
-        accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
+        final UUID accountId = UUID.fromString(accountIdString);
+        accountUserApi.getAccountById(accountId, tenantContext);
 
         final List<Invoice> invoices = unpaidInvoicesOnly ?
-                                       new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(UUID.fromString(accountId), null, tenantContext)) :
-                                       invoiceApi.getInvoicesByAccount(UUID.fromString(accountId), tenantContext);
+                                       new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, tenantContext)) :
+                                       invoiceApi.getInvoicesByAccount(accountId, tenantContext);
 
-        final AuditLogsForInvoices invoicesAuditLogs = auditUserApi.getAuditLogsForInvoices(invoices, auditMode.getLevel(), tenantContext);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
 
         if (withItems) {
             final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
             for (final Invoice invoice : invoices) {
-                result.add(new InvoiceJson(invoice,
-                                           invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId()),
-                                           invoicesAuditLogs.getInvoiceItemsAuditLogs()));
+                result.add(new InvoiceJson(invoice, accountAuditLogs));
             }
 
             return Response.status(Status.OK).entity(result).build();
         } else {
             final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
             for (final Invoice invoice : invoices) {
-                result.add(new InvoiceJson(invoice,
-                                           invoicesAuditLogs.getInvoiceAuditLogs().get(invoice.getId())));
+                result.add(new InvoiceJson(invoice, accountAuditLogs.getAuditLogsForInvoice(invoice.getId())));
             }
 
             return Response.status(Status.OK).entity(result).build();
@@ -681,11 +672,12 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String accountIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), auditMode, includedDeleted, context.createContext(request));
+        final UUID accountId = UUID.fromString(accountIdString);
+        return super.getTags(accountId, accountId, auditMode, includedDeleted, context.createContext(request));
     }
 
     @POST
