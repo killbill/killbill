@@ -39,7 +39,7 @@ update <tableName()>
 set refund_status = :refundStatus
 , processed_amount = :processedAmount
 , processed_currency = :processedCurrency
-, updated_by = :createdBy
+, updated_by = :updatedBy
 , updated_date = :createdDate
 where id = :id
 <AND_CHECK_TENANT()>
