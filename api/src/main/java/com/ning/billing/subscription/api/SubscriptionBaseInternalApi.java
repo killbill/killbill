@@ -49,7 +49,7 @@ public interface SubscriptionBaseInternalApi {
 
     public List<SubscriptionBaseBundle> getBundlesForKey(final String bundleKey, final InternalTenantContext context);
 
-    public SubscriptionBaseBundle getActiveBundleForKey(final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException;
+    public Iterable<UUID> getNonAOSubscriptionIdsForKey(final String bundleKey, final InternalTenantContext context);
 
     public List<SubscriptionBase> getSubscriptionsForBundle(final UUID bundleId, final InternalTenantContext context);
 

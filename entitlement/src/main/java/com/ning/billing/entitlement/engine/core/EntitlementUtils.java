@@ -17,8 +17,10 @@
 package com.ning.billing.entitlement.engine.core;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
@@ -29,12 +31,17 @@ import com.ning.billing.bus.api.BusEvent;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.DefaultEntitlementService;
+import com.ning.billing.entitlement.EventsStream;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.DefaultBlockingTransitionInternalEvent;
+import com.ning.billing.entitlement.api.DefaultEntitlementApi;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
+import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.block.BlockingChecker.BlockingAggregator;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
@@ -42,6 +49,13 @@ import com.ning.billing.notificationq.api.NotificationEvent;
 import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class EntitlementUtils {
 
@@ -49,6 +63,7 @@ public class EntitlementUtils {
 
     private final BlockingStateDao dao;
     private final BlockingChecker blockingChecker;
+    private final SubscriptionBaseInternalApi subscriptionBaseInternalApi;
     private final PersistentBus eventBus;
     private final Clock clock;
     protected final NotificationQueueService notificationQueueService;
@@ -56,11 +71,13 @@ public class EntitlementUtils {
     @Inject
     public EntitlementUtils(final BlockingStateDao dao, final BlockingChecker blockingChecker,
                             final PersistentBus eventBus, final Clock clock,
+                            final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
                             final NotificationQueueService notificationQueueService) {
         this.dao = dao;
         this.blockingChecker = blockingChecker;
         this.eventBus = eventBus;
         this.clock = clock;
+        this.subscriptionBaseInternalApi = subscriptionBaseInternalApi;
         this.notificationQueueService = notificationQueueService;
     }
 
@@ -80,6 +97,25 @@ public class EntitlementUtils {
             postBlockingTransitionEvent(state.getId(), state.getEffectiveDate(), state.getBlockedId(), state.getType(), previousState, currentState, context);
         }
     }
+
+    /**
+     *
+     * @param externalKey the bundle externalKey
+     * @param tenantContext the context
+     * @return the id of the first subscription (BASE or STANDALONE) that is still active for that key
+     */
+    public UUID getFirstActiveSubscriptionIdForKeyOrNull(final String externalKey, final InternalTenantContext tenantContext)  {
+
+        final Iterable<UUID> nonAddonUUIDs = subscriptionBaseInternalApi.getNonAOSubscriptionIdsForKey(externalKey, tenantContext);
+        return Iterables.tryFind(nonAddonUUIDs, new Predicate<UUID>() {
+            @Override
+            public boolean apply(final UUID input) {
+                final BlockingState state = dao.getBlockingStateForService(input, BlockingStateType.SUBSCRIPTION, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME, tenantContext);
+                return (state == null || !state.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED));
+            }
+        }).orNull();
+    }
+
 
     private BlockingAggregator getBlockingStateFor(final UUID blockableId, final BlockingStateType type, final InternalCallContext context) {
         try {

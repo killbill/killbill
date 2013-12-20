@@ -40,6 +40,7 @@ import org.joda.time.LocalDate;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
@@ -197,13 +198,14 @@ public class BundleResource extends JaxRsResourceBase {
     public Response transferBundle(final BundleJson json,
                                    @PathParam(ID_PARAM_NAME) final String id,
                                    @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                   @QueryParam(QUERY_BUNDLE_TRANSFER_ADDON) @DefaultValue("true") final Boolean transferAddOn,
-                                   @QueryParam(QUERY_BUNDLE_TRANSFER_CANCEL_IMM) @DefaultValue("false") final Boolean cancelImmediatley,
+                                   @QueryParam(QUERY_BILLING_POLICY) @DefaultValue("END_OF_TERM") final String policyString,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
                                    @HeaderParam(HDR_COMMENT) final String comment,
                                    @javax.ws.rs.core.Context final UriInfo uriInfo,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, SubscriptionApiException, AccountApiException {
+
+        final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
@@ -211,7 +213,7 @@ public class BundleResource extends JaxRsResourceBase {
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
         final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
 
-        final UUID newBundleId = entitlementApi.transferEntitlements(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, callContext);
+        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, policy, callContext);
         return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundleId, uriInfo.getBaseUri().toString());
     }
 

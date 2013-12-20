@@ -23,6 +23,7 @@ import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.api.TestApiListener.NextEvent;
@@ -37,6 +38,8 @@ import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
 public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbeddedDB {
@@ -106,11 +109,22 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, callContext);
         assertEquals(bundles.size(), 1);
 
+        final SubscriptionBundle activeBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, callContext);
+        assertEquals(activeBundle.getId(), entitlement.getBundleId());
+
         // Cancel entitlement
         clock.addDays(3);
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         entitlement.cancelEntitlementWithDate(new LocalDate(clock.getUTCNow(), account.getTimeZone()), true, callContext);
         assertListenerStatus();
+
+        try {
+            subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, callContext);
+            Assert.fail("Expected getActiveSubscriptionBundleForExternalKey to fail after cancellation");
+        } catch (SubscriptionApiException e) {
+            assertEquals(e.getCode(), ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode());
+
+        }
 
         clock.addDays(1);
         // Re-create a new bundle with same externalKey

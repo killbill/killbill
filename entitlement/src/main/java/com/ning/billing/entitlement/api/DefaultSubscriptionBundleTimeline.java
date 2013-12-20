@@ -334,6 +334,9 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                     break;
                 case PAUSE_BILLING:
                 case PAUSE_ENTITLEMENT:
+                case RESUME_ENTITLEMENT:
+                case RESUME_BILLING:
+                case SERVICE_STATE_CHANGE:
                     curTargetState.addEntitlementEvent(cur);
                     break;
                 case STOP_BILLING:
@@ -507,12 +510,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         }
 
         // See https://github.com/killbill/killbill/issues/135
-        final String serviceName;
-        if (DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(in.getService())) {
-            serviceName = getServiceName(eventType);
-        } else {
-            serviceName = in.getService();
-        }
+        final String serviceName = getRealServiceNameForEntitlementOrExternalServiceName(in.getService(), eventType);
 
         return new DefaultSubscriptionEvent(in.getId(),
                                             entitlementId,
@@ -535,6 +533,16 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                             nextBillingPeriod,
                                             in.getCreatedDate(),
                                             accountTimeZone);
+    }
+
+    private static String getRealServiceNameForEntitlementOrExternalServiceName(final String originalServiceName, final SubscriptionEventType eventType) {
+        final String serviceName;
+        if (DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(originalServiceName)) {
+            serviceName = getServiceName(eventType);
+        } else {
+            serviceName = originalServiceName;
+        }
+        return serviceName;
     }
 
     private SubscriptionEvent toSubscriptionEvent(final SubscriptionBaseTransition in, final SubscriptionEventType eventType, final DateTimeZone accountTimeZone) {
@@ -663,8 +671,22 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         }
 
         public void addEntitlementEvent(final SubscriptionEvent e) {
-            final BlockingState converted = new DefaultBlockingState(e.getEntitlementId(), BlockingStateType.SUBSCRIPTION,
-                                                                     e.getServiceStateName(), e.getServiceName(), false, e.isBlockedEntitlement(), e.isBlockedBilling(),
+            final String serviceName = getRealServiceNameForEntitlementOrExternalServiceName(e.getServiceName(), e.getSubscriptionEventType());
+            final BlockingState lastBlockingStateForService = perServiceBlockingState.get(serviceName);
+
+            // Assume the event has no impact on changes - TODO this is wrong for SERVICE_STATE_CHANGE
+            final boolean blockChange = lastBlockingStateForService != null && lastBlockingStateForService.isBlockChange();
+            // For block entitlement or billing, override the previous state
+            final boolean blockedEntitlement = e.isBlockedEntitlement();
+            final boolean blockedBilling = e.isBlockedBilling();
+
+            final BlockingState converted = new DefaultBlockingState(e.getEntitlementId(),
+                                                                     BlockingStateType.SUBSCRIPTION,
+                                                                     e.getServiceStateName(),
+                                                                     serviceName,
+                                                                     blockChange,
+                                                                     blockedEntitlement,
+                                                                     blockedBilling,
                                                                      ((DefaultSubscriptionEvent) e).getEffectiveDateTime());
             perServiceBlockingState.put(converted.getService(), converted);
         }
@@ -724,7 +746,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 result.add(SubscriptionEventType.PAUSE_BILLING);
             }
 
-            if (!shouldResumeEntitlement && !shouldBlockEntitlement && !shouldBlockEntitlement && !shouldBlockBilling && !fixedBlockingState.getService().equals(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME)) {
+            if (!shouldResumeEntitlement && !shouldResumeBilling && !shouldBlockEntitlement && !shouldBlockBilling && !fixedBlockingState.getService().equals(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME)) {
                 result.add(SubscriptionEventType.SERVICE_STATE_CHANGE);
             }
             return result;

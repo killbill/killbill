@@ -99,10 +99,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // The MIGRATE_BILLING event should have been invalidated
         assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).size(), 0);
         //assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).get(0).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
-
-        final SubscriptionBaseBundle newBundle = subscriptionInternalApi.getActiveBundleForKey(bundle.getExternalKey(), internalCallContext);
-        assertNotEquals(newBundle.getId(), bundle.getId());
-        assertEquals(newBundle.getOriginalCreatedDate().compareTo(bundleCreatedDate), 0);
     }
 
     @Test(groups = "slow")
