@@ -84,6 +84,8 @@ update payments
 set payment_status = :paymentStatus
 , processed_amount = :processedAmount
 , processed_currency = :processedCurrency
+, updated_by = :createdBy
+, updated_date = :createdDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;
@@ -95,6 +97,8 @@ update <tableName()>
 set amount = :amount
 , effective_date = :effectiveDate
 , payment_method_id= :paymentMethodId
+, updated_by = :createdBy
+, updated_date = :createdDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;

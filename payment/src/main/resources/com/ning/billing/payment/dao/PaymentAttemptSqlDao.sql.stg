@@ -66,6 +66,8 @@ update <tableName()>
 set processing_status = :processingStatus
 , gateway_error_code = :gatewayErrorCode
 , gateway_error_msg = :gatewayErrorMsg
+, updated_by = :createdBy
+, updated_date = :createdDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;

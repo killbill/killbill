@@ -32,6 +32,8 @@ tableValues() ::= <<
 markPaymentMethodAsDeleted(id) ::= <<
 update <tableName()>
 set is_active = 0
+, updated_by = :createdBy
+, updated_date = :createdDate
 where  id = :id
 <AND_CHECK_TENANT()>
 ;
@@ -41,6 +43,8 @@ unmarkPaymentMethodAsDeleted(id) ::= <<
 update <tableName()>
 set is_active = 1
 where  id = :id
+, updated_by = :createdBy
+, updated_date = :createdDate
 <AND_CHECK_TENANT()>
 ;
 >>
