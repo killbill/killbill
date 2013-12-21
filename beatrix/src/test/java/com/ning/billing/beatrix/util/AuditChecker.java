@@ -102,7 +102,7 @@ public class AuditChecker {
     // Pass the call callcontext used to create the bundle
     public void checkBundleCreated(final UUID bundleId, final CallContext context) {
         final List<AuditLog> auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
-        Assert.assertEquals(auditLogsForBundles.size(), 1);
+        Assert.assertTrue(auditLogsForBundles.size() >= 1);
         checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.get(0), bundleId, BundleSqlDao.class, false, false);
     }
 
@@ -120,7 +120,7 @@ public class AuditChecker {
     // Pass the call callcontext used to create the subscription
     public void checkSubscriptionCreated(final UUID bundleId, final UUID subscriptionId, final CallContext context) {
         final List<AuditLog> auditLogsForSubscription = getAuditLogsForSubscription(bundleId, subscriptionId, context);
-        Assert.assertEquals(auditLogsForSubscription.size(), 1);
+        Assert.assertTrue(auditLogsForSubscription.size() >= 1);
         checkAuditLog(ChangeType.INSERT, context, auditLogsForSubscription.get(0), subscriptionId, SubscriptionSqlDao.class, false, true);
     }
 
