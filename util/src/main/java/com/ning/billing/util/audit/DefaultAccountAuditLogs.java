@@ -57,7 +57,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
     @Override
     public List<AuditLog> getAuditLogsForAccount() {
-        return getAuditLogs(ObjectType.BUNDLE).getAuditLogs(accountId);
+        return getAuditLogs(ObjectType.ACCOUNT).getAuditLogs(accountId);
     }
 
     @Override
