@@ -470,7 +470,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected List<InvoiceJson> getInvoicesForAccountWithAudits(final String accountId, final AuditLevel auditLevel) throws IOException {
-        return doGetInvoicesForAccount(accountId, Boolean.FALSE, new TypeReference<List<InvoiceJson>>() {}, auditLevel);
+        return doGetInvoicesForAccount(accountId, Boolean.TRUE, new TypeReference<List<InvoiceJson>>() {}, auditLevel);
     }
 
     protected List<InvoiceJson> getInvoicesWithItemsForAccount(final String accountId) throws IOException {
