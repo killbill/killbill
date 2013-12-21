@@ -82,7 +82,6 @@ import com.google.common.collect.ImmutableMap;
 
 public class TestInvoiceHelper {
 
-
     public static final Currency accountCurrency = Currency.USD;
 
     public static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
@@ -131,7 +130,6 @@ public class TestInvoiceHelper {
     public static final BigDecimal THREE_HUNDRED_AND_SIXTY_FIVE = new BigDecimal("365.0").setScale(NUMBER_OF_DECIMALS);
     public static final BigDecimal THREE_HUNDRED_AND_SIXTY_SIX = new BigDecimal("366.0").setScale(NUMBER_OF_DECIMALS);
 
-
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
@@ -148,7 +146,6 @@ public class TestInvoiceHelper {
     // Low level SqlDao used by the tests to directly insert rows
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
-
 
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
@@ -283,8 +280,8 @@ public class TestInvoiceHelper {
         }
     }
 
-    public void verifyInvoice(final UUID invoiceId, final double balance, final double cbaAmount) throws InvoiceApiException {
-        final InvoiceModelDao invoice = invoiceDao.getById(invoiceId, internalCallContext);
+    public void verifyInvoice(final UUID invoiceId, final double balance, final double cbaAmount, final InternalTenantContext context) throws InvoiceApiException {
+        final InvoiceModelDao invoice = invoiceDao.getById(invoiceId, context);
         Assert.assertEquals(InvoiceModelDaoHelper.getBalance(invoice).doubleValue(), balance);
         Assert.assertEquals(InvoiceModelDaoHelper.getCBAAmount(invoice).doubleValue(), cbaAmount);
     }
