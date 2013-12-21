@@ -73,13 +73,45 @@ where record_id = :recordId
 ;
 >>
 
-getIdFromHistoryRecordId(tableName, historyTableName) ::= <<
+getHistoryRecordIdIdMappings(tableName, historyTableName) ::= <<
 select
-  t.id
+  ht.record_id
+, t.id
 from <tableName> t
 join <historyTableName> ht on ht.target_record_id = t.record_id
-where ht.record_id = :historyRecordId
-limit 1
+where t.account_record_id = :accountRecordId
+and t.tenant_record_id = :tenantRecordId
 ;
 >>
 
+getHistoryRecordIdIdMappingsForAccountsTable(tableName, historyTableName) ::= <<
+select
+  ht.record_id
+, t.id
+from <tableName> t
+join <historyTableName> ht on ht.target_record_id = t.record_id
+where t.record_id = :accountRecordId
+and t.tenant_record_id = :tenantRecordId
+;
+>>
+
+getHistoryRecordIdIdMappingsForTablesWithoutAccountRecordId(tableName, historyTableName) ::= <<
+select
+  ht.record_id
+, t.id
+from <tableName> t
+join <historyTableName> ht on ht.target_record_id = t.record_id
+where 1 = 1
+and t.tenant_record_id = :tenantRecordId
+;
+>>
+
+getRecordIdIdMappings(tableName) ::= <<
+select
+  t.record_id
+, t.id
+from <tableName> t
+where t.account_record_id = :accountRecordId
+and t.tenant_record_id = :tenantRecordId
+;
+>>

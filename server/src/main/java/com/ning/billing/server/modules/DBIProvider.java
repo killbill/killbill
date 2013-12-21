@@ -32,6 +32,7 @@ import com.ning.billing.util.dao.DateTimeArgumentFactory;
 import com.ning.billing.util.dao.DateTimeZoneArgumentFactory;
 import com.ning.billing.util.dao.EnumArgumentFactory;
 import com.ning.billing.util.dao.LocalDateArgumentFactory;
+import com.ning.billing.util.dao.RecordIdIdMappingsMapper;
 import com.ning.billing.util.dao.UUIDArgumentFactory;
 import com.ning.billing.util.dao.UuidMapper;
 import com.ning.jetty.jdbi.config.DaoConfig;
@@ -73,6 +74,7 @@ public class DBIProvider implements Provider<DBI> {
         dbi.registerArgumentFactory(new EnumArgumentFactory());
         dbi.registerMapper(new UuidMapper());
         dbi.registerMapper(new AuditLogModelDaoMapper());
+        dbi.registerMapper(new RecordIdIdMappingsMapper());
 
         if (sqlLog != null) {
             dbi.setSQLLog(sqlLog);
