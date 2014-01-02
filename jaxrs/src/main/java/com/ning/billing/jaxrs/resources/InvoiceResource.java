@@ -119,7 +119,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         } else {
-            final InvoiceJson json = new InvoiceJson(invoice, accountAuditLogs);
+            final InvoiceJson json = new InvoiceJson(invoice, withItems, accountAuditLogs);
             return Response.status(Status.OK).entity(json).build();
         }
     }
@@ -138,7 +138,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceNumber);
         } else {
-            final InvoiceJson json = new InvoiceJson(invoice, accountAuditLogs);
+            final InvoiceJson json = new InvoiceJson(invoice, withItems, accountAuditLogs);
             return Response.status(Status.OK).entity(json).build();
         }
     }

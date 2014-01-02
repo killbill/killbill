@@ -80,11 +80,7 @@ public class InvoiceJson extends JsonBase {
     }
 
     public InvoiceJson(final Invoice input) {
-        this(input, null, null, null);
-    }
-
-    public InvoiceJson(final Invoice input, @Nullable final List<AuditLog> auditLogs) {
-        this(input, null, null, auditLogs);
+        this(input, false, null);
     }
 
     public InvoiceJson(final Invoice input, final String bundleKeys, final List<CreditJson> credits, final List<AuditLog> auditLogs) {
@@ -93,11 +89,13 @@ public class InvoiceJson extends JsonBase {
              input.getBalance(), input.getAccountId().toString(), bundleKeys, credits, null, toAuditLogJson(auditLogs));
     }
 
-    public InvoiceJson(final Invoice input, final AccountAuditLogs accountAuditLogs) {
-        super(toAuditLogJson(accountAuditLogs.getAuditLogsForInvoice(input.getId())));
+    public InvoiceJson(final Invoice input, final boolean withItems, @Nullable final AccountAuditLogs accountAuditLogs) {
+        super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoice(input.getId())));
         this.items = new ArrayList<InvoiceItemJson>(input.getInvoiceItems().size());
-        for (final InvoiceItem item : input.getInvoiceItems()) {
-            this.items.add(new InvoiceItemJson(item, accountAuditLogs.getAuditLogsForInvoiceItem(item.getId())));
+        if (withItems) {
+            for (final InvoiceItem item : input.getInvoiceItems()) {
+                this.items.add(new InvoiceItemJson(item, accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoiceItem(item.getId())));
+            }
         }
         this.amount = input.getChargedAmount();
         this.currency = input.getCurrency().toString();

@@ -430,23 +430,13 @@ public class AccountResource extends JaxRsResourceBase {
 
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
 
-        if (withItems) {
-            final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
-            for (final Invoice invoice : invoices) {
-                result.add(new InvoiceJson(invoice, accountAuditLogs));
-            }
-
-            return Response.status(Status.OK).entity(result).build();
-        } else {
-            final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
-            for (final Invoice invoice : invoices) {
-                result.add(new InvoiceJson(invoice, accountAuditLogs.getAuditLogsForInvoice(invoice.getId())));
-            }
-
-            return Response.status(Status.OK).entity(result).build();
+        final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
+        for (final Invoice invoice : invoices) {
+            result.add(new InvoiceJson(invoice, withItems, accountAuditLogs));
         }
-    }
 
+        return Response.status(Status.OK).entity(result).build();
+    }
 
     /*
      * ************************** PAYMENTS ********************************

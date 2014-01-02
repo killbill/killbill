@@ -43,6 +43,7 @@ import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -71,6 +72,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     private final NextBillingDatePoster nextBillingDatePoster;
     private final PersistentBus eventBus;
+    private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceDaoHelper invoiceDaoHelper;
     private final CBADao cbaDao;
 
@@ -80,10 +82,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                              final PersistentBus eventBus,
                              final Clock clock,
                              final CacheControllerDispatcher cacheControllerDispatcher,
-                             final NonEntityDao nonEntityDao) {
+                             final NonEntityDao nonEntityDao,
+                             final InternalCallContextFactory internalCallContextFactory) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), InvoiceSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.eventBus = eventBus;
+        this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceDaoHelper = new InvoiceDaoHelper();
         this.cbaDao = new CBADao();
     }
@@ -180,7 +184,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 if (invoice == null) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_NUMBER_NOT_FOUND, number.longValue());
                 }
-                invoiceDaoHelper.populateChildren(invoice, entitySqlDaoWrapperFactory, context);
+
+                // The context may not contain the account record id at this point - we couldn't do it in the API above
+                // as we couldn't get access to the invoice object until now.
+                final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
+                invoiceDaoHelper.populateChildren(invoice, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
+
                 return invoice;
             }
         });
