@@ -19,11 +19,14 @@ package com.ning.billing.util.dao;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
+
+import com.ning.billing.callcontext.InternalTenantContext;
 
 @UseStringTemplate3StatementLocator
 public interface NonEntitySqlDao extends Transactional<NonEntitySqlDao>, CloseMe {
@@ -54,4 +57,23 @@ public interface NonEntitySqlDao extends Transactional<NonEntitySqlDao>, CloseMe
 
     @SqlQuery
     public Long getHistoryTargetRecordId(@Bind("recordId") Long recordId, @Define("tableName") final String tableName);
+
+    @SqlQuery
+    public Iterable<RecordIdIdMappings> getHistoryRecordIdIdMappings(@Define("tableName") String tableName,
+                                                                     @Define("historyTableName") String historyTableName,
+                                                                     @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Iterable<RecordIdIdMappings> getHistoryRecordIdIdMappingsForAccountsTable(@Define("tableName") String tableName,
+                                                                                     @Define("historyTableName") String historyTableName,
+                                                                                     @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Iterable<RecordIdIdMappings> getHistoryRecordIdIdMappingsForTablesWithoutAccountRecordId(@Define("tableName") String tableName,
+                                                                                                    @Define("historyTableName") String historyTableName,
+                                                                                                    @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Iterable<RecordIdIdMappings> getRecordIdIdMappings(@Define("tableName") String tableName,
+                                                              @BindBean final InternalTenantContext context);
 }

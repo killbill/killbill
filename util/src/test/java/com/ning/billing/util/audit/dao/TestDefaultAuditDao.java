@@ -29,6 +29,8 @@ import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.audit.AccountAuditLogs;
+import com.ning.billing.util.audit.AccountAuditLogsForObjectType;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.dao.TableName;
@@ -63,6 +65,12 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         for (final AuditLevel level : AuditLevel.values()) {
             final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG, tag.getId(), level, internalCallContext);
             verifyAuditLogsForTag(auditLogs, level);
+
+            final AccountAuditLogs accountAuditLogs = auditDao.getAuditLogsForAccountRecordId(level, internalCallContext);
+            verifyAuditLogsForTag(accountAuditLogs.getAuditLogs(ObjectType.TAG).getAuditLogs(tag.getId()), level);
+
+            final AccountAuditLogsForObjectType accountAuditLogsForObjectType = auditDao.getAuditLogsForAccountRecordId(TableName.TAG, level, internalCallContext);
+            verifyAuditLogsForTag(accountAuditLogsForObjectType.getAuditLogs(tag.getId()), level);
         }
     }
 
@@ -102,7 +110,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         tagDao.create(new TagModelDao(theTag), internalCallContext);
         assertListenerStatus();
 
-        final List<TagModelDao> tags = tagDao.getTagsForObject(objectId, ObjectType.ACCOUNT, internalCallContext);
+        final List<TagModelDao> tags = tagDao.getTagsForObject(objectId, ObjectType.ACCOUNT, false, internalCallContext);
         Assert.assertEquals(tags.size(), 1);
         tag = tags.get(0);
         Assert.assertEquals(tag.getTagDefinitionId(), tagDefinition.getId());

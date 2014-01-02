@@ -58,6 +58,7 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 import com.google.inject.Inject;
 
@@ -91,10 +92,9 @@ public class BundleResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getBundle(@PathParam("bundleId") final String bundleId,
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
-
         final UUID id = UUID.fromString(bundleId);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, context.createContext(request));
-        final BundleJson json = new BundleJson(bundle, null, null, null);
+        final BundleJson json = new BundleJson(bundle, null);
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -103,7 +103,7 @@ public class BundleResource extends JaxRsResourceBase {
     public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, context.createContext(request));
-        final BundleJson json = new BundleJson(bundle, null, null, null);
+        final BundleJson json = new BundleJson(bundle, null);
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -131,11 +131,11 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response resumeBundle(@PathParam(ID_PARAM_NAME) final String id,
-                                @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                @HeaderParam(HDR_REASON) final String reason,
-                                @HeaderParam(HDR_COMMENT) final String comment,
-                                @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException {
+                                 @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                 @HeaderParam(HDR_REASON) final String reason,
+                                 @HeaderParam(HDR_COMMENT) final String comment,
+                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
@@ -185,10 +185,14 @@ public class BundleResource extends JaxRsResourceBase {
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String bundleIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), auditMode, context.createContext(request));
+                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, SubscriptionApiException {
+        final UUID bundleId = UUID.fromString(bundleIdString);
+        final TenantContext tenantContext = context.createContext(request);
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, context.createContext(request));
+        return super.getTags(bundle.getAccountId(), bundleId, auditMode, includedDeleted, tenantContext);
     }
 
     @PUT

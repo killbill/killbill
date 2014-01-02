@@ -147,7 +147,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.TAG);
         tagApi.addTag(id, type, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
         assertListenerStatus();
-        final List<Tag> tags = tagApi.getTagsForObject(id, type, callContext);
+        final List<Tag> tags = tagApi.getTagsForObject(id, type, false, callContext);
         assertEquals(tags.size(), 1);
     }
 

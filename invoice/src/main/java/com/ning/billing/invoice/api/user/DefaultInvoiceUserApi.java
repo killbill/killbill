@@ -147,7 +147,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public Invoice getInvoiceByNumber(final Integer number, final TenantContext context) throws InvoiceApiException {
-        // TODO (PIERRE) Populate accountRecordId in callcontext
+        // The account record id will be populated in the DAO
         return new DefaultInvoice(dao.getByNumber(number, internalCallContextFactory.createInternalTenantContext(context)));
     }
 

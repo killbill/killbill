@@ -22,9 +22,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.audit.DefaultAccountAuditLogs;
+import com.ning.billing.util.audit.DefaultAccountAuditLogsForObjectType;
 import com.ning.billing.util.dao.TableName;
 
 import com.google.common.base.Objects;
@@ -48,6 +50,16 @@ public class MockAuditDao implements AuditDao {
         }
 
         auditLogsForTables.get(tableName).get(objectId).addAll(auditLogs);
+    }
+
+    @Override
+    public DefaultAccountAuditLogs getAuditLogsForAccountRecordId(final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public DefaultAccountAuditLogsForObjectType getAuditLogsForAccountRecordId(final TableName tableName, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

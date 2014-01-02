@@ -17,6 +17,7 @@
 package com.ning.billing.payment.core;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -111,6 +112,10 @@ public abstract class ProcessorBase {
             log.error("Failed to add AUTO_PAY_OFF on account " + accountId, e);
             throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Failed to add AUTO_PAY_OFF on account " + accountId);
         }
+    }
+
+    public Set<String> getAvailablePlugins() {
+        return pluginRegistry.getAllServices();
     }
 
     protected PaymentPluginApi getPaymentPluginApi(final String pluginName) throws PaymentApiException {

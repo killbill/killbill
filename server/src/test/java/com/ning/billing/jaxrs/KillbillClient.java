@@ -432,12 +432,20 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return getInvoiceWithAudits(invoiceId, AuditLevel.NONE);
     }
 
+    protected InvoiceJson getInvoice(final String invoiceId, final Boolean withItems) throws IOException {
+        return doGetInvoice(invoiceId, withItems, InvoiceJson.class, AuditLevel.NONE);
+    }
+
     protected InvoiceJson getInvoiceWithAudits(final String invoiceId, final AuditLevel auditLevel) throws IOException {
-        return doGetInvoice(invoiceId, Boolean.FALSE, InvoiceJson.class, auditLevel);
+        return doGetInvoice(invoiceId, Boolean.TRUE, InvoiceJson.class, auditLevel);
     }
 
     protected InvoiceJson getInvoice(final Integer invoiceNumber) throws IOException {
         return getInvoice(invoiceNumber.toString());
+    }
+
+    protected InvoiceJson getInvoice(final Integer invoiceNumber, final Boolean withItems) throws IOException {
+        return doGetInvoice(invoiceNumber.toString(), withItems, InvoiceJson.class, AuditLevel.NONE);
     }
 
     protected InvoiceJson getInvoiceWithItems(final String invoiceId) throws IOException {
@@ -470,7 +478,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected List<InvoiceJson> getInvoicesForAccountWithAudits(final String accountId, final AuditLevel auditLevel) throws IOException {
-        return doGetInvoicesForAccount(accountId, Boolean.FALSE, new TypeReference<List<InvoiceJson>>() {}, auditLevel);
+        return doGetInvoicesForAccount(accountId, Boolean.TRUE, new TypeReference<List<InvoiceJson>>() {}, auditLevel);
     }
 
     protected List<InvoiceJson> getInvoicesWithItemsForAccount(final String accountId) throws IOException {

@@ -19,12 +19,20 @@ package com.ning.billing.util.audit.dao;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.audit.DefaultAccountAuditLogs;
+import com.ning.billing.util.audit.DefaultAccountAuditLogsForObjectType;
 import com.ning.billing.util.dao.TableName;
 
 public interface AuditDao {
+
+    // Make sure to consume all or call close() when done to release the connection
+    public DefaultAccountAuditLogs getAuditLogsForAccountRecordId(AuditLevel auditLevel, InternalTenantContext context);
+
+    // Make sure to consume all or call close() when done to release the connection
+    public DefaultAccountAuditLogsForObjectType getAuditLogsForAccountRecordId(TableName tableName, AuditLevel auditLevel, InternalTenantContext context);
 
     public List<AuditLog> getAuditLogsForId(TableName tableName, UUID objectId, AuditLevel auditLevel, InternalTenantContext context);
 }

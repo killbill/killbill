@@ -22,11 +22,11 @@ import java.util.UUID;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.tag.ControlTagType;
@@ -142,18 +142,18 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public List<Tag> getTagsForObject(final UUID objectId, final ObjectType objectType, final TenantContext context) {
-        return withModelTransform(tagDao.getTagsForObject(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context)));
+    public List<Tag> getTagsForObject(final UUID objectId, final ObjectType objectType, final boolean includedDeleted, final TenantContext context) {
+        return withModelTransform(tagDao.getTagsForObject(objectId, objectType, includedDeleted, internalCallContextFactory.createInternalTenantContext(context)));
     }
 
     @Override
-    public List<Tag> getTagsForAccountType(final UUID accountId, final ObjectType objectType, final TenantContext context) {
-        return withModelTransform(tagDao.getTagsForAccountType(accountId, objectType, internalCallContextFactory.createInternalTenantContext(accountId, context)));
+    public List<Tag> getTagsForAccountType(final UUID accountId, final ObjectType objectType, final boolean includedDeleted, final TenantContext context) {
+        return withModelTransform(tagDao.getTagsForAccountType(accountId, objectType, includedDeleted, internalCallContextFactory.createInternalTenantContext(accountId, context)));
     }
 
     @Override
-    public List<Tag> getTagsForAccount(final UUID accountId, final TenantContext context) {
-        return withModelTransform(tagDao.getTagsForAccount(internalCallContextFactory.createInternalTenantContext(accountId, context)));
+    public List<Tag> getTagsForAccount(final UUID accountId, final boolean includedDeleted, final TenantContext context) {
+        return withModelTransform(tagDao.getTagsForAccount(includedDeleted, internalCallContextFactory.createInternalTenantContext(accountId, context)));
     }
 
     private List<Tag> withModelTransform(final List<TagModelDao> input) {

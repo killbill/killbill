@@ -16,7 +16,6 @@
 
 package com.ning.billing.beatrix.util;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,14 +45,12 @@ import com.ning.billing.subscription.engine.dao.SubscriptionEventSqlDao;
 import com.ning.billing.subscription.engine.dao.SubscriptionSqlDao;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.AuditUserApi;
+import com.ning.billing.util.audit.AccountAuditLogs;
 import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.util.audit.AuditLogsForAccount;
-import com.ning.billing.util.audit.AuditLogsForBundles;
-import com.ning.billing.util.audit.AuditLogsForInvoices;
-import com.ning.billing.util.audit.AuditLogsForPayments;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.dao.EntityModelDao;
@@ -85,15 +82,14 @@ public class AuditChecker {
      */
 
     public void checkAccountCreated(final Account account, final CallContext context) {
-        AuditLogsForAccount result = auditUserApi.getAuditLogsForAccount(account.getId(), AuditLevel.FULL, context);
-        checkAuditLog(ChangeType.INSERT, context, result.getAccountAuditLogs().get(0), account.getId(), AccountSqlDao.class, true, true);
-        checkAuditLog(ChangeType.UPDATE, context, result.getAccountAuditLogs().get(1), account.getId(), AccountSqlDao.class, true, true);
+        final AccountAuditLogs result = auditUserApi.getAccountAuditLogs(account.getId(), AuditLevel.FULL, context);
+        checkAuditLog(ChangeType.INSERT, context, result.getAuditLogsForAccount().get(0), account.getId(), AccountSqlDao.class, true, true);
+        checkAuditLog(ChangeType.UPDATE, context, result.getAuditLogsForAccount().get(1), account.getId(), AccountSqlDao.class, true, true);
     }
 
     public void checkPaymentCreated(final Payment payment, final CallContext context) {
-        AuditLogsForPayments result = getAuditLogsForPayment(payment, context);
-        Assert.assertEquals(result.getPaymentsAuditLogs().size(), 1);
-        final List<AuditLog> paymentLogs = result.getPaymentsAuditLogs().get(payment.getId());
+        final AccountAuditLogs result = auditUserApi.getAccountAuditLogs(payment.getAccountId(), AuditLevel.FULL, context);
+        final List<AuditLog> paymentLogs = result.getAuditLogsForPayment(payment.getId());
         Assert.assertEquals(paymentLogs.size(), 2);
         checkAuditLog(ChangeType.INSERT, context, paymentLogs.get(0), payment.getId(), PaymentSqlDao.class, true, false);
         checkAuditLog(ChangeType.UPDATE, context, paymentLogs.get(1), payment.getId(), PaymentSqlDao.class, true, false);
@@ -105,16 +101,16 @@ public class AuditChecker {
 
     // Pass the call callcontext used to create the bundle
     public void checkBundleCreated(final UUID bundleId, final CallContext context) {
-        final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
-        Assert.assertEquals(auditLogsForBundles.getBundlesAuditLogs().keySet().size(), 1);
-        checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getBundlesAuditLogs().get(bundleId).get(0), bundleId, BundleSqlDao.class, false, false);
+        final List<AuditLog> auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
+        Assert.assertTrue(auditLogsForBundles.size() >= 1);
+        checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.get(0), bundleId, BundleSqlDao.class, false, false);
     }
 
     // Pass the call callcontext used to update the bundle
     public void checkBundleUpdated(final UUID bundleId, final CallContext context) {
-        final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
-        Assert.assertEquals(auditLogsForBundles.getBundlesAuditLogs().keySet().size(), 1);
-        checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.getBundlesAuditLogs().get(bundleId).get(auditLogsForBundles.getBundlesAuditLogs().get(bundleId).size() - 1), bundleId, BundleSqlDao.class, false, false);
+        final List<AuditLog> auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
+        Assert.assertTrue(auditLogsForBundles.size() > 1);
+        checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.get(auditLogsForBundles.size() - 1), bundleId, BundleSqlDao.class, false, false);
     }
 
     /**
@@ -123,19 +119,17 @@ public class AuditChecker {
 
     // Pass the call callcontext used to create the subscription
     public void checkSubscriptionCreated(final UUID bundleId, final UUID subscriptionId, final CallContext context) {
-        final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
-        Assert.assertEquals(auditLogsForBundles.getSubscriptionsAuditLogs().keySet().size(), 1);
-        checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getSubscriptionsAuditLogs().get(subscriptionId).get(0), subscriptionId, SubscriptionSqlDao.class, false, true);
+        final List<AuditLog> auditLogsForSubscription = getAuditLogsForSubscription(bundleId, subscriptionId, context);
+        Assert.assertTrue(auditLogsForSubscription.size() >= 1);
+        checkAuditLog(ChangeType.INSERT, context, auditLogsForSubscription.get(0), subscriptionId, SubscriptionSqlDao.class, false, true);
     }
 
     // Pass the call callcontext used to update the subscription
     public void checkSubscriptionUpdated(final UUID bundleId, final UUID subscriptionId, final CallContext context) {
-        final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
-
-        Assert.assertEquals(auditLogsForBundles.getSubscriptionsAuditLogs().keySet().size(), 1);
-        Assert.assertEquals(auditLogsForBundles.getSubscriptionsAuditLogs().get(subscriptionId).size(), 2);
-        checkAuditLog(ChangeType.INSERT, auditLogsForBundles.getSubscriptionsAuditLogs().get(subscriptionId).get(0));
-        checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.getSubscriptionsAuditLogs().get(subscriptionId).get(1), subscriptionId, SubscriptionSqlDao.class, false, false);
+        final List<AuditLog> auditLogsForSubscription = getAuditLogsForSubscription(bundleId, subscriptionId, context);
+        Assert.assertEquals(auditLogsForSubscription.size(), 2);
+        checkAuditLog(ChangeType.INSERT, auditLogsForSubscription.get(0));
+        checkAuditLog(ChangeType.UPDATE, context, auditLogsForSubscription.get(1), subscriptionId, SubscriptionSqlDao.class, false, false);
     }
 
     /**
@@ -144,24 +138,17 @@ public class AuditChecker {
 
     // Pass the call callcontext used to create the subscription event
     public void checkSubscriptionEventCreated(final UUID bundleId, final UUID subscriptionEventId, final CallContext context) {
-        final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
-        checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(0), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
+        final List<AuditLog> auditLogsForSubscriptionEvent = getAuditLogsForSubscriptionEvent(bundleId, subscriptionEventId, context);
+        Assert.assertEquals(auditLogsForSubscriptionEvent.size(), 1);
+        checkAuditLog(ChangeType.INSERT, context, auditLogsForSubscriptionEvent.get(0), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
     }
 
     // Pass the call callcontext used to update the subscription event
     public void checkSubscriptionEventUpdated(final UUID bundleId, final UUID subscriptionEventId, final CallContext context) {
-        final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
-        checkAuditLog(ChangeType.INSERT, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(0));
-        checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(1), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
-    }
-
-    /**
-     * ********************************************  PAYMENT *******************************************************
-     */
-
-    private AuditLogsForPayments getAuditLogsForPayment(final Payment payment, final CallContext context) {
-        AuditLogsForPayments results = auditUserApi.getAuditLogsForPayments(Collections.singletonList(payment), AuditLevel.FULL, context);
-        return results;
+        final List<AuditLog> auditLogsForSubscriptionEvent = getAuditLogsForSubscriptionEvent(bundleId, subscriptionEventId, context);
+        Assert.assertEquals(auditLogsForSubscriptionEvent.size(), 2);
+        checkAuditLog(ChangeType.INSERT, auditLogsForSubscriptionEvent.get(0));
+        checkAuditLog(ChangeType.UPDATE, context, auditLogsForSubscriptionEvent.get(1), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
     }
 
     /**
@@ -169,32 +156,53 @@ public class AuditChecker {
      */
 
     public void checkInvoiceCreated(final Invoice invoice, final CallContext context) {
-        AuditLogsForInvoices result = getAuditLogForInvoice(invoice, context);
-        Assert.assertEquals(result.getInvoiceAuditLogs().keySet().size(), 1);
-        final List<AuditLog> invoiceLogs = result.getInvoiceAuditLogs().get(invoice.getId());
+        final List<AuditLog> invoiceLogs = getAuditLogForInvoice(invoice, context);
         Assert.assertEquals(invoiceLogs.size(), 1);
         checkAuditLog(ChangeType.INSERT, context, invoiceLogs.get(0), invoice.getId(), InvoiceSqlDao.class, false, false);
 
-        Assert.assertEquals(result.getInvoiceItemsAuditLogs().keySet().size(), invoice.getInvoiceItems().size());
         for (InvoiceItem cur : invoice.getInvoiceItems()) {
-            final List<AuditLog> auditLogs = result.getInvoiceItemsAuditLogs().get(cur.getId());
+            final List<AuditLog> auditLogs = getAuditLogForInvoiceItem(cur, context);
             Assert.assertEquals(auditLogs.size(), 1);
             checkAuditLog(ChangeType.INSERT, context, auditLogs.get(0), cur.getId(), InvoiceItemSqlDao.class, false, false);
         }
     }
 
-    private AuditLogsForBundles getAuditLogsForBundle(final UUID bundleId, final CallContext context) {
+    private List<AuditLog> getAuditLogsForBundle(final UUID bundleId, final TenantContext context) {
         try {
             final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, context);
-            return auditUserApi.getAuditLogsForBundles(Collections.singletonList(bundle), AuditLevel.FULL, context);
-        } catch (SubscriptionApiException e) {
+            return auditUserApi.getAccountAuditLogs(bundle.getAccountId(), AuditLevel.FULL, context).getAuditLogsForBundle(bundle.getId());
+        } catch (final SubscriptionApiException e) {
             Assert.fail(e.toString());
             return null;
         }
     }
 
-    private AuditLogsForInvoices getAuditLogForInvoice(final Invoice invoice, final CallContext context) {
-        return auditUserApi.getAuditLogsForInvoices(Collections.singletonList(invoice), AuditLevel.FULL, context);
+    private List<AuditLog> getAuditLogsForSubscription(final UUID bundleId, final UUID subscriptionId, final TenantContext context) {
+        try {
+            final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, context);
+            return auditUserApi.getAccountAuditLogs(bundle.getAccountId(), AuditLevel.FULL, context).getAuditLogsForSubscription(subscriptionId);
+        } catch (final SubscriptionApiException e) {
+            Assert.fail(e.toString());
+            return null;
+        }
+    }
+
+    private List<AuditLog> getAuditLogsForSubscriptionEvent(final UUID bundleId, final UUID subscriptionEventId, final TenantContext context) {
+        try {
+            final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, context);
+            return auditUserApi.getAccountAuditLogs(bundle.getAccountId(), AuditLevel.FULL, context).getAuditLogsForSubscriptionEvent(subscriptionEventId);
+        } catch (final SubscriptionApiException e) {
+            Assert.fail(e.toString());
+            return null;
+        }
+    }
+
+    private List<AuditLog> getAuditLogForInvoice(final Invoice invoice, final TenantContext context) {
+        return auditUserApi.getAccountAuditLogs(invoice.getAccountId(), AuditLevel.FULL, context).getAuditLogsForInvoice(invoice.getId());
+    }
+
+    private List<AuditLog> getAuditLogForInvoiceItem(final InvoiceItem invoiceItem, final TenantContext context) {
+        return auditUserApi.getAccountAuditLogs(invoiceItem.getAccountId(), AuditLevel.FULL, context).getAuditLogsForInvoiceItem(invoiceItem.getId());
     }
 
     private void checkAuditLog(final ChangeType insert, final AuditLog auditLog) {

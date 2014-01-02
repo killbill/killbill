@@ -20,11 +20,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.SubscriptionBundle;
@@ -34,16 +31,11 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.Refund;
+import com.ning.billing.util.audit.AccountAuditLogs;
 import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.util.audit.AuditLogsForBundles;
-import com.ning.billing.util.audit.AuditLogsForInvoicePayments;
-import com.ning.billing.util.audit.AuditLogsForInvoices;
-import com.ning.billing.util.audit.AuditLogsForPayments;
-import com.ning.billing.util.audit.AuditLogsForRefunds;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 
 public class AccountTimelineJson {
@@ -95,35 +87,14 @@ public class AccountTimelineJson {
         return tmp.toString();
     }
 
-
     public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments,
-                               final List<SubscriptionBundle> bundlesTimeline, final Multimap<UUID, Refund> refundsByPayment,
-                               final Multimap<UUID, InvoicePayment> chargebacksByPayment, @Nullable final AuditLogsForInvoices invoicesAuditLogs,
-                               @Nullable final AuditLogsForPayments paymentsAuditLogs, @Nullable final AuditLogsForRefunds refundsAuditLogs,
-                               @Nullable final AuditLogsForInvoicePayments chargebacksAuditLogs, @Nullable final AuditLogsForBundles bundlesAuditLogs) {
-        this(account, invoices, payments, bundlesTimeline, refundsByPayment, chargebacksByPayment,
-             invoicesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : invoicesAuditLogs.getInvoiceAuditLogs(),
-             invoicesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : invoicesAuditLogs.getInvoiceItemsAuditLogs(),
-             paymentsAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : paymentsAuditLogs.getPaymentsAuditLogs(),
-             refundsAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : refundsAuditLogs.getRefundsAuditLogs(),
-             chargebacksAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : chargebacksAuditLogs.getInvoicePaymentsAuditLogs(),
-             bundlesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : bundlesAuditLogs.getBundlesAuditLogs(),
-             bundlesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : bundlesAuditLogs.getSubscriptionsAuditLogs(),
-             bundlesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : bundlesAuditLogs.getSubscriptionEventsAuditLogs());
-    }
-
-    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments, final List<SubscriptionBundle> bundles,
-                               final Multimap<UUID, Refund> refundsByPayment, final Multimap<UUID, InvoicePayment> chargebacksByPayment,
-                               final Map<UUID, List<AuditLog>> invoiceAuditLogs, final Map<UUID, List<AuditLog>> invoiceItemsAuditLogs,
-                               final Map<UUID, List<AuditLog>> paymentsAuditLogs, final Map<UUID, List<AuditLog>> refundsAuditLogs,
-                               final Map<UUID, List<AuditLog>> chargebacksAuditLogs, final Map<UUID, List<AuditLog>> bundlesAuditLogs,
-                               final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
+                               final List<SubscriptionBundle> bundles, final Multimap<UUID, Refund> refundsByPayment,
+                               final Multimap<UUID, InvoicePayment> chargebacksByPayment, final AccountAuditLogs accountAuditLogs) {
         this.account = new AccountJson(account, null, null);
         this.bundles = new LinkedList<BundleJson>();
         for (final SubscriptionBundle bundle : bundles) {
-            final List<AuditLog> bundleAuditLogs = bundlesAuditLogs.get(bundle.getId());
-            final BundleJson jsonWithSubscriptions = new BundleJson(bundle, bundleAuditLogs,
-                                                                                                      subscriptionsAuditLogs, subscriptionEventsAuditLogs);
+            final List<AuditLog> bundleAuditLogs = accountAuditLogs.getAuditLogsForBundle(bundle.getId());
+            final BundleJson jsonWithSubscriptions = new BundleJson(bundle, accountAuditLogs);
             this.bundles.add(jsonWithSubscriptions);
         }
 
@@ -133,43 +104,41 @@ public class AccountTimelineJson {
         for (final Invoice invoice : invoices) {
             for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
                 if (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType())) {
-                    final List<AuditLog> auditLogs = invoiceItemsAuditLogs.get(invoiceItem.getId());
+                    final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForInvoiceItem(invoiceItem.getId());
                     credits.add(new CreditJson(invoice, invoiceItem, auditLogs));
                 }
             }
         }
         // Create now the invoice json objects
         for (final Invoice invoice : invoices) {
-            final List<AuditLog> auditLogs = invoiceAuditLogs.get(invoice.getId());
+            final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForInvoice(invoice.getId());
             this.invoices.add(new InvoiceJson(invoice,
-                                                            getBundleExternalKey(invoice, bundles),
-                                                            credits,
-                                                            auditLogs));
+                                              getBundleExternalKey(invoice, bundles),
+                                              credits,
+                                              auditLogs));
         }
 
         this.payments = new LinkedList<PaymentJson>();
         for (final Payment payment : payments) {
             final List<RefundJson> refunds = new ArrayList<RefundJson>();
             for (final Refund refund : refundsByPayment.get(payment.getId())) {
-                final List<AuditLog> auditLogs = refundsAuditLogs.get(refund.getId());
+                final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForRefund(refund.getId());
                 // TODO add adjusted invoice items?
                 refunds.add(new RefundJson(refund, null, auditLogs));
             }
 
             final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();
             for (final InvoicePayment chargeback : chargebacksByPayment.get(payment.getId())) {
-                final List<AuditLog> auditLogs = chargebacksAuditLogs.get(chargeback.getId());
+                final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForChargeback(chargeback.getId());
                 chargebacks.add(new ChargebackJson(payment.getAccountId(), chargeback, auditLogs));
             }
 
-            final int nbOfPaymentAttempts = payment.getAttempts().size();
-            final String status = payment.getPaymentStatus().toString();
-            final List<AuditLog> auditLogs = paymentsAuditLogs.get(payment.getId());
+            final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForPayment(payment.getId());
             this.payments.add(new PaymentJson(payment,
                                               getBundleExternalKey(payment.getInvoiceId(), invoices, bundles),
                                               refunds,
-                                                            chargebacks,
-                                                            auditLogs));
+                                              chargebacks,
+                                              auditLogs));
         }
     }
 

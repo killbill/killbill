@@ -22,10 +22,12 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.audit.DefaultAuditLog;
+import com.ning.billing.util.audit.dao.AuditLogModelDao;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.TableName;
 
@@ -67,7 +69,7 @@ public class TestAuditLogJson extends JaxrsTestSuiteNoDB {
         final ChangeType changeType = ChangeType.DELETE;
         final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType, null);
 
-        final AuditLog auditLog = new DefaultAuditLog(entityAudit, callContext);
+        final AuditLog auditLog = new DefaultAuditLog(new AuditLogModelDao(entityAudit, callContext), ObjectType.ACCOUNT_EMAIL, UUID.randomUUID());
 
         final AuditLogJson auditLogJson = new AuditLogJson(auditLog);
         Assert.assertEquals(auditLogJson.getChangeType(), changeType.toString());

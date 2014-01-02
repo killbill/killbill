@@ -712,7 +712,6 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
             assertEquals(cbaAfterRefund.compareTo(expectedCba), 0);
         }
 
-
     }
 
     @Test(groups = "slow")
@@ -1412,14 +1411,14 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Verify scenario - no CBA should have been used
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 10.00);
-        invoiceUtil.verifyInvoice(invoice1.getId(), 10.00, 10.00);
+        invoiceUtil.verifyInvoice(invoice1.getId(), 10.00, 10.00, context);
 
         // Delete the CBA on invoice 1
         invoiceDao.deleteCBA(accountId, invoice1.getId(), creditBalanceAdjInvoiceItem1.getId(), context);
 
         // Verify the result
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 0.00);
-        invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 0.00);
+        invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 0.00, context);
     }
 
     @Test(groups = "slow")
@@ -1470,16 +1469,16 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Verify scenario - half of the CBA should have been used
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 5.00);
-        invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 10.00);
-        invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00);
+        invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 10.00, context);
+        invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00, context);
 
         // Refund Payment before we can deleted CBA
         invoiceDao.createRefund(paymentId, new BigDecimal("10.0"), false, ImmutableMap.<UUID, BigDecimal>of(), UUID.randomUUID(), context);
 
         // Verify all three invoices were affected
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 0.00);
-        invoiceUtil.verifyInvoice(invoice1.getId(), 5.00, 5.00);
-        invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00);
+        invoiceUtil.verifyInvoice(invoice1.getId(), 5.00, 5.00, context);
+        invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00, context);
     }
 
     @Test(groups = "slow")
@@ -1506,7 +1505,6 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoiceItem(fixedItem1, context);
         invoiceUtil.createInvoiceItem(repairAdjInvoiceItem, context);
         invoiceUtil.createInvoiceItem(creditBalanceAdjInvoiceItem1, context);
-
 
         final BigDecimal paymentAmount = new BigDecimal("10.00");
         final UUID paymentId = UUID.randomUUID();
@@ -1545,17 +1543,17 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Verify scenario - all CBA should have been used
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 0.00);
-        invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 10.00);
-        invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00);
-        invoiceUtil.verifyInvoice(invoice3.getId(), 0.00, -5.00);
+        invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 10.00, context);
+        invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00, context);
+        invoiceUtil.verifyInvoice(invoice3.getId(), 0.00, -5.00, context);
 
         invoiceDao.createRefund(paymentId, paymentAmount, false, ImmutableMap.<UUID, BigDecimal>of(), UUID.randomUUID(), context);
 
         // Verify all three invoices were affected
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 0.00);
-        invoiceUtil.verifyInvoice(invoice1.getId(), 10.00, 10.00);
-        invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00);
-        invoiceUtil.verifyInvoice(invoice3.getId(), 0.00, -5.00);
+        invoiceUtil.verifyInvoice(invoice1.getId(), 10.00, 10.00, context);
+        invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00, context);
+        invoiceUtil.verifyInvoice(invoice3.getId(), 0.00, -5.00, context);
     }
 
     @Test(groups = "slow")
@@ -1580,7 +1578,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Verify scenario
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 10.00);
-        invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 10.00);
+        invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 10.00, context);
 
         // Delete the CBA on invoice 1
         try {
@@ -1592,6 +1590,6 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Verify the result
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 10.00);
-        invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 10.00);
+        invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 10.00, context);
     }
 }

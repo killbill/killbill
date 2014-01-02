@@ -24,16 +24,15 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.audit.DefaultAuditLog;
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.callcontext.DefaultCallContext;
+import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.audit.dao.AuditLogModelDao;
+import com.ning.billing.util.callcontext.CallContext;
 
-public class AuditLogMapper extends MapperBase implements ResultSetMapper<AuditLog> {
+public class AuditLogModelDaoMapper extends MapperBase implements ResultSetMapper<AuditLogModelDao> {
 
     @Override
-    public AuditLog map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+    public AuditLogModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID id = getUUID(r, "id");
         final String tableName = r.getString("table_name");
         final long targetRecordId = r.getLong("target_record_id");
@@ -47,6 +46,6 @@ public class AuditLogMapper extends MapperBase implements ResultSetMapper<AuditL
         final EntityAudit entityAudit = new EntityAudit(id, TableName.valueOf(tableName), targetRecordId, ChangeType.valueOf(changeType), createdDate);
         // TODO - we have the tenant_record_id but not the tenant id here
         final CallContext callContext = new DefaultCallContext(null, createdBy, createdDate, reasonCode, comments, userToken);
-        return new DefaultAuditLog(entityAudit, callContext);
+        return new AuditLogModelDao(entityAudit, callContext);
     }
 }

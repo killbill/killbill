@@ -86,10 +86,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
         super(pluginRegistry, accountInternalApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi);
     }
 
-    public Set<String> getAvailablePlugins() {
-        return pluginRegistry.getAllServices();
-    }
-
     public UUID addPaymentMethod(final String paymentPluginServiceName, final Account account,
                                  final boolean setDefault, final PaymentMethodPlugin paymentMethodProps, final InternalCallContext context)
             throws PaymentApiException {

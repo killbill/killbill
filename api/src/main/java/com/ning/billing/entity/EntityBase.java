@@ -45,7 +45,7 @@ public abstract class EntityBase implements Entity {
     }
 
     public EntityBase(final EntityBase target) {
-        this.id = UUID.randomUUID();
+        this.id = target.getId();
         this.createdDate = target.getCreatedDate();
         this.updatedDate = target.getUpdatedDate();
     }

@@ -46,3 +46,14 @@ and t.object_type = :objectType
 <AND_CHECK_TENANT("t.")>
 ;
 >>
+
+getTagsForObjectIncludedDeleted() ::= <<
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where 1 = 1
+and t.object_id = :objectId
+and t.object_type = :objectType
+<AND_CHECK_TENANT("t.")>
+;
+>>

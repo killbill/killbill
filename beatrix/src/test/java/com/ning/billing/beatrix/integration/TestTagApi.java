@@ -59,15 +59,15 @@ public class TestTagApi extends TestIntegrationBase {
         tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
         assertListenerStatus();
 
-        List<Tag> tags = tagUserApi.getTagsForAccount(account.getId(), callContext);
+        List<Tag> tags = tagUserApi.getTagsForAccount(account.getId(), false, callContext);
         Assert.assertEquals(tags.size(), 2);
         checkTagsExists(tags);
 
-        tags = tagUserApi.getTagsForObject(account.getId(), ObjectType.ACCOUNT, callContext);
+        tags = tagUserApi.getTagsForObject(account.getId(), ObjectType.ACCOUNT, false, callContext);
         Assert.assertEquals(tags.size(), 2);
         checkTagsExists(tags);
 
-        tags = tagUserApi.getTagsForAccountType(account.getId(), ObjectType.ACCOUNT, callContext);
+        tags = tagUserApi.getTagsForAccountType(account.getId(), ObjectType.ACCOUNT, false, callContext);
         Assert.assertEquals(tags.size(), 2);
         checkTagsExists(tags);
     }
@@ -109,15 +109,15 @@ public class TestTagApi extends TestIntegrationBase {
         tagUserApi.addTag(invoice.getId(), ObjectType.INVOICE, tagDefinition.getId(), callContext);
         assertListenerStatus();
 
-        List<Tag> tags = tagUserApi.getTagsForAccount(account.getId(), callContext);
+        List<Tag> tags = tagUserApi.getTagsForAccount(account.getId(), false, callContext);
         Assert.assertEquals(tags.size(), 2);
         checkTagsExists(tags);
 
-        tags = tagUserApi.getTagsForObject(invoice.getId(), ObjectType.INVOICE, callContext);
+        tags = tagUserApi.getTagsForObject(invoice.getId(), ObjectType.INVOICE, false, callContext);
         Assert.assertEquals(tags.size(), 2);
         checkTagsExists(tags);
 
-        tags = tagUserApi.getTagsForAccountType(account.getId(), ObjectType.INVOICE, callContext);
+        tags = tagUserApi.getTagsForAccountType(account.getId(), ObjectType.INVOICE, false, callContext);
         Assert.assertEquals(tags.size(), 2);
         checkTagsExists(tags);
 
@@ -128,15 +128,15 @@ public class TestTagApi extends TestIntegrationBase {
         tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
         assertListenerStatus();
 
-        tags = tagUserApi.getTagsForAccount(account.getId(), callContext);
+        tags = tagUserApi.getTagsForAccount(account.getId(), false, callContext);
         Assert.assertEquals(tags.size(), 3);
         checkTagsExists(tags);
 
-        tags = tagUserApi.getTagsForObject(invoice.getId(), ObjectType.INVOICE, callContext);
+        tags = tagUserApi.getTagsForObject(invoice.getId(), ObjectType.INVOICE, false, callContext);
         Assert.assertEquals(tags.size(), 2);
         checkTagsExists(tags);
 
-        tags = tagUserApi.getTagsForAccountType(account.getId(), ObjectType.INVOICE, callContext);
+        tags = tagUserApi.getTagsForAccountType(account.getId(), ObjectType.INVOICE, false, callContext);
         Assert.assertEquals(tags.size(), 2);
         checkTagsExists(tags);
     }

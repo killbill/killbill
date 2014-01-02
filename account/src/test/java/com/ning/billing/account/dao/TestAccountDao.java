@@ -33,6 +33,8 @@ import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.api.MutableAccountData;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.CustomFieldApiException;
@@ -40,6 +42,7 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.audit.DefaultAccountAuditLogs;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldModelDao;
@@ -81,6 +84,39 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final List<AuditLog> auditLogsForAccount = auditDao.getAuditLogsForId(TableName.ACCOUNT, account.getId(), AuditLevel.FULL, internalCallContext);
         Assert.assertEquals(auditLogsForAccount.size(), 1);
         Assert.assertEquals(auditLogsForAccount.get(0).getChangeType(), ChangeType.INSERT);
+    }
+
+    @Test(groups = "slow", description = "Test Account: verify audits")
+    public void testAudits() throws AccountApiException {
+        // Special test to verify audits - they are handled a bit differently due to the account record id (see EntitySqlDaoWrapperInvocationHandler#insertAudits)
+        final AccountModelDao account1 = createTestAccount();
+        accountDao.create(account1, internalCallContext);
+        final Long account1RecordId = nonEntityDao.retrieveAccountRecordIdFromObject(account1.getId(), ObjectType.ACCOUNT, null);
+        final InternalCallContext internalCallContext1 = new InternalCallContext(internalCallContext, account1RecordId);
+
+        // Verify audits via account record id
+        final DefaultAccountAuditLogs auditLogsForAccount1ViaAccountRecordId1 = auditDao.getAuditLogsForAccountRecordId(AuditLevel.FULL, internalCallContext1);
+        Assert.assertEquals(auditLogsForAccount1ViaAccountRecordId1.getAuditLogsForAccount().size(), 1);
+        Assert.assertEquals(auditLogsForAccount1ViaAccountRecordId1.getAuditLogsForAccount().get(0).getChangeType(), ChangeType.INSERT);
+
+        // Add an entry in the account_history table to make sure we pick up the right
+        // record id / target record id / account record id in the audit_log table
+        accountDao.updatePaymentMethod(account1.getId(), UUID.randomUUID(), internalCallContext1);
+
+        final AccountModelDao account2 = createTestAccount();
+        accountDao.create(account2, internalCallContext);
+        final Long account2RecordId = nonEntityDao.retrieveAccountRecordIdFromObject(account2.getId(), ObjectType.ACCOUNT, null);
+        final InternalTenantContext internalTenantContext2 = new InternalCallContext(internalCallContext, account2RecordId);
+
+        // Verify audits via account record id
+        final DefaultAccountAuditLogs auditLogsForAccount2ViaAccountRecordId = auditDao.getAuditLogsForAccountRecordId(AuditLevel.FULL, internalTenantContext2);
+        Assert.assertEquals(auditLogsForAccount2ViaAccountRecordId.getAuditLogsForAccount().size(), 1);
+        Assert.assertEquals(auditLogsForAccount2ViaAccountRecordId.getAuditLogsForAccount().get(0).getChangeType(), ChangeType.INSERT);
+
+        final DefaultAccountAuditLogs auditLogsForAccount1ViaAccountRecordId2 = auditDao.getAuditLogsForAccountRecordId(AuditLevel.FULL, internalCallContext1);
+        Assert.assertEquals(auditLogsForAccount1ViaAccountRecordId2.getAuditLogsForAccount().size(), 2);
+        Assert.assertEquals(auditLogsForAccount1ViaAccountRecordId2.getAuditLogsForAccount().get(0).getChangeType(), ChangeType.INSERT);
+        Assert.assertEquals(auditLogsForAccount1ViaAccountRecordId2.getAuditLogsForAccount().get(1).getChangeType(), ChangeType.UPDATE);
     }
 
     // Simple test to ensure long phone numbers can be stored
@@ -129,7 +165,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, account.getId(), internalCallContext.getCreatedDate());
         tagDao.create(new TagModelDao(tag), internalCallContext);
 
-        final List<TagModelDao> tags = tagDao.getTagsForObject(account.getId(), ObjectType.ACCOUNT, internalCallContext);
+        final List<TagModelDao> tags = tagDao.getTagsForObject(account.getId(), ObjectType.ACCOUNT, false, internalCallContext);
         Assert.assertEquals(tags.size(), 1);
         Assert.assertEquals(tags.get(0).getTagDefinitionId(), tagDefinition.getId());
         Assert.assertEquals(tags.get(0).getObjectId(), account.getId());

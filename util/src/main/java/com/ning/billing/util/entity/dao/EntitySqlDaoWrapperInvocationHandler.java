@@ -384,9 +384,17 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         return nonEntityDao.retrieveLastHistoryRecordIdFromTransaction(entityRecordId, entityModelDao.getHistoryTableName(), transactional);
     }
 
-    private void insertAudits(final TableName tableName, final Long entityRecordId, final Long historyRecordId, final ChangeType changeType, final InternalCallContext context) {
+    private void insertAudits(final TableName tableName, final Long entityRecordId, final Long historyRecordId, final ChangeType changeType, final InternalCallContext contextMaybeWithoutAccountRecordId) {
         final TableName destinationTableName = Objects.firstNonNull(tableName.getHistoryTableName(), tableName);
         final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, clock.getUTCNow());
+
+        final InternalCallContext context;
+        // Populate the account record id when creating the account record
+        if (TableName.ACCOUNT.equals(tableName) && ChangeType.INSERT.equals(changeType)) {
+            context = new InternalCallContext(contextMaybeWithoutAccountRecordId, entityRecordId);
+        } else {
+            context = contextMaybeWithoutAccountRecordId;
+        }
         sqlDao.insertAuditFromTransaction(audit, context);
 
         // We need to invalidate the caches. There is a small window of doom here where caches will be stale.

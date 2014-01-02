@@ -18,8 +18,6 @@ package com.ning.billing.jaxrs.json;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -31,7 +29,7 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionEvent;
-import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -313,12 +311,10 @@ public class SubscriptionJson extends JsonBase {
         this.newEvents = newEvents;
     }
 
-
     public SubscriptionJson(final Subscription subscription,
                             final List<SubscriptionEvent> subscriptionEvents,
-                            final List<AuditLog> subscriptionAuditLogs,
-                            final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
-        super(toAuditLogJson(subscriptionAuditLogs));
+                            @Nullable final AccountAuditLogs accountAuditLogs) {
+        super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscription(subscription.getId())));
         this.startDate = subscription.getEffectiveStartDate();
         this.productName = subscription.getLastActiveProduct().getName();
         this.productCategory = subscription.getLastActiveProductCategory().name();
@@ -334,20 +330,20 @@ public class SubscriptionJson extends JsonBase {
         this.externalKey = subscription.getExternalKey();
         this.events = subscriptionEvents != null ? new LinkedList<EventSubscriptionJson>() : null;
         if (events != null) {
-            for (SubscriptionEvent cur : subscriptionEvents) {
+            for (final SubscriptionEvent cur : subscriptionEvents) {
                 final BillingPeriod billingPeriod = cur.getNextBillingPeriod() != null ? cur.getNextBillingPeriod() : cur.getPrevBillingPeriod();
                 final Product product = cur.getNextProduct() != null ? cur.getNextProduct() : cur.getPrevProduct();
                 final PriceList priceList = cur.getNextPriceList() != null ? cur.getNextPriceList() : cur.getPrevPriceList();
                 final PlanPhase phase = cur.getNextPhase() != null ? cur.getNextPhase() : cur.getPrevPhase();
                 this.events.add(new EventSubscriptionJson(cur.getId().toString(),
-                                                              billingPeriod != null ? billingPeriod.toString() : null,
-                                                              cur.getRequestedDate(),
-                                                              cur.getEffectiveDate(),
-                                                              product != null ? product.getName() : null,
-                                                              priceList != null ? priceList.getName() : null,
-                                                              cur.getSubscriptionEventType().toString(),
-                                                              phase != null ? phase.getName() : null,
-                                                              (subscriptionEventsAuditLogs != null ? toAuditLogJson(subscriptionEventsAuditLogs.get(cur.getId())) : null)));
+                                                          billingPeriod != null ? billingPeriod.toString() : null,
+                                                          cur.getRequestedDate(),
+                                                          cur.getEffectiveDate(),
+                                                          product != null ? product.getName() : null,
+                                                          priceList != null ? priceList.getName() : null,
+                                                          cur.getSubscriptionEventType().toString(),
+                                                          phase != null ? phase.getName() : null,
+                                                          toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscriptionEvent(cur.getId()))));
             }
         }
         this.newEvents = null;

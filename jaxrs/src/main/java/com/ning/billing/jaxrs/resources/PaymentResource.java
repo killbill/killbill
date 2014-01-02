@@ -121,8 +121,8 @@ public class PaymentResource extends JaxRsResourceBase {
 
             paymentJson = new PaymentJson(payment,
                                           null, // TODO - the keys are really only used for the timeline
-                                                              refunds,
-                                                              chargebacks);
+                                          refunds,
+                                          chargebacks);
         } else {
             paymentJson = new PaymentJson(payment, null);
         }
@@ -135,10 +135,10 @@ public class PaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response retryFailedPayment(@PathParam(ID_PARAM_NAME) final String paymentIdString,
-                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                   @HeaderParam(HDR_REASON) final String reason,
-                                   @HeaderParam(HDR_COMMENT) final String comment,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
@@ -150,13 +150,11 @@ public class PaymentResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(new PaymentJson(newPayment, null)).build();
     }
 
-
-
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Produces(APPLICATION_JSON)
     public Response getChargebacksForPayment(@PathParam("paymentId") final String paymentId,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
+                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentId(UUID.fromString(paymentId), tenantContext);
@@ -172,7 +170,6 @@ public class PaymentResource extends JaxRsResourceBase {
         }
         return Response.status(Response.Status.OK).entity(chargebacksJson).build();
     }
-
 
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
@@ -229,7 +226,7 @@ public class PaymentResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path("/{paymentId:"  + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -238,7 +235,7 @@ public class PaymentResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/{paymentId:" + UUID_PATTERN  + "}/" + CUSTOM_FIELDS)
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -252,7 +249,7 @@ public class PaymentResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path("/{paymentId:" + UUID_PATTERN  + "}/" + CUSTOM_FIELDS)
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -268,10 +265,14 @@ public class PaymentResource extends JaxRsResourceBase {
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String paymentIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), auditMode, context.createContext(request));
+                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
+        final UUID paymentId = UUID.fromString(paymentIdString);
+        final TenantContext tenantContext = context.createContext(request);
+        final Payment payment = paymentApi.getPayment(paymentId, false, tenantContext);
+        return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
     }
 
     @POST
@@ -290,7 +291,7 @@ public class PaymentResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path("/{paymentId:" + UUID_PATTERN + "}/"+ TAGS)
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,

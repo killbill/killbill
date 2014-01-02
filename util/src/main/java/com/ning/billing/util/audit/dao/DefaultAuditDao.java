@@ -16,28 +16,39 @@
 
 package com.ning.billing.util.audit.dao;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.ObjectType;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.audit.DefaultAccountAuditLogs;
+import com.ning.billing.util.audit.DefaultAccountAuditLogsForObjectType;
+import com.ning.billing.util.audit.DefaultAuditLog;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.callcontext.InternalTenantContext;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.dao.NonEntitySqlDao;
+import com.ning.billing.util.dao.RecordIdIdMappings;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 public class DefaultAuditDao implements AuditDao {
 
@@ -48,6 +59,104 @@ public class DefaultAuditDao implements AuditDao {
     public DefaultAuditDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
         this.nonEntitySqlDao = dbi.onDemand(NonEntitySqlDao.class);
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
+    }
+
+    @Override
+    public DefaultAccountAuditLogs getAuditLogsForAccountRecordId(final AuditLevel auditLevel, final InternalTenantContext context) {
+        final UUID accountId = nonEntitySqlDao.getIdFromObject(context.getAccountRecordId(), TableName.ACCOUNT.getTableName());
+
+        // Lazy evaluate records to minimize the memory footprint (these can yield a lot of results)
+        // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
+        // Since we want to stream the results out, we don't want to auto-commit when this method returns.
+        final EntitySqlDao auditSqlDao = transactionalSqlDao.onDemand(EntitySqlDao.class);
+        final Iterator<AuditLogModelDao> auditLogsForAccountRecordId = auditSqlDao.getAuditLogsForAccountRecordId(context);
+        final Iterator<AuditLog> allAuditLogs = buildAuditLogsFromModelDao(auditLogsForAccountRecordId, context);
+
+        return new DefaultAccountAuditLogs(accountId, auditLevel, allAuditLogs);
+    }
+
+    @Override
+    public DefaultAccountAuditLogsForObjectType getAuditLogsForAccountRecordId(final TableName tableName, final AuditLevel auditLevel, final InternalTenantContext context) {
+        final String actualTableName;
+        if (tableName.hasHistoryTable()) {
+            actualTableName = tableName.getHistoryTableName().name(); // upper cased
+        } else {
+            actualTableName = tableName.getTableName();
+        }
+
+        // Lazy evaluate records to minimize the memory footprint (these can yield a lot of results)
+        // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
+        // Since we want to stream the results out, we don't want to auto-commit when this method returns.
+        final EntitySqlDao auditSqlDao = transactionalSqlDao.onDemand(EntitySqlDao.class);
+        final Iterator<AuditLogModelDao> auditLogsForTableNameAndAccountRecordId = auditSqlDao.getAuditLogsForTableNameAndAccountRecordId(actualTableName, context);
+        final Iterator<AuditLog> allAuditLogs = buildAuditLogsFromModelDao(auditLogsForTableNameAndAccountRecordId, context);
+
+        return new DefaultAccountAuditLogsForObjectType(auditLevel, allAuditLogs);
+    }
+
+    private Iterator<AuditLog> buildAuditLogsFromModelDao(final Iterator<AuditLogModelDao> auditLogsForAccountRecordId, final InternalTenantContext tenantContext) {
+        final Map<TableName, Map<Long, UUID>> recordIdIdsCache = new HashMap<TableName, Map<Long, UUID>>();
+        final Map<TableName, Map<Long, UUID>> historyRecordIdIdsCache = new HashMap<TableName, Map<Long, UUID>>();
+        return Iterators.<AuditLogModelDao, AuditLog>transform(auditLogsForAccountRecordId,
+                                                               new Function<AuditLogModelDao, AuditLog>() {
+                                                                   @Override
+                                                                   public AuditLog apply(final AuditLogModelDao input) {
+                                                                       // If input is for e.g. TAG_DEFINITION_HISTORY, retrieve TAG_DEFINITIONS
+                                                                       // For tables without history, e.g. TENANT, originalTableNameForHistoryTableName will be null
+                                                                       final TableName originalTableNameForHistoryTableName = findTableNameForHistoryTableName(input.getTableName());
+
+                                                                       final ObjectType objectType;
+                                                                       final UUID auditedEntityId;
+                                                                       if (originalTableNameForHistoryTableName != null) {
+                                                                           // input point to a history entry
+                                                                           objectType = originalTableNameForHistoryTableName.getObjectType();
+
+                                                                           if (historyRecordIdIdsCache.get(originalTableNameForHistoryTableName) == null) {
+                                                                               if (TableName.ACCOUNT.equals(originalTableNameForHistoryTableName)) {
+                                                                                   final Iterable<RecordIdIdMappings> mappings = nonEntitySqlDao.getHistoryRecordIdIdMappingsForAccountsTable(originalTableNameForHistoryTableName.getTableName(),
+                                                                                                                                                                                              input.getTableName().getTableName(),
+                                                                                                                                                                                              tenantContext);
+                                                                                   historyRecordIdIdsCache.put(originalTableNameForHistoryTableName, RecordIdIdMappings.toMap(mappings));
+                                                                               } else if (TableName.TAG_DEFINITIONS.equals(originalTableNameForHistoryTableName)) {
+                                                                                   final Iterable<RecordIdIdMappings> mappings = nonEntitySqlDao.getHistoryRecordIdIdMappingsForTablesWithoutAccountRecordId(originalTableNameForHistoryTableName.getTableName(),
+                                                                                                                                                                                                             input.getTableName().getTableName(),
+                                                                                                                                                                                                             tenantContext);
+                                                                                   historyRecordIdIdsCache.put(originalTableNameForHistoryTableName, RecordIdIdMappings.toMap(mappings));
+                                                                               } else {
+                                                                                   final Iterable<RecordIdIdMappings> mappings = nonEntitySqlDao.getHistoryRecordIdIdMappings(originalTableNameForHistoryTableName.getTableName(),
+                                                                                                                                                                              input.getTableName().getTableName(),
+                                                                                                                                                                              tenantContext);
+                                                                                   historyRecordIdIdsCache.put(originalTableNameForHistoryTableName, RecordIdIdMappings.toMap(mappings));
+
+                                                                               }
+                                                                           }
+
+                                                                           auditedEntityId = historyRecordIdIdsCache.get(originalTableNameForHistoryTableName).get(input.getTargetRecordId());
+                                                                       } else {
+                                                                           objectType = input.getTableName().getObjectType();
+
+                                                                           if (recordIdIdsCache.get(input.getTableName()) == null) {
+                                                                               final Iterable<RecordIdIdMappings> mappings = nonEntitySqlDao.getRecordIdIdMappings(input.getTableName().getTableName(),
+                                                                                                                                                                   tenantContext);
+                                                                               recordIdIdsCache.put(input.getTableName(), RecordIdIdMappings.toMap(mappings));
+                                                                           }
+
+                                                                           auditedEntityId = recordIdIdsCache.get(input.getTableName()).get(input.getTargetRecordId());
+                                                                       }
+
+                                                                       return new DefaultAuditLog(input, objectType, auditedEntityId);
+                                                                   }
+
+                                                                   private TableName findTableNameForHistoryTableName(final TableName historyTableName) {
+                                                                       for (final TableName tableName : TableName.values()) {
+                                                                           if (historyTableName.equals(tableName.getHistoryTableName())) {
+                                                                               return tableName;
+                                                                           }
+                                                                       }
+
+                                                                       return null;
+                                                                   }
+                                                               });
     }
 
     @Override
@@ -64,7 +173,7 @@ public class DefaultAuditDao implements AuditDao {
         if (recordId == null) {
             return ImmutableList.<AuditLog>of();
         } else {
-            return getAuditLogsForRecordId(tableName, recordId, auditLevel, context);
+            return getAuditLogsForRecordId(tableName, objectId, recordId, auditLevel, context);
         }
     }
 
@@ -78,32 +187,44 @@ public class DefaultAuditDao implements AuditDao {
         final List<AuditLog> allAuditLogs = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AuditLog>>() {
             @Override
             public List<AuditLog> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsViaHistoryForTargetRecordId(historyTableName.name(),
-                                                                                                                     historyTableName.getTableName().toLowerCase(),
-                                                                                                                     targetRecordId,
-                                                                                                                     context);
+                final List<AuditLogModelDao> auditLogsViaHistoryForTargetRecordId = entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsViaHistoryForTargetRecordId(historyTableName.name(),
+                                                                                                                                                                                  historyTableName.getTableName().toLowerCase(),
+                                                                                                                                                                                  targetRecordId,
+                                                                                                                                                                                  context);
+                return buildAuditLogsFromModelDao(auditLogsViaHistoryForTargetRecordId, tableName.getObjectType(), objectId);
             }
         });
-        return buildAuditLogs(auditLevel, allAuditLogs);
+        return filterAuditLogs(auditLevel, allAuditLogs);
     }
 
-    private List<AuditLog> getAuditLogsForRecordId(final TableName tableName, final Long targetRecordId, final AuditLevel auditLevel, final InternalTenantContext context) {
+    private List<AuditLog> getAuditLogsForRecordId(final TableName tableName, final UUID auditedEntityId, final Long targetRecordId, final AuditLevel auditLevel, final InternalTenantContext context) {
         final List<AuditLog> allAuditLogs = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AuditLog>>() {
             @Override
             public List<AuditLog> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsForTargetRecordId(tableName.name(),
-                                                                                                           targetRecordId,
-                                                                                                           context);
+                final List<AuditLogModelDao> auditLogsForTargetRecordId = entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsForTargetRecordId(tableName.name(),
+                                                                                                                                                              targetRecordId,
+                                                                                                                                                              context);
+                return buildAuditLogsFromModelDao(auditLogsForTargetRecordId, tableName.getObjectType(), auditedEntityId);
             }
         });
-        return buildAuditLogs(auditLevel, allAuditLogs);
+        return filterAuditLogs(auditLevel, allAuditLogs);
     }
 
-    private List<AuditLog> buildAuditLogs(final AuditLevel auditLevel, final List<AuditLog> auditLogs) {
+    private List<AuditLog> buildAuditLogsFromModelDao(final List<AuditLogModelDao> auditLogsForAccountRecordId, final ObjectType objectType, final UUID auditedEntityId) {
+        return Lists.<AuditLogModelDao, AuditLog>transform(auditLogsForAccountRecordId,
+                                                           new Function<AuditLogModelDao, AuditLog>() {
+                                                               @Override
+                                                               public AuditLog apply(final AuditLogModelDao input) {
+                                                                   return new DefaultAuditLog(input, objectType, auditedEntityId);
+                                                               }
+                                                           });
+    }
+
+    private List<AuditLog> filterAuditLogs(final AuditLevel auditLevel, final List<AuditLog> auditLogs) {
         // TODO Do the filtering in the query
         if (AuditLevel.FULL.equals(auditLevel)) {
             return auditLogs;
-        } else if (AuditLevel.MINIMAL.equals(auditLevel) && auditLogs.size() > 0) {
+        } else if (AuditLevel.MINIMAL.equals(auditLevel) && !auditLogs.isEmpty()) {
             if (ChangeType.INSERT.equals(auditLogs.get(0).getChangeType())) {
                 return ImmutableList.<AuditLog>of(auditLogs.get(0));
             } else {

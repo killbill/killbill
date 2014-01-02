@@ -57,7 +57,7 @@ public class TestJrubyNotificationPlugin extends TestOSGIBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(4));
         assertTrue(busHandler.isCompleted(2 * DELAY));
 
-        final List<Tag> tags = tagUserApi.getTagsForAccount(account.getId(), callContext);
+        final List<Tag> tags = tagUserApi.getTagsForAccount(account.getId(), false, callContext);
         Assert.assertEquals(tags.size(), 1);
         //final Tag tag = tags.get(0);
     }

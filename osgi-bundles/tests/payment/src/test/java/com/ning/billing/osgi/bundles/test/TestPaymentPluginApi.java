@@ -53,6 +53,11 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
     public PaymentInfoPlugin processPayment(final UUID accountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
         return withRuntimeCheckForExceptions(new PaymentInfoPlugin() {
             @Override
+            public UUID getKbPaymentId() {
+                return kbPaymentId;
+            }
+
+            @Override
             public BigDecimal getAmount() {
                 return amount;
             }
@@ -105,6 +110,11 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
         final BigDecimal someAmount = new BigDecimal("12.45");
         return withRuntimeCheckForExceptions(new PaymentInfoPlugin() {
             @Override
+            public UUID getKbPaymentId() {
+                return kbPaymentId;
+            }
+
+            @Override
             public BigDecimal getAmount() {
                 return someAmount;
             }
@@ -149,6 +159,36 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
                 return null;
             }
         });
+    }
+
+    @Override
+    public Pagination<PaymentInfoPlugin> searchPayments(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return new Pagination<PaymentInfoPlugin>() {
+            @Override
+            public Long getCurrentOffset() {
+                return 0L;
+            }
+
+            @Override
+            public Long getNextOffset() {
+                return null;
+            }
+
+            @Override
+            public Long getMaxNbRecords() {
+                return 0L;
+            }
+
+            @Override
+            public Long getTotalNbRecords() {
+                return 0L;
+            }
+
+            @Override
+            public Iterator<PaymentInfoPlugin> iterator() {
+                return null;
+            }
+        };
     }
 
     @Override
@@ -258,7 +298,6 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
     @Override
     public void resetPaymentMethods(final UUID accountId, final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {
     }
-
 
     private <T> T withRuntimeCheckForExceptions(final T result) throws PaymentPluginApiException {
         if (paymentPluginApiExceptionOnNextCalls != null) {

@@ -82,6 +82,11 @@ public class InternalCallContextFactory {
         return new InternalTenantContext(tenantRecordId, accountRecordId);
     }
 
+    public InternalTenantContext createInternalTenantContext(final UUID accountId, final InternalTenantContext context) {
+        final Long tenantRecordId = context.getTenantRecordId();
+        final Long accountRecordId = getAccountRecordId(accountId, ObjectType.ACCOUNT);
+        return new InternalTenantContext(tenantRecordId, accountRecordId);
+    }
 
     /**
      * Crate an internal tenant callcontext from a tenant callcontext, and retrieving the account_record_id from another table

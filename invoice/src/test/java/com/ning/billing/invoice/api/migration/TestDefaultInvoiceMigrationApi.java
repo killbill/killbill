@@ -30,6 +30,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.Invoice;
@@ -70,7 +71,8 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
         Assert.assertNotNull(migrationInvoiceId);
         //Double check it was created and values are correct
 
-        final InvoiceModelDao invoice = invoiceDao.getById(migrationInvoiceId, internalCallContext);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, callContext);
+        final InvoiceModelDao invoice = invoiceDao.getById(migrationInvoiceId, internalTenantContext);
         Assert.assertNotNull(invoice);
 
         Assert.assertEquals(invoice.getAccountId(), accountId);
@@ -111,8 +113,9 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
     // ACCOUNT balance should reflect total of migration and non-migration invoices
     @Test(groups = "slow")
     public void testBalance() throws InvoiceApiException {
-        final InvoiceModelDao migrationInvoice = invoiceDao.getById(migrationInvoiceId, internalCallContext);
-        final InvoiceModelDao regularInvoice = invoiceDao.getById(regularInvoiceId, internalCallContext);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, callContext);
+        final InvoiceModelDao migrationInvoice = invoiceDao.getById(migrationInvoiceId, internalTenantContext);
+        final InvoiceModelDao regularInvoice = invoiceDao.getById(regularInvoiceId, internalTenantContext);
         final BigDecimal balanceOfAllInvoices = InvoiceModelDaoHelper.getBalance(migrationInvoice).add(InvoiceModelDaoHelper.getBalance(regularInvoice));
 
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);

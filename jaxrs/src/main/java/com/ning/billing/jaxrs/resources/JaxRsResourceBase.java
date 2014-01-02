@@ -17,8 +17,10 @@
 package com.ning.billing.jaxrs.resources;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
@@ -48,6 +50,7 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.audit.AccountAuditLogsForObjectType;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
@@ -98,14 +101,19 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return null;
     }
 
-    protected Response getTags(final UUID taggedObjectId, final AuditMode auditMode, final TenantContext context) throws TagDefinitionApiException {
-        final List<Tag> tags = tagUserApi.getTagsForObject(taggedObjectId, getObjectType(), context);
+    protected Response getTags(final UUID accountId, final UUID taggedObjectId, final AuditMode auditMode, final boolean includeDeleted, final TenantContext context) throws TagDefinitionApiException {
+        final List<Tag> tags = tagUserApi.getTagsForObject(taggedObjectId, getObjectType(), includeDeleted, context);
+        final AccountAuditLogsForObjectType tagsAuditLogs = auditUserApi.getAccountAuditLogs(accountId, ObjectType.TAG, auditMode.getLevel(), context);
 
+        final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<UUID, TagDefinition>();
         final Collection<TagJson> result = new LinkedList<TagJson>();
         for (final Tag tag : tags) {
-            final TagDefinition tagDefinition = tagUserApi.getTagDefinition(tag.getTagDefinitionId(), context);
-            // TODO PIERRE - Bulk API
-            final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tag.getId(), ObjectType.TAG, auditMode.getLevel(), context);
+            if (tagDefinitionsCache.get(tag.getTagDefinitionId()) == null) {
+                tagDefinitionsCache.put(tag.getTagDefinitionId(), tagUserApi.getTagDefinition(tag.getTagDefinitionId(), context));
+            }
+            final TagDefinition tagDefinition = tagDefinitionsCache.get(tag.getTagDefinitionId());
+
+            final List<AuditLog> auditLogs = tagsAuditLogs.getAuditLogs(tag.getId());
             result.add(new TagJson(tagDefinition, auditLogs));
         }
 
@@ -188,7 +196,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final DateTime inputDateTime = inputDate != null ? DATE_TIME_FORMATTER.parseDateTime(inputDate) : clock.getUTCNow();
         return toLocalDate(account, inputDateTime, context);
     }
-
 
     protected LocalDate toLocalDate(final Account account, final String inputDate, final TenantContext context) {
 
