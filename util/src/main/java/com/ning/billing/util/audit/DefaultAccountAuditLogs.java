@@ -101,6 +101,26 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
     }
 
     @Override
+    public List<AuditLog> getAuditLogsForBlockingState(final UUID blockingStateId) {
+        return getAuditLogs(ObjectType.BLOCKING_STATES).getAuditLogs(blockingStateId);
+    }
+
+    @Override
+    public List<AuditLog> getAuditLogsForInvoicePayment(final UUID invoicePaymentId) {
+        return getAuditLogs(ObjectType.INVOICE_PAYMENT).getAuditLogs(invoicePaymentId);
+    }
+
+    @Override
+    public List<AuditLog> getAuditLogsForTag(final UUID tagId) {
+        return getAuditLogs(ObjectType.TAG).getAuditLogs(tagId);
+    }
+
+    @Override
+    public List<AuditLog> getAuditLogsForCustomField(final UUID customFieldId) {
+        return getAuditLogs(ObjectType.CUSTOM_FIELD).getAuditLogs(customFieldId);
+    }
+
+    @Override
     public AccountAuditLogsForObjectType getAuditLogs(final ObjectType objectType) {
         if (auditLogsCache.get(objectType) == null) {
             auditLogsCache.put(objectType, new DefaultAccountAuditLogsForObjectType(auditLevel, new ObjectTypeFilter(objectType, accountAuditLogs.iterator())));
