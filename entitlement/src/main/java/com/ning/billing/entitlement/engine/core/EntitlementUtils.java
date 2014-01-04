@@ -34,6 +34,7 @@ import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.DefaultEntitlementService;
+import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.EventsStream;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
@@ -94,7 +95,7 @@ public class EntitlementUtils {
 
         final BlockingAggregator currentState = getBlockingStateFor(state.getBlockedId(), state.getType(), context);
         if (previousState != null && currentState != null) {
-            postBlockingTransitionEvent(state.getId(), state.getEffectiveDate(), state.getBlockedId(), state.getType(), previousState, currentState, context);
+            postBlockingTransitionEvent(state.getId(), state.getEffectiveDate(), state.getBlockedId(), state.getType(), state.getService(), previousState, currentState, context);
         }
     }
 
@@ -127,7 +128,7 @@ public class EntitlementUtils {
     }
 
     private void postBlockingTransitionEvent(final UUID blockingStateId, final DateTime effectiveDate, final UUID blockableId, final BlockingStateType type,
-                                             final BlockingAggregator previousState, final BlockingAggregator currentState,
+                                             final String serviceName, final BlockingAggregator previousState, final BlockingAggregator currentState,
                                              final InternalCallContext context) {
         final boolean isTransitionToBlockedBilling = !previousState.isBlockBilling() && currentState.isBlockBilling();
         final boolean isTransitionToUnblockedBilling = previousState.isBlockBilling() && !currentState.isBlockBilling();
@@ -143,12 +144,18 @@ public class EntitlementUtils {
             recordFutureNotification(effectiveDate, notificationEvent, context);
         } else {
             // TODO Do we want to send a DefaultEffectiveEntitlementEvent for entitlement specific blocking states?
-            final BusEvent event = new DefaultBlockingTransitionInternalEvent(blockableId, type,
-                                                                              isTransitionToBlockedBilling, isTransitionToUnblockedBilling,
-                                                                              isTransitionToBlockedEntitlement, isTransitionToUnblockedEntitlement,
-                                                                              context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
 
-            postBusEvent(event);
+            // Don't post if nothing has changed for entitlement-service
+           if (! serviceName.equals(EntitlementService.ENTITLEMENT_SERVICE_NAME) || ! previousState.equals(currentState)) {
+                final BusEvent event = new DefaultBlockingTransitionInternalEvent(blockableId, type,
+                                                                                  isTransitionToBlockedBilling, isTransitionToUnblockedBilling,
+                                                                                  isTransitionToBlockedEntitlement, isTransitionToUnblockedEntitlement,
+                                                                                  context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+                postBusEvent(event);
+           } else {
+               System.out.println("**********   SKIPPING EVENT ");
+           }
+
         }
     }
 

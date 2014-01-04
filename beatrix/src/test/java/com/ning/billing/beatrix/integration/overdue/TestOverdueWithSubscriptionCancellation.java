@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
+import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
@@ -74,22 +75,37 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
 
-        // DAY 30 have to get out of trial before first payment
-        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        final DefaultEntitlement addOn1 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Holster", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
 
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        final DefaultEntitlement addOn2 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Holster", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+
+        // Cancel addOn1 one day after
+        clock.addDays(1);
+        cancelEntitlementAndCheckForCompletion(addOn1, clock.getUTCNow(), NextEvent.BLOCK, NextEvent.CANCEL);
+
+        // DAY 30 have to get out of trial before first payment
+        addDaysAndCheckForCompletion(29, NextEvent.PHASE,  NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
+
 
         // Should still be in clear state
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
+
         // DAY 36 -- RIGHT AFTER OD1 (two block events, for the cancellation and the OD1 state)
-        addDaysAndCheckForCompletion(6, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
+        // One BLOCK event is for the overdue state transition
+        // The 2 other BLOCK are for the entitlement blocking states for both base plan and addOn2
+        addDaysAndCheckForCompletion(6, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
 
         // Should be in OD1
         checkODState("OD1");
 
         final SubscriptionBase cancelledBaseSubscription = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext)).getSubscriptionBase();
         assertTrue(cancelledBaseSubscription.getState() == EntitlementState.CANCELLED);
+
+        final SubscriptionBase cancelledAddon1= ((DefaultEntitlement) entitlementApi.getEntitlementForId(addOn1.getId(), callContext)).getSubscriptionBase();
+        assertTrue(cancelledAddon1.getState() == EntitlementState.CANCELLED);
+
     }
 }

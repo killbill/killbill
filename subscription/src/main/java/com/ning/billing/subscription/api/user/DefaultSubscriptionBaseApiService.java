@@ -231,7 +231,9 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         dao.cancelSubscription(subscription, cancelEvent, internalCallContext, 0);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
 
-        cancelAddOnsIfRequired(subscription, effectiveDate, internalCallContext);
+        if (subscription.getCategory() == ProductCategory.BASE) {
+            cancelAddOnsIfRequired(subscription, effectiveDate, internalCallContext);
+        }
 
         final boolean isImmediate = subscription.getState() == EntitlementState.CANCELLED;
         return isImmediate;
@@ -384,7 +386,9 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         dao.changePlan(subscription, changeEvents, internalCallContext);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
 
-        cancelAddOnsIfRequired(subscription, effectiveDate, internalCallContext);
+        if (subscription.getCategory() == ProductCategory.BASE) {
+            cancelAddOnsIfRequired(subscription, effectiveDate, internalCallContext);
+        }
 
         final boolean isChangeImmediate = subscription.getCurrentPlan().getProduct().getName().equals(newProductName) &&
                                           subscription.getCurrentPlan().getBillingPeriod() == newBillingPeriod;

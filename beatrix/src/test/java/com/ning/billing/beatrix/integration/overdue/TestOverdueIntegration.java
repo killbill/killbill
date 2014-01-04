@@ -918,7 +918,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2012, 8, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
 
         // Fully adjust all invoices
-        final List<Invoice> invoicesToAdjust = ImmutableList.<Invoice>copyOf(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext));
+        final List<Invoice> invoicesToAdjust = getUnpaidInvoicesOrderFromRecent();
         for (int i = 0; i < invoicesToAdjust.size(); i++) {
             if (i == invoicesToAdjust.size() - 1) {
                 fullyAdjustInvoiceAndCheckForCompletion(account, invoicesToAdjust.get(i), NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
@@ -947,15 +947,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Upon paying the last invoice, the overdue system will clear the state and notify invoice that it should re-generate a new invoice
         // for the part hat was unblocked, which explains why on the last payment we expect an additional invoice and payment.
         //
-        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
-        // Sort in reverse order to first pay most recent invoice-- that way overdue state may only flip when we reach the last one.
-        final List<Invoice> sortedInvoices = new LinkedList<Invoice>(invoices);
-        Collections.sort(sortedInvoices, new Comparator<Invoice>() {
-            @Override
-            public int compare(final Invoice i1, final Invoice i2) {
-                return i2.getInvoiceDate().compareTo(i1.getInvoiceDate());
-            }
-        });
+        final List<Invoice> sortedInvoices = getUnpaidInvoicesOrderFromRecent();
 
         int remainingUnpaidInvoices = sortedInvoices.size();
         for (final Invoice invoice : sortedInvoices) {
@@ -969,6 +961,19 @@ public class TestOverdueIntegration extends TestOverdueBase {
             }
         }
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+    }
+
+    private List<Invoice> getUnpaidInvoicesOrderFromRecent() {
+        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+        // Sort in reverse order to first pay most recent invoice-- that way overdue state may only flip when we reach the last one.
+        final List<Invoice> sortedInvoices = new LinkedList<Invoice>(invoices);
+        Collections.sort(sortedInvoices, new Comparator<Invoice>() {
+            @Override
+            public int compare(final Invoice i1, final Invoice i2) {
+                return i2.getInvoiceDate().compareTo(i1.getInvoiceDate());
+            }
+        });
+        return sortedInvoices;
     }
 
     private void checkChangePlanWithOverdueState(final Entitlement entitlement, final boolean shouldFail, final boolean expectedPayment) {

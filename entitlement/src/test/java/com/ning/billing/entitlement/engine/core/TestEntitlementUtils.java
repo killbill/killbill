@@ -351,7 +351,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertEquals(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext).getEffectiveEndDate(), addOn1CancellationDate);
         Assert.assertEquals(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
 
-        testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK);
+        testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK);
         clock.setDay(new LocalDate(2013, 10, 30));
         assertListenerStatus();
 

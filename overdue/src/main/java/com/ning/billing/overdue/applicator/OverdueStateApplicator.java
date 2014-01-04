@@ -114,7 +114,6 @@ public class OverdueStateApplicator {
         this.bus = bus;
     }
 
-
     public void apply(final OverdueStateSet overdueStateSet, final BillingState billingState,
                       final Account account, final OverdueState previousOverdueState,
                       final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
@@ -169,7 +168,6 @@ public class OverdueStateApplicator {
             log.error("Error posting overdue change event to bus", e);
         }
     }
-
 
     public void clear(final Account overdueable, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
 
@@ -260,13 +258,17 @@ public class OverdueStateApplicator {
 
             final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
             for (final Entitlement cur : toBeCancelled) {
-                cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, context.toCallContext(tenantId));
+                try {
+                    cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, context.toCallContext(tenantId));
+                } catch (EntitlementApiException e) {
+                    // If subscription has already been cancelled, there is nothing to do so we can ignore
+                    if (e.getCode() != ErrorCode.SUB_CANCEL_BAD_STATE.getCode()) {
+                        throw new OverdueException(e);
+                    }
+                }
             }
         } catch (EntitlementApiException e) {
-            // If subscription has already been cancelled, there is nothing to do so we can ignore
-            if (e.getCode() != ErrorCode.SUB_CANCEL_BAD_STATE.getCode()) {
-                throw new OverdueException(e);
-            }
+            throw new OverdueException(e);
         }
     }
 
