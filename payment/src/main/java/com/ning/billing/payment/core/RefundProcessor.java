@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -46,8 +47,10 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultRefund;
 import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.payment.api.RefundStatus;
+import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
 import com.ning.billing.payment.dao.RefundModelDao;
@@ -55,6 +58,7 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.tag.TagInternalApi;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
@@ -156,6 +160,34 @@ public class RefundProcessor extends ProcessorBase {
                 }
             }
         });
+    }
+
+
+    public void notifyPendingRefundOfStateChanged(final Account account, final UUID refundId, final boolean isSuccess, final InternalCallContext context)
+            throws PaymentApiException {
+
+        new WithAccountLock<Void>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void>() {
+
+            @Override
+            public Void doOperation() throws PaymentApiException {
+                try {
+                    final RefundModelDao refund = paymentDao.getRefund(refundId, context);
+                    if (refund == null) {
+                        throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_REFUND, refundId);
+                    }
+                    if (refund.getRefundStatus() != RefundStatus.PENDING) {
+                        throw new PaymentApiException(ErrorCode.PAYMENT_NOT_PENDING, refundId);
+                    }
+
+                    // TODO STEPH : Model is broken if we had an invoice item adjustements as we lost track of them
+                    invoiceApi.createRefund(refund.getPaymentId(), refund.getAmount(), refund.isAdjusted(), Collections.<UUID, BigDecimal>emptyMap(), refund.getId(), context);
+                    paymentDao.updateRefundStatus(refund.getId(), RefundStatus.COMPLETED, refund.getAmount(), refund.getCurrency(), context);
+                } catch (InvoiceApiException e) {
+                }
+                return null;
+            }
+        });
+
     }
 
     /**
