@@ -132,8 +132,8 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public void notifyPendingRefundOfStateChanged(final Account account, final UUID refundId, final boolean isSuccess, final CallContext context) throws PaymentApiException {
-        return refundProcessor.notifyPendingRefundOfStateChanged(account, refundId, isSuccess,
-                                                                 internalCallContextFactory.createInternalCallContext(account.getId(), context);
+        refundProcessor.notifyPendingRefundOfStateChanged(account, refundId, isSuccess,
+                                                                 internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
