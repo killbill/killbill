@@ -191,6 +191,7 @@ public class InvoiceDispatcher {
 
             final LocalDate targetDate = dateAndTimeZoneContext != null ? dateAndTimeZoneContext.computeTargetDate(targetDateTime) : null;
             final Invoice invoice = targetDate != null ? generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency) : null;
+            boolean isRealInvoiceWithItems = false;
             if (invoice == null) {
                 log.info("Generated null invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
                 if (!dryRun) {
@@ -210,7 +211,7 @@ public class InvoiceDispatcher {
                             return input.getInvoiceId();
                         }
                     }));
-                    final boolean isRealInvoiceWithItems = adjustedUniqueOtherInvoiceId.remove(invoice.getId());
+                    isRealInvoiceWithItems = adjustedUniqueOtherInvoiceId.remove(invoice.getId());
 
                     if (isRealInvoiceWithItems) {
                         log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(),                                                                                                                                           accountId, targetDate, targetDateTime});
@@ -265,7 +266,7 @@ public class InvoiceDispatcher {
                 }
             }
 
-            if (account.isNotifiedForInvoices() && invoice != null && !dryRun) {
+            if (account.isNotifiedForInvoices() && isRealInvoiceWithItems  && !dryRun) {
                 // Need to re-hydrate the invoice object to get the invoice number (record id)
                 // API_FIX InvoiceNotifier public API?
                 invoiceNotifier.notify(account, new DefaultInvoice(invoiceDao.getById(invoice.getId(), context)), buildTenantContext(context));
