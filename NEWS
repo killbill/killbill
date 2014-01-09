@@ -1,5 +1,6 @@
 0.8.8
-    Update killbill-oss-parent to 0.5.14
+    Add APIs to retrieve all payments for a given tenant
+    Update killbill-oss-parent to 0.5.15
 
 0.8.7
     DDL: remove unused paid_through_date column

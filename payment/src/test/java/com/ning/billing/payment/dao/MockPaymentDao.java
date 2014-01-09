@@ -108,6 +108,11 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
+    public Pagination<PaymentModelDao> getPayments(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public PaymentModelDao getPayment(final UUID paymentId, final InternalTenantContext context) {
         return payments.get(paymentId);
     }
@@ -186,12 +191,10 @@ public class MockPaymentDao implements PaymentDao {
         return null;
     }
 
-
     @Override
     public void updateRefundStatus(final UUID refundId, final RefundStatus status, final BigDecimal processedAmount, final Currency processedCurrency, final InternalCallContext context) {
         return;
     }
-
 
     @Override
     public RefundModelDao getRefund(final UUID refundId, final InternalTenantContext context) {

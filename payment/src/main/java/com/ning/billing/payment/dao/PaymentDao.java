@@ -45,6 +45,8 @@ public interface PaymentDao {
 
     public PaymentModelDao getLastPaymentForPaymentMethod(UUID accountId, UUID paymentMethodId, InternalTenantContext context);
 
+    public Pagination<PaymentModelDao> getPayments(String pluginName, Long offset, Long limit, InternalTenantContext context);
+
     public PaymentModelDao getPayment(UUID paymentId, InternalTenantContext context);
 
     public List<PaymentAttemptModelDao> getAttemptsForPayment(UUID paymentId, InternalTenantContext context);

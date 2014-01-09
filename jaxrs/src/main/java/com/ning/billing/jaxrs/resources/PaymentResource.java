@@ -16,7 +16,10 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,8 +38,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
 import com.ning.billing.ObjectType;
@@ -66,9 +71,13 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.entity.Pagination;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Function;
+import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -128,6 +137,76 @@ public class PaymentResource extends JaxRsResourceBase {
         }
 
         return Response.status(Status.OK).entity(paymentJson).build();
+    }
+
+    @GET
+    @Path("/" + PAGINATION)
+    @Produces(APPLICATION_JSON)
+    public Response getPayments(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
+        final Pagination<Payment> payments;
+        final Map<String, String> nextUriParams = new HashMap<String, String>();
+        if (Strings.isNullOrEmpty(pluginName)) {
+            payments = paymentApi.getPayments(offset, limit, tenantContext);
+        } else {
+            payments = paymentApi.getPayments(offset, limit, pluginName, tenantContext);
+            nextUriParams.put(QUERY_PAYMENT_PLUGIN_NAME, pluginName);
+        }
+
+        final URI nextPageUri = uriBuilder.nextPage(PaymentResource.class, "getPayments", payments.getNextOffset(), limit, nextUriParams);
+        return buildStreamingPaymentsResponse(payments, nextPageUri);
+    }
+
+    @GET
+    @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public Response searchPayments(@PathParam("searchKey") final String searchKey,
+                                   @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                   @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                   @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
+        // Search the plugin(s)
+        final Pagination<Payment> payments;
+        if (Strings.isNullOrEmpty(pluginName)) {
+            payments = paymentApi.searchPayments(searchKey, offset, limit, tenantContext);
+        } else {
+            payments = paymentApi.searchPayments(searchKey, offset, limit, pluginName, tenantContext);
+        }
+
+        final URI nextPageUri = uriBuilder.nextPage(PaymentResource.class, "searchPayments", payments.getNextOffset(), limit, ImmutableMap.<String, String>of());
+        return buildStreamingPaymentsResponse(payments, nextPageUri);
+    }
+
+    private Response buildStreamingPaymentsResponse(final Pagination<Payment> payments, final URI nextPageUri) {
+        final StreamingOutput json = new StreamingOutput() {
+            @Override
+            public void write(final OutputStream output) throws IOException, WebApplicationException {
+                final JsonGenerator generator = mapper.getFactory().createJsonGenerator(output);
+                generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+
+                generator.writeStartArray();
+                for (final Payment payment : payments) {
+                    final PaymentJson asJson = new PaymentJson(payment, null);
+                    generator.writeObject(asJson);
+                }
+                generator.writeEndArray();
+                generator.close();
+            }
+        };
+        return Response.status(Status.OK)
+                       .entity(json)
+                       .header(HDR_PAGINATION_CURRENT_OFFSET, payments.getCurrentOffset())
+                       .header(HDR_PAGINATION_NEXT_OFFSET, payments.getNextOffset())
+                       .header(HDR_PAGINATION_TOTAL_NB_RECORDS, payments.getTotalNbRecords())
+                       .header(HDR_PAGINATION_MAX_NB_RECORDS, payments.getMaxNbRecords())
+                       .header(HDR_PAGINATION_NEXT_PAGE_URI, nextPageUri)
+                       .build();
     }
 
     @PUT

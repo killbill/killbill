@@ -104,4 +104,14 @@ where id = :id
 ;
 >>
 
-
+getByPluginName(pluginName, offset, rowCount) ::= <<
+select SQL_CALC_FOUND_ROWS
+<allTableFields("t.")>
+from <tableName()> t
+join payment_methods pm on pm.id = t.payment_method_id
+where pm.plugin_name = :pluginName
+and pm.is_active = 1
+order by record_id
+limit :offset, :rowCount
+;
+>>

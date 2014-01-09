@@ -87,6 +87,16 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
+    public Pagination<Payment> getPayments(final Long offset, final Long limit, final TenantContext context) {
+        return paymentProcessor.getPayments(offset, limit, context, internalCallContextFactory.createInternalTenantContext(context));
+    }
+
+    @Override
+    public Pagination<Payment> getPayments(final Long offset, final Long limit, final String pluginName, final TenantContext tenantContext) throws PaymentApiException {
+        return paymentProcessor.getPayments(offset, limit, pluginName, tenantContext, internalCallContextFactory.createInternalTenantContext(tenantContext));
+    }
+
+    @Override
     public Payment getPayment(final UUID paymentId, final boolean withPluginInfo, final TenantContext context) throws PaymentApiException {
         final Payment payment = paymentProcessor.getPayment(paymentId, withPluginInfo, internalCallContextFactory.createInternalTenantContext(context));
         if (payment == null) {
@@ -133,7 +143,7 @@ public class DefaultPaymentApi implements PaymentApi {
     @Override
     public void notifyPendingRefundOfStateChanged(final Account account, final UUID refundId, final boolean isSuccess, final CallContext context) throws PaymentApiException {
         refundProcessor.notifyPendingRefundOfStateChanged(account, refundId, isSuccess,
-                                                                 internalCallContextFactory.createInternalCallContext(account.getId(), context));
+                                                          internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
