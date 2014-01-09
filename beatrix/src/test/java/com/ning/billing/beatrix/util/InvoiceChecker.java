@@ -132,12 +132,15 @@ public class InvoiceChecker {
             if (expectedLocalCTD == null) {
                 assertNull(subscription.getChargedThroughDate());
             } else {
+                assertTrue(expectedLocalCTD.compareTo(subscription.getChargedThroughDate().toLocalDate()) == 0);
+                /*
                 final DateTime expectedCTD = expectedLocalCTD.toDateTime(new LocalTime(subscription.getStartDate().getMillis(), DateTimeZone.UTC), DateTimeZone.UTC);
                 final String msg = String.format("Checking CTD for entitlement %s : expectedLocalCTD = %s => expectedCTD = %s, got %s",
                                                  entitlementId, expectedLocalCTD, expectedCTD, subscription.getChargedThroughDate());
                 log.info(msg);
                 assertNotNull(subscription.getChargedThroughDate());
                 assertTrue(subscription.getChargedThroughDate().compareTo(expectedCTD) == 0, msg);
+                */
             }
         } catch (EntitlementApiException e) {
             fail("Failed to retrieve entitlement for " + entitlementId);

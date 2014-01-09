@@ -47,6 +47,7 @@
             <available>
                 <addonProduct>Telescopic-Scope</addonProduct>
                 <addonProduct>Laser-Scope</addonProduct>
+                <addonProduct>Holster</addonProduct>
             </available>
         </product>
         <product name="Assault-Rifle">
@@ -722,7 +723,7 @@
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>ANNUAL</billingPeriod>
+                <billingPeriod>MONTHLY</billingPeriod>
                 <recurringPrice>
                     <price>
                         <currency>USD</currency>

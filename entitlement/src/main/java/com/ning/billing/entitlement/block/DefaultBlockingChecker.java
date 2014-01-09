@@ -77,6 +77,38 @@ public class DefaultBlockingChecker implements BlockingChecker {
         public boolean isBlockBilling() {
             return blockBilling;
         }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof DefaultBlockingAggregator)) {
+                return false;
+            }
+
+            final DefaultBlockingAggregator that = (DefaultBlockingAggregator) o;
+
+            if (blockBilling != that.blockBilling) {
+                return false;
+            }
+            if (blockChange != that.blockChange) {
+                return false;
+            }
+            if (blockEntitlement != that.blockEntitlement) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = (blockChange ? 1 : 0);
+            result = 31 * result + (blockEntitlement ? 1 : 0);
+            result = 31 * result + (blockBilling ? 1 : 0);
+            return result;
+        }
     }
 
     private final SubscriptionBaseInternalApi subscriptionApi;
