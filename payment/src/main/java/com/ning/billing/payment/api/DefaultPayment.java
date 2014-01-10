@@ -18,6 +18,7 @@ package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -47,18 +48,15 @@ public class DefaultPayment extends EntityBase implements Payment {
     private final DateTime effectiveDate;
     private final Integer paymentNumber;
     private final PaymentStatus paymentStatus;
-    private final String extFirstPaymentIdRef;
-    private final String extSecondPaymentIdRef;
     private final List<PaymentAttempt> attempts;
     private final PaymentInfoPlugin paymentPluginInfo;
 
     private DefaultPayment(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId, final UUID invoiceId,
                            final UUID paymentMethodId, final BigDecimal amount, final BigDecimal paidAmount, final Currency currency,
                            final DateTime effectiveDate, final Integer paymentNumber,
-                           final PaymentStatus paymentStatus, final String paymentError,
-                           final PaymentInfoPlugin paymentPluginInfo,
-                           final String extFirstPaymentIdRef,
-                           final String extSecondPaymentIdRef, final List<PaymentAttempt> attempts) {
+                           final PaymentStatus paymentStatus,
+                           @Nullable final PaymentInfoPlugin paymentPluginInfo,
+                           final List<PaymentAttempt> attempts) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -69,13 +67,11 @@ public class DefaultPayment extends EntityBase implements Payment {
         this.effectiveDate = effectiveDate;
         this.paymentNumber = paymentNumber;
         this.paymentStatus = paymentStatus;
-        this.extFirstPaymentIdRef = extFirstPaymentIdRef;
-        this.extSecondPaymentIdRef = extSecondPaymentIdRef;
         this.attempts = attempts;
         this.paymentPluginInfo = paymentPluginInfo;
     }
 
-    public DefaultPayment(final PaymentModelDao src, final PaymentInfoPlugin paymentPluginInfo, final List<PaymentAttemptModelDao> attempts, final List<RefundModelDao> refunds) {
+    public DefaultPayment(final PaymentModelDao src, @Nullable final PaymentInfoPlugin paymentPluginInfo, final List<PaymentAttemptModelDao> attempts, final List<RefundModelDao> refunds) {
         this(src.getId(),
              src.getCreatedDate(),
              src.getUpdatedDate(),
@@ -88,10 +84,7 @@ public class DefaultPayment extends EntityBase implements Payment {
              src.getEffectiveDate(),
              src.getPaymentNumber(),
              src.getPaymentStatus(),
-             null,
              paymentPluginInfo,
-             src.getExtFirstPaymentRefId(),
-             src.getExtSecondPaymentRefId(),
              toPaymentAttempts(attempts));
     }
 
@@ -150,14 +143,13 @@ public class DefaultPayment extends EntityBase implements Payment {
         return attempts;
     }
 
-    private final static BigDecimal toPaidAmount(final PaymentStatus paymentStatus, final BigDecimal amount, final List<RefundModelDao> refunds) {
-
+    private static BigDecimal toPaidAmount(final PaymentStatus paymentStatus, final BigDecimal amount, final Iterable<RefundModelDao> refunds) {
         if (paymentStatus != PaymentStatus.SUCCESS) {
             return BigDecimal.ZERO;
         }
 
         BigDecimal result = amount;
-        for (RefundModelDao cur : refunds) {
+        for (final RefundModelDao cur : refunds) {
             if (cur.getRefundStatus() == RefundStatus.COMPLETED) {
                 result = result.subtract(cur.getAmount());
             }
@@ -165,10 +157,11 @@ public class DefaultPayment extends EntityBase implements Payment {
         return result;
     }
 
-    private static List<PaymentAttempt> toPaymentAttempts(final List<PaymentAttemptModelDao> attempts) {
-        if (attempts == null || attempts.size() == 0) {
+    private static List<PaymentAttempt> toPaymentAttempts(final Collection<PaymentAttemptModelDao> attempts) {
+        if (attempts == null || attempts.isEmpty()) {
             return Collections.emptyList();
         }
+
         return new ArrayList<PaymentAttempt>(Collections2.transform(attempts, new Function<PaymentAttemptModelDao, PaymentAttempt>() {
             @Override
             public PaymentAttempt apply(final PaymentAttemptModelDao input) {

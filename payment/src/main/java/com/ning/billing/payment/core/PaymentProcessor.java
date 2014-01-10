@@ -194,18 +194,16 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                                       new Function<PaymentModelDao, Payment>() {
                                                                                                                           @Override
                                                                                                                           public Payment apply(final PaymentModelDao paymentModelDao) {
-                                                                                                                              final PaymentInfoPlugin pluginInfo;
+                                                                                                                              PaymentInfoPlugin pluginInfo = null;
                                                                                                                               try {
                                                                                                                                   pluginInfo = pluginApi.getPaymentInfo(paymentModelDao.getAccountId(), paymentModelDao.getId(), tenantContext);
+                                                                                                                                  if (pluginInfo.getKbPaymentId() == null) {
+                                                                                                                                      // Garbage from the plugin?
+                                                                                                                                      log.debug("Plugin {} returned a payment without a kbPaymentId", pluginName);
+                                                                                                                                      pluginInfo = null;
+                                                                                                                                  }
                                                                                                                               } catch (final PaymentPluginApiException e) {
                                                                                                                                   log.warn("Unable to find payment  id " + paymentModelDao.getId() + " in plugin " + pluginName);
-                                                                                                                                  return null;
-                                                                                                                              }
-
-                                                                                                                              if (pluginInfo.getKbPaymentId() == null) {
-                                                                                                                                  // Garbage from the plugin?
-                                                                                                                                  log.debug("Plugin {} returned a payment without a kbPaymentId", pluginName);
-                                                                                                                                  return null;
                                                                                                                               }
 
                                                                                                                               return fromPaymentModelDao(paymentModelDao, pluginInfo, internalTenantContext);
@@ -301,7 +299,7 @@ public class PaymentProcessor extends ProcessorBase {
         return result;
     }
 
-    private Payment fromPaymentModelDao(final PaymentModelDao input, final PaymentInfoPlugin pluginInfo, final InternalTenantContext context) {
+    private Payment fromPaymentModelDao(final PaymentModelDao input, @Nullable final PaymentInfoPlugin pluginInfo, final InternalTenantContext context) {
         final List<PaymentAttemptModelDao> attempts = paymentDao.getAttemptsForPayment(input.getId(), context);
         final List<RefundModelDao> refunds = paymentDao.getRefundsForPayment(input.getId(), context);
         final Payment payment = new DefaultPayment(input, pluginInfo, attempts, refunds);

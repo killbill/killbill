@@ -33,7 +33,7 @@ public class DefaultPaymentMethod extends EntityBase implements PaymentMethod {
     private final PaymentMethodPlugin pluginDetail;
 
     public DefaultPaymentMethod(final UUID paymentMethodId, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
-                                final UUID accountId, final Boolean isActive, final String pluginName, final PaymentMethodPlugin pluginDetail) {
+                                final UUID accountId, final Boolean isActive, final String pluginName, @Nullable final PaymentMethodPlugin pluginDetail) {
         super(paymentMethodId, createdDate, updatedDate);
         this.accountId = accountId;
         this.isActive = isActive;
@@ -49,7 +49,7 @@ public class DefaultPaymentMethod extends EntityBase implements PaymentMethod {
         this(paymentMethodId, null, null, accountId, true, pluginName, null);
     }
 
-    public DefaultPaymentMethod(final PaymentMethodModelDao input, final PaymentMethodPlugin pluginDetail) {
+    public DefaultPaymentMethod(final PaymentMethodModelDao input, @Nullable final PaymentMethodPlugin pluginDetail) {
         this(input.getId(), input.getCreatedDate(), input.getUpdatedDate(), input.getAccountId(), input.isActive(), input.getPluginName(), pluginDetail);
     }
 

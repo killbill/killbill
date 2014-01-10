@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
@@ -202,18 +201,16 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                                                               new Function<PaymentMethodModelDao, PaymentMethod>() {
                                                                                                                                                   @Override
                                                                                                                                                   public PaymentMethod apply(final PaymentMethodModelDao paymentMethodModelDao) {
-                                                                                                                                                      final PaymentMethodPlugin paymentMethodPlugin;
+                                                                                                                                                      PaymentMethodPlugin paymentMethodPlugin = null;
                                                                                                                                                       try {
                                                                                                                                                           paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), tenantContext);
+                                                                                                                                                          if (paymentMethodPlugin.getKbPaymentMethodId() == null) {
+                                                                                                                                                              // Garbage from the plugin?
+                                                                                                                                                              log.debug("Plugin {} returned a payment method without a kbPaymentMethodId", pluginName);
+                                                                                                                                                              paymentMethodPlugin = null;
+                                                                                                                                                          }
                                                                                                                                                       } catch (PaymentPluginApiException e) {
                                                                                                                                                           log.warn("Unable to find payment method id " + paymentMethodModelDao.getId() + " in plugin " + pluginName);
-                                                                                                                                                          return null;
-                                                                                                                                                      }
-
-                                                                                                                                                      if (paymentMethodPlugin.getKbPaymentMethodId() == null) {
-                                                                                                                                                          // Garbage from the plugin?
-                                                                                                                                                          log.debug("Plugin {} returned a payment method without a kbPaymentMethodId", pluginName);
-                                                                                                                                                          return null;
                                                                                                                                                       }
 
                                                                                                                                                       return new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin);
