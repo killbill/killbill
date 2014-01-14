@@ -122,7 +122,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
             subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, callContext);
             Assert.fail("Expected getActiveSubscriptionBundleForExternalKey to fail after cancellation");
         } catch (SubscriptionApiException e) {
-            assertEquals(e.getCode(), ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode());
+            assertEquals(e.getCode(), ErrorCode.SUB_GET_INVALID_BUNDLE_KEY.getCode());
 
         }
 
