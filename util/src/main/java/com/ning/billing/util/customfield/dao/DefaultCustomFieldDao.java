@@ -96,6 +96,18 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
     }
 
     @Override
+    public void deleteCustomField(final UUID customFieldId, final InternalCallContext context) throws CustomFieldApiException {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class).markTagAsDeleted(customFieldId.toString(), context);
+                return null;
+            }
+        });
+
+    }
+
+    @Override
     protected CustomFieldApiException generateAlreadyExistsException(final CustomFieldModelDao entity, final InternalCallContext context) {
         return new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_ALREADY_EXISTS, entity.getId());
     }

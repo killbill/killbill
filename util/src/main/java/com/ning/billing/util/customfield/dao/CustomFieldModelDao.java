@@ -32,6 +32,8 @@ public class CustomFieldModelDao extends EntityBase implements EntityModelDao<Cu
     private String fieldValue;
     private UUID objectId;
     private ObjectType objectType;
+    private Boolean isActive;
+
 
     public CustomFieldModelDao() {  /* For the DAO mapper */ }
 
@@ -42,6 +44,7 @@ public class CustomFieldModelDao extends EntityBase implements EntityModelDao<Cu
         this.fieldValue = fieldValue;
         this.objectId = objectId;
         this.objectType = objectType;
+        this.isActive = true;
     }
 
     public CustomFieldModelDao(final CustomField customField) {
@@ -81,6 +84,14 @@ public class CustomFieldModelDao extends EntityBase implements EntityModelDao<Cu
         this.objectType = objectType;
     }
 
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(final Boolean isActive) {
+        this.isActive = isActive;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -89,6 +100,7 @@ public class CustomFieldModelDao extends EntityBase implements EntityModelDao<Cu
         sb.append(", fieldValue='").append(fieldValue).append('\'');
         sb.append(", objectId=").append(objectId);
         sb.append(", objectType=").append(objectType);
+        sb.append(", isActive=").append(isActive);
         sb.append('}');
         return sb.toString();
     }
@@ -119,6 +131,9 @@ public class CustomFieldModelDao extends EntityBase implements EntityModelDao<Cu
         if (objectType != that.objectType) {
             return false;
         }
+        if (isActive != null ? !isActive.equals(that.isActive) : that.isActive != null) {
+            return false;
+        }
 
         return true;
     }
@@ -130,6 +145,7 @@ public class CustomFieldModelDao extends EntityBase implements EntityModelDao<Cu
         result = 31 * result + (fieldValue != null ? fieldValue.hashCode() : 0);
         result = 31 * result + (objectId != null ? objectId.hashCode() : 0);
         result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
+        result = 31 * result + (isActive != null ? isActive.hashCode() : 0);
         return result;
     }
 

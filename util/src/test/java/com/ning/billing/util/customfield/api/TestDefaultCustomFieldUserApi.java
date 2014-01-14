@@ -72,5 +72,9 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
                 return null;
             }
         });
+
+        customFieldUserApi.removeCustomFields(customFields, callContext);
+        final List<CustomField> remainingCustomFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
+        Assert.assertEquals(remainingCustomFields.size(), 0);
     }
 }

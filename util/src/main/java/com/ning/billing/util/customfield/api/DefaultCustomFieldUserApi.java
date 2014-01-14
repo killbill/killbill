@@ -47,10 +47,18 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     }
 
     @Override
-    public void addCustomFields(final List<CustomField> fields, final CallContext context) throws CustomFieldApiException {
+    public void addCustomFields(final List<CustomField> customFields, final CallContext context) throws CustomFieldApiException {
         // TODO make it transactional
-        for (final CustomField cur : fields) {
+        for (final CustomField cur : customFields) {
             customFieldDao.create(new CustomFieldModelDao(cur), internalCallContextFactory.createInternalCallContext(cur.getObjectId(), cur.getObjectType(), context));
+        }
+    }
+
+    @Override
+    public void removeCustomFields(final List<CustomField> customFields, final CallContext context) throws CustomFieldApiException {
+        // TODO make it transactional
+        for (final CustomField cur : customFields) {
+            customFieldDao.deleteCustomField(cur.getId(), internalCallContextFactory.createInternalCallContext(cur.getObjectId(), cur.getObjectType(), context));
         }
     }
 
