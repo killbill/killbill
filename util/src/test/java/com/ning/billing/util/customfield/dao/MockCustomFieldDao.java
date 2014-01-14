@@ -24,6 +24,7 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.entity.Pagination;
 import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 
 public class MockCustomFieldDao extends MockEntityDaoBase<CustomFieldModelDao, CustomField, CustomFieldApiException> implements CustomFieldDao {
@@ -47,6 +48,11 @@ public class MockCustomFieldDao extends MockEntityDaoBase<CustomFieldModelDao, C
 
     @Override
     public List<CustomFieldModelDao> getCustomFieldsForAccount(final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Pagination<CustomFieldModelDao> searchCustomFields(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
 }

@@ -16,12 +16,11 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -32,10 +31,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
@@ -51,11 +48,12 @@ import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.audit.AccountAuditLogs;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.entity.Pagination;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -103,20 +101,48 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     public Response getPaymentMethods(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                       @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                       @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_NAME) final String pluginName,
+                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final Pagination<PaymentMethod> paymentMethods;
-        final Map<String, String> nextUriParams = new HashMap<String, String>();
         if (Strings.isNullOrEmpty(pluginName)) {
             paymentMethods = paymentApi.getPaymentMethods(offset, limit, tenantContext);
         } else {
             paymentMethods = paymentApi.getPaymentMethods(offset, limit, pluginName, tenantContext);
-            nextUriParams.put(QUERY_PAYMENT_METHOD_PLUGIN_NAME, pluginName);
         }
 
-        final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "getPaymentMethods", paymentMethods.getNextOffset(), limit, nextUriParams);
-        return buildStreamingPaymentMethodsResponse(paymentMethods, nextPageUri, tenantContext);
+        final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "getPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
+                                                                                                                                                                             QUERY_AUDIT, auditMode.toString()));
+
+        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
+        final Map<UUID, Account> accounts = new HashMap<UUID, Account>();
+        return buildStreamingPaginationResponse(paymentMethods,
+                                                new Function<PaymentMethod, PaymentMethodJson>() {
+                                                    @Override
+                                                    public PaymentMethodJson apply(final PaymentMethod paymentMethod) {
+                                                        // Cache audit logs per account
+                                                        if (accountsAuditLogs.get().get(paymentMethod.getAccountId()) == null) {
+                                                            accountsAuditLogs.get().put(paymentMethod.getAccountId(), auditUserApi.getAccountAuditLogs(paymentMethod.getAccountId(), auditMode.getLevel(), tenantContext));
+                                                        }
+
+                                                        // Lookup the associated account(s)
+                                                        if (accounts.get(paymentMethod.getAccountId()) == null) {
+                                                            final Account account;
+                                                            try {
+                                                                account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
+                                                                accounts.put(paymentMethod.getAccountId(), account);
+                                                            } catch (final AccountApiException e) {
+                                                                log.warn("Unable to retrieve account", e);
+                                                                return null;
+                                                            }
+                                                        }
+
+                                                        // TODO populate audit logs
+                                                        return PaymentMethodJson.toPaymentMethodJson(accounts.get(paymentMethod.getAccountId()), paymentMethod);
+                                                    }
+                                                },
+                                                nextPageUri);
     }
 
     @GET
@@ -126,6 +152,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                          @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                          @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                          @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_NAME) final String pluginName,
+                                         @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
 
@@ -137,47 +164,38 @@ public class PaymentMethodResource extends JaxRsResourceBase {
             paymentMethods = paymentApi.searchPaymentMethods(searchKey, offset, limit, pluginName, tenantContext);
         }
 
-        final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "searchPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of());
-        return buildStreamingPaymentMethodsResponse(paymentMethods, nextPageUri, tenantContext);
-    }
+        final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "searchPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
+                                                                                                                                                                                QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
+                                                                                                                                                                                QUERY_AUDIT, auditMode.toString()));
 
-    private Response buildStreamingPaymentMethodsResponse(final Pagination<PaymentMethod> paymentMethods, final URI nextPageUri, final TenantContext tenantContext) {
+        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
         final Map<UUID, Account> accounts = new HashMap<UUID, Account>();
-        final StreamingOutput json = new StreamingOutput() {
-            @Override
-            public void write(final OutputStream output) throws IOException, WebApplicationException {
-                final JsonGenerator generator = mapper.getFactory().createJsonGenerator(output);
-                generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+        return buildStreamingPaginationResponse(paymentMethods,
+                                                new Function<PaymentMethod, PaymentMethodJson>() {
+                                                    @Override
+                                                    public PaymentMethodJson apply(final PaymentMethod paymentMethod) {
+                                                        // Cache audit logs per account
+                                                        if (accountsAuditLogs.get().get(paymentMethod.getAccountId()) == null) {
+                                                            accountsAuditLogs.get().put(paymentMethod.getAccountId(), auditUserApi.getAccountAuditLogs(paymentMethod.getAccountId(), auditMode.getLevel(), tenantContext));
+                                                        }
 
-                generator.writeStartArray();
-                for (final PaymentMethod paymentMethod : paymentMethods) {
-                    // Lookup the associated account(s)
-                    if (accounts.get(paymentMethod.getAccountId()) == null) {
-                        final Account account;
-                        try {
-                            account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
-                            accounts.put(paymentMethod.getAccountId(), account);
-                        } catch (AccountApiException e) {
-                            log.warn("Unable to retrieve account", e);
-                            continue;
-                        }
-                    }
+                                                        // Lookup the associated account(s)
+                                                        if (accounts.get(paymentMethod.getAccountId()) == null) {
+                                                            final Account account;
+                                                            try {
+                                                                account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
+                                                                accounts.put(paymentMethod.getAccountId(), account);
+                                                            } catch (final AccountApiException e) {
+                                                                log.warn("Unable to retrieve account", e);
+                                                                return null;
+                                                            }
+                                                        }
 
-                    final PaymentMethodJson asJson = PaymentMethodJson.toPaymentMethodJson(accounts.get(paymentMethod.getAccountId()), paymentMethod);
-                    generator.writeObject(asJson);
-                }
-                generator.writeEndArray();
-                generator.close();
-            }
-        };
-        return Response.status(Status.OK)
-                       .entity(json)
-                       .header(HDR_PAGINATION_CURRENT_OFFSET, paymentMethods.getCurrentOffset())
-                       .header(HDR_PAGINATION_NEXT_OFFSET, paymentMethods.getNextOffset())
-                       .header(HDR_PAGINATION_TOTAL_NB_RECORDS, paymentMethods.getTotalNbRecords())
-                       .header(HDR_PAGINATION_MAX_NB_RECORDS, paymentMethods.getMaxNbRecords())
-                       .header(HDR_PAGINATION_NEXT_PAGE_URI, nextPageUri)
-                       .build();
+                                                        // TODO populate audit logs
+                                                        return PaymentMethodJson.toPaymentMethodJson(accounts.get(paymentMethod.getAccountId()), paymentMethod);
+                                                    }
+                                                },
+                                                nextPageUri);
     }
 
     @DELETE

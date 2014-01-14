@@ -27,12 +27,15 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.MockEntityDaoBase;
+import com.ning.billing.util.tag.Tag;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
-public class MockTagDao implements TagDao {
+public class MockTagDao extends MockEntityDaoBase<TagModelDao, Tag, TagApiException> implements TagDao {
 
     private final Map<UUID, List<TagModelDao>> tagStore = new HashMap<UUID, List<TagModelDao>>();
 
@@ -57,6 +60,11 @@ public class MockTagDao implements TagDao {
                 }
             }
         }
+    }
+
+    @Override
+    public Pagination<TagModelDao> searchTags(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

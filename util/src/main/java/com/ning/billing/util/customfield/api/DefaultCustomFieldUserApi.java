@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.customfield.api;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,13 +30,24 @@ import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldModelDao;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import static com.ning.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
+
 public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
+
+    private static final Function<CustomFieldModelDao, CustomField> CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION = new Function<CustomFieldModelDao, CustomField>() {
+        @Override
+        public CustomField apply(final CustomFieldModelDao input) {
+            return new StringCustomField(input);
+        }
+    };
 
     private final InternalCallContextFactory internalCallContextFactory;
     private final CustomFieldDao customFieldDao;
@@ -44,6 +56,30 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     public DefaultCustomFieldUserApi(final InternalCallContextFactory internalCallContextFactory, final CustomFieldDao customFieldDao) {
         this.internalCallContextFactory = internalCallContextFactory;
         this.customFieldDao = customFieldDao;
+    }
+
+    @Override
+    public Pagination<CustomField> searchCustomFields(final String searchKey, final Long offset, final Long limit, final TenantContext context) {
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<CustomFieldModelDao, CustomFieldApiException>() {
+                                                  @Override
+                                                  public Pagination<CustomFieldModelDao> build() {
+                                                      return customFieldDao.searchCustomFields(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                  }
+                                              },
+                                              CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION);
+    }
+
+    @Override
+    public Pagination<CustomField> getCustomFields(final Long offset, final Long limit, final TenantContext context) {
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<CustomFieldModelDao, CustomFieldApiException>() {
+                                                  @Override
+                                                  public Pagination<CustomFieldModelDao> build() {
+                                                      return customFieldDao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                  }
+                                              },
+                                              CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION);
     }
 
     @Override
@@ -69,13 +105,7 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
         return withCustomFieldsTransform(customFieldDao.getCustomFieldsForAccount(internalCallContextFactory.createInternalTenantContext(accountId, context)));
     }
 
-    private List<CustomField> withCustomFieldsTransform(List<CustomFieldModelDao> input) {
-        return ImmutableList.<CustomField>copyOf(Collections2.transform(input, new Function<CustomFieldModelDao, CustomField>() {
-            @Override
-            public CustomField apply(final CustomFieldModelDao input) {
-                return new StringCustomField(input);
-            }
-        }));
+    private List<CustomField> withCustomFieldsTransform(final Collection<CustomFieldModelDao> input) {
+        return ImmutableList.<CustomField>copyOf(Collections2.transform(input, CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION));
     }
-
 }

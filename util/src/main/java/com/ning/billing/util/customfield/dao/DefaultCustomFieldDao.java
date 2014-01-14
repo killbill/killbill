@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.customfield.dao;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,22 +30,24 @@ import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.bus.api.PersistentBus;
-import com.ning.billing.util.api.CustomFieldApiException;
-import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.events.BusInternalEvent;
+import com.ning.billing.util.api.CustomFieldApiException;
+import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.api.DefaultCustomFieldCreationEvent;
 import com.ning.billing.util.customfield.api.DefaultCustomFieldDeletionEvent;
 import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import com.ning.billing.events.BusInternalEvent;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -53,7 +56,7 @@ import com.google.inject.Inject;
 
 public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, CustomField, CustomFieldApiException> implements CustomFieldDao {
 
-    private final static Logger log = LoggerFactory.getLogger(DefaultCustomFieldDao.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultCustomFieldDao.class);
 
     private final PersistentBus bus;
 
@@ -127,4 +130,17 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
 
     }
 
+    @Override
+    public Pagination<CustomFieldModelDao> searchCustomFields(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(CustomFieldSqlDao.class,
+                                              new PaginationIteratorBuilder<CustomFieldModelDao, CustomField, CustomFieldSqlDao>() {
+                                                  @Override
+                                                  public Iterator<CustomFieldModelDao> build(final CustomFieldSqlDao customFieldSqlDao, final Long limit) {
+                                                      return customFieldSqlDao.searchCustomFields(searchKey, offset, limit, context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
+    }
 }

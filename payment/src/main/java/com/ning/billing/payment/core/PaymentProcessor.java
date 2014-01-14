@@ -72,18 +72,18 @@ import com.ning.billing.tag.TagInternalApi;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.entity.DefaultPagination;
 import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.DefaultPaginationHelper.EntityPaginationBuilder;
+import com.ning.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
 import com.google.inject.name.Named;
 
 import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
+import static com.ning.billing.util.entity.dao.DefaultPaginationHelper.getEntityPagination;
+import static com.ning.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationFromPlugins;
 
 public class PaymentProcessor extends ProcessorBase {
 
@@ -149,134 +149,89 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     public Pagination<Payment> getPayments(final Long offset, final Long limit, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
-        // Note that we cannot easily do streaming here, since we would have to rely on the statistics
-        // returned by the Pagination objects from the plugins and we probably don't want to do that (if
-        // one plugin gets it wrong, it may starve the others).
-        final List<Payment> allResults = new LinkedList<Payment>();
-        Long totalNbRecords = 0L;
-        Long maxNbRecords = 0L;
-
-        // Search in all plugins (we treat the full set of results as a union with respect to offset/limit)
-        boolean firstSearch = true;
-        for (final String pluginName : getAvailablePlugins()) {
-            try {
-                final Pagination<Payment> payments;
-                if (allResults.size() >= limit) {
-                    // We have enough results, we just keep going (limit 1) to get the stats
-                    payments = getPayments(firstSearch ? offset : 0L, 1L, pluginName, tenantContext, internalTenantContext);
-                    // Required to close database connections
-                    ImmutableList.<Payment>copyOf(payments);
-                } else {
-                    payments = getPayments(firstSearch ? offset : 0L, limit - allResults.size(), pluginName, tenantContext, internalTenantContext);
-                    allResults.addAll(ImmutableList.<Payment>copyOf(payments));
-                }
-                firstSearch = false;
-                totalNbRecords += payments.getTotalNbRecords();
-                maxNbRecords += payments.getMaxNbRecords();
-            } catch (final PaymentApiException e) {
-                log.warn("Error while searching plugin " + pluginName, e);
-                // Non-fatal, continue to search other plugins
-            }
-        }
-
-        return new DefaultPagination<Payment>(offset, limit, totalNbRecords, maxNbRecords, allResults.iterator());
+        return getEntityPaginationFromPlugins(getAvailablePlugins(),
+                                              offset,
+                                              limit,
+                                              new EntityPaginationBuilder<Payment, PaymentApiException>() {
+                                                  @Override
+                                                  public Pagination<Payment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
+                                                      return getPayments(offset, limit, pluginName, tenantContext, internalTenantContext);
+                                                  }
+                                              });
     }
 
     public Pagination<Payment> getPayments(final Long offset, final Long limit, final String pluginName, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
 
-        // Find all payments for all accounts
-        final Pagination<PaymentModelDao> paymentModelDaos = paymentDao.getPayments(pluginName, offset, limit, internalTenantContext);
+        return getEntityPagination(limit,
+                                   new SourcePaginationBuilder<PaymentModelDao, PaymentApiException>() {
+                                       @Override
+                                       public Pagination<PaymentModelDao> build() {
+                                           // Find all payments for all accounts
+                                           return paymentDao.getPayments(pluginName, offset, limit, internalTenantContext);
+                                       }
+                                   },
+                                   new Function<PaymentModelDao, Payment>() {
+                                       @Override
+                                       public Payment apply(final PaymentModelDao paymentModelDao) {
+                                           PaymentInfoPlugin pluginInfo = null;
+                                           try {
+                                               pluginInfo = pluginApi.getPaymentInfo(paymentModelDao.getAccountId(), paymentModelDao.getId(), tenantContext);
+                                           } catch (final PaymentPluginApiException e) {
+                                               log.warn("Unable to find payment  id " + paymentModelDao.getId() + " in plugin " + pluginName);
+                                           }
 
-        return new DefaultPagination<Payment>(paymentModelDaos,
-                                              limit,
-                                              Iterators.<Payment>filter(Iterators.<PaymentModelDao, Payment>transform(paymentModelDaos.iterator(),
-                                                                                                                      new Function<PaymentModelDao, Payment>() {
-                                                                                                                          @Override
-                                                                                                                          public Payment apply(final PaymentModelDao paymentModelDao) {
-                                                                                                                              PaymentInfoPlugin pluginInfo = null;
-                                                                                                                              try {
-                                                                                                                                  pluginInfo = pluginApi.getPaymentInfo(paymentModelDao.getAccountId(), paymentModelDao.getId(), tenantContext);
-                                                                                                                                  if (pluginInfo.getKbPaymentId() == null) {
-                                                                                                                                      // Garbage from the plugin?
-                                                                                                                                      log.debug("Plugin {} returned a payment without a kbPaymentId", pluginName);
-                                                                                                                                      pluginInfo = null;
-                                                                                                                                  }
-                                                                                                                              } catch (final PaymentPluginApiException e) {
-                                                                                                                                  log.warn("Unable to find payment  id " + paymentModelDao.getId() + " in plugin " + pluginName);
-                                                                                                                              }
-
-                                                                                                                              return fromPaymentModelDao(paymentModelDao, pluginInfo, internalTenantContext);
-                                                                                                                          }
-                                                                                                                      }),
-                                                                        Predicates.<Payment>notNull()));
+                                           return fromPaymentModelDao(paymentModelDao, pluginInfo, internalTenantContext);
+                                       }
+                                   }
+                                  );
     }
 
     public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final InternalTenantContext internalTenantContext) {
-        // Note that we cannot easily do streaming here, since we would have to rely on the statistics
-        // returned by the Pagination objects from the plugins and we probably don't want to do that (if
-        // one plugin gets it wrong, it may starve the others).
-        final List<Payment> allResults = new LinkedList<Payment>();
-        Long totalNbRecords = 0L;
-        Long maxNbRecords = 0L;
-
-        // Search in all plugins (we treat the full set of results as a union with respect to offset/limit)
-        boolean firstSearch = true;
-        for (final String pluginName : getAvailablePlugins()) {
-            try {
-                final Pagination<Payment> payments;
-                if (allResults.size() >= limit) {
-                    // We have enough results, we just keep going (limit 1) to get the stats
-                    payments = searchPayments(searchKey, firstSearch ? offset : 0L, 1L, pluginName, internalTenantContext);
-                    // Required to close database connections
-                    ImmutableList.<Payment>copyOf(payments);
-                } else {
-                    payments = searchPayments(searchKey, firstSearch ? offset : 0L, limit - allResults.size(), pluginName, internalTenantContext);
-                    allResults.addAll(ImmutableList.<Payment>copyOf(payments));
-                }
-                firstSearch = false;
-                totalNbRecords += payments.getTotalNbRecords();
-                maxNbRecords += payments.getMaxNbRecords();
-            } catch (final PaymentApiException e) {
-                log.warn("Error while searching plugin " + pluginName, e);
-                // Non-fatal, continue to search other plugins
-            }
-        }
-
-        return new DefaultPagination<Payment>(offset, limit, totalNbRecords, maxNbRecords, allResults.iterator());
+        return getEntityPaginationFromPlugins(getAvailablePlugins(),
+                                              offset,
+                                              limit,
+                                              new EntityPaginationBuilder<Payment, PaymentApiException>() {
+                                                  @Override
+                                                  public Pagination<Payment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
+                                                      return searchPayments(searchKey, offset, limit, pluginName, internalTenantContext);
+                                                  }
+                                              });
     }
 
     public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
-        final Pagination<PaymentInfoPlugin> payments;
-        try {
-            payments = pluginApi.searchPayments(searchKey, offset, limit, buildTenantContext(internalTenantContext));
-        } catch (final PaymentPluginApiException e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENTS, pluginName, searchKey);
-        }
 
-        return new DefaultPagination<Payment>(payments,
-                                              limit,
-                                              Iterators.<Payment>filter(Iterators.<PaymentInfoPlugin, Payment>transform(payments.iterator(),
-                                                                                                                        new Function<PaymentInfoPlugin, Payment>() {
-                                                                                                                            @Override
-                                                                                                                            public Payment apply(final PaymentInfoPlugin paymentInfoPlugin) {
-                                                                                                                                if (paymentInfoPlugin.getKbPaymentId() == null) {
-                                                                                                                                    // Garbage from the plugin?
-                                                                                                                                    log.debug("Plugin {} returned a payment without a kbPaymentId for searchKey {}", pluginName, searchKey);
-                                                                                                                                    return null;
-                                                                                                                                }
+        return getEntityPagination(limit,
+                                   new SourcePaginationBuilder<PaymentInfoPlugin, PaymentApiException>() {
+                                       @Override
+                                       public Pagination<PaymentInfoPlugin> build() throws PaymentApiException {
+                                           try {
+                                               return pluginApi.searchPayments(searchKey, offset, limit, buildTenantContext(internalTenantContext));
+                                           } catch (final PaymentPluginApiException e) {
+                                               throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENTS, pluginName, searchKey);
+                                           }
+                                       }
+                                   },
+                                   new Function<PaymentInfoPlugin, Payment>() {
+                                       @Override
+                                       public Payment apply(final PaymentInfoPlugin paymentInfoPlugin) {
+                                           if (paymentInfoPlugin.getKbPaymentId() == null) {
+                                               // Garbage from the plugin?
+                                               log.debug("Plugin {} returned a payment without a kbPaymentId for searchKey {}", pluginName, searchKey);
+                                               return null;
+                                           }
 
-                                                                                                                                final PaymentModelDao model = paymentDao.getPayment(paymentInfoPlugin.getKbPaymentId(), internalTenantContext);
-                                                                                                                                if (model == null) {
-                                                                                                                                    log.warn("Unable to find payment id " + paymentInfoPlugin.getKbPaymentId() + " present in plugin " + pluginName);
-                                                                                                                                    return null;
-                                                                                                                                }
+                                           final PaymentModelDao model = paymentDao.getPayment(paymentInfoPlugin.getKbPaymentId(), internalTenantContext);
+                                           if (model == null) {
+                                               log.warn("Unable to find payment id " + paymentInfoPlugin.getKbPaymentId() + " present in plugin " + pluginName);
+                                               return null;
+                                           }
 
-                                                                                                                                return fromPaymentModelDao(model, paymentInfoPlugin, internalTenantContext);
-                                                                                                                            }
-                                                                                                                        }),
-                                                                        Predicates.<Payment>notNull()));
+                                           return fromPaymentModelDao(model, paymentInfoPlugin, internalTenantContext);
+                                       }
+                                   }
+                                  );
     }
 
     public List<Payment> getInvoicePayments(final UUID invoiceId, final InternalTenantContext context) {

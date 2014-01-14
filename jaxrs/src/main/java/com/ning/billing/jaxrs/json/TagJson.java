@@ -20,7 +20,9 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -28,20 +30,34 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TagJson extends JsonBase {
 
+    private final String tagId;
+    private final ObjectType objectType;
     private final String tagDefinitionId;
     private final String tagDefinitionName;
 
     @JsonCreator
-    public TagJson(@JsonProperty("tagDefinitionId") final String tagDefinitionId,
+    public TagJson(@JsonProperty("tagId") final String tagId,
+                   @JsonProperty("objectType") final ObjectType objectType,
+                   @JsonProperty("tagDefinitionId") final String tagDefinitionId,
                    @JsonProperty("tagDefinitionName") final String tagDefinitionName,
                    @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
+        this.tagId = tagId;
+        this.objectType = objectType;
         this.tagDefinitionId = tagDefinitionId;
         this.tagDefinitionName = tagDefinitionName;
     }
 
-    public TagJson(final TagDefinition tagDefinition, @Nullable final List<AuditLog> auditLogs) {
-        this(tagDefinition.getId().toString(), tagDefinition.getName(), toAuditLogJson(auditLogs));
+    public TagJson(final Tag tag, final TagDefinition tagDefinition, @Nullable final List<AuditLog> auditLogs) {
+        this(tag.getId().toString(), tag.getObjectType(), tagDefinition.getId().toString(), tagDefinition.getName(), toAuditLogJson(auditLogs));
+    }
+
+    public String getTagId() {
+        return tagId;
+    }
+
+    public ObjectType getObjectType() {
+        return objectType;
     }
 
     public String getTagDefinitionId() {
@@ -55,7 +71,9 @@ public class TagJson extends JsonBase {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("TagJson{");
-        sb.append("tagDefinitionId='").append(tagDefinitionId).append('\'');
+        sb.append("tagId='").append(tagId).append('\'');
+        sb.append(", objectType=").append(objectType);
+        sb.append(", tagDefinitionId='").append(tagDefinitionId).append('\'');
         sb.append(", tagDefinitionName='").append(tagDefinitionName).append('\'');
         sb.append('}');
         return sb.toString();
@@ -72,10 +90,16 @@ public class TagJson extends JsonBase {
 
         final TagJson tagJson = (TagJson) o;
 
+        if (objectType != tagJson.objectType) {
+            return false;
+        }
         if (tagDefinitionId != null ? !tagDefinitionId.equals(tagJson.tagDefinitionId) : tagJson.tagDefinitionId != null) {
             return false;
         }
         if (tagDefinitionName != null ? !tagDefinitionName.equals(tagJson.tagDefinitionName) : tagJson.tagDefinitionName != null) {
+            return false;
+        }
+        if (tagId != null ? !tagId.equals(tagJson.tagId) : tagJson.tagId != null) {
             return false;
         }
 
@@ -84,7 +108,9 @@ public class TagJson extends JsonBase {
 
     @Override
     public int hashCode() {
-        int result = tagDefinitionId != null ? tagDefinitionId.hashCode() : 0;
+        int result = tagId != null ? tagId.hashCode() : 0;
+        result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
+        result = 31 * result + (tagDefinitionId != null ? tagDefinitionId.hashCode() : 0);
         result = 31 * result + (tagDefinitionName != null ? tagDefinitionName.hashCode() : 0);
         return result;
     }

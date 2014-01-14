@@ -31,12 +31,16 @@ import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entity.EntityPersistenceException;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.api.Refund;
 import com.ning.billing.payment.api.RefundStatus;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.entity.DefaultPagination;
 import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.DefaultPaginationSqlDaoHelper;
+import com.ning.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -48,10 +52,12 @@ import com.google.common.collect.Collections2;
 public class DefaultPaymentDao implements PaymentDao {
 
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
+    private final DefaultPaginationSqlDaoHelper paginationHelper;
 
     @Inject
     public DefaultPaymentDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
+        this.paginationHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao);
     }
 
     @Override
@@ -160,6 +166,20 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
+    public Pagination<RefundModelDao> getRefunds(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(RefundSqlDao.class,
+                                              new PaginationIteratorBuilder<RefundModelDao, Refund, RefundSqlDao>() {
+                                                  @Override
+                                                  public Iterator<RefundModelDao> build(final RefundSqlDao refundSqlDao, final Long limit) {
+                                                      return refundSqlDao.getByPluginName(pluginName, offset, limit, context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
+    }
+
+    @Override
     public RefundModelDao getRefund(final UUID refundId, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<RefundModelDao>() {
             @Override
@@ -221,30 +241,16 @@ public class DefaultPaymentDao implements PaymentDao {
 
     @Override
     public Pagination<PaymentMethodModelDao> getPaymentMethods(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
-        // Note: the connection will be busy as we stream the results out: hence we cannot use
-        // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
-        // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
-        // more pages. To do that, we perform a dummy search query with SQL_CALC_FOUND_ROWS (but limit 1).
-        final Long count = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
-            @Override
-            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final PaymentMethodSqlDao sqlDao = entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class);
-                final Iterator<PaymentMethodModelDao> dumbIterator = sqlDao.getByPluginName(pluginName, offset, 1L, context);
-                // Make sure to go through the results to close the connection
-                while (dumbIterator.hasNext()) {
-                    dumbIterator.next();
-                }
-                return sqlDao.getFoundRows(context);
-            }
-        });
-
-        // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
-        // Since we want to stream the results out, we don't want to auto-commit when this method returns.
-        final PaymentMethodSqlDao paymentMethodSqlDao = transactionalSqlDao.onDemand(PaymentMethodSqlDao.class);
-        final Long totalCount = paymentMethodSqlDao.getCount(context);
-        final Iterator<PaymentMethodModelDao> results = paymentMethodSqlDao.getByPluginName(pluginName, offset, limit, context);
-
-        return new DefaultPagination<PaymentMethodModelDao>(offset, limit, count, totalCount, results);
+        return paginationHelper.getPagination(PaymentMethodSqlDao.class,
+                                              new PaginationIteratorBuilder<PaymentMethodModelDao, PaymentMethod, PaymentMethodSqlDao>() {
+                                                  @Override
+                                                  public Iterator<PaymentMethodModelDao> build(final PaymentMethodSqlDao paymentMethodSqlDao, final Long limit) {
+                                                      return paymentMethodSqlDao.getByPluginName(pluginName, offset, limit, context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
     }
 
     @Override
@@ -300,30 +306,16 @@ public class DefaultPaymentDao implements PaymentDao {
 
     @Override
     public Pagination<PaymentModelDao> getPayments(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
-        // Note: the connection will be busy as we stream the results out: hence we cannot use
-        // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
-        // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
-        // more pages. To do that, we perform a dummy search query with SQL_CALC_FOUND_ROWS (but limit 1).
-        final Long count = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
-            @Override
-            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final PaymentSqlDao sqlDao = entitySqlDaoWrapperFactory.become(PaymentSqlDao.class);
-                final Iterator<PaymentModelDao> dumbIterator = sqlDao.getByPluginName(pluginName, offset, 1L, context);
-                // Make sure to go through the results to close the connection
-                while (dumbIterator.hasNext()) {
-                    dumbIterator.next();
-                }
-                return sqlDao.getFoundRows(context);
-            }
-        });
-
-        // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
-        // Since we want to stream the results out, we don't want to auto-commit when this method returns.
-        final PaymentSqlDao paymentSqlDao = transactionalSqlDao.onDemand(PaymentSqlDao.class);
-        final Long totalCount = paymentSqlDao.getCount(context);
-        final Iterator<PaymentModelDao> results = paymentSqlDao.getByPluginName(pluginName, offset, limit, context);
-
-        return new DefaultPagination<PaymentModelDao>(offset, limit, count, totalCount, results);
+        return paginationHelper.getPagination(PaymentSqlDao.class,
+                                              new PaginationIteratorBuilder<PaymentModelDao, Payment, PaymentSqlDao>() {
+                                                  @Override
+                                                  public Iterator<PaymentModelDao> build(final PaymentSqlDao paymentSqlDao, final Long limit) {
+                                                      return paymentSqlDao.getByPluginName(pluginName, offset, limit, context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
     }
 
     @Override

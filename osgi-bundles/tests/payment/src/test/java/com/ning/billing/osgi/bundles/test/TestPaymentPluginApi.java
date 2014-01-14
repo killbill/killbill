@@ -193,9 +193,12 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
 
     @Override
     public RefundInfoPlugin processRefund(final UUID accountId, final UUID kbPaymentId, final BigDecimal refundAmount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
-
-        final BigDecimal someAmount = new BigDecimal("12.45");
         return withRuntimeCheckForExceptions(new RefundInfoPlugin() {
+            @Override
+            public UUID getKbPaymentId() {
+                return kbPaymentId;
+            }
+
             @Override
             public BigDecimal getAmount() {
                 return null;
@@ -232,7 +235,12 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
             }
 
             @Override
-            public String getReferenceId() {
+            public String getFirstRefundReferenceId() {
+                return null;
+            }
+
+            @Override
+            public String getSecondRefundReferenceId() {
                 return null;
             }
         });
@@ -241,6 +249,36 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
     @Override
     public List<RefundInfoPlugin> getRefundInfo(final UUID kbAccountId, final UUID kbPaymentId, final TenantContext context) {
         return Collections.<RefundInfoPlugin>emptyList();
+    }
+
+    @Override
+    public Pagination<RefundInfoPlugin> searchRefunds(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return new Pagination<RefundInfoPlugin>() {
+            @Override
+            public Long getCurrentOffset() {
+                return 0L;
+            }
+
+            @Override
+            public Long getNextOffset() {
+                return null;
+            }
+
+            @Override
+            public Long getMaxNbRecords() {
+                return 0L;
+            }
+
+            @Override
+            public Long getTotalNbRecords() {
+                return 0L;
+            }
+
+            @Override
+            public Iterator<RefundInfoPlugin> iterator() {
+                return null;
+            }
+        };
     }
 
     @Override

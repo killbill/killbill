@@ -57,3 +57,21 @@ and t.object_type = :objectType
 <AND_CHECK_TENANT("t.")>
 ;
 >>
+
+searchTags(searchKey, offset, rowCount) ::= <<
+select SQL_CALC_FOUND_ROWS
+<allTableFields("t.")>
+from <tableName()> t
+join tag_definitions td on td.id = t.tag_definition_id
+where 1 = 1
+and (
+     <idField("t.")> = '<searchKey>'
+  or t.object_type like '%<searchKey>%'
+  or td.name like '%<searchKey>%'
+  or td.description like '%<searchKey>%'
+)
+<AND_CHECK_TENANT("t.")>
+order by <recordIdField("t.")> ASC
+limit :offset, :rowCount
+;
+>>

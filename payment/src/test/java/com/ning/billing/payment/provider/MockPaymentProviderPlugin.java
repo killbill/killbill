@@ -121,7 +121,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         final ImmutableList<PaymentInfoPlugin> results = ImmutableList.<PaymentInfoPlugin>copyOf(Iterables.<PaymentInfoPlugin>filter(payments.values(), new Predicate<PaymentInfoPlugin>() {
             @Override
             public boolean apply(final PaymentInfoPlugin input) {
-                return (input.getKbPaymentId() != null && input.getKbPaymentId().equals(searchKey)) ||
+                return (input.getKbPaymentId() != null && input.getKbPaymentId().toString().equals(searchKey)) ||
                        (input.getFirstPaymentReferenceId() != null && input.getFirstPaymentReferenceId().contains(searchKey)) ||
                        (input.getSecondPaymentReferenceId() != null && input.getSecondPaymentReferenceId().contains(searchKey));
             }
@@ -202,7 +202,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
                                                                   refundAmount, kbPaymentId.toString(), paymentInfoPlugin.getAmount(), PLUGIN_NAME));
         }
 
-        final DefaultNoOpRefundInfoPlugin refundInfoPlugin = new DefaultNoOpRefundInfoPlugin(refundAmount, currency, clock.getUTCNow(), clock.getUTCNow(), RefundPluginStatus.PROCESSED, null);
+        final DefaultNoOpRefundInfoPlugin refundInfoPlugin = new DefaultNoOpRefundInfoPlugin(kbPaymentId, refundAmount, currency, clock.getUTCNow(), clock.getUTCNow(), RefundPluginStatus.PROCESSED, null);
         refunds.put(kbPaymentId.toString(), refundInfoPlugin);
 
         return refundInfoPlugin;
@@ -211,5 +211,18 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     @Override
     public List<RefundInfoPlugin> getRefundInfo(final UUID kbAccountId, final UUID kbPaymentId, final TenantContext context) throws PaymentPluginApiException {
         return Collections.<RefundInfoPlugin>emptyList();
+    }
+
+    @Override
+    public Pagination<RefundInfoPlugin> searchRefunds(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        final ImmutableList<RefundInfoPlugin> results = ImmutableList.<RefundInfoPlugin>copyOf(Iterables.<RefundInfoPlugin>filter(refunds.values(), new Predicate<RefundInfoPlugin>() {
+            @Override
+            public boolean apply(final RefundInfoPlugin input) {
+                return (input.getKbPaymentId() != null && input.getKbPaymentId().toString().equals(searchKey)) ||
+                       (input.getFirstRefundReferenceId() != null && input.getFirstRefundReferenceId().contains(searchKey)) ||
+                       (input.getSecondRefundReferenceId() != null && input.getSecondRefundReferenceId().contains(searchKey));
+            }
+        }));
+        return DefaultPagination.<RefundInfoPlugin>build(offset, limit, results);
     }
 }

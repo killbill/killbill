@@ -116,6 +116,26 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
+    public Pagination<Refund> getRefunds(final Long offset, final Long limit, final TenantContext context) {
+        return refundProcessor.getRefunds(offset, limit, context, internalCallContextFactory.createInternalTenantContext(context));
+    }
+
+    @Override
+    public Pagination<Refund> getRefunds(final Long offset, final Long limit, final String pluginName, final TenantContext tenantContext) throws PaymentApiException {
+        return refundProcessor.getRefunds(offset, limit, pluginName, tenantContext, internalCallContextFactory.createInternalTenantContext(tenantContext));
+    }
+
+    @Override
+    public Pagination<Refund> searchRefunds(final String searchKey, final Long offset, final Long limit, final TenantContext context) {
+        return refundProcessor.searchRefunds(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+    }
+
+    @Override
+    public Pagination<Refund> searchRefunds(final String searchKey, final Long offset, final Long limit, final String pluginName, final TenantContext context) throws PaymentApiException {
+        return refundProcessor.searchRefunds(searchKey, offset, limit, pluginName, internalCallContextFactory.createInternalTenantContext(context));
+    }
+
+    @Override
     public List<Payment> getInvoicePayments(final UUID invoiceId, final TenantContext context) {
         return paymentProcessor.getInvoicePayments(invoiceId, internalCallContextFactory.createInternalTenantContext(context));
     }

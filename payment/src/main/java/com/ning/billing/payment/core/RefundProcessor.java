@@ -20,11 +20,12 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -47,31 +48,37 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultRefund;
 import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.payment.api.RefundStatus;
-import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
 import com.ning.billing.payment.dao.RefundModelDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
+import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 import com.ning.billing.tag.TagInternalApi;
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.DefaultPaginationHelper.EntityPaginationBuilder;
+import com.ning.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.inject.name.Named;
 
 import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
+import static com.ning.billing.util.entity.dao.DefaultPaginationHelper.getEntityPagination;
+import static com.ning.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationFromPlugins;
 
 public class RefundProcessor extends ProcessorBase {
 
@@ -151,7 +158,11 @@ public class RefundProcessor extends ProcessorBase {
                         default:
                             paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_ERRORED, refundAmount, account.getCurrency(), context);
                             throw new PaymentPluginApiException("Refund error for RefundInfo: " + refundInfo.toString(),
-                                                                String.format("Gateway error: %s, Gateway error code: %s, Reference id: %s", refundInfoPlugin.getGatewayError(), refundInfoPlugin.getGatewayErrorCode(), refundInfoPlugin.getReferenceId()));
+                                                                String.format("Gateway error: %s, Gateway error code: %s, Reference ids: %s / %s",
+                                                                              refundInfoPlugin.getGatewayError(),
+                                                                              refundInfoPlugin.getGatewayErrorCode(),
+                                                                              refundInfoPlugin.getFirstRefundReferenceId(),
+                                                                              refundInfoPlugin.getSecondRefundReferenceId()));
                     }
                 } catch (PaymentPluginApiException e) {
                     throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_REFUND, account.getId(), e.getErrorMessage());
@@ -161,7 +172,6 @@ public class RefundProcessor extends ProcessorBase {
             }
         });
     }
-
 
     public void notifyPendingRefundOfStateChanged(final Account account, final UUID refundId, final boolean isSuccess, final InternalCallContext context)
             throws PaymentApiException {
@@ -231,23 +241,184 @@ public class RefundProcessor extends ProcessorBase {
         throw new IllegalArgumentException("Unable to find invoice item for id " + itemId);
     }
 
-    public Refund getRefund(final UUID refundId, final boolean withPluginInfo /* not yet implemented */, final InternalTenantContext context)
-            throws PaymentApiException {
+    public Refund getRefund(final UUID refundId, final boolean withPluginInfo, final InternalTenantContext context) throws PaymentApiException {
         RefundModelDao result = paymentDao.getRefund(refundId, context);
         if (result == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_REFUND, refundId);
         }
+
         final List<RefundModelDao> filteredInput = filterUncompletedPluginRefund(Collections.singletonList(result));
-        if (filteredInput.size() == 0) {
+        if (filteredInput.isEmpty()) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_REFUND, refundId);
         }
 
         if (completePluginCompletedRefund(filteredInput, context)) {
             result = paymentDao.getRefund(refundId, context);
         }
-        return new DefaultRefund(result.getId(), result.getCreatedDate(), result.getUpdatedDate(),
-                                 result.getPaymentId(), result.getAmount(), result.getCurrency(),
-                                 result.isAdjusted(), result.getCreatedDate(), result.getRefundStatus());
+
+        final Account account;
+        try {
+            account = accountInternalApi.getAccountById(result.getAccountId(), context);
+        } catch (final AccountApiException e) {
+            throw new PaymentApiException(e);
+        }
+
+        final PaymentPluginApi plugin = withPluginInfo ? getPaymentProviderPlugin(account, context) : null;
+        List<RefundInfoPlugin> refundInfoPlugins = ImmutableList.<RefundInfoPlugin>of();
+        if (plugin != null) {
+            try {
+                refundInfoPlugins = plugin.getRefundInfo(account.getId(), result.getPaymentId(), buildTenantContext(context));
+            } catch (final PaymentPluginApiException e) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_GET_REFUND_INFO, refundId, e.toString());
+            }
+        }
+
+        return new DefaultRefund(result, findRefundInfoPlugin(result, refundInfoPlugins));
+    }
+
+    private RefundInfoPlugin findRefundInfoPlugin(final RefundModelDao refundModelDao, final List<RefundInfoPlugin> refundInfoPlugins) {
+        // We have a mapping 1:N for payment:refunds and a mapping 1:1 for RefundModelDao:RefundInfoPlugin.
+        // Unfortunately, we processing a refund, we don't tell the plugin about the refund id, so we need to do some heuristics
+        // to map a RefundInfoPlugin back to its RefundModelDao
+        // TODO This will break for multiple partial refunds of the same amount. Check the effective date won't help for same day partial refunds and checking effective datetime seems risky
+        return Iterables.<RefundInfoPlugin>tryFind(refundInfoPlugins,
+                                                   new Predicate<RefundInfoPlugin>() {
+                                                       @Override
+                                                       public boolean apply(final RefundInfoPlugin refundInfoPlugin) {
+                                                           return refundObjectsMatch(refundModelDao, refundInfoPlugin);
+                                                       }
+                                                   }).orNull();
+    }
+
+    private boolean refundObjectsMatch(final RefundModelDao refundModelDao, final RefundInfoPlugin refundInfoPlugin) {
+        return (refundInfoPlugin.getKbPaymentId() != null && refundModelDao.getPaymentId() != null && refundInfoPlugin.getKbPaymentId().equals(refundModelDao.getPaymentId())) &&
+               (refundInfoPlugin.getAmount() != null && refundModelDao.getProcessedAmount() != null && refundInfoPlugin.getAmount().compareTo(refundModelDao.getProcessedAmount()) == 0) &&
+               (refundInfoPlugin.getCurrency() != null && refundModelDao.getProcessedCurrency() != null && refundInfoPlugin.getCurrency().equals(refundModelDao.getProcessedCurrency())) &&
+               (
+                       (refundInfoPlugin.getStatus().equals(RefundPluginStatus.PROCESSED) && refundModelDao.getRefundStatus().equals(RefundStatus.COMPLETED)) ||
+                       (refundInfoPlugin.getStatus().equals(RefundPluginStatus.PENDING) && refundModelDao.getRefundStatus().equals(RefundStatus.PENDING))
+               );
+    }
+
+    public Pagination<Refund> getRefunds(final Long offset, final Long limit, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
+        return getEntityPaginationFromPlugins(getAvailablePlugins(),
+                                              offset,
+                                              limit,
+                                              new EntityPaginationBuilder<Refund, PaymentApiException>() {
+                                                  @Override
+                                                  public Pagination<Refund> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
+                                                      return getRefunds(offset, limit, pluginName, tenantContext, internalTenantContext);
+                                                  }
+                                              });
+    }
+
+    public Pagination<Refund> getRefunds(final Long offset, final Long limit, final String pluginName, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+        final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
+
+        return getEntityPagination(limit,
+                                   new SourcePaginationBuilder<RefundModelDao, PaymentApiException>() {
+                                       @Override
+                                       public Pagination<RefundModelDao> build() {
+                                           // Find all refunds for all accounts
+                                           return paymentDao.getRefunds(pluginName, offset, limit, internalTenantContext);
+                                       }
+                                   },
+                                   new Function<RefundModelDao, Refund>() {
+                                       @Override
+                                       public Refund apply(final RefundModelDao refundModelDao) {
+                                           List<RefundInfoPlugin> refundInfoPlugins = null;
+                                           try {
+                                               refundInfoPlugins = pluginApi.getRefundInfo(refundModelDao.getAccountId(), refundModelDao.getId(), tenantContext);
+                                           } catch (final PaymentPluginApiException e) {
+                                               log.warn("Unable to find refund id " + refundModelDao.getId() + " in plugin " + pluginName);
+                                           }
+
+                                           final RefundInfoPlugin refundInfoPlugin = findRefundInfoPlugin(refundModelDao, refundInfoPlugins);
+                                           return new DefaultRefund(refundModelDao, refundInfoPlugin);
+                                       }
+                                   }
+                                  );
+    }
+
+    public Pagination<Refund> searchRefunds(final String searchKey, final Long offset, final Long limit, final InternalTenantContext internalTenantContext) {
+        return getEntityPaginationFromPlugins(getAvailablePlugins(),
+                                              offset,
+                                              limit,
+                                              new EntityPaginationBuilder<Refund, PaymentApiException>() {
+                                                  @Override
+                                                  public Pagination<Refund> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
+                                                      return searchRefunds(searchKey, offset, limit, pluginName, internalTenantContext);
+                                                  }
+                                              });
+    }
+
+    public Pagination<Refund> searchRefunds(final String searchKey, final Long offset, final Long limit, final String pluginName, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+        final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
+
+        final Map<UUID, List<RefundInfoPlugin>> refundsByPaymentId = new HashMap<UUID, List<RefundInfoPlugin>>();
+        final Map<UUID, List<RefundModelDao>> refundModelDaosByPaymentId = new HashMap<UUID, List<RefundModelDao>>();
+
+        return getEntityPagination(limit,
+                                   new SourcePaginationBuilder<RefundInfoPlugin, PaymentApiException>() {
+                                       @Override
+                                       public Pagination<RefundInfoPlugin> build() throws PaymentApiException {
+                                           final Pagination<RefundInfoPlugin> refunds;
+                                           try {
+                                               refunds = pluginApi.searchRefunds(searchKey, offset, limit, buildTenantContext(internalTenantContext));
+                                           } catch (final PaymentPluginApiException e) {
+                                               throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_REFUNDS, pluginName, searchKey);
+                                           }
+
+                                           // We need to group the refunds from the plugin by payment id. Since the ordering of the results is unspecified,
+                                           // we cannot do streaming here unfortunately
+                                           for (final RefundInfoPlugin refundInfoPlugin : refunds) {
+                                               if (refundInfoPlugin.getKbPaymentId() == null) {
+                                                   // Garbage from the plugin?
+                                                   log.debug("Plugin {} returned a refund without a kbPaymentId for searchKey {}", pluginName, searchKey);
+                                                   continue;
+                                               }
+
+                                               if (refundsByPaymentId.get(refundInfoPlugin.getKbPaymentId()) == null) {
+                                                   refundsByPaymentId.put(refundInfoPlugin.getKbPaymentId(), new LinkedList<RefundInfoPlugin>());
+                                               }
+                                               refundsByPaymentId.get(refundInfoPlugin.getKbPaymentId()).add(refundInfoPlugin);
+                                           }
+
+                                           return refunds;
+                                       }
+                                   },
+                                   new Function<RefundInfoPlugin, Refund>() {
+                                       @Override
+                                       public Refund apply(final RefundInfoPlugin refundInfoPlugin) {
+                                           if (refundInfoPlugin.getKbPaymentId() == null) {
+                                               // Garbage from the plugin?
+                                               log.debug("Plugin {} returned a refund without a kbPaymentId for searchKey {}", pluginName, searchKey);
+                                               return null;
+                                           }
+
+                                           List<RefundModelDao> modelCandidates = refundModelDaosByPaymentId.get(refundInfoPlugin.getKbPaymentId());
+                                           if (modelCandidates == null) {
+                                               refundModelDaosByPaymentId.put(refundInfoPlugin.getKbPaymentId(), paymentDao.getRefundsForPayment(refundInfoPlugin.getKbPaymentId(), internalTenantContext));
+                                               modelCandidates = refundModelDaosByPaymentId.get(refundInfoPlugin.getKbPaymentId());
+                                           }
+
+                                           final RefundModelDao model = Iterables.<RefundModelDao>tryFind(modelCandidates,
+                                                                                                          new Predicate<RefundModelDao>() {
+                                                                                                              @Override
+                                                                                                              public boolean apply(final RefundModelDao refundModelDao) {
+                                                                                                                  return refundObjectsMatch(refundModelDao, refundInfoPlugin);
+                                                                                                              }
+                                                                                                          }).orNull();
+
+                                           if (model == null) {
+                                               log.warn("Unable to find refund for payment id " + refundInfoPlugin.getKbPaymentId() + " present in plugin " + pluginName);
+                                               return null;
+                                           }
+
+                                           return new DefaultRefund(model, refundInfoPlugin);
+                                       }
+                                   }
+                                  );
     }
 
     public List<Refund> getAccountRefunds(final Account account, final InternalTenantContext context)

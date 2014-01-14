@@ -75,12 +75,17 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public RefundInfoPlugin processRefund(final UUID kbAccountId, final UUID kbPaymentId, final BigDecimal refundAmount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpRefundInfoPlugin(BigDecimal.ZERO, currency, clock.getUTCNow(), clock.getUTCNow(), RefundPluginStatus.PROCESSED, null);
+        return new DefaultNoOpRefundInfoPlugin(kbPaymentId, BigDecimal.ZERO, currency, clock.getUTCNow(), clock.getUTCNow(), RefundPluginStatus.PROCESSED, null);
     }
 
     @Override
     public List<RefundInfoPlugin> getRefundInfo(final UUID kbAccountId, final UUID kbPaymentId, final TenantContext context) throws PaymentPluginApiException {
         return Collections.emptyList();
+    }
+
+    @Override
+    public Pagination<RefundInfoPlugin> searchRefunds(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return new DefaultPagination<RefundInfoPlugin>(offset, limit, 0L, 0L, Iterators.<RefundInfoPlugin>emptyIterator());
     }
 
     @Override

@@ -17,6 +17,7 @@
 package com.ning.billing.payment.provider;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 
@@ -26,6 +27,7 @@ import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 
 public class DefaultNoOpRefundInfoPlugin implements RefundInfoPlugin {
 
+    private final UUID kbPaymentId;
     private final BigDecimal amount;
     private final Currency currency;
     private final DateTime effectiveDate;
@@ -33,14 +35,20 @@ public class DefaultNoOpRefundInfoPlugin implements RefundInfoPlugin {
     private final RefundPluginStatus status;
     private final String error;
 
-    public DefaultNoOpRefundInfoPlugin(final BigDecimal amount, final Currency currency, final DateTime effectiveDate,
+    public DefaultNoOpRefundInfoPlugin(final UUID kbPaymentId, final BigDecimal amount, final Currency currency, final DateTime effectiveDate,
                                        final DateTime createdDate, final RefundPluginStatus status, final String error) {
+        this.kbPaymentId = kbPaymentId;
         this.amount = amount;
         this.currency = currency;
         this.effectiveDate = effectiveDate;
         this.createdDate = createdDate;
         this.status = status;
         this.error = error;
+    }
+
+    @Override
+    public UUID getKbPaymentId() {
+        return kbPaymentId;
     }
 
     @Override
@@ -79,15 +87,21 @@ public class DefaultNoOpRefundInfoPlugin implements RefundInfoPlugin {
     }
 
     @Override
-    public String getReferenceId() {
+    public String getFirstRefundReferenceId() {
+        return null;
+    }
+
+    @Override
+    public String getSecondRefundReferenceId() {
         return null;
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("DefaultNoOpRefundInfoPlugin");
-        sb.append("{amount=").append(amount);
+        final StringBuilder sb = new StringBuilder("DefaultNoOpRefundInfoPlugin{");
+        sb.append("kbPaymentId=").append(kbPaymentId);
+        sb.append(", amount=").append(amount);
+        sb.append(", currency=").append(currency);
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append(", createdDate=").append(createdDate);
         sb.append(", status=").append(status);
@@ -107,16 +121,22 @@ public class DefaultNoOpRefundInfoPlugin implements RefundInfoPlugin {
 
         final DefaultNoOpRefundInfoPlugin that = (DefaultNoOpRefundInfoPlugin) o;
 
-        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
             return false;
         }
-        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+        if (createdDate != null ? createdDate.compareTo(that.createdDate) != 0 : that.createdDate != null) {
             return false;
         }
-        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+        if (currency != that.currency) {
+            return false;
+        }
+        if (effectiveDate != null ? effectiveDate.compareTo(that.effectiveDate) != 0 : that.effectiveDate != null) {
             return false;
         }
         if (error != null ? !error.equals(that.error) : that.error != null) {
+            return false;
+        }
+        if (kbPaymentId != null ? !kbPaymentId.equals(that.kbPaymentId) : that.kbPaymentId != null) {
             return false;
         }
         if (status != that.status) {
@@ -128,7 +148,9 @@ public class DefaultNoOpRefundInfoPlugin implements RefundInfoPlugin {
 
     @Override
     public int hashCode() {
-        int result = amount != null ? amount.hashCode() : 0;
+        int result = kbPaymentId != null ? kbPaymentId.hashCode() : 0;
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);

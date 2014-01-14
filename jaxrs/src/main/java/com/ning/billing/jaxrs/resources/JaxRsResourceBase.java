@@ -16,6 +16,9 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -23,7 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
@@ -41,6 +47,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.JsonBase;
 import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -56,10 +63,13 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
+import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.Pagination;
 import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -114,7 +124,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             final TagDefinition tagDefinition = tagDefinitionsCache.get(tag.getTagDefinitionId());
 
             final List<AuditLog> auditLogs = tagsAuditLogs.getAuditLogs(tag.getId());
-            result.add(new TagJson(tagDefinition, auditLogs));
+            result.add(new TagJson(tag, tagDefinition, auditLogs));
         }
 
         return Response.status(Response.Status.OK).entity(result).build();
@@ -179,6 +189,34 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                           final CallContext context) {
         // STEPH missing API to delete custom fields
         return Response.status(Response.Status.OK).build();
+    }
+
+    protected <E extends Entity, J extends JsonBase> Response buildStreamingPaginationResponse(final Pagination<E> entities,
+                                                                                               final Function<E, J> toJson,
+                                                                                               final URI nextPageUri) {
+        final StreamingOutput json = new StreamingOutput() {
+            @Override
+            public void write(final OutputStream output) throws IOException, WebApplicationException {
+                final JsonGenerator generator = mapper.getFactory().createJsonGenerator(output);
+                generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+
+                generator.writeStartArray();
+                for (final E entity : entities) {
+                    generator.writeObject(toJson.apply(entity));
+                }
+                generator.writeEndArray();
+                generator.close();
+            }
+        };
+
+        return Response.status(Status.OK)
+                       .entity(json)
+                       .header(HDR_PAGINATION_CURRENT_OFFSET, entities.getCurrentOffset())
+                       .header(HDR_PAGINATION_NEXT_OFFSET, entities.getNextOffset())
+                       .header(HDR_PAGINATION_TOTAL_NB_RECORDS, entities.getTotalNbRecords())
+                       .header(HDR_PAGINATION_MAX_NB_RECORDS, entities.getMaxNbRecords())
+                       .header(HDR_PAGINATION_NEXT_PAGE_URI, nextPageUri)
+                       .build();
     }
 
     protected LocalDate toLocalDate(final UUID accountId, final String inputDate, final TenantContext context) {

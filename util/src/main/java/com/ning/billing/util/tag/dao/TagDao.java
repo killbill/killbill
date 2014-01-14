@@ -23,14 +23,15 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.EntityDao;
+import com.ning.billing.util.tag.Tag;
 
-public interface TagDao {
-
-    void create(TagModelDao tag, InternalCallContext context) throws TagApiException;
+public interface TagDao extends EntityDao<TagModelDao, Tag, TagApiException> {
 
     void deleteTag(UUID objectId, ObjectType objectType, UUID tagDefinition, InternalCallContext context) throws TagApiException;
 
-    TagModelDao getById(UUID tagId, InternalTenantContext context);
+    Pagination<TagModelDao> searchTags(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
     List<TagModelDao> getTagsForObject(UUID objectId, ObjectType objectType, boolean includedDeleted, InternalTenantContext internalTenantContext);
 

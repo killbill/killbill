@@ -228,7 +228,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
                                                                   refundAmount, kbPaymentId.toString(), paymentInfoPlugin.getAmount(), PLUGIN_NAME));
         }
 
-        final DefaultNoOpRefundInfoPlugin refundInfoPlugin = new DefaultNoOpRefundInfoPlugin(refundAmount, currency, clock.getUTCNow(), clock.getUTCNow(), RefundPluginStatus.PROCESSED, null);
+        final DefaultNoOpRefundInfoPlugin refundInfoPlugin = new DefaultNoOpRefundInfoPlugin(kbPaymentId, refundAmount, currency, clock.getUTCNow(), clock.getUTCNow(), RefundPluginStatus.PROCESSED, null);
         refunds.put(kbPaymentId.toString(), refundInfoPlugin);
 
         return refundInfoPlugin;
@@ -237,5 +237,27 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     @Override
     public List<RefundInfoPlugin> getRefundInfo(final UUID kbAccountId, final UUID kbPaymentId, final TenantContext context) {
         return ImmutableList.<RefundInfoPlugin>copyOf(refunds.get(kbPaymentId.toString()));
+    }
+
+    @Override
+    public Pagination<RefundInfoPlugin> searchRefunds(final String searchKey, final Long offset, final Long limit, final TenantContext tenantContext) throws PaymentPluginApiException {
+        final ImmutableList<RefundInfoPlugin> allResults = ImmutableList.<RefundInfoPlugin>copyOf(Iterables.<RefundInfoPlugin>filter(Iterables.<RefundInfoPlugin>concat(refunds.values()), new Predicate<RefundInfoPlugin>() {
+            @Override
+            public boolean apply(final RefundInfoPlugin input) {
+                return (input.getFirstRefundReferenceId() != null && input.getFirstRefundReferenceId().contains(searchKey)) ||
+                       (input.getSecondRefundReferenceId() != null && input.getSecondRefundReferenceId().contains(searchKey));
+            }
+        }));
+
+        final List<RefundInfoPlugin> results;
+        if (offset >= allResults.size()) {
+            results = ImmutableList.<RefundInfoPlugin>of();
+        } else if (offset + limit > allResults.size()) {
+            results = allResults.subList(offset.intValue(), allResults.size());
+        } else {
+            results = allResults.subList(offset.intValue(), offset.intValue() + limit.intValue());
+        }
+
+        return new DefaultPagination<RefundInfoPlugin>(offset, limit, (long) results.size(), (long) refunds.values().size(), results.iterator());
     }
 }

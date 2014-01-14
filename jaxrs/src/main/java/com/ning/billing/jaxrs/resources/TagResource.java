@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,42 +16,46 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import java.util.LinkedList;
+import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.jaxrs.json.TagDefinitionJson;
+import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
-import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
-import com.google.common.base.Preconditions;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
-@Path(JaxrsResource.TAG_DEFINITIONS_PATH)
+@Path(JaxrsResource.TAGS_PATH)
 public class TagResource extends JaxRsResourceBase {
 
     @Inject
@@ -66,58 +70,62 @@ public class TagResource extends JaxRsResourceBase {
     }
 
     @GET
+    @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
-    public Response getTagDefinitions(@javax.ws.rs.core.Context final HttpServletRequest request) {
-        final List<TagDefinition> tagDefinitions = tagUserApi.getTagDefinitions(context.createContext(request));
+    public Response getTags(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                            @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                            @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final Pagination<Tag> tags = tagUserApi.getTags(offset, limit, tenantContext);
+        final URI nextPageUri = uriBuilder.nextPage(TagResource.class, "getTags", tags.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.toString()));
 
-        final List<TagDefinitionJson> result = new LinkedList<TagDefinitionJson>();
-        for (final TagDefinition cur : tagDefinitions) {
-            result.add(new TagDefinitionJson(cur));
+        final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<UUID, TagDefinition>();
+        for (final TagDefinition tagDefinition : tagUserApi.getTagDefinitions(tenantContext)) {
+            tagDefinitionsCache.put(tagDefinition.getId(), tagDefinition);
         }
 
-        return Response.status(Status.OK).entity(result).build();
+        return buildStreamingPaginationResponse(tags,
+                                                new Function<Tag, TagJson>() {
+                                                    @Override
+                                                    public TagJson apply(final Tag tag) {
+                                                        final TagDefinition tagDefinition = tagDefinitionsCache.get(tag.getTagDefinitionId());
+
+                                                        // TODO Really slow - we should instead try to figure out the account id
+                                                        final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tag.getId(), ObjectType.TAG, auditMode.getLevel(), tenantContext);
+                                                        return new TagJson(tag, tagDefinition, auditLogs);
+                                                    }
+                                                },
+                                                nextPageUri);
     }
 
     @GET
-    @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
+    @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        final TagDefinition tagDef = tagUserApi.getTagDefinition(UUID.fromString(tagDefId), context.createContext(request));
-        final TagDefinitionJson json = new TagDefinitionJson(tagDef);
-        return Response.status(Status.OK).entity(json).build();
-    }
+    public Response searchTags(@PathParam("searchKey") final String searchKey,
+                               @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                               @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                               @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final Pagination<Tag> tags = tagUserApi.searchTags(searchKey, offset, limit, tenantContext);
+        final URI nextPageUri = uriBuilder.nextPage(TagResource.class, "searchTags", tags.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
+                                                                                                                                                  QUERY_AUDIT, auditMode.toString()));
+        final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<UUID, TagDefinition>();
+        for (final TagDefinition tagDefinition : tagUserApi.getTagDefinitions(tenantContext)) {
+            tagDefinitionsCache.put(tagDefinition.getId(), tagDefinition);
+        }
+        return buildStreamingPaginationResponse(tags,
+                                                new Function<Tag, TagJson>() {
+                                                    @Override
+                                                    public TagJson apply(final Tag tag) {
+                                                        final TagDefinition tagDefinition = tagDefinitionsCache.get(tag.getTagDefinitionId());
 
-    @POST
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    public Response createTagDefinition(final TagDefinitionJson json,
-                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                        @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        // Checked as the database layer as well, but bail early and return 400 instead of 500
-        Preconditions.checkNotNull(json.getName(), String.format("TagDefinition name needs to be set"));
-        Preconditions.checkNotNull(json.getDescription(), String.format("TagDefinition description needs to be set"));
-
-        final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment, request));
-        return uriBuilder.buildResponse(TagResource.class, "getTagDefinition", createdTagDef.getId());
-    }
-
-    @DELETE
-    @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
-    @Produces(APPLICATION_JSON)
-    public Response deleteTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
-                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                        @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        tagUserApi.deleteTagDefinition(UUID.fromString(tagDefId), context.createContext(createdBy, reason, comment, request));
-        return Response.status(Status.NO_CONTENT).build();
-    }
-
-    @Override
-    protected ObjectType getObjectType() {
-        return ObjectType.TAG_DEFINITION;
+                                                        // TODO Really slow - we should instead try to figure out the account id
+                                                        final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tag.getId(), ObjectType.TAG, auditMode.getLevel(), tenantContext);
+                                                        return new TagJson(tag, tagDefinition, auditLogs);
+                                                    }
+                                                },
+                                                nextPageUri);
     }
 }

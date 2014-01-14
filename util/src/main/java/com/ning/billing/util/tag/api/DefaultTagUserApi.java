@@ -29,6 +29,8 @@ import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DefaultTagDefinition;
@@ -46,7 +48,18 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import static com.ning.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
+
 public class DefaultTagUserApi implements TagUserApi {
+
+    private static final Function<TagModelDao, Tag> TAG_MODEL_DAO_TAG_FUNCTION = new Function<TagModelDao, Tag>() {
+        @Override
+        public Tag apply(final TagModelDao input) {
+            return TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
+                   new DefaultControlTag(input.getId(), ControlTagType.getTypeFromId(input.getTagDefinitionId()), input.getObjectType(), input.getObjectId(), input.getCreatedDate()) :
+                   new DescriptiveTag(input.getId(), input.getTagDefinitionId(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
+        }
+    };
 
     private final InternalCallContextFactory internalCallContextFactory;
     private final TagDefinitionDao tagDefinitionDao;
@@ -127,6 +140,30 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
+    public Pagination<Tag> searchTags(final String searchKey, final Long offset, final Long limit, final TenantContext context) {
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<TagModelDao, TagApiException>() {
+                                                  @Override
+                                                  public Pagination<TagModelDao> build() {
+                                                      return tagDao.searchTags(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                  }
+                                              },
+                                              TAG_MODEL_DAO_TAG_FUNCTION);
+    }
+
+    @Override
+    public Pagination<Tag> getTags(final Long offset, final Long limit, final TenantContext context) {
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<TagModelDao, TagApiException>() {
+                                                  @Override
+                                                  public Pagination<TagModelDao> build() {
+                                                      return tagDao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                  }
+                                              },
+                                              TAG_MODEL_DAO_TAG_FUNCTION);
+    }
+
+    @Override
     public void removeTags(final UUID objectId, final ObjectType objectType, final Collection<UUID> tagDefinitionIds, final CallContext context) throws TagApiException {
         // TODO: consider making this batch
         for (final UUID tagDefinitionId : tagDefinitionIds) {
@@ -156,14 +193,7 @@ public class DefaultTagUserApi implements TagUserApi {
         return withModelTransform(tagDao.getTagsForAccount(includedDeleted, internalCallContextFactory.createInternalTenantContext(accountId, context)));
     }
 
-    private List<Tag> withModelTransform(final List<TagModelDao> input) {
-        return ImmutableList.<Tag>copyOf(Collections2.transform(input, new Function<TagModelDao, Tag>() {
-            @Override
-            public Tag apply(final TagModelDao input) {
-                return TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
-                       new DefaultControlTag(input.getId(), ControlTagType.getTypeFromId(input.getTagDefinitionId()), input.getObjectType(), input.getObjectId(), input.getCreatedDate()) :
-                       new DescriptiveTag(input.getId(), input.getTagDefinitionId(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
-            }
-        }));
+    private List<Tag> withModelTransform(final Collection<TagModelDao> input) {
+        return ImmutableList.<Tag>copyOf(Collections2.transform(input, TAG_MODEL_DAO_TAG_FUNCTION));
     }
 }

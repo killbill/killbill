@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
-public class PaymentMethodJson {
+public class PaymentMethodJson extends JsonBase {
 
     private final String paymentMethodId;
     private final String accountId;

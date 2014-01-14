@@ -55,6 +55,8 @@ public interface PaymentDao {
 
     public void updateRefundStatus(UUID refundId, RefundStatus status, BigDecimal processedAmount, Currency processedCurrency, InternalCallContext context);
 
+    public Pagination<RefundModelDao> getRefunds(String pluginName, Long offset, Long limit, InternalTenantContext context);
+
     public RefundModelDao getRefund(UUID refundId, InternalTenantContext context);
 
     public List<RefundModelDao> getRefundsForPayment(UUID paymentId, InternalTenantContext context);

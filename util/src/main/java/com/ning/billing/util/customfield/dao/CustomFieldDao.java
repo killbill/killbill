@@ -20,12 +20,15 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.entity.Pagination;
 import com.ning.billing.util.entity.dao.EntityDao;
 
 public interface CustomFieldDao extends EntityDao<CustomFieldModelDao, CustomField, CustomFieldApiException> {
+
+    public Pagination<CustomFieldModelDao> searchCustomFields(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
     public List<CustomFieldModelDao> getCustomFieldsForObject(final UUID objectId, final ObjectType objectType, final InternalTenantContext context);
 

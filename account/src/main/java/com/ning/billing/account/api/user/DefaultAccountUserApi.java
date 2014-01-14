@@ -34,14 +34,15 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.entity.DefaultPagination;
 import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
+
+import static com.ning.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
 public class DefaultAccountUserApi implements AccountUserApi {
 
@@ -92,30 +93,38 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public Pagination<Account> searchAccounts(final String searchKey, final Long offset, final Long limit, final TenantContext context) {
-        final Pagination<AccountModelDao> accountModelDaos = accountDao.searchAccounts(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
-        return new DefaultPagination<Account>(accountModelDaos,
-                                              limit,
-                                              Iterators.<AccountModelDao, Account>transform(accountModelDaos.iterator(),
-                                                                                            new Function<AccountModelDao, Account>() {
-                                                                                                @Override
-                                                                                                public Account apply(final AccountModelDao input) {
-                                                                                                    return new DefaultAccount(input);
-                                                                                                }
-                                                                                            }));
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<AccountModelDao, AccountApiException>() {
+                                                  @Override
+                                                  public Pagination<AccountModelDao> build() {
+                                                      return accountDao.searchAccounts(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                  }
+                                              },
+                                              new Function<AccountModelDao, Account>() {
+                                                  @Override
+                                                  public Account apply(final AccountModelDao accountModelDao) {
+                                                      return new DefaultAccount(accountModelDao);
+                                                  }
+                                              }
+                                             );
     }
 
     @Override
     public Pagination<Account> getAccounts(final Long offset, final Long limit, final TenantContext context) {
-        final Pagination<AccountModelDao> accountModelDaos = accountDao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
-        return new DefaultPagination<Account>(accountModelDaos,
-                                              limit,
-                                              Iterators.<AccountModelDao, Account>transform(accountModelDaos.iterator(),
-                                                                                            new Function<AccountModelDao, Account>() {
-                                                                                                @Override
-                                                                                                public Account apply(final AccountModelDao input) {
-                                                                                                    return new DefaultAccount(input);
-                                                                                                }
-                                                                                            }));
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<AccountModelDao, AccountApiException>() {
+                                                  @Override
+                                                  public Pagination<AccountModelDao> build() {
+                                                      return accountDao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                  }
+                                              },
+                                              new Function<AccountModelDao, Account>() {
+                                                  @Override
+                                                  public Account apply(final AccountModelDao accountModelDao) {
+                                                      return new DefaultAccount(accountModelDao);
+                                                  }
+                                              }
+                                             );
     }
 
     @Override

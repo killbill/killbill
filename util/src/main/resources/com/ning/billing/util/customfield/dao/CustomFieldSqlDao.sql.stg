@@ -39,3 +39,19 @@ and object_type = :objectType
 ;
 >>
 
+searchCustomFields(searchKey, offset, rowCount) ::= <<
+select SQL_CALC_FOUND_ROWS
+<allTableFields("t.")>
+from <tableName()> t
+where 1 = 1
+and (
+     <idField("t.")> = '<searchKey>'
+  or t.object_type like '%<searchKey>%'
+  or t.field_name like '%<searchKey>%'
+  or t.field_value like '%<searchKey>%'
+)
+<AND_CHECK_TENANT("t.")>
+order by <recordIdField("t.")> ASC
+limit :offset, :rowCount
+;
+>>

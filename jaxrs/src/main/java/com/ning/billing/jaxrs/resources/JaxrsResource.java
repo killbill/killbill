@@ -148,7 +148,11 @@ public interface JaxrsResource {
     public static final String CHARGEBACKS_PATH = PREFIX + "/" + CHARGEBACKS;
 
     public static final String TAGS = "tags";
+    public static final String TAGS_PATH = PREFIX + "/" + TAGS;
+
     public static final String CUSTOM_FIELDS = "customFields";
+    public static final String CUSTOM_FIELDS_PATH = PREFIX + "/" + CUSTOM_FIELDS;
+
     public static final String EMAILS = "emails";
     public static final String EMAIL_NOTIFICATIONS = "emailNotifications";
 

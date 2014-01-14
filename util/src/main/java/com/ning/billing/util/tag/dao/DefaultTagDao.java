@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.tag.dao;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,6 +36,8 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -212,5 +215,19 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
             }
         });
 
+    }
+
+    @Override
+    public Pagination<TagModelDao> searchTags(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(TagSqlDao.class,
+                                              new PaginationIteratorBuilder<TagModelDao, Tag, TagSqlDao>() {
+                                                  @Override
+                                                  public Iterator<TagModelDao> build(final TagSqlDao tagSqlDao, final Long limit) {
+                                                      return tagSqlDao.searchTags(searchKey, offset, limit, context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
     }
 }
