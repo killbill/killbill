@@ -460,4 +460,8 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
                          final List<TransferCancelData> transferCancelData, final InternalCallContext fromContext,
                          final InternalCallContext toContext) {
     }
+
+    @Override
+    public void updateBundleExternalKey(final UUID bundleId, final String externalKey, final InternalCallContext context) {
+    }
 }

@@ -90,6 +90,8 @@ public interface SubscriptionDao {
 
     public void transfer(UUID srcAccountId, UUID destAccountId, BundleMigrationData data, List<TransferCancelData> transferCancelData, InternalCallContext fromContext, InternalCallContext toContext);
 
+    public void updateBundleExternalKey(UUID bundleId, String externalKey, final InternalCallContext context);
+
     // Repair
     public void repair(UUID accountId, UUID bundleId, List<SubscriptionDataRepair> inRepair, InternalCallContext context);
 }

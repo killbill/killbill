@@ -38,6 +38,12 @@ public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao, S
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
+    public void updateBundleExternalKey(@Bind("id") String id,
+                                        @Bind("externalKey") String externalKey,
+                                        @BindBean final InternalCallContext context);
+
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     public void updateBundleLastSysTime(@Bind("id") String id,
                                         @Bind("lastSysUpdateDate") Date lastSysUpdate,
                                         @BindBean final InternalCallContext context);
