@@ -160,7 +160,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         try {
             final UUID activeSubscriptionIdForKey = entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(externalKey, internalContext);
             if (activeSubscriptionIdForKey == null) {
-                throw new SubscriptionApiException(new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, externalKey));
+                throw new SubscriptionApiException(new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, externalKey));
             }
             final SubscriptionBase subscriptionBase = subscriptionBaseInternalApi.getSubscriptionFromId(activeSubscriptionIdForKey, internalContext);
             return getSubscriptionBundle(subscriptionBase.getBundleId(), context);
