@@ -37,7 +37,6 @@ CREATE TABLE subscriptions (
     bundle_start_date datetime NOT NULL,
     active_version int(11) DEFAULT 1,
     charged_through_date datetime DEFAULT NULL,
-    paid_through_date datetime DEFAULT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
