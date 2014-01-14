@@ -74,6 +74,11 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
+    public void notifyPendingPaymentOfStateChanged(final Account account, final UUID uuid, final boolean b, final CallContext callContext) throws PaymentApiException {
+
+    }
+
+    @Override
     public Payment retryPayment(final Account account, final UUID paymentId, final CallContext context) throws PaymentApiException {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), context);
         paymentProcessor.retryPaymentFromApi(paymentId, internalCallContext);
@@ -87,6 +92,16 @@ public class DefaultPaymentApi implements PaymentApi {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentId);
         }
         return payment;
+    }
+
+    @Override
+    public Pagination<Payment> getPayments(final Long aLong, final Long aLong2, final TenantContext tenantContext) {
+        return null;
+    }
+
+    @Override
+    public Pagination<Payment> getPayments(final Long aLong, final Long aLong2, final String s, final TenantContext tenantContext) throws PaymentApiException {
+        return null;
     }
 
     @Override
@@ -122,6 +137,11 @@ public class DefaultPaymentApi implements PaymentApi {
         }
         return refundProcessor.createRefund(account, paymentId, refundAmount, false, ImmutableMap.<UUID, BigDecimal>of(),
                                             internalCallContextFactory.createInternalCallContext(account.getId(), context));
+    }
+
+    @Override
+    public void notifyPendingRefundOfStateChanged(final Account account, final UUID uuid, final boolean b, final CallContext callContext) throws PaymentApiException {
+
     }
 
     @Override
