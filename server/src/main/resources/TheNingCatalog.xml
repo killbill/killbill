@@ -1,0 +1,3279 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+
+     xsi:noNamespaceSchemaLocation="../../../../../../../../../killbill/catalog/src/test/resources/CatalogSchema.xsd">
+
+    <effectiveDate>2000-01-01T00:00:00+00:00</effectiveDate>
+
+    <catalogName>Ning</catalogName>
+
+    <currencies>
+        <currency>USD</currency>
+        <currency>GBP</currency>
+        <currency>BRL</currency>
+        <currency>EUR</currency>
+        <currency>AUD</currency>
+        <currency>MXN</currency>
+    </currencies>
+
+    <products>
+
+        <!-- Bedazzle Products -->
+        <product name="Basic">
+            <category>BASE</category>
+            <included>
+                <addonProduct>BrandedMusic</addonProduct>
+                <addonProduct>BrandedVideo</addonProduct>
+                <addonProduct>Events</addonProduct>
+                <addonProduct>Groups</addonProduct>
+                <addonProduct>PaidAccess</addonProduct>
+                <addonProduct>DoItForMe</addonProduct>
+                <addonProduct>DomainNameAddOn</addonProduct>
+            </included>
+        </product>
+        <product name="Performance">
+            <category>BASE</category>
+            <included>
+                <addonProduct>BrandedMusic</addonProduct>
+                <addonProduct>BrandedVideo</addonProduct>
+                <addonProduct>Events</addonProduct>
+                <addonProduct>Groups</addonProduct>
+                <addonProduct>PaidAccess</addonProduct>
+                <addonProduct>DoItForMe</addonProduct>
+                <addonProduct>DomainNameAddOn</addonProduct>
+            </included>
+        </product>
+        <product name="Business">
+            <category>BASE</category>
+            <included>
+                <addonProduct>BrandedMusic</addonProduct>
+                <addonProduct>BrandedVideo</addonProduct>
+                <addonProduct>Events</addonProduct>
+                <addonProduct>Groups</addonProduct>
+                <addonProduct>PaidAccess</addonProduct>
+                <addonProduct>DoItForMe</addonProduct>
+                <addonProduct>DomainNameAddOn</addonProduct>
+            </included>
+        </product>
+        <product name="BusinessPlus">
+            <category>BASE</category>
+            <included>
+                <addonProduct>BrandedMusic</addonProduct>
+                <addonProduct>BrandedVideo</addonProduct>
+                <addonProduct>Events</addonProduct>
+                <addonProduct>Groups</addonProduct>
+                <addonProduct>PaidAccess</addonProduct>
+                <addonProduct>DoItForMe</addonProduct>
+                <addonProduct>DomainNameAddOn</addonProduct>
+            </included>
+        </product>
+        <product name="Corporate">
+            <category>BASE</category>
+            <included>
+                <addonProduct>BrandedMusic</addonProduct>
+                <addonProduct>BrandedVideo</addonProduct>
+                <addonProduct>Events</addonProduct>
+                <addonProduct>Groups</addonProduct>
+                <addonProduct>PaidAccess</addonProduct>
+                <addonProduct>DoItForMe</addonProduct>
+                <addonProduct>DomainNameAddOn</addonProduct>
+            </included>
+        </product>
+        <product name="Demo">
+            <category>BASE</category>
+            <included>
+                <addonProduct>BrandedMusic</addonProduct>
+                <addonProduct>BrandedVideo</addonProduct>
+                <addonProduct>Events</addonProduct>
+                <addonProduct>Groups</addonProduct>
+                <addonProduct>PaidAccess</addonProduct>
+                <addonProduct>DoItForMe</addonProduct>
+                <addonProduct>DomainNameAddOn</addonProduct>
+            </included>
+        </product>
+
+        <!-- These products are pre-Bedazzle -->
+        <product name="BrandedMusic">
+            <category>ADD_ON</category>
+        </product>
+        <product name="BrandedVideo">
+            <category>ADD_ON</category>
+        </product>
+        <product name="Events">
+            <category>ADD_ON</category>
+        </product>
+        <product name="Groups">
+            <category>ADD_ON</category>
+        </product>
+        <product name="PaidAccess">
+            <category>ADD_ON</category>
+        </product>
+        <product name="Ads">
+            <category>STANDALONE</category>
+        </product>
+        <product name="DoItForMe">
+            <category>ADD_ON</category>
+        </product>
+        <product name="Domain">
+            <category>STANDALONE</category>
+        </product>
+        <product name="Mini">
+            <category>BASE</category>
+            <available>
+                <addonProduct>BrandedMusic</addonProduct>
+                <addonProduct>BrandedVideo</addonProduct>
+                <addonProduct>Events</addonProduct>
+                <addonProduct>Groups</addonProduct>
+                <addonProduct>PaidAccess</addonProduct>
+                <addonProduct>DoItForMe</addonProduct>
+                <addonProduct>DomainNameAddOn</addonProduct>
+            </available>
+        </product>
+        <product name="PartnerSupport">
+            <category>STANDALONE</category>
+        </product>
+        <product name="PersonalSupport">
+            <category>STANDALONE</category>
+        </product>
+        <product name="Plus">
+            <category>BASE</category>
+            <included>
+                <addonProduct>Events</addonProduct>
+                <addonProduct>Groups</addonProduct>
+            </included>
+            <available>
+                <addonProduct>BrandedMusic</addonProduct>
+                <addonProduct>BrandedVideo</addonProduct>
+                <addonProduct>PaidAccess</addonProduct>
+                <addonProduct>DoItForMe</addonProduct>
+                <addonProduct>DomainNameAddOn</addonProduct>
+            </available>
+        </product>
+        <product name="PrepaidCredit">
+            <category>STANDALONE</category>
+        </product>
+        <product name="Pro">
+            <category>BASE</category>
+            <included>
+                <addonProduct>BrandedMusic</addonProduct>
+                <addonProduct>BrandedVideo</addonProduct>
+                <addonProduct>Events</addonProduct>
+                <addonProduct>Groups</addonProduct>
+            </included>
+            <available>
+                <addonProduct>PaidAccess</addonProduct>
+                <addonProduct>DoItForMe</addonProduct>
+                <addonProduct>DomainNameAddOn</addonProduct>
+            </available>
+        </product>
+        <product name="ProfessionalSupport">
+            <category>STANDALONE</category>
+        </product>
+        <product name="RemoveLinks">
+            <category>STANDALONE</category>
+        </product>
+        <product name="DomainNameAddOn">
+            <category>ADD_ON</category>
+        </product>
+        <product name="PriceChangeTest">
+            <category>BASE</category>
+        </product>
+        <product name="StorageBandwidth">
+            <category>STANDALONE</category>
+        </product>
+    </products>
+
+    <rules>
+        <changePolicy>
+            <!-- Changes to Rescue Pricing are always EOT -->
+            <changePolicyCase>
+                <toPriceList>rescue-cheap</toPriceList>
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <toPriceList>rescue-expensive</toPriceList>
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
+            <!-- Trial changes are always immediate -->
+            <changePolicyCase>
+                <phaseType>TRIAL</phaseType>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <!-- Changes to/from unpublished plans are always immediate -->
+            <changePolicyCase>
+                <fromProduct>BusinessPlus</fromProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Corporate</fromProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Demo</fromProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <toProduct>BusinessPlus</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <toProduct>Corporate</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <toProduct>Demo</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <!-- Billing period change longer-> Immediate -->
+            <changePolicyCase>
+                <fromBillingPeriod>MONTHLY</fromBillingPeriod>
+                <toBillingPeriod>ANNUAL</toBillingPeriod>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <!-- Conversions to Bedazzle -> Immediate -->
+            <changePolicyCase>
+                <fromProduct>Mini</fromProduct>
+                <toProduct>Basic</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Mini</fromProduct>
+                <toProduct>Performance</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Mini</fromProduct>
+                <toProduct>Business</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Plus</fromProduct>
+                <toProduct>Basic</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Plus</fromProduct>
+                <toProduct>Performance</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Plus</fromProduct>
+                <toProduct>Business</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Pro</fromProduct>
+                <toProduct>Basic</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Pro</fromProduct>
+                <toProduct>Performance</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Pro</fromProduct>
+                <toProduct>Business</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+
+            <!-- Upgrades -> Immediate -->
+            <changePolicyCase>
+                <fromProduct>Basic</fromProduct>
+                <toProduct>Performance</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Basic</fromProduct>
+                <toProduct>Business</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Performance</fromProduct>
+                <toProduct>Business</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            
+            <changePolicyCase>
+                <fromProduct>Mini</fromProduct>
+                <toProduct>Plus</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Mini</fromProduct>
+                <toProduct>Pro</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Plus</fromProduct>
+                <toProduct>Pro</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <!-- default policy is EOT -->
+            <changePolicyCase>
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <changeAlignment>
+            <!-- Discount plans align to subscription start-->
+            <changeAlignmentCase>
+                <toPriceList>earlydiscount</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <toPriceList>trialpay</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <toPriceList>cafepress</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <toPriceList>pearson</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <toPriceList>wego</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <toPriceList>pro-annual-discount-pricelist</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <toPriceList>pro-annual-dev-discount-pricelist</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <toPriceList>plus-annual-discount-pricelist</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <toPriceList>standard-comp-strategic</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <toPriceList>standard-comp-internal</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <toPriceList>standard-comp-external</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>            
+            <!-- Rescue plans align to the change of pricelist -->
+            <changeAlignmentCase>
+                <toPriceList>rescue-cheap</toPriceList>
+                <alignment>CHANGE_OF_PRICELIST</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <toPriceList>rescue-expensive</toPriceList>
+                <alignment>CHANGE_OF_PRICELIST</alignment>
+            </changeAlignmentCase>
+            <!-- By default everything else aligns to bundle start -->
+            <changeAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </changeAlignmentCase>
+        </changeAlignment>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <phaseType>TRIAL</phaseType>
+                <policy>IMMEDIATE</policy>
+            </cancelPolicyCase>
+            <cancelPolicyCase>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+        <createAlignment>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+        </createAlignment>
+        <billingAlignment>
+            <billingAlignmentCase>
+                <productCategory>BASE</productCategory>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <alignment>SUBSCRIPTION</alignment>
+            </billingAlignmentCase>
+            <billingAlignmentCase>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
+        </billingAlignment>
+        <priceList>
+            <priceListCase>
+                <!-- Any change initially goes to default after migration we may move to proper price list behavior-->
+                <toPriceList>DEFAULT</toPriceList>
+            </priceListCase>
+        </priceList>
+    </rules>
+
+    <plans>
+        <!-- Bedazzle Plans -->
+        <plan name="basic-monthly">
+            <product>Basic</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>14</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>22</value></price>
+                    <price><currency>MXN</currency><value>420</value></price>
+                    <price><currency>BRL</currency><value>70</value></price>
+                    <price><currency>EUR</currency><value>27</value></price>
+                    <price><currency>AUD</currency><value>30</value></price>
+                    <price><currency>USD</currency><value>30</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="basic-monthly-notrial">
+            <product>Basic</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>22</value></price>
+                    <price><currency>MXN</currency><value>420</value></price>
+                    <price><currency>BRL</currency><value>70</value></price>
+                    <price><currency>EUR</currency><value>27</value></price>
+                    <price><currency>AUD</currency><value>30</value></price>
+                    <price><currency>USD</currency><value>30</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>        
+        <plan name="basic-annual">
+            <product>Basic</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>14</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>216</value></price>
+                    <price><currency>MXN</currency><value>4188</value></price>
+                    <price><currency>BRL</currency><value>660</value></price>
+                    <price><currency>EUR</currency><value>264</value></price>
+                    <price><currency>AUD</currency><value>300</value></price>
+                    <price><currency>USD</currency><value>300</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="basic-annual-notrial">
+            <product>Basic</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>216</value></price>
+                    <price><currency>MXN</currency><value>4188</value></price>
+                    <price><currency>BRL</currency><value>660</value></price>
+                    <price><currency>EUR</currency><value>264</value></price>
+                    <price><currency>AUD</currency><value>300</value></price>
+                    <price><currency>USD</currency><value>300</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>        
+        <plan name="performance-monthly">
+            <product>Performance</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>14</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>49</value></price>
+                    <price><currency>MXN</currency><value>849</value></price>
+                    <price><currency>BRL</currency><value>139</value></price>
+                    <price><currency>EUR</currency><value>55</value></price>
+                    <price><currency>AUD</currency><value>59</value></price>
+                    <price><currency>USD</currency><value>59</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="performance-monthly-notrial">
+            <product>Performance</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>49</value></price>
+                    <price><currency>MXN</currency><value>849</value></price>
+                    <price><currency>BRL</currency><value>139</value></price>
+                    <price><currency>EUR</currency><value>55</value></price>
+                    <price><currency>AUD</currency><value>59</value></price>
+                    <price><currency>USD</currency><value>59</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>        
+        <plan name="performance-annual">
+            <product>Performance</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>14</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>480</value></price>
+                    <price><currency>MXN</currency><value>8388</value></price>
+                    <price><currency>BRL</currency><value>1308</value></price>
+                    <price><currency>EUR</currency><value>540</value></price>
+                    <price><currency>AUD</currency><value>588</value></price>
+                    <price><currency>USD</currency><value>588</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="performance-annual-notrial">
+            <product>Performance</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>480</value></price>
+                    <price><currency>MXN</currency><value>8388</value></price>
+                    <price><currency>BRL</currency><value>1308</value></price>
+                    <price><currency>EUR</currency><value>540</value></price>
+                    <price><currency>AUD</currency><value>588</value></price>
+                    <price><currency>USD</currency><value>588</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>        
+        <plan name="business-monthly">
+            <product>Business</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>14</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>90</value></price>
+                    <price><currency>MXN</currency><value>1699</value></price>
+                    <price><currency>BRL</currency><value>279</value></price>
+                    <price><currency>EUR</currency><value>99</value></price>
+                    <price><currency>AUD</currency><value>119</value></price>
+                    <price><currency>USD</currency><value>119</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="business-monthly-notrial">
+            <product>Business</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>90</value></price>
+                    <price><currency>MXN</currency><value>1699</value></price>
+                    <price><currency>BRL</currency><value>279</value></price>
+                    <price><currency>EUR</currency><value>99</value></price>
+                    <price><currency>AUD</currency><value>119</value></price>
+                    <price><currency>USD</currency><value>119</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>        
+        <plan name="business-annual">
+            <product>Business</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>14</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>900</value></price>
+                    <price><currency>MXN</currency><value>16788</value></price>
+                    <price><currency>BRL</currency><value>2628</value></price>
+                    <price><currency>EUR</currency><value>984</value></price>
+                    <price><currency>AUD</currency><value>1180</value></price>
+                    <price><currency>USD</currency><value>1188</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="business-annual-notrial">
+            <product>Business</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>900</value></price>
+                    <price><currency>MXN</currency><value>16788</value></price>
+                    <price><currency>BRL</currency><value>2628</value></price>
+                    <price><currency>EUR</currency><value>984</value></price>
+                    <price><currency>AUD</currency><value>1180</value></price>
+                    <price><currency>USD</currency><value>1188</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>        
+        <plan name="businessplus-monthly">
+            <product>BusinessPlus</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>758</value></price>
+                    <price><currency>MXN</currency><value>14131</value></price>
+                    <price><currency>BRL</currency><value>2212</value></price>
+                    <price><currency>EUR</currency><value>828</value></price>
+                    <price><currency>AUD</currency><value>993</value></price>
+                    <price><currency>USD</currency><value>999.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="businessplus-annual">
+            <product>BusinessPlus</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>9090</value></price>
+                    <price><currency>MXN</currency><value>169567</value></price>
+                    <price><currency>BRL</currency><value>26544</value></price>
+                    <price><currency>EUR</currency><value>9939</value></price>
+                    <price><currency>AUD</currency><value>11919</value></price>
+                    <price><currency>USD</currency><value>11999.40</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="corporatetier1-monthly">
+            <product>Corporate</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>2273</value></price>
+                    <price><currency>MXN</currency><value>42394</value></price>
+                    <price><currency>BRL</currency><value>6636</value></price>
+                    <price><currency>EUR</currency><value>2485</value></price>
+                    <price><currency>AUD</currency><value>2980</value></price>
+                    <price><currency>USD</currency><value>3000</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="corporatetier1-annual">
+            <product>Corporate</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>27273</value></price>
+                    <price><currency>MXN</currency><value>508727</value></price>
+                    <price><currency>BRL</currency><value>79636</value></price>
+                    <price><currency>EUR</currency><value>29818</value></price>
+                    <price><currency>AUD</currency><value>35758</value></price>
+                    <price><currency>USD</currency><value>36000</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="corporatetier2-monthly">
+            <product>Corporate</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>758</value></price>
+                    <price><currency>MXN</currency><value>14131</value></price>
+                    <price><currency>BRL</currency><value>2212</value></price>
+                    <price><currency>EUR</currency><value>828</value></price>
+                    <price><currency>AUD</currency><value>993</value></price>
+                    <price><currency>USD</currency><value>1000</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="corporatetier2-annual">
+            <product>Corporate</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>9091</value></price>
+                    <price><currency>MXN</currency><value>169576</value></price>
+                    <price><currency>BRL</currency><value>26545</value></price>
+                    <price><currency>EUR</currency><value>9939</value></price>
+                    <price><currency>AUD</currency><value>11919</value></price>
+                    <price><currency>USD</currency><value>12000</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="corporatetier3-monthly">
+            <product>Corporate</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>379</value></price>
+                    <price><currency>MXN</currency><value>7066</value></price>
+                    <price><currency>BRL</currency><value>1106</value></price>
+                    <price><currency>EUR</currency><value>414</value></price>
+                    <price><currency>AUD</currency><value>497</value></price>
+                    <price><currency>USD</currency><value>500</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="corporatetier3-annual">
+            <product>Corporate</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>4545</value></price>
+                    <price><currency>MXN</currency><value>84788</value></price>
+                    <price><currency>BRL</currency><value>13273</value></price>
+                    <price><currency>EUR</currency><value>4970</value></price>
+                    <price><currency>AUD</currency><value>5960</value></price>
+                    <price><currency>USD</currency><value>6000</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="demo-monthly">
+            <product>Demo</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="basic-monthly-comp-strategic">
+            <product>Basic</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>21.95</value></price>
+                    <price><currency>MXN</currency><value>449</value></price>
+                    <price><currency>BRL</currency><value>69.95</value></price>
+                    <price><currency>EUR</currency><value>24.95</value></price>
+                    <price><currency>AUD</currency><value>32.95</value></price>
+                    <price><currency>USD</currency><value>29.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="performance-monthly-comp-strategic">
+            <product>Performance</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>419.40</value></price>
+                    <price><currency>MXN</currency><value>8388</value></price>
+                    <price><currency>BRL</currency><value>1319.40</value></price>
+                    <price><currency>EUR</currency><value>239.40</value></price>
+                    <price><currency>AUD</currency><value>599.40</value></price>
+                    <price><currency>USD</currency><value>599.40</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="business-monthly-comp-strategic">
+            <product>Business</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>99.95</value></price>
+                    <price><currency>MXN</currency><value>1799</value></price>
+                    <price><currency>BRL</currency><value>279.95</value></price>
+                    <price><currency>EUR</currency><value>99.95</value></price>
+                    <price><currency>AUD</currency><value>129.95</value></price>
+                    <price><currency>USD</currency><value>119.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="businessplus-monthly-comp-strategic">
+            <product>BusinessPlus</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>USD</currency><value>999.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="corporate-monthly-comp-internal">
+            <product>Corporate</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="corporate-monthly-comp-external">
+            <product>Corporate</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <!-- Plans prior to Bedazzle -->
+        <plan name="brandedmusic-monthly">
+            <product>BrandedMusic</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>6.95</value></price>
+                    <price><currency>MXN</currency><value>139</value></price>
+                    <price><currency>BRL</currency><value>19</value></price>
+                    <price><currency>EUR</currency><value>7.95</value></price>
+                    <price><currency>AUD</currency><value>9.95</value></price>
+                    <price><currency>USD</currency><value>9.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="brandedmusic-monthly-comp-strategic">
+            <product>BrandedMusic</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>6.95</value></price>
+                    <price><currency>MXN</currency><value>139</value></price>
+                    <price><currency>BRL</currency><value>19</value></price>
+                    <price><currency>EUR</currency><value>7.95</value></price>
+                    <price><currency>AUD</currency><value>9.95</value></price>
+                    <price><currency>USD</currency><value>9.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="brandedmusic-monthly-comp-internal">
+            <product>BrandedMusic</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="brandedvideo-monthly">
+            <product>BrandedVideo</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>9.95</value></price>
+                    <price><currency>MXN</currency><value>209</value></price>
+                    <price><currency>BRL</currency><value>29</value></price>
+                    <price><currency>EUR</currency><value>11.95</value></price>
+                    <price><currency>AUD</currency><value>14.95</value></price>
+                    <price><currency>USD</currency><value>14.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="brandedvideo-monthly-comp-strategic">
+            <product>BrandedVideo</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>9.95</value></price>
+                    <price><currency>MXN</currency><value>209</value></price>
+                    <price><currency>BRL</currency><value>29</value></price>
+                    <price><currency>EUR</currency><value>11.95</value></price>
+                    <price><currency>AUD</currency><value>14.95</value></price>
+                    <price><currency>USD</currency><value>14.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="brandedvideo-monthly-comp-internal">
+            <product>BrandedVideo</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="events-monthly">
+            <product>Events</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>6.95</value></price>
+                    <price><currency>MXN</currency><value>139</value></price>
+                    <price><currency>BRL</currency><value>19</value></price>
+                    <price><currency>EUR</currency><value>7.95</value></price>
+                    <price><currency>AUD</currency><value>9.95</value></price>
+                    <price><currency>USD</currency><value>9.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="events-monthly-comp-strategic">
+            <product>Events</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>6.95</value></price>
+                    <price><currency>MXN</currency><value>139</value></price>
+                    <price><currency>BRL</currency><value>19</value></price>
+                    <price><currency>EUR</currency><value>7.95</value></price>
+                    <price><currency>AUD</currency><value>9.95</value></price>
+                    <price><currency>USD</currency><value>9.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="events-monthly-comp-internal">
+            <product>Events</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="groups-monthly">
+            <product>Groups</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>6.95</value></price>
+                    <price><currency>MXN</currency><value>139</value></price>
+                    <price><currency>BRL</currency><value>19</value></price>
+                    <price><currency>EUR</currency><value>7.95</value></price>
+                    <price><currency>AUD</currency><value>9.95</value></price>
+                    <price><currency>USD</currency><value>9.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="groups-monthly-comp-internal">
+            <product>Groups</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="groups-monthly-comp-strategic">
+            <product>Groups</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>6.95</value></price>
+                    <price><currency>MXN</currency><value>139</value></price>
+                    <price><currency>BRL</currency><value>19</value></price>
+                    <price><currency>EUR</currency><value>7.95</value></price>
+                    <price><currency>AUD</currency><value>9.95</value></price>
+                    <price><currency>USD</currency><value>9.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="paidaccess-monthly">
+            <product>PaidAccess</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>12.95</value></price>
+                    <price><currency>MXN</currency><value>229</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>14.95</value></price>
+                    <price><currency>AUD</currency><value>19.95</value></price>
+                    <price><currency>USD</currency><value>19.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="paidaccess-monthly-comp-strategic">
+            <product>PaidAccess</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>0</value></price>
+                        <price><currency>MXN</currency><value>0</value></price>
+                        <price><currency>BRL</currency><value>-1</value></price>
+                        <price><currency>EUR</currency><value>0</value></price>
+                        <price><currency>AUD</currency><value>0</value></price>
+                        <price><currency>USD</currency><value>0</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>12.95</value></price>
+                    <price><currency>MXN</currency><value>229</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>14.95</value></price>
+                    <price><currency>AUD</currency><value>19.95</value></price>
+                    <price><currency>USD</currency><value>19.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="paidaccess-monthly-comp-external">
+            <product>PaidAccess</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>0</value></price>
+                    <price><currency>MXN</currency><value>0</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>0</value></price>
+                    <price><currency>AUD</currency><value>0</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-ads-comp">
+            <product>Ads</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-ads">
+            <product>Ads</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>24.95</value></price>
+                </recurringPrice>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="doitforme-onetime">
+            <product>DoItForMe</product>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>1</number>
+                </duration>
+                <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>299.95</value></price>
+                    <price><currency>MXN</currency><value>5899</value></price>
+                    <price><currency>BRL</currency><value>829</value></price>
+                    <price><currency>EUR</currency><value>359.95</value></price>
+                    <price><currency>AUD</currency><value>499.95</value></price>
+                    <price><currency>USD</currency><value>499.95</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="doitforme-onetime599">
+            <product>DoItForMe</product>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>1</number>
+                </duration>
+                <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>369.95</value></price>
+                    <price><currency>MXN</currency><value>7199</value></price>
+                    <price><currency>BRL</currency><value>949</value></price>
+                    <price><currency>EUR</currency><value>429.95</value></price>
+                    <price><currency>AUD</currency><value>569.95</value></price>
+                    <price><currency>USD</currency><value>599.95</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="doitforme-onetime799">
+            <product>DoItForMe</product>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>1</number>
+                </duration>
+                <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>509.95</value></price>
+                    <price><currency>MXN</currency><value>9799</value></price>
+                    <price><currency>BRL</currency><value>1189</value></price>
+                    <price><currency>EUR</currency><value>569.95</value></price>
+                    <price><currency>AUD</currency><value>709.95</value></price>
+                    <price><currency>USD</currency><value>799.95</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="doitforme-onetime699">
+            <product>DoItForMe</product>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>1</number>
+                </duration>
+                <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>439.95</value></price>
+                    <price><currency>MXN</currency><value>8499</value></price>
+                    <price><currency>BRL</currency><value>1069</value></price>
+                    <price><currency>EUR</currency><value>499.95</value></price>
+                    <price><currency>AUD</currency><value>639.95</value></price>
+                    <price><currency>USD</currency><value>699.95</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="doitforme-onetime-fullprice">
+            <product>DoItForMe</product>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>1</number>
+                </duration>
+                <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>649.95</value></price>
+                    <price><currency>MXN</currency><value>12999</value></price>
+                    <price><currency>BRL</currency><value>1999</value></price>
+                    <price><currency>EUR</currency><value>799.95</value></price>
+                    <price><currency>AUD</currency><value>999.95</value></price>
+                    <price><currency>USD</currency><value>999.95</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="domain-monthly-comp">
+            <product>Domain</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="domain-monthly">
+            <product>Domain</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>4.95</value></price>
+                </recurringPrice>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="mini-annual-early-discount">
+            <product>Mini</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>19.95</value></price>
+                        <price><currency>MXN</currency><value>399</value></price>
+                        <price><currency>BRL</currency><value>59</value></price>
+                        <price><currency>EUR</currency><value>9.95</value></price>
+                        <price><currency>AUD</currency><value>29.95</value></price>
+                        <price><currency>USD</currency><value>18.29</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>19.95</value></price>
+                    <price><currency>MXN</currency><value>399</value></price>
+                    <price><currency>BRL</currency><value>59</value></price>
+                    <price><currency>EUR</currency><value>19.95</value></price>
+                    <price><currency>AUD</currency><value>29.95</value></price>
+                    <price><currency>USD</currency><value>19.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="mini-trialpay">
+            <product>Mini</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>2.95</value></price>
+                    <price><currency>MXN</currency><value>49</value></price>
+                    <price><currency>BRL</currency><value>9</value></price>
+                    <price><currency>EUR</currency><value>2.95</value></price>
+                    <price><currency>AUD</currency><value>3.95</value></price>
+                    <price><currency>USD</currency><value>2.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="mini-cafepress">
+            <product>Mini</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>2.95</value></price>
+                    <price><currency>MXN</currency><value>49</value></price>
+                    <price><currency>BRL</currency><value>9</value></price>
+                    <price><currency>EUR</currency><value>2.95</value></price>
+                    <price><currency>AUD</currency><value>3.95</value></price>
+                    <price><currency>USD</currency><value>2.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="mini-pearson">
+            <product>Mini</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>36</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>2.95</value></price>
+                    <price><currency>MXN</currency><value>49</value></price>
+                    <price><currency>BRL</currency><value>9</value></price>
+                    <price><currency>EUR</currency><value>2.95</value></price>
+                    <price><currency>AUD</currency><value>3.95</value></price>
+                    <price><currency>USD</currency><value>2.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="mini-monthly-comp-internal">
+            <product>Mini</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="mini-monthly-comp-strategic">
+            <product>Mini</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>2.95</value></price>
+                    <price><currency>MXN</currency><value>49</value></price>
+                    <price><currency>BRL</currency><value>9</value></price>
+                    <price><currency>EUR</currency><value>2.95</value></price>
+                    <price><currency>AUD</currency><value>3.95</value></price>
+                    <price><currency>USD</currency><value>2.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="mini-monthly">
+            <product>Mini</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>2.95</value></price>
+                    <price><currency>MXN</currency><value>49</value></price>
+                    <price><currency>BRL</currency><value>9</value></price>
+                    <price><currency>EUR</currency><value>2.95</value></price>
+                    <price><currency>AUD</currency><value>3.95</value></price>
+                    <price><currency>USD</currency><value>2.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="mini-monthly-notrial">
+            <product>Mini</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>2.95</value></price>
+                    <price><currency>MXN</currency><value>49</value></price>
+                    <price><currency>BRL</currency><value>9</value></price>
+                    <price><currency>EUR</currency><value>2.95</value></price>
+                    <price><currency>AUD</currency><value>3.95</value></price>
+                    <price><currency>USD</currency><value>2.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>        
+        <plan name="mini-annual">
+            <product>Mini</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>19.95</value></price>
+                    <price><currency>MXN</currency><value>399</value></price>
+                    <price><currency>BRL</currency><value>59</value></price>
+                    <price><currency>EUR</currency><value>19.95</value></price>
+                    <price><currency>AUD</currency><value>29.95</value></price>
+                    <price><currency>USD</currency><value>19.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="mini-annual-notrial">
+            <product>Mini</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>19.95</value></price>
+                    <price><currency>MXN</currency><value>399</value></price>
+                    <price><currency>BRL</currency><value>59</value></price>
+                    <price><currency>EUR</currency><value>19.95</value></price>
+                    <price><currency>AUD</currency><value>29.95</value></price>
+                    <price><currency>USD</currency><value>19.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>        
+        <plan name="mini-monthly-locaweb">
+            <product>Mini</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>2.95</value></price>
+                    <price><currency>MXN</currency><value>49</value></price>
+                    <price><currency>BRL</currency><value>7</value></price>
+                    <price><currency>EUR</currency><value>2.95</value></price>
+                    <price><currency>AUD</currency><value>3.95</value></price>
+                    <price><currency>USD</currency><value>2.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="mini-annual-locaweb">
+            <product>Mini</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>19.95</value></price>
+                    <price><currency>MXN</currency><value>399</value></price>
+                    <price><currency>BRL</currency><value>49</value></price>
+                    <price><currency>EUR</currency><value>19.95</value></price>
+                    <price><currency>AUD</currency><value>29.95</value></price>
+                    <price><currency>USD</currency><value>19.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-partner-support-comp">
+            <product>PartnerSupport</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-partner-support">
+            <product>PartnerSupport</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>199.95</value></price>
+                    <price><currency>MXN</currency><value>2975</value></price>
+                    <price><currency>BRL</currency><value>399</value></price>
+                    <price><currency>EUR</currency><value>199</value></price>
+                    <price><currency>AUD</currency><value>250</value></price>
+                    <price><currency>USD</currency><value>250</value></price>
+                </recurringPrice>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>0</value></price>
+                    <price><currency>MXN</currency><value>0</value></price>
+                    <price><currency>BRL</currency><value>0</value></price>
+                    <price><currency>EUR</currency><value>0</value></price>
+                    <price><currency>AUD</currency><value>0</value></price>
+                    <price><currency>USD</currency><value>-250</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-personal-support-comp">
+            <product>PersonalSupport</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-personal-support">
+            <product>PersonalSupport</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>10</value></price>
+                </recurringPrice>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-annual-early-discount">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>169.95</value></price>
+                        <price><currency>MXN</currency><value>2299</value></price>
+                        <price><currency>BRL</currency><value>399</value></price>
+                        <price><currency>EUR</currency><value>149.95</value></price>
+                        <price><currency>AUD</currency><value>249.95</value></price>
+                        <price><currency>USD</currency><value>183.29</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>169.95</value></price>
+                    <price><currency>MXN</currency><value>2299</value></price>
+                    <price><currency>BRL</currency><value>399</value></price>
+                    <price><currency>EUR</currency><value>149.95</value></price>
+                    <price><currency>AUD</currency><value>249.95</value></price>
+                    <price><currency>USD</currency><value>239.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-trialpay">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>3</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>16.95</value></price>
+                    <price><currency>MXN</currency><value>229</value></price>
+                    <price><currency>BRL</currency><value>39</value></price>
+                    <price><currency>EUR</currency><value>14.95</value></price>
+                    <price><currency>AUD</currency><value>24.95</value></price>
+                    <price><currency>USD</currency><value>24.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-cafepress">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>16.95</value></price>
+                    <price><currency>MXN</currency><value>229</value></price>
+                    <price><currency>BRL</currency><value>39</value></price>
+                    <price><currency>EUR</currency><value>14.95</value></price>
+                    <price><currency>AUD</currency><value>24.95</value></price>
+                    <price><currency>USD</currency><value>24.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-monthly-comp-internal">
+            <product>Plus</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-monthly-comp-strategic">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>16.95</value></price>
+                    <price><currency>MXN</currency><value>229</value></price>
+                    <price><currency>BRL</currency><value>39</value></price>
+                    <price><currency>EUR</currency><value>14.95</value></price>
+                    <price><currency>AUD</currency><value>24.95</value></price>
+                    <price><currency>USD</currency><value>24.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-wego">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>16.95</value></price>
+                    <price><currency>MXN</currency><value>229</value></price>
+                    <price><currency>BRL</currency><value>39</value></price>
+                    <price><currency>EUR</currency><value>14.95</value></price>
+                    <price><currency>AUD</currency><value>24.95</value></price>
+                    <price><currency>USD</currency><value>24.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-annual-discount">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>155</value></price>
+                        <price><currency>MXN</currency><value>2099</value></price>
+                        <price><currency>BRL</currency><value>369</value></price>
+                        <price><currency>EUR</currency><value>137.5</value></price>
+                        <price><currency>AUD</currency><value>229.95</value></price>
+                        <price><currency>USD</currency><value>183.29</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>169.95</value></price>
+                    <price><currency>MXN</currency><value>2299</value></price>
+                    <price><currency>BRL</currency><value>399</value></price>
+                    <price><currency>EUR</currency><value>149.95</value></price>
+                    <price><currency>AUD</currency><value>249.95</value></price>
+                    <price><currency>USD</currency><value>239.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-monthly-discount-bulk100">
+            <product>Plus</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>12.95</value></price>
+                    <price><currency>MXN</currency><value>169</value></price>
+                    <price><currency>BRL</currency><value>29</value></price>
+                    <price><currency>EUR</currency><value>11.25</value></price>
+                    <price><currency>AUD</currency><value>18.7</value></price>
+                    <price><currency>USD</currency><value>18</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="starter-discount">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>169.95</value></price>
+                        <price><currency>MXN</currency><value>49</value></price>
+                        <price><currency>BRL</currency><value>399</value></price>
+                        <price><currency>EUR</currency><value>149.5</value></price>
+                        <price><currency>AUD</currency><value>249.95</value></price>
+                        <price><currency>USD</currency><value>19.95</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>169.95</value></price>
+                    <price><currency>MXN</currency><value>2299</value></price>
+                    <price><currency>BRL</currency><value>399</value></price>
+                    <price><currency>EUR</currency><value>149.95</value></price>
+                    <price><currency>AUD</currency><value>249.95</value></price>
+                    <price><currency>USD</currency><value>239.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-monthly">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>16.95</value></price>
+                    <price><currency>MXN</currency><value>229</value></price>
+                    <price><currency>BRL</currency><value>39</value></price>
+                    <price><currency>EUR</currency><value>14.95</value></price>
+                    <price><currency>AUD</currency><value>24.95</value></price>
+                    <price><currency>USD</currency><value>24.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-monthly-notrial">
+            <product>Plus</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>16.95</value></price>
+                    <price><currency>MXN</currency><value>229</value></price>
+                    <price><currency>BRL</currency><value>39</value></price>
+                    <price><currency>EUR</currency><value>14.95</value></price>
+                    <price><currency>AUD</currency><value>24.95</value></price>
+                    <price><currency>USD</currency><value>24.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-annual">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>169.95</value></price>
+                    <price><currency>MXN</currency><value>2299</value></price>
+                    <price><currency>BRL</currency><value>399</value></price>
+                    <price><currency>EUR</currency><value>149.95</value></price>
+                    <price><currency>AUD</currency><value>249.95</value></price>
+                    <price><currency>USD</currency><value>239.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>        
+        <plan name="plus-annual-notrial">
+            <product>Plus</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>169.95</value></price>
+                    <price><currency>MXN</currency><value>2299</value></price>
+                    <price><currency>BRL</currency><value>399</value></price>
+                    <price><currency>EUR</currency><value>149.95</value></price>
+                    <price><currency>AUD</currency><value>249.95</value></price>
+                    <price><currency>USD</currency><value>239.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-monthly-upgrade-promo">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>3</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>8.49</value></price>
+                        <price><currency>MXN</currency><value>114.5</value></price>
+                        <price><currency>BRL</currency><value>19.5</value></price>
+                        <price><currency>EUR</currency><value>7.5</value></price>
+                        <price><currency>AUD</currency><value>12.49</value></price>
+                        <price><currency>USD</currency><value>12.45</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>16.95</value></price>
+                    <price><currency>MXN</currency><value>229</value></price>
+                    <price><currency>BRL</currency><value>39</value></price>
+                    <price><currency>EUR</currency><value>14.95</value></price>
+                    <price><currency>AUD</currency><value>24.95</value></price>
+                    <price><currency>USD</currency><value>24.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-annual-upgrade-promo">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>149.95</value></price>
+                        <price><currency>MXN</currency><value>2099</value></price>
+                        <price><currency>BRL</currency><value>369</value></price>
+                        <price><currency>EUR</currency><value>137.95</value></price>
+                        <price><currency>AUD</currency><value>229.95</value></price>
+                        <price><currency>USD</currency><value>219.95</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>169.95</value></price>
+                    <price><currency>MXN</currency><value>2299</value></price>
+                    <price><currency>BRL</currency><value>399</value></price>
+                    <price><currency>EUR</currency><value>149.95</value></price>
+                    <price><currency>AUD</currency><value>249.95</value></price>
+                    <price><currency>USD</currency><value>239.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-annual-domain-included">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>169.95</value></price>
+                        <price><currency>MXN</currency><value>2299</value></price>
+                        <price><currency>BRL</currency><value>399</value></price>
+                        <price><currency>EUR</currency><value>149.95</value></price>
+                        <price><currency>AUD</currency><value>249.95</value></price>
+                        <price><currency>USD</currency><value>239.95</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>189.9</value></price>
+                    <price><currency>MXN</currency><value>2598</value></price>
+                    <price><currency>BRL</currency><value>440</value></price>
+                    <price><currency>EUR</currency><value>169.9</value></price>
+                    <price><currency>AUD</currency><value>274.9</value></price>
+                    <price><currency>USD</currency><value>264.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-annual-locaweb">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>169.95</value></price>
+                    <price><currency>MXN</currency><value>2299</value></price>
+                    <price><currency>BRL</currency><value>319</value></price>
+                    <price><currency>EUR</currency><value>149.95</value></price>
+                    <price><currency>AUD</currency><value>249.95</value></price>
+                    <price><currency>USD</currency><value>199.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-monthly-locaweb">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>16.95</value></price>
+                    <price><currency>MXN</currency><value>229</value></price>
+                    <price><currency>BRL</currency><value>31</value></price>
+                    <price><currency>EUR</currency><value>14.95</value></price>
+                    <price><currency>AUD</currency><value>24.95</value></price>
+                    <price><currency>USD</currency><value>19.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-annual-rescue-expensive">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>149.95</value></price>
+                        <price><currency>MXN</currency><value>2099</value></price>
+                        <price><currency>BRL</currency><value>369</value></price>
+                        <price><currency>EUR</currency><value>137.95</value></price>
+                        <price><currency>AUD</currency><value>229.95</value></price>
+                        <price><currency>USD</currency><value>219.95</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>169.95</value></price>
+                    <price><currency>MXN</currency><value>2299</value></price>
+                    <price><currency>BRL</currency><value>399</value></price>
+                    <price><currency>EUR</currency><value>149.95</value></price>
+                    <price><currency>AUD</currency><value>249.95</value></price>
+                    <price><currency>USD</currency><value>239.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="plus-annual-rescue-cheap">
+            <product>Plus</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>139.95</value></price>
+                        <price><currency>MXN</currency><value>1919</value></price>
+                        <price><currency>BRL</currency><value>333</value></price>
+                        <price><currency>EUR</currency><value>124.95</value></price>
+                        <price><currency>AUD</currency><value>209.95</value></price>
+                        <price><currency>USD</currency><value>199.95</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>169.95</value></price>
+                    <price><currency>MXN</currency><value>2299</value></price>
+                    <price><currency>BRL</currency><value>399</value></price>
+                    <price><currency>EUR</currency><value>149.95</value></price>
+                    <price><currency>AUD</currency><value>249.95</value></price>
+                    <price><currency>USD</currency><value>239.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="prepaid-credit-check">
+            <product>PrepaidCredit</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>0</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="prepaid-credit-wiretransfer">
+            <product>PrepaidCredit</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>0</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-annual-early-discount">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>399.95</value></price>
+                        <price><currency>MXN</currency><value>5499</value></price>
+                        <price><currency>BRL</currency><value>999</value></price>
+                        <price><currency>EUR</currency><value>349.95</value></price>
+                        <price><currency>AUD</currency><value>599.95</value></price>
+                        <price><currency>USD</currency><value>458.29</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>399.95</value></price>
+                    <price><currency>MXN</currency><value>5499</value></price>
+                    <price><currency>BRL</currency><value>999</value></price>
+                    <price><currency>EUR</currency><value>349.95</value></price>
+                    <price><currency>AUD</currency><value>599.95</value></price>
+                    <price><currency>USD</currency><value>599.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-monthly-comp-internal">
+            <product>Pro</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-monthly-comp-strategic">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice></recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>39.95</value></price>
+                    <price><currency>MXN</currency><value>549</value></price>
+                    <price><currency>BRL</currency><value>99</value></price>
+                    <price><currency>EUR</currency><value>34.95</value></price>
+                    <price><currency>AUD</currency><value>59.95</value></price>
+                    <price><currency>USD</currency><value>59.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-annual-discount">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>359.95</value></price>
+                        <price><currency>MXN</currency><value>5099</value></price>
+                        <price><currency>BRL</currency><value>915</value></price>
+                        <price><currency>EUR</currency><value>320.95</value></price>
+                        <price><currency>AUD</currency><value>549.95</value></price>
+                        <price><currency>USD</currency><value>458.29</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>399.95</value></price>
+                    <price><currency>MXN</currency><value>5499</value></price>
+                    <price><currency>BRL</currency><value>999</value></price>
+                    <price><currency>EUR</currency><value>349.95</value></price>
+                    <price><currency>AUD</currency><value>599.95</value></price>
+                    <price><currency>USD</currency><value>599.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-monthly">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>39.95</value></price>
+                    <price><currency>MXN</currency><value>549</value></price>
+                    <price><currency>BRL</currency><value>99</value></price>
+                    <price><currency>EUR</currency><value>34.95</value></price>
+                    <price><currency>AUD</currency><value>59.95</value></price>
+                    <price><currency>USD</currency><value>59.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-monthly-notrial">
+            <product>Pro</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>39.95</value></price>
+                    <price><currency>MXN</currency><value>549</value></price>
+                    <price><currency>BRL</currency><value>99</value></price>
+                    <price><currency>EUR</currency><value>34.95</value></price>
+                    <price><currency>AUD</currency><value>59.95</value></price>
+                    <price><currency>USD</currency><value>59.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-annual">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>399.95</value></price>
+                    <price><currency>MXN</currency><value>5499</value></price>
+                    <price><currency>BRL</currency><value>999</value></price>
+                    <price><currency>EUR</currency><value>349.95</value></price>
+                    <price><currency>AUD</currency><value>599.95</value></price>
+                    <price><currency>USD</currency><value>599.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>        
+        <plan name="pro-annual-notrial">
+            <product>Pro</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>399.95</value></price>
+                    <price><currency>MXN</currency><value>5499</value></price>
+                    <price><currency>BRL</currency><value>999</value></price>
+                    <price><currency>EUR</currency><value>349.95</value></price>
+                    <price><currency>AUD</currency><value>599.95</value></price>
+                    <price><currency>USD</currency><value>599.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-monthly-upgrade-promo">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>3</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>19.95</value></price>
+                        <price><currency>MXN</currency><value>274.5</value></price>
+                        <price><currency>BRL</currency><value>49.5</value></price>
+                        <price><currency>EUR</currency><value>17.5</value></price>
+                        <price><currency>AUD</currency><value>29.95</value></price>
+                        <price><currency>USD</currency><value>29.95</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>39.95</value></price>
+                    <price><currency>MXN</currency><value>549</value></price>
+                    <price><currency>BRL</currency><value>99</value></price>
+                    <price><currency>EUR</currency><value>34.95</value></price>
+                    <price><currency>AUD</currency><value>59.95</value></price>
+                    <price><currency>USD</currency><value>59.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-annual-upgrade-promo">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>359.95</value></price>
+                        <price><currency>MXN</currency><value>5099</value></price>
+                        <price><currency>BRL</currency><value>915</value></price>
+                        <price><currency>EUR</currency><value>320.95</value></price>
+                        <price><currency>AUD</currency><value>549.95</value></price>
+                        <price><currency>USD</currency><value>549.95</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>399.95</value></price>
+                    <price><currency>MXN</currency><value>5499</value></price>
+                    <price><currency>BRL</currency><value>999</value></price>
+                    <price><currency>EUR</currency><value>349.95</value></price>
+                    <price><currency>AUD</currency><value>599.95</value></price>
+                    <price><currency>USD</currency><value>599.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-annual-domain-included">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="FIXEDTERM">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>399.95</value></price>
+                        <price><currency>MXN</currency><value>5499</value></price>
+                        <price><currency>BRL</currency><value>999</value></price>
+                        <price><currency>EUR</currency><value>349.95</value></price>
+                        <price><currency>AUD</currency><value>599.95</value></price>
+                        <price><currency>USD</currency><value>599.95</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>419.9</value></price>
+                    <price><currency>MXN</currency><value>5798</value></price>
+                    <price><currency>BRL</currency><value>1040</value></price>
+                    <price><currency>EUR</currency><value>369.9</value></price>
+                    <price><currency>AUD</currency><value>624.9</value></price>
+                    <price><currency>USD</currency><value>624.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-annual-dev-discount">
+            <product>Pro</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>199.95</value></price>
+                    <price><currency>MXN</currency><value>2749.5</value></price>
+                    <price><currency>BRL</currency><value>499</value></price>
+                    <price><currency>EUR</currency><value>174.95</value></price>
+                    <price><currency>AUD</currency><value>299.95</value></price>
+                    <price><currency>USD</currency><value>100</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-monthly-locaweb">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>39.95</value></price>
+                    <price><currency>MXN</currency><value>549</value></price>
+                    <price><currency>BRL</currency><value>79</value></price>
+                    <price><currency>EUR</currency><value>34.95</value></price>
+                    <price><currency>AUD</currency><value>59.95</value></price>
+                    <price><currency>USD</currency><value>49.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-annual-rescue-cheap">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>329.95</value></price>
+                        <price><currency>MXN</currency><value>4599</value></price>
+                        <price><currency>BRL</currency><value>833</value></price>
+                        <price><currency>EUR</currency><value>289.95</value></price>
+                        <price><currency>AUD</currency><value>499.95</value></price>
+                        <price><currency>USD</currency><value>499.95</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>399.95</value></price>
+                    <price><currency>MXN</currency><value>5499</value></price>
+                    <price><currency>BRL</currency><value>999</value></price>
+                    <price><currency>EUR</currency><value>349.95</value></price>
+                    <price><currency>AUD</currency><value>599.95</value></price>
+                    <price><currency>USD</currency><value>599.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-monthly-comp-external">
+            <product>Pro</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-annual-locaweb">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice></fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>399.95</value></price>
+                    <price><currency>MXN</currency><value>5499</value></price>
+                    <price><currency>BRL</currency><value>799</value></price>
+                    <price><currency>EUR</currency><value>349.95</value></price>
+                    <price><currency>AUD</currency><value>599.95</value></price>
+                    <price><currency>USD</currency><value>499.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="pro-annual-rescue-expensive">
+            <product>Pro</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>12</number>
+                    </duration>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price><currency>GBP</currency><value>359.95</value></price>
+                        <price><currency>MXN</currency><value>5099</value></price>
+                        <price><currency>BRL</currency><value>915</value></price>
+                        <price><currency>EUR</currency><value>320.95</value></price>
+                        <price><currency>AUD</currency><value>549.95</value></price>
+                        <price><currency>USD</currency><value>549.95</value></price>
+                    </recurringPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>399.95</value></price>
+                    <price><currency>MXN</currency><value>5499</value></price>
+                    <price><currency>BRL</currency><value>999</value></price>
+                    <price><currency>EUR</currency><value>349.95</value></price>
+                    <price><currency>AUD</currency><value>599.95</value></price>
+                    <price><currency>USD</currency><value>599.9</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-professional-support">
+            <product>ProfessionalSupport</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-professional-support-comp">
+            <product>ProfessionalSupport</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>100</value></price>
+                </recurringPrice>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-remove-links-comp">
+            <product>RemoveLinks</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-remove-links">
+            <product>RemoveLinks</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>24.95</value></price>
+                </recurringPrice>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="domain-only">
+            <product>DomainNameAddOn</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>19.95</value></price>
+                    <price><currency>MXN</currency><value>299</value></price>
+                    <price><currency>BRL</currency><value>41</value></price>
+                    <price><currency>EUR</currency><value>19.95</value></price>
+                    <price><currency>AUD</currency><value>24.95</value></price>
+                    <price><currency>USD</currency><value>24.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="domain-idprotect">
+            <product>DomainNameAddOn</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>29.95</value></price>
+                    <price><currency>MXN</currency><value>399</value></price>
+                    <price><currency>BRL</currency><value>59</value></price>
+                    <price><currency>EUR</currency><value>24.95</value></price>
+                    <price><currency>AUD</currency><value>34.95</value></price>
+                    <price><currency>USD</currency><value>34.95</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="domain-only-comp">
+            <product>DomainNameAddOn</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="domain-idprotect-comp">
+            <product>DomainNameAddOn</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <recurringPrice></recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-storage-bandwidth">
+            <product>StorageBandwidth</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>9.95</value></price>
+                </recurringPrice>
+                <fixedPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </fixedPrice>
+            </finalPhase>
+        </plan>
+        <plan name="legacy-storage-bandwidth-comp">
+            <product>StorageBandwidth</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price><currency>GBP</currency><value>-1</value></price>
+                    <price><currency>MXN</currency><value>-1</value></price>
+                    <price><currency>BRL</currency><value>-1</value></price>
+                    <price><currency>EUR</currency><value>-1</value></price>
+                    <price><currency>AUD</currency><value>-1</value></price>
+                    <price><currency>USD</currency><value>0</value></price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+    </plans>
+
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>basic-monthly</plan>
+                <plan>basic-annual</plan>
+                <plan>performance-monthly</plan>
+                <plan>performance-annual</plan>
+                <plan>business-monthly</plan>
+                <plan>business-annual</plan>
+                <plan>businessplus-monthly</plan>
+                <plan>businessplus-annual</plan>
+                <plan>corporatetier1-monthly</plan>
+                <plan>corporatetier1-annual</plan>
+                <plan>demo-monthly</plan>
+                <plan>brandedmusic-monthly</plan>
+                <plan>brandedvideo-monthly</plan>
+                <plan>events-monthly</plan>
+                <plan>groups-monthly</plan>
+                <plan>paidaccess-monthly</plan>
+                <plan>legacy-ads</plan>
+                <plan>domain-monthly</plan>
+                <plan>mini-monthly</plan>
+                <plan>mini-annual</plan>
+                <plan>plus-monthly</plan>
+                <plan>plus-annual</plan>
+                <plan>pro-monthly</plan>
+                <plan>pro-annual</plan>
+            </plans>
+        </defaultPriceList>
+        <childPriceList name="standard-notrial">
+            <plans>
+                <plan>basic-monthly-notrial</plan>
+                <plan>basic-annual-notrial</plan>
+                <plan>performance-monthly-notrial</plan>
+                <plan>performance-annual-notrial</plan>
+                <plan>business-monthly-notrial</plan>
+                <plan>business-annual-notrial</plan>
+                <plan>mini-monthly-notrial</plan>
+                <plan>mini-annual-notrial</plan>
+                <plan>plus-monthly-notrial</plan>
+                <plan>plus-annual-notrial</plan>
+                <plan>pro-monthly-notrial</plan>
+                <plan>pro-annual-notrial</plan>                
+            </plans>
+        </childPriceList>        
+        <childPriceList name="corporatetier2">
+            <plans>
+                <plan>corporatetier2-monthly</plan>
+                <plan>corporatetier2-annual</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="corporatetier3">
+            <plans>
+                <plan>corporatetier3-monthly</plan>
+                <plan>corporatetier3-annual</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="standard-comp-strategic">
+            <plans>
+                <plan>basic-monthly-comp-strategic</plan>
+                <plan>performance-monthly-comp-strategic</plan>
+                <plan>business-monthly-comp-strategic</plan>
+                <plan>businessplus-monthly-comp-strategic</plan>                
+                <plan>brandedmusic-monthly-comp-strategic</plan>
+                <plan>brandedvideo-monthly-comp-strategic</plan>
+                <plan>events-monthly-comp-strategic</plan>
+                <plan>groups-monthly-comp-strategic</plan>
+                <plan>paidaccess-monthly-comp-strategic</plan>
+                <plan>domain-monthly-comp</plan>
+                <plan>mini-monthly-comp-strategic</plan>
+                <plan>plus-monthly-comp-strategic</plan>
+                <plan>pro-monthly-comp-strategic</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="standard-comp-internal">
+            <plans>
+                <plan>corporate-monthly-comp-internal</plan>
+                <plan>brandedmusic-monthly-comp-internal</plan>
+                <plan>brandedvideo-monthly-comp-internal</plan>
+                <plan>events-monthly-comp-internal</plan>
+                <plan>groups-monthly-comp-internal</plan>
+                <plan>mini-monthly-comp-internal</plan>
+                <plan>plus-monthly-comp-internal</plan>
+                <plan>pro-monthly-comp-internal</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="standard-comp-external">
+            <plans>
+                <plan>corporate-monthly-comp-external</plan>
+                <plan>paidaccess-monthly-comp-external</plan>
+                <plan>pro-monthly-comp-external</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="legacy-ads-comp-pricelist">
+            <plans>
+                <plan>legacy-ads-comp</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="doitforme-onetime-pricelist">
+            <plans>
+                <plan>doitforme-onetime</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="doitforme-onetime599-pricelist">
+            <plans>
+                <plan>doitforme-onetime599</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="doitforme-onetime799-pricelist">
+            <plans>
+                <plan>doitforme-onetime799</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="doitforme-onetime699-pricelist">
+            <plans>
+                <plan>doitforme-onetime699</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="doitforme-onetime-fullprice-pricelist">
+            <plans>
+                <plan>doitforme-onetime-fullprice</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="earlydiscount">
+            <plans>
+                <plan>mini-annual-early-discount</plan>
+                <plan>plus-annual-early-discount</plan>
+                <plan>pro-annual-early-discount</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="trialpay">
+            <plans>
+                <plan>mini-trialpay</plan>
+                <plan>plus-trialpay</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="cafepress">
+            <plans>
+                <plan>mini-cafepress</plan>
+                <plan>plus-cafepress</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="pearson">
+            <plans>
+                <plan>mini-pearson</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="locaweb">
+            <plans>
+                <plan>mini-monthly-locaweb</plan>
+                <plan>mini-annual-locaweb</plan>
+                <plan>plus-annual-locaweb</plan>
+                <plan>plus-monthly-locaweb</plan>
+                <plan>pro-monthly-locaweb</plan>
+                <plan>pro-annual-locaweb</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="legacy-partner-support-comp-pricelist">
+            <plans>
+                <plan>legacy-partner-support-comp</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="legacy-partner-support-pricelist">
+            <plans>
+                <plan>legacy-partner-support</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="legacy-personal-support-comp-pricelist">
+            <plans>
+                <plan>legacy-personal-support-comp</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="legacy-personal-support-pricelist">
+            <plans>
+                <plan>legacy-personal-support</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="wego">
+            <plans>
+                <plan>plus-wego</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="plus-annual-discount-pricelist">
+            <plans>
+                <plan>plus-annual-discount</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="bulk100">
+            <plans>
+                <plan>plus-monthly-discount-bulk100</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="starter-discount-pricelist">
+            <plans>
+                <plan>starter-discount</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="upgradepromo">
+            <plans>
+                <plan>plus-monthly-upgrade-promo</plan>
+                <plan>plus-annual-upgrade-promo</plan>
+                <plan>pro-monthly-upgrade-promo</plan>
+                <plan>pro-annual-upgrade-promo</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="domainincluded">
+            <plans>
+                <plan>plus-annual-domain-included</plan>
+                <plan>pro-annual-domain-included</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="rescue-expensive">
+            <plans>
+                <plan>plus-annual-rescue-expensive</plan>
+                <plan>pro-annual-rescue-expensive</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="rescue-cheap">
+            <plans>
+                <plan>plus-annual-rescue-cheap</plan>
+                <plan>pro-annual-rescue-cheap</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="prepaid-credit-check-pricelist">
+            <plans>
+                <plan>prepaid-credit-check</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="prepaid-credit-wiretransfer-pricelist">
+            <plans>
+                <plan>prepaid-credit-wiretransfer</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="pro-annual-discount-pricelist">
+            <plans>
+                <plan>pro-annual-discount</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="pro-annual-dev-discount-pricelist">
+            <plans>
+                <plan>pro-annual-dev-discount</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="legacy-professional-support-pricelist">
+            <plans>
+                <plan>legacy-professional-support</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="legacy-professional-support-comp-pricelist">
+            <plans>
+                <plan>legacy-professional-support-comp</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="legacy-remove-links-comp-pricelist">
+            <plans>
+                <plan>legacy-remove-links-comp</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="legacy-remove-links-pricelist">
+            <plans>
+                <plan>legacy-remove-links</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="domain-only-pricelist">
+            <plans>
+                <plan>domain-only</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="domain-idprotect-pricelist">
+            <plans>
+                <plan>domain-idprotect</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="domain-only-comp-pricelist">
+            <plans>
+                <plan>domain-only-comp</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="domain-idprotect-comp-pricelist">
+            <plans>
+                <plan>domain-idprotect-comp</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="legacy-storage-bandwidth-pricelist">
+            <plans>
+                <plan>legacy-storage-bandwidth</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="legacy-storage-bandwidth-comp-pricelist">
+            <plans>
+                <plan>legacy-storage-bandwidth-comp</plan>
+            </plans>
+        </childPriceList>
+    </priceLists>
+
+</catalog>

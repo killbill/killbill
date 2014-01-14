@@ -30,6 +30,7 @@ import org.joda.time.DateTimeZone;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.entitlement.AccountEntitlements;
 import com.ning.billing.entitlement.EntitlementInternalApi;
@@ -42,6 +43,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.customfield.ShouldntHappenException;
@@ -136,6 +138,12 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
+    public void updateExternalKey(final UUID uuid, final String newExternalKey, final CallContext callContext) {
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(callContext);
+        subscriptionBaseInternalApi.updateExternalKey(uuid, newExternalKey, internalContext);
+    }
+
+    @Override
     public List<SubscriptionBundle> getSubscriptionBundlesForAccountIdAndExternalKey(final UUID accountId, final String externalKey, final TenantContext context) throws SubscriptionApiException {
         return ImmutableList.<SubscriptionBundle>copyOf(Iterables.<SubscriptionBundle>filter(getSubscriptionBundlesForAccount(accountId, context),
                                                                                              new Predicate<SubscriptionBundle>() {
@@ -152,7 +160,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         try {
             final UUID activeSubscriptionIdForKey = entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(externalKey, internalContext);
             if (activeSubscriptionIdForKey == null) {
-                throw new SubscriptionApiException(new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, externalKey));
+                throw new SubscriptionApiException(new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, externalKey));
             }
             final SubscriptionBase subscriptionBase = subscriptionBaseInternalApi.getSubscriptionFromId(activeSubscriptionIdForKey, internalContext);
             return getSubscriptionBundle(subscriptionBase.getBundleId(), context);

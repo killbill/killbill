@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.customfield.CustomField;
@@ -53,6 +54,11 @@ public class MockCustomFieldDao extends MockEntityDaoBase<CustomFieldModelDao, C
 
     @Override
     public Pagination<CustomFieldModelDao> searchCustomFields(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void deleteCustomField(final UUID customFieldId, final InternalCallContext context) throws CustomFieldApiException {
         throw new UnsupportedOperationException();
     }
 }

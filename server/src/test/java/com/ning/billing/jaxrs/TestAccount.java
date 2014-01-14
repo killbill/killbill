@@ -38,6 +38,7 @@ import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.util.api.AuditLevel;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -306,7 +307,7 @@ public class TestAccount extends TestJaxrsBase {
         customFields.add(new CustomFieldJson("1", "value1", null));
         customFields.add(new CustomFieldJson("2", "value2", null));
         customFields.add(new CustomFieldJson("3", "value3", null));
-        final String baseJson = mapper.writeValueAsString(customFields);
+        String baseJson = mapper.writeValueAsString(customFields);
 
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.CUSTOM_FIELDS;
         Response response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -316,6 +317,17 @@ public class TestAccount extends TestJaxrsBase {
         final String url = getUrlFromUri(uri);
         response = doGetWithUrl(url, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        // Delete all custom fields for account
+        response = doDelete(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        final List<CustomFieldDao> remainingCustomFields = mapper.readValue(baseJson, new TypeReference<List<CustomFieldDao>>() {});
+        assertEquals(remainingCustomFields.size(), 0);
+
     }
 
     private void searchAccount(final AccountJson input, @Nullable final AccountJson output) throws Exception {

@@ -339,6 +339,11 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         return result;
     }
 
+    @Override
+    public void updateExternalKey(final UUID bundleId, final String newExternalKey, final InternalCallContext context) {
+        dao.updateBundleExternalKey(bundleId, newExternalKey, context);
+    }
+
     private List<EffectiveSubscriptionInternalEvent> convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(final SubscriptionBase subscription,
                                                                                                                           final InternalTenantContext context, final List<SubscriptionBaseTransition> transitions) {
         return ImmutableList.<EffectiveSubscriptionInternalEvent>copyOf(Collections2.transform(transitions, new Function<SubscriptionBaseTransition, EffectiveSubscriptionInternalEvent>() {

@@ -73,4 +73,7 @@ public interface SubscriptionBaseInternalApi {
 
     public List<EntitlementAOStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName,
                                                                      final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
+
+
+    public void updateExternalKey(final UUID bundleId, final String newExternalKey, final InternalCallContext context);
 }

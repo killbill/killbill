@@ -1,10 +1,13 @@
 group CustomFieldSqlDao: EntitySqlDao;
 
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+
 tableName() ::= "custom_fields"
 
 tableFields(prefix) ::= <<
   <prefix>object_id
 , <prefix>object_type
+, <prefix>is_active
 , <prefix>field_name
 , <prefix>field_value
 , <prefix>created_by
@@ -16,6 +19,7 @@ tableFields(prefix) ::= <<
 tableValues() ::= <<
   :objectId
 , :objectType
+, :isActive
 , :fieldName
 , :fieldValue
 , :createdBy
@@ -26,6 +30,14 @@ tableValues() ::= <<
 
 historyTableName() ::= "custom_field_history"
 
+markTagAsDeleted() ::= <<
+update <tableName()> t
+set t.is_active = 0
+where <idField("t.")> = :id
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
 
 getCustomFieldsForObject() ::= <<
 select
@@ -34,6 +46,7 @@ from <tableName()>
 where
 object_id = :objectId
 and object_type = :objectType
+and is_active
 <AND_CHECK_TENANT()>
 <defaultOrderBy()>
 ;

@@ -36,6 +36,17 @@ where id = :id
 ;
 >>
 
+updateBundleExternalKey()  ::= <<
+update <tableName()>
+set
+external_key = :externalKey
+, updated_by = :createdBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
 getBundlesForKey() ::= <<
 select <allTableFields()>
 from bundles

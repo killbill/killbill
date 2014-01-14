@@ -966,6 +966,19 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
         });
     }
 
+    @Override
+    public void updateBundleExternalKey(final UUID bundleId, final String externalKey, final InternalCallContext context) {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+
+                final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
+                bundleSqlDao.updateBundleExternalKey(bundleId.toString(), externalKey, context);
+                return null;
+            }
+        });
+    }
+
     private DefaultSubscriptionBase createSubscriptionForInternalUse(final SubscriptionBase shellSubscription, final List<SubscriptionBaseEvent> events) {
         final DefaultSubscriptionBase result = new DefaultSubscriptionBase(new SubscriptionBuilder(((DefaultSubscriptionBase) shellSubscription)), null, clock);
         if (events.size() > 0) {

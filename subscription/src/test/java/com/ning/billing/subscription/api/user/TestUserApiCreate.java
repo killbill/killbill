@@ -68,6 +68,12 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.PHASE);
         final DefaultSubscriptionBase newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(newBundle.getId(),
                                                                                                                              testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
+
+        subscriptionInternalApi.updateExternalKey(newBundle.getId(), "myNewSuperKey", internalCallContext);
+
+        final SubscriptionBaseBundle bundleWithNewKey = subscriptionInternalApi.getBundleFromId(newBundle.getId(), internalCallContext);
+        assertEquals(bundleWithNewKey.getExternalKey(), "myNewSuperKey");
+
         assertListenerStatus();
         assertNotNull(newSubscription);
     }

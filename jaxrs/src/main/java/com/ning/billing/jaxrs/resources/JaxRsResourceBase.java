@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -71,8 +72,10 @@ import com.ning.billing.util.tag.TagDefinition;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public abstract class JaxRsResourceBase implements JaxrsResource {
 
@@ -184,10 +187,43 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return uriBuilder.buildResponse(this.getClass(), "createCustomFields", id);
     }
 
+    /**
+     * @param id              the if of the object for which the custom fields apply
+     * @param customFieldList a comma separated list of custom field ids or null if they should all be removed
+     * @param context         the context
+     * @return
+     * @throws CustomFieldApiException
+     */
     protected Response deleteCustomFields(final UUID id,
-                                          final String customFieldList,
-                                          final CallContext context) {
-        // STEPH missing API to delete custom fields
+                                          @Nullable final String customFieldList,
+                                          final CallContext context) throws CustomFieldApiException {
+
+        // Retrieve all the custom fields for the object
+        final List<CustomField> fields = customFieldUserApi.getCustomFieldsForObject(id, getObjectType(), context);
+
+        final String[] requestedIds = customFieldList != null ? customFieldList.split("\\s*,\\s*") : null;
+
+        // Filter the proposed list to only keep the one that exist and indeed match our object
+        final Iterable inputIterable = Iterables.filter(fields, new Predicate<CustomField>() {
+            @Override
+            public boolean apply(final CustomField input) {
+                if (customFieldList == null) {
+                    return true;
+                }
+                for (final String cur : requestedIds) {
+                    final UUID curId = UUID.fromString(cur);
+                    if (input.getId().equals(curId)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+
+        if (inputIterable.iterator().hasNext()) {
+            final List<CustomField> input = ImmutableList.<CustomField>copyOf(inputIterable);
+            customFieldUserApi.removeCustomFields(input, context);
+        }
         return Response.status(Response.Status.OK).build();
     }
 

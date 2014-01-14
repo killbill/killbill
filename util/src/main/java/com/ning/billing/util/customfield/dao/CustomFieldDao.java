@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.customfield.CustomField;
@@ -36,4 +37,5 @@ public interface CustomFieldDao extends EntityDao<CustomFieldModelDao, CustomFie
 
     public List<CustomFieldModelDao> getCustomFieldsForAccount(final InternalTenantContext context);
 
+    void deleteCustomField(UUID customFieldId, InternalCallContext context) throws CustomFieldApiException;
 }
