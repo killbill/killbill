@@ -16,9 +16,13 @@
 
 package com.ning.billing.util.customfield.api;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -33,6 +37,7 @@ import com.ning.billing.util.customfield.dao.CustomFieldModelDao;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
@@ -49,7 +54,35 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     @Override
     public void addCustomFields(final List<CustomField> customFields, final CallContext context) throws CustomFieldApiException {
         // TODO make it transactional
+
+        final Map<UUID, ObjectType> mapping = new HashMap<UUID, ObjectType>();
         for (final CustomField cur : customFields) {
+            mapping.put(cur.getObjectId(), cur.getObjectType());
+        }
+
+        final List<CustomFieldModelDao> all = new LinkedList<CustomFieldModelDao>();
+        for (UUID cur : mapping.keySet()) {
+            final ObjectType type = mapping.get(cur);
+            all.addAll(customFieldDao.getCustomFieldsForObject(cur, type, internalCallContextFactory.createInternalCallContext(cur, type, context)));
+        }
+        final List<CustomField> toBeInserted = new LinkedList<CustomField>();
+        for (final CustomField cur : customFields) {
+            final CustomFieldModelDao match = Iterables.tryFind(all, new com.google.common.base.Predicate<CustomFieldModelDao>() {
+                @Override
+                public boolean apply(final CustomFieldModelDao input) {
+                    return input.getObjectId().equals(cur.getObjectId()) &&
+                           input.getObjectType() == cur.getObjectType() &&
+                           input.getFieldName().equals(cur.getFieldName());
+
+                }
+            }).orNull();
+            if (match != null) {
+                throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_ALREADY_EXISTS, match.getId());
+            }
+            toBeInserted.add(cur);
+        }
+
+        for (CustomField cur : toBeInserted) {
             customFieldDao.create(new CustomFieldModelDao(cur), internalCallContextFactory.createInternalCallContext(cur.getObjectId(), cur.getObjectType(), context));
         }
     }
