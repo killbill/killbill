@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.dao;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,8 +41,8 @@ public class InvoiceModelDao extends EntityBase implements EntityModelDao<Invoic
     private boolean migrated;
 
     // Note in the database, for convenience only
-    private List<InvoiceItemModelDao> invoiceItems;
-    private List<InvoicePaymentModelDao> invoicePayments;
+    private List<InvoiceItemModelDao> invoiceItems = new LinkedList<InvoiceItemModelDao>();
+    private List<InvoicePaymentModelDao> invoicePayments = new LinkedList<InvoicePaymentModelDao>();
     private Currency processedCurrency;
 
     public InvoiceModelDao() { /* For the DAO mapper */ }
@@ -72,7 +73,7 @@ public class InvoiceModelDao extends EntityBase implements EntityModelDao<Invoic
     }
 
     public void addInvoiceItems(final List<InvoiceItemModelDao> invoiceItems) {
-        this.invoiceItems = invoiceItems;
+        this.invoiceItems.addAll(invoiceItems);
     }
 
     public List<InvoiceItemModelDao> getInvoiceItems() {
@@ -80,7 +81,7 @@ public class InvoiceModelDao extends EntityBase implements EntityModelDao<Invoic
     }
 
     public void addPayments(final List<InvoicePaymentModelDao> invoicePayments) {
-        this.invoicePayments = invoicePayments;
+        this.invoicePayments.addAll(invoicePayments);
     }
 
     public List<InvoicePaymentModelDao> getInvoicePayments() {
