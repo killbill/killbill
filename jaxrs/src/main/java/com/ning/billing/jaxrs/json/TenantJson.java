@@ -22,7 +22,7 @@ import com.ning.billing.tenant.api.TenantData;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class TenantJson {
+public class TenantJson extends JsonBase {
 
     protected final String tenantId;
     protected final String externalKey;
