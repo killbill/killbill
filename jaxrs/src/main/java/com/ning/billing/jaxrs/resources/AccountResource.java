@@ -93,9 +93,11 @@ import com.ning.billing.util.entity.Pagination;
 import com.ning.billing.util.tag.ControlTagType;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -738,7 +740,18 @@ public class AccountResource extends JaxRsResourceBase {
         // Make sure the account exist or we will confuse the history and auditing code
         accountUserApi.getAccountById(accountId, callContext);
 
-        accountUserApi.addEmail(accountId, json.toAccountEmail(UUID.randomUUID()), callContext);
+        // Make sure the email doesn't exist
+        final AccountEmail existingEmail = Iterables.<AccountEmail>tryFind(accountUserApi.getEmails(accountId, callContext),
+                                                                           new Predicate<AccountEmail>() {
+                                                                               @Override
+                                                                               public boolean apply(final AccountEmail input) {
+                                                                                   return input.getEmail().equals(json.getEmail());
+                                                                               }
+                                                                           })
+                                                    .orNull();
+        if (existingEmail == null) {
+            accountUserApi.addEmail(accountId, json.toAccountEmail(UUID.randomUUID()), callContext);
+        }
 
         return uriBuilder.buildResponse(AccountResource.class, "getEmails", json.getAccountId());
     }

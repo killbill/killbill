@@ -67,22 +67,22 @@ public class TestPlugin extends TestJaxrsBase {
 
         // We don't test the output here as it is some Jetty specific HTML blurb
 
-        response = pluginGET(uri);
+        response = killBillClient.pluginGET(uri);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
-        response = pluginHEAD(uri);
+        response = killBillClient.pluginHEAD(uri);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
-        response = pluginPOST(uri, null);
+        response = killBillClient.pluginPOST(uri, null);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
-        response = pluginPUT(uri, null);
+        response = killBillClient.pluginPUT(uri, null);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
-        response = pluginDELETE(uri);
+        response = killBillClient.pluginDELETE(uri);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
-        response = pluginOPTIONS(uri);
+        response = killBillClient.pluginOPTIONS(uri);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
     }
 
@@ -91,22 +91,22 @@ public class TestPlugin extends TestJaxrsBase {
         final String uri = TEST_PLUGIN_NAME + "/somethingSomething";
         Response response;
 
-        response = pluginGET(uri);
+        response = killBillClient.pluginGET(uri);
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
 
-        response = pluginHEAD(uri);
+        response = killBillClient.pluginHEAD(uri);
         testAndResetAllMarkers(response, 204, new byte[]{}, false, false, false, false, false, false);
 
-        response = pluginPOST(uri, null);
+        response = killBillClient.pluginPOST(uri, null);
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
 
-        response = pluginPUT(uri, null);
+        response = killBillClient.pluginPUT(uri, null);
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
 
-        response = pluginDELETE(uri);
+        response = killBillClient.pluginDELETE(uri);
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
 
-        response = pluginOPTIONS(uri);
+        response = killBillClient.pluginOPTIONS(uri);
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
     }
 
@@ -114,30 +114,35 @@ public class TestPlugin extends TestJaxrsBase {
     public void testPassRequestsToKnownPluginAndKnownPath() throws Exception {
         Response response;
 
-        response = pluginGET(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_GET_PATH);
+        response = killBillClient.pluginGET(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_GET_PATH);
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, true, false, false, false, false, false);
 
-        response = pluginHEAD(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_HEAD_PATH);
+        response = killBillClient.pluginHEAD(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_HEAD_PATH);
         testAndResetAllMarkers(response, 204, new byte[]{}, false, true, false, false, false, false);
 
-        response = pluginPOST(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_POST_PATH, null);
+        response = killBillClient.pluginPOST(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_POST_PATH, null);
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, false, false, true, false, false, false);
 
-        response = pluginPUT(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_PUT_PATH, null);
+        response = killBillClient.pluginPUT(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_PUT_PATH, null);
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, false, false, false, true, false, false);
 
-        response = pluginDELETE(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_DELETE_PATH);
+        response = killBillClient.pluginDELETE(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_DELETE_PATH);
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, false, false, false, false, true, false);
 
-        response = pluginOPTIONS(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_OPTIONS_PATH);
+        response = killBillClient.pluginOPTIONS(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_OPTIONS_PATH);
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, false, false, false, false, false, true);
     }
 
-    private void testAndResetAllMarkers(final Response response, final int responseCode, @Nullable final byte[] responseBytes, final boolean get, final boolean head,
+    private void testAndResetAllMarkers(@Nullable final Response response, final int responseCode, @Nullable final byte[] responseBytes, final boolean get, final boolean head,
                                         final boolean post, final boolean put, final boolean delete, final boolean options) throws IOException {
-        Assert.assertEquals(response.getStatusCode(), responseCode);
-        if (responseBytes != null) {
-            Assert.assertEquals(response.getResponseBodyAsBytes(), responseBytes);
+        if (responseCode == 404 || responseCode == 204) {
+            Assert.assertNull(response);
+        } else {
+            Assert.assertNotNull(response);
+            Assert.assertEquals(response.getStatusCode(), responseCode);
+            if (responseBytes != null) {
+                Assert.assertEquals(response.getResponseBodyAsBytes(), responseBytes);
+            }
         }
 
         Assert.assertEquals(requestGETMarker.get(), get);

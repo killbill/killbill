@@ -25,7 +25,7 @@ import com.ning.billing.account.api.AccountEmail;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class AccountEmailJson {
+public class AccountEmailJson extends JsonBase {
 
     private final String accountId;
     private final String email;

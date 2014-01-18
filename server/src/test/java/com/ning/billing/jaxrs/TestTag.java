@@ -18,15 +18,11 @@ package com.ning.billing.jaxrs;
 
 import java.util.List;
 
-import javax.ws.rs.core.Response.Status;
-
 import org.testng.annotations.Test;
 
-import com.ning.billing.jaxrs.json.TagDefinitionJson;
-import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.http.client.Response;
+import com.ning.billing.client.KillBillClientException;
+import com.ning.billing.client.model.TagDefinition;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
@@ -34,85 +30,54 @@ import static org.testng.Assert.assertNotNull;
 
 public class TestTag extends TestJaxrsBase {
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Cannot add badly formatted TagDefinition")
     public void testTagErrorHandling() throws Exception {
-        final TagDefinitionJson[] tags = new TagDefinitionJson[]{new TagDefinitionJson(null, false, null, null, null),
-                                                                 new TagDefinitionJson(null, false, "something", null, null),
-                                                                 new TagDefinitionJson(null, false, null, "something", null)};
-        for (final TagDefinitionJson tag : tags) {
-            final String baseJson = mapper.writeValueAsString(tag);
-            final Response response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-            assertEquals(response.getStatusCode(), Status.BAD_REQUEST.getStatusCode());
+        final TagDefinition[] tagDefinitions = {new TagDefinition(null, false, null, null, null),
+                                                new TagDefinition(null, false, "something", null, null),
+                                                new TagDefinition(null, false, null, "something", null)};
+
+        for (final TagDefinition tagDefinition : tagDefinitions) {
+            try {
+                killBillClient.createTagDefinition(tagDefinition, createdBy, reason, comment);
+            } catch (final KillBillClientException e) {
+            }
         }
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can create a TagDefinition")
     public void testTagDefinitionOk() throws Exception {
-        final TagDefinitionJson input = new TagDefinitionJson(null, false, "blue", "relaxing color", ImmutableList.<String>of());
-        String baseJson = mapper.writeValueAsString(input);
-        Response response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+        final TagDefinition input = new TagDefinition(null, false, "blue", "relaxing color", ImmutableList.<String>of());
 
-        final String location = response.getHeader("Location");
-        assertNotNull(location);
-
-        // Retrieves by Id based on Location returned
-        response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-
-        baseJson = response.getResponseBody();
-        final TagDefinitionJson objFromJson = mapper.readValue(baseJson, TagDefinitionJson.class);
+        final TagDefinition objFromJson = killBillClient.createTagDefinition(input, createdBy, reason, comment);
         assertNotNull(objFromJson);
         assertEquals(objFromJson.getName(), input.getName());
         assertEquals(objFromJson.getDescription(), input.getDescription());
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can create and delete TagDefinitions")
     public void testMultipleTagDefinitionOk() throws Exception {
-        Response response = doGet(JaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        String baseJson = response.getResponseBody();
+        List<TagDefinition> objFromJson = killBillClient.getTagDefinitions();
+        final int sizeSystemTag = objFromJson.isEmpty() ? 0 : objFromJson.size();
 
-        List<TagDefinitionJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<TagDefinitionJson>>() {});
-        final int sizeSystemTag = (objFromJson == null || objFromJson.size() == 0) ? 0 : objFromJson.size();
+        final TagDefinition inputBlue = new TagDefinition(null, false, "blue", "relaxing color", ImmutableList.<String>of());
+        killBillClient.createTagDefinition(inputBlue, createdBy, reason, comment);
 
-        final TagDefinitionJson inputBlue = new TagDefinitionJson(null, false, "blue", "relaxing color", ImmutableList.<String>of());
-        baseJson = mapper.writeValueAsString(inputBlue);
-        response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+        final TagDefinition inputRed = new TagDefinition(null, false, "red", "hot color", ImmutableList.<String>of());
+        killBillClient.createTagDefinition(inputRed, createdBy, reason, comment);
 
-        final TagDefinitionJson inputRed = new TagDefinitionJson(null, false, "red", "hot color", ImmutableList.<String>of());
-        baseJson = mapper.writeValueAsString(inputRed);
-        response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+        final TagDefinition inputYellow = new TagDefinition(null, false, "yellow", "vibrant color", ImmutableList.<String>of());
+        killBillClient.createTagDefinition(inputYellow, createdBy, reason, comment);
 
-        final TagDefinitionJson inputYellow = new TagDefinitionJson(null, false, "yellow", "vibrant color", ImmutableList.<String>of());
-        baseJson = mapper.writeValueAsString(inputYellow);
-        response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+        final TagDefinition inputGreen = new TagDefinition(null, false, "green", "super relaxing color", ImmutableList.<String>of());
+        killBillClient.createTagDefinition(inputGreen, createdBy, reason, comment);
 
-        final TagDefinitionJson inputGreen = new TagDefinitionJson(null, false, "green", "super relaxing color", ImmutableList.<String>of());
-        baseJson = mapper.writeValueAsString(inputGreen);
-        response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
-
-        response = doGet(JaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        baseJson = response.getResponseBody();
-
-        objFromJson = mapper.readValue(baseJson, new TypeReference<List<TagDefinitionJson>>() {});
+        objFromJson = killBillClient.getTagDefinitions();
         assertNotNull(objFromJson);
         assertEquals(objFromJson.size(), 4 + sizeSystemTag);
 
-        final String uri = JaxrsResource.TAG_DEFINITIONS_PATH + "/" + objFromJson.get(0).getId();
-        response = doDelete(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
+        killBillClient.deleteTagDefinition(objFromJson.get(0).getId(), createdBy, reason, comment);
 
-        response = doGet(JaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        baseJson = response.getResponseBody();
-
-        objFromJson = mapper.readValue(baseJson, new TypeReference<List<TagDefinitionJson>>() {});
+        objFromJson = killBillClient.getTagDefinitions();
         assertNotNull(objFromJson);
         assertEquals(objFromJson.size(), 3 + sizeSystemTag);
     }

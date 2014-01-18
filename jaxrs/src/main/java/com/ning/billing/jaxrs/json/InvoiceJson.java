@@ -104,7 +104,7 @@ public class InvoiceJson extends JsonBase {
         this.invoiceId = input.getId().toString();
         this.invoiceDate = input.getInvoiceDate();
         this.targetDate = input.getTargetDate();
-        this.invoiceNumber = String.valueOf(input.getInvoiceNumber());
+        this.invoiceNumber = input.getInvoiceNumber() == null ? null : String.valueOf(input.getInvoiceNumber());
         this.balance = input.getBalance();
         this.accountId = input.getAccountId().toString();
         this.bundleKeys = null;

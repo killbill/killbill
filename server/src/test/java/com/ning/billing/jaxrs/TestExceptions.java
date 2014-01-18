@@ -16,32 +16,38 @@
 
 package com.ning.billing.jaxrs;
 
-import javax.ws.rs.core.Response.Status;
+import java.math.BigDecimal;
+import java.util.List;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.jaxrs.json.BillingExceptionJson;
-import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.http.client.Response;
+import com.ning.billing.client.KillBillClientException;
+import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.Chargeback;
+import com.ning.billing.client.model.Payment;
+import com.ning.billing.invoice.api.InvoiceApiException;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import static org.testng.Assert.fail;
 
 public class TestExceptions extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testExceptionMapping() throws Exception {
-        // Non-existent account
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747";
-        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
+        final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        final List<Payment> payments = killBillClient.getPaymentsForAccount(account.getAccountId());
+        final Chargeback input = new Chargeback();
+        input.setAmount(BigDecimal.TEN.negate());
+        input.setPaymentId(payments.get(0).getPaymentId());
 
-        final BillingExceptionJson objFromJson = mapper.readValue(response.getResponseBody(), new TypeReference<BillingExceptionJson>() {});
-        Assert.assertNotNull(objFromJson);
-        Assert.assertEquals(objFromJson.getClassName(), AccountApiException.class.getName());
-        Assert.assertEquals(objFromJson.getCode(), (Integer) ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode());
-        Assert.assertTrue(objFromJson.getStackTrace().size() > 0);
+        try {
+            killBillClient.createChargeBack(input, createdBy, reason, comment);
+            fail();
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getBillingException().getClassName(), InvoiceApiException.class.getName());
+            Assert.assertEquals(e.getBillingException().getCode(), (Integer) ErrorCode.CHARGE_BACK_AMOUNT_IS_NEGATIVE.getCode());
+            Assert.assertFalse(e.getBillingException().getStackTrace().isEmpty());
+        }
     }
 }

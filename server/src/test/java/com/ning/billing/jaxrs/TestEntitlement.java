@@ -16,10 +16,7 @@
 
 package com.ning.billing.jaxrs;
 
-import java.util.Map;
 import java.util.UUID;
-
-import javax.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
@@ -27,13 +24,13 @@ import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.SubscriptionJson;
-import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.http.client.Response;
+import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.Subscription;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -42,57 +39,35 @@ import static org.testng.Assert.assertTrue;
 
 public class TestEntitlement extends TestJaxrsBase {
 
-    private static final String CALL_COMPLETION_TIMEOUT_SEC = "5";
+    private static final int CALL_COMPLETION_TIMEOUT_SEC = 5;
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can change plan and cancel a subscription")
     public void testEntitlementInTrialOk() throws Exception {
-
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("xil", "shdxilhkkl", "xil@yahoo.com");
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
-        final SubscriptionJson entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName, ProductCategory.BASE.toString(), term.toString(), true);
-
-        String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
+        final Subscription entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName,
+                                                               ProductCategory.BASE, term, true);
 
         // Retrieves with GET
-        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        String baseJson = response.getResponseBody();
-        SubscriptionJson objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
+        Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         Assert.assertTrue(objFromJson.equals(entitlementJson));
 
         // Change plan IMM
         final String newProductName = "Assault-Rifle";
 
-        final SubscriptionJson newInput = new SubscriptionJson(null,
-                                                               null,
-                                                               entitlementJson.getSubscriptionId(),
-                                                               null,
-                                                               null,
-                                                               newProductName,
-                                                               entitlementJson.getProductCategory(),
-                                                               entitlementJson.getBillingPeriod(),
-                                                               entitlementJson.getPriceList(),
-                                                               null,
-                                                               null,
-                                                               null,
-                                                               null,
-                                                               null,
-                                                               null,
-                                                               null,
-                                                               null);
-        baseJson = mapper.writeValueAsString(newInput);
-
-        final Map<String, String> queryParams = getQueryParamsForCallCompletion(CALL_COMPLETION_TIMEOUT_SEC);
-        response = doPut(uri, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        baseJson = response.getResponseBody();
-        objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
+        final Subscription newInput = new Subscription();
+        newInput.setSubscriptionId(entitlementJson.getSubscriptionId());
+        newInput.setProductName(newProductName);
+        newInput.setBillingPeriod(entitlementJson.getBillingPeriod());
+        newInput.setPriceList(entitlementJson.getPriceList());
+        objFromJson = killBillClient.updateSubscription(newInput, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+        Assert.assertNotNull(objFromJson);
 
         // MOVE AFTER TRIAL
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
@@ -101,42 +76,29 @@ public class TestEntitlement extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Cancel IMM (Billing EOT)
-        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
-        response = doDelete(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        killBillClient.cancelSubscription(newInput.getSubscriptionId(), CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
 
         // Retrieves to check EndDate
-        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
-        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        baseJson = response.getResponseBody();
-        objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
+        objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         assertNotNull(objFromJson.getCancelledDate());
         assertTrue(objFromJson.getCancelledDate().compareTo(new LocalDate(clock.getUTCNow())) == 0);
     }
 
-
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can cancel and uncancel a subscription")
     public void testEntitlementUncancel() throws Exception {
-
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("xil", "shdxilhkkl", "xil@yahoo.com");
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
-        final SubscriptionJson entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName, ProductCategory.BASE.toString(), term.toString(), true);
-
-        String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
+        final Subscription entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName,
+                                                               ProductCategory.BASE, term, true);
 
         // Retrieves with GET
-        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        String baseJson = response.getResponseBody();
-        SubscriptionJson objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
+        Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         Assert.assertTrue(objFromJson.equals(entitlementJson));
 
         // MOVE AFTER TRIAL
@@ -146,94 +108,63 @@ public class TestEntitlement extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Cancel EOT
-        final Map<String, String> queryParams = getQueryParamsForCallCompletion(CALL_COMPLETION_TIMEOUT_SEC);
-        queryParams.put(JaxrsResource.QUERY_BILLING_POLICY, "END_OF_TERM");
-        queryParams.put(JaxrsResource.QUERY_ENTITLEMENT_POLICY, "END_OF_TERM");
-
-        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
-        response = doDelete(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC * 10000);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        killBillClient.cancelSubscription(entitlementJson.getSubscriptionId(), EntitlementActionPolicy.END_OF_TERM,
+                                          BillingActionPolicy.END_OF_TERM, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
 
         // Retrieves to check EndDate
-        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
-        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        baseJson = response.getResponseBody();
-        objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
+        objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         assertNotNull(objFromJson.getCancelledDate());
 
+        // Uncancel
+        killBillClient.uncancelSubscription(entitlementJson.getSubscriptionId(), createdBy, reason, comment);
 
-        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId() + "/uncancel";
-        response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-
-        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId();
-        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        baseJson = response.getResponseBody();
-        objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
+        objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         assertNull(objFromJson.getCancelledDate());
-
     }
 
-
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can handle non existent subscription")
     public void testWithNonExistentEntitlement() throws Exception {
-        final String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + UUID.randomUUID().toString();
-        final SubscriptionJson subscriptionJson = new SubscriptionJson(null, null, UUID.randomUUID().toString(), null, null, "Pistol", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(),
-                                                                       PriceListSet.DEFAULT_PRICELIST_NAME, null, null, null, null, null, null, null, null);
-        final String baseJson = mapper.writeValueAsString(subscriptionJson);
+        final UUID subscriptionId = UUID.randomUUID();
+        final Subscription subscription = new Subscription();
+        subscription.setSubscriptionId(subscriptionId);
+        subscription.setProductName("Pistol");
+        subscription.setBillingPeriod(BillingPeriod.ANNUAL);
+        subscription.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
+        Assert.assertNull(killBillClient.updateSubscription(subscription, createdBy, reason, comment));
 
-        response = doDelete(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
+        // No-op (404, doesn't throw an exception)
+        killBillClient.cancelSubscription(subscriptionId, createdBy, reason, comment);
 
-        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
+        Assert.assertNull(killBillClient.getSubscription(subscriptionId));
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can override billing policy on change")
     public void testOverridePolicy() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("xil", "shdxilhkkl", "xil@yahoo.com");
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
 
-        final SubscriptionJson SubscriptionJson = createEntitlement(accountJson.getAccountId(), "99999", productName, ProductCategory.BASE.toString(), term.toString(), true);
-        final String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + SubscriptionJson.getSubscriptionId();
+        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), "99999", productName,
+                                                                ProductCategory.BASE, term, true);
 
         // Retrieves with GET
-        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        String baseJson = response.getResponseBody();
-        SubscriptionJson objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
-        Assert.assertTrue(objFromJson.equals(SubscriptionJson));
-        assertEquals(objFromJson.getBillingPeriod(), BillingPeriod.ANNUAL.toString());
+        Subscription objFromJson = killBillClient.getSubscription(subscriptionJson.getSubscriptionId());
+        Assert.assertTrue(objFromJson.equals(subscriptionJson));
+        assertEquals(objFromJson.getBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Change billing period immediately
-        final SubscriptionJson newInput = new SubscriptionJson(null,
-                                                               null,
-                                                               SubscriptionJson.getSubscriptionId(),
-                                                               null,
-                                                               null,
-                                                               SubscriptionJson.getProductName(),
-                                                               SubscriptionJson.getProductCategory(),
-                                                               BillingPeriod.MONTHLY.toString(),
-                                                               SubscriptionJson.getPriceList(),
-                                                               SubscriptionJson.getCancelledDate(),
-                                                               null, null, null, null, null, null, null);
-        baseJson = mapper.writeValueAsString(newInput);
-        final Map<String, String> queryParams = getQueryParamsForCallCompletion(CALL_COMPLETION_TIMEOUT_SEC);
-        queryParams.put(JaxrsResource.QUERY_BILLING_POLICY, "immediate");
-        response = doPut(uri, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        baseJson = response.getResponseBody();
-        objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
-        assertEquals(objFromJson.getBillingPeriod(), BillingPeriod.MONTHLY.toString());
+        final Subscription newInput = new Subscription();
+        newInput.setSubscriptionId(subscriptionJson.getSubscriptionId());
+        newInput.setProductName(subscriptionJson.getProductName());
+        newInput.setBillingPeriod(BillingPeriod.MONTHLY);
+        newInput.setPriceList(subscriptionJson.getPriceList());
+        objFromJson = killBillClient.updateSubscription(newInput, BillingActionPolicy.IMMEDIATE, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+        Assert.assertNotNull(objFromJson);
+        assertEquals(objFromJson.getBillingPeriod(), BillingPeriod.MONTHLY);
     }
 }

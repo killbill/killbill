@@ -22,43 +22,47 @@ import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.InvoiceJson;
+import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.Invoice;
+import com.ning.billing.client.model.Payment;
 
 import static org.testng.Assert.assertEquals;
 
 public class TestOverdue extends TestJaxrsBase {
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can retrieve the account overdue status")
     public void testOverdueStatus() throws Exception {
         // Create an account without a payment method
-        final AccountJson accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<InvoiceJson> invoices = getInvoicesWithItemsForAccount(accountJson.getAccountId());
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
-        final String bundleId = invoices.get(1).getItems().get(0).getBundleId();
 
         // We're still clear - see the configuration
-        Assert.assertTrue(getOverdueStateForAccount(accountJson.getAccountId()).isClearState());
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getIsClearState());
 
         clock.addDays(30);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD1");
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD1");
 
         clock.addDays(10);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD2");
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD2");
 
         clock.addDays(10);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD3");
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD3");
 
         // Post external payments
-        for (final InvoiceJson invoice : getInvoicesForAccount(accountJson.getAccountId())) {
+        for (final Invoice invoice : killBillClient.getInvoicesForAccount(accountJson.getAccountId())) {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
-                createExternalPayment(accountJson, invoice.getInvoiceId(), invoice.getBalance());
+                final Payment payment = new Payment();
+                payment.setAccountId(accountJson.getAccountId());
+                payment.setInvoiceId(invoice.getInvoiceId());
+                payment.setAmount(invoice.getBalance());
+                killBillClient.createPayment(payment, true, createdBy, reason, comment);
             }
         }
 
@@ -66,6 +70,6 @@ public class TestOverdue extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Verify we're in clear state
-        Assert.assertTrue(getOverdueStateForAccount(accountJson.getAccountId()).isClearState());
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getIsClearState());
     }
 }

@@ -36,7 +36,8 @@ public class TestInvoiceEmailJson extends JaxrsTestSuiteNoDB {
 
         final String asJson = mapper.writeValueAsString(invoiceEmailJson);
         Assert.assertEquals(asJson, "{\"accountId\":\"" + accountId + "\"," +
-                                    "\"isNotifiedForInvoices\":" + isNotifiedForInvoices + "}");
+                                    "\"isNotifiedForInvoices\":" + isNotifiedForInvoices + "," +
+                                    "\"auditLogs\":null}");
 
         final InvoiceEmailJson fromJson = mapper.readValue(asJson, InvoiceEmailJson.class);
         Assert.assertEquals(fromJson, invoiceEmailJson);

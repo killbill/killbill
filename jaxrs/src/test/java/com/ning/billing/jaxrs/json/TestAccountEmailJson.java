@@ -37,7 +37,8 @@ public class TestAccountEmailJson extends JaxrsTestSuiteNoDB {
 
         final String asJson = mapper.writeValueAsString(accountEmailJson);
         Assert.assertEquals(asJson, "{\"accountId\":\"" + accountId + "\"," +
-                                    "\"email\":\"" + email + "\"}");
+                                    "\"email\":\"" + email + "\"," +
+                                    "\"auditLogs\":null}");
 
         final AccountEmailJson fromJson = mapper.readValue(asJson, AccountEmailJson.class);
         Assert.assertEquals(fromJson, accountEmailJson);

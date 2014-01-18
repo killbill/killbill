@@ -45,6 +45,9 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.client.KillBillClient;
+import com.ning.billing.client.KillBillHttpClient;
+import com.ning.billing.client.model.Tenant;
 import com.ning.billing.commons.embeddeddb.EmbeddedDB;
 import com.ning.billing.currency.glue.CurrencyModule;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
@@ -81,14 +84,9 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.RecordIdModule;
 import com.ning.billing.util.glue.SecurityModule;
 import com.ning.billing.util.glue.TagStoreModule;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.jetty.core.CoreConfig;
 import com.ning.jetty.core.server.HttpServer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
@@ -108,13 +106,14 @@ public class TestJaxrsBase extends KillbillClient {
     protected CacheControllerDispatcher cacheControllerDispatcher;
 
     @Inject
-    protected @javax.inject.Named(BeatrixModule.EXTERNAL_BUS)PersistentBus externalBus;
+    protected @javax.inject.Named(BeatrixModule.EXTERNAL_BUS) PersistentBus externalBus;
 
     @Inject
     protected PersistentBus internalBus;
 
     protected static TestKillbillGuiceListener listener;
 
+    protected CoreConfig config;
     private HttpServer server;
     protected TestApiListener busHandler;
 
@@ -131,7 +130,6 @@ public class TestJaxrsBase extends KillbillClient {
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {
 
         private final EmbeddedDB helper;
-
 
         public TestKillbillGuiceListener(final EmbeddedDB helper) {
             super();
@@ -201,7 +199,6 @@ public class TestJaxrsBase extends KillbillClient {
 
             install(new GuicyKillbillTestWithEmbeddedDBModule());
 
-
             install(new EmailModule(configSource));
             install(new CacheModule(configSource));
             install(new NonEntityDaoModule());
@@ -236,6 +233,35 @@ public class TestJaxrsBase extends KillbillClient {
         }
     }
 
+    protected void setupClient(final String username, final String password, final String apiKey, final String apiSecret) {
+        killBillHttpClient = new KillBillHttpClient(String.format("http://%s:%d", config.getServerHost(), config.getServerPort()),
+                                                    username,
+                                                    password,
+                                                    apiKey,
+                                                    apiSecret);
+        killBillClient = new KillBillClient(killBillHttpClient);
+    }
+
+    protected void loginTenant(final String apiKey, final String apiSecret) {
+        setupClient(USERNAME, PASSWORD, apiKey, apiSecret);
+    }
+
+    protected void logoutTenant() {
+        setupClient(USERNAME, PASSWORD, null, null);
+    }
+
+    protected void login() {
+        login(USERNAME, PASSWORD);
+    }
+
+    protected void login(final String username, final String password) {
+        setupClient(username, password, DEFAULT_API_KEY, DEFAULT_API_SECRET);
+    }
+
+    protected void logout() {
+        setupClient(null, null, null, null);
+    }
+
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
@@ -246,14 +272,18 @@ public class TestJaxrsBase extends KillbillClient {
         clock.resetDeltaFromReality();
         clock.setDay(new LocalDate(2012, 8, 25));
 
-        loginAsAdmin();
+        loginTenant(DEFAULT_API_KEY, DEFAULT_API_SECRET);
 
         // Recreate the tenant (tables have been cleaned-up)
-        createTenant(DEFAULT_API_KEY, DEFAULT_API_SECRET);
+        final Tenant tenant = new Tenant();
+        tenant.setApiKey(DEFAULT_API_KEY);
+        tenant.setApiSecret(DEFAULT_API_SECRET);
+        killBillClient.createTenant(tenant, createdBy, reason, comment);
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        killBillClient.close();
         externalBus.stop();
         internalBus.stop();
     }
@@ -263,12 +293,6 @@ public class TestJaxrsBase extends KillbillClient {
         loadConfig();
 
         listener.getInstantiatedInjector().injectMembers(this);
-
-        httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(DEFAULT_HTTP_TIMEOUT_SEC * 1000).build());
-
-        mapper = new ObjectMapper();
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         busHandler = new TestApiListener(null, dbi);
     }

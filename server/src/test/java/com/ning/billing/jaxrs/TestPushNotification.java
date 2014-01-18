@@ -13,10 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletException;
@@ -41,15 +43,13 @@ import com.google.common.io.CharStreams;
 
 public class TestPushNotification extends TestJaxrsBase {
 
-
     private CallbackServer callbackServer;
 
-    private final static int SERVER_PORT = 8087;
-    private final static String CALLBACK_ENDPPOINT = "/callmeback";
+    private static final int SERVER_PORT = 8087;
+    private static final String CALLBACK_ENDPPOINT = "/callmeback";
 
     private volatile boolean callbackCompleted;
     private volatile boolean callbackCompletedWithError;
-
 
     @Override
     @BeforeMethod(groups = "slow")
@@ -67,7 +67,6 @@ public class TestPushNotification extends TestJaxrsBase {
     }
 
     private boolean waitForCallbacksToComplete() throws InterruptedException {
-
         long remainingMs = 20000;
         do {
             if (callbackCompleted) {
@@ -82,8 +81,8 @@ public class TestPushNotification extends TestJaxrsBase {
     public void retrieveAccountWithAsserts(final String accountId) {
         try {
             // Just check we can retrieve the account with the id from the callback
-            /* final AccountJson account = */ getAccountById(accountId);
-        } catch(final Exception e) {
+            killBillClient.getAccount(UUID.fromString(accountId));
+        } catch (final Exception e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -91,7 +90,7 @@ public class TestPushNotification extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testPushNotification() throws Exception {
         // Register tenant for callback
-        registerCallbackNotificationForTenant("http://127.0.0.1:" + SERVER_PORT + CALLBACK_ENDPPOINT);
+        killBillClient.registerCallbackNotificationForTenant("http://127.0.0.1:" + SERVER_PORT + CALLBACK_ENDPPOINT, createdBy, reason, comment);
         // Create account to trigger a push notification
         createAccount();
 
@@ -117,7 +116,7 @@ public class TestPushNotification extends TestJaxrsBase {
         private final TestPushNotification test;
 
         public CallbackServer(final TestPushNotification test, final int port, final String callbackEndpoint) {
-            this.callbackEndpoint =  callbackEndpoint;
+            this.callbackEndpoint = callbackEndpoint;
             this.test = test;
             this.server = new Server(port);
         }
@@ -126,7 +125,7 @@ public class TestPushNotification extends TestJaxrsBase {
             final ServletContextHandler context = new ServletContextHandler();
             context.setContextPath("/");
             server.setHandler(context);
-            context.addServlet(new ServletHolder(new CallmebackServlet(test,  1)), callbackEndpoint);
+            context.addServlet(new ServletHolder(new CallmebackServlet(test, 1)), callbackEndpoint);
             server.start();
         }
 
@@ -135,12 +134,11 @@ public class TestPushNotification extends TestJaxrsBase {
         }
     }
 
-
     public static class CallmebackServlet extends HttpServlet {
 
         private static final long serialVersionUID = -5181211514918217301L;
 
-        private final static Logger log = LoggerFactory.getLogger(CallmebackServlet.class);
+        private static final Logger log = LoggerFactory.getLogger(CallmebackServlet.class);
 
         private final int expectedNbCalls;
         private final AtomicInteger receivedCalls;
@@ -160,7 +158,7 @@ public class TestPushNotification extends TestJaxrsBase {
         protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
             final int current = receivedCalls.incrementAndGet();
 
-            final String body = CharStreams.toString( new InputStreamReader(request.getInputStream(), "UTF-8" ));
+            final String body = CharStreams.toString(new InputStreamReader(request.getInputStream(), "UTF-8"));
 
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_OK);
@@ -168,7 +166,7 @@ public class TestPushNotification extends TestJaxrsBase {
             log.info("Got body {}", body);
 
             try {
-                final NotificationJson notification =  objectMapper.readValue(body, NotificationJson.class);
+                final NotificationJson notification = objectMapper.readValue(body, NotificationJson.class);
                 Assert.assertEquals(notification.getEventType(), "ACCOUNT_CREATION");
                 Assert.assertEquals(notification.getObjectType(), "ACCOUNT");
                 Assert.assertNotNull(notification.getObjectId());
@@ -183,7 +181,6 @@ public class TestPushNotification extends TestJaxrsBase {
             log.info("CallmebackServlet received {} calls , current = {}", current, body);
             stopServerWhenComplete(current, withError);
         }
-
 
         private void stopServerWhenComplete(final int current, final boolean withError) {
             if (current == expectedNbCalls) {

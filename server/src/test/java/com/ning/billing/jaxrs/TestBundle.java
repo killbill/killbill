@@ -16,13 +16,8 @@
 
 package com.ning.billing.jaxrs;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import javax.ws.rs.core.Response.Status;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.testng.Assert;
@@ -30,137 +25,78 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.BundleJson;
-import com.ning.billing.jaxrs.json.SubscriptionJson;
-import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.http.client.Response;
-
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.Bundle;
+import com.ning.billing.client.model.Subscription;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
 public class TestBundle extends TestJaxrsBase {
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", description = "Can retrieve bundles by external key")
     public void testBundleOk() throws Exception {
+        final Account accountJson = createAccount();
 
-        final AccountJson accountJson = createAccount("xlxl", "shdgfhkkl", "xlxl@yahoo.com");
+        createEntitlement(accountJson.getAccountId(), "123467", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
 
-        createEntitlement(accountJson.getAccountId(), "123467", "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         // Retrieves by external key
-        final Map<String, String> queryParams = new HashMap<String, String>();
-        queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "123467");
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.BUNDLES;
-        final Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final String baseJson = response.getResponseBody();
-        final List<BundleJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJson>>() {});
+        final List<Bundle> objFromJson = killBillClient.getAccountBundles(accountJson.getAccountId(), "123467");
         Assert.assertEquals(objFromJson.size(), 1);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", description = "Can retrieve account bundles")
     public void testBundleFromAccount() throws Exception {
+        final Account accountJson = createAccount();
+        createEntitlement(accountJson.getAccountId(), "156567", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        createEntitlement(accountJson.getAccountId(), "265658", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
 
-        final AccountJson accountJson = createAccount("xaxa", "saagfhkkl", "xaxa@yahoo.com");
-        createEntitlement(accountJson.getAccountId(), "156567", "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
-        createEntitlement(accountJson.getAccountId(), "265658", "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
-
-
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId().toString() + "/" + JaxrsResource.BUNDLES;
-        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final String baseJson = response.getResponseBody();
-        final List<BundleJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJson>>() {});
-
-        Collections.sort(objFromJson, new Comparator<BundleJson>() {
-            @Override
-            public int compare(final BundleJson o1, final BundleJson o2) {
-                return o1.getExternalKey().compareTo(o2.getExternalKey());
-            }
-        });
+        final List<Bundle> objFromJson = killBillClient.getAccountBundles(accountJson.getAccountId());
+        Assert.assertEquals(objFromJson.size(), 2);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", description = "Can handle non existent bundle")
     public void testBundleNonExistent() throws Exception {
-        final AccountJson accountJson = createAccount("dfdf", "dfdfgfhkkl", "dfdf@yahoo.com");
+        final Account accountJson = createAccount();
 
-        String uri = JaxrsResource.BUNDLES_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747";
-        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
-
-        // Retrieves by external key
-        final Map<String, String> queryParams = new HashMap<String, String>();
-        queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "56566");
-        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.BUNDLES;
-        response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-
-        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.BUNDLES;
-        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final String baseJson = response.getResponseBody();
-        final List<BundleJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJson>>() {});
-        Assert.assertNotNull(objFromJson);
-        Assert.assertEquals(objFromJson.size(), 0);
+        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID()));
+        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), "98374982743892").isEmpty());
+        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId()).isEmpty());
     }
 
-    @Test(groups = "slow", enabled = true)
-    public void testAppNonExistent() throws Exception {
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747/" + JaxrsResource.BUNDLES;
-        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
+    @Test(groups = "slow", description = "Can handle non existent account")
+    public void testAccountNonExistent() throws Exception {
+        Assert.assertTrue(killBillClient.getAccountBundles(UUID.randomUUID()).isEmpty());
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", description = "Can transfer bundle")
     public void testBundleTransfer() throws Exception {
-
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("src", "src", "src@yahoo.com");
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String bundleExternalKey = "93199";
 
-        final SubscriptionJson entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), "93199", productName, ProductCategory.BASE.toString(), term.toString(), true);
+        final Subscription entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), bundleExternalKey, productName,
+                                                                       ProductCategory.BASE, term, true);
 
-
-        Map<String, String> queryParams = new HashMap<String, String>();
-        queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "93199");
-        String uri = JaxrsResource.BUNDLES_PATH;
-        Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final BundleJson originalBundle = mapper.readValue(response.getResponseBody(), BundleJson.class);
+        final Bundle originalBundle = killBillClient.getBundle(bundleExternalKey);
         assertEquals(originalBundle.getAccountId(), accountJson.getAccountId());
-        assertEquals(originalBundle.getExternalKey(), "93199");
+        assertEquals(originalBundle.getExternalKey(), bundleExternalKey);
 
+        final Account newAccount = createAccountWithDefaultPaymentMethod();
 
-        final AccountJson newAccount = createAccountWithDefaultPaymentMethod("dst", "dst", "dst@yahoo.com");
+        final Bundle bundle = new Bundle();
+        bundle.setAccountId(newAccount.getAccountId());
+        bundle.setBundleId(entitlementJsonNoEvents.getBundleId());
+        assertEquals(killBillClient.transferBundle(bundle, createdBy, reason, comment).getAccountId(), newAccount.getAccountId());
 
-        final BundleJson newBundleInput = new BundleJson(newAccount.getAccountId(), null, null, null, null);
-        final String newBundleInputJson = mapper.writeValueAsString(newBundleInput);
-        uri = JaxrsResource.BUNDLES_PATH + "/" + entitlementJsonNoEvents.getBundleId();
-        response = doPut(uri, newBundleInputJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
-
-        final String locationCC = response.getHeader("Location");
-        Assert.assertNotNull(locationCC);
-
-        response = doGetWithUrl(locationCC, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-
-        queryParams = new HashMap<String, String>();
-        queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "93199");
-        uri = JaxrsResource.BUNDLES_PATH;
-        response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final BundleJson newBundle = mapper.readValue(response.getResponseBody(), BundleJson.class);
-
+        final Bundle newBundle = killBillClient.getBundle(bundleExternalKey);
         assertNotEquals(newBundle.getBundleId(), originalBundle.getBundleId());
         assertEquals(newBundle.getExternalKey(), originalBundle.getExternalKey());
         assertEquals(newBundle.getAccountId(), newAccount.getAccountId());
-
     }
 }

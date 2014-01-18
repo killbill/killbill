@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -26,15 +27,15 @@ import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.AccountTimelineJson;
-import com.ning.billing.jaxrs.json.AuditLogJson;
-import com.ning.billing.jaxrs.json.ChargebackJson;
-import com.ning.billing.jaxrs.json.CreditJson;
-import com.ning.billing.jaxrs.json.InvoiceJson;
-import com.ning.billing.jaxrs.json.PaymentJson;
-import com.ning.billing.jaxrs.json.RefundJson;
-import com.ning.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
+import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.AccountTimeline;
+import com.ning.billing.client.model.AuditLog;
+import com.ning.billing.client.model.Chargeback;
+import com.ning.billing.client.model.Credit;
+import com.ning.billing.client.model.EventSubscription;
+import com.ning.billing.client.model.Invoice;
+import com.ning.billing.client.model.Payment;
+import com.ning.billing.client.model.Refund;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.ChangeType;
 
@@ -43,19 +44,19 @@ public class TestAccountTimeline extends TestJaxrsBase {
     private static final String PAYMENT_REQUEST_PROCESSOR = "PaymentRequestProcessor";
     private static final String TRANSITION = "SubscriptionBaseTransition";
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can retrieve the timeline without audits")
     public void testAccountTimeline() throws Exception {
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
 
-        final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final AccountTimelineJson timeline = getAccountTimeline(accountJson.getAccountId());
+        final AccountTimeline timeline = killBillClient.getAccountTimeline(accountJson.getAccountId());
         Assert.assertEquals(timeline.getPayments().size(), 1);
         Assert.assertEquals(timeline.getInvoices().size(), 2);
         Assert.assertEquals(timeline.getBundles().size(), 1);
         Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
         Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 3);
-        final List<EventSubscriptionJson> events = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents();
+        final List<EventSubscription> events = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents();
         Assert.assertEquals(events.get(0).getEffectiveDate(), new LocalDate(2012, 4, 25));
         Assert.assertEquals(events.get(0).getEventType(), "START_ENTITLEMENT");
         Assert.assertEquals(events.get(1).getEffectiveDate(), new LocalDate(2012, 4, 25));
@@ -64,28 +65,35 @@ public class TestAccountTimeline extends TestJaxrsBase {
         Assert.assertEquals(events.get(2).getEventType(), "PHASE");
     }
 
-
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can retrieve the timeline with audits")
     public void testAccountTimelineWithAudits() throws Exception {
         final DateTime startTime = clock.getUTCNow();
-        final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
         final DateTime endTime = clock.getUTCNow();
 
         // Add credit
-        final InvoiceJson invoice = getInvoicesForAccount(accountJson.getAccountId()).get(1);
-        final DateTime creditEffectiveDate = clock.getUTCNow();
+        final Invoice invoice = killBillClient.getInvoicesForAccount(accountJson.getAccountId()).get(1);
         final BigDecimal creditAmount = BigDecimal.ONE;
-        createCreditForInvoice(accountJson.getAccountId(), invoice.getInvoiceId(),
-                               creditAmount, clock.getUTCNow(), creditEffectiveDate);
+        final Credit credit = new Credit();
+        credit.setAccountId(accountJson.getAccountId());
+        credit.setInvoiceId(invoice.getInvoiceId());
+        credit.setCreditAmount(creditAmount);
+        killBillClient.createCredit(credit, createdBy, reason, comment);
 
         // Add refund
-        final PaymentJson postedPayment = getPaymentsForAccount(accountJson.getAccountId()).get(0);
+        final Payment postedPayment = killBillClient.getPaymentsForAccount(accountJson.getAccountId()).get(0);
         final BigDecimal refundAmount = BigDecimal.ONE;
-        createRefund(postedPayment.getPaymentId(), refundAmount);
+        final Refund refund = new Refund();
+        refund.setPaymentId(postedPayment.getPaymentId());
+        refund.setAmount(refundAmount);
+        killBillClient.createRefund(refund, createdBy, reason, comment);
 
         // Add chargeback
         final BigDecimal chargebackAmount = BigDecimal.ONE;
-        createChargeBack(postedPayment.getPaymentId(), chargebackAmount);
+        final Chargeback chargeback = new Chargeback();
+        chargeback.setPaymentId(postedPayment.getPaymentId());
+        chargeback.setAmount(chargebackAmount);
+        killBillClient.createChargeBack(chargeback, createdBy, reason, comment);
 
         // Verify payments
         verifyPayments(accountJson.getAccountId(), startTime, endTime, refundAmount, chargebackAmount);
@@ -100,31 +108,31 @@ public class TestAccountTimeline extends TestJaxrsBase {
         verifyBundles(accountJson.getAccountId(), startTime, endTime);
     }
 
-    private void verifyPayments(final String accountId, final DateTime startTime, final DateTime endTime,
+    private void verifyPayments(final UUID accountId, final DateTime startTime, final DateTime endTime,
                                 final BigDecimal refundAmount, final BigDecimal chargebackAmount) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
-            final AccountTimelineJson timeline = getAccountTimelineWithAudits(accountId, auditLevel);
+            final AccountTimeline timeline = killBillClient.getAccountTimeline(accountId, auditLevel);
 
             // Verify payments
             Assert.assertEquals(timeline.getPayments().size(), 1);
-            final PaymentJson paymentJson = timeline.getPayments().get(0);
+            final Payment paymentJson = timeline.getPayments().get(0);
 
             // Verify refunds
             Assert.assertEquals(paymentJson.getRefunds().size(), 1);
-            final RefundJson refundJson = paymentJson.getRefunds().get(0);
+            final Refund refundJson = paymentJson.getRefunds().get(0);
             Assert.assertEquals(refundJson.getPaymentId(), paymentJson.getPaymentId());
             Assert.assertEquals(refundJson.getAmount().compareTo(refundAmount), 0);
 
             // Verify chargebacks
             Assert.assertEquals(paymentJson.getChargebacks().size(), 1);
-            final ChargebackJson chargebackJson = paymentJson.getChargebacks().get(0);
+            final Chargeback chargebackJson = paymentJson.getChargebacks().get(0);
             Assert.assertEquals(chargebackJson.getPaymentId(), paymentJson.getPaymentId());
             Assert.assertEquals(chargebackJson.getAmount().compareTo(chargebackAmount), 0);
 
             // Verify audits
-            final List<AuditLogJson> paymentAuditLogs = paymentJson.getAuditLogs();
-            final List<AuditLogJson> refundAuditLogs = refundJson.getAuditLogs();
-            final List<AuditLogJson> chargebackAuditLogs = chargebackJson.getAuditLogs();
+            final List<AuditLog> paymentAuditLogs = paymentJson.getAuditLogs();
+            final List<AuditLog> refundAuditLogs = refundJson.getAuditLogs();
+            final List<AuditLog> chargebackAuditLogs = chargebackJson.getAuditLogs();
             if (AuditLevel.NONE.equals(auditLevel)) {
                 // Audits for payments
                 Assert.assertEquals(paymentAuditLogs.size(), 0);
@@ -165,16 +173,16 @@ public class TestAccountTimeline extends TestJaxrsBase {
         }
     }
 
-    private void verifyInvoices(final String accountId, final DateTime startTime, final DateTime endTime) throws Exception {
+    private void verifyInvoices(final UUID accountId, final DateTime startTime, final DateTime endTime) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
-            final AccountTimelineJson timeline = getAccountTimelineWithAudits(accountId, auditLevel);
+            final AccountTimeline timeline = killBillClient.getAccountTimeline(accountId, auditLevel);
 
             // Verify invoices
             Assert.assertEquals(timeline.getInvoices().size(), 2);
 
             // Verify audits
-            final List<AuditLogJson> firstInvoiceAuditLogs = timeline.getInvoices().get(0).getAuditLogs();
-            final List<AuditLogJson> secondInvoiceAuditLogs = timeline.getInvoices().get(1).getAuditLogs();
+            final List<AuditLog> firstInvoiceAuditLogs = timeline.getInvoices().get(0).getAuditLogs();
+            final List<AuditLog> secondInvoiceAuditLogs = timeline.getInvoices().get(1).getAuditLogs();
             if (AuditLevel.NONE.equals(auditLevel)) {
                 Assert.assertEquals(firstInvoiceAuditLogs.size(), 0);
                 Assert.assertEquals(secondInvoiceAuditLogs.size(), 0);
@@ -187,17 +195,17 @@ public class TestAccountTimeline extends TestJaxrsBase {
         }
     }
 
-    private void verifyCredits(final String accountId, final DateTime startTime, final DateTime endTime, final BigDecimal creditAmount) throws Exception {
+    private void verifyCredits(final UUID accountId, final DateTime startTime, final DateTime endTime, final BigDecimal creditAmount) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
-            final AccountTimelineJson timeline = getAccountTimelineWithAudits(accountId, auditLevel);
+            final AccountTimeline timeline = killBillClient.getAccountTimeline(accountId, auditLevel);
 
             // Verify credits
-            final List<CreditJson> credits = timeline.getInvoices().get(1).getCredits();
+            final List<Credit> credits = timeline.getInvoices().get(1).getCredits();
             Assert.assertEquals(credits.size(), 1);
             Assert.assertEquals(credits.get(0).getCreditAmount().compareTo(creditAmount.negate()), 0);
 
             // Verify audits
-            final List<AuditLogJson> creditAuditLogs = credits.get(0).getAuditLogs();
+            final List<AuditLog> creditAuditLogs = credits.get(0).getAuditLogs();
             if (AuditLevel.NONE.equals(auditLevel)) {
                 Assert.assertEquals(creditAuditLogs.size(), 0);
             } else {
@@ -207,9 +215,9 @@ public class TestAccountTimeline extends TestJaxrsBase {
         }
     }
 
-    private void verifyBundles(final String accountId, final DateTime startTime, final DateTime endTime) throws Exception {
+    private void verifyBundles(final UUID accountId, final DateTime startTime, final DateTime endTime) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
-            final AccountTimelineJson timeline = getAccountTimelineWithAudits(accountId, auditLevel);
+            final AccountTimeline timeline = killBillClient.getAccountTimeline(accountId, auditLevel);
 
             // Verify bundles
             Assert.assertEquals(timeline.getBundles().size(), 1);
@@ -217,10 +225,10 @@ public class TestAccountTimeline extends TestJaxrsBase {
             Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 3);
 
             // Verify audits
-            final List<AuditLogJson> bundleAuditLogs = timeline.getBundles().get(0).getAuditLogs();
-            final List<AuditLogJson> subscriptionAuditLogs = timeline.getBundles().get(0).getSubscriptions().get(0).getAuditLogs();
-            final List<AuditLogJson> subscriptionEvent1AuditLogs = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().get(0).getAuditLogs();
-            final List<AuditLogJson> subscriptionEvent2AuditLogs = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().get(1).getAuditLogs();
+            final List<AuditLog> bundleAuditLogs = timeline.getBundles().get(0).getAuditLogs();
+            final List<AuditLog> subscriptionAuditLogs = timeline.getBundles().get(0).getSubscriptions().get(0).getAuditLogs();
+            final List<AuditLog> subscriptionEvent1AuditLogs = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().get(0).getAuditLogs();
+            final List<AuditLog> subscriptionEvent2AuditLogs = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().get(1).getAuditLogs();
             if (AuditLevel.NONE.equals(auditLevel)) {
                 // Audits for bundles
                 Assert.assertEquals(bundleAuditLogs.size(), 0);
@@ -267,7 +275,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         }
     }
 
-    private void verifyAuditLog(final AuditLogJson auditLogJson, final ChangeType changeType, @Nullable final String reasonCode,
+    private void verifyAuditLog(final AuditLog auditLogJson, final ChangeType changeType, @Nullable final String reasonCode,
                                 @Nullable final String comments, @Nullable final String changedBy,
                                 final DateTime startTime, final DateTime endTime) {
         Assert.assertEquals(auditLogJson.getChangeType(), changeType.toString());

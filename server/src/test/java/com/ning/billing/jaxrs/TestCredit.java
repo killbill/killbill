@@ -19,71 +19,73 @@ package com.ning.billing.jaxrs;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import javax.ws.rs.core.Response.Status;
-
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.CreditJson;
-import com.ning.billing.jaxrs.json.InvoiceJson;
-import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.http.client.Response;
+import com.ning.billing.client.KillBillClientException;
+import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.Credit;
+import com.ning.billing.client.model.Invoice;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 public class TestCredit extends TestJaxrsBase {
 
-    AccountJson accountJson;
+    Account accountJson;
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can add a credit to an existing invoice")
     public void testAddCreditToInvoice() throws Exception {
-        final InvoiceJson invoice = getInvoicesForAccount(accountJson.getAccountId()).get(1);
+        final Invoice invoice = killBillClient.getInvoicesForAccount(accountJson.getAccountId()).get(1);
 
         final DateTime effectiveDate = clock.getUTCNow();
         final BigDecimal creditAmount = BigDecimal.ONE;
-        final CreditJson objFromJson = createCreditForInvoice(accountJson.getAccountId(), invoice.getInvoiceId(),
-                                                              creditAmount, clock.getUTCNow(), effectiveDate);
+        final Credit credit = new Credit();
+        credit.setAccountId(accountJson.getAccountId());
+        credit.setInvoiceId(invoice.getInvoiceId());
+        credit.setCreditAmount(creditAmount);
+        final Credit objFromJson = killBillClient.createCredit(credit, createdBy, reason, comment);
 
         // We can't just compare the object via .equals() due e.g. to the invoice id
         assertEquals(objFromJson.getAccountId(), accountJson.getAccountId());
+        assertEquals(objFromJson.getInvoiceId(), invoice.getInvoiceId());
         assertEquals(objFromJson.getCreditAmount().compareTo(creditAmount), 0);
         assertEquals(objFromJson.getEffectiveDate().compareTo(effectiveDate.toLocalDate()), 0);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Cannot add a credit if the account doesn't exist")
     public void testAccountDoesNotExist() throws Exception {
-        final LocalDate effectiveDate = clock.getUTCToday();
-        final CreditJson input = new CreditJson(BigDecimal.TEN, UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-                                                effectiveDate,
-                                                UUID.randomUUID().toString(), null);
-        final String jsonInput = mapper.writeValueAsString(input);
+        final Credit credit = new Credit();
+        credit.setAccountId(UUID.randomUUID());
+        credit.setCreditAmount(BigDecimal.TEN);
 
         // Try to create the credit
-        final Response response = doPost(JaxrsResource.CREDITS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode(), response.getResponseBody());
+        assertNull(killBillClient.createCredit(credit, createdBy, reason, comment));
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Cannot credit a badly formatted credit")
     public void testBadRequest() throws Exception {
-        final CreditJson input = new CreditJson(null, null, null, null, null, null);
-        final String jsonInput = mapper.writeValueAsString(input);
+        final Credit credit = new Credit();
+        credit.setAccountId(accountJson.getAccountId());
+        credit.setCreditAmount(BigDecimal.TEN.negate());
 
         // Try to create the credit
-        final Response response = doPost(JaxrsResource.CREDITS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.BAD_REQUEST.getStatusCode(), response.getResponseBody());
+        try {
+            killBillClient.createCredit(credit, createdBy, reason, comment);
+            fail();
+        } catch (final KillBillClientException e) {
+        }
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Cannot retrieve a non existing credit")
     public void testCreditDoesNotExist() throws Exception {
-        final Response response = doGet(JaxrsResource.CREDITS_PATH + "/" + UUID.randomUUID().toString(), DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode(), response.getResponseBody());
+        assertNull(killBillClient.getCredit(UUID.randomUUID()));
     }
 }

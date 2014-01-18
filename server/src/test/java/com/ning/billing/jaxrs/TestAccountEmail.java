@@ -22,39 +22,39 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.jaxrs.json.AccountEmailJson;
-import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.AccountEmail;
 
 public class TestAccountEmail extends TestJaxrsBase {
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can create and delete account emails")
     public void testAddAndRemoveAccountEmail() throws Exception {
-        final AccountJson input = createAccount(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        final String accountId = input.getAccountId();
+        final Account input = createAccount();
+        final UUID accountId = input.getAccountId();
 
         final String email1 = UUID.randomUUID().toString();
         final String email2 = UUID.randomUUID().toString();
-        final AccountEmailJson accountEmailJson1 = new AccountEmailJson(accountId, email1);
-        final AccountEmailJson accountEmailJson2 = new AccountEmailJson(accountId, email2);
+        final AccountEmail accountEmailJson1 = new AccountEmail(accountId, email1);
+        final AccountEmail accountEmailJson2 = new AccountEmail(accountId, email2);
 
         // Verify the initial state
-        final List<AccountEmailJson> firstEmails = getEmailsForAccount(accountId);
+        final List<AccountEmail> firstEmails = killBillClient.getEmailsForAccount(accountId);
         Assert.assertEquals(firstEmails.size(), 0);
 
         // Add an email
-        addEmailToAccount(accountId, accountEmailJson1);
+        killBillClient.addEmailToAccount(accountEmailJson1, createdBy, reason, comment);
 
         // Verify we can retrieve it
-        final List<AccountEmailJson> secondEmails = getEmailsForAccount(accountId);
+        final List<AccountEmail> secondEmails = killBillClient.getEmailsForAccount(accountId);
         Assert.assertEquals(secondEmails.size(), 1);
         Assert.assertEquals(secondEmails.get(0).getAccountId(), accountId);
         Assert.assertEquals(secondEmails.get(0).getEmail(), email1);
 
         // Add another email
-        addEmailToAccount(accountId, accountEmailJson2);
+        killBillClient.addEmailToAccount(accountEmailJson2, createdBy, reason, comment);
 
         // Verify we can retrieve both
-        final List<AccountEmailJson> thirdEmails = getEmailsForAccount(accountId);
+        final List<AccountEmail> thirdEmails = killBillClient.getEmailsForAccount(accountId);
         Assert.assertEquals(thirdEmails.size(), 2);
         Assert.assertEquals(thirdEmails.get(0).getAccountId(), accountId);
         Assert.assertEquals(thirdEmails.get(1).getAccountId(), accountId);
@@ -62,16 +62,16 @@ public class TestAccountEmail extends TestJaxrsBase {
         Assert.assertTrue(thirdEmails.get(1).getEmail().equals(email1) || thirdEmails.get(1).getEmail().equals(email2));
 
         // Delete the first email
-        removeEmailFromAccount(accountId, email1);
+        killBillClient.removeEmailFromAccount(accountEmailJson1, createdBy, reason, comment);
 
         // Verify it has been deleted
-        final List<AccountEmailJson> fourthEmails = getEmailsForAccount(accountId);
+        final List<AccountEmail> fourthEmails = killBillClient.getEmailsForAccount(accountId);
         Assert.assertEquals(fourthEmails.size(), 1);
         Assert.assertEquals(fourthEmails.get(0).getAccountId(), accountId);
         Assert.assertEquals(fourthEmails.get(0).getEmail(), email2);
 
-        // Try to add the same email -- that works because we removed the unique constraints for soft deletion.
-        // addEmailToAccount(accountId, accountEmailJson2);
-        Assert.assertEquals(getEmailsForAccount(accountId), fourthEmails);
+        // Try to add the same email
+        killBillClient.addEmailToAccount(accountEmailJson2, createdBy, reason, comment);
+        Assert.assertEquals(killBillClient.getEmailsForAccount(accountId), fourthEmails);
     }
 }

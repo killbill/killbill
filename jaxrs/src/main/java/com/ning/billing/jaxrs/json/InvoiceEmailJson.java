@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class InvoiceEmailJson {
+public class InvoiceEmailJson extends JsonBase {
 
     private final String accountId;
     private final boolean isNotifiedForInvoices;

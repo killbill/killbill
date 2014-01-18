@@ -21,53 +21,37 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-
-import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.InvoiceEmailJson;
-import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.http.client.Response;
-
-import static org.testng.Assert.assertEquals;
+import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.InvoiceEmail;
 
 public class TestAccountEmailNotifications extends TestJaxrsBase {
-    @Test(groups = "slow")
-    public void testSetAndUnsetEmailNotifications() throws Exception {
-        final AccountJson input = createAccount(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        final String accountId = input.getAccountId();
 
-        final InvoiceEmailJson invoiceEmailJsonWithNotifications = new InvoiceEmailJson(accountId, true);
-        final InvoiceEmailJson invoiceEmailJsonWithoutNotifications = new InvoiceEmailJson(accountId, false);
-        final String baseUri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.EMAIL_NOTIFICATIONS;
+    @Test(groups = "slow", description = "Can toggle email notifications")
+    public void testSetAndUnsetEmailNotifications() throws Exception {
+        final Account input = createAccount();
+        final UUID accountId = input.getAccountId();
+
+        final InvoiceEmail invoiceEmailJsonWithNotifications = new InvoiceEmail(accountId, true);
+        final InvoiceEmail invoiceEmailJsonWithoutNotifications = new InvoiceEmail(accountId, false);
 
         // Verify the initial state
-        final Response firstResponse = doGet(baseUri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(firstResponse.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
-        final InvoiceEmailJson firstInvoiceEmailJson = mapper.readValue(firstResponse.getResponseBody(), new TypeReference<InvoiceEmailJson>() {});
+        final InvoiceEmail firstInvoiceEmailJson = killBillClient.getEmailNotificationsForAccount(accountId);
         Assert.assertEquals(firstInvoiceEmailJson.getAccountId(), accountId);
         Assert.assertFalse(firstInvoiceEmailJson.isNotifiedForInvoices());
 
         // Enable email notifications
-        final String firstEmailString = mapper.writeValueAsString(invoiceEmailJsonWithNotifications);
-        final Response secondResponse = doPut(baseUri, firstEmailString, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(secondResponse.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        killBillClient.updateEmailNotificationsForAccount(invoiceEmailJsonWithNotifications, createdBy, reason, comment);
 
         // Verify we can retrieve it
-        final Response thirdResponse = doGet(baseUri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(thirdResponse.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
-        final InvoiceEmailJson secondInvoiceEmailJson = mapper.readValue(thirdResponse.getResponseBody(), new TypeReference<InvoiceEmailJson>() {});
+        final InvoiceEmail secondInvoiceEmailJson = killBillClient.getEmailNotificationsForAccount(accountId);
         Assert.assertEquals(secondInvoiceEmailJson.getAccountId(), accountId);
         Assert.assertTrue(secondInvoiceEmailJson.isNotifiedForInvoices());
 
         // Disable email notifications
-        final String secondEmailString = mapper.writeValueAsString(invoiceEmailJsonWithoutNotifications);
-        final Response fourthResponse = doPut(baseUri, secondEmailString, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(fourthResponse.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        killBillClient.updateEmailNotificationsForAccount(invoiceEmailJsonWithoutNotifications, createdBy, reason, comment);
 
         // Verify we can retrieve it
-        final Response fifthResponse = doGet(baseUri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(fifthResponse.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
-        final InvoiceEmailJson thirdInvoiceEmailJson = mapper.readValue(fifthResponse.getResponseBody(), new TypeReference<InvoiceEmailJson>() {});
+        final InvoiceEmail thirdInvoiceEmailJson = killBillClient.getEmailNotificationsForAccount(accountId);
         Assert.assertEquals(thirdInvoiceEmailJson.getAccountId(), accountId);
         Assert.assertFalse(thirdInvoiceEmailJson.isNotifiedForInvoices());
     }

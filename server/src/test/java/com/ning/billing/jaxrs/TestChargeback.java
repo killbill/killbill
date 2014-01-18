@@ -16,188 +16,154 @@
 
 package com.ning.billing.jaxrs;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import javax.ws.rs.core.Response.Status;
-
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.ChargebackJson;
-import com.ning.billing.jaxrs.json.InvoiceJson;
-import com.ning.billing.jaxrs.json.PaymentJson;
-import com.ning.billing.jaxrs.json.SubscriptionJson;
-import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.http.client.Response;
-
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.ning.billing.client.KillBillClientException;
+import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.Chargeback;
+import com.ning.billing.client.model.Invoice;
+import com.ning.billing.client.model.Payment;
+import com.ning.billing.client.model.Subscription;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class TestChargeback extends TestJaxrsBase {
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can create a chargeback")
     public void testAddChargeback() throws Exception {
-        final PaymentJson payment = createAccountWithInvoiceAndPayment();
+        final Payment payment = createAccountWithInvoiceAndPayment();
         createAndVerifyChargeback(payment);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can create multiple chargebacks")
     public void testMultipleChargeback() throws Exception {
-        final PaymentJson payment = createAccountWithInvoiceAndPayment();
+        final Payment payment = createAccountWithInvoiceAndPayment();
 
         // We get a 249.95 payment so we do 4 chargeback and then the fifth should fail
-        final ChargebackJson input = new ChargebackJson(null, null, null, null, new BigDecimal("50.00"), payment.getPaymentId(), null, null);
-        final String jsonInput = mapper.writeValueAsString(input);
+        final Chargeback input = new Chargeback();
+        input.setAmount(new BigDecimal("50.00"));
+        input.setPaymentId(payment.getPaymentId());
 
-        //
         int count = 4;
-        Response response;
         while (count-- > 0) {
-            response = doPost(JaxrsResource.CHARGEBACKS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-            assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.CREATED.getStatusCode(), response.getResponseBody());
+            assertNotNull(killBillClient.createChargeBack(input, createdBy, reason, comment));
         }
 
         // Last attempt should fail because this is more than the Payment
-        response = doPost(JaxrsResource.CHARGEBACKS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.BAD_REQUEST.getStatusCode(), response.getResponseBody());
+        try {
+            killBillClient.createChargeBack(input, createdBy, reason, comment);
+            fail();
+        } catch (final KillBillClientException e) {
+        }
 
         // Find the chargeback by account
-        response = doGet(JaxrsResource.ACCOUNTS_PATH + "/" + payment.getAccountId() + "/" + JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
-        List<ChargebackJson> chargebacks = mapper.readValue(response.getResponseBody(), new TypeReference<List<ChargebackJson>>() {});
+        List<Chargeback> chargebacks = killBillClient.getChargebacksForAccount(payment.getAccountId());
         assertEquals(chargebacks.size(), 4);
-        for (int i = 0; i < chargebacks.size(); i++) {
-            final ChargebackJson chargeBack = chargebacks.get(i);
+        for (final Chargeback chargeBack : chargebacks) {
             assertTrue(chargeBack.getAmount().compareTo(input.getAmount()) == 0);
             assertEquals(chargeBack.getPaymentId(), input.getPaymentId());
         }
 
         // Find the chargeback by payment
-        response = doGet(JaxrsResource.PAYMENTS_PATH + "/" + payment.getPaymentId() + "/" + JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
-        chargebacks = mapper.readValue(response.getResponseBody(), new TypeReference<List<ChargebackJson>>() {});
+        chargebacks = killBillClient.getChargebacksForPayment(payment.getPaymentId());
         assertEquals(chargebacks.size(), 4);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can add a chargeback for deleted payment methods")
     public void testAddChargebackForDeletedPaymentMethod() throws Exception {
-        final PaymentJson payment = createAccountWithInvoiceAndPayment();
+        final Payment payment = createAccountWithInvoiceAndPayment();
 
         // Check the payment method exists
-        assertEquals(getAccountById(payment.getAccountId()).getPaymentMethodId(), payment.getPaymentMethodId());
-        assertEquals(getPaymentMethod(payment.getPaymentMethodId()).getAccountId(), payment.getAccountId());
+        assertEquals(killBillClient.getAccount(payment.getAccountId()).getPaymentMethodId(), payment.getPaymentMethodId());
+        assertEquals(killBillClient.getPaymentMethod(payment.getPaymentMethodId()).getAccountId(), payment.getAccountId());
 
         // Delete the payment method
-        deletePaymentMethod(payment.getPaymentMethodId(), true);
+        killBillClient.deletePaymentMethod(payment.getPaymentMethodId(), true, createdBy, reason, comment);
 
         // Check the payment method was deleted
-        assertNull(getAccountById(payment.getAccountId()).getPaymentMethodId());
+        assertNull(killBillClient.getAccount(payment.getAccountId()).getPaymentMethodId());
 
         createAndVerifyChargeback(payment);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Cannot add a chargeback for non existent payment")
     public void testInvoicePaymentDoesNotExist() throws Exception {
-        final ChargebackJson input = new ChargebackJson(null, null, new DateTime(DateTimeZone.UTC),
-                                                          new DateTime(DateTimeZone.UTC), BigDecimal.TEN,
-                                                          UUID.randomUUID().toString(), null, null);
-        final String jsonInput = mapper.writeValueAsString(input);
-
-        // Try to create the chargeback
-        final Response response = doPost(JaxrsResource.CHARGEBACKS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode(), response.getResponseBody());
+        final Chargeback input = new Chargeback();
+        input.setAmount(BigDecimal.TEN);
+        input.setPaymentId(UUID.randomUUID());
+        assertNull(killBillClient.createChargeBack(input, createdBy, reason, comment));
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Cannot add a badly formatted chargeback")
     public void testBadRequest() throws Exception {
-        final ChargebackJson input = new ChargebackJson(null, null, null, null, null, null, null, null);
-        final String jsonInput = mapper.writeValueAsString(input);
+        final Payment payment = createAccountWithInvoiceAndPayment();
 
-        // Try to create the chargeback
-        final Response response = doPost(JaxrsResource.CHARGEBACKS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.BAD_REQUEST.getStatusCode(), response.getResponseBody());
+        final Chargeback input = new Chargeback();
+        input.setAmount(BigDecimal.TEN.negate());
+        input.setPaymentId(payment.getPaymentId());
+
+        try {
+            killBillClient.createChargeBack(input, createdBy, reason, comment);
+            fail();
+        } catch (final KillBillClientException e) {
+        }
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Accounts can have zero chargeback")
     public void testNoChargebackForAccount() throws Exception {
-        final String accountId = UUID.randomUUID().toString();
-        final Response response = doGet(JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode(), response.getResponseBody());
-
-        final List<ChargebackJson> chargebackJson = mapper.readValue(response.getResponseBody(), new TypeReference<List<ChargebackJson>>() {});
-        Assert.assertEquals(chargebackJson.size(), 0);
+        Assert.assertEquals(killBillClient.getChargebacksForAccount(UUID.randomUUID()).size(), 0);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Payments can have zero chargeback")
     public void testNoChargebackForPayment() throws Exception {
-        final String paymentId = UUID.randomUUID().toString();
-        final Response response = doGet(JaxrsResource.PAYMENTS_PATH + "/" + paymentId + "/" + JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        // STEPH needs to fix that we get 200 instaed of 204 although stepping through code, i see we do return NO_CONTENT. mistery that needs to be solved!!!!
-        //assertEquals(response.getStatusCode(),Status.NO_CONTENT.getStatusCode(), response.getResponseBody());
+        Assert.assertEquals(killBillClient.getChargebacksForPayment(UUID.randomUUID()).size(), 0);
     }
 
-    private void createAndVerifyChargeback(final PaymentJson payment) throws IOException {
-        final ChargebackJson input = new ChargebackJson(null, null, null, null, BigDecimal.TEN, payment.getPaymentId(), null, null);
-        final String jsonInput = mapper.writeValueAsString(input);
-
+    private void createAndVerifyChargeback(final Payment payment) throws KillBillClientException {
         // Create the chargeback
-        Response response = doPost(JaxrsResource.CHARGEBACKS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode(), response.getResponseBody());
-
-        // Find the chargeback by location
-        final String location = response.getHeader("Location");
-        assertNotNull(location);
-        response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        verifySingleChargebackResponse(response, input);
+        final Chargeback chargeback = new Chargeback();
+        chargeback.setPaymentId(payment.getPaymentId());
+        chargeback.setAmount(BigDecimal.TEN);
+        final Chargeback chargebackJson = killBillClient.createChargeBack(chargeback, createdBy, reason, comment);
+        assertEquals(chargebackJson.getAmount().compareTo(chargeback.getAmount()), 0);
+        assertEquals(chargebackJson.getPaymentId(), chargeback.getPaymentId());
 
         // Find the chargeback by account
-        response = doGet(JaxrsResource.ACCOUNTS_PATH + "/" + payment.getAccountId() + "/" + JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        verifyCollectionChargebackResponse(response, input);
+        List<Chargeback> chargebacks = killBillClient.getChargebacksForAccount(payment.getAccountId());
+        assertEquals(chargebacks.size(), 1);
+        assertEquals(chargebacks.get(0).getAmount().compareTo(chargeback.getAmount()), 0);
+        assertEquals(chargebacks.get(0).getPaymentId(), chargeback.getPaymentId());
 
         // Find the chargeback by payment
-        response = doGet(JaxrsResource.PAYMENTS_PATH + "/" + payment.getPaymentId() + "/" + JaxrsResource.CHARGEBACKS, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        verifyCollectionChargebackResponse(response, input);
+        chargebacks = killBillClient.getChargebacksForPayment(payment.getPaymentId());
+        assertEquals(chargebacks.size(), 1);
+        assertEquals(chargebacks.get(0).getAmount().compareTo(chargeback.getAmount()), 0);
+        assertEquals(chargebacks.get(0).getPaymentId(), chargeback.getPaymentId());
     }
 
-    private void verifyCollectionChargebackResponse(final Response response, final ChargebackJson input) throws IOException {
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final List<ChargebackJson> chargebackJson = mapper.readValue(response.getResponseBody(), new TypeReference<List<ChargebackJson>>() {});
-        assertEquals(chargebackJson.size(), 1);
-        final ChargebackJson chargeBack = chargebackJson.get(0);
-        assertTrue(chargeBack.getAmount().compareTo(input.getAmount()) == 0);
-        assertEquals(chargeBack.getPaymentId(), input.getPaymentId());
-    }
-
-    private void verifySingleChargebackResponse(final Response response, final ChargebackJson input) throws IOException {
-        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final ChargebackJson objFromJson = mapper.readValue(response.getResponseBody(), ChargebackJson.class);
-        assertTrue(objFromJson.getAmount().compareTo(input.getAmount()) == 0);
-    }
-
-    private PaymentJson createAccountWithInvoiceAndPayment() throws Exception {
-        final InvoiceJson invoice = createAccountWithInvoice();
+    private Payment createAccountWithInvoiceAndPayment() throws Exception {
+        final Invoice invoice = createAccountWithInvoice();
         return getPayment(invoice);
     }
 
-    private InvoiceJson createAccountWithInvoice() throws Exception {
+    private Invoice createAccountWithInvoice() throws Exception {
         // Create account
-        final AccountJson accountJson = createAccountWithDefaultPaymentMethod(UUID.randomUUID().toString(), UUID.randomUUID().toString(), "nohup@yahoo.com");
-
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
 
         // Create subscription
-        final SubscriptionJson subscriptionJson = createEntitlement(accountJson.getAccountId(), "6253283", "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), "6253283", "Shotgun",
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
 
         // Move after the trial period to trigger an invoice with a non-zero invoice item
@@ -205,29 +171,18 @@ public class TestChargeback extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Retrieve the invoice
-
-        final Response response = doGet(JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.INVOICES, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final String baseJson = response.getResponseBody();
-        final List<InvoiceJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<InvoiceJson>>() {});
-        assertNotNull(objFromJson);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
         // We should have two invoices, one for the trial (zero dollar amount) and one for the first month
-        assertEquals(objFromJson.size(), 2);
-        assertTrue(objFromJson.get(1).getAmount().doubleValue() > 0);
+        assertEquals(invoices.size(), 2);
+        assertTrue(invoices.get(1).getAmount().doubleValue() > 0);
 
-        return objFromJson.get(1);
+        return invoices.get(1);
     }
 
-    private PaymentJson getPayment(final InvoiceJson invoice) throws IOException {
-        final String uri = JaxrsResource.INVOICES_PATH + "/" + invoice.getInvoiceId() + "/" + JaxrsResource.PAYMENTS;
-        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final String baseJson = response.getResponseBody();
-        final List<PaymentJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJson>>() {});
-        assertNotNull(objFromJson);
-        assertEquals(objFromJson.size(), 1);
-
-        return objFromJson.get(0);
+    private Payment getPayment(final Invoice invoice) throws KillBillClientException {
+        final List<Payment> payments = killBillClient.getPaymentsForInvoice(invoice.getInvoiceId());
+        assertNotNull(payments);
+        assertEquals(payments.size(), 1);
+        return payments.get(0);
     }
 }

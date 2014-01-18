@@ -29,7 +29,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
-public class TagDefinitionJson {
+public class TagDefinitionJson extends JsonBase {
 
     private final String id;
     private final Boolean isControlTag;

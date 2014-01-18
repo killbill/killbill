@@ -22,10 +22,13 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.client.KillBillClient;
+import com.ning.billing.client.KillBillClientException;
+import com.ning.billing.client.KillBillHttpClient;
+import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.Tenant;
 import com.ning.billing.jaxrs.TestJaxrsBase;
-import com.ning.billing.jaxrs.json.AccountJson;
 
-// Pure Multi-Tenancy test (no RBAC)
 public class TestTenantFilter extends TestJaxrsBase {
 
     @AfterMethod(groups = "slow")
@@ -38,51 +41,44 @@ public class TestTenantFilter extends TestJaxrsBase {
     public void testTenantShouldOnlySeeOwnAccount() throws Exception {
         // Try to create an account without being logged-in
         logoutTenant();
-        Assert.assertEquals(createAccountNoValidation().getStatusCode(), Status.UNAUTHORIZED.getStatusCode());
+        try {
+            killBillClient.createAccount(getAccount(), createdBy, reason, comment);
+            Assert.fail();
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getResponse().getStatusCode(), Status.UNAUTHORIZED.getStatusCode());
+        }
 
         // Create the tenant
         final String apiKeyTenant1 = "pierre";
         final String apiSecretTenant1 = "pierreIsFr3nch";
-        createTenant(apiKeyTenant1, apiSecretTenant1);
-
-        // We should still not be able to create an account
-        Assert.assertEquals(createAccountNoValidation().getStatusCode(), Status.UNAUTHORIZED.getStatusCode());
-
-        // Now, let's log-in and try again
         loginTenant(apiKeyTenant1, apiSecretTenant1);
-        final AccountJson account1 = createAccount();
-        Assert.assertEquals(getAccountByExternalKey(account1.getExternalKey()), account1);
+        final Tenant tenant1 = new Tenant();
+        tenant1.setApiKey(apiKeyTenant1);
+        tenant1.setApiSecret(apiSecretTenant1);
+        killBillClient.createTenant(tenant1, createdBy, reason, comment);
+
+        final Account account1 = createAccount();
+        Assert.assertEquals(killBillClient.getAccount(account1.getExternalKey()), account1);
 
         logoutTenant();
 
         // Create another tenant
         final String apiKeyTenant2 = "stephane";
         final String apiSecretTenant2 = "stephane1sAlsoFr3nch";
-        createTenant(apiKeyTenant2, apiSecretTenant2);
-
-        // We should not be able to create an account before being logged-in
-        Assert.assertEquals(createAccountNoValidation().getStatusCode(), Status.UNAUTHORIZED.getStatusCode());
-
-        // Now, let's log-in and try again
         loginTenant(apiKeyTenant2, apiSecretTenant2);
-        final AccountJson account2 = createAccount();
-        Assert.assertEquals(getAccountByExternalKey(account2.getExternalKey()), account2);
+        final Tenant tenant2 = new Tenant();
+        tenant2.setApiKey(apiKeyTenant2);
+        tenant2.setApiSecret(apiSecretTenant2);
+        killBillClient.createTenant(tenant2, createdBy, reason, comment);
+
+        final Account account2 = createAccount();
+        Assert.assertEquals(killBillClient.getAccount(account2.getExternalKey()), account2);
 
         // We should not be able to retrieve the first account as tenant2
-        Assert.assertEquals(getAccountByExternalKeyNoValidation(account1.getExternalKey()).getStatusCode(), Status.NOT_FOUND.getStatusCode());
+        Assert.assertNull(killBillClient.getAccount(account1.getExternalKey()));
 
         // Same for tenant1 and account2
         loginTenant(apiKeyTenant1, apiSecretTenant1);
-        Assert.assertEquals(getAccountByExternalKeyNoValidation(account2.getExternalKey()).getStatusCode(), Status.NOT_FOUND.getStatusCode());
-    }
-
-    private void loginTenant(final String apiKey, final String apiSecret) {
-        this.apiKey = apiKey;
-        this.apiSecret = apiSecret;
-    }
-
-    private void logoutTenant() {
-        apiKey = "";
-        apiSecret = "";
+        Assert.assertNull(killBillClient.getAccount(account2.getExternalKey()));
     }
 }

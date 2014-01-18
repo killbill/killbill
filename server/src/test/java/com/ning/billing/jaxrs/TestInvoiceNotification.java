@@ -17,7 +17,6 @@
 package com.ning.billing.jaxrs;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.testng.Assert;
@@ -25,42 +24,32 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.InvoiceJson;
-import com.ning.billing.jaxrs.json.SubscriptionJson;
-import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.http.client.Response;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.ImmutableMap;
+import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.Invoice;
+import com.ning.billing.client.model.Subscription;
 
 public class TestInvoiceNotification extends TestJaxrsBase {
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Can trigger an invoice notification")
     public void testTriggerNotification() throws Exception {
-        final AccountJson accountJson = createScenarioWithOneInvoice();
+        final Account accountJson = createScenarioWithOneInvoice();
 
-        final String uri = JaxrsResource.INVOICES_PATH;
-        final Response response = doGet(JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.INVOICES, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
-        final String baseJson = response.getResponseBody();
-        final List<InvoiceJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<InvoiceJson>>() {});
-        Assert.assertEquals(objFromJson.size(), 1);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
+        Assert.assertEquals(invoices.size(), 1);
 
-        final InvoiceJson invoice = objFromJson.get(0);
-        final Response triggerResponse = doPost(uri + "/" + invoice.getInvoiceId() + "/" + JaxrsResource.EMAIL_NOTIFICATIONS,
-                                                null, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(triggerResponse.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        final Invoice invoice = invoices.get(0);
+        killBillClient.triggerInvoiceNotification(invoice.getInvoiceId(), createdBy, reason, comment);
     }
 
-    private AccountJson createScenarioWithOneInvoice() throws Exception {
+    private Account createScenarioWithOneInvoice() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final AccountJson accountJson = createAccountWithDefaultPaymentMethod(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
         Assert.assertNotNull(accountJson);
 
-        final SubscriptionJson subscriptionJson = createEntitlement(accountJson.getAccountId(), "76213", "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), "76213", "Shotgun",
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         Assert.assertNotNull(subscriptionJson);
 
         return accountJson;
