@@ -1,6 +1,12 @@
+0.8.9
+    Introduce PENDING payment state for Bitcoin
+    Implement new pagination and search APIs
+    Update killbill-oss-parent to 0.5.19
+
 0.8.8
-    Add APIs to retrieve all payments for a given tenant
-    Update killbill-oss-parent to 0.5.15
+    Add ability to update a bundle externalKey
+    Add ability to delete (mark as deleted) custom fields
+    Update killbill-oss-parent to 0.5.16
 
 0.8.7
     DDL: remove unused paid_through_date column
