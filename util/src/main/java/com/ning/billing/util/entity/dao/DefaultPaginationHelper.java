@@ -64,7 +64,8 @@ public class DefaultPaginationHelper {
                     pages = entityPaginationBuilder.build(firstSearch ? offset : 0L, limit - allResults.size(), pluginName);
                     allResults.addAll(ImmutableList.<E>copyOf(pages));
                 }
-                firstSearch = false;
+                // Make sure not to start at 0 for subsequent plugins if previous ones didn't yield any result
+                firstSearch = allResults.isEmpty();
                 totalNbRecords += pages.getTotalNbRecords();
                 maxNbRecords += pages.getMaxNbRecords();
             } catch (final BillingExceptionBase e) {

@@ -27,6 +27,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
 
@@ -93,7 +94,8 @@ public class CreditResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
+                                 @javax.ws.rs.core.Context final HttpServletRequest request,
+                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);
@@ -110,7 +112,7 @@ public class CreditResource extends JaxRsResourceBase {
                                                  account.getCurrency(), callContext);
         }
 
-        return uriBuilder.buildResponse(CreditResource.class, "getCredit", credit.getId());
+        return uriBuilder.buildResponse(uriInfo, CreditResource.class, "getCredit", credit.getId());
     }
 
     @Override

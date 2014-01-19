@@ -21,24 +21,23 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import com.ning.billing.jaxrs.resources.JaxRsResourceBase;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 
 public class JaxrsUriBuilder {
 
-    public Response buildResponse(final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId) {
-        final URI uri = UriBuilder.fromPath(objectId.toString()).build();
-        final Response.ResponseBuilder ri = Response.created(uri);
-        return ri.entity(new Object() {
-            @SuppressWarnings(value = "all")
-            public URI getUri() {
-                final URI newUriFromResource = objectId != null ?
-                                               UriBuilder.fromResource(theClass).path(theClass, getMethodName).build(objectId) :
-                                               UriBuilder.fromResource(theClass).path(theClass, getMethodName).build();
-                return newUriFromResource;
-            }
-        }).build();
+    public Response buildResponse(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId) {
+        final UriBuilder uriBuilder = UriBuilder.fromResource(theClass)
+                                                .path(theClass, getMethodName)
+                                                .scheme(uriInfo.getAbsolutePath().getScheme())
+                                                .host(uriInfo.getAbsolutePath().getHost())
+                                                .port(uriInfo.getAbsolutePath().getPort());
+
+        final URI location = objectId != null ? uriBuilder.build(objectId) : uriBuilder.build();
+
+        return Response.created(location).build();
     }
 
     public URI nextPage(final Class<? extends JaxrsResource> theClass, final String getMethodName, final Long nextOffset, final Long limit, final Map<String, String> params) {

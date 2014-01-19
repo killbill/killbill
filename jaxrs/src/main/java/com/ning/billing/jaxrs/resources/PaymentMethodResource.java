@@ -113,7 +113,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         }
 
         final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "getPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
-                                                                                                                                                                             QUERY_AUDIT, auditMode.toString()));
+                                                                                                                                                                             QUERY_AUDIT, auditMode.getLevel().toString()));
 
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
         final Map<UUID, Account> accounts = new HashMap<UUID, Account>();
@@ -166,7 +166,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
 
         final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "searchPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
                                                                                                                                                                                 QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
-                                                                                                                                                                                QUERY_AUDIT, auditMode.toString()));
+                                                                                                                                                                                QUERY_AUDIT, auditMode.getLevel().toString()));
 
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
         final Map<UUID, Account> accounts = new HashMap<UUID, Account>();

@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.client.model.Account;
 import com.ning.billing.client.model.PaymentMethod;
+import com.ning.billing.client.model.PaymentMethods;
 
 public class TestPaymentMethod extends TestJaxrsBase {
 
@@ -54,6 +55,25 @@ public class TestPaymentMethod extends TestJaxrsBase {
         doSearch("CA", paymentMethodJson);
         // Country
         doSearch("Zimbawe", paymentMethodJson);
+    }
+
+    @Test(groups = "slow", description = "Can paginate through all payment methods")
+    public void testPaymentMethodsPagination() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            createAccountWithDefaultPaymentMethod();
+        }
+
+        final PaymentMethods allPaymentMethods = killBillClient.getPaymentMethods();
+        Assert.assertEquals(allPaymentMethods.size(), 5);
+
+        PaymentMethods page = killBillClient.getPaymentMethods(0L, 1L);
+        for (int i = 0; i < 5; i++) {
+            Assert.assertNotNull(page);
+            Assert.assertEquals(page.size(), 1);
+            Assert.assertEquals(page.get(0), allPaymentMethods.get(i));
+            page = page.getNext();
+        }
+        Assert.assertNull(page);
     }
 
     private void doSearch(final String searchKey, final PaymentMethod paymentMethodJson) throws Exception {

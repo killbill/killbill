@@ -78,7 +78,7 @@ public class TagResource extends JaxRsResourceBase {
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         final TenantContext tenantContext = context.createContext(request);
         final Pagination<Tag> tags = tagUserApi.getTags(offset, limit, tenantContext);
-        final URI nextPageUri = uriBuilder.nextPage(TagResource.class, "getTags", tags.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.toString()));
+        final URI nextPageUri = uriBuilder.nextPage(TagResource.class, "getTags", tags.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()));
 
         final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<UUID, TagDefinition>();
         for (final TagDefinition tagDefinition : tagUserApi.getTagDefinitions(tenantContext)) {
@@ -110,7 +110,7 @@ public class TagResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
         final Pagination<Tag> tags = tagUserApi.searchTags(searchKey, offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(TagResource.class, "searchTags", tags.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
-                                                                                                                                                  QUERY_AUDIT, auditMode.toString()));
+                                                                                                                                                  QUERY_AUDIT, auditMode.getLevel().toString()));
         final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<UUID, TagDefinition>();
         for (final TagDefinition tagDefinition : tagUserApi.getTagDefinitions(tenantContext)) {
             tagDefinitionsCache.put(tagDefinition.getId(), tagDefinition);

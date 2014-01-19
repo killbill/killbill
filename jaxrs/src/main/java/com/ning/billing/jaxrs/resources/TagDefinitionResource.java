@@ -31,6 +31,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.AccountUserApi;
@@ -95,13 +96,14 @@ public class TagDefinitionResource extends JaxRsResourceBase {
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
-                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
+                                        @javax.ws.rs.core.Context final HttpServletRequest request,
+                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws TagDefinitionApiException {
         // Checked as the database layer as well, but bail early and return 400 instead of 500
         Preconditions.checkNotNull(json.getName(), String.format("TagDefinition name needs to be set"));
         Preconditions.checkNotNull(json.getDescription(), String.format("TagDefinition description needs to be set"));
 
         final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment, request));
-        return uriBuilder.buildResponse(TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId());
+        return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId());
     }
 
     @DELETE

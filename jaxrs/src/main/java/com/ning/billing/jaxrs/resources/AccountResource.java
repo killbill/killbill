@@ -252,10 +252,11 @@ public class AccountResource extends JaxRsResourceBase {
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
                                   @HeaderParam(HDR_COMMENT) final String comment,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+                                  @javax.ws.rs.core.Context final HttpServletRequest request,
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
         final AccountData data = json.toAccountData();
         final Account account = accountUserApi.createAccount(data, context.createContext(createdBy, reason, comment, request));
-        return uriBuilder.buildResponse(AccountResource.class, "getAccount", account.getId());
+        return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", account.getId());
     }
 
     @PUT
@@ -623,9 +624,10 @@ public class AccountResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+                                       @javax.ws.rs.core.Context final HttpServletRequest request,
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request));
+                                        context.createContext(createdBy, reason, comment, request), uriInfo);
     }
 
     @DELETE
@@ -732,7 +734,8 @@ public class AccountResource extends JaxRsResourceBase {
                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                              @HeaderParam(HDR_REASON) final String reason,
                              @HeaderParam(HDR_COMMENT) final String comment,
-                             @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+                             @javax.ws.rs.core.Context final HttpServletRequest request,
+                             @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID accountId = UUID.fromString(id);
@@ -753,7 +756,7 @@ public class AccountResource extends JaxRsResourceBase {
             accountUserApi.addEmail(accountId, json.toAccountEmail(UUID.randomUUID()), callContext);
         }
 
-        return uriBuilder.buildResponse(AccountResource.class, "getEmails", json.getAccountId());
+        return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getEmails", json.getAccountId());
     }
 
     @DELETE

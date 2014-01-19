@@ -30,7 +30,9 @@ import com.ning.billing.client.model.Invoice;
 import com.ning.billing.client.model.InvoiceItem;
 import com.ning.billing.client.model.Payment;
 import com.ning.billing.client.model.PaymentMethod;
+import com.ning.billing.client.model.Payments;
 import com.ning.billing.client.model.Refund;
+import com.ning.billing.client.model.Refunds;
 import com.ning.billing.payment.api.RefundStatus;
 
 import com.google.common.collect.ImmutableList;
@@ -176,6 +178,50 @@ public class TestPayment extends TestJaxrsBase {
 
         // Verify the invoice balance
         verifyInvoice(paymentJson, expectedInvoiceBalance);
+    }
+
+    @Test(groups = "slow", description = "Can paginate through all payments and refunds")
+    public void testPaymentsAndRefundsPagination() throws Exception {
+        Payment lastPayment = setupScenarioWithPayment();
+
+        for (int i = 0; i < 5; i++) {
+            final Refund refund = new Refund();
+            refund.setPaymentId(lastPayment.getPaymentId());
+            refund.setAmount(lastPayment.getAmount());
+            killBillClient.createRefund(refund, createdBy, reason, comment);
+
+            final Payment payment = new Payment();
+            payment.setAccountId(lastPayment.getAccountId());
+            payment.setInvoiceId(lastPayment.getInvoiceId());
+            payment.setAmount(lastPayment.getAmount());
+            final List<Payment> payments = killBillClient.createPayment(payment, false, createdBy, reason, comment);
+
+            lastPayment = payments.get(payments.size() - 1);
+        }
+
+        final Payments allPayments = killBillClient.getPayments();
+        Assert.assertEquals(allPayments.size(), 6);
+
+        final Refunds allRefunds = killBillClient.getRefunds();
+        Assert.assertEquals(allRefunds.size(), 5);
+
+        Payments paymentsPage = killBillClient.getPayments(0L, 1L);
+        for (int i = 0; i < 6; i++) {
+            Assert.assertNotNull(paymentsPage);
+            Assert.assertEquals(paymentsPage.size(), 1);
+            Assert.assertEquals(paymentsPage.get(0), allPayments.get(i));
+            paymentsPage = paymentsPage.getNext();
+        }
+        Assert.assertNull(paymentsPage);
+
+        Refunds refundsPage = killBillClient.getRefunds(0L, 1L);
+        for (int i = 0; i < 5; i++) {
+            Assert.assertNotNull(refundsPage);
+            Assert.assertEquals(refundsPage.size(), 1);
+            Assert.assertEquals(refundsPage.get(0), allRefunds.get(i));
+            refundsPage = refundsPage.getNext();
+        }
+        Assert.assertNull(refundsPage);
     }
 
     private BigDecimal getFractionOfAmount(final BigDecimal amount) {

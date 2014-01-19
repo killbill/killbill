@@ -73,7 +73,6 @@
         <dependency>
             <groupId>com.ning</groupId>
             <artifactId>async-http-client</artifactId>
-            <version>${async-http-client.version}</version>
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>

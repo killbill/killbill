@@ -177,14 +177,15 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected Response createCustomFields(final UUID id,
                                           final List<CustomFieldJson> customFields,
-                                          final CallContext context) throws CustomFieldApiException {
+                                          final CallContext context,
+                                          final UriInfo uriInfo) throws CustomFieldApiException {
         final LinkedList<CustomField> input = new LinkedList<CustomField>();
         for (final CustomFieldJson cur : customFields) {
             input.add(new StringCustomField(cur.getName(), cur.getValue(), getObjectType(), id, context.getCreatedDate()));
         }
 
         customFieldUserApi.addCustomFields(input, context);
-        return uriBuilder.buildResponse(this.getClass(), "createCustomFields", id);
+        return uriBuilder.buildResponse(uriInfo, this.getClass(), "createCustomFields", null);
     }
 
     /**

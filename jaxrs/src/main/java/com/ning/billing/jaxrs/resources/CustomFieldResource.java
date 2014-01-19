@@ -74,7 +74,7 @@ public class CustomFieldResource extends JaxRsResourceBase {
                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         final TenantContext tenantContext = context.createContext(request);
         final Pagination<CustomField> customFields = customFieldUserApi.getCustomFields(offset, limit, tenantContext);
-        final URI nextPageUri = uriBuilder.nextPage(CustomFieldResource.class, "getCustomFields", customFields.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.toString()));
+        final URI nextPageUri = uriBuilder.nextPage(CustomFieldResource.class, "getCustomFields", customFields.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()));
 
         return buildStreamingPaginationResponse(customFields,
                                                 new Function<CustomField, CustomFieldJson>() {
@@ -99,7 +99,7 @@ public class CustomFieldResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
         final Pagination<CustomField> customFields = customFieldUserApi.searchCustomFields(searchKey, offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(CustomFieldResource.class, "searchCustomFields", customFields.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
-                                                                                                                                                                          QUERY_AUDIT, auditMode.toString()));
+                                                                                                                                                                          QUERY_AUDIT, auditMode.getLevel().toString()));
         return buildStreamingPaginationResponse(customFields,
                                                 new Function<CustomField, CustomFieldJson>() {
                                                     @Override

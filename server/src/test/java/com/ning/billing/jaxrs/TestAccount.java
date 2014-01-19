@@ -29,6 +29,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.client.KillBillClientException;
 import com.ning.billing.client.model.Account;
+import com.ning.billing.client.model.Accounts;
 import com.ning.billing.client.model.AuditLog;
 import com.ning.billing.client.model.CustomField;
 import com.ning.billing.client.model.Payment;
@@ -238,6 +239,25 @@ public class TestAccount extends TestJaxrsBase {
 
         final List<CustomField> remainingCustomFields = killBillClient.getAccountCustomFields(accountJson.getAccountId());
         assertEquals(remainingCustomFields.size(), 0);
+    }
+
+    @Test(groups = "slow", description = "Can paginate through all accounts")
+    public void testAccountsPagination() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            createAccount();
+        }
+
+        final Accounts allAccounts = killBillClient.getAccounts();
+        Assert.assertEquals(allAccounts.size(), 5);
+
+        Accounts page = killBillClient.getAccounts(0L, 1L);
+        for (int i = 0; i < 5; i++) {
+            Assert.assertNotNull(page);
+            Assert.assertEquals(page.size(), 1);
+            Assert.assertEquals(page.get(0), allAccounts.get(i));
+            page = page.getNext();
+        }
+        Assert.assertNull(page);
     }
 
     private void searchAccount(final Account input, @Nullable final Account output) throws Exception {

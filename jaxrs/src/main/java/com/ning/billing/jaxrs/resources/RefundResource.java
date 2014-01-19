@@ -107,7 +107,7 @@ public class RefundResource extends JaxRsResourceBase {
         }
 
         final URI nextPageUri = uriBuilder.nextPage(RefundResource.class, "getRefunds", refunds.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
-                                                                                                                                                        QUERY_AUDIT, auditMode.toString()));
+                                                                                                                                                        QUERY_AUDIT, auditMode.getLevel().toString()));
 
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
         final Map<UUID, UUID> paymentIdAccountIdMappings = new HashMap<UUID, UUID>();
@@ -158,7 +158,7 @@ public class RefundResource extends JaxRsResourceBase {
 
         final URI nextPageUri = uriBuilder.nextPage(RefundResource.class, "searchRefunds", refunds.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
                                                                                                                                                            QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
-                                                                                                                                                           QUERY_AUDIT, auditMode.toString()));
+                                                                                                                                                           QUERY_AUDIT, auditMode.getLevel().toString()));
 
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
         final Map<UUID, UUID> paymentIdAccountIdMappings = new HashMap<UUID, UUID>();

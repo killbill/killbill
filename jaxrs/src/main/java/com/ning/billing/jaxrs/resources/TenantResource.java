@@ -16,8 +16,6 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +33,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.AccountUserApi;
@@ -57,6 +56,8 @@ import com.ning.billing.util.callcontext.TenantContext;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
 @Singleton
 @Path(JaxrsResource.TENANTS_PATH)
 public class TenantResource extends JaxRsResourceBase {
@@ -65,13 +66,13 @@ public class TenantResource extends JaxRsResourceBase {
 
     @Inject
     public TenantResource(final TenantUserApi tenantApi,
-            final JaxrsUriBuilder uriBuilder,
-            final TagUserApi tagUserApi,
-            final CustomFieldUserApi customFieldUserApi,
-            final AuditUserApi auditUserApi,
-            final AccountUserApi accountUserApi,
-            final Clock clock,
-            final Context context) {
+                          final JaxrsUriBuilder uriBuilder,
+                          final TagUserApi tagUserApi,
+                          final CustomFieldUserApi customFieldUserApi,
+                          final AuditUserApi auditUserApi,
+                          final AccountUserApi accountUserApi,
+                          final Clock clock,
+                          final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
         this.tenantApi = tenantApi;
     }
@@ -95,13 +96,14 @@ public class TenantResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTenant(final TenantJson json,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment,
-            @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                 @HeaderParam(HDR_REASON) final String reason,
+                                 @HeaderParam(HDR_COMMENT) final String comment,
+                                 @javax.ws.rs.core.Context final HttpServletRequest request,
+                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
         final TenantData data = json.toTenantData();
         final Tenant tenant = tenantApi.createTenant(data, context.createContext(createdBy, reason, comment, request));
-        return uriBuilder.buildResponse(TenantResource.class, "getTenant", tenant.getId());
+        return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId());
     }
 
     @POST
@@ -109,14 +111,14 @@ public class TenantResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response registerPushNotificationCallback(@PathParam("tenantId") final String tenantId,
-            @QueryParam(QUERY_NOTIFICATION_CALLBACK) final String notificationCallback,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment,
-            @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                                     @QueryParam(QUERY_NOTIFICATION_CALLBACK) final String notificationCallback,
+                                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                     @HeaderParam(HDR_REASON) final String reason,
+                                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         tenantApi.addTenantKeyValue(TenantKey.PUSH_NOTIFICATION_CB.toString(), notificationCallback, callContext);
-        final URI uri =  UriBuilder.fromResource(TenantResource.class).path(TenantResource.class, "getPushNotificationCallbacks").build();
+        final URI uri = UriBuilder.fromResource(TenantResource.class).path(TenantResource.class, "getPushNotificationCallbacks").build();
         return Response.created(uri).build();
     }
 
@@ -134,15 +136,14 @@ public class TenantResource extends JaxRsResourceBase {
     @DELETE
     @Path("/REGISTER_NOTIFICATION_CALLBACK")
     public Response deletePushNotificationCallbacks(@PathParam("tenantId") final String tenantId,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment,
-            @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                    @HeaderParam(HDR_REASON) final String reason,
+                                                    @HeaderParam(HDR_COMMENT) final String comment,
+                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         tenantApi.deleteTenantKey(TenantKey.PUSH_NOTIFICATION_CB.toString(), callContext);
         return Response.status(Status.OK).build();
     }
-
 
     @Override
     protected ObjectType getObjectType() {

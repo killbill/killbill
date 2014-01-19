@@ -29,6 +29,7 @@ import com.ning.billing.client.model.Account;
 import com.ning.billing.client.model.AuditLog;
 import com.ning.billing.client.model.Invoice;
 import com.ning.billing.client.model.InvoiceItem;
+import com.ning.billing.client.model.Invoices;
 import com.ning.billing.client.model.Payment;
 import com.ning.billing.client.model.PaymentMethod;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
@@ -447,5 +448,27 @@ public class TestInvoice extends TestJaxrsBase {
         final Invoice adjustedInvoice = killBillClient.getInvoice(invoiceId);
         final BigDecimal adjustedInvoiceBalance = originalInvoiceAmount.add(chargeAmount.setScale(2, RoundingMode.HALF_UP));
         assertEquals(adjustedInvoice.getBalance().compareTo(adjustedInvoiceBalance), 0);
+    }
+
+    @Test(groups = "slow", description = "Can paginate through all invoices")
+    public void testInvoicesPagination() throws Exception {
+        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        for (int i = 0; i < 3; i++) {
+            clock.addMonths(1);
+            crappyWaitForLackOfProperSynchonization();
+        }
+
+        final Invoices allInvoices = killBillClient.getInvoices();
+        Assert.assertEquals(allInvoices.size(), 5);
+
+        Invoices page = killBillClient.getInvoices(0L, 1L);
+        for (int i = 0; i < 5; i++) {
+            Assert.assertNotNull(page);
+            Assert.assertEquals(page.size(), 1);
+            Assert.assertEquals(page.get(0), allInvoices.get(i));
+            page = page.getNext();
+        }
+        Assert.assertNull(page);
     }
 }
