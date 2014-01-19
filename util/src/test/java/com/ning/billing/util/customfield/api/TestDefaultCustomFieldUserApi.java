@@ -52,7 +52,9 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
             }
         });
 
-        final CustomField customField = new StringCustomField(UUID.randomUUID().toString().substring(1, 4), UUID.randomUUID().toString().substring(1, 4), ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
+        final String cfName = UUID.randomUUID().toString().substring(1, 4);
+        final String cfValue = UUID.randomUUID().toString().substring(1, 4);
+        final CustomField customField = new StringCustomField(cfName, cfValue, ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
         eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
         customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField), callContext);
         assertListenerStatus();
@@ -74,7 +76,21 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
         });
 
         customFieldUserApi.removeCustomFields(customFields, callContext);
-        final List<CustomField> remainingCustomFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
+        List<CustomField> remainingCustomFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
         Assert.assertEquals(remainingCustomFields.size(), 0);
+
+        // Add again the custom field
+        final CustomField newCustomField = new StringCustomField(cfName, cfValue, ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
+
+        eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
+        customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(newCustomField), callContext);
+        remainingCustomFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
+        Assert.assertEquals(remainingCustomFields.size(), 1);
+
+        // Delete again
+        customFieldUserApi.removeCustomFields(remainingCustomFields, callContext);
+        remainingCustomFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
+        Assert.assertEquals(remainingCustomFields.size(), 0);
+
     }
 }

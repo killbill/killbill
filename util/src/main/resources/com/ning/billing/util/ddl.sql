@@ -19,7 +19,6 @@ CREATE TABLE custom_fields (
 ) CHARACTER SET utf8 COLLATE utf8_bin;
 CREATE UNIQUE INDEX custom_fields_id ON custom_fields(id);
 CREATE INDEX custom_fields_object_id_object_type ON custom_fields(object_id, object_type);
-CREATE UNIQUE INDEX custom_fields_unique ON custom_fields(object_id, object_type, field_name);
 CREATE INDEX custom_fields_tenant_account_record_id ON custom_fields(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS custom_field_history;
