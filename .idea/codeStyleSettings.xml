@@ -64,191 +64,191 @@
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PUBLIC</MODIFIER>
-                    <MODIFIER>STATIC</MODIFIER>
-                    <MODIFIER>FINAL</MODIFIER>
+                    <FIELD />
+                    <FINAL />
+                    <PUBLIC />
+                    <STATIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PROTECTED</MODIFIER>
-                    <MODIFIER>STATIC</MODIFIER>
-                    <MODIFIER>FINAL</MODIFIER>
+                    <FIELD />
+                    <FINAL />
+                    <PROTECTED />
+                    <STATIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PACKAGE_PRIVATE</MODIFIER>
-                    <MODIFIER>STATIC</MODIFIER>
-                    <MODIFIER>FINAL</MODIFIER>
+                    <FIELD />
+                    <FINAL />
+                    <PACKAGE_PRIVATE />
+                    <STATIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PRIVATE</MODIFIER>
-                    <MODIFIER>STATIC</MODIFIER>
-                    <MODIFIER>FINAL</MODIFIER>
+                    <FIELD />
+                    <FINAL />
+                    <PRIVATE />
+                    <STATIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PUBLIC</MODIFIER>
-                    <MODIFIER>STATIC</MODIFIER>
+                    <FIELD />
+                    <PUBLIC />
+                    <STATIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PROTECTED</MODIFIER>
-                    <MODIFIER>STATIC</MODIFIER>
+                    <FIELD />
+                    <PROTECTED />
+                    <STATIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PACKAGE_PRIVATE</MODIFIER>
-                    <MODIFIER>STATIC</MODIFIER>
+                    <FIELD />
+                    <PACKAGE_PRIVATE />
+                    <STATIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PRIVATE</MODIFIER>
-                    <MODIFIER>STATIC</MODIFIER>
+                    <FIELD />
+                    <PRIVATE />
+                    <STATIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PUBLIC</MODIFIER>
-                    <MODIFIER>FINAL</MODIFIER>
+                    <FIELD />
+                    <FINAL />
+                    <PUBLIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PROTECTED</MODIFIER>
-                    <MODIFIER>FINAL</MODIFIER>
+                    <FIELD />
+                    <FINAL />
+                    <PROTECTED />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PACKAGE_PRIVATE</MODIFIER>
-                    <MODIFIER>FINAL</MODIFIER>
+                    <FIELD />
+                    <FINAL />
+                    <PACKAGE_PRIVATE />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PRIVATE</MODIFIER>
-                    <MODIFIER>FINAL</MODIFIER>
+                    <FIELD />
+                    <FINAL />
+                    <PRIVATE />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PUBLIC</MODIFIER>
+                    <FIELD />
+                    <PUBLIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PROTECTED</MODIFIER>
+                    <FIELD />
+                    <PROTECTED />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PACKAGE_PRIVATE</MODIFIER>
+                    <FIELD />
+                    <PACKAGE_PRIVATE />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>FIELD</TYPE>
-                    <MODIFIER>PRIVATE</MODIFIER>
+                    <FIELD />
+                    <PRIVATE />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
-                  <TYPE>FIELD</TYPE>
+                  <FIELD />
                 </match>
               </rule>
               <rule>
                 <match>
-                  <TYPE>CONSTRUCTOR</TYPE>
+                  <CONSTRUCTOR />
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>METHOD</TYPE>
-                    <MODIFIER>STATIC</MODIFIER>
+                    <METHOD />
+                    <STATIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
-                  <TYPE>METHOD</TYPE>
+                  <METHOD />
                 </match>
               </rule>
               <rule>
                 <match>
-                  <TYPE>ENUM</TYPE>
+                  <ENUM />
                 </match>
               </rule>
               <rule>
                 <match>
-                  <TYPE>INTERFACE</TYPE>
+                  <INTERFACE />
                 </match>
               </rule>
               <rule>
                 <match>
                   <AND>
-                    <TYPE>CLASS</TYPE>
-                    <MODIFIER>STATIC</MODIFIER>
+                    <CLASS />
+                    <STATIC />
                   </AND>
                 </match>
               </rule>
               <rule>
                 <match>
-                  <TYPE>CLASS</TYPE>
+                  <CLASS />
                 </match>
               </rule>
             </rules>
