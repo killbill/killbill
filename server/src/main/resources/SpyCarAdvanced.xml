@@ -26,6 +26,7 @@
         <currency>GBP</currency>
         <currency>EUR</currency>
         <currency>JPY</currency>
+        <currency>BTC</currency>
     </currencies>
 
     <products>
@@ -179,6 +180,10 @@
                         <currency>JPY</currency>
                         <value>100.00</value>
                     </price>
+                    <price>
+                        <currency>BTC</currency>
+                        <value>1.0</value>
+                    </price>
                 </recurringPrice>
             </finalPhase>
         </plan>
@@ -216,6 +221,10 @@
                     <price>
                         <currency>JPY</currency>
                         <value>10.00</value>
+                    </price>
+                    <price>
+                        <currency>BTC</currency>
+                        <value>0.1</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -255,6 +264,10 @@
                         <currency>JPY</currency>
                         <value>50.00</value>
                     </price>
+                    <price>
+                        <currency>BTC</currency>
+                        <value>0.5</value>
+                    </price>
                 </recurringPrice>
             </finalPhase>
         </plan>
@@ -292,6 +305,10 @@
                     <price>
                         <currency>JPY</currency>
                         <value>100.00</value>
+                    </price>
+                    <price>
+                        <currency>BTC</currency>
+                        <value>1.0</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -331,6 +348,10 @@
                             <currency>JPY</currency>
                             <value>6.60</value>
                         </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>0.06</value>
+                        </price>
                     </recurringPrice>
                 </phase>
             </initialPhases>
@@ -355,6 +376,10 @@
                     <price>
                         <currency>JPY</currency>
                         <value>10.00</value>
+                    </price>
+                    <price>
+                        <currency>BTC</currency>
+                        <value>0.1</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -394,6 +419,10 @@
                             <currency>JPY</currency>
                             <value>33.30</value>
                         </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>0.3</value>
+                        </price>
                     </recurringPrice>
                 </phase>
             </initialPhases>
@@ -418,6 +447,10 @@
                     <price>
                         <currency>JPY</currency>
                         <value>50.00</value>
+                    </price>
+                    <price>
+                        <currency>BTC</currency>
+                        <value>0.5</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -457,6 +490,10 @@
                             <currency>JPY</currency>
                             <value>66.60</value>
                         </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>0.6</value>
+                        </price>
                     </recurringPrice>
                 </phase>
             </initialPhases>
@@ -481,6 +518,10 @@
                     <price>
                         <currency>JPY</currency>
                         <value>100.00</value>
+                    </price>
+                    <price>
+                        <currency>BTC</currency>
+                        <value>1.0</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -511,6 +552,10 @@
                             <currency>JPY</currency>
                             <value>0.40</value>
                         </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>0.01</value>
+                        </price>
                     </recurringPrice>
                 </phase>
             </initialPhases>
@@ -531,6 +576,10 @@
                     <price>
                         <currency>JPY</currency>
                         <value>0.80</value>
+                    </price>
+                    <price>
+                        <currency>BTC</currency>
+                        <value>0.01</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
@@ -561,6 +610,10 @@
                             <currency>JPY</currency>
                             <value>0.80</value>
                         </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>0.01</value>
+                        </price>
                     </recurringPrice>
                 </phase>
             </initialPhases>
@@ -585,6 +638,10 @@
                     <price>
                         <currency>JPY</currency>
                         <value>1.79</value>
+                    </price>
+                    <price>
+                        <currency>BTC</currency>
+                        <value>0.01</value>
                     </price>
                 </recurringPrice>
             </finalPhase>
