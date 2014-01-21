@@ -50,6 +50,11 @@ public class ExternalPersistentBusConfig extends PersistentBusConfig {
     }
 
     @Override
+    public int getMaxFailureRetries() {
+        return externalPersistentBusConfig.getMaxFailureRetries();
+    }
+
+    @Override
     public int getMaxEntriesClaimed() {
         return externalPersistentBusConfig.getMaxEntriesClaimed();
     }

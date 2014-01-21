@@ -159,6 +159,7 @@ CREATE TABLE notifications (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
+    error_count int(11) unsigned DEFAULT 0,
     search_key1 int(11) unsigned default null,
     search_key2 int(11) unsigned default null,
     queue_name char(64) NOT NULL,
@@ -182,6 +183,7 @@ CREATE TABLE notifications_history (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
+    error_count int(11) unsigned DEFAULT 0,
     search_key1 int(11) unsigned default null,
     search_key2 int(11) unsigned default null,
     queue_name char(64) NOT NULL,
@@ -201,6 +203,7 @@ CREATE TABLE bus_events (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
+    error_count int(11) unsigned DEFAULT 0,
     search_key1 int(11) unsigned default null,
     search_key2 int(11) unsigned default null,
     PRIMARY KEY(record_id)
@@ -219,6 +222,7 @@ CREATE TABLE bus_events_history (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
+    error_count int(11) unsigned DEFAULT 0,
     search_key1 int(11) unsigned default null,
     search_key2 int(11) unsigned default null,
     PRIMARY KEY(record_id)
