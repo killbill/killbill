@@ -76,6 +76,9 @@ public interface OSGIConfig extends KillbillConfig {
              // need the bundles to see them for them to be able to register their servlets.
              // Note: bundles should mark javax.servlet:servlet-api as provided
              "sun.misc," +
+             "sun.misc.unsafe," +
+             "javax.crypto," +
+             "javax.crypto.spec," +
              "javax.management," +
              "javax.servlet;version=3.0," +
              "javax.servlet.http;version=3.0," +

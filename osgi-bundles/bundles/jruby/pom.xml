@@ -65,7 +65,7 @@
         <dependency>
             <groupId>org.jruby</groupId>
             <artifactId>jruby-complete</artifactId>
-            <version>1.7.1</version>
+            <version>1.7.10</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -163,10 +163,16 @@
                             com.ning.billing.util.template;
                             com.ning.billing.util.template.translation;resolution:=optional,
                             org.joda.time;org.joda.time.format;resolution:=optional,
+                            sun.misc;
+                            sun.misc.*;
+                            sun.misc.unsafe;
+                            sun.misc.unsafe.*;
                             javax.management;
                             javax.management.*;
                             javax.crypto;
                             javax.crypto.*;
+                            javax.crypto.spec;
+                            javax.crypto.spec.*;
                             javax.net;
                             javax.net.*;
                             javax.net.ssl;
