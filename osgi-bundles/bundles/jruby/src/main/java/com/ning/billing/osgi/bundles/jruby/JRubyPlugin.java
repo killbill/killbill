@@ -217,8 +217,8 @@ public abstract class JRubyPlugin {
             if (rubyRequire != null) {
                 builder.append("begin\n")
                        .append("require '").append(rubyRequire).append("'\n")
-                       .append("rescue LoadError\n")
-                       .append("warn \"WARN: unable to require ").append(rubyRequire).append("\"\n")
+                       .append("rescue LoadError => e\n")
+                       .append("warn \"WARN: unable to require ").append(rubyRequire).append(": \" + e.to_s\n")
                        .append("end\n");
             }
             // Require any file directly in the pluginLibdir directory (e.g. /var/tmp/bundles/ruby/foo/1.0/gems/*.rb).
