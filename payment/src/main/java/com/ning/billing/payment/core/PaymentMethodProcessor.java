@@ -181,11 +181,12 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                    new Function<PaymentMethodModelDao, PaymentMethod>() {
                                        @Override
                                        public PaymentMethod apply(final PaymentMethodModelDao paymentMethodModelDao) {
-                                           PaymentMethodPlugin paymentMethodPlugin = null;
+                                           final PaymentMethodPlugin paymentMethodPlugin;
                                            try {
                                                paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), tenantContext);
                                            } catch (PaymentPluginApiException e) {
                                                log.warn("Unable to find payment method id " + paymentMethodModelDao.getId() + " in plugin " + pluginName);
+                                               return null;
                                            }
 
                                            return new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin);

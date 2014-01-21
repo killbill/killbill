@@ -326,11 +326,12 @@ public class RefundProcessor extends ProcessorBase {
                                    new Function<RefundModelDao, Refund>() {
                                        @Override
                                        public Refund apply(final RefundModelDao refundModelDao) {
-                                           List<RefundInfoPlugin> refundInfoPlugins = null;
+                                           final List<RefundInfoPlugin> refundInfoPlugins;
                                            try {
                                                refundInfoPlugins = pluginApi.getRefundInfo(refundModelDao.getAccountId(), refundModelDao.getId(), tenantContext);
                                            } catch (final PaymentPluginApiException e) {
                                                log.warn("Unable to find refund id " + refundModelDao.getId() + " in plugin " + pluginName);
+                                               return null;
                                            }
 
                                            final RefundInfoPlugin refundInfoPlugin = findRefundInfoPlugin(refundModelDao, refundInfoPlugins);
