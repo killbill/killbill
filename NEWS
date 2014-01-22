@@ -1,3 +1,9 @@
+0.8.10
+    Upgrade JRuby and add support for OpenSSL in plugins
+    payment: pagination bugfix
+    Update killbill-oss-parent to 0.5.21 (DDL change)
+     - retry logic for bus and notification queues
+
 0.8.9
     Introduce PENDING payment state for Bitcoin
     Implement new pagination and search APIs
