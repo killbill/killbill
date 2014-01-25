@@ -46,7 +46,6 @@ import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.InAdvanceBillingMode;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
-import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItemData;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
@@ -54,6 +53,7 @@ import com.ning.billing.junction.BillingEvent;
 import com.ning.billing.junction.BillingEventSet;
 import com.ning.billing.junction.BillingModeType;
 import com.ning.billing.util.config.InvoiceConfig;
+import com.ning.billing.util.currency.KillBillMoney;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
@@ -92,8 +92,6 @@ import com.google.inject.Inject;
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceGenerator.class);
-    private static final int ROUNDING_MODE = InvoicingConfiguration.getRoundingMode();
-    private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
 
     private final Clock clock;
     private final InvoiceConfig config;
@@ -517,7 +515,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     final BigDecimal rate = thisEvent.getRecurringPrice();
 
                     if (rate != null) {
-                        final BigDecimal amount = itemDatum.getNumberOfCycles().multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
+                        final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rate), currency);
 
                         final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
                                                                                             accountId,

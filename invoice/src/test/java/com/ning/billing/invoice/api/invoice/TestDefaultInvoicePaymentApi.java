@@ -125,7 +125,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         Assert.assertEquals(refund.getType(), InvoicePaymentType.REFUND);
 
         // Verify the current invoice balance
-        final BigDecimal newInvoiceBalance = invoicePaymentApi.getInvoice(invoice.getId(), callContext).getBalance().setScale(2, RoundingMode.HALF_UP);
-        Assert.assertEquals(newInvoiceBalance.compareTo(finalInvoiceAmount.setScale(2, RoundingMode.HALF_UP)), 0);
+        final BigDecimal newInvoiceBalance = invoicePaymentApi.getInvoice(invoice.getId(), callContext).getBalance();
+        Assert.assertEquals(newInvoiceBalance.compareTo(finalInvoiceAmount), 0);
     }
 }

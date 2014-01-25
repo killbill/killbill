@@ -195,13 +195,13 @@ public class TestDefaultInvoiceGeneratorRepairUnit extends InvoiceTestSuiteNoDB 
         assertEquals(proposed.get(0).getStartDate(), endDateProposed1);
         assertEquals(proposed.get(0).getEndDate(), startDateProposed2);
         assertEquals(proposed.get(0).getLinkedItemId(), repairedItem.getId());
-        assertEquals(proposed.get(0).getAmount(), new BigDecimal("-69.894000"));
+        assertEquals(proposed.get(0).getAmount(), new BigDecimal("-69.89010993000"));
         assertEquals(proposed.get(0).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
 
         assertEquals(proposed.get(1).getStartDate(), endDateProposed2);
         assertEquals(proposed.get(1).getEndDate(), startDateProposed3);
         assertEquals(proposed.get(1).getLinkedItemId(), repairedItem.getId());
-        assertEquals(proposed.get(1).getAmount(), new BigDecimal("-20.106000"));
+        assertEquals(proposed.get(1).getAmount(), new BigDecimal("-20.10989007000"));
         assertEquals(proposed.get(1).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
     }
 

@@ -34,28 +34,29 @@ public class InvoiceModelDaoHelper {
     private InvoiceModelDaoHelper() {}
 
     public static BigDecimal getBalance(final InvoiceModelDao invoiceModelDao) {
-        return InvoiceCalculatorUtils.computeInvoiceBalance(
-                Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
-                    @Override
-                    public InvoiceItem apply(final InvoiceItemModelDao input) {
-                        return InvoiceItemFactory.fromModelDao(input);
-                    }
-                }),
-                Iterables.transform(invoiceModelDao.getInvoicePayments(), new Function<InvoicePaymentModelDao, InvoicePayment>() {
-                    @Nullable
-                    @Override
-                    public InvoicePayment apply(final InvoicePaymentModelDao input) {
-                        return new DefaultInvoicePayment(input);
-                    }
-                }));
+        return InvoiceCalculatorUtils.computeInvoiceBalance(invoiceModelDao.getCurrency(),
+                                                            Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
+                                                                @Override
+                                                                public InvoiceItem apply(final InvoiceItemModelDao input) {
+                                                                    return InvoiceItemFactory.fromModelDao(input);
+                                                                }
+                                                            }),
+                                                            Iterables.transform(invoiceModelDao.getInvoicePayments(), new Function<InvoicePaymentModelDao, InvoicePayment>() {
+                                                                @Nullable
+                                                                @Override
+                                                                public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                                                                    return new DefaultInvoicePayment(input);
+                                                                }
+                                                            }));
     }
 
     public static BigDecimal getCBAAmount(final InvoiceModelDao invoiceModelDao) {
-        return InvoiceCalculatorUtils.computeInvoiceAmountCredited(Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
-            @Override
-            public InvoiceItem apply(final InvoiceItemModelDao input) {
-                return InvoiceItemFactory.fromModelDao(input);
-            }
-        }));
+        return InvoiceCalculatorUtils.computeInvoiceAmountCredited(invoiceModelDao.getCurrency(),
+                                                                   Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
+                                                                       @Override
+                                                                       public InvoiceItem apply(final InvoiceItemModelDao input) {
+                                                                           return InvoiceItemFactory.fromModelDao(input);
+                                                                       }
+                                                                   }));
     }
 }

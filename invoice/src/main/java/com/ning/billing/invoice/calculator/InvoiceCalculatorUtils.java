@@ -22,19 +22,17 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentType;
-import com.ning.billing.invoice.model.InvoicingConfiguration;
+import com.ning.billing.util.currency.KillBillMoney;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 public abstract class InvoiceCalculatorUtils {
-
-    private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
-    private static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
 
     // Invoice adjustments
     public static boolean isInvoiceAdjustmentItem(final InvoiceItem invoiceItem, final Iterable<InvoiceItem> otherInvoiceItems) {
@@ -65,24 +63,26 @@ public abstract class InvoiceCalculatorUtils {
                InvoiceItemType.RECURRING.equals(invoiceItem.getInvoiceItemType());
     }
 
-    public static BigDecimal computeInvoiceBalance(@Nullable final Iterable<InvoiceItem> invoiceItems,
+    public static BigDecimal computeInvoiceBalance(final Currency currency,
+                                                   @Nullable final Iterable<InvoiceItem> invoiceItems,
                                                    @Nullable final Iterable<InvoicePayment> invoicePayments) {
-        return computeInvoiceAmountCharged(invoiceItems)
-                .add(computeInvoiceAmountCredited(invoiceItems))
-                .add(computeInvoiceAmountAdjustedForAccountCredit(invoiceItems))
+        final BigDecimal invoiceBalance = computeInvoiceAmountCharged(currency, invoiceItems)
+                .add(computeInvoiceAmountCredited(currency, invoiceItems))
+                .add(computeInvoiceAmountAdjustedForAccountCredit(currency, invoiceItems))
                 .add(
-                        computeInvoiceAmountPaid(invoicePayments).negate()
+                        computeInvoiceAmountPaid(currency, invoicePayments).negate()
                                 .add(
-                                        computeInvoiceAmountRefunded(invoicePayments).negate()
+                                        computeInvoiceAmountRefunded(currency, invoicePayments).negate()
                                     )
-                    )
-                .setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+                    );
+
+        return KillBillMoney.of(invoiceBalance, currency);
     }
 
     // Snowflake for the CREDIT_ADJ on its own invoice
-    private static BigDecimal computeInvoiceAmountAdjustedForAccountCredit(final Iterable<InvoiceItem> invoiceItems) {
+    private static BigDecimal computeInvoiceAmountAdjustedForAccountCredit(final Currency currency, final Iterable<InvoiceItem> invoiceItems) {
         BigDecimal amountAdjusted = BigDecimal.ZERO;
-        if (invoiceItems == null) {
+        if (invoiceItems == null || !invoiceItems.iterator().hasNext()) {
             return amountAdjusted;
         }
 
@@ -102,12 +102,13 @@ public abstract class InvoiceCalculatorUtils {
                 amountAdjusted = amountAdjusted.add(invoiceItem.getAmount());
             }
         }
-        return amountAdjusted.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        return KillBillMoney.of(amountAdjusted, currency);
     }
 
-    public static BigDecimal computeInvoiceAmountCharged(@Nullable final Iterable<InvoiceItem> invoiceItems) {
+    public static BigDecimal computeInvoiceAmountCharged(final Currency currency, @Nullable final Iterable<InvoiceItem> invoiceItems) {
         BigDecimal amountCharged = BigDecimal.ZERO;
-        if (invoiceItems == null) {
+        if (invoiceItems == null || !invoiceItems.iterator().hasNext()) {
             return amountCharged;
         }
 
@@ -125,12 +126,13 @@ public abstract class InvoiceCalculatorUtils {
                 amountCharged = amountCharged.add(invoiceItem.getAmount());
             }
         }
-        return amountCharged.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        return KillBillMoney.of(amountCharged, currency);
     }
 
-    public static BigDecimal computeInvoiceOriginalAmountCharged(final DateTime invoiceCreatedDate, @Nullable final Iterable<InvoiceItem> invoiceItems) {
+    public static BigDecimal computeInvoiceOriginalAmountCharged(final DateTime invoiceCreatedDate, final Currency currency, @Nullable final Iterable<InvoiceItem> invoiceItems) {
         BigDecimal amountCharged = BigDecimal.ZERO;
-        if (invoiceItems == null) {
+        if (invoiceItems == null || !invoiceItems.iterator().hasNext()) {
             return amountCharged;
         }
 
@@ -140,12 +142,13 @@ public abstract class InvoiceCalculatorUtils {
                 amountCharged = amountCharged.add(invoiceItem.getAmount());
             }
         }
-        return amountCharged.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        return KillBillMoney.of(amountCharged, currency);
     }
 
-    public static BigDecimal computeInvoiceAmountCredited(@Nullable final Iterable<InvoiceItem> invoiceItems) {
+    public static BigDecimal computeInvoiceAmountCredited(final Currency currency, @Nullable final Iterable<InvoiceItem> invoiceItems) {
         BigDecimal amountCredited = BigDecimal.ZERO;
-        if (invoiceItems == null) {
+        if (invoiceItems == null || !invoiceItems.iterator().hasNext()) {
             return amountCredited;
         }
 
@@ -154,12 +157,13 @@ public abstract class InvoiceCalculatorUtils {
                 amountCredited = amountCredited.add(invoiceItem.getAmount());
             }
         }
-        return amountCredited.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        return KillBillMoney.of(amountCredited, currency);
     }
 
-    public static BigDecimal computeInvoiceAmountPaid(@Nullable final Iterable<InvoicePayment> invoicePayments) {
+    public static BigDecimal computeInvoiceAmountPaid(final Currency currency, @Nullable final Iterable<InvoicePayment> invoicePayments) {
         BigDecimal amountPaid = BigDecimal.ZERO;
-        if (invoicePayments == null) {
+        if (invoicePayments == null || !invoicePayments.iterator().hasNext()) {
             return amountPaid;
         }
 
@@ -168,12 +172,13 @@ public abstract class InvoiceCalculatorUtils {
                 amountPaid = amountPaid.add(invoicePayment.getAmount());
             }
         }
-        return amountPaid.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        return KillBillMoney.of(amountPaid, currency);
     }
 
-    public static BigDecimal computeInvoiceAmountRefunded(@Nullable final Iterable<InvoicePayment> invoicePayments) {
+    public static BigDecimal computeInvoiceAmountRefunded(final Currency currency, @Nullable final Iterable<InvoicePayment> invoicePayments) {
         BigDecimal amountRefunded = BigDecimal.ZERO;
-        if (invoicePayments == null) {
+        if (invoicePayments == null || !invoicePayments.iterator().hasNext()) {
             return amountRefunded;
         }
 
@@ -183,6 +188,7 @@ public abstract class InvoiceCalculatorUtils {
                 amountRefunded = amountRefunded.add(invoicePayment.getAmount());
             }
         }
-        return amountRefunded.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        return KillBillMoney.of(amountRefunded, currency);
     }
 }

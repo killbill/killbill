@@ -67,6 +67,7 @@ import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.junction.BillingEvent;
 import com.ning.billing.junction.BillingEventSet;
 import com.ning.billing.junction.BillingModeType;
+import com.ning.billing.util.currency.KillBillMoney;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -1099,7 +1100,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         events.add(event1);
 
         final Invoice invoice1 = generator.generateInvoice(accountId, events, invoiceList, targetDate, Currency.USD);
-        assertEquals(invoice1.getBalance(), TEN);
+        assertEquals(invoice1.getBalance(), KillBillMoney.of(TEN, invoice1.getCurrency()));
         invoiceList.add(invoice1);
 
         // generate second invoice
@@ -1117,17 +1118,17 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // second invoice should be for one half (14/28 days) the difference between the rate plans
         // this is a temporary state, since it actually contains an adjusting item that properly belong to invoice 1
         final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, targetDate, Currency.USD);
-        assertEquals(invoice2.getBalance(), FIVE);
+        assertEquals(invoice2.getBalance(), KillBillMoney.of(FIVE, invoice2.getCurrency()));
         invoiceList.add(invoice2);
 
         invoiceUtil.createInvoice(invoice1, true, context);
         invoiceUtil.createInvoice(invoice2, true, context);
 
         final InvoiceModelDao savedInvoice1 = invoiceDao.getById(invoice1.getId(), context);
-        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice1), FIVE);
+        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice1), KillBillMoney.of(FIVE, savedInvoice1.getCurrency()));
 
         final InvoiceModelDao savedInvoice2 = invoiceDao.getById(invoice2.getId(), context);
-        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice2), TEN);
+        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice2), KillBillMoney.of(TEN, savedInvoice2.getCurrency()));
     }
 
     @Test(groups = "slow")

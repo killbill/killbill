@@ -121,7 +121,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
                 fail("Expected to fail because requested amount > invoice amount");
             }
             assertNotNull(paymentInfo.getId());
-            assertTrue(paymentInfo.getAmount().compareTo(expectedAmount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
+            assertTrue(paymentInfo.getAmount().compareTo(expectedAmount) == 0);
             assertNotNull(paymentInfo.getPaymentNumber());
             assertEquals(paymentInfo.getPaymentStatus(), PaymentStatus.SUCCESS);
             assertEquals(paymentInfo.getAttempts().size(), 1);

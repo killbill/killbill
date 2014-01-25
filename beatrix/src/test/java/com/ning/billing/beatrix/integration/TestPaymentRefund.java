@@ -71,27 +71,27 @@ public class TestPaymentRefund extends TestIntegrationBase {
     public void testRefundWithNoAdjustments() throws Exception {
         // Although we don't adjust the invoice, the invoicing system sends an event because invoice balance changes and overdue system-- in particular-- needs to know about it.
         refundPaymentAndCheckForCompletion(account, payment, NextEvent.INVOICE_ADJUSTMENT);
-        refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), false, new BigDecimal("233.83"), Currency.USD, initialCreationDate.toLocalDate()));
+        refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), false, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
     }
 
     @Test(groups = "slow")
     public void testRefundWithInvoiceItemAdjustemts() throws Exception {
         refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment, invoiceItems, NextEvent.INVOICE_ADJUSTMENT);
-        refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), true, new BigDecimal("233.83"), Currency.USD, initialCreationDate.toLocalDate()));
+        refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), true, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
         invoice = invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext,
                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
-                                                                           new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.83")),
-                                              new ExpectedInvoiceItemCheck(InvoiceItemType.ITEM_ADJ, new BigDecimal("-233.83")));
+                                                                           new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.82")),
+                                              new ExpectedInvoiceItemCheck(InvoiceItemType.ITEM_ADJ, new BigDecimal("-233.82")));
     }
 
     @Test(groups = "slow")
     public void testRefundWithInvoiceAdjustment() throws Exception {
         refundPaymentWithAdjustmenttAndCheckForCompletion(account, payment, NextEvent.INVOICE_ADJUSTMENT);
-        refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), true, new BigDecimal("233.83"), Currency.USD, initialCreationDate.toLocalDate()));
+        refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), true, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
         invoice = invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext,
                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
-                                                                           new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.83")),
-                                              new ExpectedInvoiceItemCheck(InvoiceItemType.REFUND_ADJ, new BigDecimal("-233.83")));
+                                                                           new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.82")),
+                                              new ExpectedInvoiceItemCheck(InvoiceItemType.REFUND_ADJ, new BigDecimal("-233.82")));
 
     }
 
@@ -118,8 +118,8 @@ public class TestPaymentRefund extends TestIntegrationBase {
 
         setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         invoice = invoiceChecker.checkInvoice(account.getId(), ++invoiceItemCount, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
-                                                                                                                             new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.83")));
-        payment = paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 3, 2), new BigDecimal("233.83"), PaymentStatus.SUCCESS, invoice.getId(), Currency.USD));
+                                                                                                                             new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.82")));
+        payment = paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 3, 2), new BigDecimal("233.82"), PaymentStatus.SUCCESS, invoice.getId(), Currency.USD));
 
         // Filter and extract UUId from all Recuring invoices
         invoiceItems = new HashSet<UUID>(Collections2.transform(Collections2.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
