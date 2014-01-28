@@ -174,12 +174,12 @@ public class PaymentProcessor extends ProcessorBase {
                                    new Function<PaymentModelDao, Payment>() {
                                        @Override
                                        public Payment apply(final PaymentModelDao paymentModelDao) {
-                                           final PaymentInfoPlugin pluginInfo;
+                                           PaymentInfoPlugin pluginInfo = null;
                                            try {
                                                pluginInfo = pluginApi.getPaymentInfo(paymentModelDao.getAccountId(), paymentModelDao.getId(), tenantContext);
                                            } catch (final PaymentPluginApiException e) {
-                                               log.warn("Unable to find payment  id " + paymentModelDao.getId() + " in plugin " + pluginName);
-                                               return null;
+                                               log.warn("Unable to find payment id " + paymentModelDao.getId() + " in plugin " + pluginName);
+                                               // We still want to return a payment object, even though the plugin details are missing
                                            }
 
                                            return fromPaymentModelDao(paymentModelDao, pluginInfo, internalTenantContext);

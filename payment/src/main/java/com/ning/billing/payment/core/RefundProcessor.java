@@ -326,15 +326,15 @@ public class RefundProcessor extends ProcessorBase {
                                    new Function<RefundModelDao, Refund>() {
                                        @Override
                                        public Refund apply(final RefundModelDao refundModelDao) {
-                                           final List<RefundInfoPlugin> refundInfoPlugins;
+                                           List<RefundInfoPlugin> refundInfoPlugins = null;
                                            try {
                                                refundInfoPlugins = pluginApi.getRefundInfo(refundModelDao.getAccountId(), refundModelDao.getId(), tenantContext);
                                            } catch (final PaymentPluginApiException e) {
                                                log.warn("Unable to find refund id " + refundModelDao.getId() + " in plugin " + pluginName);
-                                               return null;
+                                               // We still want to return a refund object, even though the plugin details are missing
                                            }
 
-                                           final RefundInfoPlugin refundInfoPlugin = findRefundInfoPlugin(refundModelDao, refundInfoPlugins);
+                                           final RefundInfoPlugin refundInfoPlugin = refundInfoPlugins == null ? null : findRefundInfoPlugin(refundModelDao, refundInfoPlugins);
                                            return new DefaultRefund(refundModelDao, refundInfoPlugin);
                                        }
                                    }
