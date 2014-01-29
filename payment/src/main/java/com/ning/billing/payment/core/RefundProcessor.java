@@ -256,18 +256,16 @@ public class RefundProcessor extends ProcessorBase {
             result = paymentDao.getRefund(refundId, context);
         }
 
-        final Account account;
-        try {
-            account = accountInternalApi.getAccountById(result.getAccountId(), context);
-        } catch (final AccountApiException e) {
-            throw new PaymentApiException(e);
+        final PaymentModelDao payment = paymentDao.getPayment(result.getPaymentId(), context);
+        if (payment == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, result.getPaymentId());
         }
 
-        final PaymentPluginApi plugin = withPluginInfo ? getPaymentProviderPlugin(account, context) : null;
+        final PaymentPluginApi plugin = withPluginInfo ? getPaymentProviderPlugin(payment.getPaymentMethodId(), context) : null;
         List<RefundInfoPlugin> refundInfoPlugins = ImmutableList.<RefundInfoPlugin>of();
         if (plugin != null) {
             try {
-                refundInfoPlugins = plugin.getRefundInfo(account.getId(), result.getPaymentId(), buildTenantContext(context));
+                refundInfoPlugins = plugin.getRefundInfo(result.getAccountId(), result.getPaymentId(), buildTenantContext(context));
             } catch (final PaymentPluginApiException e) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_GET_REFUND_INFO, refundId, e.toString());
             }
