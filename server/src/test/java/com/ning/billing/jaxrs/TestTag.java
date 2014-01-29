@@ -30,6 +30,8 @@ import com.ning.billing.client.model.Account;
 import com.ning.billing.client.model.Tag;
 import com.ning.billing.client.model.TagDefinition;
 import com.ning.billing.client.model.Tags;
+import com.ning.billing.util.tag.ControlTag;
+import com.ning.billing.util.tag.ControlTagType;
 
 import com.google.common.collect.ImmutableList;
 
@@ -90,6 +92,22 @@ public class TestTag extends TestJaxrsBase {
         objFromJson = killBillClient.getTagDefinitions();
         assertNotNull(objFromJson);
         assertEquals(objFromJson.size(), 3 + sizeSystemTag);
+    }
+
+    @Test(groups = "slow", description = "Can search system tags")
+    public void testSystemTagsPagination() throws Exception {
+        final Account account = createAccount();
+        for (final ControlTagType controlTagType : ControlTagType.values()) {
+            killBillClient.createAccountTag(account.getAccountId(), controlTagType.getId(), createdBy, reason, comment);
+        }
+
+        final Tags allTags = killBillClient.getTags();
+        Assert.assertEquals(allTags.size(), ControlTagType.values().length);
+
+        for (final ControlTagType controlTagType : ControlTagType.values()) {
+            Assert.assertEquals(killBillClient.searchTags(controlTagType.toString()).size(), 1);
+            Assert.assertEquals(killBillClient.searchTags(controlTagType.getDescription()).size(), 1);
+        }
     }
 
     @Test(groups = "slow", description = "Can paginate through all tags")
