@@ -112,7 +112,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                               new PaginationIteratorBuilder<AccountModelDao, Account, AccountSqlDao>() {
                                                   @Override
                                                   public Iterator<AccountModelDao> build(final AccountSqlDao accountSqlDao, final Long limit) {
-                                                      return accountSqlDao.searchAccounts(searchKey, offset, limit, context);
+                                                      return accountSqlDao.searchAccounts(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
                                                   }
                                               },
                                               offset,

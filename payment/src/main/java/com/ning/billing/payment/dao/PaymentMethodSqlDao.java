@@ -23,7 +23,6 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.customizers.FetchSize;
 
 import com.ning.billing.callcontext.InternalCallContext;
