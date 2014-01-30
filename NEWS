@@ -2,6 +2,7 @@
     [SECURITY] Fix SQL injection in search APIs
     Fix bug when retrieving refund information from plugins
     Add system tag definitions support to tag search
+    https://github.com/killbill/killbill/issues/100
 
 0.8.10
     Upgrade JRuby and add support for OpenSSL in plugins
