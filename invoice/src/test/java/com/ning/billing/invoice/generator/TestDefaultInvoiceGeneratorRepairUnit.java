@@ -54,7 +54,7 @@ public class TestDefaultInvoiceGeneratorRepairUnit extends InvoiceTestSuiteNoDB 
         this.defaultInvoiceGenerator = (DefaultInvoiceGenerator) generator;
     }
 
-    /*********************************************  addRepairItem logic ********************************/
+    /*********************************************  addRepairsForItem logic ********************************/
 
     //                 repairedItem
     // |-----------------------------------------------|
@@ -82,7 +82,7 @@ public class TestDefaultInvoiceGeneratorRepairUnit extends InvoiceTestSuiteNoDB 
         final InvoiceItem proposed2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startProposed2, endDate, BigDecimal.TEN, rate, currency);
         proposed.add(proposed2);
 
-        defaultInvoiceGenerator.addRepairItem(repairedItem, candidateRepairItem, proposed);
+        defaultInvoiceGenerator.addRepairsForItem(repairedItem, candidateRepairItem, proposed);
 
         assertEquals(proposed.size(), 1);
         assertEquals(proposed.get(0).getStartDate(), endDateProposed1);
@@ -115,7 +115,7 @@ public class TestDefaultInvoiceGeneratorRepairUnit extends InvoiceTestSuiteNoDB 
         final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDateProposed1, BigDecimal.TEN, rate, currency);
         proposed.add(proposed1);
 
-        defaultInvoiceGenerator.addRepairItem(repairedItem, candidateRepairItem, proposed);
+        defaultInvoiceGenerator.addRepairsForItem(repairedItem, candidateRepairItem, proposed);
 
         assertEquals(proposed.size(), 1);
         assertEquals(proposed.get(0).getStartDate(), endDateProposed1);
@@ -149,7 +149,7 @@ public class TestDefaultInvoiceGeneratorRepairUnit extends InvoiceTestSuiteNoDB 
         final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDateProposed1, endDate, BigDecimal.TEN, rate, currency);
         proposed.add(proposed1);
 
-        defaultInvoiceGenerator.addRepairItem(repairedItem, candidateRepairItem, proposed);
+        defaultInvoiceGenerator.addRepairsForItem(repairedItem, candidateRepairItem, proposed);
 
         assertEquals(proposed.size(), 1);
         assertEquals(proposed.get(0).getStartDate(), startDate);
@@ -189,7 +189,7 @@ public class TestDefaultInvoiceGeneratorRepairUnit extends InvoiceTestSuiteNoDB 
         final InvoiceItem proposed3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDateProposed3, endDate, BigDecimal.TEN, rate, currency);
         proposed.add(proposed3);
 
-        defaultInvoiceGenerator.addRepairItem(repairedItem, candidateRepairItem, proposed);
+        defaultInvoiceGenerator.addRepairsForItem(repairedItem, candidateRepairItem, proposed);
 
         assertEquals(proposed.size(), 2);
         assertEquals(proposed.get(0).getStartDate(), endDateProposed1);
@@ -206,7 +206,7 @@ public class TestDefaultInvoiceGeneratorRepairUnit extends InvoiceTestSuiteNoDB 
     }
 
 
-    /*********************************************  addRepairItems logic ********************************/
+    /*********************************************  addRepairsForItems logic ********************************/
 
     @Test(groups = "fast")
     public void testAddRepairedItemsItemsRecurringPrice() {

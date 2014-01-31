@@ -64,7 +64,7 @@ import com.google.inject.Inject;
  * Terminology for repair scenarii:
  * <p/>
  * - A 'repaired' item is an item that was generated and that needs to be repaired because the plan changed for that subscription on that period of time
- * - The 'repair' item is the item that cancels the (to be) repaired item; the repair item amount might not match (to be) repaired item because:
+ * - The 'repair' item is the item that cancels the (to be) repaired item; the repair item amount might not match the (to be) repaired item because:
  * * the (to be) repaired item was already adjusted so we will only repair what is left
  * * in case of partial repair we only repair the part that is not used
  * - The 'reparee' item is only present on disk-- in the existing item list -- in case of full repair; in that case it represents the portion of the item that should still
@@ -181,7 +181,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 final BigDecimal amountNegated = existingItem.getAmount() == null ? null : existingItem.getAmount().subtract(existingAdjustedPositiveAmount).negate();
                 if (amountNegated != null && amountNegated.compareTo(BigDecimal.ZERO) < 0) {
                     final RepairAdjInvoiceItem candidateRepairItem = new RepairAdjInvoiceItem(existingItem.getInvoiceId(), existingItem.getAccountId(), existingItem.getStartDate(), existingItem.getEndDate(), amountNegated, existingItem.getCurrency(), existingItem.getId());
-                    addRepairItem(existingItem, candidateRepairItem, proposedItems);
+                    addRepairsForItem(existingItem, candidateRepairItem, proposedItems);
                 }
             }
         }
@@ -194,7 +194,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      * @param candidateRepairItem the repair item we would have if we were to repair the full period
      * @param proposedItems       the list of proposed items
      */
-    void addRepairItem(final InvoiceItem repairedItem, final RepairAdjInvoiceItem candidateRepairItem, final List<InvoiceItem> proposedItems) {
+    void addRepairsForItem(final InvoiceItem repairedItem, final RepairAdjInvoiceItem candidateRepairItem, final List<InvoiceItem> proposedItems) {
 
         int nbTotalRepaireeDays = 0;
 
@@ -224,7 +224,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             }
         });
 
-        //Build the reparees
+        //Build the repaired
         BigDecimal totalRepairItemAmount = BigDecimal.ZERO;
         List<InvoiceItem> repairedItems = new ArrayList<InvoiceItem>();
         InvoiceItem prevReparee = null;
@@ -391,10 +391,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 itemsToRemove.add(repairItem.getLinkedItemId());
 
                 final InvoiceItem repairedItem = getRepairedInvoiceItem(repairItem.getLinkedItemId(), existingItems);
-                // if this is a full repair there is no reparee so nothing to remove; if not reparees need to be removed from proposed list
-                if (!isFullRepair(repairedItem, repairItem, existingItems)) {
-                    removeProposedRepareesForPartialrepair(repairedItem, repairItem, proposedItems);
-                }
+                // Always look for reparees; if this is a full repair there may not be any reparee to remove, but
+                // if this is a partial repair with an additional invoice item adjustment, this is seen as a full repair
+                // and yet there is a reparee to remove
+                removeProposedRepareesForPartialrepair(repairedItem, repairItem, proposedItems);
             }
         }
         final Iterator<InvoiceItem> iterator = existingItems.iterator();
