@@ -91,6 +91,11 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
     }
 
     @Override
+    public List<AuditLog> getAuditLogsForPaymentMethod(final UUID paymentMethodId) {
+        return getAuditLogs(ObjectType.PAYMENT_METHOD).getAuditLogs(paymentMethodId);
+    }
+
+    @Override
     public List<AuditLog> getAuditLogsForRefund(final UUID refundId) {
         return getAuditLogs(ObjectType.REFUND).getAuditLogs(refundId);
     }
