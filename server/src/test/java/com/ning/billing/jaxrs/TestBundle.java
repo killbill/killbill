@@ -27,6 +27,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.client.model.Account;
 import com.ning.billing.client.model.Bundle;
+import com.ning.billing.client.model.Bundles;
 import com.ning.billing.client.model.Subscription;
 
 import static org.testng.Assert.assertEquals;
@@ -98,5 +99,32 @@ public class TestBundle extends TestJaxrsBase {
         assertNotEquals(newBundle.getBundleId(), originalBundle.getBundleId());
         assertEquals(newBundle.getExternalKey(), originalBundle.getExternalKey());
         assertEquals(newBundle.getAccountId(), newAccount.getAccountId());
+    }
+
+    @Test(groups = "slow", description = "Can paginate and search through all bundles")
+    public void testBundlesPagination() throws Exception {
+        final Account accountJson = createAccount();
+
+        for (int i = 0; i < 5; i++) {
+            createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        }
+
+        final Bundles allBundles = killBillClient.getBundles();
+        Assert.assertEquals(allBundles.size(), 5);
+
+        for (final Bundle bundle : allBundles) {
+            Assert.assertEquals(killBillClient.searchBundles(bundle.getBundleId().toString()).size(), 1);
+            Assert.assertEquals(killBillClient.searchBundles(bundle.getAccountId().toString()).size(), 5);
+            Assert.assertEquals(killBillClient.searchBundles(bundle.getExternalKey()).size(), 1);
+        }
+
+        Bundles page = killBillClient.getBundles(0L, 1L);
+        for (int i = 0; i < 5; i++) {
+            Assert.assertNotNull(page);
+            Assert.assertEquals(page.size(), 1);
+            Assert.assertEquals(page.get(0), allBundles.get(i));
+            page = page.getNext();
+        }
+        Assert.assertNull(page);
     }
 }

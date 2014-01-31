@@ -27,6 +27,16 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
+import org.skife.jdbi.v2.IDBI;
+
+import com.ning.billing.ErrorCode;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.api.SubscriptionApiException;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.migration.AccountMigrationData;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
@@ -34,21 +44,34 @@ import com.ning.billing.subscription.api.timeline.SubscriptionDataRepair;
 import com.ning.billing.subscription.api.transfer.TransferCancelData;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
+import com.ning.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
+import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.EntityDaoBase;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
-public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptionLifecycleDao {
+public class RepairSubscriptionDao extends EntityDaoBase<SubscriptionBundleModelDao, SubscriptionBaseBundle, SubscriptionApiException> implements SubscriptionDao, RepairSubscriptionLifecycleDao {
 
     private static final String NOT_IMPLEMENTED = "Not implemented";
 
     private final ThreadLocal<Map<UUID, SubscriptionRepairEvent>> preThreadsInRepairSubscriptions = new ThreadLocal<Map<UUID, SubscriptionRepairEvent>>();
+
+    @Inject
+    public RepairSubscriptionDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), BundleSqlDao.class);
+    }
+
+    @Override
+    protected SubscriptionApiException generateAlreadyExistsException(final SubscriptionBundleModelDao entity, final InternalCallContext context) {
+        return new SubscriptionApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, entity.getExternalKey());
+    }
 
     private static final class SubscriptionEventWithOrderingId {
 
@@ -307,6 +330,11 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
 
     @Override
     public List<SubscriptionBaseBundle> getSubscriptionBundlesForKey(final String bundleKey, final InternalTenantContext context) {
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
+    }
+
+    @Override
+    public Pagination<SubscriptionBundleModelDao> searchSubscriptionBundles(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 

@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.entitlement.api.SubscriptionApiException;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.migration.AccountMigrationData;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.subscription.api.timeline.SubscriptionDataRepair;
@@ -27,19 +31,21 @@ import com.ning.billing.subscription.api.transfer.TransferCancelData;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
+import com.ning.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.EntityDao;
 
-public interface SubscriptionDao {
+public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, SubscriptionBaseBundle, SubscriptionApiException> {
 
     // Bundle apis
     public List<SubscriptionBaseBundle> getSubscriptionBundleForAccount(UUID accountId, InternalTenantContext context);
 
     public List<SubscriptionBaseBundle> getSubscriptionBundlesForKey(String bundleKey, InternalTenantContext context);
 
-    public Iterable<UUID> getNonAOSubscriptionIdsForKey(final String bundleKey, final InternalTenantContext context);
+    public Pagination<SubscriptionBundleModelDao> searchSubscriptionBundles(String searchKey, Long offset, Long limit, InternalTenantContext context);
+
+    public Iterable<UUID> getNonAOSubscriptionIdsForKey(String bundleKey, InternalTenantContext context);
 
     public List<SubscriptionBaseBundle> getSubscriptionBundlesForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
 
@@ -80,7 +86,7 @@ public interface SubscriptionDao {
 
     public void cancelSubscription(DefaultSubscriptionBase subscription, SubscriptionBaseEvent cancelEvent, InternalCallContext context, int cancelSeq);
 
-    public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context);
+    public void cancelSubscriptions(List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, InternalCallContext context);
 
     public void uncancelSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> uncancelEvents, InternalCallContext context);
 
@@ -90,7 +96,7 @@ public interface SubscriptionDao {
 
     public void transfer(UUID srcAccountId, UUID destAccountId, BundleMigrationData data, List<TransferCancelData> transferCancelData, InternalCallContext fromContext, InternalCallContext toContext);
 
-    public void updateBundleExternalKey(UUID bundleId, String externalKey, final InternalCallContext context);
+    public void updateBundleExternalKey(UUID bundleId, String externalKey, InternalCallContext context);
 
     // Repair
     public void repair(UUID accountId, UUID bundleId, List<SubscriptionDataRepair> inRepair, InternalCallContext context);
