@@ -51,6 +51,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.api.SubscriptionApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -171,6 +172,35 @@ public class InvoiceResource extends JaxRsResourceBase {
         final URI nextPageUri = uriBuilder.nextPage(InvoiceResource.class, "getInvoices", invoices.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_INVOICE_WITH_ITEMS, withItems.toString(),
                                                                                                                                                            QUERY_AUDIT, auditMode.getLevel().toString()));
 
+        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
+        return buildStreamingPaginationResponse(invoices,
+                                                new Function<Invoice, InvoiceJson>() {
+                                                    @Override
+                                                    public InvoiceJson apply(final Invoice invoice) {
+                                                        // Cache audit logs per account
+                                                        if (accountsAuditLogs.get().get(invoice.getAccountId()) == null) {
+                                                            accountsAuditLogs.get().put(invoice.getAccountId(), auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext));
+                                                        }
+                                                        return new InvoiceJson(invoice, withItems, accountsAuditLogs.get().get(invoice.getAccountId()));
+                                                    }
+                                                },
+                                                nextPageUri);
+    }
+
+    @GET
+    @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public Response searchInvoices(@PathParam("searchKey") final String searchKey,
+                                   @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                   @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                   @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final Boolean withItems,
+                                   @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final Pagination<Invoice> invoices = invoiceApi.searchInvoices(searchKey, offset, limit, tenantContext);
+        final URI nextPageUri = uriBuilder.nextPage(InvoiceResource.class, "searchInvoices", invoices.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
+                                                                                                                                                              QUERY_INVOICE_WITH_ITEMS, withItems.toString(),
+                                                                                                                                                              QUERY_AUDIT, auditMode.getLevel().toString()));
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
         return buildStreamingPaginationResponse(invoices,
                                                 new Function<Invoice, InvoiceJson>() {

@@ -1,3 +1,8 @@
+0.8.12
+    Implement bundles pagination and search APIs
+    Implement invoices search API
+    https://github.com/killbill/killbill/issues/154
+
 0.8.11
     [SECURITY] Fix SQL injection in search APIs
     Fix bug when retrieving refund information from plugins

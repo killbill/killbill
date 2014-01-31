@@ -450,7 +450,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(adjustedInvoice.getBalance().compareTo(adjustedInvoiceBalance), 0);
     }
 
-    @Test(groups = "slow", description = "Can paginate through all invoices")
+    @Test(groups = "slow", description = "Can paginate and search through all invoices")
     public void testInvoicesPagination() throws Exception {
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -461,6 +461,13 @@ public class TestInvoice extends TestJaxrsBase {
 
         final Invoices allInvoices = killBillClient.getInvoices();
         Assert.assertEquals(allInvoices.size(), 5);
+
+        for (final Invoice invoice : allInvoices) {
+            Assert.assertEquals(killBillClient.searchInvoices(invoice.getInvoiceId().toString()).size(), 1);
+            Assert.assertEquals(killBillClient.searchInvoices(invoice.getAccountId().toString()).size(), 5);
+            Assert.assertEquals(killBillClient.searchInvoices(invoice.getInvoiceNumber().toString()).size(), 1);
+            Assert.assertEquals(killBillClient.searchInvoices(invoice.getCurrency().toString()).size(), 5);
+        }
 
         Invoices page = killBillClient.getInvoices(0L, 1L);
         for (int i = 0; i < 5; i++) {

@@ -134,6 +134,25 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public Pagination<Invoice> searchInvoices(final String searchKey, final Long offset, final Long limit, final TenantContext context) {
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<InvoiceModelDao, AccountApiException>() {
+                                                  @Override
+                                                  public Pagination<InvoiceModelDao> build() {
+                                                      // Invoices will be shallow, i.e. won't contain items nor payments
+                                                      return dao.searchInvoices(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                  }
+                                              },
+                                              new Function<InvoiceModelDao, Invoice>() {
+                                                  @Override
+                                                  public Invoice apply(final InvoiceModelDao invoiceModelDao) {
+                                                      return new DefaultInvoice(invoiceModelDao);
+                                                  }
+                                              }
+                                             );
+    }
+
+    @Override
     public BigDecimal getAccountBalance(final UUID accountId, final TenantContext context) {
         final BigDecimal result = dao.getAccountBalance(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
         return result == null ? BigDecimal.ZERO : result;
