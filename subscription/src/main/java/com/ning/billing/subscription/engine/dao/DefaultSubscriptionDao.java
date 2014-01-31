@@ -46,6 +46,7 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.api.SubscriptionApiException;
 import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.events.RepairSubscriptionInternalEvent;
@@ -85,6 +86,9 @@ import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
+import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -96,15 +100,13 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
-public class DefaultSubscriptionDao implements SubscriptionDao {
+public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleModelDao, SubscriptionBaseBundle, SubscriptionApiException> implements SubscriptionDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionDao.class);
 
     private final Clock clock;
-    private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
     private final PersistentBus eventBus;
@@ -114,12 +116,17 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
     public DefaultSubscriptionDao(final IDBI dbi, final Clock clock, final AddonUtils addonUtils,
                                   final NotificationQueueService notificationQueueService, final PersistentBus eventBus, final CatalogService catalogService,
                                   final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), BundleSqlDao.class);
         this.clock = clock;
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
         this.eventBus = eventBus;
         this.catalogService = catalogService;
+    }
+
+    @Override
+    protected SubscriptionApiException generateAlreadyExistsException(final SubscriptionBundleModelDao entity, final InternalCallContext context) {
+        return new SubscriptionApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, entity.getExternalKey());
     }
 
     @Override
@@ -180,6 +187,20 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
                 }));
             }
         });
+    }
+
+    @Override
+    public Pagination<SubscriptionBundleModelDao> searchSubscriptionBundles(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(BundleSqlDao.class,
+                                              new PaginationIteratorBuilder<SubscriptionBundleModelDao, SubscriptionBaseBundle, BundleSqlDao>() {
+                                                  @Override
+                                                  public Iterator<SubscriptionBundleModelDao> build(final BundleSqlDao bundleSqlDao, final Long limit) {
+                                                      return bundleSqlDao.searchBundles(searchKey, offset, limit, context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
     }
 
     @Override

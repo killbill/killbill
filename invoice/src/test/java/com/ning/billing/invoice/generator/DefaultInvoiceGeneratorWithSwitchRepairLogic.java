@@ -48,9 +48,9 @@ public class DefaultInvoiceGeneratorWithSwitchRepairLogic extends DefaultInvoice
     }
 
     @Override
-    void addRepairItem(final InvoiceItem repairedItem, final RepairAdjInvoiceItem candidateRepairItem, final List<InvoiceItem> proposedItems) {
+    void addRepairsForItem(final InvoiceItem repairedItem, final RepairAdjInvoiceItem candidateRepairItem, final List<InvoiceItem> proposedItems) {
         if (repairtLogic == REPAIR_INVOICE_LOGIC.PARTIAL_REPAIR) {
-            super.addRepairItem(repairedItem, candidateRepairItem, proposedItems);
+            super.addRepairsForItem(repairedItem, candidateRepairItem, proposedItems);
         } else {
             proposedItems.add(candidateRepairItem);
             return;

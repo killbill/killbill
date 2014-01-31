@@ -21,12 +21,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodKVInfo;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -46,7 +49,9 @@ public class PaymentMethodJson extends JsonBase {
                              @JsonProperty("accountId") final String accountId,
                              @JsonProperty("isDefault") final Boolean isDefault,
                              @JsonProperty("pluginName") final String pluginName,
-                             @JsonProperty("pluginInfo") final PaymentMethodPluginDetailJson pluginInfo) {
+                             @JsonProperty("pluginInfo") final PaymentMethodPluginDetailJson pluginInfo,
+                             @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
         this.paymentMethodId = paymentMethodId;
         this.accountId = accountId;
         this.isDefault = isDefault;
@@ -54,7 +59,7 @@ public class PaymentMethodJson extends JsonBase {
         this.pluginInfo = pluginInfo;
     }
 
-    public static PaymentMethodJson toPaymentMethodJson(final Account account, final PaymentMethod in) {
+    public static PaymentMethodJson toPaymentMethodJson(final Account account, final PaymentMethod in, @Nullable final AccountAuditLogs accountAuditLogs) {
         final boolean isDefault = account.getPaymentMethodId() != null && account.getPaymentMethodId().equals(in.getId());
         final PaymentMethodPlugin pluginDetail = in.getPluginDetail();
         PaymentMethodPluginDetailJson pluginDetailJson = null;
@@ -84,7 +89,8 @@ public class PaymentMethodJson extends JsonBase {
                                                                  pluginDetail.getCountry(),
                                                                  properties);
         }
-        return new PaymentMethodJson(in.getId().toString(), account.getId().toString(), isDefault, in.getPluginName(), pluginDetailJson);
+        return new PaymentMethodJson(in.getId().toString(), account.getId().toString(), isDefault, in.getPluginName(),
+                                     pluginDetailJson, toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentMethod(in.getId())));
     }
 
     public PaymentMethod toPaymentMethod(final String accountId) {

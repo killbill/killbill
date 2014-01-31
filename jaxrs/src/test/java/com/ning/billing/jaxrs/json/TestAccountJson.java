@@ -55,7 +55,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         final AccountJson accountJson = new AccountJson(accountId, name, length, externalKey,
                                                         email, billCycleDayLocal, currency, paymentMethodId,
                                                         timeZone, address1, address2, postalCode, company, city, state,
-                                                        country, locale, phone, isMigrated, isNotifiedForInvoice, null, null);
+                                                        country, locale, phone, isMigrated, isNotifiedForInvoice, null, null, null);
         Assert.assertEquals(accountJson.getAccountId(), accountId);
         Assert.assertEquals(accountJson.getName(), name);
         Assert.assertEquals(accountJson.getFirstNameLength(), length);
@@ -107,7 +107,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         accountBuilder.timeZone(DateTimeZone.UTC);
         final Account account = accountBuilder.build();
 
-        final AccountJson accountJson = new AccountJson(account, null, null);
+        final AccountJson accountJson = new AccountJson(account, null, null, null);
         Assert.assertEquals(accountJson.getAddress1(), account.getAddress1());
         Assert.assertEquals(accountJson.getAddress2(), account.getAddress2());
         Assert.assertEquals(accountJson.getBillCycleDayLocal(), (Integer) bcd);

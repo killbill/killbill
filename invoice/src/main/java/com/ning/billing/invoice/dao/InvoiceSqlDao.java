@@ -16,15 +16,17 @@
 
 package com.ning.billing.invoice.dao;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.customizers.FetchSize;
 
-import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
@@ -33,6 +35,15 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
 
     @SqlQuery
     List<InvoiceModelDao> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId,
+                                                    @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    // Magic value to force MySQL to stream from the database
+    // See http://dev.mysql.com/doc/refman/5.0/en/connector-j-reference-implementation-notes.html (ResultSet)
+    @FetchSize(Integer.MIN_VALUE)
+    public Iterator<InvoiceModelDao> searchInvoices(@Bind("searchKey") final String searchKey,
+                                                    @Bind("offset") final Long offset,
+                                                    @Bind("rowCount") final Long rowCount,
                                                     @BindBean final InternalTenantContext context);
 
     @SqlQuery

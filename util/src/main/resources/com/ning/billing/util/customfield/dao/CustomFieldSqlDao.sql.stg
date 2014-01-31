@@ -52,16 +52,16 @@ and is_active
 ;
 >>
 
-searchCustomFields(searchKey, offset, rowCount) ::= <<
+searchCustomFields() ::= <<
 select SQL_CALC_FOUND_ROWS
 <allTableFields("t.")>
 from <tableName()> t
 where 1 = 1
 and (
-     <idField("t.")> = '<searchKey>'
-  or t.object_type like '%<searchKey>%'
-  or t.field_name like '%<searchKey>%'
-  or t.field_value like '%<searchKey>%'
+     <idField("t.")> = :searchKey
+  or t.object_type like :likeSearchKey
+  or t.field_name like :likeSearchKey
+  or t.field_value like :likeSearchKey
 )
 <AND_CHECK_TENANT("t.")>
 order by <recordIdField("t.")> ASC

@@ -23,9 +23,11 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DescriptiveTag;
@@ -153,4 +155,25 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tagDao.getTagsForObject(objectId, objectType, true, internalCallContext).size(), 1);
         Assert.assertEquals(tagDao.getTagsForAccount(true, internalCallContext).size(), 1);
     }
+
+    @Test(groups = "slow")
+    public void testInsertMultipleTags() throws TagApiException {
+        final UUID objectId = UUID.randomUUID();
+        final ObjectType objectType = ObjectType.INVOICE_ITEM;
+
+        eventsListener.pushExpectedEvent(NextEvent.TAG);
+        final Tag tag = new DescriptiveTag(ControlTagType.AUTO_INVOICING_OFF.getId(), objectType, objectId, internalCallContext.getCreatedDate());
+        tagDao.create(new TagModelDao(tag), internalCallContext);
+        assertListenerStatus();
+
+        try {
+            final Tag tag2 = new DescriptiveTag(ControlTagType.AUTO_INVOICING_OFF.getId(), objectType, objectId, internalCallContext.getCreatedDate());
+            tagDao.create(new TagModelDao(tag2), internalCallContext);
+            Assert.fail("Should not be able to create twice the same tag");
+            assertListenerStatus();
+        } catch (final TagApiException e) {
+            Assert.assertEquals(ErrorCode.TAG_ALREADY_EXISTS.getCode(), e.getCode());
+        }
+    }
+
 }

@@ -26,9 +26,11 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
@@ -39,7 +41,9 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.generator.DefaultInvoiceGeneratorWithSwitchRepairLogic;
 import com.ning.billing.invoice.generator.DefaultInvoiceGeneratorWithSwitchRepairLogic.REPAIR_INVOICE_LOGIC;
@@ -700,4 +704,160 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 11), new LocalDate(2012, 6, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("-249.95")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
     }
+
+    @Test(groups = "slow")
+    public void testRepairWithFullItemAdjustment() throws Exception {
+
+        invoiceGenerator.setDefaultRepairLogic(REPAIR_INVOICE_LOGIC.PARTIAL_REPAIR);
+
+        final LocalDate today = new LocalDate(2013, 7, 19);
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.ANNUAL;
+        final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        //
+        DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+
+        // Move out of trials for interesting invoices adjustments
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        assertEquals(invoices.size(), 2);
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+
+        // Move clock to 2013-09-17
+        clock.addDays(30);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
+        bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, callContext);
+        assertListenerStatus();
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        assertEquals(invoices.size(), 2);
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2014, 8, 18), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2202.67")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2013, 9, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("2202.67")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+
+
+        //
+        // ITEM ADJUSTMENT PRIOR TO DOING THE REPAIR
+        //
+        final Invoice invoice1 = invoices.get(1);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), callContext);
+        final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), PaymentStatus.SUCCESS, invoice1.getId(), Currency.USD);
+        final Payment payment1 = payments.get(0);
+
+        final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
+        iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("197.28"));
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, callContext);
+        assertListenerStatus();
+
+        try {
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(clock.getUTCToday()), false, callContext);
+            Assert.fail("Should not gnenerated an new invoice");
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
+        }
+    }
+
+    //
+    // This is the exact same test as testRepairWithFullItemAdjustment except we now only do a partial item adjustment.
+    // The invoice code will NOT reinvoice for the remaining part as the item was both repaired and adjusted and so
+    // it does not have enough info to understand what should be re-invoiced.
+    //
+    // Note that there is no real use case for those scenarii in real life
+    //
+    @Test(groups = "slow")
+    public void testRepairWithPartialItemAdjustment() throws Exception {
+
+        invoiceGenerator.setDefaultRepairLogic(REPAIR_INVOICE_LOGIC.PARTIAL_REPAIR);
+
+        final LocalDate today = new LocalDate(2013, 7, 19);
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.ANNUAL;
+        final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        //
+        DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+
+        // Move out of trials for interesting invoices adjustments
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        assertEquals(invoices.size(), 2);
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+
+        // Move clock to 2013-09-17
+        clock.addDays(30);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
+        bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, callContext);
+        assertListenerStatus();
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        assertEquals(invoices.size(), 2);
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2014, 8, 18), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2202.67")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2013, 9, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("2202.67")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+
+
+        //
+        // ITEM ADJUSTMENT PRIOR TO DOING THE REPAIR
+        //
+        final Invoice invoice1 = invoices.get(1);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), callContext);
+        final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), PaymentStatus.SUCCESS, invoice1.getId(), Currency.USD);
+        final Payment payment1 = payments.get(0);
+
+        final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
+        iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("100.00"));
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, callContext);
+        assertListenerStatus();
+
+        try {
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(clock.getUTCToday()), false, callContext);
+            Assert.fail("Should not gnenerated an new invoice");
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
+        }
+    }
+
 }

@@ -36,6 +36,7 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.api.SubscriptionApiException;
 import com.ning.billing.notificationq.api.NotificationEvent;
 import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
@@ -52,16 +53,20 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import com.ning.billing.subscription.engine.core.SubscriptionNotificationKey;
+import com.ning.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
+import com.ning.billing.util.entity.DefaultPagination;
+import com.ning.billing.util.entity.Pagination;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 
 import com.google.inject.Inject;
 
-public class MockSubscriptionDaoMemory implements SubscriptionDao {
+public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBundleModelDao, SubscriptionBaseBundle, SubscriptionApiException> implements SubscriptionDao {
 
     protected static final Logger log = LoggerFactory.getLogger(SubscriptionDao.class);
 
@@ -111,6 +116,20 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
             }
         }
         return results;
+    }
+
+    @Override
+    public Pagination<SubscriptionBundleModelDao> searchSubscriptionBundles(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        final List<SubscriptionBundleModelDao> results = new LinkedList<SubscriptionBundleModelDao>();
+        for (final SubscriptionBundleModelDao bundleModelDao : getAll(context)) {
+            if (bundleModelDao.getId().toString().equals(searchKey) ||
+                bundleModelDao.getExternalKey().equals(searchKey) ||
+                bundleModelDao.getAccountId().toString().equals(searchKey)) {
+                results.add(bundleModelDao);
+            }
+        }
+
+        return DefaultPagination.<SubscriptionBundleModelDao>build(offset, limit, results);
     }
 
     @Override

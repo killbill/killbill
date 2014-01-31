@@ -223,7 +223,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
                                               new PaginationIteratorBuilder<TagModelDao, Tag, TagSqlDao>() {
                                                   @Override
                                                   public Iterator<TagModelDao> build(final TagSqlDao tagSqlDao, final Long limit) {
-                                                      return tagSqlDao.searchTags(searchKey, offset, limit, context);
+                                                      return tagSqlDao.searchTags(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
                                                   }
                                               },
                                               offset,

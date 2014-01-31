@@ -30,6 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
@@ -43,8 +45,10 @@ import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.api.EntitlementAOStatusDryRun;
 import com.ning.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
+import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.subscription.api.SubscriptionApiBase;
 import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseApiService;
@@ -57,17 +61,18 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
+import com.ning.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.callcontext.InternalTenantContext;
-import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+
+import static com.ning.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
 public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implements SubscriptionBaseInternalApi {
 
@@ -187,11 +192,48 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
+    public Pagination<SubscriptionBaseBundle> getBundles(final Long offset, final Long limit, final InternalTenantContext context) {
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<SubscriptionBundleModelDao, SubscriptionBaseApiException>() {
+                                                  @Override
+                                                  public Pagination<SubscriptionBundleModelDao> build() {
+                                                      return dao.get(offset, limit, context);
+                                                  }
+                                              },
+                                              new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
+                                                  @Override
+                                                  public SubscriptionBaseBundle apply(final SubscriptionBundleModelDao bundleModelDao) {
+                                                      return SubscriptionBundleModelDao.toSubscriptionbundle(bundleModelDao);
+                                                  }
+                                              }
+                                             );
+    }
+
+    @Override
+    public Pagination<SubscriptionBaseBundle> searchBundles(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<SubscriptionBundleModelDao, SubscriptionBaseApiException>() {
+                                                  @Override
+                                                  public Pagination<SubscriptionBundleModelDao> build() {
+                                                      return dao.searchSubscriptionBundles(searchKey, offset, limit, context);
+                                                  }
+                                              },
+                                              new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
+                                                  @Override
+                                                  public SubscriptionBaseBundle apply(final SubscriptionBundleModelDao bundleModelDao) {
+                                                      return SubscriptionBundleModelDao.toSubscriptionbundle(bundleModelDao);
+                                                  }
+                                              }
+                                             );
+
+    }
+
+    @Override
     public Iterable<UUID> getNonAOSubscriptionIdsForKey(final String bundleKey, final InternalTenantContext context) {
         return dao.getNonAOSubscriptionIdsForKey(bundleKey, context);
     }
 
-    public static SubscriptionBaseBundle getActiveBundleForKeyNotException(final List<SubscriptionBaseBundle> existingBundles, final SubscriptionDao dao, final Clock clock, final InternalTenantContext context)  {
+    public static SubscriptionBaseBundle getActiveBundleForKeyNotException(final List<SubscriptionBaseBundle> existingBundles, final SubscriptionDao dao, final Clock clock, final InternalTenantContext context) {
         for (SubscriptionBaseBundle cur : existingBundles) {
             final List<SubscriptionBase> subscriptions = dao.getSubscriptions(cur.getId(), context);
             for (SubscriptionBase s : subscriptions) {
@@ -330,10 +372,10 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 reason = DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN;
             }
             final EntitlementAOStatusDryRun status = new DefaultSubscriptionStatusDryRun(cur.getId(),
-                                                                                        cur.getCurrentPlan().getProduct().getName(),
-                                                                                        cur.getCurrentPhase().getPhaseType(),
-                                                                                        cur.getCurrentPlan().getBillingPeriod(),
-                                                                                        cur.getCurrentPriceList().getName(), reason);
+                                                                                         cur.getCurrentPlan().getProduct().getName(),
+                                                                                         cur.getCurrentPhase().getPhaseType(),
+                                                                                         cur.getCurrentPlan().getBillingPeriod(),
+                                                                                         cur.getCurrentPriceList().getName(), reason);
             result.add(status);
         }
         return result;

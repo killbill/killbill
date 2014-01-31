@@ -31,6 +31,7 @@ import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.util.entity.Pagination;
 import com.ning.billing.util.entity.dao.EntityDao;
 
 public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceApiException> {
@@ -45,6 +46,8 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     List<InvoiceModelDao> getInvoicesByAccount(LocalDate fromDate, InternalTenantContext context);
 
     List<InvoiceModelDao> getInvoicesBySubscription(UUID subscriptionId, InternalTenantContext context);
+
+    public Pagination<InvoiceModelDao> searchInvoices(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
     UUID getInvoiceIdByPaymentId(UUID paymentId, InternalTenantContext context);
 

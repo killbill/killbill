@@ -17,13 +17,17 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -54,8 +58,8 @@ public class AccountJson extends JsonBase {
     private final Boolean isMigrated;
     private final Boolean isNotifiedForInvoices;
 
-    public AccountJson(final Account account, final BigDecimal accountBalance, final BigDecimal accountCBA) {
-        super(null);
+    public AccountJson(final Account account, final BigDecimal accountBalance, final BigDecimal accountCBA, @Nullable final AccountAuditLogs accountAuditLogs) {
+        super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForAccount()));
         this.accountCBA = accountCBA;
         this.accountBalance = accountBalance;
         this.accountId = account.getId().toString();
@@ -102,8 +106,9 @@ public class AccountJson extends JsonBase {
                        @JsonProperty("isMigrated") final Boolean isMigrated,
                        @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices,
                        @JsonProperty("accountBalance") final BigDecimal accountBalance,
-                       @JsonProperty("accountCBA") final BigDecimal accountCBA) {
-        super(null);
+                       @JsonProperty("accountCBA") final BigDecimal accountCBA,
+                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
         this.accountBalance = accountBalance;
         this.externalKey = externalKey;
         this.accountId = accountId;
@@ -236,7 +241,7 @@ public class AccountJson extends JsonBase {
             }
         };
     }
-    
+
     public BigDecimal getAccountBalance() {
         return accountBalance;
     }

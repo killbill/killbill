@@ -36,6 +36,23 @@ getInvoicesBySubscription() ::= <<
   ;
 >>
 
+searchInvoices() ::= <<
+select SQL_CALC_FOUND_ROWS
+<allTableFields("t.")>
+from <tableName()> t
+where 1 = 1
+and (
+     <idField("t.")> = :searchKey
+  or <recordIdField("t.")> = :searchKey
+  or t.account_id = :searchKey
+  or t.currency = :searchKey
+)
+<AND_CHECK_TENANT("t.")>
+order by <recordIdField("t.")> ASC
+limit :offset, :rowCount
+;
+>>
+
 getInvoiceIdByPaymentId() ::= <<
   SELECT i.id
     FROM <tableName()> i, invoice_payments ip

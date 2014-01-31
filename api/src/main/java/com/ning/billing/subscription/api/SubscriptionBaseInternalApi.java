@@ -24,20 +24,19 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.entitlement.api.EntitlementAOStatusDryRun;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.entitlement.api.EntitlementAOStatusDryRun;
 import com.ning.billing.events.EffectiveSubscriptionInternalEvent;
-
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
+import com.ning.billing.util.entity.Pagination;
 
 public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs,
                                                final InternalCallContext context) throws SubscriptionBaseApiException;
-
 
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context)
             throws SubscriptionBaseApiException;
@@ -48,6 +47,10 @@ public interface SubscriptionBaseInternalApi {
     public List<SubscriptionBaseBundle> getBundlesForAccount(final UUID accountId, final InternalTenantContext context);
 
     public List<SubscriptionBaseBundle> getBundlesForKey(final String bundleKey, final InternalTenantContext context);
+
+    public Pagination<SubscriptionBaseBundle> getBundles(final Long offset, final Long limit, final InternalTenantContext context);
+
+    public Pagination<SubscriptionBaseBundle> searchBundles(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context);
 
     public Iterable<UUID> getNonAOSubscriptionIdsForKey(final String bundleKey, final InternalTenantContext context);
 
@@ -73,7 +76,6 @@ public interface SubscriptionBaseInternalApi {
 
     public List<EntitlementAOStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName,
                                                                      final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
-
 
     public void updateExternalKey(final UUID bundleId, final String newExternalKey, final InternalCallContext context);
 }

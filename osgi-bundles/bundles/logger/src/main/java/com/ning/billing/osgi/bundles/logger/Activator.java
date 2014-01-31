@@ -28,7 +28,6 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogListener;
 import org.osgi.service.log.LogReaderService;
-import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,8 +55,7 @@ public class Activator implements BundleActivator {
                 if (event.getType() == ServiceEvent.REGISTERED) {
                     registerLogReaderService(logReaderService);
                 } else if (event.getType() == ServiceEvent.UNREGISTERING) {
-                    logReaderService.removeLogListener(killbillLogListener);
-                    logReaderServices.remove(logReaderService);
+                    unregisterLogReaderService(logReaderService);
                 }
             }
         }
@@ -65,24 +63,17 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        // Get a list of all the registered LogReaderService, and add the killbill listener
-        final ServiceTracker logReaderTracker = new ServiceTracker(context, LogReaderService.class.getName(), null);
-        logReaderTracker.open();
-        final Object[] readers = logReaderTracker.getServices();
-        if (readers != null) {
-            for (final Object reader : readers) {
-                final LogReaderService service = (LogReaderService) reader;
-                registerLogReaderService(service);
-            }
-        }
-        logReaderTracker.close();
-
-        // Add the ServiceListener
         final String filter = "(objectclass=" + LogReaderService.class.getName() + ")";
         try {
             context.addServiceListener(logReaderServiceListener, filter);
-        } catch (InvalidSyntaxException e) {
+        } catch (final InvalidSyntaxException e) {
             logger.warn("Unable to register the killbill LogReaderService listener", e);
+        }
+
+        // If the LogReaderService was already registered, manually construct a REGISTERED ServiceEvent
+        final ServiceReference[] serviceReferences = context.getServiceReferences((String) null, filter);
+        for (int i = 0; serviceReferences != null && i < serviceReferences.length; i++) {
+            logReaderServiceListener.serviceChanged(new ServiceEvent(ServiceEvent.REGISTERED, serviceReferences[i]));
         }
     }
 
@@ -96,7 +87,14 @@ public class Activator implements BundleActivator {
     }
 
     private void registerLogReaderService(final LogReaderService service) {
+        logger.info("Registering the killbill LogReaderService listener");
         logReaderServices.add(service);
         service.addLogListener(killbillLogListener);
+    }
+
+    private void unregisterLogReaderService(final LogReaderService logReaderService) {
+        logger.info("Unregistering the killbill LogReaderService listener");
+        logReaderService.removeLogListener(killbillLogListener);
+        logReaderServices.remove(logReaderService);
     }
 }

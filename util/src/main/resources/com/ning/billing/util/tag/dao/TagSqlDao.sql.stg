@@ -58,17 +58,58 @@ and t.object_type = :objectType
 ;
 >>
 
-searchTags(searchKey, offset, rowCount) ::= <<
+searchTags() ::= <<
 select SQL_CALC_FOUND_ROWS
 <allTableFields("t.")>
 from <tableName()> t
-join tag_definitions td on td.id = t.tag_definition_id
+join (
+  select
+    id
+  , name
+  , description
+  from tag_definitions
+  union
+  select
+    \'00000000-0000-0000-0000-000000000001\' id
+  , \'AUTO_PAY_OFF\' name
+  , \'Suspends payments until removed.\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000001\' id
+  , \'AUTO_INVOICING_OFF\' name
+  , \'Suspends invoicing until removed.\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000003\' id
+  , \'OVERDUE_ENFORCEMENT_OFF\' name
+  , \'Suspends overdue enforcement behaviour until removed.\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000004\' id
+  , \'WRITTEN_OFF\' name
+  , \'Indicates that an invoice is written off. No billing or payment effect.\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000005\' id
+  , \'MANUAL_PAY\' name
+  , \'Indicates that Killbill doesn\\\\\'t process payments for that account (external payments only)\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000006\' id
+  , \'TEST\' name
+  , \'Indicates that this is a test account\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000007\' id
+  , \'PARTNER\' name
+  , \'Indicates that this is a partner account\' description
+) td on td.id = t.tag_definition_id
 where 1 = 1
 and (
-     <idField("t.")> = '<searchKey>'
-  or t.object_type like '%<searchKey>%'
-  or td.name like '%<searchKey>%'
-  or td.description like '%<searchKey>%'
+     <idField("t.")> = :searchKey
+  or t.object_type like :likeSearchKey
+  or td.name like :likeSearchKey
+  or td.description like :likeSearchKey
 )
 <AND_CHECK_TENANT("t.")>
 order by <recordIdField("t.")> ASC

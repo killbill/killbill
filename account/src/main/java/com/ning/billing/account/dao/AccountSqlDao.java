@@ -23,7 +23,6 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.customizers.FetchSize;
 
 import com.ning.billing.account.api.Account;
@@ -45,7 +44,8 @@ public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
     // Magic value to force MySQL to stream from the database
     // See http://dev.mysql.com/doc/refman/5.0/en/connector-j-reference-implementation-notes.html (ResultSet)
     @FetchSize(Integer.MIN_VALUE)
-    public Iterator<AccountModelDao> searchAccounts(@Define("searchKey") final String searchKey,
+    public Iterator<AccountModelDao> searchAccounts(@Bind("searchKey") final String searchKey,
+                                                    @Bind("likeSearchKey") final String likeSearchKey,
                                                     @Bind("offset") final Long offset,
                                                     @Bind("rowCount") final Long rowCount,
                                                     @BindBean final InternalTenantContext context);

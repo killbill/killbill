@@ -156,6 +156,21 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
+    public Pagination<InvoiceModelDao> searchInvoices(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        final List<InvoiceModelDao> results = new LinkedList<InvoiceModelDao>();
+        for (final InvoiceModelDao invoice : getAll(context)) {
+            if (invoice.getId().toString().equals(searchKey) ||
+                invoice.getAccountId().toString().equals(searchKey) ||
+                invoice.getInvoiceNumber().toString().equals(searchKey) ||
+                invoice.getCurrency().toString().equals(searchKey)) {
+                results.add(invoice);
+            }
+        }
+
+        return DefaultPagination.<InvoiceModelDao>build(offset, limit, results);
+    }
+
+    @Override
     public void test(final InternalTenantContext context) {
     }
 

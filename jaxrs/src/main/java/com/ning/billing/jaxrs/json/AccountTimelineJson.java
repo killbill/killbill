@@ -90,7 +90,7 @@ public class AccountTimelineJson {
     public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments,
                                final List<SubscriptionBundle> bundles, final Multimap<UUID, Refund> refundsByPayment,
                                final Multimap<UUID, InvoicePayment> chargebacksByPayment, final AccountAuditLogs accountAuditLogs) {
-        this.account = new AccountJson(account, null, null);
+        this.account = new AccountJson(account, null, null, accountAuditLogs);
         this.bundles = new LinkedList<BundleJson>();
         for (final SubscriptionBundle bundle : bundles) {
             final List<AuditLog> bundleAuditLogs = accountAuditLogs.getAuditLogsForBundle(bundle.getId());

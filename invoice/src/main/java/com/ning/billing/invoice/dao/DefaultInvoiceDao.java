@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -45,6 +46,8 @@ import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.entity.Pagination;
+import com.ning.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -248,6 +251,21 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
+    public Pagination<InvoiceModelDao> searchInvoices(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(InvoiceSqlDao.class,
+                                              new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
+                                                  @Override
+                                                  public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long limit) {
+                                                      return invoiceSqlDao.searchInvoices(searchKey, offset, limit, context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
+
+    }
+
+    @Override
     public BigDecimal getAccountBalance(final UUID accountId, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<BigDecimal>() {
             @Override
@@ -284,7 +302,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
         });
     }
-
 
     @Override
     public UUID getInvoiceIdByPaymentId(final UUID paymentId, final InternalTenantContext context) {
@@ -539,7 +556,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                    currency, null);
                 final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
                 transInvoiceItemDao.create(externalCharge, context);
-
 
                 cbaDao.doCBAComplexity(accountId, entitySqlDaoWrapperFactory, context);
 

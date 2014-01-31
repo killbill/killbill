@@ -16,8 +16,12 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -57,9 +61,13 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.audit.AccountAuditLogs;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.entity.Pagination;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -105,6 +113,58 @@ public class BundleResource extends JaxRsResourceBase {
         final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, context.createContext(request));
         final BundleJson json = new BundleJson(bundle, null);
         return Response.status(Status.OK).entity(json).build();
+    }
+
+    @GET
+    @Path("/" + PAGINATION)
+    @Produces(APPLICATION_JSON)
+    public Response getBundles(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                               @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                               @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                               @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final Pagination<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundles(offset, limit, tenantContext);
+        final URI nextPageUri = uriBuilder.nextPage(BundleResource.class, "getBundles", bundles.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()));
+        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
+        return buildStreamingPaginationResponse(bundles,
+                                                new Function<SubscriptionBundle, BundleJson>() {
+                                                    @Override
+                                                    public BundleJson apply(final SubscriptionBundle bundle) {
+                                                        // Cache audit logs per account
+                                                        if (accountsAuditLogs.get().get(bundle.getAccountId()) == null) {
+                                                            accountsAuditLogs.get().put(bundle.getAccountId(), auditUserApi.getAccountAuditLogs(bundle.getAccountId(), auditMode.getLevel(), tenantContext));
+                                                        }
+                                                        return new BundleJson(bundle, accountsAuditLogs.get().get(bundle.getAccountId()));
+                                                    }
+                                                },
+                                                nextPageUri);
+    }
+
+    @GET
+    @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public Response searchBundles(@PathParam("searchKey") final String searchKey,
+                                  @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                  @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                  @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final Pagination<SubscriptionBundle> bundles = subscriptionApi.searchSubscriptionBundles(searchKey, offset, limit, tenantContext);
+        final URI nextPageUri = uriBuilder.nextPage(BundleResource.class, "searchBundles", bundles.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
+                                                                                                                                                           QUERY_AUDIT, auditMode.getLevel().toString()));
+        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
+        return buildStreamingPaginationResponse(bundles,
+                                                new Function<SubscriptionBundle, BundleJson>() {
+                                                    @Override
+                                                    public BundleJson apply(final SubscriptionBundle bundle) {
+                                                        // Cache audit logs per account
+                                                        if (accountsAuditLogs.get().get(bundle.getAccountId()) == null) {
+                                                            accountsAuditLogs.get().put(bundle.getAccountId(), auditUserApi.getAccountAuditLogs(bundle.getAccountId(), auditMode.getLevel(), tenantContext));
+                                                        }
+                                                        return new BundleJson(bundle, accountsAuditLogs.get().get(bundle.getAccountId()));
+                                                    }
+                                                },
+                                                nextPageUri);
     }
 
     @PUT
