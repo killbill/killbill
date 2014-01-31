@@ -158,9 +158,6 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testInsertMultipleTags() throws TagApiException {
-
-        final String definitionName = UUID.randomUUID().toString().substring(0, 5);
-        final String description = UUID.randomUUID().toString().substring(0, 5);
         final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.INVOICE_ITEM;
 
@@ -170,15 +167,13 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         try {
-            eventsListener.pushExpectedEvent(NextEvent.TAG);
             final Tag tag2 = new DescriptiveTag(ControlTagType.AUTO_INVOICING_OFF.getId(), objectType, objectId, internalCallContext.getCreatedDate());
             tagDao.create(new TagModelDao(tag2), internalCallContext);
             Assert.fail("Should not be able to create twice the same tag");
             assertListenerStatus();
-        } catch (TagApiException e) {
+        } catch (final TagApiException e) {
             Assert.assertEquals(ErrorCode.TAG_ALREADY_EXISTS.getCode(), e.getCode());
         }
-
     }
 
 }
