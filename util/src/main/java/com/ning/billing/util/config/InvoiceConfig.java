@@ -32,9 +32,4 @@ public interface InvoiceConfig extends KillbillConfig {
     @Description("Whether to send email notifications on invoice creation (for configured accounts)")
     public boolean isEmailNotificationsEnabled();
 
-
-    @Config("killbill.invoice.triggerInvoiceOnBlockingEvent")
-    @Default("false")
-    @Description("Whether the invoice code regenerate a new invoice when a blocking event is received")
-    public boolean isTriggerInvoiceOnBlockingEvent();
 }
