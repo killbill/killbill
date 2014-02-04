@@ -34,7 +34,7 @@ public class TestTagDefinitionJson extends JaxrsTestSuiteNoDB {
         final String name = UUID.randomUUID().toString();
         final String description = UUID.randomUUID().toString();
         final ImmutableList<String> applicableObjectTypes = ImmutableList.<String>of(UUID.randomUUID().toString());
-        final TagDefinitionJson tagDefinitionJson = new TagDefinitionJson(id, isControlTag, name, description, applicableObjectTypes);
+        final TagDefinitionJson tagDefinitionJson = new TagDefinitionJson(id, isControlTag, name, description, applicableObjectTypes, null);
         Assert.assertEquals(tagDefinitionJson.getId(), id);
         Assert.assertEquals(tagDefinitionJson.isControlTag(), isControlTag);
         Assert.assertEquals(tagDefinitionJson.getName(), name);
