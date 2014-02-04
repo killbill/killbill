@@ -61,6 +61,7 @@ import com.ning.billing.overdue.notification.OverdueCheckNotificationKey;
 import com.ning.billing.overdue.notification.OverdueCheckNotifier;
 import com.ning.billing.overdue.notification.OverduePoster;
 import com.ning.billing.tag.TagInternalApi;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.email.DefaultEmailSender;
 import com.ning.billing.util.email.EmailApiException;
@@ -156,6 +157,8 @@ public class OverdueStateApplicator {
 
             sendEmailIfRequired(billingState, account, nextOverdueState, context);
 
+            avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(account, previousOverdueState, nextOverdueState, context);
+
         } catch (OverdueApiException e) {
             if (e.getCode() != ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
                 throw new OverdueException(e);
@@ -169,16 +172,31 @@ public class OverdueStateApplicator {
         }
     }
 
-    public void clear(final Account overdueable, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
+    private void avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(final Account account, final OverdueState previousOverdueState,
+                                                                 final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueApiException {
+        if (isBlockBillingTransition(previousOverdueState, nextOverdueState)) {
+            set_AUTO_INVOICE_OFF_on_blockedBilling(account.getId(), context);
+        } else if (isUnblockBillingTransition(previousOverdueState, nextOverdueState)) {
+            remove_AUTO_INVOICE_OFF_on_clear(account.getId(), context);
+        }
+    }
+
+    public void clear(final Account account, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
 
         log.debug("OverdueStateApplicator:clear : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueState.getName());
 
-        storeNewState(overdueable, clearState, context);
+        storeNewState(account, clearState, context);
 
-        clearFutureNotification(overdueable, context);
+        clearFutureNotification(account, context);
 
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueState.getName(), clearState.getName(), isBlockBillingTransition(previousOverdueState, clearState),
+            avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(account, previousOverdueState, clearState, context);
+        } catch (OverdueApiException e) {
+            throw new OverdueException(e);
+        }
+
+        try {
+            bus.post(createOverdueEvent(account, previousOverdueState.getName(), clearState.getName(), isBlockBillingTransition(previousOverdueState, clearState),
                                         isUnblockBillingTransition(previousOverdueState, clearState), context));
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
@@ -204,6 +222,24 @@ public class OverdueStateApplicator {
                                          context);
         } catch (Exception e) {
             throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, blockable.getId(), blockable.getClass().getName());
+        }
+    }
+
+    private void set_AUTO_INVOICE_OFF_on_blockedBilling(final UUID accountId, final InternalCallContext context) throws OverdueApiException {
+        try {
+            tagApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), context);
+        } catch (TagApiException e) {
+            throw new OverdueApiException(e);
+        }
+    }
+
+    private void remove_AUTO_INVOICE_OFF_on_clear(final UUID accountId, final InternalCallContext context) throws OverdueApiException {
+        try {
+            tagApi.removeTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), context);
+        } catch (TagApiException e) {
+            if (e.getCode() != ErrorCode.TAG_DOES_NOT_EXIST.getCode()) {
+                throw new OverdueApiException(e);
+            }
         }
     }
 
