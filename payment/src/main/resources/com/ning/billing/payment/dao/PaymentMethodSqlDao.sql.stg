@@ -42,9 +42,9 @@ where  id = :id
 unmarkPaymentMethodAsDeleted(id) ::= <<
 update <tableName()>
 set is_active = 1
-where  id = :id
 , updated_by = :updatedBy
 , updated_date = :createdDate
+where  id = :id
 <AND_CHECK_TENANT()>
 ;
 >>
