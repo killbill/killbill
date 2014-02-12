@@ -111,7 +111,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected static final Logger log = LoggerFactory.getLogger(TestIntegrationBase.class);
     protected static long AT_LEAST_ONE_MONTH_MS = 32L * 24L * 3600L * 1000L;
 
-    protected static final long DELAY = 10000;
+    protected static final long DELAY = 10000; // * 100000;
 
     @Inject
     protected Lifecycle lifecycle;

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2010-2014 Ning, Inc.
+ *
+ * Ning licenses this file to you under the Apache License, version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at:
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.ning.billing.invoice.tree;
 
 import java.math.BigDecimal;
@@ -5,7 +21,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
@@ -47,35 +62,32 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, repairDate, endDate, amount1.negate(), currency, initial.getId());
 
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
-        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, repairDate, BigDecimal.ONE, rate1, currency);
+        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, repairDate, new BigDecimal("8.52"), rate1, currency);
         expectedResult.add(expected1);
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "someelse", "someelse", repairDate, endDate, amount2, rate2, currency);
         expectedResult.add(expected2);
 
         // First test with items in order
-        List<InvoiceItem> result = Lists.newLinkedList();
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(initial);
         tree.addItem(newItem);
         tree.addItem(repair);
-        tree.build(result);
-        verifyResult(result, expectedResult);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
 
-        result = Lists.newLinkedList();
         tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(repair);
         tree.addItem(newItem);
         tree.addItem(initial);
-        tree.build(result);
-        verifyResult(result, expectedResult);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
 
-        result = Lists.newLinkedList();
         tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(repair);
         tree.addItem(initial);
         tree.addItem(newItem);
-        tree.build(result);
-        verifyResult(result, expectedResult);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
     }
 
     @Test(groups = "fast")
@@ -104,49 +116,42 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final InvoiceItem newItem2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, repairDate2, endDate, amount3, rate3, currency);
         final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, repairDate2, endDate, amount2.negate(), currency, initial.getId());
 
-
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
-        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, repairDate1, BigDecimal.ONE, rate1, currency);
+        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, repairDate1, new BigDecimal("8.52"), rate1, currency);
         expectedResult.add(expected1);
-        final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, repairDate1, repairDate2, BigDecimal.ONE, rate2, currency);
+        final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, repairDate1, repairDate2, new BigDecimal("4.95"), rate2, currency);
         expectedResult.add(expected2);
         final InvoiceItem expected3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, repairDate2, endDate, amount3, rate3, currency);
         expectedResult.add(expected3);
 
-
         // First test with items in order
-        List<InvoiceItem> result = Lists.newLinkedList();
-
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(initial);
         tree.addItem(newItem1);
         tree.addItem(repair1);
         tree.addItem(newItem2);
         tree.addItem(repair2);
-        tree.build(result);
-        verifyResult(result, expectedResult);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
 
-        result = Lists.newLinkedList();
         tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(repair2);
         tree.addItem(newItem1);
         tree.addItem(newItem2);
         tree.addItem(repair1);
         tree.addItem(initial);
-        tree.build(result);
-        verifyResult(result, expectedResult);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
 
-        result = Lists.newLinkedList();
         tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(repair1);
         tree.addItem(newItem1);
         tree.addItem(initial);
         tree.addItem(repair2);
         tree.addItem(newItem2);
-        tree.build(result);
-        verifyResult(result, expectedResult);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
     }
-
 
     @Test(groups = "fast")
     public void testMultipleBlockedBillings() {
@@ -163,11 +168,45 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final BigDecimal rate1 = new BigDecimal("12.00");
         final BigDecimal amount1 = rate1;
 
-
         final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
         final InvoiceItem block1 = new RepairAdjInvoiceItem(invoiceId, accountId, blockStart1, unblockStart1, amount1.negate(), currency, initial.getId());
         final InvoiceItem block2 = new RepairAdjInvoiceItem(invoiceId, accountId, blockStart2, unblockStart2, amount1.negate(), currency, initial.getId());
 
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, blockStart1, new BigDecimal("2.71"), rate1, currency);
+        expectedResult.add(expected1);
+        final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, unblockStart1, blockStart2, new BigDecimal("2.71"), rate1, currency);
+        expectedResult.add(expected2);
+        final InvoiceItem expected3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, unblockStart2, endDate, new BigDecimal("3.48"), rate1, currency);
+        expectedResult.add(expected3);
+
+        // First test with items in order
+        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
+        tree.addItem(initial);
+        tree.addItem(block1);
+        tree.addItem(block2);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
+    }
+
+    @Test(groups = "fast", enabled = false)
+    public void testRepairAndInvoiceItemAdj() {
+
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final LocalDate blockStart1 = new LocalDate(2014, 1, 8);
+        final LocalDate unblockStart1 = new LocalDate(2014, 1, 10);
+
+        final LocalDate blockStart2 = new LocalDate(2014, 1, 17);
+        final LocalDate unblockStart2 = new LocalDate(2014, 1, 23);
+
+        final BigDecimal rate1 = new BigDecimal("12.00");
+        final BigDecimal amount1 = rate1;
+
+        final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
+        final InvoiceItem block1 = new RepairAdjInvoiceItem(invoiceId, accountId, blockStart1, unblockStart1, amount1.negate(), currency, initial.getId());
+        final InvoiceItem block2 = new RepairAdjInvoiceItem(invoiceId, accountId, blockStart2, unblockStart2, amount1.negate(), currency, initial.getId());
 
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, blockStart1, BigDecimal.ONE, rate1, currency);
@@ -179,18 +218,14 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final InvoiceItem expected3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, unblockStart2, endDate, BigDecimal.ONE, rate1, currency);
         expectedResult.add(expected3);
 
-
         // First test with items in order
-        List<InvoiceItem> result = Lists.newLinkedList();
-
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(initial);
         tree.addItem(block1);
         tree.addItem(block2);
-        tree.build(result);
-        verifyResult(result, expectedResult);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
     }
-
 
     private void verifyResult(final List<InvoiceItem> result, final List<InvoiceItem> expectedResult) {
         assertEquals(result.size(), expectedResult.size());
