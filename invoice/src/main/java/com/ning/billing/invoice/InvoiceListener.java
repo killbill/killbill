@@ -103,9 +103,8 @@ public class InvoiceListener {
     @Subscribe
     public void handleBlockingStateTransition(final BlockingTransitionInternalEvent event) {
 
-        // We are only interested in unblockBilling transitions or blockBilling transitions when those are configured.
-        if (!event.isTransitionedToUnblockedBilling() &&
-            !(event.isTransitionedToBlockedBilling() && invoiceConfig.isTriggerInvoiceOnBlockingEvent())) {
+        // We are only interested in blockBilling or unblockBilling transitions.
+        if (!event.isTransitionedToUnblockedBilling() && !event.isTransitionedToBlockedBilling()) {
             return;
         }
 

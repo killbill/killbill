@@ -185,7 +185,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
 
         customFieldUserApi.addCustomFields(input, context);
-        return uriBuilder.buildResponse(uriInfo, this.getClass(), "createCustomFields", null);
+        return uriBuilder.buildResponse(uriInfo, this.getClass(), "getCustomFields", id);
     }
 
     /**

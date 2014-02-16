@@ -27,8 +27,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
+
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.jaxrs.json.SubjectJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.security.Permission;
@@ -66,10 +70,18 @@ public class SecurityResource extends JaxRsResourceBase {
     @GET
     @Path("/permissions")
     @Produces(APPLICATION_JSON)
-    public Response getCurrentUserPermissions(@javax.ws.rs.core.Context final HttpServletRequest request)  {
+    public Response getCurrentUserPermissions(@javax.ws.rs.core.Context final HttpServletRequest request) {
         final Set<Permission> permissions = securityApi.getCurrentUserPermissions(context.createContext(request));
         final List<String> json = ImmutableList.<String>copyOf(Iterables.<Permission, String>transform(permissions, Functions.toStringFunction()));
         return Response.status(Status.OK).entity(json).build();
     }
 
+    @GET
+    @Path("/subject")
+    @Produces(APPLICATION_JSON)
+    public Response getCurrentUserSubject(@javax.ws.rs.core.Context final HttpServletRequest request) {
+        final Subject subject = SecurityUtils.getSubject();
+        final SubjectJson subjectJson = new SubjectJson(subject);
+        return Response.status(Status.OK).entity(subjectJson).build();
+    }
 }

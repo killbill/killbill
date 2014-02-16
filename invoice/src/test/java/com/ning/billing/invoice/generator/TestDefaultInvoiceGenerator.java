@@ -101,11 +101,6 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
             public boolean isEmailNotificationsEnabled() {
                 return false;
             }
-
-            @Override
-            public boolean isTriggerInvoiceOnBlockingEvent() {
-                return false;
-            }
         };
         this.generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
     }
