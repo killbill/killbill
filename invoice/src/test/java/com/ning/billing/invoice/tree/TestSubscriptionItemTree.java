@@ -25,6 +25,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.ItemAdjInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 
@@ -189,40 +190,112 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         verifyResult(tree.getSimplifiedView(), expectedResult);
     }
 
-    @Test(groups = "fast", enabled = false)
-    public void testRepairAndInvoiceItemAdj() {
+
+    @Test(groups = "fast")
+    public void testInvoiceItemAdj() {
 
         final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate itemAdjDate = new LocalDate(2014, 1, 7);
         final LocalDate endDate = new LocalDate(2014, 2, 1);
 
-        final LocalDate blockStart1 = new LocalDate(2014, 1, 8);
-        final LocalDate unblockStart1 = new LocalDate(2014, 1, 10);
-
-        final LocalDate blockStart2 = new LocalDate(2014, 1, 17);
-        final LocalDate unblockStart2 = new LocalDate(2014, 1, 23);
 
         final BigDecimal rate1 = new BigDecimal("12.00");
         final BigDecimal amount1 = rate1;
 
         final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
-        final InvoiceItem block1 = new RepairAdjInvoiceItem(invoiceId, accountId, blockStart1, unblockStart1, amount1.negate(), currency, initial.getId());
-        final InvoiceItem block2 = new RepairAdjInvoiceItem(invoiceId, accountId, blockStart2, unblockStart2, amount1.negate(), currency, initial.getId());
+        final InvoiceItem adj = new ItemAdjInvoiceItem(initial, itemAdjDate, amount1, currency);
 
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
-        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, blockStart1, BigDecimal.ONE, rate1, currency);
-        expectedResult.add(expected1);
-        expectedResult.add(block1);
-        final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, unblockStart1, blockStart2, BigDecimal.ONE, rate1, currency);
-        expectedResult.add(expected2);
-        expectedResult.add(block2);
-        final InvoiceItem expected3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, unblockStart2, endDate, BigDecimal.ONE, rate1, currency);
-        expectedResult.add(expected3);
+        expectedResult.add(initial);
 
         // First test with items in order
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(initial);
+        tree.addItem(adj);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
+    }
+
+
+    @Test(groups = "fast")
+    public void testBlockAcrossPeriod() {
+
+        final LocalDate startDate1 = new LocalDate(2014, 1, 1);
+        final LocalDate blockDate = new LocalDate(2014, 1, 25);
+        final LocalDate startDate2 = new LocalDate(2014, 2, 1);
+        final LocalDate unblockDate = new LocalDate(2014, 2, 7);
+        final LocalDate endDate = new LocalDate(2014, 3, 1);
+
+
+        final BigDecimal rate1 = new BigDecimal("12.00");
+        final BigDecimal amount1 = rate1;
+
+        final InvoiceItem first = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate1, startDate2, amount1, rate1, currency);
+        final InvoiceItem second = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate2, endDate, amount1, rate1, currency);
+        final InvoiceItem block1 = new RepairAdjInvoiceItem(invoiceId, accountId, blockDate, startDate2, amount1.negate(), currency, first.getId());
+        final InvoiceItem block2 = new RepairAdjInvoiceItem(invoiceId, accountId, startDate2, unblockDate, amount1.negate(), currency, first.getId());
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate1, blockDate, new BigDecimal("9.29"), rate1, currency);
+        final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, unblockDate, endDate, new BigDecimal("9.43"), rate1, currency);
+        expectedResult.add(expected1);
+        expectedResult.add(expected2);
+
+        // First test with items in order
+        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
+        tree.addItem(first);
+        tree.addItem(second);
         tree.addItem(block1);
         tree.addItem(block2);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
+    }
+
+    @Test(groups = "fast")
+    public void testAnnualFullRepairFollowedByMonthly() {
+
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate firstMonthlyEndDate = new LocalDate(2014, 2, 1);
+        final LocalDate secondMonthlyEndDate = new LocalDate(2014, 3, 1);
+        final LocalDate endDate = new LocalDate(2015, 2, 1);
+
+        final BigDecimal rate1 = new BigDecimal("120.00");
+        final BigDecimal amount1 = rate1;
+
+        final BigDecimal rate2 = new BigDecimal("10.00");
+        final BigDecimal amount2 = rate2;
+
+        final InvoiceItem annual = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
+        final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, amount1.negate(), currency, annual.getId());
+        final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "someelse", "someelse", startDate, firstMonthlyEndDate, amount2, rate2, currency);
+        final InvoiceItem monthly2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "someelse", "someelse", firstMonthlyEndDate, secondMonthlyEndDate, amount2, rate2, currency);
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        expectedResult.add(monthly1);
+        expectedResult.add(monthly2);
+
+        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
+        tree.addItem(annual);
+        tree.addItem(repair);
+        tree.addItem(monthly1);
+        tree.addItem(monthly2);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
+
+
+        tree = new SubscriptionItemTree(subscriptionId);
+        tree.addItem(monthly1);
+        tree.addItem(repair);
+        tree.addItem(annual);
+        tree.addItem(monthly2);
+        tree.build();
+        verifyResult(tree.getSimplifiedView(), expectedResult);
+
+        tree = new SubscriptionItemTree(subscriptionId);
+        tree.addItem(monthly1);
+        tree.addItem(monthly2);
+        tree.addItem(annual);
+        tree.addItem(repair);
         tree.build();
         verifyResult(tree.getSimplifiedView(), expectedResult);
     }

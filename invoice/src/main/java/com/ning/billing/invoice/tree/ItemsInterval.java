@@ -57,25 +57,19 @@ public class ItemsInterval {
         }
     }
 
-    public InvoiceItem createRecuringItem(LocalDate startDate, LocalDate endDate) {
-        Iterator<InvoiceItem> it = items.iterator();
-        while (it.hasNext()) {
-            final InvoiceItem cur = it.next();
-            if (cur.getInvoiceItemType() == InvoiceItemType.RECURRING) {
-                int nbTotalRepairedDays = Days.daysBetween(cur.getStartDate(), cur.getEndDate()).getDays();
-                final BigDecimal amount = InvoiceDateUtils.calculateProrationBetweenDates(startDate, endDate, nbTotalRepairedDays).multiply(cur.getRate()).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
-                return new RecurringInvoiceItem(cur.getInvoiceId(), cur.getAccountId(), cur.getBundleId(), cur.getSubscriptionId(),
-                                                cur.getPlanName(), cur.getPhaseName(), startDate, endDate, amount, cur.getRate(), cur.getCurrency());
-            }
-        }
-        return null;
-    }
-
     public List<InvoiceItem> getItems() {
         return items;
     }
 
-    public void build(final List<InvoiceItem> output) {
+    public void buildForNonRepairedItems(final LocalDate startDate, final LocalDate endDate, final List<InvoiceItem> output) {
+        final InvoiceItem item = createRecuringItem(startDate, endDate);
+        if (item != null) {
+            output.add(item);
+        }
+    }
+
+
+    public void buildFromItems(final List<InvoiceItem> output) {
 
 
         final Set<UUID> repairedIds = new HashSet<UUID>();
@@ -97,7 +91,7 @@ public class ItemsInterval {
                     break;
 
                 case ITEM_ADJ:
-                    // TODO Not implemented
+                    // If item has been adjusted, we assume the item should not be re-invoiced so we leave it in the list.
                     break;
 
                 // Ignored
@@ -122,4 +116,25 @@ public class ItemsInterval {
             }
         });
     }
+
+    private InvoiceItem createRecuringItem(LocalDate startDate, LocalDate endDate) {
+
+        final List<InvoiceItem> itemToConsider = new LinkedList<InvoiceItem>();
+        buildFromItems(itemToConsider);
+
+        Iterator<InvoiceItem> it = itemToConsider.iterator();
+        while (it.hasNext()) {
+            final InvoiceItem cur = it.next();
+            if (cur.getInvoiceItemType() == InvoiceItemType.RECURRING &&
+                cur.getStartDate().compareTo(startDate) <= 0 &&
+                cur.getEndDate().compareTo(endDate) >= 0) {
+                int nbTotalRepairedDays = Days.daysBetween(cur.getStartDate(), cur.getEndDate()).getDays();
+                final BigDecimal amount = InvoiceDateUtils.calculateProrationBetweenDates(startDate, endDate, nbTotalRepairedDays).multiply(cur.getRate()).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
+                return new RecurringInvoiceItem(cur.getInvoiceId(), cur.getAccountId(), cur.getBundleId(), cur.getSubscriptionId(),
+                                                cur.getPlanName(), cur.getPhaseName(), startDate, endDate, amount, cur.getRate(), cur.getCurrency());
+            }
+        }
+        return null;
+    }
+
 }

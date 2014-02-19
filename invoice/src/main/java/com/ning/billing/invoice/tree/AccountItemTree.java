@@ -16,12 +16,20 @@
 
 package com.ning.billing.invoice.tree;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class AccountItemTree {
 
@@ -33,23 +41,49 @@ public class AccountItemTree {
         this.subscriptionItemTree = new HashMap<UUID, SubscriptionItemTree>();
     }
 
-    public void addItem(final InvoiceItem item) {
-        if (!subscriptionItemTree.containsKey(item.getSubscriptionId())) {
-            subscriptionItemTree.put(item.getSubscriptionId(), new SubscriptionItemTree(item.getSubscriptionId()));
+    public void addItem(final InvoiceItem item, final List<InvoiceItem> allItems) {
+        if (item.getInvoiceItemType() != InvoiceItemType.RECURRING && item.getInvoiceItemType() != InvoiceItemType.REPAIR_ADJ) {
+            return;
         }
-        final SubscriptionItemTree tree = subscriptionItemTree.get(item.getSubscriptionId());
+        final UUID subscriptionId  = getSubscriptionId(item, allItems);
+
+        if (!subscriptionItemTree.containsKey(subscriptionId)) {
+            subscriptionItemTree.put(subscriptionId, new SubscriptionItemTree(subscriptionId));
+        }
+        final SubscriptionItemTree tree = subscriptionItemTree.get(subscriptionId);
         tree.addItem(item);
     }
 
-    public List<InvoiceItem> computeNewItems(final List<InvoiceItem> proposedItems) {
+    public void build() {
+        for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
+            tree.build();
+        }
+    }
 
-        final SubscriptionItemTree curTree = null;
-        for (InvoiceItem cur : proposedItems) {
-            // STEPH
-            if (curTree == null || curTree.getSubscriptionId().equals("foo")) {
+    public List<InvoiceItem> getCurrentExistingItemsView() {
 
+        final List<InvoiceItem> result = new ArrayList<InvoiceItem>();
+        for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
+            final List<InvoiceItem> simplifiedView = tree.getSimplifiedView();
+            if (simplifiedView.size() > 0) {
+                result.addAll(simplifiedView);
             }
         }
-        return null;
+        return result;
+    }
+
+    private UUID getSubscriptionId(final InvoiceItem item, final List<InvoiceItem> allItems) {
+        if (item.getInvoiceItemType() == InvoiceItemType.RECURRING) {
+            return item.getSubscriptionId();
+        } else {
+            final InvoiceItem linkedItem  = Iterables.tryFind(allItems, new Predicate<InvoiceItem>() {
+                @Override
+                public boolean apply(final InvoiceItem input) {
+                    return item.getLinkedItemId().equals(input.getId());
+                }
+            }).get();
+            return linkedItem.getSubscriptionId();
+        }
+
     }
 }

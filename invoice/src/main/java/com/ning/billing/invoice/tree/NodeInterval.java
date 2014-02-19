@@ -49,21 +49,9 @@ public class NodeInterval {
 
     public void build(final List<InvoiceItem> output) {
 
-        /*
-        // Compute start and end
-        if (isRoot()) {
-            this.start = leftChild.getStart();
-            NodeInterval cur = leftChild;
-            while (cur.getRightSibling() != null) {
-                cur = cur.getRightSibling();
-            }
-            this.end = cur.getEnd();
-        }
-        */
-
         // There is no sub-interval, just add our own items.
         if (leftChild == null) {
-            items.build(output);
+            items.buildFromItems(output);
             return;
         }
 
@@ -71,14 +59,14 @@ public class NodeInterval {
         NodeInterval curChild = leftChild;
         while (curChild != null) {
             if (curChild.getStart().compareTo(curDate) > 0) {
-                output.add(items.createRecuringItem(curDate, curChild.getStart()));
+               items.buildForNonRepairedItems(curDate, curChild.getStart(), output);
             }
             curChild.build(output);
             curDate = curChild.getEnd();
             curChild = curChild.getRightSibling();
         }
         if (curDate.compareTo(end) < 0) {
-            output.add(items.createRecuringItem(curDate, end));
+            items.buildForNonRepairedItems(curDate, end, output);
         }
     }
 
@@ -170,8 +158,15 @@ public class NodeInterval {
             prevRebalanced.rightSibling = newNode;
         }
 
+
+        NodeInterval prev = null;
         for (NodeInterval cur : toBeRebalanced) {
-            newNode.addNode(cur);
+            if (prev == null) {
+                newNode.leftChild = cur;
+            } else {
+                prev.rightSibling = cur;
+            }
+            prev = cur;
         }
     }
 

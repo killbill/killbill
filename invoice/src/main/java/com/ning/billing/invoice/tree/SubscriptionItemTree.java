@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class SubscriptionItemTree {
 
@@ -35,6 +36,9 @@ public class SubscriptionItemTree {
     }
 
     public void addItem(final InvoiceItem item) {
+        if (item.getInvoiceItemType() != InvoiceItemType.RECURRING && item.getInvoiceItemType() != InvoiceItemType.REPAIR_ADJ) {
+            return;
+        }
         root.addItem(item);
     }
 
