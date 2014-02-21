@@ -27,114 +27,128 @@ import java.util.ListIterator;
 import java.util.Set;
 import java.util.UUID;
 
-import org.joda.time.Days;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.invoice.generator.InvoiceDateUtils;
-import com.ning.billing.invoice.model.InvoicingConfiguration;
-import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.invoice.tree.Item.ItemAction;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public class ItemsInterval {
 
-    private static final int ROUNDING_MODE = InvoicingConfiguration.getRoundingMode();
-    private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
+    private final NodeInterval interval;
+    private LinkedList<Item> items;
 
-
-    private LinkedList<InvoiceItem> items;
-
-    public ItemsInterval() {
-        this(null);
+    public ItemsInterval(final NodeInterval interval) {
+        this(interval, null);
     }
 
-    public ItemsInterval(final InvoiceItem initialItem) {
+    public ItemsInterval(final NodeInterval interval, final Item initialItem) {
+        this.interval = interval;
         this.items = Lists.newLinkedList();
         if (initialItem != null) {
             items.add(initialItem);
         }
     }
 
-    public List<InvoiceItem> getItems() {
+    public boolean containsItem(final UUID targetId) {
+        return Iterables.tryFind(items, new Predicate<Item>() {
+            @Override
+            public boolean apply(final Item input) {
+                return input.getId().equals(targetId);
+            }
+        }).orNull() != null;
+    }
+
+    public void setAdjustment(final BigDecimal amount, final UUID targetId) {
+        final Item item = Iterables.tryFind(items, new Predicate<Item>() {
+            @Override
+            public boolean apply(final Item input) {
+                return input.getId().equals(targetId);
+            }
+        }).get();
+        item.incrementAdjustedAmount(amount);
+    }
+
+    public List<Item> getItems() {
         return items;
     }
 
-    public void buildForNonRepairedItems(final LocalDate startDate, final LocalDate endDate, final List<InvoiceItem> output) {
-        final InvoiceItem item = createRecuringItem(startDate, endDate);
+    public void buildForMissingInterval(final LocalDate startDate, final LocalDate endDate, final List<Item> output, final boolean addRepair) {
+        final Item item = createNewItem(startDate, endDate, addRepair);
         if (item != null) {
             output.add(item);
         }
     }
 
-
-    public void buildFromItems(final List<InvoiceItem> output) {
-
-
+    public void buildFromItems(final List<Item> output, final boolean addRepair) {
         final Set<UUID> repairedIds = new HashSet<UUID>();
-        ListIterator<InvoiceItem> it = items.listIterator(items.size());
+        final ListIterator<Item> it = items.listIterator(items.size());
+
         while (it.hasPrevious()) {
-            final InvoiceItem cur = it.previous();
-            switch (cur.getInvoiceItemType()) {
-                case FIXED:
-                case RECURRING:
-                    // The only time we could see that true is a case of full repair, when the repair
-                    // points to an item that will end up in the same ItemsInterval
+            final Item cur = it.previous();
+            switch (cur.getAction()) {
+                case ADD:
                     if (!repairedIds.contains(cur.getId())) {
                         output.add(cur);
                     }
                     break;
-
-                case REPAIR_ADJ:
-                    repairedIds.add(cur.getLinkedItemId());
+                case CANCEL:
+                    if (cur.getLinkedId() != null) {
+                        repairedIds.add(cur.getLinkedId());
+                    }
+                    if (addRepair) {
+                        output.add(cur);
+                    }
                     break;
-
-                case ITEM_ADJ:
-                    // If item has been adjusted, we assume the item should not be re-invoiced so we leave it in the list.
-                    break;
-
-                // Ignored
-                case EXTERNAL_CHARGE:
-                case CBA_ADJ:
-                case CREDIT_ADJ:
-                case REFUND_ADJ:
-                default:
             }
         }
     }
 
-    public void insertSortedItem(final InvoiceItem item) {
+    // Just ensure that ADD items precedes CANCEL items
+    public void insertSortedItem(final Item item) {
         items.add(item);
-        Collections.sort(items, new Comparator<InvoiceItem>() {
+        Collections.sort(items, new Comparator<Item>() {
             @Override
-            public int compare(final InvoiceItem o1, final InvoiceItem o2) {
-
-                final int type1 = o1.getInvoiceItemType().ordinal();
-                final int type2 = o2.getInvoiceItemType().ordinal();
-                return (type1 < type2) ? -1 : ((type1 == type2) ? 0 : 1);
+            public int compare(final Item o1, final Item o2) {
+                if (o1.getAction() == ItemAction.ADD && o2.getAction() == ItemAction.CANCEL) {
+                    return -1;
+                } else if (o1.getAction() == ItemAction.CANCEL && o2.getAction() == ItemAction.ADD) {
+                    return 1;
+                } else {
+                    return 0;
+                }
             }
         });
     }
 
-    private InvoiceItem createRecuringItem(LocalDate startDate, LocalDate endDate) {
+    public void cancelItems(final Item item) {
+        Preconditions.checkState(item.getAction() == ItemAction.ADD);
+        Preconditions.checkState(items.size() == 1);
+        Preconditions.checkState(items.get(0).getAction() == ItemAction.CANCEL);
+        items.clear();
+    }
 
-        final List<InvoiceItem> itemToConsider = new LinkedList<InvoiceItem>();
-        buildFromItems(itemToConsider);
+    private Item createNewItem(LocalDate startDate, LocalDate endDate, final boolean addRepair) {
 
-        Iterator<InvoiceItem> it = itemToConsider.iterator();
+        final List<Item> itemToConsider = new LinkedList<Item>();
+        buildFromItems(itemToConsider, addRepair);
+
+        Iterator<Item> it = itemToConsider.iterator();
         while (it.hasNext()) {
-            final InvoiceItem cur = it.next();
-            if (cur.getInvoiceItemType() == InvoiceItemType.RECURRING &&
-                cur.getStartDate().compareTo(startDate) <= 0 &&
-                cur.getEndDate().compareTo(endDate) >= 0) {
-                int nbTotalRepairedDays = Days.daysBetween(cur.getStartDate(), cur.getEndDate()).getDays();
-                final BigDecimal amount = InvoiceDateUtils.calculateProrationBetweenDates(startDate, endDate, nbTotalRepairedDays).multiply(cur.getRate()).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
-                return new RecurringInvoiceItem(cur.getInvoiceId(), cur.getAccountId(), cur.getBundleId(), cur.getSubscriptionId(),
-                                                cur.getPlanName(), cur.getPhaseName(), startDate, endDate, amount, cur.getRate(), cur.getCurrency());
+            final Item cur = it.next();
+            if (cur.getAction() == ItemAction.CANCEL && !addRepair) {
+                continue;
             }
+            final Item result = new Item(cur.toProratedInvoiceItem(startDate, endDate), cur.getAction());
+            if (cur.getAction() == ItemAction.CANCEL) {
+                cur.incrementCurrentRepairedAmount(result.getAmount());
+            }
+            return result;
         }
         return null;
     }
-
 }

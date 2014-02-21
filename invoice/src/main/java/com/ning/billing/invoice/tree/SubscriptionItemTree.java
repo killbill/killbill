@@ -20,38 +20,138 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
+import com.ning.billing.invoice.tree.Item.ItemAction;
+
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 
 public class SubscriptionItemTree {
 
-    private final UUID subscriptionId;
-    private final NodeInterval root;
+    private boolean isBuilt;
 
-    private List<InvoiceItem> fixedOrRecuringItems;
+    private final UUID subscriptionId;
+    private NodeInterval root;
+
+    private List<Item> items;
+
+    private List<InvoiceItem> existingFixedItems;
+    private List<InvoiceItem> remainingFixedItems;
+    private List<InvoiceItem> pendingItemAdj;
 
     public SubscriptionItemTree(final UUID subscriptionId) {
         this.subscriptionId = subscriptionId;
         this.root = new NodeInterval();
+        this.items = new LinkedList<Item>();
+        this.existingFixedItems = new LinkedList<InvoiceItem>();
+        this.remainingFixedItems = new LinkedList<InvoiceItem>();
+        this.pendingItemAdj = new LinkedList<InvoiceItem>();
+        this.isBuilt = false;
     }
-
-    public void addItem(final InvoiceItem item) {
-        if (item.getInvoiceItemType() != InvoiceItemType.RECURRING && item.getInvoiceItemType() != InvoiceItemType.REPAIR_ADJ) {
-            return;
-        }
-        root.addItem(item);
-    }
-
 
     public void build() {
-        if (fixedOrRecuringItems == null) {
-            fixedOrRecuringItems = new LinkedList<InvoiceItem>();
-            root.build(fixedOrRecuringItems);
+        Preconditions.checkState(!isBuilt);
+        for (InvoiceItem item : pendingItemAdj) {
+            root.addAdjustment(item.getStartDate(), item.getAmount(), item.getLinkedItemId());
+        }
+        pendingItemAdj.clear();
+        root.build(items, false);
+        isBuilt = true;
+    }
+
+    public void flatten(boolean reverse) {
+        if (!isBuilt) {
+            build();
+        }
+        root = new NodeInterval();
+        for (Item item : items) {
+            final InvoiceItem invoiceItem = item.toInvoiceItem();
+            Preconditions.checkState(item.getAction() == ItemAction.ADD);
+            root.addNodeInterval(new NodeInterval(root, new Item(item, reverse ? ItemAction.CANCEL : ItemAction.ADD)));
+        }
+        items.clear();
+        isBuilt = false;
+    }
+
+    public void buildForMerge() {
+        Preconditions.checkState(!isBuilt);
+        root.build(items, true);
+        isBuilt = true;
+    }
+
+    public void addItem(final InvoiceItem invoiceItem) {
+
+        Preconditions.checkState(!isBuilt);
+        switch (invoiceItem.getInvoiceItemType()) {
+            case RECURRING:
+                root.addNodeInterval(new NodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
+                break;
+
+            case REPAIR_ADJ:
+                root.addNodeInterval(new NodeInterval(root, new Item(invoiceItem, ItemAction.CANCEL)));
+                break;
+
+            case FIXED:
+                existingFixedItems.add(invoiceItem);
+                break;
+
+            case ITEM_ADJ:
+                pendingItemAdj.add(invoiceItem);
+                break;
+
+            default:
+                break;
         }
     }
 
-    public List<InvoiceItem> getSimplifiedView() {
-        return fixedOrRecuringItems;
+
+    public void mergeProposedItem(final InvoiceItem invoiceItem) {
+
+        Preconditions.checkState(!isBuilt);
+        switch (invoiceItem.getInvoiceItemType()) {
+            case RECURRING:
+                final boolean result = root.mergeProposedItem(new NodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
+                if (!result) {
+                    items.add(new Item(invoiceItem, ItemAction.ADD));
+                }
+                break;
+
+            case FIXED:
+                final InvoiceItem existingItem = Iterables.tryFind(existingFixedItems, new Predicate<InvoiceItem>() {
+                    @Override
+                    public boolean apply(final InvoiceItem input) {
+                        return input.matches(invoiceItem);
+                    }
+                }).orNull();
+                if (existingItem == null) {
+                    remainingFixedItems.add(invoiceItem);
+                }
+                break;
+
+            default:
+                Preconditions.checkState(false, "Unexpected proposed item " + invoiceItem);
+        }
+
+    }
+
+    public List<InvoiceItem> getView() {
+
+        // STEPH TODO check that nodeInterval don't overlap or throw. => double billing...
+        final List<InvoiceItem> result = new LinkedList<InvoiceItem>();
+        result.addAll(remainingFixedItems);
+        result.addAll(Collections2.transform(items, new Function<Item, InvoiceItem>() {
+            @Override
+            public InvoiceItem apply(final Item input) {
+                return input.toInvoiceItem();
+            }
+        }));
+        return result;
     }
 
     public UUID getSubscriptionId() {
@@ -85,4 +185,5 @@ public class SubscriptionItemTree {
         result = 31 * result + (root != null ? root.hashCode() : 0);
         return result;
     }
+
 }

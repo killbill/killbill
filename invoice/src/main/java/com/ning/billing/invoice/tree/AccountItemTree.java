@@ -18,12 +18,9 @@ package com.ning.billing.invoice.tree;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -42,7 +39,10 @@ public class AccountItemTree {
     }
 
     public void addItem(final InvoiceItem item, final List<InvoiceItem> allItems) {
-        if (item.getInvoiceItemType() != InvoiceItemType.RECURRING && item.getInvoiceItemType() != InvoiceItemType.REPAIR_ADJ) {
+        if (item.getInvoiceItemType() != InvoiceItemType.RECURRING &&
+            item.getInvoiceItemType() != InvoiceItemType.REPAIR_ADJ &&
+            item.getInvoiceItemType() != InvoiceItemType.FIXED &&
+            item.getInvoiceItemType() != InvoiceItemType.ITEM_ADJ) {
             return;
         }
         final UUID subscriptionId  = getSubscriptionId(item, allItems);
@@ -60,11 +60,32 @@ public class AccountItemTree {
         }
     }
 
+    public void mergeWithProposedItems(final List<InvoiceItem> proposedItems) {
+
+        for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
+            tree.flatten(true);
+        }
+
+        for (InvoiceItem item : proposedItems) {
+            final UUID subscriptionId  = getSubscriptionId(item, null);
+            SubscriptionItemTree tree = subscriptionItemTree.get(subscriptionId);
+            if (tree == null) {
+                tree = new SubscriptionItemTree(subscriptionId);
+                subscriptionItemTree.put(subscriptionId, tree);
+            }
+            tree.mergeProposedItem(item);
+        }
+
+        for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
+            tree.buildForMerge();
+        }
+    }
+
     public List<InvoiceItem> getCurrentExistingItemsView() {
 
         final List<InvoiceItem> result = new ArrayList<InvoiceItem>();
         for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
-            final List<InvoiceItem> simplifiedView = tree.getSimplifiedView();
+            final List<InvoiceItem> simplifiedView = tree.getView();
             if (simplifiedView.size() > 0) {
                 result.addAll(simplifiedView);
             }
@@ -73,7 +94,8 @@ public class AccountItemTree {
     }
 
     private UUID getSubscriptionId(final InvoiceItem item, final List<InvoiceItem> allItems) {
-        if (item.getInvoiceItemType() == InvoiceItemType.RECURRING) {
+        if (item.getInvoiceItemType() == InvoiceItemType.RECURRING ||
+            item.getInvoiceItemType() == InvoiceItemType.FIXED) {
             return item.getSubscriptionId();
         } else {
             final InvoiceItem linkedItem  = Iterables.tryFind(allItems, new Predicate<InvoiceItem>() {

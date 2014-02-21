@@ -60,7 +60,6 @@ import com.ning.billing.util.config.InvoiceConfig;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
@@ -136,7 +135,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                         !events.getSubscriptionIdsWithAutoInvoiceOff()
                                .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
 
-                        if (item.getInvoiceItemType() == InvoiceItemType.FIXED || item.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ) {
+                        if ( item.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ) {
                             existingItems.add(item);
                         } else {
                             tree.addItem(item, allSeenItems);
@@ -152,7 +151,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             existingItems.addAll(recurringExistingItems);
         }
 
-
         final LocalDate adjustedTargetDate = adjustTargetDate(existingInvoices, targetDate);
 
         final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), adjustedTargetDate, targetCurrency);
@@ -166,6 +164,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         // We don't want the Fixed items to be repaired -- as they are setup fees that should be paid
         removeRemainingFixedItemsFromExisting(existingItems);
+
 
         // Add repair items based on what is left in existing items
         addRepairItems(existingItems, proposedItems);
@@ -194,8 +193,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      */
     void addRepairItems(final List<InvoiceItem> existingItems, final List<InvoiceItem> proposedItems) {
         for (final InvoiceItem existingItem : existingItems) {
-            if (existingItem.getInvoiceItemType() == InvoiceItemType.RECURRING ||
-                existingItem.getInvoiceItemType() == InvoiceItemType.FIXED) {
+            if (existingItem.getInvoiceItemType() == InvoiceItemType.RECURRING) {
                 final BigDecimal existingAdjustedPositiveAmount = getAdjustedPositiveAmount(existingItems, existingItem.getId());
                 final BigDecimal amountNegated = existingItem.getAmount() == null ? null : existingItem.getAmount().subtract(existingAdjustedPositiveAmount).negate();
                 if (amountNegated != null && amountNegated.compareTo(BigDecimal.ZERO) < 0) {
@@ -306,21 +304,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                Objects.firstNonNull(repairedInvoiceItem.getPlanName(), "").equals(Objects.firstNonNull(invoiceItem.getPlanName(), "")) &&
                Objects.firstNonNull(repairedInvoiceItem.getPhaseName(), "").equals(Objects.firstNonNull(invoiceItem.getPhaseName(), "")) &&
                Objects.firstNonNull(repairedInvoiceItem.getRate(), BigDecimal.ZERO).compareTo(Objects.firstNonNull(invoiceItem.getRate(), BigDecimal.ZERO)) == 0;
-    }
-
-    /**
-     * Check whether the repair invoice item overlaps the proposed item
-     *
-     * @param repairInvoiceItem      the repair invoice item associated to the repaired item for which we pass the subscriptionId
-     * @param repairedSubscriptionId the subscriptionId for which this repair points to
-     * @param invoiceItem            an invoice item to compare to
-     * @return
-     */
-    boolean isRepareeIncludedInRepair(final InvoiceItem repairInvoiceItem, final UUID repairedSubscriptionId, final InvoiceItem invoiceItem) {
-        return invoiceItem.getSubscriptionId().equals(repairedSubscriptionId) &&
-               repairInvoiceItem.getStartDate().compareTo(invoiceItem.getStartDate()) <= 0 &&
-               (invoiceItem.getEndDate() != null &&
-                repairInvoiceItem.getEndDate().compareTo(invoiceItem.getEndDate()) >= 0);
     }
 
     // We check to see if there are any adjustments that point to the item we are trying to repair
