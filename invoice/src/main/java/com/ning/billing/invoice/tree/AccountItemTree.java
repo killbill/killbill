@@ -60,6 +60,7 @@ public class AccountItemTree {
         }
     }
 
+
     public void mergeWithProposedItems(final List<InvoiceItem> proposedItems) {
 
         for (SubscriptionItemTree tree : subscriptionItemTree.values()) {

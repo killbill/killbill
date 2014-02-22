@@ -354,6 +354,26 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
     }
 
 
+    @Test(groups = "fast")
+    public void testMergeWithNoExisting() {
+
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final BigDecimal monthlyRate = new BigDecimal("12.00");
+        final BigDecimal monthlyAmount = monthlyRate;
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
+        tree.mergeProposedItem(proposed1);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        expectedResult.add(proposed1);
+        verifyResult(tree.getView(), expectedResult);
+    }
 
     @Test(groups = "fast")
     public void testMergeTwoSimilarItems() {
@@ -408,7 +428,7 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
     }
 
     @Test(groups = "fast")
-    public void testMergeWithInitialRepair() {
+    public void testMergeCancellationWithInitialRepair() {
 
         final LocalDate startDate = new LocalDate(2014, 1, 1);
         final LocalDate blockDate = new LocalDate(2014, 1, 25);
@@ -431,13 +451,12 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, blockDate, new BigDecimal("-9.29"), currency, monthly1.getId());
         expectedResult.add(repair);
-        expectedResult.add(proposed1);
         verifyResult(tree.getView(), expectedResult);
     }
 
 
     @Test(groups = "fast")
-    public void testMergeWithFinalRepair() {
+    public void testMergeCancellationWithFinalRepair() {
 
         final LocalDate startDate = new LocalDate(2014, 1, 1);
         final LocalDate cancelDate = new LocalDate(2014, 1, 25);
@@ -453,19 +472,17 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         tree.flatten(true);
 
         final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, cancelDate, monthlyAmount1, monthlyRate1, currency);
-
         tree.mergeProposedItem(proposed1);
         tree.buildForMerge();
 
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, cancelDate, endDate, new BigDecimal("-2.71"), currency, monthly1.getId());
-        expectedResult.add(proposed1);
         expectedResult.add(repair);
         verifyResult(tree.getView(), expectedResult);
     }
 
     @Test(groups = "fast")
-    public void testMergeWithMiddleRepair() {
+    public void testMergeCancellationWithMiddleRepair() {
 
         final LocalDate startDate = new LocalDate(2014, 1, 1);
         final LocalDate blockDate = new LocalDate(2014, 1, 13);
@@ -490,14 +507,12 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
 
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, blockDate, unblockDate, new BigDecimal("-4.65"), currency, monthly1.getId());
-        expectedResult.add(proposed1);
         expectedResult.add(repair);
-        expectedResult.add(proposed2);
         verifyResult(tree.getView(), expectedResult);
     }
 
     @Test(groups = "fast")
-    public void testMergeWithTwoMiddleRepair() {
+    public void testMergeCancellationWithTwoMiddleRepair() {
 
         final LocalDate startDate = new LocalDate(2014, 1, 1);
         final LocalDate blockDate1 = new LocalDate(2014, 1, 7);
@@ -526,14 +541,85 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, blockDate1, unblockDate1, new BigDecimal("-2.32"), currency, monthly.getId());
         final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, blockDate2, unblockDate2, new BigDecimal("-3.10"), currency, monthly.getId());
-        expectedResult.add(proposed1);
         expectedResult.add(repair1);
-        expectedResult.add(proposed2);
         expectedResult.add(repair2);
-        expectedResult.add(proposed3);
         verifyResult(tree.getView(), expectedResult);
     }
 
+    @Test(groups = "fast")
+    public void testMergeUpgradeWithFinalRepair() {
+
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate upgradeDate = new LocalDate(2014, 1, 25);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final BigDecimal monthlyRate1 = new BigDecimal("12.00");
+        final BigDecimal monthlyAmount1 = monthlyRate1;
+
+        final BigDecimal monthlyRate2 = new BigDecimal("20.00");
+        final BigDecimal monthlyAmount2 = monthlyRate1;
+
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
+        final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
+        tree.addItem(monthly1);
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, upgradeDate, monthlyAmount1, monthlyRate1, currency);
+        final InvoiceItem proposed2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "foo", "foo", upgradeDate, endDate, monthlyAmount2, monthlyRate2, currency);
+        tree.mergeProposedItem(proposed1);
+        tree.mergeProposedItem(proposed2);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, upgradeDate, endDate, new BigDecimal("-2.71"), currency, monthly1.getId());
+        expectedResult.add(proposed2);
+        expectedResult.add(repair);
+        verifyResult(tree.getView(), expectedResult);
+    }
+
+    @Test(groups = "fast")
+    public void testMergeWithSecondRepair() {
+
+        final LocalDate startDate = new LocalDate(2012, 5, 1);
+        final LocalDate endDate = new LocalDate(2012, 6, 1);
+        final LocalDate change1 = new LocalDate(2012, 5, 7);
+        final LocalDate change2 = new LocalDate(2012, 5, 8);
+
+        final BigDecimal rate1 = new BigDecimal("599.95");
+        final BigDecimal amount1 = rate1;
+
+        final BigDecimal rate2 = new BigDecimal("9.95");
+        final BigDecimal proratedAmount2 = new BigDecimal("8.02");
+
+        final BigDecimal rate3 = new BigDecimal("29.95");
+        final BigDecimal proratedAmount3 = new BigDecimal("23.19");
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
+        final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
+        final InvoiceItem newItem1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "foo", "foo", change1, endDate, proratedAmount2, rate2, currency);
+        final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, change1, endDate, new BigDecimal("-483.86"), currency, initial.getId());
+
+        tree.addItem(initial);
+        tree.addItem(newItem1);
+        tree.addItem(repair1);
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, change1, amount1, rate1, currency);
+        final InvoiceItem proposed2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,  "foo",  "foo", change1, change2, proratedAmount3, rate2, currency);
+        final InvoiceItem proposed3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,  "bar",  "bar", change2, endDate, proratedAmount3, rate3, currency);
+        tree.mergeProposedItem(proposed1);
+        tree.mergeProposedItem(proposed2);
+        tree.mergeProposedItem(proposed3);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, change2, endDate, new BigDecimal("-7.70"), currency, initial.getId());
+        expectedResult.add(proposed3);
+        expectedResult.add(repair2);
+        verifyResult(tree.getView(), expectedResult);
+
+    }
 
     @Test(groups = "fast")
     public void testWithExistingFixedItem() {
@@ -617,8 +703,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         tree.buildForMerge();
 
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
-        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, cancelDate, amount1, rate1, currency);
-        expectedResult.add(expected1);
         final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, cancelDate, endDate, new BigDecimal("-3.48"), currency, initial.getId());
         expectedResult.add(repair1);
 
@@ -651,8 +735,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         tree.buildForMerge();
 
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
-        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, cancelDate, amount1, rate1, currency);
-        expectedResult.add(expected1);
         final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, cancelDate, endDate, new BigDecimal("-2.00"), currency, initial.getId());
         expectedResult.add(repair1);
 

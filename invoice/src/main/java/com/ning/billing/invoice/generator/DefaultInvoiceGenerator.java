@@ -18,9 +18,6 @@ package com.ning.billing.invoice.generator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,7 +25,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
 import org.slf4j.Logger;
@@ -41,7 +37,6 @@ import com.ning.billing.clock.Clock;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.model.BillingMode;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
@@ -50,46 +45,13 @@ import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItemData;
-import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 import com.ning.billing.invoice.tree.AccountItemTree;
 import com.ning.billing.junction.BillingEvent;
 import com.ning.billing.junction.BillingEventSet;
 import com.ning.billing.junction.BillingModeType;
 import com.ning.billing.util.config.InvoiceConfig;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
-
-/**
- * Terminology for repair scenarii:
- * <p/>
- * - A 'repaired' item is an item that was generated and that needs to be repaired because the plan changed for that subscription on that period of time
- * - The 'repair' item is the item that cancels the (to be) repaired item; the repair item amount might not match the (to be) repaired item because:
- * * the (to be) repaired item was already adjusted so we will only repair what is left
- * * in case of partial repair we only repair the part that is not used
- * - The 'reparee' item is only present on disk-- in the existing item list -- in case of full repair; in that case it represents the portion of the item that should still
- * be invoiced for the plan of the repaired item. In case of partial repair it is merged with the repair item and does not exist except as a virtual item in the proposed list
- * <p/>
- * <p/>
- * <p/>
- * Example. We had a 20 subscription for a given period; we charged that amount and later discovered that only 3/4 of the time period were used after which the subscription was cancelled (immediate canellation)
- * <p/>
- * Full repair logic:
- * <p/>
- * Invoice 1:                   Invoice 2:
- * +20 (repaired)             +5 (reparee)
- * -20 (repair)
- * <p/>
- * Partial repair logic:
- * <p/>
- * Invoice 1:                   Invoice 2: (N/A)
- * +20 (repaired)
- * -15 (repair)
- * <p/>
- * The current version of the code uses partial repair logic but is able to deal with 'full repair' scenarii.
- */
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
@@ -122,7 +84,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         final AccountItemTree tree = new AccountItemTree(accountId);
 
-        final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
         if (existingInvoices != null) {
             for (final Invoice invoice : existingInvoices) {
 
@@ -134,21 +95,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     if (item.getSubscriptionId() == null || // Always include migration invoices, credits, external charges etc.
                         !events.getSubscriptionIdsWithAutoInvoiceOff()
                                .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
-
-                        if ( item.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ) {
-                            existingItems.add(item);
-                        } else {
-                            tree.addItem(item, allSeenItems);
-                        }
-
+                        tree.addItem(item, allSeenItems);
                     }
                 }
             }
-        }
-        tree.build();
-        final List<InvoiceItem> recurringExistingItems = tree.getCurrentExistingItemsView();
-        if (recurringExistingItems.size() > 0) {
-            existingItems.addAll(recurringExistingItems);
         }
 
         final LocalDate adjustedTargetDate = adjustTargetDate(existingInvoices, targetDate);
@@ -159,173 +109,11 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         // Generate list of proposed invoice items based on billing events from junction-- proposed items are ALL items since beginning of time
         final List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, accountId, events, adjustedTargetDate, targetCurrency);
 
-        // Remove from both lists the items in common
-        removeMatchingInvoiceItems(existingItems, proposedItems);
+        tree.mergeWithProposedItems(proposedItems);
+        final List<InvoiceItem> finalItems = tree.getCurrentExistingItemsView();
+        invoice.addInvoiceItems(finalItems);
 
-        // We don't want the Fixed items to be repaired -- as they are setup fees that should be paid
-        removeRemainingFixedItemsFromExisting(existingItems);
-
-
-        // Add repair items based on what is left in existing items
-        addRepairItems(existingItems, proposedItems);
-
-        // Finally add this new items on the new invoice
-        invoice.addInvoiceItems(proposedItems);
-
-        return proposedItems.size() != 0 ? invoice : null;
-    }
-
-    private void removeRemainingFixedItemsFromExisting(final List<InvoiceItem> existingItems) {
-        final Iterator<InvoiceItem> it = existingItems.iterator();
-        while (it.hasNext()) {
-            final InvoiceItem cur = it.next();
-            if (cur.getInvoiceItemType() == InvoiceItemType.FIXED) {
-                it.remove();
-            }
-        }
-    }
-
-    /**
-     * At this point either we have 0 existingItem left or those left need to be repaired
-     *
-     * @param existingItems the list of remaining existing items
-     * @param proposedItems the list of remaining proposed items
-     */
-    void addRepairItems(final List<InvoiceItem> existingItems, final List<InvoiceItem> proposedItems) {
-        for (final InvoiceItem existingItem : existingItems) {
-            if (existingItem.getInvoiceItemType() == InvoiceItemType.RECURRING) {
-                final BigDecimal existingAdjustedPositiveAmount = getAdjustedPositiveAmount(existingItems, existingItem.getId());
-                final BigDecimal amountNegated = existingItem.getAmount() == null ? null : existingItem.getAmount().subtract(existingAdjustedPositiveAmount).negate();
-                if (amountNegated != null && amountNegated.compareTo(BigDecimal.ZERO) < 0) {
-                    final RepairAdjInvoiceItem candidateRepairItem = new RepairAdjInvoiceItem(existingItem.getInvoiceId(), existingItem.getAccountId(), existingItem.getStartDate(), existingItem.getEndDate(), amountNegated, existingItem.getCurrency(), existingItem.getId());
-                    addRepairsForItem(existingItem, candidateRepairItem, proposedItems);
-                }
-            }
-        }
-    }
-
-    /**
-     * Add the repair item for the (yet to be) repairedItem. It will merge the candidateRepairItem with reparee item
-     *
-     * @param repairedItem        the item being repaired
-     * @param candidateRepairItem the repair item we would have if we were to repair the full period
-     * @param proposedItems       the list of proposed items
-     */
-    void addRepairsForItem(final InvoiceItem repairedItem, final RepairAdjInvoiceItem candidateRepairItem, final List<InvoiceItem> proposedItems) {
-
-        int nbTotalRepaireeDays = 0;
-
-        // totalRepareeItemAmount is negative and represents the portion left after we removed the adjustments for the total period for all the reparees combined
-        BigDecimal totalRepareeItemAmount = candidateRepairItem.getAmount();
-        final List<InvoiceItem> reparees = new ArrayList<InvoiceItem>();
-        for (final InvoiceItem cur : proposedItems) {
-            if (isRepareeItemForRepairedItem(repairedItem, cur)) {
-                nbTotalRepaireeDays += Days.daysBetween(cur.getStartDate(), cur.getEndDate()).getDays();
-                reparees.add(cur);
-                totalRepareeItemAmount = totalRepareeItemAmount.add(cur.getAmount());
-            }
-        }
-        int nbTotalRepairedDays = Days.daysBetween(candidateRepairItem.getStartDate(), candidateRepairItem.getEndDate()).getDays() - nbTotalRepaireeDays;
-
-        // If we repaired the full period there is no repairee item
-        if (reparees.size() == 0) {
-            proposedItems.add(candidateRepairItem);
-            return;
-        }
-
-        // Sort the reparees based on startDate in order to create the repair items -- based on the endDate (previous repairee) -> startDate (next reparee)
-        Collections.sort(reparees, new Comparator<InvoiceItem>() {
-            @Override
-            public int compare(final InvoiceItem o1, final InvoiceItem o2) {
-                return o1.getStartDate().compareTo(o2.getStartDate());
-            }
-        });
-
-        //Build the repaired
-        BigDecimal totalRepairItemAmount = BigDecimal.ZERO;
-        List<InvoiceItem> repairedItems = new ArrayList<InvoiceItem>();
-        InvoiceItem prevReparee = null;
-        final Iterator<InvoiceItem> it = reparees.iterator();
-        while (it.hasNext()) {
-            final InvoiceItem nextReparee = it.next();
-            if (prevReparee != null || nextReparee.getStartDate().compareTo(repairedItem.getStartDate()) > 0) {
-                final LocalDate repairedStartDate = (prevReparee == null) ? repairedItem.getStartDate() : prevReparee.getEndDate();
-                final LocalDate repairedEndDateDate = nextReparee.getStartDate();
-                // repairItemAmount is an approximation of the exact amount by simply prorating totalRepareeItemAmount in the repair period; we make sure last item is calculated based
-                // on what is left so the sum of all repairs amount is exactly correct
-                final BigDecimal repairItemAmount = (nextReparee.getEndDate().compareTo(candidateRepairItem.getEndDate()) != 0) ?
-                                                    InvoiceDateUtils.calculateProrationBetweenDates(repairedStartDate, repairedEndDateDate, nbTotalRepairedDays).multiply(totalRepareeItemAmount) :
-                                                    totalRepareeItemAmount.subtract(totalRepairItemAmount);
-                totalRepairItemAmount = totalRepairItemAmount.add(repairItemAmount);
-                final RepairAdjInvoiceItem repairItem = new RepairAdjInvoiceItem(candidateRepairItem.getInvoiceId(), candidateRepairItem.getAccountId(), repairedStartDate, repairedEndDateDate, repairItemAmount, candidateRepairItem.getCurrency(), repairedItem.getId());
-                repairedItems.add(repairItem);
-            }
-            prevReparee = nextReparee;
-        }
-
-        // In case we end up with a repair up to the service endDate we need to add this extra item-- this is the 'classic' case with one repairee/repair item
-        if (prevReparee.getEndDate().compareTo(candidateRepairItem.getEndDate()) != 0) {
-            final BigDecimal repairItemAmount = totalRepareeItemAmount.subtract(totalRepairItemAmount);
-            final RepairAdjInvoiceItem repairItem = new RepairAdjInvoiceItem(candidateRepairItem.getInvoiceId(), candidateRepairItem.getAccountId(), prevReparee.getEndDate(), candidateRepairItem.getEndDate(), repairItemAmount, candidateRepairItem.getCurrency(), repairedItem.getId());
-            repairedItems.add(repairItem);
-        }
-
-        // Finally remove all reparees from the proposed items and add all repaired items in the invoice
-        for (InvoiceItem reparee : reparees) {
-            proposedItems.remove(reparee);
-        }
-        proposedItems.addAll(repairedItems);
-    }
-
-    /**
-     * Check whether or not the invoiceItem passed is the reparee for that repaired invoice item
-     *
-     * @param repairedInvoiceItem the repaired invoice item
-     * @param invoiceItem         any invoice item to compare to
-     * @return true if invoiceItem is the reparee for that repaired invoice item
-     */
-    boolean isRepareeItemForRepairedItem(final InvoiceItem repairedInvoiceItem, final InvoiceItem invoiceItem) {
-        return !repairedInvoiceItem.getId().equals(invoiceItem.getId()) &&
-               repairedInvoiceItem.getInvoiceItemType().equals(invoiceItem.getInvoiceItemType()) &&
-               // We assume the items are correctly created, so that the subscription id check implicitly
-               // verifies that account id and bundle id matches
-               repairedInvoiceItem.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) &&
-               // service period for reparee should be included in service period of repaired-- true for startDate and endDate
-               repairedInvoiceItem.getStartDate().compareTo(invoiceItem.getStartDate()) <= 0 &&
-               // Similarly, check the "portion used" is less than the original service end date. The check
-               // is strict, otherwise there wouldn't be anything to repair
-               ((repairedInvoiceItem.getEndDate() == null && invoiceItem.getEndDate() == null) ||
-                (repairedInvoiceItem.getEndDate() != null && invoiceItem.getEndDate() != null &&
-                 repairedInvoiceItem.getEndDate().compareTo(invoiceItem.getEndDate()) >= 0)) &&
-               // Finally, for the tricky part... In case of complete repairs, the new item will always meet all of the
-               // following conditions: same type, subscription, start date. Depending on the catalog configuration, the end
-               // date check could also match (e.g. repair from annual to monthly). For that scenario, we need to default
-               // to catalog checks (the rate check is a lame check for versioned catalogs).
-               Objects.firstNonNull(repairedInvoiceItem.getPlanName(), "").equals(Objects.firstNonNull(invoiceItem.getPlanName(), "")) &&
-               Objects.firstNonNull(repairedInvoiceItem.getPhaseName(), "").equals(Objects.firstNonNull(invoiceItem.getPhaseName(), "")) &&
-               Objects.firstNonNull(repairedInvoiceItem.getRate(), BigDecimal.ZERO).compareTo(Objects.firstNonNull(invoiceItem.getRate(), BigDecimal.ZERO)) == 0;
-    }
-
-    // We check to see if there are any adjustments that point to the item we are trying to repair
-    // If we did any CREDIT_ADJ or REFUND_ADJ, then we unfortunately we can't know what is the intent
-    // was as it applies to the full Invoice, so we ignore it. That might result in an extra positive CBA
-    // that would have to be corrected manually. This is the best we can do, and administrators should always
-    // use ITEM_ADJUSTMENT rather than CREDIT_ADJ or REFUND_ADJ when possible.
-    //
-    BigDecimal getAdjustedPositiveAmount(final List<InvoiceItem> existingItems, final UUID linkedItemId) {
-        BigDecimal totalAdjustedOnItem = BigDecimal.ZERO;
-        final Collection<InvoiceItem> invoiceItems = Collections2.filter(existingItems, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem item) {
-                return item.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ &&
-                       item.getLinkedItemId() != null && item.getLinkedItemId().equals(linkedItemId);
-            }
-        });
-
-        for (final InvoiceItem invoiceItem : invoiceItems) {
-            totalAdjustedOnItem = totalAdjustedOnItem.add(invoiceItem.getAmount());
-        }
-        return totalAdjustedOnItem.negate();
+        return finalItems.size() != 0 ? invoice : null;
     }
 
     private void validateTargetDate(final LocalDate targetDate) throws InvoiceApiException {

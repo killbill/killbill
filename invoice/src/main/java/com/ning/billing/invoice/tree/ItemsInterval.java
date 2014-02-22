@@ -84,7 +84,7 @@ public class ItemsInterval {
         }
     }
 
-    public void buildFromItems(final List<Item> output, final boolean addRepair) {
+    public void buildFromItems(final List<Item> output, final boolean isParentRepair, final boolean mergeMode) {
         final Set<UUID> repairedIds = new HashSet<UUID>();
         final ListIterator<Item> it = items.listIterator(items.size());
 
@@ -92,7 +92,11 @@ public class ItemsInterval {
             final Item cur = it.previous();
             switch (cur.getAction()) {
                 case ADD:
-                    if (!repairedIds.contains(cur.getId())) {
+                    if (!mergeMode && !repairedIds.contains(cur.getId())) {
+                        output.add(cur);
+                    }
+
+                    if (mergeMode && !isParentRepair) {
                         output.add(cur);
                     }
                     break;
@@ -100,7 +104,7 @@ public class ItemsInterval {
                     if (cur.getLinkedId() != null) {
                         repairedIds.add(cur.getLinkedId());
                     }
-                    if (addRepair) {
+                    if (mergeMode) {
                         output.add(cur);
                     }
                     break;
@@ -132,19 +136,25 @@ public class ItemsInterval {
         items.clear();
     }
 
-    private Item createNewItem(LocalDate startDate, LocalDate endDate, final boolean addRepair) {
+    // STEPH so complicated...
+    public boolean isRepairNode() {
+       return items.size() == 1 && items.get(0).getAction() == ItemAction.CANCEL;
+    }
+
+    private Item createNewItem(LocalDate startDate, LocalDate endDate, final boolean mergeMode) {
 
         final List<Item> itemToConsider = new LinkedList<Item>();
-        buildFromItems(itemToConsider, addRepair);
+        // STEPH flags...
+        buildFromItems(itemToConsider, true, mergeMode);
 
         Iterator<Item> it = itemToConsider.iterator();
         while (it.hasNext()) {
             final Item cur = it.next();
-            if (cur.getAction() == ItemAction.CANCEL && !addRepair) {
+            if (cur.getAction() == ItemAction.CANCEL && !mergeMode) {
                 continue;
             }
             final Item result = new Item(cur.toProratedInvoiceItem(startDate, endDate), cur.getAction());
-            if (cur.getAction() == ItemAction.CANCEL) {
+            if (cur.getAction() == ItemAction.CANCEL && result != null) {
                 cur.incrementCurrentRepairedAmount(result.getAmount());
             }
             return result;

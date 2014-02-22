@@ -42,7 +42,7 @@ import com.ning.billing.currency.glue.CurrencyModule;
 import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceService;
-import com.ning.billing.invoice.generator.DefaultInvoiceGeneratorWithSwitchRepairLogic;
+import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
@@ -144,8 +144,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         }
 
         protected void installInvoiceGenerator() {
-            bind(InvoiceGenerator.class).to(DefaultInvoiceGeneratorWithSwitchRepairLogic.class).asEagerSingleton();
-            bind(DefaultInvoiceGeneratorWithSwitchRepairLogic.class).asEagerSingleton();
+            bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
         }
     }
 

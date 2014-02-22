@@ -17,13 +17,10 @@
 package com.ning.billing.invoice.tree;
 
 import java.math.BigDecimal;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-
-import com.ning.billing.invoice.api.InvoiceItem;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -51,11 +48,11 @@ public class NodeInterval {
         this.rightSibling = null;
     }
 
-    public void build(final List<Item> output, boolean addRepair) {
+    public void build(final List<Item> output, boolean isParentRepair, boolean mergeMode) {
 
         // There is no sub-interval, just add our own items.
         if (leftChild == null) {
-            items.buildFromItems(output, addRepair);
+            items.buildFromItems(output, isParentRepair, mergeMode);
             return;
         }
 
@@ -63,14 +60,14 @@ public class NodeInterval {
         NodeInterval curChild = leftChild;
         while (curChild != null) {
             if (curChild.getStart().compareTo(curDate) > 0) {
-                items.buildForMissingInterval(curDate, curChild.getStart(), output, addRepair);
+                items.buildForMissingInterval(curDate, curChild.getStart(), output, mergeMode);
             }
-            curChild.build(output, addRepair);
+            curChild.build(output, isRepairNode(), mergeMode);
             curDate = curChild.getEnd();
             curChild = curChild.getRightSibling();
         }
         if (curDate.compareTo(end) < 0) {
-            items.buildForMissingInterval(curDate, end, output, addRepair);
+            items.buildForMissingInterval(curDate, end, output, mergeMode);
         }
     }
 
@@ -104,7 +101,7 @@ public class NodeInterval {
         if (!isRoot()) {
             throw new TreeNodeException("findNode can only be called from root");
         }
-        return findNodeRecursively(this, date, targetItemId);
+        return findNodeRecursively2(this, date, targetItemId);
     }
 
     private NodeInterval findNodeRecursively(final NodeInterval curNode, final LocalDate date, final UUID targetItemId) {
@@ -125,6 +122,24 @@ public class NodeInterval {
         return null;
     }
 
+    private NodeInterval findNodeRecursively2(final NodeInterval curNode, final LocalDate date, final UUID targetItemId) {
+
+        if (!curNode.isRoot() && curNode.containsItem(targetItemId)) {
+            return curNode;
+        }
+
+        NodeInterval curChild = curNode.getLeftChild();
+        while (curChild != null) {
+            final NodeInterval result = findNodeRecursively2(curChild, date, targetItemId);
+            if (result != null) {
+                return result;
+            }
+            curChild = curChild.getRightSibling();
+        }
+        return null;
+    }
+
+
     public boolean mergeProposedItem(final NodeInterval newNode) {
 
         Preconditions.checkState(newNode.getItems().size() == 1, "Expected new node to have only one item");
@@ -135,7 +150,6 @@ public class NodeInterval {
             return true;
         }
         computeRootInterval(newNode);
-
 
         if (leftChild == null) {
             leftChild = newNode;
@@ -184,6 +198,10 @@ public class NodeInterval {
         }
         computeRootInterval(newNode);
         addNode(newNode);
+    }
+
+    public boolean isRepairNode() {
+        return items.isRepairNode();
     }
 
     // STEPH TODO are parents correctly maintained and/or do we need them?

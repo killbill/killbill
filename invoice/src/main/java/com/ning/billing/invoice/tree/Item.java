@@ -76,7 +76,7 @@ public class Item {
         this.amount = item.amount;
         this.rate = item.rate;
         this.currency = item.currency;
-        this.linkedId = item.linkedId;
+        this.linkedId = this.id; // STEPH called from flatten where linkedId does not exist
         this.createdDate = item.createdDate;
         this.currentRepairedAmount = item.currentRepairedAmount;
         this.adjustedAmount = item.adjustedAmount;
@@ -116,7 +116,7 @@ public class Item {
 
         final BigDecimal positiveAmount = prorated ?
                                           InvoiceDateUtils.calculateProrationBetweenDates(newStartDate, newEndDate, nbTotalDays)
-                                                          .multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE) :
+                                                          .multiply(amount).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE) :
                                           amount;
 
         if (action == ItemAction.ADD) {
@@ -125,7 +125,7 @@ public class Item {
             final BigDecimal maxAvailableAmountAfterAdj = amount.subtract(adjustedAmount);
             final BigDecimal maxAvailableAmountForRepair = maxAvailableAmountAfterAdj.subtract(currentRepairedAmount);
             final BigDecimal positiveAmountForRepair = positiveAmount.compareTo(maxAvailableAmountForRepair) <= 0 ? positiveAmount : maxAvailableAmountForRepair;
-            return new RepairAdjInvoiceItem(invoiceId, accountId, newStartDate, newEndDate, positiveAmountForRepair.negate(), currency, linkedId);
+            return positiveAmountForRepair.compareTo(BigDecimal.ZERO) > 0 ? new RepairAdjInvoiceItem(invoiceId, accountId, newStartDate, newEndDate, positiveAmountForRepair.negate(), currency, linkedId) : null;
         }
     }
 

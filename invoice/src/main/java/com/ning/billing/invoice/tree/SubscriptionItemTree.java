@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.tree;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -61,7 +62,7 @@ public class SubscriptionItemTree {
             root.addAdjustment(item.getStartDate(), item.getAmount(), item.getLinkedItemId());
         }
         pendingItemAdj.clear();
-        root.build(items, false);
+        root.build(items, false, false);
         isBuilt = true;
     }
 
@@ -71,7 +72,6 @@ public class SubscriptionItemTree {
         }
         root = new NodeInterval();
         for (Item item : items) {
-            final InvoiceItem invoiceItem = item.toInvoiceItem();
             Preconditions.checkState(item.getAction() == ItemAction.ADD);
             root.addNodeInterval(new NodeInterval(root, new Item(item, reverse ? ItemAction.CANCEL : ItemAction.ADD)));
         }
@@ -81,7 +81,7 @@ public class SubscriptionItemTree {
 
     public void buildForMerge() {
         Preconditions.checkState(!isBuilt);
-        root.build(items, true);
+        root.build(items, false, true);
         isBuilt = true;
     }
 
@@ -145,10 +145,15 @@ public class SubscriptionItemTree {
         // STEPH TODO check that nodeInterval don't overlap or throw. => double billing...
         final List<InvoiceItem> result = new LinkedList<InvoiceItem>();
         result.addAll(remainingFixedItems);
-        result.addAll(Collections2.transform(items, new Function<Item, InvoiceItem>() {
+        result.addAll(Collections2.filter(Collections2.transform(items, new Function<Item, InvoiceItem>() {
             @Override
             public InvoiceItem apply(final Item input) {
                 return input.toInvoiceItem();
+            }
+        }), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(@Nullable final InvoiceItem input) {
+                return input != null;
             }
         }));
         return result;
