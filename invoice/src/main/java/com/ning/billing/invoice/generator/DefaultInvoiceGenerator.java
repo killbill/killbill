@@ -139,28 +139,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return maxDate;
     }
 
-    /*
-     * Removes all matching items from both submitted collections
-     */
-    void removeMatchingInvoiceItems(final List<InvoiceItem> existingInvoiceItems,
-                                    final List<InvoiceItem> proposedItems) {
-        // We can't just use sets here as order matters (we want to keep duplicated in existingInvoiceItems)
-        final Iterator<InvoiceItem> proposedItemIterator = proposedItems.iterator();
-        while (proposedItemIterator.hasNext()) {
-            final InvoiceItem proposedItem = proposedItemIterator.next();
-
-            final Iterator<InvoiceItem> existingItemIterator = existingInvoiceItems.iterator();
-            while (existingItemIterator.hasNext()) {
-                final InvoiceItem existingItem = existingItemIterator.next();
-                if (existingItem.matches(proposedItem)) {
-                    existingItemIterator.remove();
-                    proposedItemIterator.remove();
-                    break;
-                }
-            }
-        }
-    }
-
     private List<InvoiceItem> generateInvoiceItems(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
                                                    final LocalDate targetDate, final Currency currency) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
