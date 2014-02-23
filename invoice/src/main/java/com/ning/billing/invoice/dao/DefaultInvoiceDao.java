@@ -256,7 +256,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                               new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
                                                   @Override
                                                   public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long limit) {
-                                                      return invoiceSqlDao.searchInvoices(searchKey, offset, limit, context);
+                                                      return invoiceSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
                                                   }
                                               },
                                               offset,

@@ -44,13 +44,7 @@ public class DefaultPaginationSqlDaoHelper {
             @Override
             public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> sqlDao = entitySqlDaoWrapperFactory.become(sqlDaoClazz);
-                // TODO lame cast, but couldn't make sqlDaoClazz a Class<? extends S>
-                final Iterator<M> dumbIterator = paginationIteratorBuilder.build((S) sqlDao, 1L);
-                // Make sure to go through the results to close the connection
-                while (dumbIterator.hasNext()) {
-                    dumbIterator.next();
-                }
-                return sqlDao.getFoundRows(context);
+                return sqlDao.getSearchCount(context);
             }
         });
 

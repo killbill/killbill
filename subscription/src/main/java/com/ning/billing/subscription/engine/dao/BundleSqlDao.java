@@ -17,14 +17,12 @@
 package com.ning.billing.subscription.engine.dao;
 
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.FetchSize;
 
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
@@ -62,13 +60,4 @@ public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao, S
     @SqlQuery
     public List<SubscriptionBundleModelDao> getBundlesForKey(@Bind("externalKey") String externalKey,
                                                              @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    // Magic value to force MySQL to stream from the database
-    // See http://dev.mysql.com/doc/refman/5.0/en/connector-j-reference-implementation-notes.html (ResultSet)
-    @FetchSize(Integer.MIN_VALUE)
-    public Iterator<SubscriptionBundleModelDao> searchBundles(@Bind("searchKey") final String searchKey,
-                                                              @Bind("offset") final Long offset,
-                                                              @Bind("rowCount") final Long rowCount,
-                                                              @BindBean final InternalTenantContext context);
 }

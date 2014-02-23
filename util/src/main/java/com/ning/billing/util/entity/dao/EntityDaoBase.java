@@ -77,7 +77,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     protected abstract U generateAlreadyExistsException(final M entity, final InternalCallContext context);
 
     protected String getNaturalOrderingColumns() {
-        return "recordId";
+        return "record_id";
     }
 
     @Override
@@ -124,7 +124,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
 
         // Note: we need to perform the count before streaming the results, as the connection
         // will be busy as we stream the results out. This is also why we cannot use
-        // SQL_CALC_FOUND_ROWS / FOUND_ROWS (which may ne be faster anyways).
+        // SQL_CALC_FOUND_ROWS / FOUND_ROWS (which may not be faster anyways).
         final Long count = sqlDao.getCount(context);
 
         final Iterator<M> results = sqlDao.getAll(context);

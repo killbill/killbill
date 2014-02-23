@@ -148,7 +148,7 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
                                               new PaginationIteratorBuilder<CustomFieldModelDao, CustomField, CustomFieldSqlDao>() {
                                                   @Override
                                                   public Iterator<CustomFieldModelDao> build(final CustomFieldSqlDao customFieldSqlDao, final Long limit) {
-                                                      return customFieldSqlDao.searchCustomFields(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
+                                                      return customFieldSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
                                                   }
                                               },
                                               offset,

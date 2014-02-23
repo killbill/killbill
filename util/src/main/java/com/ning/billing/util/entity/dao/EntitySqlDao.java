@@ -23,13 +23,14 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.FetchSize;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
+import com.ning.billing.commons.jdbi.statement.SmartFetchSize;
 import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.cache.Cachable;
@@ -70,21 +71,25 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
                             @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getFoundRows(@BindBean final InternalTenantContext context);
+    @SmartFetchSize(shouldStream = true)
+    public Iterator<M> search(@Bind("searchKey") final String searchKey,
+                              @Bind("likeSearchKey") final String likeSearchKey,
+                              @Bind("offset") final Long offset,
+                              @Bind("rowCount") final Long rowCount,
+                              @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    // Magic value to force MySQL to stream from the database
-    // See http://dev.mysql.com/doc/refman/5.0/en/connector-j-reference-implementation-notes.html (ResultSet)
-    @FetchSize(Integer.MIN_VALUE)
+    public Long getSearchCount(@BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    @SmartFetchSize(shouldStream = true)
     public Iterator<M> getAll(@BindBean final InternalTenantContext context);
 
     @SqlQuery
-    // Magic value to force MySQL to stream from the database
-    // See http://dev.mysql.com/doc/refman/5.0/en/connector-j-reference-implementation-notes.html (ResultSet)
-    @FetchSize(Integer.MIN_VALUE)
+    @SmartFetchSize(shouldStream = true)
     public Iterator<M> get(@Bind("offset") final Long offset,
                            @Bind("rowCount") final Long rowCount,
-                           @Bind("orderBy") final String orderBy,
+                           @Define("orderBy") final String orderBy,
                            @BindBean final InternalTenantContext context);
 
     @SqlQuery
