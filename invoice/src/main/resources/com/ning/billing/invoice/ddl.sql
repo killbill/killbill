@@ -22,7 +22,7 @@ CREATE TABLE invoice_items (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) CHARACTER SET utf8 COLLATE utf8_bin;
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX invoice_items_id ON invoice_items(id);
 CREATE INDEX invoice_items_subscription_id ON invoice_items(subscription_id ASC);
 CREATE INDEX invoice_items_invoice_id ON invoice_items(invoice_id ASC);
@@ -43,7 +43,7 @@ CREATE TABLE invoices (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) CHARACTER SET utf8 COLLATE utf8_bin;
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX invoices_id ON invoices(id);
 CREATE INDEX invoices_account_target ON invoices(account_id ASC, target_date);
 CREATE INDEX invoices_tenant_account_record_id ON invoices(tenant_record_id, account_record_id);
@@ -52,7 +52,7 @@ DROP TABLE IF EXISTS invoice_payments;
 CREATE TABLE invoice_payments (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
-    type varchar(24) NOT NULL,    
+    type varchar(24) NOT NULL,
     invoice_id char(36) NOT NULL,
     payment_id char(36),
     payment_date datetime NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE invoice_payments (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) CHARACTER SET utf8 COLLATE utf8_bin;
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX invoice_payments_id ON invoice_payments(id);
 CREATE INDEX invoice_payments ON invoice_payments(payment_id);
 CREATE INDEX invoice_payments_invoice_id ON invoice_payments(invoice_id);
