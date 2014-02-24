@@ -187,12 +187,12 @@ where <recordIdField("t.")> = :recordId
 ;
 >>
 
-/** Use NULL-safe equal to operator in case account_record_id is NULL **/
+/** Note: account_record_id can be NULL **/
 getByAccountRecordId(accountRecordId) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
-where <accountRecordIdField("t.")> \<=\> :accountRecordId
+where (<accountRecordIdField("t.")> = :accountRecordId or (<accountRecordIdField("t.")> is null and :accountRecordId is null))
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
@@ -203,7 +203,7 @@ getByAccountRecordIdIncludedDeleted(accountRecordId) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
-where <accountRecordIdField("t.")> \<=\> :accountRecordId
+where (<accountRecordIdField("t.")> = :accountRecordId or (<accountRecordIdField("t.")> is null and :accountRecordId is null))
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
 ;
