@@ -86,7 +86,7 @@ getAccountByKey() ::= <<
     where external_key = :externalKey <AND_CHECK_TENANT()>;
 >>
 
-searchQuery(prefix) ::= <<<
+searchQuery(prefix) ::= <<
      <idField(prefix)> = :searchKey
   or <prefix>.name like :likeSearchKey
   or <prefix>.email like :likeSearchKey
