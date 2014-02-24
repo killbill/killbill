@@ -33,7 +33,7 @@ public class TestJDBCSessionDao extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testCRUD() throws Exception {
         // Note! We are testing the do* methods here to bypass the caching layer
-        final JDBCSessionDao jdbcSessionDao = new JDBCSessionDao((DBI) dbi);
+        final JDBCSessionDao jdbcSessionDao = new JDBCSessionDao(dbi);
 
         // Retrieve
         final SimpleSession session = createSession();

@@ -40,7 +40,7 @@ public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
     public void cleanupTablesBetweenMethods() {
         try {
             DBTestingHelper.get().cleanupAllTables();
-        } catch (Exception ignored) {
+        } catch (final Exception ignored) {
         }
     }
 
@@ -56,7 +56,7 @@ public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
 
         try {
             DBTestingHelper.get().stop();
-        } catch (Exception ignored) {
+        } catch (final Exception ignored) {
         }
     }
 }

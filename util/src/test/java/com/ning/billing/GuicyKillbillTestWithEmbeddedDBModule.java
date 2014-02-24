@@ -37,7 +37,7 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
         try {
             bind(DataSource.class).toInstance(DBTestingHelper.get().getDataSource());
             bind(IDBI.class).toInstance(DBTestingHelper.getDBI());
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Assert.fail(e.toString());
         }
     }

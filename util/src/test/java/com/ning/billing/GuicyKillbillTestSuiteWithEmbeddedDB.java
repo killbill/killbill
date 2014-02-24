@@ -50,7 +50,7 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     public void beforeMethod() throws Exception {
         try {
             DBTestingHelper.get().cleanupAllTables();
-        } catch (Exception ignored) {
+        } catch (final Exception ignored) {
         }
     }
 
@@ -66,7 +66,7 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
         try {
             DBTestingHelper.get().stop();
-        } catch (Exception ignored) {
+        } catch (final Exception ignored) {
         }
     }
 }
