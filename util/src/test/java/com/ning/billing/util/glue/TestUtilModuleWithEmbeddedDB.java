@@ -18,7 +18,9 @@ package com.ning.billing.util.glue;
 
 import org.skife.config.ConfigSource;
 
+import com.ning.billing.DBTestingHelper;
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import com.ning.billing.util.globallocker.TestGlobalLockerModule;
 
 public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
 
@@ -38,6 +40,6 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
         install(new BusModule(configSource));
         install(new NotificationQueueModule(configSource));
         install(new NonEntityDaoModule());
-        install(new GlobalLockerModule());
+        install(new TestGlobalLockerModule(DBTestingHelper.get()));
     }
 }

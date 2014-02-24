@@ -41,12 +41,12 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     @Inject
     protected IDBI dbi;
 
-    @BeforeSuite(groups = {"slow", "mysql"})
+    @BeforeSuite(groups = "slow")
     public void beforeSuite() throws Exception {
         DBTestingHelper.start();
     }
 
-    @BeforeMethod(groups = {"slow", "mysql"})
+    @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         try {
             DBTestingHelper.get().cleanupAllTables();
@@ -54,7 +54,7 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         }
     }
 
-    @AfterSuite(groups = {"slow", "mysql"})
+    @AfterSuite(groups = "slow")
     public void afterSuite() throws Exception {
         if (hasFailed()) {
             log.error("**********************************************************************************************");

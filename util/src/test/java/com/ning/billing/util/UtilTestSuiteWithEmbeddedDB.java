@@ -30,6 +30,7 @@ import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.commons.locker.GlobalLocker;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
@@ -76,6 +77,8 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected DefaultTagDao tagDao;
     @Inject
     protected AuditDao auditDao;
+    @Inject
+    protected GlobalLocker locker;
     @Inject
     protected IDBI idbi;
 
