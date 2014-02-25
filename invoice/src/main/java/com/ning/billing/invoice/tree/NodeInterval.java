@@ -156,7 +156,6 @@ public class NodeInterval {
                 }
             }
 
-            // STEPH test for that code path
             if (newNodeItem.getStartDate().compareTo(curChild.getStart()) < 0) {
                 newNode.rightSibling = curChild;
                 if (prevChild == null) {

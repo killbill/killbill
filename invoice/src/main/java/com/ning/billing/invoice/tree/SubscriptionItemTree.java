@@ -58,7 +58,8 @@ public class SubscriptionItemTree {
             if (startDateComp != 0) {
                 return startDateComp;
             }
-            int itemTypeComp = Integer.compare(o1.getInvoiceItemType().ordinal(), o2.getInvoiceItemType().ordinal());
+            int itemTypeComp =  (o1.getInvoiceItemType().ordinal()<o2.getInvoiceItemType().ordinal() ? -1 :
+                                 (o1.getInvoiceItemType().ordinal()==o2.getInvoiceItemType().ordinal() ? 0 : 1));
             if (itemTypeComp != 0) {
                 return itemTypeComp;
             }
@@ -92,7 +93,7 @@ public class SubscriptionItemTree {
     }
 
     /**
-     * Flattens the tree so its depth only has one levl below root -- becomes a list.
+     * Flattens the tree so its depth only has one level below root -- becomes a list.
      * <p>
      * If the tree was not built, it is first built. The list of items is cleared and the state is now reset to unbuilt.
      *

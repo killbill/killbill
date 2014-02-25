@@ -524,6 +524,7 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
 
         tree.mergeProposedItem(proposed1);
         tree.mergeProposedItem(proposed2);
+        tree.mergeProposedItem(proposed1);
         tree.mergeProposedItem(proposed3);
         tree.buildForMerge();
 
@@ -533,6 +534,27 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         expectedResult.add(repair1);
         expectedResult.add(repair2);
         verifyResult(tree.getView(), expectedResult);
+
+
+        // Dot it again but with propsoed items out of order
+        final SubscriptionItemTree treeAgain = new SubscriptionItemTree(subscriptionId);
+        final InvoiceItem monthlyAgain = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
+        treeAgain.addItem(monthlyAgain);
+        treeAgain.flatten(true);
+
+        final InvoiceItem proposed2Again = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, unblockDate1, blockDate2, monthlyAmount, monthlyRate, currency);
+        final InvoiceItem proposed1Again = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, blockDate1, monthlyAmount, monthlyRate, currency);
+        final InvoiceItem proposed3Again = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, unblockDate2, endDate, monthlyAmount, monthlyRate, currency);
+
+        treeAgain.mergeProposedItem(proposed1Again);
+        treeAgain.mergeProposedItem(proposed2Again);
+        treeAgain.mergeProposedItem(proposed1Again);
+        treeAgain.mergeProposedItem(proposed3Again);
+        treeAgain.buildForMerge();
+
+        verifyResult(treeAgain.getView(), expectedResult);
+
+
     }
 
     @Test(groups = "fast")
