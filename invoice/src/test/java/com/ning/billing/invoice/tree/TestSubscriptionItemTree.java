@@ -31,7 +31,6 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 
 import com.google.common.collect.Lists;
-import sun.reflect.annotation.ExceptionProxy;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -192,8 +191,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         verifyResult(tree.getView(), expectedResult);
     }
 
-
-
     @Test(groups = "fast")
     public void testBlockAcrossPeriod() {
 
@@ -202,7 +199,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final LocalDate startDate2 = new LocalDate(2014, 2, 1);
         final LocalDate unblockDate = new LocalDate(2014, 2, 7);
         final LocalDate endDate = new LocalDate(2014, 3, 1);
-
 
         final BigDecimal rate1 = new BigDecimal("12.00");
         final BigDecimal amount1 = rate1;
@@ -259,7 +255,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         tree.build();
         verifyResult(tree.getView(), expectedResult);
 
-
         tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(monthly1);
         tree.addItem(repair);
@@ -276,7 +271,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         tree.build();
         verifyResult(tree.getView(), expectedResult);
     }
-
 
     @Test(groups = "fast")
     public void testMonthlyToAnnualWithLeadingProRation() {
@@ -352,7 +346,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         tree.build();
         verifyResult(tree.getView(), expectedResult);
     }
-
 
     @Test(groups = "fast")
     public void testMergeWithNoExisting() {
@@ -437,7 +430,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final BigDecimal monthlyRate1 = new BigDecimal("12.00");
         final BigDecimal monthlyAmount1 = monthlyRate1;
 
-
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
         tree.addItem(monthly1);
@@ -454,7 +446,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         verifyResult(tree.getView(), expectedResult);
     }
 
-
     @Test(groups = "fast")
     public void testMergeCancellationWithFinalRepair() {
 
@@ -464,7 +455,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
 
         final BigDecimal monthlyRate1 = new BigDecimal("12.00");
         final BigDecimal monthlyAmount1 = monthlyRate1;
-
 
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
@@ -491,7 +481,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
 
         final BigDecimal monthlyRate1 = new BigDecimal("12.00");
         final BigDecimal monthlyAmount1 = monthlyRate1;
-
 
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
@@ -559,7 +548,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final BigDecimal monthlyRate2 = new BigDecimal("20.00");
         final BigDecimal monthlyAmount2 = monthlyRate1;
 
-
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
         tree.addItem(monthly1);
@@ -606,8 +594,8 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         tree.flatten(true);
 
         final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, change1, amount1, rate1, currency);
-        final InvoiceItem proposed2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,  "foo",  "foo", change1, change2, proratedAmount3, rate2, currency);
-        final InvoiceItem proposed3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,  "bar",  "bar", change2, endDate, proratedAmount3, rate3, currency);
+        final InvoiceItem proposed2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "foo", "foo", change1, change2, proratedAmount3, rate2, currency);
+        final InvoiceItem proposed3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "bar", "bar", change2, endDate, proratedAmount3, rate3, currency);
         tree.mergeProposedItem(proposed1);
         tree.mergeProposedItem(proposed2);
         tree.mergeProposedItem(proposed3);
@@ -631,14 +619,12 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final BigDecimal monthlyAmount = monthlyRate;
         final BigDecimal fixedAmount = new BigDecimal("5.00");
 
-
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         final InvoiceItem monthly = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
         final InvoiceItem fixed = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, fixedAmount, currency);
         tree.addItem(monthly);
         tree.addItem(fixed);
         tree.flatten(true);
-
 
         final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
         tree.mergeProposedItem(proposed1);
@@ -659,12 +645,10 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final BigDecimal monthlyAmount = monthlyRate;
         final BigDecimal fixedAmount = new BigDecimal("5.00");
 
-
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         final InvoiceItem monthly = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
         tree.addItem(monthly);
         tree.flatten(true);
-
 
         final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
         final InvoiceItem fixed = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, fixedAmount, currency);
@@ -677,7 +661,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         verifyResult(tree.getView(), expectedResult);
     }
 
-
     @Test(groups = "fast")
     public void testRepairWithSmallItemAdjustment() {
 
@@ -689,7 +672,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
 
         final BigDecimal rate1 = new BigDecimal("12.00");
         final BigDecimal amount1 = rate1;
-
 
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
@@ -709,7 +691,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         verifyResult(tree.getView(), expectedResult);
     }
 
-
     @Test(groups = "fast")
     public void testRepairWithLargeItemAdjustment() {
 
@@ -721,7 +702,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
 
         final BigDecimal rate1 = new BigDecimal("12.00");
         final BigDecimal amount1 = rate1;
-
 
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
@@ -741,6 +721,45 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         verifyResult(tree.getView(), expectedResult);
     }
 
+    @Test(groups = "fast")
+    public void testMergeMonthlyToAnnualWithNoProRation() {
+
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate endMonthly1 = new LocalDate(2014, 2, 1);
+        final LocalDate endMonthly2 = new LocalDate(2014, 3, 1);
+        final LocalDate switchToAnnualDate = new LocalDate(2014, 2, 23);
+        final LocalDate endDate = new LocalDate(2015, 2, 23);
+
+        final BigDecimal monthlyRate = new BigDecimal("12.00");
+        final BigDecimal monthlyAmount = monthlyRate;
+
+        final BigDecimal yearlyRate = new BigDecimal("100.00");
+        final BigDecimal yearlyAmount = yearlyRate;
+
+        final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endMonthly1, monthlyAmount, monthlyRate, currency);
+        final InvoiceItem monthly2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endMonthly1, endMonthly2, monthlyAmount, monthlyRate, currency);
+
+        // First test with items in order
+        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
+        tree.addItem(monthly1);
+        tree.addItem(monthly2);
+        tree.flatten(true);
+
+        final InvoiceItem proposed = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, switchToAnnualDate, endDate, yearlyAmount, yearlyRate, currency);
+        final InvoiceItem proposedMonthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endMonthly1, monthlyAmount, monthlyRate, currency);
+        tree.mergeProposedItem(proposedMonthly1);
+        final InvoiceItem proRatedmonthly2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endMonthly1, switchToAnnualDate, monthlyAmount, monthlyRate, currency);
+        tree.mergeProposedItem(proRatedmonthly2);
+        tree.mergeProposedItem(proposed);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, switchToAnnualDate, endMonthly2, new BigDecimal("-2.57"), currency, monthly2.getId());
+        expectedResult.add(proposed);
+        expectedResult.add(repair);
+
+        verifyResult(tree.getView(), expectedResult);
+    }
 
     private void verifyResult(final List<InvoiceItem> result, final List<InvoiceItem> expectedResult) {
         assertEquals(result.size(), expectedResult.size());
@@ -748,6 +767,5 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
             assertTrue(result.get(i).matches(expectedResult.get(i)));
         }
     }
-
 
 }

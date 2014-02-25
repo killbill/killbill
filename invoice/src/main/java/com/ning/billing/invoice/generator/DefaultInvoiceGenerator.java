@@ -86,16 +86,11 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         if (existingInvoices != null) {
             for (final Invoice invoice : existingInvoices) {
-
-                final List<InvoiceItem> allSeenItems = new LinkedList<InvoiceItem>();
-                allSeenItems.addAll(invoice.getInvoiceItems());
-
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {
-
                     if (item.getSubscriptionId() == null || // Always include migration invoices, credits, external charges etc.
                         !events.getSubscriptionIdsWithAutoInvoiceOff()
                                .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
-                        tree.addItem(item, allSeenItems);
+                        tree.addExistingItem(item);
                     }
                 }
             }
@@ -110,7 +105,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         final List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, accountId, events, adjustedTargetDate, targetCurrency);
 
         tree.mergeWithProposedItems(proposedItems);
-        final List<InvoiceItem> finalItems = tree.getCurrentExistingItemsView();
+        final List<InvoiceItem> finalItems = tree.getResultingItemList();
         invoice.addInvoiceItems(finalItems);
 
         return finalItems.size() != 0 ? invoice : null;

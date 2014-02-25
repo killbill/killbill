@@ -33,6 +33,12 @@ import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
+/**
+ * An generic invoice item that contains all pertinent fields regarding of its InvoiceItemType.
+ * <p>
+ * It contains an action that determines what to do when building the tree (whether in normal or merge mode). It also
+ * keeps track of current adjusted and repair amount so subsequent repair can be limited to what is left.
+ */
 public class Item {
 
     private static final int ROUNDING_MODE = InvoicingConfiguration.getRoundingMode();
@@ -76,7 +82,8 @@ public class Item {
         this.amount = item.amount;
         this.rate = item.rate;
         this.currency = item.currency;
-        this.linkedId = this.id; // STEPH called from flatten where linkedId does not exist
+        // In merge mode, the reverse item needs to correctly point to itself (repair of original item)
+        this.linkedId = action == ItemAction.ADD ? item.linkedId : this.id;
         this.createdDate = item.createdDate;
         this.currentRepairedAmount = item.currentRepairedAmount;
         this.adjustedAmount = item.adjustedAmount;
@@ -114,6 +121,7 @@ public class Item {
         int nbTotalDays = Days.daysBetween(startDate, endDate).getDays();
         final boolean prorated = !(newStartDate.compareTo(startDate) == 0 && newEndDate.compareTo(endDate) == 0);
 
+        // Pro-ration is built by using the startDate, endDate and amount of this item instead of using the rate and a potential full period.
         final BigDecimal positiveAmount = prorated ?
                                           InvoiceDateUtils.calculateProrationBetweenDates(newStartDate, newEndDate, nbTotalDays)
                                                           .multiply(amount).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE) :
@@ -122,6 +130,7 @@ public class Item {
         if (action == ItemAction.ADD) {
             return new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, newStartDate, newEndDate, positiveAmount, rate, currency);
         } else {
+            // We first compute the maximum amount after adjustment and that sets the amount limit of how much can be repaired.
             final BigDecimal maxAvailableAmountAfterAdj = amount.subtract(adjustedAmount);
             final BigDecimal maxAvailableAmountForRepair = maxAvailableAmountAfterAdj.subtract(currentRepairedAmount);
             final BigDecimal positiveAmountForRepair = positiveAmount.compareTo(maxAvailableAmountForRepair) <= 0 ? positiveAmount : maxAvailableAmountForRepair;
@@ -167,6 +176,12 @@ public class Item {
         return currency;
     }
 
+    /**
+     * Compare two items to check whether there are the same kind; that is whether or not they build for the same product/plan.
+     *
+     * @param other item to compare with
+     * @return
+     */
     public boolean isSameKind(final Item other) {
 
         final InvoiceItem otherItem = other.toInvoiceItem();
@@ -176,7 +191,6 @@ public class Item {
                // following conditions: same type, subscription, start date. Depending on the catalog configuration, the end
                // date check could also match (e.g. repair from annual to monthly). For that scenario, we need to default
                // to catalog checks (the rate check is a lame check for versioned catalogs).
-
                Objects.firstNonNull(planName, "").equals(Objects.firstNonNull(otherItem.getPlanName(), "")) &&
                Objects.firstNonNull(phaseName, "").equals(Objects.firstNonNull(otherItem.getPhaseName(), "")) &&
                Objects.firstNonNull(rate, BigDecimal.ZERO).compareTo(Objects.firstNonNull(otherItem.getRate(), BigDecimal.ZERO)) == 0;

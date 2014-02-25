@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -29,7 +28,6 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 
-import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.tree.Item.ItemAction;
 
 import com.google.common.base.Preconditions;
@@ -37,6 +35,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+/**
+ * Keeps track of all the items existing on a specified interval.
+ */
 public class ItemsInterval {
 
     private final NodeInterval interval;
@@ -84,7 +85,14 @@ public class ItemsInterval {
         }
     }
 
-    public void buildFromItems(final List<Item> output, final boolean isParentRepair, final boolean mergeMode) {
+    /**
+     * Determines what is left based on the mergeMode and the action for each item.
+     *
+     * @param output
+     * @param mergeMode
+     */
+    public void buildFromItems(final List<Item> output, final boolean mergeMode) {
+
         final Set<UUID> repairedIds = new HashSet<UUID>();
         final ListIterator<Item> it = items.listIterator(items.size());
 
@@ -92,20 +100,23 @@ public class ItemsInterval {
             final Item cur = it.previous();
             switch (cur.getAction()) {
                 case ADD:
-                    if (!mergeMode && !repairedIds.contains(cur.getId())) {
-                        output.add(cur);
-                    }
-
-                    if (mergeMode && !isParentRepair) {
-                        output.add(cur);
+                    // Don't consider ADD items in mergeMode as they are only there to specify the bounderies of the repair elements.
+                    if (!mergeMode) {
+                        // If we found a CANCEL item pointing to that item then don't return it as it was repair (full repair scenario)
+                        if (!repairedIds.contains(cur.getId())) {
+                            output.add(cur);
+                        }
                     }
                     break;
+
                 case CANCEL:
-                    if (cur.getLinkedId() != null) {
-                        repairedIds.add(cur.getLinkedId());
-                    }
+                    // In merge logic we want to CANCEL (repair) items)
                     if (mergeMode) {
                         output.add(cur);
+                    }
+                    // In all cases populate the set with the id of target item being repaired
+                    if (cur.getLinkedId() != null) {
+                        repairedIds.add(cur.getLinkedId());
                     }
                     break;
             }
@@ -136,29 +147,37 @@ public class ItemsInterval {
         items.clear();
     }
 
-    // STEPH so complicated...
-    public boolean isRepairNode() {
-       return items.size() == 1 && items.get(0).getAction() == ItemAction.CANCEL;
-    }
-
+    /**
+     * Creates a new item.
+     * <p/>
+     * <ul>
+     * <li>In normal mode, we only consider ADD items. This happens when for instance an existing item was partially repaired
+     * and there is a need to create a new item which represents the part left -- that was not repaired.
+     * <li>In mergeMode, we allow to create new items that are the missing repaired items (CANCEL).
+     * </ul>
+     *
+     * @param startDate start date of the new item to create
+     * @param endDate   end date of the new item to create
+     * @param mergeMode mode to consider.
+     * @return
+     */
     private Item createNewItem(LocalDate startDate, LocalDate endDate, final boolean mergeMode) {
 
         final List<Item> itemToConsider = new LinkedList<Item>();
-        // STEPH flags...
-        buildFromItems(itemToConsider, true, mergeMode);
-
-        Iterator<Item> it = itemToConsider.iterator();
-        while (it.hasNext()) {
-            final Item cur = it.next();
-            if (cur.getAction() == ItemAction.CANCEL && !mergeMode) {
-                continue;
-            }
-            final Item result = new Item(cur.toProratedInvoiceItem(startDate, endDate), cur.getAction());
-            if (cur.getAction() == ItemAction.CANCEL && result != null) {
-                cur.incrementCurrentRepairedAmount(result.getAmount());
-            }
-            return result;
+        buildFromItems(itemToConsider, mergeMode);
+        if (itemToConsider.size() == 0) {
+            return null;
         }
-        return null;
+
+        Preconditions.checkState(itemToConsider.size() == 1);
+        final Item item = itemToConsider.size() == 1 ? itemToConsider.get(0) : null;
+        Preconditions.checkState((!mergeMode && item.getAction() == ItemAction.ADD) ||
+                                 (mergeMode && item.getAction() == ItemAction.CANCEL));
+
+        final Item result = new Item(item.toProratedInvoiceItem(startDate, endDate), item.getAction());
+        if (item.getAction() == ItemAction.CANCEL && result != null) {
+            item.incrementCurrentRepairedAmount(result.getAmount());
+        }
+        return result;
     }
 }
