@@ -88,10 +88,10 @@ getAccountByKey() ::= <<
 
 searchQuery(prefix) ::= <<
      <idField(prefix)> = :searchKey
-  or <prefix>.name like :likeSearchKey
-  or <prefix>.email like :likeSearchKey
-  or <prefix>.external_key like :likeSearchKey
-  or <prefix>.company_name like :likeSearchKey
+  or <prefix>name like :likeSearchKey
+  or <prefix>email like :likeSearchKey
+  or <prefix>external_key like :likeSearchKey
+  or <prefix>company_name like :likeSearchKey
 >>
 
 getIdFromKey() ::= <<

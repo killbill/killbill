@@ -267,7 +267,7 @@ search() ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
-where <searchQuery("t.")>
+where (<searchQuery("t.")>)
 <AND_CHECK_TENANT("t.")>
 order by <recordIdField("t.")> ASC
 limit :offset, :rowCount
@@ -278,7 +278,7 @@ getSearchCount() ::= <<
 select
   count(1) as count
 from <tableName()> t
-where <searchQuery("t.")>
+where (<searchQuery("t.")>)
 <AND_CHECK_TENANT("t.")>
 ;
 >>

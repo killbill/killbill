@@ -80,6 +80,6 @@ account_id = :accountId
 
 searchQuery(prefix) ::= <<
      <idField(prefix)> = :searchKey
-  or <prefix>.external_key = :searchKey
-  or <prefix>.account_id = :searchKey
+  or <prefix>external_key = :searchKey
+  or <prefix>account_id = :searchKey
 >>
