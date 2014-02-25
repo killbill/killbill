@@ -194,7 +194,12 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         return paginationHelper.getPagination(BundleSqlDao.class,
                                               new PaginationIteratorBuilder<SubscriptionBundleModelDao, SubscriptionBaseBundle, BundleSqlDao>() {
                                                   @Override
-                                                  public Iterator<SubscriptionBundleModelDao> build(final BundleSqlDao bundleSqlDao, final Long limit) {
+                                                  public Long getCount(final BundleSqlDao bundleSqlDao, final InternalTenantContext context) {
+                                                      return bundleSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<SubscriptionBundleModelDao> build(final BundleSqlDao bundleSqlDao, final Long limit, final InternalTenantContext context) {
                                                       return bundleSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
                                                   }
                                               },

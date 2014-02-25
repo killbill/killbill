@@ -170,7 +170,12 @@ public class DefaultPaymentDao implements PaymentDao {
         return paginationHelper.getPagination(RefundSqlDao.class,
                                               new PaginationIteratorBuilder<RefundModelDao, Refund, RefundSqlDao>() {
                                                   @Override
-                                                  public Iterator<RefundModelDao> build(final RefundSqlDao refundSqlDao, final Long limit) {
+                                                  public Long getCount(final RefundSqlDao refundSqlDao, final InternalTenantContext context) {
+                                                      return refundSqlDao.getCountByPluginName(pluginName, context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<RefundModelDao> build(final RefundSqlDao refundSqlDao, final Long limit, final InternalTenantContext context) {
                                                       return refundSqlDao.getByPluginName(pluginName, offset, limit, context);
                                                   }
                                               },
@@ -244,7 +249,12 @@ public class DefaultPaymentDao implements PaymentDao {
         return paginationHelper.getPagination(PaymentMethodSqlDao.class,
                                               new PaginationIteratorBuilder<PaymentMethodModelDao, PaymentMethod, PaymentMethodSqlDao>() {
                                                   @Override
-                                                  public Iterator<PaymentMethodModelDao> build(final PaymentMethodSqlDao paymentMethodSqlDao, final Long limit) {
+                                                  public Long getCount(final PaymentMethodSqlDao paymentMethodSqlDao, final InternalTenantContext context) {
+                                                      return paymentMethodSqlDao.getCountByPluginName(pluginName, context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<PaymentMethodModelDao> build(final PaymentMethodSqlDao paymentMethodSqlDao, final Long limit, final InternalTenantContext context) {
                                                       return paymentMethodSqlDao.getByPluginName(pluginName, offset, limit, context);
                                                   }
                                               },
@@ -309,7 +319,12 @@ public class DefaultPaymentDao implements PaymentDao {
         return paginationHelper.getPagination(PaymentSqlDao.class,
                                               new PaginationIteratorBuilder<PaymentModelDao, Payment, PaymentSqlDao>() {
                                                   @Override
-                                                  public Iterator<PaymentModelDao> build(final PaymentSqlDao paymentSqlDao, final Long limit) {
+                                                  public Long getCount(final PaymentSqlDao paymentSqlDao, final InternalTenantContext context) {
+                                                      return paymentSqlDao.getCountByPluginName(pluginName, context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<PaymentModelDao> build(final PaymentSqlDao paymentSqlDao, final Long limit, final InternalTenantContext context) {
                                                       return paymentSqlDao.getByPluginName(pluginName, offset, limit, context);
                                                   }
                                               },

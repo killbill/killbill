@@ -60,4 +60,8 @@ public interface RefundSqlDao extends EntitySqlDao<RefundModelDao, Refund> {
                                                     @Bind("offset") final Long offset,
                                                     @Bind("rowCount") final Long rowCount,
                                                     @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Long getCountByPluginName(@Bind("pluginName") final String pluginName,
+                                     @BindBean final InternalTenantContext context);
 }

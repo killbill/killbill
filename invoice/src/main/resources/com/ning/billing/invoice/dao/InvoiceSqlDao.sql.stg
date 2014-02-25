@@ -38,9 +38,8 @@ getInvoicesBySubscription() ::= <<
 
 searchQuery(prefix) ::= <<
      <idField(prefix)> = :searchKey
-  or <recordIdField(prefix)> = :searchKey
-  or <prefix>.account_id = :searchKey
-  or <prefix>.currency = :searchKey
+  or <prefix>account_id = :searchKey
+  or <prefix>currency = :searchKey
 >>
 
 getInvoiceIdByPaymentId() ::= <<

@@ -111,7 +111,12 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         return paginationHelper.getPagination(AccountSqlDao.class,
                                               new PaginationIteratorBuilder<AccountModelDao, Account, AccountSqlDao>() {
                                                   @Override
-                                                  public Iterator<AccountModelDao> build(final AccountSqlDao accountSqlDao, final Long limit) {
+                                                  public Long getCount(final AccountSqlDao accountSqlDao, final InternalTenantContext context) {
+                                                      return accountSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<AccountModelDao> build(final AccountSqlDao accountSqlDao, final Long limit, final InternalTenantContext context) {
                                                       return accountSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
                                                   }
                                               },

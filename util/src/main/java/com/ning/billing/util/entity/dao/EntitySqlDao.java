@@ -79,7 +79,9 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
                               @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getSearchCount(@BindBean final InternalTenantContext context);
+    public Long getSearchCount(@Bind("searchKey") final String searchKey,
+                               @Bind("likeSearchKey") final String likeSearchKey,
+                               @BindBean final InternalTenantContext context);
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)

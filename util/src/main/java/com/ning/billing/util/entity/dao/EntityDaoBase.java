@@ -136,7 +136,12 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
         return paginationHelper.getPagination(realSqlDao,
                                               new PaginationIteratorBuilder<M, E, EntitySqlDao<M, E>>() {
                                                   @Override
-                                                  public Iterator<M> build(final EntitySqlDao<M, E> sqlDao, final Long limit) {
+                                                  public Long getCount(final EntitySqlDao<M, E> sqlDao, final InternalTenantContext context) {
+                                                      return sqlDao.getCount(context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<M> build(final EntitySqlDao<M, E> sqlDao, final Long limit, final InternalTenantContext context) {
                                                       return sqlDao.get(offset, limit, getNaturalOrderingColumns(), context);
                                                   }
                                               },

@@ -58,11 +58,7 @@ and t.object_type = :objectType
 ;
 >>
 
-searchTags() ::= <<
-select SQL_CALC_FOUND_ROWS
-<allTableFields("t.")>
-from <tableName()> t
-join (
+userAndSystemTagDefinitions() ::= <<
   select
     id
   , name
@@ -75,7 +71,7 @@ join (
   , \'Suspends payments until removed.\' description
   union
   select
-    \'00000000-0000-0000-0000-000000000001\' id
+    \'00000000-0000-0000-0000-000000000002\' id
   , \'AUTO_INVOICING_OFF\' name
   , \'Suspends invoicing until removed.\' description
   union
@@ -92,7 +88,7 @@ join (
   select
     \'00000000-0000-0000-0000-000000000005\' id
   , \'MANUAL_PAY\' name
-  , \'Indicates that Killbill doesn\\\\\'t process payments for that account (external payments only)\' description
+  , \'Indicates that Killbill doesn\\'\\'t process payments for that account (external payments only)\' description
   union
   select
     \'00000000-0000-0000-0000-000000000006\' id
@@ -103,16 +99,33 @@ join (
     \'00000000-0000-0000-0000-000000000007\' id
   , \'PARTNER\' name
   , \'Indicates that this is a partner account\' description
-) td on td.id = t.tag_definition_id
-where 1 = 1
-and (
-     <idField("t.")> = :searchKey
-  or t.object_type like :likeSearchKey
-  or td.name like :likeSearchKey
-  or td.description like :likeSearchKey
-)
+>>
+
+searchQuery(tagAlias, tagDefinitionAlias) ::= <<
+     <idField(tagAlias)> = :searchKey
+  or <tagAlias>object_type like :likeSearchKey
+  or <tagDefinitionAlias>name like :likeSearchKey
+  or <tagDefinitionAlias>description like :likeSearchKey
+>>
+
+search() ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+join (<userAndSystemTagDefinitions()>) td on td.id = t.tag_definition_id
+where (<searchQuery(tagAlias="t.", tagDefinitionAlias="td.")>)
 <AND_CHECK_TENANT("t.")>
 order by <recordIdField("t.")> ASC
 limit :offset, :rowCount
+;
+>>
+
+getSearchCount() ::= <<
+select
+  count(1) as count
+from <tableName()> t
+join (<userAndSystemTagDefinitions()>) td on td.id = t.tag_definition_id
+where (<searchQuery(tagAlias="t.", tagDefinitionAlias="td.")>)
+<AND_CHECK_TENANT("t.")>
 ;
 >>
