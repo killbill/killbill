@@ -20,6 +20,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.customfield.CustomField;
 
@@ -28,20 +29,41 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CustomFieldJson extends JsonBase {
 
+    private final String customFieldId;
+    private final String objectId;
+    private final ObjectType objectType;
     private final String name;
     private final String value;
 
     @JsonCreator
-    public CustomFieldJson(@JsonProperty("name") @Nullable final String name,
+    public CustomFieldJson(@JsonProperty("customFieldId") final String customFieldId,
+                           @JsonProperty("objectId") final String objectId,
+                           @JsonProperty("objectType") final ObjectType objectType,
+                           @JsonProperty("name") @Nullable final String name,
                            @JsonProperty("value") @Nullable final String value,
                            @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
+        this.customFieldId = customFieldId;
+        this.objectId = objectId;
+        this.objectType = objectType;
         this.name = name;
         this.value = value;
     }
 
     public CustomFieldJson(final CustomField input, @Nullable final List<AuditLog> auditLogs) {
-        this(input.getFieldName(), input.getFieldValue(), toAuditLogJson(auditLogs));
+        this(input.getId().toString(), input.getObjectId().toString(), input.getObjectType(), input.getFieldName(), input.getFieldValue(), toAuditLogJson(auditLogs));
+    }
+
+    public String getCustomFieldId() {
+        return customFieldId;
+    }
+
+    public String getObjectId() {
+        return objectId;
+    }
+
+    public ObjectType getObjectType() {
+        return objectType;
     }
 
     public String getName() {
@@ -55,7 +77,10 @@ public class CustomFieldJson extends JsonBase {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("CustomFieldJson{");
-        sb.append("name='").append(name).append('\'');
+        sb.append("customFieldId='").append(customFieldId).append('\'');
+        sb.append(", objectId=").append(objectId);
+        sb.append(", objectType=").append(objectType);
+        sb.append(", name='").append(name).append('\'');
         sb.append(", value='").append(value).append('\'');
         sb.append('}');
         return sb.toString();
@@ -72,7 +97,16 @@ public class CustomFieldJson extends JsonBase {
 
         final CustomFieldJson that = (CustomFieldJson) o;
 
+        if (customFieldId != null ? !customFieldId.equals(that.customFieldId) : that.customFieldId != null) {
+            return false;
+        }
         if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        if (objectId != null ? !objectId.equals(that.objectId) : that.objectId != null) {
+            return false;
+        }
+        if (objectType != that.objectType) {
             return false;
         }
         if (value != null ? !value.equals(that.value) : that.value != null) {
@@ -84,7 +118,10 @@ public class CustomFieldJson extends JsonBase {
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
+        int result = customFieldId != null ? customFieldId.hashCode() : 0;
+        result = 31 * result + (objectId != null ? objectId.hashCode() : 0);
+        result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
         return result;
     }

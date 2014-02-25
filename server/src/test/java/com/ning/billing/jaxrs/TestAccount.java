@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.client.KillBillClientException;
 import com.ning.billing.client.model.Account;
 import com.ning.billing.client.model.Accounts;
@@ -225,9 +226,9 @@ public class TestAccount extends TestJaxrsBase {
         assertNotNull(accountJson);
 
         final Collection<CustomField> customFields = new LinkedList<CustomField>();
-        customFields.add(new CustomField("1", "value1", null));
-        customFields.add(new CustomField("2", "value2", null));
-        customFields.add(new CustomField("3", "value3", null));
+        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "1", "value1", null));
+        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "2", "value2", null));
+        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "3", "value3", null));
 
         killBillClient.createAccountCustomFields(accountJson.getAccountId(), customFields, createdBy, reason, comment);
 

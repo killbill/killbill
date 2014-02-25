@@ -21,15 +21,22 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 public class TestCustomFieldJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
+        final String customFieldId = UUID.randomUUID().toString();
+        final String objectId = UUID.randomUUID().toString();
+        final ObjectType objectType = ObjectType.INVOICE;
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
-        final CustomFieldJson customFieldJson = new CustomFieldJson(name, value, null);
+        final CustomFieldJson customFieldJson = new CustomFieldJson(customFieldId, objectId, objectType, name, value, null);
+        Assert.assertEquals(customFieldJson.getCustomFieldId(), customFieldId);
+        Assert.assertEquals(customFieldJson.getObjectId(), objectId);
+        Assert.assertEquals(customFieldJson.getObjectType(), objectType);
         Assert.assertEquals(customFieldJson.getName(), name);
         Assert.assertEquals(customFieldJson.getValue(), value);
         Assert.assertNull(customFieldJson.getAuditLogs());
