@@ -34,6 +34,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.catalog.DefaultPrice;
 import com.ning.billing.catalog.MockInternationalPrice;
 import com.ning.billing.catalog.MockPlan;
@@ -45,6 +46,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.clock.ClockMock;
+import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.MockBillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
@@ -60,13 +62,11 @@ import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.junction.BillingEvent;
 import com.ning.billing.junction.BillingEventSet;
 import com.ning.billing.junction.BillingModeType;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.util.currency.KillBillMoney;
 
 import com.google.common.collect.ImmutableMap;
@@ -1156,11 +1156,15 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(invoice.getBalance().compareTo(ZERO), 0);
     }
 
-    private SubscriptionBase getZombieSubscription() {
+    private SubscriptionBase getZombieSubscription(UUID subscriptionId) {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription.getBundleId()).thenReturn(UUID.randomUUID());
         return subscription;
+    }
+
+    private SubscriptionBase getZombieSubscription() {
+        return getZombieSubscription(UUID.randomUUID());
     }
 
     @Test(groups = "slow")
@@ -1282,7 +1286,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         ((ClockMock) clock).setDay(startDate);
 
         final LocalDate recuringStartDate = clock.getUTCNow().plusDays(30).toLocalDate();
-        final LocalDate recuringEndDate = clock.getUTCNow().plusDays(30).toLocalDate();
+        final LocalDate recuringEndDate = recuringStartDate.plusMonths(1);
         final LocalDate targetDate = recuringStartDate.plusDays(1);
 
         // FIRST CREATE INITIAL INVOICE WITH ONE RECURRING ITEM
@@ -1317,7 +1321,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         // NOW COMPUTE A DIFFERENT ITEM TO TRIGGER REPAIR
         final BillingEventSet events = new MockBillingEventSet();
-        final SubscriptionBase subscription = getZombieSubscription();
+        final SubscriptionBase subscription = getZombieSubscription(subscriptionId);
 
         final Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getName()).thenReturn("plan");
@@ -1325,18 +1329,15 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final PlanPhase phase1 = Mockito.mock(PlanPhase.class);
         Mockito.when(phase1.getName()).thenReturn("plan-phase1");
 
-        final PlanPhase phase2 = Mockito.mock(PlanPhase.class);
-        Mockito.when(phase2.getName()).thenReturn("plan-phase2");
-
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, recuringStartDate.toDateTimeAtStartOfDay(), plan, phase1, null,
                                                                        TEN, Currency.USD,
-                                                                       BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+                                                                       BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                                                                        "new-event", 1L, SubscriptionBaseTransitionType.CREATE);
         events.add(event1);
         final Invoice newInvoice = generator.generateInvoice(UUID.randomUUID(), events, invoices, targetDate, Currency.USD);
         invoiceUtil.createInvoice(newInvoice, true, context);
 
-        // VERIFY THAT WE STILL HAVE ONLY 2 ITEMS, MENAING THERE WERE NO REPAIR AND NO CBA GENERATED
+        // VERIFY THAT WE STILL HAVE ONLY 2 ITEMS, MEANING THERE WERE NO REPAIR AND NO CBA GENERATED
         final Invoice firstInvoice = new DefaultInvoice(invoiceDao.getById(invoiceId, context));
         assertNotNull(firstInvoice);
         assertEquals(firstInvoice.getInvoiceItems().size(), 2);

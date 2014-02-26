@@ -181,8 +181,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 23), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-102.13")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("102.13")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 23), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-104.83")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("104.83")));
 
         // Add 10 days to generate next invoice. We verify that we indeed have a notification for nextBillingDate
         addDaysAndCheckForCompletion(10, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -190,7 +190,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     // Item for the upgraded recurring plan
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2012, 8, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 2), new LocalDate(2012, 8, 2), InvoiceItemType.CBA_ADJ, new BigDecimal("-102.13")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 2), new LocalDate(2012, 8, 2), InvoiceItemType.CBA_ADJ, new BigDecimal("-104.83")));
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 8, 31), callContext);
 
@@ -465,16 +465,16 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 23), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-102.13")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("102.13")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 23), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-104.83")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("104.83")));
 
         // Do an upgrade now
         checkChangePlanWithOverdueState(baseEntitlement, false, false);
 
         invoiceChecker.checkRepairedInvoice(account.getId(), 3, callContext,
                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
-                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 23), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-102.13")),
-                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("102.13")),
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 23), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-104.83")),
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("104.83")),
                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-64.51")),
                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("64.51")));
 
@@ -487,7 +487,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Verify the account balance:
-        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-11.79")), 0);
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-14.49")), 0);
     }
 
     @Test(groups = "slow", description = "Test overdue stages and follow with an immediate change of plan and use of credit", enabled=false)
@@ -538,6 +538,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD3");
 
         allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(false);
+
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     // New invoice for the part that was unblocked up to the BCD
@@ -664,7 +665,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
 
-        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-8.88")), 0);
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-12.91")), 0);
     }
 
     @Test(groups = "slow", description = "Test overdue from non paid external charge")
