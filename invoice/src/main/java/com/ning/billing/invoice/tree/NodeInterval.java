@@ -134,6 +134,7 @@ public class NodeInterval {
                 return false;
             } else {
                 // Proposed item is the first child of an existing item with the same product info.
+                newNode.parent = this;
                 leftChild = newNode;
                 return true;
 
@@ -157,6 +158,7 @@ public class NodeInterval {
             }
 
             if (newNodeItem.getStartDate().compareTo(curChild.getStart()) < 0) {
+                newNode.parent = this;
                 newNode.rightSibling = curChild;
                 if (prevChild == null) {
                     leftChild = newNode;
@@ -174,6 +176,7 @@ public class NodeInterval {
             // The new proposed item spans over a new interval, nothing to add in the merge tree
             return false;
         } else {
+            newNode.parent = this;
             prevChild.rightSibling = newNode;
             return true;
         }
@@ -247,6 +250,17 @@ public class NodeInterval {
         return rightSibling;
     }
 
+
+    public int getNbChildren() {
+        int result = 0;
+        NodeInterval curChild = leftChild;
+        while (curChild != null) {
+            result++;
+            curChild = curChild.rightSibling;
+        }
+        return result;
+    }
+
     public List<Item> getItems() {
         return items.getItems();
     }
@@ -255,8 +269,9 @@ public class NodeInterval {
         return items.containsItem(targetId);
     }
 
-    // STEPH TODO are parents correctly maintained and/or do we need them?
     private void addNode(final NodeInterval newNode) {
+
+        newNode.parent = this;
         final Item item = newNode.getItems().get(0);
         if (leftChild == null) {
             leftChild = newNode;
@@ -293,7 +308,7 @@ public class NodeInterval {
     }
 
     /**
-     * Since items may be added out of order, there is no guarantee that we don't suddenly had a new node
+     * Since items may be added out of order, there is no guarantee that we don't suddenly have a new node
      * whose interval emcompasses cuurent node(s). In which case we need to rebalance the tree.
      *
      * @param newNode node that triggered a rebalance operation
@@ -317,7 +332,10 @@ public class NodeInterval {
             curChild = curChild.rightSibling;
         } while (curChild != null);
 
-        newNode.rightSibling = toBeRebalanced.get(toBeRebalanced.size() - 1).rightSibling;
+        newNode.parent = this;
+        final NodeInterval lastNodeToRebalance = toBeRebalanced.get(toBeRebalanced.size() - 1);
+        newNode.rightSibling = lastNodeToRebalance.rightSibling;
+        lastNodeToRebalance.rightSibling = null;
         if (prevRebalanced == null) {
             leftChild = newNode;
         } else {
@@ -326,6 +344,7 @@ public class NodeInterval {
 
         NodeInterval prev = null;
         for (NodeInterval cur : toBeRebalanced) {
+            cur.parent = newNode;
             if (prev == null) {
                 newNode.leftChild = cur;
             } else {
