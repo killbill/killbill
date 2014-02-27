@@ -79,51 +79,22 @@ public class NodeInterval {
             return;
         }
 
-        final NodeInterval lastChild = walkChildren(new ChildCallback() {
-
-            // Start for the beginning of the interval and as we move through children keep the mark the end date for
-            // each child period.
-            LocalDate curDate = start;
-
-            @Override
-            public boolean performActionOnChild(final NodeInterval prevChild, final NodeInterval curChild) {
-                // If there is a hole, that is no child, we build the missing piece from ourself
-                if (curChild.getStart().compareTo(curDate) > 0) {
-                    items.buildForMissingInterval(curDate, curChild.getStart(), output, mergeMode);
-                }
-                // Recursively build for the child
-                curChild.build(output, mergeMode);
-                curDate = curChild.getEnd();
-                return false;
-            }
-        });
-        // Finally if there is a hole at the end, we build the missing piece from ourself
-        if (lastChild.getEnd().compareTo(end) < 0) {
-            items.buildForMissingInterval(lastChild.getEnd(), end, output, mergeMode);
-        }
-    }
-
-    private NodeInterval walkChildren(final ChildCallback callback) {
-
-        NodeInterval prevChild = null;
+        LocalDate curDate = start;
         NodeInterval curChild = leftChild;
         while (curChild != null) {
-            boolean shouldBreak = callback.performActionOnChild(prevChild, curChild);
-            if (shouldBreak) {
-                return curChild;
+            if (curChild.getStart().compareTo(curDate) > 0) {
+                               items.buildForMissingInterval(curDate, curChild.getStart(), output, mergeMode);
             }
-            prevChild = curChild;
+                      curChild.build(output, mergeMode);
+                        curDate = curChild.getEnd();
             curChild = curChild.getRightSibling();
         }
-        return prevChild == null ? curChild : prevChild;
+
+        // Finally if there is a hole at the end, we build the missing piece from ourself
+        if (curDate.compareTo(end) < 0) {
+            items.buildForMissingInterval(curDate, end, output, mergeMode);
+        }
     }
-
-    public interface ChildCallback {
-        public boolean performActionOnChild(NodeInterval prevChild, NodeInterval child);
-    }
-
-
-
 
     /**
      * The merge tree is initially constructed by flattening all the existing items and reversing them (CANCEL node).
