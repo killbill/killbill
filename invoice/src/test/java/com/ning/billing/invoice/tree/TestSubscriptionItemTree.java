@@ -76,7 +76,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         tree.addItem(repair);
         tree.build();
         verifyResult(tree.getView(), expectedResult);
-
         tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(repair);
         tree.addItem(newItem);
@@ -500,6 +499,7 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         verifyResult(tree.getView(), expectedResult);
     }
 
+
     @Test(groups = "fast")
     public void testMergeCancellationWithTwoMiddleRepair() {
 
@@ -524,7 +524,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
 
         tree.mergeProposedItem(proposed1);
         tree.mergeProposedItem(proposed2);
-        tree.mergeProposedItem(proposed1);
         tree.mergeProposedItem(proposed3);
         tree.buildForMerge();
 
@@ -536,7 +535,7 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         verifyResult(tree.getView(), expectedResult);
 
 
-        // Dot it again but with propsoed items out of order
+        // Dot it again but with proposed items out of order
         final SubscriptionItemTree treeAgain = new SubscriptionItemTree(subscriptionId);
         final InvoiceItem monthlyAgain = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
         treeAgain.addItem(monthlyAgain);
@@ -548,7 +547,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
 
         treeAgain.mergeProposedItem(proposed1Again);
         treeAgain.mergeProposedItem(proposed2Again);
-        treeAgain.mergeProposedItem(proposed1Again);
         treeAgain.mergeProposedItem(proposed3Again);
         treeAgain.buildForMerge();
 

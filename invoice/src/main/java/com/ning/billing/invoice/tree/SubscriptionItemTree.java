@@ -43,7 +43,7 @@ public class SubscriptionItemTree {
     private boolean isBuilt;
 
     private final UUID subscriptionId;
-    private NodeInterval root;
+    private ItemsNodeInterval root;
 
     private List<Item> items;
 
@@ -71,7 +71,7 @@ public class SubscriptionItemTree {
 
     public SubscriptionItemTree(final UUID subscriptionId) {
         this.subscriptionId = subscriptionId;
-        this.root = new NodeInterval();
+        this.root = new ItemsNodeInterval();
         this.items = new LinkedList<Item>();
         this.existingFixedItems = new LinkedList<InvoiceItem>();
         this.remainingFixedItems = new LinkedList<InvoiceItem>();
@@ -88,7 +88,7 @@ public class SubscriptionItemTree {
             root.addAdjustment(item.getStartDate(), item.getAmount(), item.getLinkedItemId());
         }
         pendingItemAdj.clear();
-        root.build(items, false);
+        root.buildForExistingItems(items);
         isBuilt = true;
     }
 
@@ -103,10 +103,10 @@ public class SubscriptionItemTree {
         if (!isBuilt) {
             build();
         }
-        root = new NodeInterval();
+        root = new ItemsNodeInterval();
         for (Item item : items) {
             Preconditions.checkState(item.getAction() == ItemAction.ADD);
-            root.addExistingItem(new NodeInterval(root, new Item(item, reverse ? ItemAction.CANCEL : ItemAction.ADD)));
+            root.addExistingItem(new ItemsNodeInterval(root, new Item(item, reverse ? ItemAction.CANCEL : ItemAction.ADD)));
         }
         items.clear();
         isBuilt = false;
@@ -114,7 +114,7 @@ public class SubscriptionItemTree {
 
     public void buildForMerge() {
         Preconditions.checkState(!isBuilt);
-        root.build(items, true);
+        root.mergeExistingAndProposed(items);
         isBuilt = true;
     }
 
@@ -128,11 +128,11 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
-                root.addExistingItem(new NodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
+                root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
                 break;
 
             case REPAIR_ADJ:
-                root.addExistingItem(new NodeInterval(root, new Item(invoiceItem, ItemAction.CANCEL)));
+                root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, ItemAction.CANCEL)));
                 break;
 
             case FIXED:
@@ -158,7 +158,7 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
-                final boolean result = root.mergeProposedItem(new NodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
+                final boolean result = root.addProposedItem(new ItemsNodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
                 if (!result) {
                     items.add(new Item(invoiceItem, ItemAction.ADD));
                 }

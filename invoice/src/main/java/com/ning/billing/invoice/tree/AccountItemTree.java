@@ -68,11 +68,11 @@ public class AccountItemTree {
     public void build() {
         Preconditions.checkState(!isBuilt);
 
-        if (allExistingItems.size() > 0) {
-            for (InvoiceItem item : allExistingItems) {
+        if (pendingItemAdj.size() > 0) {
+            for (InvoiceItem item : pendingItemAdj) {
                 addExistingItem(item, true);
             }
-            allExistingItems.clear();
+            pendingItemAdj.clear();
         }
         for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
             tree.build();

@@ -20,46 +20,65 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.tree.Item.ItemAction;
+import com.ning.billing.invoice.tree.NodeInterval.AddNodeCallback;
 
 import static org.testng.Assert.assertEquals;
 
 public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
 
-    private final UUID invoiceId = UUID.randomUUID();
-    private final UUID accountId = UUID.randomUUID();
-    private final UUID subscriptionId = UUID.randomUUID();
-    private final UUID bundleId = UUID.randomUUID();
-    private final String planName = "my-plan";
-    private final String phaseName = "my-phase";
-    private final Currency currency = Currency.USD;
+
+    private AddNodeCallback CALLBACK = new DummyAddNodeCallback();
+
+    public class DummyNodeInterval extends NodeInterval {
+
+        public DummyNodeInterval() {
+        }
+
+        public DummyNodeInterval(final NodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
+            super(parent, startDate, endDate);
+        }
+
+    }
+
+    public class DummyAddNodeCallback implements AddNodeCallback {
+
+        @Override
+        public boolean onExistingNode(final NodeInterval existingNode) {
+            return false;
+        }
+
+        @Override
+        public boolean shouldInsertNode(final NodeInterval insertionNode) {
+            return true;
+        }
+    }
 
     @Test(groups = "fast")
     public void testAddExistingItemSimple() {
-        final NodeInterval root = new NodeInterval();
+        final DummyNodeInterval root = new DummyNodeInterval();
 
-        final NodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
-        root.addExistingItem(top);
+        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
+        root.addNode(top, CALLBACK);
 
-        final NodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-07");
-        final NodeInterval secondChildLevel1 = createNodeInterval("2014-01-08", "2014-01-15");
-        final NodeInterval thirdChildLevel1 = createNodeInterval("2014-01-16", "2014-02-01");
-        root.addExistingItem(firstChildLevel1);
-        root.addExistingItem(secondChildLevel1);
-        root.addExistingItem(thirdChildLevel1);
+        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-07");
+        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2014-01-08", "2014-01-15");
+        final DummyNodeInterval thirdChildLevel1 = createNodeInterval("2014-01-16", "2014-02-01");
+        root.addNode(firstChildLevel1, CALLBACK);
+        root.addNode(secondChildLevel1, CALLBACK);
+        root.addNode(thirdChildLevel1, CALLBACK);
 
-        final NodeInterval firstChildLevel2 = createNodeInterval("2014-01-01", "2014-01-03");
-        final NodeInterval secondChildLevel2 = createNodeInterval("2014-01-03", "2014-01-5");
-        final NodeInterval thirdChildLevel2 = createNodeInterval("2014-01-16", "2014-01-17");
-        root.addExistingItem(firstChildLevel2);
-        root.addExistingItem(secondChildLevel2);
-        root.addExistingItem(thirdChildLevel2);
+        final DummyNodeInterval firstChildLevel2 = createNodeInterval("2014-01-01", "2014-01-03");
+        final DummyNodeInterval secondChildLevel2 = createNodeInterval("2014-01-03", "2014-01-5");
+        final DummyNodeInterval thirdChildLevel2 = createNodeInterval("2014-01-16", "2014-01-17");
+        root.addNode(firstChildLevel2, CALLBACK);
+        root.addNode(secondChildLevel2, CALLBACK);
+        root.addNode(thirdChildLevel2, CALLBACK);
 
         checkNode(top, 3, root, firstChildLevel1, null);
         checkNode(firstChildLevel1, 2, top, firstChildLevel2, secondChildLevel1);
@@ -74,24 +93,24 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
 
     @Test(groups = "fast")
     public void testAddExistingItemWithRebalance() {
-        final NodeInterval root = new NodeInterval();
+        final DummyNodeInterval root = new DummyNodeInterval();
 
-        final NodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
-        root.addExistingItem(top);
+        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
+        root.addNode(top, CALLBACK);
 
-        final NodeInterval firstChildLevel2 = createNodeInterval("2014-01-01", "2014-01-03");
-        final NodeInterval secondChildLevel2 = createNodeInterval("2014-01-03", "2014-01-5");
-        final NodeInterval thirdChildLevel2 = createNodeInterval("2014-01-16", "2014-01-17");
-        root.addExistingItem(firstChildLevel2);
-        root.addExistingItem(secondChildLevel2);
-        root.addExistingItem(thirdChildLevel2);
+        final DummyNodeInterval firstChildLevel2 = createNodeInterval("2014-01-01", "2014-01-03");
+        final DummyNodeInterval secondChildLevel2 = createNodeInterval("2014-01-03", "2014-01-5");
+        final DummyNodeInterval thirdChildLevel2 = createNodeInterval("2014-01-16", "2014-01-17");
+        root.addNode(firstChildLevel2, CALLBACK);
+        root.addNode(secondChildLevel2, CALLBACK);
+        root.addNode(thirdChildLevel2, CALLBACK);
 
-        final NodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-07");
-        final NodeInterval secondChildLevel1 = createNodeInterval("2014-01-08", "2014-01-15");
-        final NodeInterval thirdChildLevel1 = createNodeInterval("2014-01-16", "2014-02-01");
-        root.addExistingItem(firstChildLevel1);
-        root.addExistingItem(secondChildLevel1);
-        root.addExistingItem(thirdChildLevel1);
+        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-07");
+        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2014-01-08", "2014-01-15");
+        final DummyNodeInterval thirdChildLevel1 = createNodeInterval("2014-01-16", "2014-02-01");
+        root.addNode(firstChildLevel1, CALLBACK);
+        root.addNode(secondChildLevel1, CALLBACK);
+        root.addNode(thirdChildLevel1, CALLBACK);
 
         checkNode(top, 3, root, firstChildLevel1, null);
         checkNode(firstChildLevel1, 2, top, firstChildLevel2, secondChildLevel1);
@@ -105,7 +124,7 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
 
 
 
-    private void checkNode(final NodeInterval node, final int expectedChildren, final NodeInterval expectedParent, final NodeInterval expectedLeftChild, final NodeInterval expectedRightSibling) {
+    private void checkNode(final NodeInterval node, final int expectedChildren, final DummyNodeInterval expectedParent, final DummyNodeInterval expectedLeftChild, final DummyNodeInterval expectedRightSibling) {
         assertEquals(node.getNbChildren(), expectedChildren);
         assertEquals(node.getParent(), expectedParent);
         assertEquals(node.getRightSibling(), expectedRightSibling);
@@ -113,15 +132,8 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
         assertEquals(node.getLeftChild(), expectedLeftChild);
     }
 
-    private NodeInterval createNodeInterval(final String startDate, final String endDate) {
-        return new NodeInterval(null, createItem(startDate, endDate));
+    private DummyNodeInterval createNodeInterval(final String startDate, final String endDate) {
+        return new DummyNodeInterval(null, new LocalDate(startDate), new LocalDate(endDate));
     }
 
-    private Item createItem(final String startDate, final String endDate) {
-        final BigDecimal amount = BigDecimal.TEN;
-        final BigDecimal rate = BigDecimal.TEN;
-        final InvoiceItem invoiceItem = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, new LocalDate(startDate), new LocalDate(endDate), amount, rate, currency);
-        Item item = new Item(invoiceItem, ItemAction.ADD);
-        return item;
-    }
 }
