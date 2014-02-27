@@ -71,7 +71,7 @@ public class NodeInterval {
      * @param output    result list of items
      * @param mergeMode mode used to produce output list
      */
-    public void build(final List<Item> output, boolean mergeMode) {
+    public void build(final List<Item> output, final boolean mergeMode) {
 
         // There is no sub-interval, just add our own items.
         if (leftChild == null) {
@@ -79,20 +79,51 @@ public class NodeInterval {
             return;
         }
 
-        LocalDate curDate = start;
-        NodeInterval curChild = leftChild;
-        while (curChild != null) {
-            if (curChild.getStart().compareTo(curDate) > 0) {
-                items.buildForMissingInterval(curDate, curChild.getStart(), output, mergeMode);
+        final NodeInterval lastChild = walkChildren(new ChildCallback() {
+
+            // Start for the beginning of the interval and as we move through children keep the mark the end date for
+            // each child period.
+            LocalDate curDate = start;
+
+            @Override
+            public boolean performActionOnChild(final NodeInterval prevChild, final NodeInterval curChild) {
+                // If there is a hole, that is no child, we build the missing piece from ourself
+                if (curChild.getStart().compareTo(curDate) > 0) {
+                    items.buildForMissingInterval(curDate, curChild.getStart(), output, mergeMode);
+                }
+                // Recursively build for the child
+                curChild.build(output, mergeMode);
+                curDate = curChild.getEnd();
+                return false;
             }
-            curChild.build(output, mergeMode);
-            curDate = curChild.getEnd();
-            curChild = curChild.getRightSibling();
-        }
-        if (curDate.compareTo(end) < 0) {
-            items.buildForMissingInterval(curDate, end, output, mergeMode);
+        });
+        // Finally if there is a hole at the end, we build the missing piece from ourself
+        if (lastChild.getEnd().compareTo(end) < 0) {
+            items.buildForMissingInterval(lastChild.getEnd(), end, output, mergeMode);
         }
     }
+
+    private NodeInterval walkChildren(final ChildCallback callback) {
+
+        NodeInterval prevChild = null;
+        NodeInterval curChild = leftChild;
+        while (curChild != null) {
+            boolean shouldBreak = callback.performActionOnChild(prevChild, curChild);
+            if (shouldBreak) {
+                return curChild;
+            }
+            prevChild = curChild;
+            curChild = curChild.getRightSibling();
+        }
+        return prevChild == null ? curChild : prevChild;
+    }
+
+    public interface ChildCallback {
+        public boolean performActionOnChild(NodeInterval prevChild, NodeInterval child);
+    }
+
+
+
 
     /**
      * The merge tree is initially constructed by flattening all the existing items and reversing them (CANCEL node).
@@ -280,7 +311,7 @@ public class NodeInterval {
 
         NodeInterval prevChild = null;
         NodeInterval curChild = leftChild;
-        do {
+        while (curChild != null) {
             if (curChild.isItemContained(item)) {
                 curChild.addExistingItem(newNode);
                 return;
@@ -302,7 +333,7 @@ public class NodeInterval {
             }
             prevChild = curChild;
             curChild = curChild.rightSibling;
-        } while (curChild != null);
+        }
 
         prevChild.rightSibling = newNode;
     }
@@ -371,7 +402,7 @@ public class NodeInterval {
         return findNodeRecursively2(this, date, targetItemId);
     }
 
-    // TODO That method should be use instaed of findNodeRecursively2 to search the node more effectively using the time
+    // TODO That method should be use instead of findNodeRecursively2 to search the node more effectively using the time
     // but unfortunately that fails because of our test that use the wrong date when doing adjustments.
     private NodeInterval findNodeRecursively(final NodeInterval curNode, final LocalDate date, final UUID targetItemId) {
         if (date.compareTo(curNode.getStart()) < 0 || date.compareTo(curNode.getEnd()) > 0) {
