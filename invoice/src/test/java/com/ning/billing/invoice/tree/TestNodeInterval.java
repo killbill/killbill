@@ -17,9 +17,12 @@
 package com.ning.billing.invoice.tree;
 
 import java.math.BigDecimal;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
@@ -27,8 +30,11 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.tree.Item.ItemAction;
 import com.ning.billing.invoice.tree.NodeInterval.AddNodeCallback;
+import com.ning.billing.invoice.tree.NodeInterval.BuildNodeCallback;
+import com.ning.billing.invoice.tree.NodeInterval.SearchCallback;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 
 public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
 
@@ -37,13 +43,20 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
 
     public class DummyNodeInterval extends NodeInterval {
 
+        private final UUID id;
+
         public DummyNodeInterval() {
+            this.id = UUID.randomUUID();
         }
 
         public DummyNodeInterval(final NodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
             super(parent, startDate, endDate);
+            this.id = UUID.randomUUID();
         }
 
+        public UUID getId() {
+            return id;
+        }
     }
 
     public class DummyAddNodeCallback implements AddNodeCallback {
@@ -123,6 +136,109 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
     }
 
 
+    @Test(groups = "fast")
+      public void testBuild() {
+        final DummyNodeInterval root = new DummyNodeInterval();
+
+        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
+        root.addNode(top, CALLBACK);
+
+        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-07");
+        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2014-01-08", "2014-01-15");
+        final DummyNodeInterval thirdChildLevel1 = createNodeInterval("2014-01-16", "2014-02-01");
+        root.addNode(firstChildLevel1, CALLBACK);
+        root.addNode(secondChildLevel1, CALLBACK);
+        root.addNode(thirdChildLevel1, CALLBACK);
+
+        final DummyNodeInterval firstChildLevel2 = createNodeInterval("2014-01-01", "2014-01-03");
+        final DummyNodeInterval secondChildLevel2 = createNodeInterval("2014-01-03", "2014-01-5");
+        final DummyNodeInterval thirdChildLevel2 = createNodeInterval("2014-01-16", "2014-01-17");
+        root.addNode(firstChildLevel2, CALLBACK);
+        root.addNode(secondChildLevel2, CALLBACK);
+        root.addNode(thirdChildLevel2, CALLBACK);
+
+        final List<NodeInterval> output = new LinkedList<NodeInterval>();
+
+        // Just build the missing pieces.
+        root.build(new BuildNodeCallback() {
+            @Override
+            public void buildMissingInterval(final NodeInterval curNode, final LocalDate startDate, final LocalDate endDate) {
+                output.add(createNodeInterval(startDate, endDate));
+            }
+            @Override
+            public void buildNode(final NodeInterval curNode) {
+                // Nothing
+            }
+        });
+
+        final List<NodeInterval> expected = new LinkedList<NodeInterval>();
+        expected.add(createNodeInterval("2014-01-05", "2014-01-07"));
+        expected.add(createNodeInterval("2014-01-07", "2014-01-08"));
+        expected.add(createNodeInterval("2014-01-15", "2014-01-16"));
+        expected.add(createNodeInterval("2014-01-17", "2014-02-01"));
+
+        assertEquals(output.size(), expected.size());
+        checkInterval(output.get(0), expected.get(0));
+        checkInterval(output.get(1), expected.get(1));
+    }
+
+
+    @Test(groups = "fast")
+    public void testSearch() {
+        final DummyNodeInterval root = new DummyNodeInterval();
+
+        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
+        root.addNode(top, CALLBACK);
+
+        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-07");
+        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2014-01-08", "2014-01-15");
+        final DummyNodeInterval thirdChildLevel1 = createNodeInterval("2014-01-16", "2014-02-01");
+        root.addNode(firstChildLevel1, CALLBACK);
+        root.addNode(secondChildLevel1, CALLBACK);
+        root.addNode(thirdChildLevel1, CALLBACK);
+
+        final DummyNodeInterval firstChildLevel2 = createNodeInterval("2014-01-01", "2014-01-03");
+        final DummyNodeInterval secondChildLevel2 = createNodeInterval("2014-01-03", "2014-01-5");
+        final DummyNodeInterval thirdChildLevel2 = createNodeInterval("2014-01-16", "2014-01-17");
+        root.addNode(firstChildLevel2, CALLBACK);
+        root.addNode(secondChildLevel2, CALLBACK);
+        root.addNode(thirdChildLevel2, CALLBACK);
+
+        final DummyNodeInterval firstChildLevel3 = createNodeInterval("2014-01-01", "2014-01-02");
+        final DummyNodeInterval secondChildLevel3 = createNodeInterval("2014-01-03", "2014-01-04");
+        root.addNode(firstChildLevel3, CALLBACK);
+        root.addNode(secondChildLevel3, CALLBACK);
+
+        final NodeInterval search1 = root.findNode(new LocalDate("2014-01-04"), new SearchCallback() {
+            @Override
+            public boolean isMatch(final NodeInterval curNode) {
+                return ((DummyNodeInterval) curNode).getId().equals(secondChildLevel3.getId());
+            }
+        });
+        checkInterval(search1, secondChildLevel3);
+
+        final NodeInterval search2 = root.findNode(new SearchCallback() {
+            @Override
+            public boolean isMatch(final NodeInterval curNode) {
+                return ((DummyNodeInterval) curNode).getId().equals(thirdChildLevel2.getId());
+            }
+        });
+        checkInterval(search2, thirdChildLevel2);
+
+        final NodeInterval nullSearch = root.findNode(new SearchCallback() {
+            @Override
+            public boolean isMatch(final NodeInterval curNode) {
+                return ((DummyNodeInterval) curNode).getId().equals("foo");
+            }
+        });
+        assertNull(nullSearch);
+    }
+
+
+    private void checkInterval(final NodeInterval real, final NodeInterval expected) {
+        assertEquals(real.getStart(), expected.getStart());
+        assertEquals(real.getEnd(), expected.getEnd());
+    }
 
     private void checkNode(final NodeInterval node, final int expectedChildren, final DummyNodeInterval expectedParent, final DummyNodeInterval expectedLeftChild, final DummyNodeInterval expectedRightSibling) {
         assertEquals(node.getNbChildren(), expectedChildren);
@@ -131,9 +247,12 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
         assertEquals(node.getLeftChild(), expectedLeftChild);
         assertEquals(node.getLeftChild(), expectedLeftChild);
     }
+    private DummyNodeInterval createNodeInterval(final LocalDate startDate, final LocalDate endDate) {
+        return new DummyNodeInterval(null, startDate, endDate);
+    }
 
     private DummyNodeInterval createNodeInterval(final String startDate, final String endDate) {
-        return new DummyNodeInterval(null, new LocalDate(startDate), new LocalDate(endDate));
+        return createNodeInterval(new LocalDate(startDate), new LocalDate(endDate));
     }
 
 }

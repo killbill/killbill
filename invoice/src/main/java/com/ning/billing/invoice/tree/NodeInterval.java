@@ -268,7 +268,7 @@ public abstract class NodeInterval {
                 if (callback.isMatch(curChild)) {
                     return curChild;
                 }
-                NodeInterval result = findNode(targetDate, callback);
+                NodeInterval result = curChild.findNode(targetDate, callback);
                 if (result != null) {
                     return result;
                 }
@@ -285,6 +285,8 @@ public abstract class NodeInterval {
      * @return the found node or null if there is nothing.
      */
     public NodeInterval findNode(final SearchCallback callback) {
+
+        System.out.println("ENTERING [" + start + " - " + end + "]");
 
         Preconditions.checkNotNull(callback);
         if (/*!isRoot() && */callback.isMatch(this)) {
