@@ -1,11 +1,18 @@
 package com.ning.billing.invoice.tree;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
 
+import com.ning.billing.util.jackson.ObjectMapper;
+
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Preconditions;
 
 public class ItemsNodeInterval extends NodeInterval {
@@ -21,12 +28,13 @@ public class ItemsNodeInterval extends NodeInterval {
         this.items = new ItemsInterval(this, item);
     }
 
-    public ItemsInterval getItems() {
+    @JsonIgnore
+    public ItemsInterval getItemsInterval() {
         return items;
     }
 
-    public boolean containsItem(final UUID targetId) {
-        return items.containsItem(targetId);
+    public List<Item> getItems() {
+        return items.getItems();
     }
 
     /**
@@ -53,14 +61,14 @@ public class ItemsNodeInterval extends NodeInterval {
     public void buildForExistingItems(final List<Item> output) {
         build(new BuildNodeCallback() {
             @Override
-            public void buildMissingInterval(final NodeInterval curNode, final LocalDate startDate, final LocalDate endDate) {
-                final ItemsInterval items = ((ItemsNodeInterval) curNode).getItems();
+            public void onMissingInterval(final NodeInterval curNode, final LocalDate startDate, final LocalDate endDate) {
+                final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
                 items.buildForMissingInterval(startDate, endDate, output, false);
             }
 
             @Override
-            public void buildNode(final NodeInterval curNode) {
-                final ItemsInterval items = ((ItemsNodeInterval) curNode).getItems();
+            public void onLastNode(final NodeInterval curNode) {
+                final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
                 items.buildFromItems(output, false);
             }
         });
@@ -91,14 +99,14 @@ public class ItemsNodeInterval extends NodeInterval {
     public void mergeExistingAndProposed(final List<Item> output) {
         build(new BuildNodeCallback() {
             @Override
-            public void buildMissingInterval(final NodeInterval curNode, final LocalDate startDate, final LocalDate endDate) {
-                final ItemsInterval items = ((ItemsNodeInterval) curNode).getItems();
+            public void onMissingInterval(final NodeInterval curNode, final LocalDate startDate, final LocalDate endDate) {
+                final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
                 items.buildForMissingInterval(startDate, endDate, output, true);
             }
 
             @Override
-            public void buildNode(final NodeInterval curNode) {
-                final ItemsInterval items = ((ItemsNodeInterval) curNode).getItems();
+            public void onLastNode(final NodeInterval curNode) {
+                final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
                 items.buildFromItems(output, true);
             }
         });
@@ -115,8 +123,8 @@ public class ItemsNodeInterval extends NodeInterval {
             @Override
             public boolean onExistingNode(final NodeInterval existingNode) {
                 if (!existingNode.isRoot() && newNode.getStart().compareTo(existingNode.getStart()) == 0 && newNode.getEnd().compareTo(existingNode.getEnd()) == 0) {
-                    final Item item = newNode.getItems().getItems().get(0);
-                    final ItemsInterval existingOrNewNodeItems = ((ItemsNodeInterval) existingNode).getItems();
+                    final Item item = newNode.getItems().get(0);
+                    final ItemsInterval existingOrNewNodeItems = ((ItemsNodeInterval) existingNode).getItemsInterval();
                     existingOrNewNodeItems.insertSortedItem(item);
                 }
                 // There is no new node added but instead we just populated the list of items for the already existing node.
@@ -148,8 +156,8 @@ public class ItemsNodeInterval extends NodeInterval {
                 }
 
                 Preconditions.checkState(newNode.getStart().compareTo(existingNode.getStart()) == 0 && newNode.getEnd().compareTo(existingNode.getEnd()) == 0);
-                final Item item = newNode.getItems().getItems().get(0);
-                final ItemsInterval existingOrNewNodeItems = ((ItemsNodeInterval) existingNode).getItems();
+                final Item item = newNode.getItems().get(0);
+                final ItemsInterval existingOrNewNodeItems = ((ItemsNodeInterval) existingNode).getItemsInterval();
                 existingOrNewNodeItems.cancelItems(item);
                 // In the merge logic, whether we really insert the node or find an existing node on which to insert items should be seen
                 // as an insertion (so as to avoid keeping that proposed item, see how return value of addProposedItem is used)
@@ -164,10 +172,10 @@ public class ItemsNodeInterval extends NodeInterval {
                     return false;
                 }
 
-                final ItemsInterval insertionNodeItems = ((ItemsNodeInterval) insertionNode).getItems();
+                final ItemsInterval insertionNodeItems = ((ItemsNodeInterval) insertionNode).getItemsInterval();
                 Preconditions.checkState(insertionNodeItems.getItems().size() == 1, "Expected existing node to have only one item");
                 final Item insertionNodeItem = insertionNodeItems.getItems().get(0);
-                final Item newNodeItem = newNode.getItems().getItems().get(0);
+                final Item newNodeItem = newNode.getItems().get(0);
 
                 // If we receive a new proposed that is the same kind as the reversed existing we want to insert it to generate
                 // a piece of repair
@@ -194,11 +202,44 @@ public class ItemsNodeInterval extends NodeInterval {
         final NodeInterval node = findNode(new SearchCallback() {
             @Override
             public boolean isMatch(final NodeInterval curNode) {
-                return ((ItemsNodeInterval) curNode).getItems().containsItem(targetId);
+                return ((ItemsNodeInterval) curNode).getItemsInterval().containsItem(targetId);
             }
         });
         Preconditions.checkNotNull(node, "Cannot add adjustement for item = " + targetId + ", date = " + adjustementDate);
         ((ItemsNodeInterval) node).setAdjustment(amount.negate(), targetId);
+    }
+
+    public void jsonSerializeTree(final ObjectMapper mapper, final OutputStream output) throws IOException {
+
+        final JsonGenerator generator = mapper.getFactory().createJsonGenerator(output);
+        generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+
+        walkTree(new WalkCallback() {
+
+            private int curDepth = 0;
+
+            @Override
+            public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
+                final ItemsNodeInterval node = (ItemsNodeInterval) curNode;
+                if (node.isRoot()) {
+                    return;
+                }
+
+                try {
+                    if (curDepth < depth) {
+                        generator.writeStartArray();
+                        curDepth = depth;
+                    } else if (curDepth > depth) {
+                        generator.writeEndArray();
+                        curDepth = depth;
+                    }
+                    generator.writeObject(node);
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to deserialize tree", e);
+                }
+            }
+        });
+        generator.close();
     }
 
     protected void setAdjustment(final BigDecimal amount, final UUID linkedId) {

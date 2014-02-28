@@ -20,10 +20,11 @@ import java.util.List;
 
 import org.joda.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public abstract class NodeInterval {
+public class NodeInterval {
 
     protected NodeInterval parent;
     protected NodeInterval leftChild;
@@ -54,7 +55,7 @@ public abstract class NodeInterval {
         Preconditions.checkNotNull(callback);
 
         if (leftChild == null) {
-            callback.buildNode(this);
+            callback.onLastNode(this);
             return;
         }
 
@@ -62,7 +63,7 @@ public abstract class NodeInterval {
         NodeInterval curChild = leftChild;
         while (curChild != null) {
             if (curChild.getStart().compareTo(curDate) > 0) {
-                callback.buildMissingInterval(this, curDate, curChild.getStart());
+                callback.onMissingInterval(this, curDate, curChild.getStart());
             }
             curChild.build(callback);
             curDate = curChild.getEnd();
@@ -71,7 +72,7 @@ public abstract class NodeInterval {
 
         // Finally if there is a hole at the end, we build the missing piece from ourself
         if (curDate.compareTo(end) < 0) {
-            callback.buildMissingInterval(this, curDate, end);
+            callback.onMissingInterval(this, curDate, end);
         }
     }
 
@@ -145,6 +146,85 @@ public abstract class NodeInterval {
         }
     }
 
+    /**
+     * Return the first node satisfying the date and match callback.
+     *
+     * @param targetDate target date for possible match nodes whose interval comprises that date
+     * @param callback   custom logic to decide if a given node is a match
+     * @return the found node or null if there is nothing.
+     */
+    public NodeInterval findNode(final LocalDate targetDate, final SearchCallback callback) {
+
+        Preconditions.checkNotNull(callback);
+        Preconditions.checkNotNull(targetDate);
+
+        if (targetDate.compareTo(getStart()) < 0 || targetDate.compareTo(getEnd()) > 0) {
+            return null;
+        }
+
+        NodeInterval curChild = leftChild;
+        while (curChild != null) {
+            if (curChild.getStart().compareTo(targetDate) <= 0 && curChild.getEnd().compareTo(targetDate) >= 0) {
+                if (callback.isMatch(curChild)) {
+                    return curChild;
+                }
+                NodeInterval result = curChild.findNode(targetDate, callback);
+                if (result != null) {
+                    return result;
+                }
+            }
+            curChild = curChild.getRightSibling();
+        }
+        return null;
+    }
+
+    /**
+     * Return the first node satisfying the date and match callback.
+     *
+     * @param callback custom logic to decide if a given node is a match
+     * @return the found node or null if there is nothing.
+     */
+    public NodeInterval findNode(final SearchCallback callback) {
+
+        Preconditions.checkNotNull(callback);
+        if (callback.isMatch(this)) {
+            return this;
+        }
+
+        NodeInterval curChild = leftChild;
+        while (curChild != null) {
+            final NodeInterval result = curChild.findNode(callback);
+            if (result != null) {
+                return result;
+            }
+            curChild = curChild.getRightSibling();
+        }
+        return null;
+    }
+
+    /**
+     * Walk the tree (depth first search) and invoke callback for each node.
+     *
+     * @param callback
+     */
+    public void walkTree(WalkCallback callback) {
+        Preconditions.checkNotNull(callback);
+        walkTreeWithDepth(callback, 0);
+    }
+
+    private void walkTreeWithDepth(WalkCallback callback, int depth) {
+
+        Preconditions.checkNotNull(callback);
+        callback.onCurrentNode(depth, this, parent);
+
+        NodeInterval curChild = leftChild;
+        while (curChild != null) {
+            curChild.walkTreeWithDepth(callback, (depth + 1));
+            curChild = curChild.getRightSibling();
+        }
+    }
+
+
     public boolean isItemContained(final NodeInterval newNode) {
         return (newNode.getStart().compareTo(start) >= 0 &&
                 newNode.getStart().compareTo(end) <= 0 &&
@@ -159,6 +239,7 @@ public abstract class NodeInterval {
                  newNode.getEnd().compareTo(end) > 0));
     }
 
+    @JsonIgnore
     public boolean isRoot() {
         return parent == null;
     }
@@ -171,18 +252,22 @@ public abstract class NodeInterval {
         return end;
     }
 
+    @JsonIgnore
     public NodeInterval getParent() {
         return parent;
     }
 
+    @JsonIgnore
     public NodeInterval getLeftChild() {
         return leftChild;
     }
 
+    @JsonIgnore
     public NodeInterval getRightSibling() {
         return rightSibling;
     }
 
+    @JsonIgnore
     public int getNbChildren() {
         int result = 0;
         NodeInterval curChild = leftChild;
@@ -247,68 +332,22 @@ public abstract class NodeInterval {
     }
 
     /**
-     * Return the first node satisfying the date and match callback.
-     *
-     * @param targetDate target date for possible match nodes whose interval comprises that date
-     * @param callback   custom logic to decide if a given node is a match
-     * @return the found node or null if there is nothing.
+     * Provides callback for walking the tree.
      */
-    public NodeInterval findNode(final LocalDate targetDate, final SearchCallback callback) {
-
-        Preconditions.checkNotNull(callback);
-        Preconditions.checkNotNull(targetDate);
-
-        if (targetDate.compareTo(getStart()) < 0 || targetDate.compareTo(getEnd()) > 0) {
-            return null;
-        }
-
-        NodeInterval curChild = leftChild;
-        while (curChild != null) {
-            if (curChild.getStart().compareTo(targetDate) <= 0 && curChild.getEnd().compareTo(targetDate) >= 0) {
-                if (callback.isMatch(curChild)) {
-                    return curChild;
-                }
-                NodeInterval result = curChild.findNode(targetDate, callback);
-                if (result != null) {
-                    return result;
-                }
-            }
-            curChild = curChild.getRightSibling();
-        }
-        return null;
-    }
-
-    /**
-     * Return the first node satisfying the date and match callback.
-     *
-     * @param callback custom logic to decide if a given node is a match
-     * @return the found node or null if there is nothing.
-     */
-    public NodeInterval findNode(final SearchCallback callback) {
-
-        System.out.println("ENTERING [" + start + " - " + end + "]");
-
-        Preconditions.checkNotNull(callback);
-        if (/*!isRoot() && */callback.isMatch(this)) {
-            return this;
-        }
-
-        NodeInterval curChild = leftChild;
-        while (curChild != null) {
-            final NodeInterval result = curChild.findNode(callback);
-            if (result != null) {
-                return result;
-            }
-            curChild = curChild.getRightSibling();
-        }
-        return null;
+    public interface WalkCallback {
+        public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent);
     }
 
     /**
      * Provides custom logic for the search.
      */
     public interface SearchCallback {
-
+        /**
+         * Custom logic to decide which node to return.
+         *
+         * @param curNode found node
+         * @return evaluates whether this is the node that should be returned
+         */
         boolean isMatch(NodeInterval curNode);
     }
 
@@ -324,14 +363,14 @@ public abstract class NodeInterval {
          * @param startDate startDate of the new interval to build
          * @param endDate   endDate of the new interval to build
          */
-        public void buildMissingInterval(NodeInterval curNode, LocalDate startDate, LocalDate endDate);
+        public void onMissingInterval(NodeInterval curNode, LocalDate startDate, LocalDate endDate);
 
         /**
          * Called when we hit a node with no children
          *
          * @param curNode current node
          */
-        public void buildNode(NodeInterval curNode);
+        public void onLastNode(NodeInterval curNode);
     }
 
     /**

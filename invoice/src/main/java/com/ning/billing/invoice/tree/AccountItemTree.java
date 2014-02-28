@@ -89,24 +89,6 @@ public class AccountItemTree {
         addExistingItem(existingItem, false);
     }
 
-    /*
-    EXTERNAL_CHARGE,
-    // Fixed (one-time) charge
-    FIXED,
-    // Recurring charge
-    RECURRING,
-    // Internal adjustment, used for repair
-    REPAIR_ADJ,
-    // Internal adjustment, used as rollover credits
-    CBA_ADJ,
-    // Credit adjustment, either at the account level (on its own invoice) or against an existing invoice
-    // (invoice level adjustment)
-    CREDIT_ADJ,
-    // Invoice item adjustment (by itself or triggered by a refund)
-    ITEM_ADJ,
-    // Refund adjustment (against a posted payment), used when adjusting invoices
-    REFUND_ADJ
-     */
     private void addExistingItem(final InvoiceItem existingItem, boolean failOnMissingSubscription) {
 
         Preconditions.checkState(!isBuilt);

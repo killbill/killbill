@@ -28,6 +28,7 @@ import org.joda.time.LocalDate;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.tree.Item.ItemAction;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -273,4 +274,8 @@ public class SubscriptionItemTree {
         return result;
     }
 
+    @VisibleForTesting
+    ItemsNodeInterval getRoot() {
+        return root;
+    }
 }
