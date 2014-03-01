@@ -97,8 +97,6 @@ public class TestJaxrsBase extends KillbillClient {
 
     protected static final String PLUGIN_NAME = "noop";
 
-    protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 50000;
-
     @Inject
     protected OSGIServiceRegistration<Servlet> servletRouter;
 
