@@ -19,5 +19,4 @@ package com.ning.billing.beatrix.integration.osgi;
 import com.ning.billing.beatrix.integration.TestIntegrationBase;
 
 public class TestOSGIBase extends TestIntegrationBase {
-
 }
