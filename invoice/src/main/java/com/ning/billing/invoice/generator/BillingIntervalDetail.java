@@ -22,9 +22,6 @@ import com.ning.billing.catalog.api.BillingPeriod;
 
 public class BillingIntervalDetail {
 
-
-    private final boolean shouldUsePatch = true;
-
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final LocalDate targetDate;
@@ -78,11 +75,14 @@ public class BillingIntervalDetail {
             billingCycleDate = new LocalDate(startDate.getYear(), startDate.getMonthOfYear(), billingCycleDay, startDate.getChronology());
         }
 
+        int numberOfPeriods = 0;
+        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
         LocalDate proposedDate = billingCycleDate;
         while (proposedDate.isBefore(startDate)) {
-            proposedDate = proposedDate.plusMonths(1);
+            proposedDate = proposedDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
+            numberOfPeriods += 1;
         }
-        firstBillingCycleDate = proposedDate;
+        firstBillingCycleDate = alignProposedBillCycleDate(proposedDate);
     }
 
     private void calculateEffectiveEndDate() {
@@ -144,9 +144,6 @@ public class BillingIntervalDetail {
     // We start from a billCycleDate
     //
     private LocalDate alignProposedBillCycleDate(final LocalDate proposedDate) {
-        if (!shouldUsePatch) {
-            return proposedDate;
-        }
         final int lastDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
 
         int proposedBillCycleDate = proposedDate.getDayOfMonth();
