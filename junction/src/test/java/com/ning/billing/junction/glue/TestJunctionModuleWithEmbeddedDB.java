@@ -21,10 +21,8 @@ import org.skife.config.ConfigSource;
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.api.TestApiListener;
-import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
-import com.ning.billing.junction.JunctionTestListenerStatus;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.MetricsModule;
@@ -53,7 +51,6 @@ public class TestJunctionModuleWithEmbeddedDB extends TestJunctionModule {
         install(new MetricsModule());
         install(new TagStoreModule());
 
-        bind(TestListenerStatus.class).to(JunctionTestListenerStatus.class).asEagerSingleton();
         bind(TestApiListener.class).asEagerSingleton();
     }
 }

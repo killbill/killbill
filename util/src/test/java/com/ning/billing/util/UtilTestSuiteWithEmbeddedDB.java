@@ -21,14 +21,12 @@ import javax.inject.Inject;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.api.TestApiListener;
-import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.commons.locker.GlobalLocker;
 import com.ning.billing.notificationq.api.NotificationQueueService;
@@ -47,13 +45,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
-import static org.testng.Assert.assertTrue;
-
-public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB implements TestListenerStatus {
+public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
     private static final Logger log = LoggerFactory.getLogger(UtilTestSuiteWithEmbeddedDB.class);
-
-    protected static final long DELAY = 10000;
 
     @Inject
     protected PersistentBus eventBus;
@@ -81,18 +75,13 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected GlobalLocker locker;
     @Inject
     protected IDBI idbi;
-
+    @Inject
     protected TestApiListener eventsListener;
-
-    private boolean isListenerFailed;
-    private String listenerFailedMsg;
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleWithEmbeddedDB(configSource));
         g.injectMembers(this);
-
-        eventsListener = new TestApiListener(this, idbi);
     }
 
     @Override
@@ -100,7 +89,6 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     public void beforeMethod() throws Exception {
         super.beforeMethod();
 
-        resetTestListenerStatus();
         eventsListener.reset();
 
         eventBus.start();
@@ -121,23 +109,7 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         eventBus.stop();
     }
 
-    @Override
-    public void failed(final String msg) {
-        isListenerFailed = true;
-        listenerFailedMsg = msg;
-    }
-
-    @Override
-    public void resetTestListenerStatus() {
-        isListenerFailed = false;
-        listenerFailedMsg = null;
-    }
-
     protected void assertListenerStatus() {
-        assertTrue(eventsListener.isCompleted(DELAY));
-        if (isListenerFailed) {
-            log.error(listenerFailedMsg);
-            Assert.fail(listenerFailedMsg);
-        }
+        eventsListener.assertListenerStatus();
     }
 }

@@ -26,6 +26,7 @@ import com.ning.billing.DBTestingHelper;
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.glue.DefaultAccountModule;
+import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.DefaultBeatrixService;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;
@@ -141,6 +142,8 @@ public class BeatrixIntegrationModule extends AbstractModule {
         bind(PaymentChecker.class).asEagerSingleton();
         bind(RefundChecker.class).asEagerSingleton();
         bind(AuditChecker.class).asEagerSingleton();
+
+        bind(TestApiListener.class).asEagerSingleton();
     }
 
     private static final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {

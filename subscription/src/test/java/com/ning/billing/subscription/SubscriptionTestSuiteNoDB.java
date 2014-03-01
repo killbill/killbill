@@ -33,7 +33,6 @@ import org.testng.annotations.BeforeMethod;
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.api.TestApiListener;
-import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.clock.ClockMock;
@@ -88,8 +87,6 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected TestSubscriptionHelper testUtil;
     @Inject
     protected TestApiListener testListener;
-    @Inject
-    protected TestListenerStatus testListenerStatus;
 
     @Inject
     protected SubscriptionTestInitializer subscriptionTestInitializer;
@@ -122,7 +119,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         // CLEANUP ALL DB TABLES OR IN MEMORY STRUCTURES
         ((MockSubscriptionDaoMemory) dao).reset();
 
-        subscriptionTestInitializer.startTestFamework(testListener, testListenerStatus, clock, busService, subscriptionBaseService);
+        subscriptionTestInitializer.startTestFamework(testListener, clock, busService, subscriptionBaseService);
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService);
         this.accountData = subscriptionTestInitializer.initAccountData();
@@ -135,6 +132,6 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     }
 
     protected void assertListenerStatus() {
-        ((SubscriptionTestListenerStatus) testListenerStatus).assertListenerStatus();
+        testListener.assertListenerStatus();
     }
 }

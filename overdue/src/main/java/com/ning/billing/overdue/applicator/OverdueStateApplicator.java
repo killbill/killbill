@@ -151,14 +151,16 @@ public class OverdueStateApplicator {
                 return;
             }
 
-            storeNewState(account, nextOverdueState, context);
-
             cancelSubscriptionsIfRequired(account, nextOverdueState, context);
 
             sendEmailIfRequired(billingState, account, nextOverdueState, context);
 
             avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(account, previousOverdueState, nextOverdueState, context);
 
+            // Make sure to store the new state last here: the entitlement DAO will send a BlockingTransitionInternalEvent
+            // on the bus to which invoice will react. We need the latest state (including AUTO_INVOICE_OFF tag for example)
+            // to be present in the database first.
+            storeNewState(account, nextOverdueState, context);
         } catch (OverdueApiException e) {
             if (e.getCode() != ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
                 throw new OverdueException(e);

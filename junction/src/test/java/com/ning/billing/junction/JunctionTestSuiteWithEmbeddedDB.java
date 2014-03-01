@@ -32,7 +32,6 @@ import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.api.TestApiListener;
-import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.Catalog;
@@ -62,9 +61,6 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
 
     protected static final Logger log = LoggerFactory.getLogger(JunctionTestSuiteWithEmbeddedDB.class);
 
-    // Be generous...
-    protected static final Long DELAY = 20000L;
-
     @Inject
     protected AccountUserApi accountApi;
     @Inject
@@ -81,8 +77,6 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     protected PersistentBus bus;
     @Inject
     protected TestApiListener testListener;
-    @Inject
-    protected TestListenerStatus testListenerStatus;
     @Inject
     protected BusService busService;
     @Inject
@@ -136,7 +130,7 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     private void startTestFamework() throws Exception {
         log.debug("STARTING TEST FRAMEWORK");
 
-        resetTestListener(testListener, testListenerStatus);
+        resetTestListener(testListener);
 
         resetClockToStartOfTest(clock);
 
@@ -156,11 +150,10 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
         log.debug("STOPPED TEST FRAMEWORK");
     }
 
-    private void resetTestListener(final TestApiListener testListener, final TestListenerStatus testListenerStatus) {
+    private void resetTestListener(final TestApiListener testListener) {
         // RESET LIST OF EXPECTED EVENTS
         if (testListener != null) {
             testListener.reset();
-            testListenerStatus.resetTestListenerStatus();
         }
     }
 
@@ -218,7 +211,6 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     }
 
     protected void assertListenerStatus() {
-        assertTrue(testListener.isCompleted(DELAY));
-        ((JunctionTestListenerStatus) testListenerStatus).assertListenerStatus();
+        testListener.assertListenerStatus();
     }
 }

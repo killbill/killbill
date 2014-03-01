@@ -18,14 +18,13 @@ package com.ning.billing.subscription;
 
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.api.TestApiListener;
-import com.ning.billing.api.TestListenerStatus;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.clock.ClockMock;
+import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 public interface SubscriptionTestInitializer {
@@ -37,7 +36,6 @@ public interface SubscriptionTestInitializer {
     public SubscriptionBaseBundle initBundle(final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception;
 
     public void startTestFamework(final TestApiListener testListener,
-                                  final TestListenerStatus testListenerStatus,
                                   final ClockMock clock,
                                   final BusService busService,
                                   final SubscriptionBaseService subscriptionBaseService) throws Exception;

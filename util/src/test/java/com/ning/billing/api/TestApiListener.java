@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -29,6 +30,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import com.ning.billing.events.BlockingTransitionInternalEvent;
 import com.ning.billing.events.CustomFieldEvent;
@@ -47,28 +49,43 @@ import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
 
 import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class TestApiListener {
 
-    protected static final Logger log = LoggerFactory.getLogger(TestApiListener.class);
+    private static final Logger log = LoggerFactory.getLogger(TestApiListener.class);
+
+    private static final Joiner SPACE_JOINER = Joiner.on(" ");
+
+    private static final long DELAY = 25000;
 
     private final List<NextEvent> nextExpectedEvent;
-
-    private final TestListenerStatus testStatus;
     private final IDBI idbi;
 
-    private boolean nonExpectedMode;
+    private boolean isListenerFailed = false;
+    private String listenerFailedMsg;
 
     private volatile boolean completed;
 
     @Inject
-    public TestApiListener(final TestListenerStatus testStatus, final IDBI idbi) {
+    public TestApiListener(final IDBI idbi) {
         nextExpectedEvent = new Stack<NextEvent>();
         this.completed = false;
-        this.testStatus = testStatus;
-        this.nonExpectedMode = false;
         this.idbi = idbi;
+    }
+
+    public void assertListenerStatus() {
+        try {
+            assertTrue(isCompleted(DELAY));
+        } catch (final Exception e) {
+            fail("assertListenerStatus didn't complete", e);
+        }
+
+        if (isListenerFailed) {
+            log.error(listenerFailedMsg);
+            Assert.fail(listenerFailedMsg);
+        }
     }
 
     public enum NextEvent {
@@ -93,12 +110,6 @@ public class TestApiListener {
         TAG,
         TAG_DEFINITION,
         CUSTOM_FIELD,
-    }
-
-    public void setNonExpectedMode() {
-        synchronized (this) {
-            this.nonExpectedMode = true;
-        }
     }
 
     @Subscribe
@@ -189,7 +200,6 @@ public class TestApiListener {
         notifyIfStackEmpty();
     }
 
-
     @Subscribe
     public synchronized void processTagDefinitonEvent(final TagDefinitionInternalEvent event) {
         log.info(String.format("Got TagDefinitionInternalEvent event %s", event.toString()));
@@ -236,7 +246,9 @@ public class TestApiListener {
         synchronized (this) {
             nextExpectedEvent.clear();
             completed = true;
-            nonExpectedMode = false;
+
+            isListenerFailed = false;
+            listenerFailedMsg = null;
         }
     }
 
@@ -248,9 +260,8 @@ public class TestApiListener {
 
     public void pushExpectedEvent(final NextEvent next) {
         synchronized (this) {
-            final Joiner joiner = Joiner.on(" ");
             nextExpectedEvent.add(next);
-            log.debug("Stacking expected event {}, got [{}]", next, joiner.join(nextExpectedEvent));
+            log.debug("Stacking expected event {}, got [{}]", next, SPACE_JOINER.join(nextExpectedEvent));
             completed = false;
         }
     }
@@ -271,7 +282,7 @@ public class TestApiListener {
                         // all expected events. But other handlers might still be processing them.
                         // Since there is only one bus thread, and that the test thread waits for all events to be processed,
                         // we're guaranteed that all are processed when the bus events table is empty.
-                        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
+                        await().atMost(timeout, TimeUnit.MILLISECONDS).until(new Callable<Boolean>() {
                             @Override
                             public Boolean call() throws Exception {
                                 final long inProcessingBusEvents = idbi.withHandle(new HandleCallback<Long>() {
@@ -288,16 +299,18 @@ public class TestApiListener {
                     }
                     final DateTime after = new DateTime();
                     waitTimeMs -= after.getMillis() - before.getMillis();
-                } catch (Exception ignore) {
+                } catch (final Exception ignore) {
                     log.error("isCompleted got interrupted ", ignore);
                     return false;
                 }
             } while (waitTimeMs > 0 && !completed);
         }
-        if (!completed && !nonExpectedMode) {
+
+        if (!completed) {
             final Joiner joiner = Joiner.on(" ");
             log.error("TestApiListener did not complete in " + timeout + " ms, remaining events are " + joiner.join(nextExpectedEvent));
         }
+
         return completed;
     }
 
@@ -323,21 +336,19 @@ public class TestApiListener {
                 if (ev == received) {
                     it.remove();
                     foundIt = true;
-                    if (!nonExpectedMode) {
-                        log.debug("Found expected event {}. Yeah!", received);
-                    } else {
-                        log.error("Found non expected event {}. Boohh! ", received);
-                    }
+                    log.debug("Found expected event {}. Yeah!", received);
                     break;
                 }
             }
-            if (!foundIt && !nonExpectedMode) {
-                final Joiner joiner = Joiner.on(" ");
-                log.error("Received unexpected event " + received + "; remaining expected events [" + joiner.join(nextExpectedEvent) + "]");
-                if (testStatus != null) {
-                    testStatus.failed("TestApiListener [ApiListenerStatus]: Received unexpected event " + received + "; remaining expected events [" + joiner.join(nextExpectedEvent) + "]");
-                }
+            if (!foundIt) {
+                log.error("Received unexpected event " + received + "; remaining expected events [" + SPACE_JOINER.join(nextExpectedEvent) + "]");
+                failed("TestApiListener [ApiListenerStatus]: Received unexpected event " + received + "; remaining expected events [" + SPACE_JOINER.join(nextExpectedEvent) + "]");
             }
         }
+    }
+
+    private void failed(final String msg) {
+        this.isListenerFailed = true;
+        this.listenerFailedMsg = msg;
     }
 }

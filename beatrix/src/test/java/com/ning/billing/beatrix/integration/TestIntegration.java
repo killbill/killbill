@@ -501,7 +501,6 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // VERIFY CTD HAS BEEN SET
         //
-        busHandler.reset();
         DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) baseEntitlement.getSubscriptionBase();
         final DateTime startDate = subscription.getCurrentPhaseStart();
         final BigDecimal rate = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
