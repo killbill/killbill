@@ -20,6 +20,8 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class BillingIntervalDetail {
 
     private final LocalDate startDate;
@@ -65,7 +67,8 @@ public class BillingIntervalDetail {
         calculateLastBillingCycleDate();
     }
 
-    private void calculateFirstBillingCycleDate() {
+    @VisibleForTesting
+    void calculateFirstBillingCycleDate() {
 
         final int lastDayOfMonth = startDate.dayOfMonth().getMaximumValue();
         final LocalDate billingCycleDate;
@@ -75,12 +78,10 @@ public class BillingIntervalDetail {
             billingCycleDate = new LocalDate(startDate.getYear(), startDate.getMonthOfYear(), billingCycleDay, startDate.getChronology());
         }
 
-        int numberOfPeriods = 0;
         final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
         LocalDate proposedDate = billingCycleDate;
         while (proposedDate.isBefore(startDate)) {
-            proposedDate = proposedDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
-            numberOfPeriods += 1;
+            proposedDate = proposedDate.plusMonths(numberOfMonthsInPeriod);
         }
         firstBillingCycleDate = alignProposedBillCycleDate(proposedDate);
     }
