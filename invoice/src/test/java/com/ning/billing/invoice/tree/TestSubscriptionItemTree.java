@@ -16,11 +16,15 @@
 
 package com.ning.billing.invoice.tree;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
@@ -29,6 +33,7 @@ import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.ItemAdjInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
+import com.ning.billing.util.jackson.ObjectMapper;
 
 import com.google.common.collect.Lists;
 
@@ -76,7 +81,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         tree.addItem(repair);
         tree.build();
         verifyResult(tree.getView(), expectedResult);
-
         tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(repair);
         tree.addItem(newItem);
@@ -500,6 +504,7 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         verifyResult(tree.getView(), expectedResult);
     }
 
+
     @Test(groups = "fast")
     public void testMergeCancellationWithTwoMiddleRepair() {
 
@@ -533,6 +538,26 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         expectedResult.add(repair1);
         expectedResult.add(repair2);
         verifyResult(tree.getView(), expectedResult);
+
+
+        // Dot it again but with proposed items out of order
+        final SubscriptionItemTree treeAgain = new SubscriptionItemTree(subscriptionId);
+        final InvoiceItem monthlyAgain = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
+        treeAgain.addItem(monthlyAgain);
+        treeAgain.flatten(true);
+
+        final InvoiceItem proposed2Again = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, unblockDate1, blockDate2, monthlyAmount, monthlyRate, currency);
+        final InvoiceItem proposed1Again = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, blockDate1, monthlyAmount, monthlyRate, currency);
+        final InvoiceItem proposed3Again = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, unblockDate2, endDate, monthlyAmount, monthlyRate, currency);
+
+        treeAgain.mergeProposedItem(proposed1Again);
+        treeAgain.mergeProposedItem(proposed2Again);
+        treeAgain.mergeProposedItem(proposed3Again);
+        treeAgain.buildForMerge();
+
+        verifyResult(treeAgain.getView(), expectedResult);
+
+
     }
 
     @Test(groups = "fast")
@@ -759,6 +784,38 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         expectedResult.add(repair);
 
         verifyResult(tree.getView(), expectedResult);
+    }
+
+    @Test(groups = "fast")
+    public void verifyJson() {
+
+        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
+        final UUID id1 = UUID.fromString("e8ba6ce7-9bd4-417d-af53-70951ecaa99f");
+        final InvoiceItem yearly1 = new RecurringInvoiceItem(id1, new DateTime(), invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, new LocalDate("2014-01-01"), new LocalDate("2015-01-01"), BigDecimal.TEN, BigDecimal.TEN, currency);
+        tree.addItem(yearly1);
+
+        final UUID id2 = UUID.fromString("48db1317-9a6e-4666-bcc5-fc7d3d0defc8");
+        final InvoiceItem newItem = new RecurringInvoiceItem(id2, new DateTime(), invoiceId, accountId, bundleId, subscriptionId, "other-plan", "other-plan", new LocalDate("2014-08-01"), new LocalDate("2015-01-01"), BigDecimal.ONE, BigDecimal.ONE, currency);
+        tree.addItem(newItem);
+
+        final UUID id3 = UUID.fromString("02ec57f5-2723-478b-86ba-ebeaedacb9db");
+        final InvoiceItem repair = new RepairAdjInvoiceItem(id3, new DateTime(), invoiceId, accountId, new LocalDate("2014-08-01"), new LocalDate("2015-01-01"), BigDecimal.TEN.negate(), currency, yearly1.getId());
+        tree.addItem(repair);
+
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            tree.getRoot().jsonSerializeTree(new ObjectMapper(), outputStream);
+
+            final String json = outputStream.toString("UTF-8");
+            final String expectedJson = "[{\"start\":\"2014-01-01\",\"end\":\"2015-01-01\",\"items\":[{\"id\":\"e8ba6ce7-9bd4-417d-af53-70951ecaa99f\",\"startDate\":\"2014-01-01\",\"endDate\":\"2015-01-01\",\"amount\":10,\"currency\":\"USD\",\"linkedId\":null,\"action\":\"ADD\"}]},[{\"start\":\"2014-08-01\",\"end\":\"2015-01-01\",\"items\":[{\"id\":\"48db1317-9a6e-4666-bcc5-fc7d3d0defc8\",\"startDate\":\"2014-08-01\",\"endDate\":\"2015-01-01\",\"amount\":1,\"currency\":\"USD\",\"linkedId\":null,\"action\":\"ADD\"},{\"id\":\"02ec57f5-2723-478b-86ba-ebeaedacb9db\",\"startDate\":\"2014-08-01\",\"endDate\":\"2015-01-01\",\"amount\":10,\"currency\":\"USD\",\"linkedId\":\"e8ba6ce7-9bd4-417d-af53-70951ecaa99f\",\"action\":\"CANCEL\"}]}]]";
+
+            assertEquals(json, expectedJson);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
+
     }
 
     private void verifyResult(final List<InvoiceItem> result, final List<InvoiceItem> expectedResult) {

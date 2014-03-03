@@ -20,6 +20,7 @@ import static com.ning.billing.invoice.TestInvoiceHelper.*;
 
 import java.math.BigDecimal;
 
+import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.testng.annotations.Test;
 
@@ -45,35 +46,23 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         expectedValue = FOURTEEN.divide(EIGHTY_NINE, KillBillMoney.ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, phaseChangeDate, targetDate, 10, expectedValue);
 
-        expectedValue = FOURTEEN.divide(NINETY, KillBillMoney.ROUNDING_METHOD);
+        // 75 is number of days between phaseChangeDate and next billing cycle date (2011, 5, 10)
+        // 89 is total number of days between the next and previous billing period  (2011, 2, 10) -> (2011, 5, 10)
+        expectedValue = SEVENTY_FIVE.divide(EIGHTY_NINE, KillBillMoney.ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(phaseChangeDate, targetDate, 10, expectedValue);
-    }
-
-    @Test(groups = "fast")
-    public void testSinglePlan_WithPhaseChange_BeforeBillCycleDay() throws InvalidDateSequenceException {
-        final LocalDate startDate = invoiceUtil.buildDate(2011, 2, 3);
-        final LocalDate phaseChangeDate = invoiceUtil.buildDate(2011, 2, 17);
-        final LocalDate targetDate = invoiceUtil.buildDate(2011, 3, 1);
-
-        BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(EIGHTY_NINE, KillBillMoney.ROUNDING_METHOD);
-        testCalculateNumberOfBillingCycles(startDate, phaseChangeDate, targetDate, 3, expectedValue);
-
-        expectedValue = FOURTEEN.divide(NINETY, KillBillMoney.ROUNDING_METHOD);
-        testCalculateNumberOfBillingCycles(phaseChangeDate, targetDate, 3, expectedValue);
     }
 
     @Test(groups = "fast")
     public void testSinglePlan_WithPhaseChange_OnBillCycleDay() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2011, 2, 3);
         final LocalDate phaseChangeDate = invoiceUtil.buildDate(2011, 2, 17);
-        final LocalDate targetDate = invoiceUtil.buildDate(2011, 3, 3);
+        final LocalDate targetDate = invoiceUtil.buildDate(2011, 5, 3);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(EIGHTY_NINE, KillBillMoney.ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, phaseChangeDate, targetDate, 3, expectedValue);
 
-        expectedValue = FOURTEEN.divide(NINETY, KillBillMoney.ROUNDING_METHOD).add(ONE);
+        expectedValue = ONE.add(SEVENTY_FIVE.divide(EIGHTY_NINE, KillBillMoney.ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(phaseChangeDate, targetDate, 3, expectedValue);
     }
 
@@ -81,13 +70,13 @@ public class TestProRation extends ProRationInAdvanceTestBase {
     public void testSinglePlan_WithPhaseChange_AfterBillCycleDay() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2011, 2, 3);
         final LocalDate phaseChangeDate = invoiceUtil.buildDate(2011, 2, 17);
-        final LocalDate targetDate = invoiceUtil.buildDate(2011, 3, 4);
+        final LocalDate targetDate = invoiceUtil.buildDate(2011, 5, 4);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(EIGHTY_NINE, KillBillMoney.ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, phaseChangeDate, targetDate, 3, expectedValue);
 
-        expectedValue = FOURTEEN.divide(NINETY, KillBillMoney.ROUNDING_METHOD).add(ONE);
+        expectedValue = SEVENTY_FIVE.divide(EIGHTY_NINE, KillBillMoney.ROUNDING_METHOD).add(ONE);
         testCalculateNumberOfBillingCycles(phaseChangeDate, targetDate, 3, expectedValue);
     }
 
@@ -236,9 +225,10 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 5, 21);
 
         BigDecimal expectedValue;
-        expectedValue = SEVEN.divide(NINETY_TWO, KillBillMoney.ROUNDING_METHOD);
-        expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(THREE.divide(NINETY_TWO, KillBillMoney.ROUNDING_METHOD));
+        // startDate, 2011, 4, 7 -> 66 days out of 2011, 1, 7, 2011, 4, 7 -> 90
+        expectedValue = SIXTY_SIX.divide(NINETY, KillBillMoney.ROUNDING_METHOD);
+        // 2011, 1, 7, planChangeDate-> 33 days out of 2011, 4, 7, 2011, 7, 7 -> 89
+        expectedValue = expectedValue.add(THIRTY_THREE.divide(NINETY_ONE, KillBillMoney.ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, planChangeDate, targetDate, 7, expectedValue);
 
         expectedValue = FIVE.divide(EIGHTY_NINE, KillBillMoney.ROUNDING_METHOD).add(ONE);

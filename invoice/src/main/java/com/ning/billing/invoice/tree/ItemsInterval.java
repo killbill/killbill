@@ -92,6 +92,28 @@ public class ItemsInterval {
      * @param mergeMode
      */
     public void buildFromItems(final List<Item> output, final boolean mergeMode) {
+        final Item item  = getResultingItem(mergeMode);
+        if (item != null) {
+            output.add(item);
+        }
+    }
+
+    private Item getResultingItem(final boolean mergeMode) {
+        return mergeMode ? getResulting_CANCEL_Item() : getResulting_ADD_Item();
+    }
+
+    private Item getResulting_CANCEL_Item() {
+        Preconditions.checkState(items.size() == 0 || items.size() == 1);
+        return Iterables.tryFind(items, new Predicate<Item>() {
+            @Override
+            public boolean apply(final Item input) {
+                return input.getAction() == ItemAction.CANCEL;
+            }
+        }).orNull();
+    }
+
+
+    private Item getResulting_ADD_Item() {
 
         final Set<UUID> repairedIds = new HashSet<UUID>();
         final ListIterator<Item> it = items.listIterator(items.size());
@@ -100,20 +122,13 @@ public class ItemsInterval {
             final Item cur = it.previous();
             switch (cur.getAction()) {
                 case ADD:
-                    // Don't consider ADD items in mergeMode as they are only there to specify the bounderies of the repair elements.
-                    if (!mergeMode) {
-                        // If we found a CANCEL item pointing to that item then don't return it as it was repair (full repair scenario)
-                        if (!repairedIds.contains(cur.getId())) {
-                            output.add(cur);
-                        }
+                    // If we found a CANCEL item pointing to that item then don't return it as it was repair (full repair scenario)
+                    if (!repairedIds.contains(cur.getId())) {
+                        return cur;
                     }
                     break;
 
                 case CANCEL:
-                    // In merge logic we want to CANCEL (repair) items)
-                    if (mergeMode) {
-                        output.add(cur);
-                    }
                     // In all cases populate the set with the id of target item being repaired
                     if (cur.getLinkedId() != null) {
                         repairedIds.add(cur.getLinkedId());
@@ -121,7 +136,9 @@ public class ItemsInterval {
                     break;
             }
         }
+        return null;
     }
+
 
     // Just ensure that ADD items precedes CANCEL items
     public void insertSortedItem(final Item item) {
@@ -163,16 +180,10 @@ public class ItemsInterval {
      */
     private Item createNewItem(LocalDate startDate, LocalDate endDate, final boolean mergeMode) {
 
-        final List<Item> itemToConsider = new LinkedList<Item>();
-        buildFromItems(itemToConsider, mergeMode);
-        if (itemToConsider.size() == 0) {
+        final Item item  = getResultingItem(mergeMode);
+        if (item == null) {
             return null;
         }
-
-        Preconditions.checkState(itemToConsider.size() == 1);
-        final Item item = itemToConsider.size() == 1 ? itemToConsider.get(0) : null;
-        Preconditions.checkState((!mergeMode && item.getAction() == ItemAction.ADD) ||
-                                 (mergeMode && item.getAction() == ItemAction.CANCEL));
 
         final Item result = new Item(item.toProratedInvoiceItem(startDate, endDate), item.getAction());
         if (item.getAction() == ItemAction.CANCEL && result != null) {

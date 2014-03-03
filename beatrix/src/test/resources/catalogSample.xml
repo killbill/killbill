@@ -322,6 +322,40 @@
                 </recurringPrice>
             </finalPhase>
         </plan>
+        <plan name="pistol-quarterly">
+            <product>Pistol</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice> <!-- empty price implies $0 -->
+                    </fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>QUARTERLY</billingPeriod>
+                <recurringPrice>
+                    <price>
+                        <currency>GBP</currency>
+                        <value>69.95</value>
+                    </price>
+                    <price>
+                        <currency>EUR</currency>
+                        <value>69.95</value>
+                    </price>
+                    <price>
+                        <currency>USD</currency>
+                        <value>69.95</value>
+                    </price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
         <plan name="pistol-annual">
             <product>Pistol</product>
             <initialPhases>
@@ -867,6 +901,7 @@
                 <plan>shotgun-monthly</plan>
                 <plan>assault-rifle-monthly</plan>
                 <plan>pistol-annual</plan>
+                <plan>pistol-quarterly</plan>
                 <plan>shotgun-annual</plan>
                 <plan>assault-rifle-annual</plan>
                 <plan>laser-scope-monthly</plan>

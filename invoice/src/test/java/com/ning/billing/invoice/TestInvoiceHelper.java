@@ -109,13 +109,15 @@ public class TestInvoiceHelper {
     public static final BigDecimal TWENTY_FOUR = new BigDecimal("24.0").setScale(KillBillMoney.MAX_SCALE);
     public static final BigDecimal TWENTY_FIVE = new BigDecimal("25.0").setScale(KillBillMoney.MAX_SCALE);
 
-    public static final BigDecimal TWENTY_SEVEN = new BigDecimal("27.0").setScale(KillBillMoney.MAX_SCALE);
     public static final BigDecimal TWENTY_EIGHT = new BigDecimal("28.0").setScale(KillBillMoney.MAX_SCALE);
     public static final BigDecimal TWENTY_NINE = new BigDecimal("29.0").setScale(KillBillMoney.MAX_SCALE);
     public static final BigDecimal THIRTY = new BigDecimal("30.0").setScale(KillBillMoney.MAX_SCALE);
     public static final BigDecimal THIRTY_ONE = new BigDecimal("31.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal THIRTY_THREE = new BigDecimal("33.0").setScale(KillBillMoney.MAX_SCALE);
 
     public static final BigDecimal FORTY = new BigDecimal("40.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal SIXTY_SIX = new BigDecimal("66.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal SEVENTY_FIVE = new BigDecimal("75.0").setScale(KillBillMoney.MAX_SCALE);
 
     public static final BigDecimal EIGHTY_NINE = new BigDecimal("89.0").setScale(KillBillMoney.MAX_SCALE);
     public static final BigDecimal NINETY = new BigDecimal("90.0").setScale(KillBillMoney.MAX_SCALE);
@@ -123,6 +125,9 @@ public class TestInvoiceHelper {
     public static final BigDecimal NINETY_TWO = new BigDecimal("92.0").setScale(KillBillMoney.MAX_SCALE);
 
     public static final BigDecimal ONE_HUNDRED = new BigDecimal("100.0").setScale(KillBillMoney.MAX_SCALE);
+
+    public static final BigDecimal THREE_HUNDRED_AND_FOURTY_NINE = new BigDecimal("349.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal THREE_HUNDRED_AND_FIFTY_FOUR = new BigDecimal("354.0").setScale(KillBillMoney.MAX_SCALE);
 
     public static final BigDecimal THREE_HUNDRED_AND_SIXTY_FIVE = new BigDecimal("365.0").setScale(KillBillMoney.MAX_SCALE);
     public static final BigDecimal THREE_HUNDRED_AND_SIXTY_SIX = new BigDecimal("366.0").setScale(KillBillMoney.MAX_SCALE);

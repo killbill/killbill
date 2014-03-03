@@ -28,6 +28,7 @@ import org.joda.time.LocalDate;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.tree.Item.ItemAction;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -43,7 +44,7 @@ public class SubscriptionItemTree {
     private boolean isBuilt;
 
     private final UUID subscriptionId;
-    private NodeInterval root;
+    private ItemsNodeInterval root;
 
     private List<Item> items;
 
@@ -58,7 +59,8 @@ public class SubscriptionItemTree {
             if (startDateComp != 0) {
                 return startDateComp;
             }
-            int itemTypeComp = Integer.compare(o1.getInvoiceItemType().ordinal(), o2.getInvoiceItemType().ordinal());
+            int itemTypeComp =  (o1.getInvoiceItemType().ordinal()<o2.getInvoiceItemType().ordinal() ? -1 :
+                                 (o1.getInvoiceItemType().ordinal()==o2.getInvoiceItemType().ordinal() ? 0 : 1));
             if (itemTypeComp != 0) {
                 return itemTypeComp;
             }
@@ -70,7 +72,7 @@ public class SubscriptionItemTree {
 
     public SubscriptionItemTree(final UUID subscriptionId) {
         this.subscriptionId = subscriptionId;
-        this.root = new NodeInterval();
+        this.root = new ItemsNodeInterval();
         this.items = new LinkedList<Item>();
         this.existingFixedItems = new LinkedList<InvoiceItem>();
         this.remainingFixedItems = new LinkedList<InvoiceItem>();
@@ -87,12 +89,12 @@ public class SubscriptionItemTree {
             root.addAdjustment(item.getStartDate(), item.getAmount(), item.getLinkedItemId());
         }
         pendingItemAdj.clear();
-        root.build(items, false);
+        root.buildForExistingItems(items);
         isBuilt = true;
     }
 
     /**
-     * Flattens the tree so its depth only has one levl below root -- becomes a list.
+     * Flattens the tree so its depth only has one level below root -- becomes a list.
      * <p>
      * If the tree was not built, it is first built. The list of items is cleared and the state is now reset to unbuilt.
      *
@@ -102,10 +104,10 @@ public class SubscriptionItemTree {
         if (!isBuilt) {
             build();
         }
-        root = new NodeInterval();
+        root = new ItemsNodeInterval();
         for (Item item : items) {
             Preconditions.checkState(item.getAction() == ItemAction.ADD);
-            root.addExistingItem(new NodeInterval(root, new Item(item, reverse ? ItemAction.CANCEL : ItemAction.ADD)));
+            root.addExistingItem(new ItemsNodeInterval(root, new Item(item, reverse ? ItemAction.CANCEL : ItemAction.ADD)));
         }
         items.clear();
         isBuilt = false;
@@ -113,7 +115,7 @@ public class SubscriptionItemTree {
 
     public void buildForMerge() {
         Preconditions.checkState(!isBuilt);
-        root.build(items, true);
+        root.mergeExistingAndProposed(items);
         isBuilt = true;
     }
 
@@ -127,11 +129,11 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
-                root.addExistingItem(new NodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
+                root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
                 break;
 
             case REPAIR_ADJ:
-                root.addExistingItem(new NodeInterval(root, new Item(invoiceItem, ItemAction.CANCEL)));
+                root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, ItemAction.CANCEL)));
                 break;
 
             case FIXED:
@@ -157,7 +159,7 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
-                final boolean result = root.mergeProposedItem(new NodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
+                final boolean result = root.addProposedItem(new ItemsNodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
                 if (!result) {
                     items.add(new Item(invoiceItem, ItemAction.ADD));
                 }
@@ -272,4 +274,8 @@ public class SubscriptionItemTree {
         return result;
     }
 
+    @VisibleForTesting
+    ItemsNodeInterval getRoot() {
+        return root;
+    }
 }

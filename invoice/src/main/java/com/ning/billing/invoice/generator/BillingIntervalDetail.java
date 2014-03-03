@@ -20,10 +20,9 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class BillingIntervalDetail {
-
-
-    private final boolean shouldUsePatch = true;
 
     private final LocalDate startDate;
     private final LocalDate endDate;
@@ -68,7 +67,8 @@ public class BillingIntervalDetail {
         calculateLastBillingCycleDate();
     }
 
-    private void calculateFirstBillingCycleDate() {
+    @VisibleForTesting
+    void calculateFirstBillingCycleDate() {
 
         final int lastDayOfMonth = startDate.dayOfMonth().getMaximumValue();
         final LocalDate billingCycleDate;
@@ -78,11 +78,12 @@ public class BillingIntervalDetail {
             billingCycleDate = new LocalDate(startDate.getYear(), startDate.getMonthOfYear(), billingCycleDay, startDate.getChronology());
         }
 
+        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
         LocalDate proposedDate = billingCycleDate;
         while (proposedDate.isBefore(startDate)) {
-            proposedDate = proposedDate.plusMonths(1);
+            proposedDate = proposedDate.plusMonths(numberOfMonthsInPeriod);
         }
-        firstBillingCycleDate = proposedDate;
+        firstBillingCycleDate = alignProposedBillCycleDate(proposedDate);
     }
 
     private void calculateEffectiveEndDate() {
@@ -144,9 +145,6 @@ public class BillingIntervalDetail {
     // We start from a billCycleDate
     //
     private LocalDate alignProposedBillCycleDate(final LocalDate proposedDate) {
-        if (!shouldUsePatch) {
-            return proposedDate;
-        }
         final int lastDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
 
         int proposedBillCycleDate = proposedDate.getDayOfMonth();

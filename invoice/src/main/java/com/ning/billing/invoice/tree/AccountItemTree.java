@@ -32,11 +32,11 @@ import com.google.common.collect.Iterables;
 
 /**
  * Tree of invoice items for a given account.
- *
+ * <p/>
  * <p>It contains a map of <tt>SubscriptionItemTree</tt> and the logic is executed independently for all items
  * associated to a given subscription. That also means that invoice item adjustment which cross subscriptions
  * can't be correctly handled when they compete with other forms of adjustments.
- *
+ * <p/>
  * <p>The class is not thread safe, there is no such use case today, and there is a lifecyle to respect:
  * <ul>
  * <li>Add existing invoice items
@@ -50,6 +50,7 @@ public class AccountItemTree {
     private final UUID accountId;
     private final Map<UUID, SubscriptionItemTree> subscriptionItemTree;
     private final List<InvoiceItem> allExistingItems;
+    private List<InvoiceItem> pendingItemAdj;
 
     private boolean isBuilt;
 
@@ -58,6 +59,7 @@ public class AccountItemTree {
         this.subscriptionItemTree = new HashMap<UUID, SubscriptionItemTree>();
         this.isBuilt = false;
         this.allExistingItems = new LinkedList<InvoiceItem>();
+        this.pendingItemAdj = new LinkedList<InvoiceItem>();
     }
 
     /**
@@ -65,30 +67,58 @@ public class AccountItemTree {
      */
     public void build() {
         Preconditions.checkState(!isBuilt);
+
+        if (pendingItemAdj.size() > 0) {
+            for (InvoiceItem item : pendingItemAdj) {
+                addExistingItem(item, true);
+            }
+            pendingItemAdj.clear();
+        }
         for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
             tree.build();
         }
         isBuilt = true;
     }
+
     /**
      * Populate tree from existing items on disk
      *
      * @param existingItem an item read on disk
      */
     public void addExistingItem(final InvoiceItem existingItem) {
+        addExistingItem(existingItem, false);
+    }
+
+    private void addExistingItem(final InvoiceItem existingItem, boolean failOnMissingSubscription) {
 
         Preconditions.checkState(!isBuilt);
-        if (existingItem.getInvoiceItemType() != InvoiceItemType.RECURRING &&
-            existingItem.getInvoiceItemType() != InvoiceItemType.REPAIR_ADJ &&
-            existingItem.getInvoiceItemType() != InvoiceItemType.FIXED &&
-            existingItem.getInvoiceItemType() != InvoiceItemType.ITEM_ADJ) {
-            return;
+        switch (existingItem.getInvoiceItemType()) {
+            case EXTERNAL_CHARGE:
+            case CBA_ADJ:
+            case CREDIT_ADJ:
+            case REFUND_ADJ:
+                return;
+
+            case RECURRING:
+            case REPAIR_ADJ:
+            case FIXED:
+            case ITEM_ADJ:
+                break;
+
+            default:
+                Preconditions.checkState(false, "Unknown invoice item type " + existingItem.getInvoiceItemType());
+
         }
 
         allExistingItems.add(existingItem);
 
-        final UUID subscriptionId  = getSubscriptionId(existingItem, allExistingItems);
-        Preconditions.checkNotNull(subscriptionId);
+        final UUID subscriptionId = getSubscriptionId(existingItem, allExistingItems);
+        Preconditions.checkState(subscriptionId != null || !failOnMissingSubscription);
+
+        if (subscriptionId == null && existingItem.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ) {
+            pendingItemAdj.add(existingItem);
+            return;
+        }
 
         if (!subscriptionItemTree.containsKey(subscriptionId)) {
             subscriptionItemTree.put(subscriptionId, new SubscriptionItemTree(subscriptionId));
@@ -104,13 +134,13 @@ public class AccountItemTree {
      */
     public void mergeWithProposedItems(final List<InvoiceItem> proposedItems) {
 
+        build();
         for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
             tree.flatten(true);
         }
-        isBuilt = true;
 
         for (InvoiceItem item : proposedItems) {
-            final UUID subscriptionId  = getSubscriptionId(item, null);
+            final UUID subscriptionId = getSubscriptionId(item, null);
             SubscriptionItemTree tree = subscriptionItemTree.get(subscriptionId);
             if (tree == null) {
                 tree = new SubscriptionItemTree(subscriptionId);
@@ -125,7 +155,6 @@ public class AccountItemTree {
     }
 
     /**
-     *
      * @return the resulting list of items that should be written to disk
      */
     public List<InvoiceItem> getResultingItemList() {
@@ -148,13 +177,13 @@ public class AccountItemTree {
             item.getInvoiceItemType() == InvoiceItemType.FIXED) {
             return item.getSubscriptionId();
         } else {
-            final InvoiceItem linkedItem  = Iterables.tryFind(allItems, new Predicate<InvoiceItem>() {
+            final InvoiceItem linkedItem = Iterables.tryFind(allItems, new Predicate<InvoiceItem>() {
                 @Override
                 public boolean apply(final InvoiceItem input) {
                     return item.getLinkedItemId().equals(input.getId());
                 }
-            }).get();
-            return linkedItem.getSubscriptionId();
+            }).orNull();
+            return linkedItem != null ? linkedItem.getSubscriptionId() : null;
         }
     }
 }

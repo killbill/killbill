@@ -56,7 +56,7 @@ public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
             final BigDecimal numberOfBillingCycles;
             numberOfBillingCycles = calculateNumberOfBillingCycles(startDate, endDate, targetDate, billingCycleDay);
 
-            assertEquals(numberOfBillingCycles.compareTo(expectedValue), 0);
+            assertEquals(numberOfBillingCycles.compareTo(expectedValue), 0, "Actual: " + numberOfBillingCycles.toString() + "; expected: " + expectedValue.toString());
         } catch (InvalidDateSequenceException idse) {
             throw idse;
         } catch (Exception e) {
