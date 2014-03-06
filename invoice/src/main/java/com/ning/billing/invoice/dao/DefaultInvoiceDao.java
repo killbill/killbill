@@ -58,6 +58,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 
@@ -252,11 +253,29 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public Pagination<InvoiceModelDao> searchInvoices(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        Integer invoiceNumberParsed = null;
+        try {
+            invoiceNumberParsed = Integer.parseInt(searchKey);
+        } catch (final NumberFormatException ignored) {
+        }
+
+        final Integer invoiceNumber = invoiceNumberParsed;
         return paginationHelper.getPagination(InvoiceSqlDao.class,
                                               new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
                                                   @Override
-                                                  public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long limit) {
-                                                      return invoiceSqlDao.searchInvoices(searchKey, offset, limit, context);
+                                                  public Long getCount(final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
+                                                      return invoiceNumber != null ? 1L : invoiceSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long limit, final InternalTenantContext context) {
+                                                      try {
+                                                          return invoiceNumber != null ?
+                                                                 ImmutableList.<InvoiceModelDao>of(getByNumber(invoiceNumber, context)).iterator() :
+                                                                 invoiceSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
+                                                      } catch (final InvoiceApiException ignored) {
+                                                          return Iterators.<InvoiceModelDao>emptyIterator();
+                                                      }
                                                   }
                                               },
                                               offset,

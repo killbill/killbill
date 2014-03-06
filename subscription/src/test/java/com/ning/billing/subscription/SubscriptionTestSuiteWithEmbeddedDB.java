@@ -30,7 +30,6 @@ import org.testng.annotations.BeforeMethod;
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.api.TestApiListener;
-import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.clock.ClockMock;
@@ -49,8 +48,6 @@ import com.ning.billing.util.svcsapi.bus.BusService;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-
-import static org.testng.Assert.assertTrue;
 
 public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
@@ -86,8 +83,6 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     @Inject
     protected TestApiListener testListener;
     @Inject
-    protected TestListenerStatus testListenerStatus;
-    @Inject
     protected SubscriptionTestInitializer subscriptionTestInitializer;
 
     protected Catalog catalog;
@@ -113,7 +108,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        subscriptionTestInitializer.startTestFamework(testListener, testListenerStatus, clock, busService, subscriptionBaseService);
+        subscriptionTestInitializer.startTestFamework(testListener, clock, busService, subscriptionBaseService);
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService);
         this.accountData = subscriptionTestInitializer.initAccountData();
@@ -132,7 +127,6 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     }
 
     protected void assertListenerStatus() {
-        assertTrue(testListener.isCompleted(DELAY));
-        ((SubscriptionTestListenerStatus) testListenerStatus).assertListenerStatus();
+        testListener.assertListenerStatus();
     }
 }

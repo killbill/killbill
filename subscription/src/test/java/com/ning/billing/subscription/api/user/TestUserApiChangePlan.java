@@ -38,7 +38,6 @@ import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.user.ApiEvent;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -123,12 +122,9 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
 
         // RE READ SUBSCRIPTION + CHANGE PLAN
-        testListener.setNonExpectedMode();
-        testListener.pushExpectedEvent(NextEvent.CHANGE);
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
         subscription.changePlan(toProd, toTerm, toPlanSet, callContext);
-        assertFalse(testListener.isCompleted(3000));
-        testListener.reset();
+        assertListenerStatus();
 
         // CHECK CHANGE PLAN
         currentPhase = subscription.getCurrentPhase();
@@ -229,10 +225,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         checkChangePlan(subscription, fromProd, ProductCategory.BASE, fromTerm, PhaseType.EVERGREEN);
 
         // CHECK CHANGE DID NOT KICK IN YET
-        testListener.setNonExpectedMode();
-        testListener.pushExpectedEvent(NextEvent.CHANGE);
-        assertFalse(testListener.isCompleted(3000));
-        testListener.reset();
+        assertListenerStatus();
 
         // MOVE TO AFTER CTD
         testListener.pushExpectedEvent(NextEvent.CHANGE);
@@ -250,13 +243,10 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
         // MOVE TIME ABOUT ONE MONTH BEFORE NEXT EXPECTED PHASE CHANGE
-        testListener.setNonExpectedMode();
-        testListener.pushExpectedEvent(NextEvent.PHASE);
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(11));
         clock.addDeltaFromReality(it.toDurationMillis());
         currentTime = clock.getUTCNow();
-        assertFalse(testListener.isCompleted(3000));
-        testListener.reset();
+        assertListenerStatus();
 
         final DateTime nextExpectedPhaseChange = TestSubscriptionHelper.addDuration(newChargedThroughDate, currentPhase.getDuration());
         testUtil.checkNextPhaseChange(subscription, 1, nextExpectedPhaseChange);
@@ -296,11 +286,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
         // CHANGE EOT
-        testListener.setNonExpectedMode();
-        testListener.pushExpectedEvent(NextEvent.CHANGE);
         subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", callContext);
-        assertFalse(testListener.isCompleted(3000));
-        testListener.reset();
+        assertListenerStatus();
 
         // CHANGE
         testListener.pushExpectedEvent(NextEvent.CHANGE);
@@ -341,18 +328,12 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
         // CHANGE EOT
-        testListener.setNonExpectedMode();
-        testListener.pushExpectedEvent(NextEvent.CHANGE);
         subscription.changePlan("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount", callContext);
-        assertFalse(testListener.isCompleted(3000));
-        testListener.reset();
+        assertListenerStatus();
 
         // CHANGE EOT
-        testListener.setNonExpectedMode();
-        testListener.pushExpectedEvent(NextEvent.CHANGE);
         subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", callContext);
-        assertFalse(testListener.isCompleted(3000));
-        testListener.reset();
+        assertListenerStatus();
 
         // CHECK NO CHANGE OCCURED YET
         Plan currentPlan = subscription.getCurrentPlan();
@@ -365,11 +346,10 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
-        // ACTIVATE CHNAGE BY MOVING AFTER CTD
+        // ACTIVATE CHANGE BY MOVING AFTER CTD
         testListener.pushExpectedEvent(NextEvent.CHANGE);
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
         clock.addDeltaFromReality(it.toDurationMillis());
-
         assertListenerStatus();
 
         currentPlan = subscription.getCurrentPlan();
@@ -413,11 +393,9 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
 
         // CHANGE IMMEDIATE TO A 3 PHASES PLAN
-        testListener.reset();
         testListener.pushExpectedEvent(NextEvent.CHANGE);
         subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", callContext);
         assertListenerStatus();
-        testListener.reset();
 
         // CHECK EVERYTHING LOOKS CORRECT
         final Plan currentPlan = subscription.getCurrentPlan();

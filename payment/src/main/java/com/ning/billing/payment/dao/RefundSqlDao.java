@@ -24,11 +24,11 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.FetchSize;
 
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.commons.jdbi.statement.SmartFetchSize;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.entity.dao.Audited;
@@ -55,11 +55,13 @@ public interface RefundSqlDao extends EntitySqlDao<RefundModelDao, Refund> {
                                               @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    // Magic value to force MySQL to stream from the database
-    // See http://dev.mysql.com/doc/refman/5.0/en/connector-j-reference-implementation-notes.html (ResultSet)
-    @FetchSize(Integer.MIN_VALUE)
+    @SmartFetchSize(shouldStream = true)
     public Iterator<RefundModelDao> getByPluginName(@Bind("pluginName") final String pluginName,
                                                     @Bind("offset") final Long offset,
                                                     @Bind("rowCount") final Long rowCount,
                                                     @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Long getCountByPluginName(@Bind("pluginName") final String pluginName,
+                                     @BindBean final InternalTenantContext context);
 }

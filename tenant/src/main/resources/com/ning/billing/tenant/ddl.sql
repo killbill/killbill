@@ -13,7 +13,7 @@ CREATE TABLE tenants (
     updated_date datetime DEFAULT NULL,
     updated_by varchar(50) DEFAULT NULL,
     PRIMARY KEY(record_id)
-) CHARACTER SET utf8 COLLATE utf8_bin;
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX tenants_id ON tenants(id);
 CREATE UNIQUE INDEX tenants_api_key ON tenants(api_key);
 
@@ -31,5 +31,5 @@ CREATE TABLE tenant_kvs (
    updated_date datetime DEFAULT NULL,
    updated_by varchar(50) DEFAULT NULL,
    PRIMARY KEY(record_id)
-) CHARACTER SET utf8 COLLATE utf8_bin;
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX tenant_kvs_key ON tenant_kvs(tenant_key);

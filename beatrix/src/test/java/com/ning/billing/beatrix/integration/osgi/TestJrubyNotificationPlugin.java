@@ -27,8 +27,6 @@ import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.util.tag.Tag;
 
-import static org.testng.Assert.assertTrue;
-
 public class TestJrubyNotificationPlugin extends TestOSGIBase {
 
     private final String BUNDLE_TEST_RESOURCE_PREFIX = "killbill-notification-test";
@@ -55,11 +53,10 @@ public class TestJrubyNotificationPlugin extends TestOSGIBase {
         // We wait for all that to occur and declare victory if we see the TagDefinition/Tag creation.
         busHandler.pushExpectedEvents(NextEvent.TAG_DEFINITION, NextEvent.TAG);
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(4));
-        assertTrue(busHandler.isCompleted(2 * DELAY));
+        assertListenerStatus();
 
         final List<Tag> tags = tagUserApi.getTagsForAccount(account.getId(), false, callContext);
         Assert.assertEquals(tags.size(), 1);
         //final Tag tag = tags.get(0);
     }
-
 }

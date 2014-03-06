@@ -44,7 +44,6 @@ import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
@@ -104,14 +103,12 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implements TestListenerStatus {
+public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     protected static final DateTimeZone testTimeZone = DateTimeZone.UTC;
 
     protected static final Logger log = LoggerFactory.getLogger(TestIntegrationBase.class);
     protected static long AT_LEAST_ONE_MONTH_MS = 32L * 24L * 3600L * 1000L;
-
-    protected static final long DELAY = 10000; // * 100000;
 
     @Inject
     protected Lifecycle lifecycle;
@@ -202,36 +199,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected CacheControllerDispatcher controlCacheDispatcher;
 
+    @Inject
     protected TestApiListener busHandler;
 
-    private boolean isListenerFailed;
-    private String listenerFailedMsg;
-
-    @Override
-    public void failed(final String msg) {
-        isListenerFailed = true;
-        listenerFailedMsg = msg;
-    }
-
-    @Override
-    public void resetTestListenerStatus() {
-        isListenerFailed = false;
-        listenerFailedMsg = null;
-    }
-
     protected void assertListenerStatus() {
-        assertTrue(busHandler.isCompleted(DELAY));
-        if (isListenerFailed) {
-            log.error(listenerFailedMsg);
-            Assert.fail(listenerFailedMsg);
-        }
+        busHandler.assertListenerStatus();
     }
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource));
         g.injectMembers(this);
-        busHandler = new TestApiListener(this, idbi);
 
         SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion("whatever", osgiConfig, "whatever");
         setupTest.cleanBundleInstallDir();
@@ -249,7 +227,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         controlCacheDispatcher.clearAll();
 
         clock.resetDeltaFromReality();
-        resetTestListenerStatus();
         busHandler.reset();
 
         // Start services

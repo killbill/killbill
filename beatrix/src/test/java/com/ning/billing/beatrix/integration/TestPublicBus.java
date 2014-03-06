@@ -64,7 +64,6 @@ public class TestPublicBus extends TestIntegrationBase {
         log.debug("RESET TEST FRAMEWORK");
 
         clock.resetDeltaFromReality();
-        resetTestListenerStatus();
         busHandler.reset();
 
         // Start services

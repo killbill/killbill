@@ -34,11 +34,10 @@ import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
 
     // Used as a manual test to validate the simple DAO by stepping through that locking is done and release correctly
-    @Test(groups = "mysql")
+    @Test(groups = "slow")
     public void testSimpleLocking() throws IOException, LockFailedException {
         final String lockName = UUID.randomUUID().toString();
 
-        final GlobalLocker locker = new MySqlGlobalLocker(dataSource);
         final GlobalLock lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), lockName, 3);
 
         dbi.inTransaction(new TransactionCallback<Void>() {

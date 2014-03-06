@@ -128,7 +128,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         final DefaultEntitlement baseEntitlement3 = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey3", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         final SubscriptionBundle bundle3 = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
-        // Cancel addOn1 one day after
+        // Cancel bundle 2 one day after
         clock.addDays(1);
         cancelEntitlementAndCheckForCompletion(baseEntitlement2, clock.getUTCNow(), NextEvent.BLOCK, NextEvent.CANCEL);
 
@@ -137,10 +137,8 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
 
-
         // Should still be in clear state
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
-
 
         // DAY 36 -- RIGHT AFTER OD1 (two block events, for the cancellation and the OD1 state)
         // One BLOCK event is for the overdue state transition

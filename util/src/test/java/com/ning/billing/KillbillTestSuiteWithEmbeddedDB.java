@@ -31,20 +31,20 @@ public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
 
     private static final Logger log = LoggerFactory.getLogger(KillbillTestSuiteWithEmbeddedDB.class);
 
-    @BeforeSuite(groups = {"slow", "mysql"})
+    @BeforeSuite(groups = "slow")
     public void startMysqlBeforeTestSuite() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
         DBTestingHelper.start();
     }
 
-    @BeforeMethod(groups = {"slow", "mysql"})
+    @BeforeMethod(groups = "slow")
     public void cleanupTablesBetweenMethods() {
         try {
             DBTestingHelper.get().cleanupAllTables();
-        } catch (Exception ignored) {
+        } catch (final Exception ignored) {
         }
     }
 
-    @AfterSuite(groups = {"slow", "mysql"})
+    @AfterSuite(groups = "slow")
     public void shutdownMysqlAfterTestSuite() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
         if (hasFailed()) {
             log.error("**********************************************************************************************");
@@ -56,7 +56,7 @@ public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
 
         try {
             DBTestingHelper.get().stop();
-        } catch (Exception ignored) {
+        } catch (final Exception ignored) {
         }
     }
 }

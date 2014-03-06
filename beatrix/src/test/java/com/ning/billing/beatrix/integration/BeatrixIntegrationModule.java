@@ -22,9 +22,11 @@ import java.util.Set;
 
 import org.skife.config.ConfigSource;
 
+import com.ning.billing.DBTestingHelper;
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.glue.DefaultAccountModule;
+import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.DefaultBeatrixService;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;
@@ -38,6 +40,7 @@ import com.ning.billing.beatrix.util.RefundChecker;
 import com.ning.billing.beatrix.util.SubscriptionChecker;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.commons.embeddeddb.EmbeddedDB;
 import com.ning.billing.currency.glue.CurrencyModule;
 import com.ning.billing.entitlement.EntitlementService;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
@@ -47,6 +50,7 @@ import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.lifecycle.KillbillService;
+import com.ning.billing.mock.glue.MockGlobalLockerModule;
 import com.ning.billing.osgi.DefaultOSGIService;
 import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.overdue.OverdueService;
@@ -96,12 +100,15 @@ public class BeatrixIntegrationModule extends AbstractModule {
 
     @Override
     protected void configure() {
-
         loadSystemPropertiesFromClasspath("/beatrix.properties");
 
         install(new GuicyKillbillTestWithEmbeddedDBModule());
 
-        install(new GlobalLockerModule());
+        if (EmbeddedDB.DBEngine.MYSQL.equals(DBTestingHelper.get().getDBEngine())) {
+            install(new GlobalLockerModule());
+        } else {
+            install(new MockGlobalLockerModule());
+        }
         install(new CacheModule(configSource));
         install(new EmailModule(configSource));
         install(new CallContextModule());
@@ -135,6 +142,8 @@ public class BeatrixIntegrationModule extends AbstractModule {
         bind(PaymentChecker.class).asEagerSingleton();
         bind(RefundChecker.class).asEagerSingleton();
         bind(AuditChecker.class).asEagerSingleton();
+
+        bind(TestApiListener.class).asEagerSingleton();
     }
 
     private static final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {

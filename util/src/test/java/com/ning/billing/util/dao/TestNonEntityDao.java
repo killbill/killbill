@@ -33,19 +33,14 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
     final Long tenantRecordId = 123123123L;
     final UUID tenantId = UUID.fromString("121c59d4-0458-4038-a683-698c9a121c12");
 
-
     final UUID accountId = UUID.fromString("a01c59d4-0458-4038-a683-698c9a121c69");
     final Long accountRecordId = 333333L;
-
-    final UUID accountHistoryId = UUID.fromString("2b1c59d4-0458-4038-a683-698c9a121c78");
-    final Long accountHistoryRecordId = 777777L;
 
     final UUID tagDefinitionId = UUID.fromString("e01c59d4-0458-4038-a683-698c9a121c34");
     final Long tagDefinitionRecordId = 44444444L;
 
     final UUID tagId = UUID.fromString("123c59d4-0458-4038-a683-698c9a121456");
     final Long tagRecordId = 55555555L;
-
 
     @Test(groups = "slow")
     public void testRetrieveRecordIdFromObject() throws IOException {
@@ -62,7 +57,6 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
         final Long resultAccountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(accountId, ObjectType.ACCOUNT, null);
         Assert.assertEquals(resultAccountRecordId, accountRecordId);
     }
-
 
     @Test(groups = "slow")
     public void testRetrieveAccountRecordIdFromTagDefinitionObject() throws IOException {
@@ -96,6 +90,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
         final Long resultTenantRecordId = nonEntityDao.retrieveTenantRecordIdFromObject(tenantId, ObjectType.TENANT, null);
         Assert.assertEquals(resultTenantRecordId, tenantRecordId);
     }
+
     private void insertAccount() throws IOException {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -119,7 +114,6 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
             }
         });
     }
-
 
     private void insertTagDefinition() throws IOException {
         dbi.withHandle(new HandleCallback<Void>() {

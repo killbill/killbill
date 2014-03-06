@@ -33,8 +33,7 @@ import com.ning.billing.util.tag.dao.TagSqlDao;
 
 public class TestCache extends UtilTestSuiteWithEmbeddedDB {
 
-    private  EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
-
+    private EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     private void insertTag(final TagModelDao modelDao) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
@@ -60,7 +59,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
         return cache != null ? cache.size() : 0;
     }
 
-    private Long retrieveRecordIdFromCache(UUID tagId) {
+    private Long retrieveRecordIdFromCache(final UUID tagId) {
         final CacheController<Object, Object> cache = controlCacheDispatcher.getCacheController(CacheType.RECORD_ID);
         Object result = null;
         if (cache != null) {
@@ -72,7 +71,6 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCacheRecordId() throws Exception {
-
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controlCacheDispatcher, nonEntityDao);
         final TagModelDao tag = new TagModelDao(clock.getUTCNow(), UUID.randomUUID(), UUID.randomUUID(), ObjectType.TAG);
 

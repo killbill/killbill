@@ -137,10 +137,6 @@ allHistoryTableValues() ::= <<
 CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
 AND_CHECK_TENANT(prefix) ::= "and <CHECK_TENANT(prefix)>"
 
-getFoundRows() ::= <<
-select FOUND_ROWS();
->>
-
 getAll() ::= <<
 select
 <allTableFields("t.")>
@@ -152,12 +148,12 @@ where <CHECK_TENANT("t.")>
 >>
 
 get(offset, rowCount, orderBy) ::= <<
-select SQL_CALC_FOUND_ROWS
+select
 <allTableFields("t.")>
 from <tableName()> t
 where <CHECK_TENANT("t.")>
 <andCheckSoftDeletionWithComma("t.")>
-order by :orderBy
+order by t.<orderBy>
 limit :offset, :rowCount
 ;
 >>
@@ -191,12 +187,12 @@ where <recordIdField("t.")> = :recordId
 ;
 >>
 
-/** Use NULL-safe equal to operator in case account_record_id is NULL **/
+/** Note: account_record_id can be NULL **/
 getByAccountRecordId(accountRecordId) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
-where <accountRecordIdField("t.")> \<=\> :accountRecordId
+where (<accountRecordIdField("t.")> = :accountRecordId or (<accountRecordIdField("t.")> is null and :accountRecordId is null))
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
@@ -207,7 +203,7 @@ getByAccountRecordIdIncludedDeleted(accountRecordId) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
-where <accountRecordIdField("t.")> \<=\> :accountRecordId
+where (<accountRecordIdField("t.")> = :accountRecordId or (<accountRecordIdField("t.")> is null and :accountRecordId is null))
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
 ;
@@ -222,7 +218,6 @@ where <recordIdField("t.")> = :recordId
 <AND_CHECK_TENANT("t.")>
 ;
 >>
-
 
 getRecordId(id) ::= <<
 select
@@ -254,7 +249,6 @@ where <targetRecordIdField("t.")> = :targetRecordId
 ;
 >>
 
-
 getHistoryRecordIdsForTable(historyTableName) ::= <<
 select
   <recordIdField("t.")>
@@ -265,6 +259,29 @@ where <targetRecordIdField("t.")> = :targetRecordId
 ;
 >>
 
+searchQuery(prefix) ::= <<
+1 = 1
+>>
+
+search() ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where (<searchQuery("t.")>)
+<AND_CHECK_TENANT("t.")>
+order by <recordIdField("t.")> ASC
+limit :offset, :rowCount
+;
+>>
+
+getSearchCount() ::= <<
+select
+  count(1) as count
+from <tableName()> t
+where (<searchQuery("t.")>)
+<AND_CHECK_TENANT("t.")>
+;
+>>
 
 create() ::= <<
 insert into <tableName()> (

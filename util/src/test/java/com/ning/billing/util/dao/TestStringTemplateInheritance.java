@@ -114,7 +114,7 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
                                                                          "where t.tenant_record_id = :tenantRecordId\n" +
                                                                          "order by t.record_id ASC\n" +
                                                                          ";");
-        Assert.assertEquals(kombucha.getInstanceOf("get", ImmutableMap.<String, String>of("orderBy", "recordId", "offset", "3", "rowCount", "12")).toString(), "select SQL_CALC_FOUND_ROWS\n" +
+        Assert.assertEquals(kombucha.getInstanceOf("get", ImmutableMap.<String, String>of("orderBy", "record_id", "offset", "3", "rowCount", "12")).toString(), "select\n" +
                                                                                                                                                                "  t.record_id\n" +
                                                                                                                                                                ", t.id\n" +
                                                                                                                                                                ", t.tea\n" +
@@ -124,7 +124,7 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
                                                                                                                                                                ", t.tenant_record_id\n" +
                                                                                                                                                                "from kombucha t\n" +
                                                                                                                                                                "where t.tenant_record_id = :tenantRecordId\n" +
-                                                                                                                                                               "order by :orderBy\n" +
+                                                                                                                                                               "order by t.record_id\n" +
                                                                                                                                                                "limit :offset, :rowCount\n" +
                                                                                                                                                                ";");
         Assert.assertEquals(kombucha.getInstanceOf("test").toString(), "select\n" +

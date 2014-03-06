@@ -51,7 +51,7 @@ public class UpdateChecker {
             }
         };
         t.setDaemon(true);
-        t.run();
+        t.start();
     }
 
     private void doCheck(final ServletContext servletContext) throws IOException {

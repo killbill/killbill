@@ -21,11 +21,9 @@ import org.skife.config.ConfigSource;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.api.TestApiListener;
-import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.subscription.DefaultSubscriptionTestInitializer;
 import com.ning.billing.subscription.SubscriptionTestInitializer;
-import com.ning.billing.subscription.SubscriptionTestListenerStatus;
 import com.ning.billing.subscription.api.user.TestSubscriptionHelper;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
@@ -46,7 +44,6 @@ public class TestDefaultSubscriptionModule extends DefaultSubscriptionModule {
         bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
 
         bind(TestSubscriptionHelper.class).asEagerSingleton();
-        bind(TestListenerStatus.class).to(SubscriptionTestListenerStatus.class).asEagerSingleton();
         bind(TestApiListener.class).asEagerSingleton();
         bind(SubscriptionTestInitializer.class).to(DefaultSubscriptionTestInitializer.class).asEagerSingleton();
     }

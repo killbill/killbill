@@ -39,18 +39,12 @@ public class DefaultPaginationSqlDaoHelper {
         // Note: the connection will be busy as we stream the results out: hence we cannot use
         // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
         // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
-        // more pages. To do that, we perform a dummy search query with SQL_CALC_FOUND_ROWS (but limit 1).
+        // more pages.
         final Long count = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
             @Override
             public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> sqlDao = entitySqlDaoWrapperFactory.become(sqlDaoClazz);
-                // TODO lame cast, but couldn't make sqlDaoClazz a Class<? extends S>
-                final Iterator<M> dumbIterator = paginationIteratorBuilder.build((S) sqlDao, 1L);
-                // Make sure to go through the results to close the connection
-                while (dumbIterator.hasNext()) {
-                    dumbIterator.next();
-                }
-                return sqlDao.getFoundRows(context);
+                return paginationIteratorBuilder.getCount((S) sqlDao, context);
             }
         });
 
@@ -58,14 +52,15 @@ public class DefaultPaginationSqlDaoHelper {
         // Since we want to stream the results out, we don't want to auto-commit when this method returns.
         final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemand(sqlDaoClazz);
         final Long totalCount = sqlDao.getCount(context);
-        final Iterator<M> results = paginationIteratorBuilder.build((S) sqlDao, limit);
+        final Iterator<M> results = paginationIteratorBuilder.build((S) sqlDao, limit, context);
 
         return new DefaultPagination<M>(offset, limit, count, totalCount, results);
     }
 
     public abstract static class PaginationIteratorBuilder<M extends EntityModelDao<E>, E extends Entity, S extends EntitySqlDao<M, E>> {
 
-        public abstract Iterator<M> build(final S sqlDao,
-                                          final Long limit);
+        public abstract Long getCount(final S sqlDao, final InternalTenantContext context);
+
+        public abstract Iterator<M> build(final S sqlDao, final Long limit, final InternalTenantContext context);
     }
 }

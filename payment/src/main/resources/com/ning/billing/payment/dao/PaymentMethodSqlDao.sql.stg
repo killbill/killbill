@@ -73,13 +73,22 @@ where account_id = :accountId
 ;
 >>
 
-getByPluginName(pluginName, offset, rowCount) ::= <<
-select SQL_CALC_FOUND_ROWS
-<allTableFields()>
-from <tableName()>
-where plugin_name = :pluginName
-and is_active = 1
-order by record_id
+getByPluginName() ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where t.plugin_name = :pluginName
+and t.is_active = 1
+order by t.record_id
 limit :offset, :rowCount
+;
+>>
+
+getCountByPluginName() ::= <<
+select
+  count(1) as count
+from <tableName()> t
+where t.plugin_name = :pluginName
+and t.is_active = 1
 ;
 >>

@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.api.TestApiListener;
-import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.Catalog;
@@ -85,13 +84,12 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
     }
 
     public void startTestFamework(final TestApiListener testListener,
-                                  final TestListenerStatus testListenerStatus,
                                   final ClockMock clock,
                                   final BusService busService,
                                   final SubscriptionBaseService subscriptionBaseService) throws Exception {
         log.debug("STARTING TEST FRAMEWORK");
 
-        resetTestListener(testListener, testListenerStatus);
+        resetTestListener(testListener);
 
         resetClockToStartOfTest(clock);
 
@@ -113,11 +111,10 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         log.debug("STOPPED TEST FRAMEWORK");
     }
 
-    private void resetTestListener(final TestApiListener testListener, final TestListenerStatus testListenerStatus) {
+    private void resetTestListener(final TestApiListener testListener) {
         // RESET LIST OF EXPECTED EVENTS
         if (testListener != null) {
             testListener.reset();
-            testListenerStatus.resetTestListenerStatus();
         }
     }
 

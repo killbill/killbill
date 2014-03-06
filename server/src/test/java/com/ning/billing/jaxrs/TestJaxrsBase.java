@@ -97,8 +97,6 @@ public class TestJaxrsBase extends KillbillClient {
 
     protected static final String PLUGIN_NAME = "noop";
 
-    protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 50000;
-
     @Inject
     protected OSGIServiceRegistration<Servlet> servletRouter;
 
@@ -111,11 +109,13 @@ public class TestJaxrsBase extends KillbillClient {
     @Inject
     protected PersistentBus internalBus;
 
+    @Inject
+    protected TestApiListener busHandler;
+
     protected static TestKillbillGuiceListener listener;
 
     protected CoreConfig config;
     private HttpServer server;
-    protected TestApiListener busHandler;
 
     public static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = TestJaxrsBase.class.getResource(resource);
@@ -293,8 +293,6 @@ public class TestJaxrsBase extends KillbillClient {
         loadConfig();
 
         listener.getInstantiatedInjector().injectMembers(this);
-
-        busHandler = new TestApiListener(null, dbi);
     }
 
     protected void loadConfig() {

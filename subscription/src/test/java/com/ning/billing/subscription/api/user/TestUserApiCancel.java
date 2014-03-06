@@ -33,7 +33,6 @@ import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import com.ning.billing.subscription.api.SubscriptionBillingApiException;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
@@ -67,7 +66,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         // CANCEL in trial period to get IMM policy
         subscription.cancel(callContext);
         currentPhase = subscription.getCurrentPhase();
-        testListener.isCompleted(3000);
+        assertListenerStatus();
 
         assertEquals(subscription.getLastActiveProduct().getName(), prod);
         assertEquals(subscription.getLastActivePriceList().getName(), planSet);
@@ -116,11 +115,8 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription.getLastActiveCategory(), ProductCategory.BASE);
 
         // CANCEL
-        testListener.setNonExpectedMode();
-        testListener.pushExpectedEvent(NextEvent.CANCEL);
         subscription.cancel(callContext);
-        assertFalse(testListener.isCompleted(3000));
-        testListener.reset();
+        assertListenerStatus();
 
         assertEquals(subscription.getLastActiveProduct().getName(), prod);
         assertEquals(subscription.getLastActivePriceList().getName(), planSet);

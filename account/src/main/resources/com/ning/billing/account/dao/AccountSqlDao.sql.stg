@@ -86,22 +86,12 @@ getAccountByKey() ::= <<
     where external_key = :externalKey <AND_CHECK_TENANT()>;
 >>
 
-searchAccounts() ::= <<
-select SQL_CALC_FOUND_ROWS
-<allTableFields("t.")>
-from <tableName()> t
-where 1 = 1
-and (
-     <idField("t.")> = :searchKey
-  or t.name like :likeSearchKey
-  or t.email like :likeSearchKey
-  or t.external_key like :likeSearchKey
-  or t.company_name like :likeSearchKey
-)
-<AND_CHECK_TENANT("t.")>
-order by <recordIdField("t.")> ASC
-limit :offset, :rowCount
-;
+searchQuery(prefix) ::= <<
+     <idField(prefix)> = :searchKey
+  or <prefix>name like :likeSearchKey
+  or <prefix>email like :likeSearchKey
+  or <prefix>external_key like :likeSearchKey
+  or <prefix>company_name like :likeSearchKey
 >>
 
 getIdFromKey() ::= <<
