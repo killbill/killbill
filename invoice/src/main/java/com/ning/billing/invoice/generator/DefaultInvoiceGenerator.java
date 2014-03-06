@@ -19,7 +19,6 @@ package com.ning.billing.invoice.generator;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -79,34 +78,38 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
         validateTargetDate(targetDate);
+        final LocalDate adjustedTargetDate = adjustTargetDate(existingInvoices, targetDate);
 
-        final AccountItemTree tree = new AccountItemTree(accountId);
+        final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), adjustedTargetDate, targetCurrency);
+        final UUID invoiceId = invoice.getId();
 
+        final List<InvoiceItem> inAdvanceItems = generateInAdvanceInvoiceItems(accountId, invoiceId, events, existingInvoices, adjustedTargetDate, targetCurrency);
+        invoice.addInvoiceItems(inAdvanceItems);
+
+        return inAdvanceItems.size() != 0 ? invoice : null;
+    }
+
+    private List<InvoiceItem> generateInAdvanceInvoiceItems(final UUID accountId, final UUID invoiceId, @Nullable final BillingEventSet events,
+                                               @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
+                                               final Currency targetCurrency) throws InvoiceApiException {
+        final AccountItemTree accountItemTree = new AccountItemTree(accountId);
         if (existingInvoices != null) {
             for (final Invoice invoice : existingInvoices) {
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {
                     if (item.getSubscriptionId() == null || // Always include migration invoices, credits, external charges etc.
                         !events.getSubscriptionIdsWithAutoInvoiceOff()
                                .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
-                        tree.addExistingItem(item);
+                        accountItemTree.addExistingItem(item);
                     }
                 }
             }
         }
 
-        final LocalDate adjustedTargetDate = adjustTargetDate(existingInvoices, targetDate);
-
-        final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), adjustedTargetDate, targetCurrency);
-        final UUID invoiceId = invoice.getId();
-
         // Generate list of proposed invoice items based on billing events from junction-- proposed items are ALL items since beginning of time
-        final List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, accountId, events, adjustedTargetDate, targetCurrency);
+        final List<InvoiceItem> proposedItems = generateInAdvanceInvoiceItems(invoiceId, accountId, events, targetDate, targetCurrency);
 
-        tree.mergeWithProposedItems(proposedItems);
-        final List<InvoiceItem> finalItems = tree.getResultingItemList();
-        invoice.addInvoiceItems(finalItems);
-
-        return finalItems.size() != 0 ? invoice : null;
+        accountItemTree.mergeWithProposedItems(proposedItems);
+        return accountItemTree.getResultingItemList();
     }
 
     private void validateTargetDate(final LocalDate targetDate) throws InvoiceApiException {
@@ -132,8 +135,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return maxDate;
     }
 
-    private List<InvoiceItem> generateInvoiceItems(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
-                                                   final LocalDate targetDate, final Currency currency) throws InvoiceApiException {
+    private List<InvoiceItem> generateInAdvanceInvoiceItems(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
+                                                            final LocalDate targetDate, final Currency currency) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
         if (events.size() == 0) {
@@ -154,10 +157,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             if (!events.getSubscriptionIdsWithAutoInvoiceOff().
                     contains(thisEvent.getSubscription().getId())) { // don't consider events for subscriptions that have auto_invoice_off
                 final BillingEvent adjustedNextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
-                items.addAll(processEvents(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, logStringBuilder));
+                items.addAll(processInAdvanceEvents(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, logStringBuilder));
             }
         }
-        items.addAll(processEvents(invoiceId, accountId, nextEvent, null, targetDate, currency, logStringBuilder));
+        items.addAll(processInAdvanceEvents(invoiceId, accountId, nextEvent, null, targetDate, currency, logStringBuilder));
 
         log.info(logStringBuilder.toString());
 
@@ -165,9 +168,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     }
 
     // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
-    private List<InvoiceItem> processEvents(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
-                                            final LocalDate targetDate, final Currency currency,
-                                            final StringBuilder logStringBuilder) throws InvoiceApiException {
+    private List<InvoiceItem> processInAdvanceEvents(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
+                                                     final LocalDate targetDate, final Currency currency,
+                                                     final StringBuilder logStringBuilder) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
         // Handle fixed price items
