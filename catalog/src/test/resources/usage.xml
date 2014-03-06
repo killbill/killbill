@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+
+    <effectiveDate>2013-02-08T00:00:00+00:00</effectiveDate>
+    <catalogName>Usage</catalogName>
+
+    <!-- TBD
+    Defines the billingMode for all recurring subscription in that catalog:
+    Goal is to avoid to end up in a situation where a user could switch plan and suddenly his
+    recurring billing goes from IN_ADVANCE to IN_ARREAR or the reverse.
+    -->
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
+    <currencies>
+        <currency>BTC</currency>
+    </currencies>
+
+    <products>
+        <product name="Dummy">
+            <category>BASE</category>
+        </product>
+        <product name="CapacityInAdvance">
+            <category>BASE</category>
+        </product>
+        <product name="ConsumableInAdvancePrepayCredit">
+            <category>BASE</category>
+        </product>
+        <product name="ConsumableInAdvanceTopUp">
+            <category>BASE</category>
+        </product>
+        <product name="CapacityInArrear">
+            <category>BASE</category>
+        </product>
+        <product name="ConsumableInArrear">
+            <category>BASE</category>
+        </product>
+    </products>
+
+
+    <plans>
+
+        <!-- Shows main layout -->
+        <plan name="dummy-annual">
+            <product>Dummy</product>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <!-- New Fixed section (maybe not needed,. but for consistency with recurring, usage sections) -->
+                <fixed>
+                    <fixedPrice>
+                        <price>
+                        </price>
+                    </fixedPrice>
+                </fixed>
+                <!-- New recurring section:
+                     - Embeds its own billingPeriod
+                     - Its billingMode is catalog level
+                 -->
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <!-- ... -->
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <!-- New usage sections -->
+                <usages>
+                    <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
+                        <!-- ... -->
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+
+        <plan name="capacity-in-advance-annual">
+            <product>CapacityInAdvance</product>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>100.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages>
+                    <usage billingMode="IN_ADVANCE" type="CAPACITY">
+                        <limits>
+                            <limit>
+                                <unit>members</unit>
+                                <max>100</max>
+                            </limit>
+                        </limits>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+
+        <plan name="consumable-in-advance-prepay-credit-annual">
+            <product>ConsumableInAdvancePrepayCredit</product>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>100.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages>
+                    <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
+                        <limits>
+                            <limit>
+                                <unit>minutes</unit>
+                                <max>1000</max>
+                            </limit>
+                        </limits>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+
+        <plan name="consumable-in-advance-topup">
+            <product>ConsumableInAdvanceTopUp</product>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+
+                <usages>
+                    <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
+                        <limits>
+                            <limit>
+                                <unit>fasttrack_tokens</unit>
+                                <min>5</min>
+                                <increment>5</increment>
+                            </limit>
+                        </limits>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+
+        <plan name="capacity-in-arrear">
+            <product>CapacityInArrear</product>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+
+                <usages>
+                    <usage billingMode="IN_ARREAR" type="CAPACITY">
+                        <limits>
+                            <limit>
+                                <unit>bandwith (Meg/sec)</unit>
+                                <tiers>
+                                    <tier>
+                                        <max>10</max>
+                                        <price>
+                                            <currency>BTC</currency>
+                                            <value>0.5</value>
+                                        </price>
+                                    </tier>
+                                    <tier>
+                                        <max>20</max>
+                                        <price>
+                                            <currency>BTC</currency>
+                                            <value>1.0</value>
+                                        </price>
+                                    </tier>
+                                </tiers>
+                            </limit>
+                        </limits>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+
+        <plan name="consumable-in-arrear">
+            <product>ConsumableInArrear</product>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage billingMode="IN_ARREAR" type="CONSUMABLE">
+                        <tiers>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>minutes</unit>
+                                        <max>1000</max>
+                                        <price>
+                                            <currency>BTC</currency>
+                                            <value>0.5</value>
+                                        </price>
+                                    </limit>
+                                    <limit>
+                                        <unit>Mbytes</unit>
+                                        <max>512</max>
+                                        <price>
+                                            <currency>BTC</currency>
+                                            <value>1.0</value>
+                                        </price>
+                                    </limit>
+                                </limits>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>capacity-in-advance-annual</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+</catalog>
