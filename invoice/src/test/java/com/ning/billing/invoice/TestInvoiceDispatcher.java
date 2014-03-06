@@ -172,7 +172,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(invoiceItems.get(3).getInvoiceItemType(), InvoiceItemType.RECURRING);
         Assert.assertEquals(invoiceItems.get(3).getStartDate(), new LocalDate("2012-07-25"));
         Assert.assertEquals(invoiceItems.get(3).getEndDate(), new LocalDate("2012-07-31"));
-        Assert.assertEquals(invoiceItems.get(3).getAmount(), new BigDecimal("193.50"));
+        Assert.assertEquals(invoiceItems.get(3).getAmount(), new BigDecimal("193.55"));
         Assert.assertEquals(invoiceItems.get(3).getRate(), new BigDecimal("1000"));
 
         // Verify common fields

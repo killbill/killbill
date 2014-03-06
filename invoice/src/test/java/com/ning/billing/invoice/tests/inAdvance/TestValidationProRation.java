@@ -86,13 +86,5 @@ public class TestValidationProRation extends ProRationTestBase {
 
         calculateNumberOfBillingCycles(startDate, targetDate, 15);
     }
-
-    @Test(groups = "fast")
-    public void testBigDecimalTruncation() {
-        final BigDecimal value = new BigDecimal("1.3349573498567");
-        final BigDecimal truncated = value.setScale(0, BigDecimal.ROUND_DOWN).setScale(NUMBER_OF_DECIMALS);
-
-        assertEquals(truncated, ONE);
-    }
 }
 

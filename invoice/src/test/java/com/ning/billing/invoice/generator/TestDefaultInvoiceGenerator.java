@@ -43,8 +43,8 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 import com.ning.billing.invoice.MockBillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
@@ -54,12 +54,13 @@ import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.clock.Clock;
-import com.ning.billing.clock.DefaultClock;
-import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.junction.BillingEvent;
 import com.ning.billing.junction.BillingEventSet;
 import com.ning.billing.junction.BillingModeType;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
+import com.ning.billing.util.config.InvoiceConfig;
+import com.ning.billing.util.currency.KillBillMoney;
 
 import static com.ning.billing.invoice.TestInvoiceHelper.EIGHT;
 import static com.ning.billing.invoice.TestInvoiceHelper.FIFTEEN;
@@ -67,10 +68,8 @@ import static com.ning.billing.invoice.TestInvoiceHelper.FIVE;
 import static com.ning.billing.invoice.TestInvoiceHelper.FORTY;
 import static com.ning.billing.invoice.TestInvoiceHelper.FOURTEEN;
 import static com.ning.billing.invoice.TestInvoiceHelper.NINETEEN;
-import static com.ning.billing.invoice.TestInvoiceHelper.NUMBER_OF_DECIMALS;
 import static com.ning.billing.invoice.TestInvoiceHelper.ONE;
 import static com.ning.billing.invoice.TestInvoiceHelper.ONE_HUNDRED;
-import static com.ning.billing.invoice.TestInvoiceHelper.ROUNDING_METHOD;
 import static com.ning.billing.invoice.TestInvoiceHelper.TEN;
 import static com.ning.billing.invoice.TestInvoiceHelper.THIRTEEN;
 import static com.ning.billing.invoice.TestInvoiceHelper.THIRTY;
@@ -141,7 +140,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
-        assertEquals(invoice.getBalance(), TWENTY);
+        assertEquals(invoice.getBalance(), KillBillMoney.of(TWENTY, invoice.getCurrency()));
         assertEquals(invoice.getInvoiceItems().get(0).getSubscriptionId(), sub.getId());
     }
 
@@ -228,8 +227,8 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         assertEquals(invoice.getNumberOfItems(), 2);
 
         final BigDecimal expectedNumberOfBillingCycles;
-        expectedNumberOfBillingCycles = ONE.add(FOURTEEN.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
-        final BigDecimal expectedAmount = expectedNumberOfBillingCycles.multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedNumberOfBillingCycles = ONE.add(FOURTEEN.divide(THIRTY_ONE, KillBillMoney.ROUNDING_METHOD));
+        final BigDecimal expectedAmount = KillBillMoney.of(expectedNumberOfBillingCycles.multiply(rate), invoice.getCurrency());
         assertEquals(invoice.getBalance(), expectedAmount);
     }
 
@@ -259,7 +258,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
-        assertEquals(invoice.getBalance(), rate1.add(rate2).setScale(NUMBER_OF_DECIMALS));
+        assertEquals(invoice.getBalance(), KillBillMoney.of(rate1.add(rate2), invoice.getCurrency()));
     }
 
     @Test(groups = "fast")
@@ -287,14 +286,14 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         assertEquals(invoice.getNumberOfItems(), 4);
 
         final BigDecimal numberOfCyclesEvent1;
-        numberOfCyclesEvent1 = ONE.add(FOURTEEN.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        numberOfCyclesEvent1 = ONE.add(FOURTEEN.divide(THIRTY_ONE, KillBillMoney.ROUNDING_METHOD));
 
         final BigDecimal numberOfCyclesEvent2 = TWO;
 
         BigDecimal expectedValue;
         expectedValue = numberOfCyclesEvent1.multiply(rate1);
         expectedValue = expectedValue.add(numberOfCyclesEvent2.multiply(rate2));
-        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = KillBillMoney.of(expectedValue, invoice.getCurrency());
 
         assertEquals(invoice.getBalance(), expectedValue);
     }
@@ -327,7 +326,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 4);
-        assertEquals(invoice.getBalance(), rate1.add(rate2).add(TWO.multiply(rate3)).setScale(NUMBER_OF_DECIMALS));
+        assertEquals(invoice.getBalance(), KillBillMoney.of(rate1.add(rate2).add(TWO.multiply(rate3)), invoice.getCurrency()));
     }
 
     @Test(groups = "fast")
@@ -470,7 +469,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // on 6/21/2011, create add-on (subscription 5)
         events.add(createBillingEvent(subscriptionId5, bundleId, plan5StartDate, plan5, plan5Phase1, 10));
-        expectedAmount = TWENTY.multiply(NINETEEN).divide(THIRTY, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedAmount = TWENTY.multiply(NINETEEN).divide(THIRTY, KillBillMoney.ROUNDING_METHOD);
         testInvoiceGeneration(accountId, events, invoices, plan5StartDate, 1, expectedAmount);
 
         // on 7/7/2011, invoice SubscriptionBase 4 (plan 1)
@@ -610,7 +609,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final Invoice invoice1 = generator.generateInvoice(accountId, events, null, startDate, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 2);
-        assertEquals(invoice1.getBalance(), FIFTEEN);
+        assertEquals(invoice1.getBalance(), KillBillMoney.of(FIFTEEN, invoice1.getCurrency()));
 
         final List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
@@ -622,7 +621,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, currentDate, Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
-        assertEquals(invoice2.getBalance(), FIVE);
+        assertEquals(invoice2.getBalance(), KillBillMoney.of(FIVE, invoice2.getCurrency()));
     }
 
     @Test(groups = "fast")
@@ -647,7 +646,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final Invoice invoice1 = generator.generateInvoice(accountId, events, null, startDate, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
-        assertEquals(invoice1.getBalance(), fixedCost1);
+        assertEquals(invoice1.getBalance(), KillBillMoney.of(fixedCost1, invoice1.getCurrency()));
 
         final List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
@@ -661,7 +660,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, phaseChangeDate, Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
-        assertEquals(invoice2.getBalance(), fixedCost2);
+        assertEquals(invoice2.getBalance(), KillBillMoney.of(fixedCost2, invoice2.getCurrency()));
     }
 
     @Test(groups = "fast")
@@ -780,7 +779,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         existingInvoices.add(invoice);
 
         distributeItems(existingInvoices);
-        assertEquals(invoice.getBalance(), expectedAmount);
+        assertEquals(invoice.getBalance(), KillBillMoney.of(expectedAmount, invoice.getCurrency()));
     }
 
     @Test(groups = "fast")
@@ -826,7 +825,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         invoices.add(invoice2);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 2);
-        assertEquals(invoice2.getBalance().compareTo(TWENTY_FIVE.multiply(new BigDecimal("0.9")).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD)), 0);
+        assertEquals(invoice2.getBalance().compareTo(KillBillMoney.of(TWENTY_FIVE.multiply(new BigDecimal("0.9")), invoice2.getCurrency())), 0);
 
         // perform a repair (change base plan; remove one add-on)
         // event stream should include just two plans
@@ -845,7 +844,6 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         // -4.50 -18 - 10 (to correct the previous 2 invoices) + 4.50 + 13
         assertEquals(invoice3.getBalance().compareTo(FIFTEEN.negate()), 0);
     }
-
 
     @Test(groups = "fast")
     public void testRepairForPaidInvoice() throws CatalogApiException, InvoiceApiException {
@@ -995,7 +993,6 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         assertNotNull(invoice3);
         assertTrue(invoice3.getBalance().compareTo(FIFTEEN.multiply(TWO).add(TWELVE)) == 0);
     }
-
 
     private void printDetailInvoice(final Invoice invoice) {
         log.info("--------------------  START DETAIL ----------------------");

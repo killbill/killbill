@@ -20,12 +20,14 @@ import static com.ning.billing.invoice.TestInvoiceHelper.*;
 
 import java.math.BigDecimal;
 
+import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
+import com.ning.billing.util.currency.KillBillMoney;
 
 public class TestProRation extends ProRationInAdvanceTestBase {
 
@@ -39,16 +41,18 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         final LocalDate startDate = invoiceUtil.buildDate(2011, 1, 31);
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 2, 24);
 
-        final BigDecimal expectedValue = ONE.add(FIFTEEN.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        // THREE_HUNDRED_AND_FOURTY_NINE is number of days between startDate and expected first billing cycle date (2012, 1, 15);
+        final BigDecimal expectedValue = THREE_HUNDRED_AND_FOURTY_NINE.divide(THREE_HUNDRED_AND_SIXTY_FIVE, KillBillMoney.ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, expectedValue);
     }
 
     @Test(groups = "fast")
     public void testSinglePlan_PrecedingProRation_CrossingYearBoundary() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2010, 12, 15);
-        final LocalDate targetDate = invoiceUtil.buildDate(2011, 1, 13);
+        final LocalDate targetDate = invoiceUtil.buildDate(2012, 1, 13);
 
-        final BigDecimal expectedValue = ONE.add(TWENTY.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        // THREE_HUNDRED_AND_FOURTY_NINE is number of days between startDate and expected first billing cycle date (2011, 12, 4);
+        final BigDecimal expectedValue = ONE.add(THREE_HUNDRED_AND_FIFTY_FOUR.divide(THREE_HUNDRED_AND_SIXTY_FIVE, KillBillMoney.ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, targetDate, 4, expectedValue);
     }
 

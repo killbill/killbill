@@ -207,7 +207,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         clock.addDays(3);
         final DateTime newEffectiveDate = clock.getUTCNow();
         final UUID newPaymentMethodId = UUID.randomUUID();
-        final BigDecimal newAmount = new BigDecimal(15.23).setScale(2, RoundingMode.HALF_EVEN);
+        final BigDecimal newAmount = new BigDecimal("15.23");
         final PaymentAttemptModelDao secondAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), newPaymentMethodId, newEffectiveDate, newAmount, currency);
         paymentDao.updatePaymentWithNewAttempt(payment.getId(), secondAttempt, internalCallContext);
 

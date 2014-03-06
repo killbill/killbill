@@ -16,8 +16,6 @@
 
 package com.ning.billing.invoice.tests.inAdvance.monthly;
 
-import static com.ning.billing.invoice.TestInvoiceHelper.*;
-
 import java.math.BigDecimal;
 
 import org.joda.time.LocalDate;
@@ -26,6 +24,11 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
+import com.ning.billing.util.currency.KillBillMoney;
+
+import static com.ning.billing.invoice.TestInvoiceHelper.EIGHT;
+import static com.ning.billing.invoice.TestInvoiceHelper.ONE;
+import static com.ning.billing.invoice.TestInvoiceHelper.THIRTY_ONE;
 
 public class TestTrailingProRation extends ProRationInAdvanceTestBase {
 
@@ -58,7 +61,7 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
         final LocalDate endDate = invoiceUtil.buildDate(2010, 7, 25);
         final LocalDate targetDate = invoiceUtil.buildDate(2010, 7, 17);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, KillBillMoney.ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
@@ -68,7 +71,7 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
         final LocalDate endDate = invoiceUtil.buildDate(2010, 7, 25);
         final LocalDate targetDate = invoiceUtil.buildDate(2010, 7, 18);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, KillBillMoney.ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
@@ -77,7 +80,7 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
         final LocalDate startDate = invoiceUtil.buildDate(2010, 6, 17);
         final LocalDate endDate = invoiceUtil.buildDate(2010, 7, 25);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, KillBillMoney.ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, endDate, 17, expectedValue);
     }
 
@@ -87,7 +90,7 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
         final LocalDate endDate = invoiceUtil.buildDate(2010, 7, 25);
         final LocalDate targetDate = invoiceUtil.buildDate(2010, 7, 30);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, KillBillMoney.ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 }

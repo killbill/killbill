@@ -459,8 +459,7 @@ public class PaymentProcessor extends ProcessorBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_AMOUNT_DENIED,
                                           invoice.getId(), inputAmount.floatValue(), invoice.getBalance().floatValue());
         }
-        final BigDecimal result = inputAmount != null ? inputAmount : invoice.getBalance();
-        return result.setScale(2, RoundingMode.HALF_UP);
+        return inputAmount != null ? inputAmount : invoice.getBalance();
     }
 
     public void retryAutoPayOff(final UUID paymentId, final InternalCallContext context) {
@@ -578,7 +577,7 @@ public class PaymentProcessor extends ProcessorBase {
 
     private Payment processNewPaymentWithAccountLocked(final UUID paymentMethodId, final PaymentPluginApi plugin, final Account account, final Invoice invoice,
                                                        final BigDecimal requestedAmount, final boolean isInstantPayment, final InternalCallContext context) throws PaymentApiException {
-        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), paymentMethodId, requestedAmount.setScale(2, RoundingMode.HALF_UP), invoice.getCurrency(), clock.getUTCNow());
+        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), paymentMethodId, requestedAmount, invoice.getCurrency(), clock.getUTCNow());
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), paymentMethodId, clock.getUTCNow(),
                                                                           requestedAmount, invoice.getCurrency());
 

@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -39,7 +41,9 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.callcontext.CallContext;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 import static org.testng.Assert.assertNotNull;
@@ -92,7 +96,34 @@ public class InvoiceChecker {
         final List<InvoiceItem> actual = invoice.getInvoiceItems();
         Assert.assertEquals(actual.size(), expected.size());
         for (final ExpectedInvoiceItemCheck cur : expected) {
+
             boolean found = false;
+
+            // First try to find exact match; this is necessary because the for loop below might encounter a similar item -- for instance
+            // same type, same dates, but different amount and choke.
+            final InvoiceItem foundItem = Iterables.tryFind(actual, new Predicate<InvoiceItem>() {
+                @Override
+                public boolean apply(final InvoiceItem input) {
+                    if (input.getInvoiceItemType() != cur.getType() || (cur.shouldCheckDates() && input.getStartDate().compareTo(cur.getStartDate()) != 0)) {
+                        return false;
+                    }
+                    if (input.getAmount().compareTo(cur.getAmount()) != 0) {
+                        return false;
+                    }
+
+                    if (!cur.shouldCheckDates() ||
+                        (cur.getEndDate() == null && input.getEndDate() == null) ||
+                        (cur.getEndDate() != null && input.getEndDate() != null && cur.getEndDate().compareTo(input.getEndDate()) == 0)) {
+                        return true;
+                    }
+                    return false;
+                }
+            }).orNull();
+            if (foundItem != null) {
+                continue;
+            }
+
+            // If we could not find it, we still loop again, so that error message helps to debug when there is a 'similar' item.
             for (final InvoiceItem in : actual) {
                 // Match first on type and start date
                 if (in.getInvoiceItemType() != cur.getType() || (cur.shouldCheckDates() && in.getStartDate().compareTo(cur.getStartDate()) != 0)) {
@@ -114,8 +145,15 @@ public class InvoiceChecker {
                                        cur.getType(), cur.getStartDate(), in.getAmount(), in.getEndDate(), cur.getEndDate()));
             }
             if (!found) {
-                Assert.fail(String.format("Failed to find invoice item type = %s and startDate = %s, amount = %s, endDate = %s for invoice id %s",
-                                          cur.getType(), cur.getStartDate(), cur.getAmount(), cur.getEndDate(), invoice.getId()));
+                final StringBuilder debugBuilder = new StringBuilder();
+                debugBuilder.append(String.format("Invoice id=[%s], targetDate=[%s]", invoice.getId(), invoice.getTargetDate()));
+                for (final InvoiceItem actualInvoiceItem : actual) {
+                    debugBuilder.append(String.format("\n    type=[%s] startDate=[%s] endDate=[%s] amount=[%s]", actualInvoiceItem.getInvoiceItemType(), actualInvoiceItem.getStartDate(), actualInvoiceItem.getEndDate(), actualInvoiceItem.getAmount()));
+                }
+
+                final String failureMessage = String.format("Failed to find invoice item type = %s and startDate = %s, amount = %s, endDate = %s for invoice id %s\n%s",
+                                                            cur.getType(), cur.getStartDate(), cur.getAmount(), cur.getEndDate(), invoice.getId(), debugBuilder.toString());
+                Assert.fail(failureMessage);
             }
         }
         auditChecker.checkInvoiceCreated(invoice, context);

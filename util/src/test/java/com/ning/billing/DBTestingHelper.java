@@ -162,7 +162,7 @@ public class DBTestingHelper {
                                "    account_id char(36) NOT NULL,\n" +
                                "    invoice_id char(36) NOT NULL,\n" +
                                "    payment_method_id char(36) NOT NULL,\n" +
-                               "    amount numeric(10,4),\n" +
+                               "    amount numeric(15,9),\n" +
                                "    currency char(3),\n" +
                                "    effective_date datetime,\n" +
                                "    payment_status varchar(50),\n" +

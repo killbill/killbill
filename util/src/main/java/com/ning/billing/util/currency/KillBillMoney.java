@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,20 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.model;
+package com.ning.billing.util.currency;
 
 import java.math.BigDecimal;
 
-public class InvoicingConfiguration {
+import org.joda.money.CurrencyUnit;
 
-    private static final int roundingMethod = BigDecimal.ROUND_HALF_UP;
-    private static final int numberOfDecimals = 2;
+import com.ning.billing.catalog.api.Currency;
 
-    public static int getRoundingMode() {
-        return roundingMethod;
-    }
+public class KillBillMoney {
 
-    public static int getNumberOfDecimals() {
-        return numberOfDecimals;
+    public static final int ROUNDING_METHOD = BigDecimal.ROUND_HALF_UP;
+    public static final int MAX_SCALE = 9;
+
+    private KillBillMoney() {}
+
+    public static BigDecimal of(final BigDecimal amount, final Currency currency) {
+        final CurrencyUnit currencyUnit = CurrencyUnit.getInstance(currency.toString());
+        return amount.setScale(currencyUnit.getDecimalPlaces(), ROUNDING_METHOD);
     }
 }

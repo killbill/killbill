@@ -56,7 +56,7 @@ public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
             final BigDecimal numberOfBillingCycles;
             numberOfBillingCycles = calculateNumberOfBillingCycles(startDate, endDate, targetDate, billingCycleDay);
 
-            assertEquals(numberOfBillingCycles.compareTo(expectedValue), 0);
+            assertEquals(numberOfBillingCycles.compareTo(expectedValue), 0, "Actual: " + numberOfBillingCycles.toString() + "; expected: " + expectedValue.toString());
         } catch (InvalidDateSequenceException idse) {
             throw idse;
         } catch (Exception e) {
@@ -72,7 +72,7 @@ public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
             numberOfBillingCycles = numberOfBillingCycles.add(item.getNumberOfCycles());
         }
 
-        return numberOfBillingCycles.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        return numberOfBillingCycles;
     }
 
     protected BigDecimal calculateNumberOfBillingCycles(final LocalDate startDate, final LocalDate targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
@@ -83,6 +83,6 @@ public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
             numberOfBillingCycles = numberOfBillingCycles.add(item.getNumberOfCycles());
         }
 
-        return numberOfBillingCycles.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        return numberOfBillingCycles;
     }
 }

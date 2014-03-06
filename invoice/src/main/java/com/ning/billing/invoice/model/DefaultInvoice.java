@@ -28,6 +28,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.entity.EntityBase;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -35,7 +36,6 @@ import com.ning.billing.invoice.calculator.InvoiceCalculatorUtils;
 import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
-import com.ning.billing.entity.EntityBase;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -65,8 +65,8 @@ public class DefaultInvoice extends EntityBase implements Invoice {
 
     // Used to hydrate invoice from persistence layer
     public DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
-                           @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
-                           final LocalDate targetDate, final Currency currency, final Currency processedCurrency, final boolean isMigrationInvoice) {
+                          @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
+                          final LocalDate targetDate, final Currency currency, final Currency processedCurrency, final boolean isMigrationInvoice) {
         super(invoiceId, createdDate, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
@@ -187,32 +187,32 @@ public class DefaultInvoice extends EntityBase implements Invoice {
 
     @Override
     public BigDecimal getPaidAmount() {
-        return InvoiceCalculatorUtils.computeInvoiceAmountPaid(payments);
+        return InvoiceCalculatorUtils.computeInvoiceAmountPaid(currency, payments);
     }
 
     @Override
     public BigDecimal getOriginalChargedAmount() {
-        return InvoiceCalculatorUtils.computeInvoiceOriginalAmountCharged(createdDate, invoiceItems);
+        return InvoiceCalculatorUtils.computeInvoiceOriginalAmountCharged(createdDate, currency, invoiceItems);
     }
 
     @Override
     public BigDecimal getChargedAmount() {
-        return InvoiceCalculatorUtils.computeInvoiceAmountCharged(invoiceItems);
+        return InvoiceCalculatorUtils.computeInvoiceAmountCharged(currency, invoiceItems);
     }
 
     @Override
     public BigDecimal getCreditedAmount() {
-        return InvoiceCalculatorUtils.computeInvoiceAmountCredited(invoiceItems);
+        return InvoiceCalculatorUtils.computeInvoiceAmountCredited(currency, invoiceItems);
     }
 
     @Override
     public BigDecimal getRefundedAmount() {
-        return InvoiceCalculatorUtils.computeInvoiceAmountRefunded(payments);
+        return InvoiceCalculatorUtils.computeInvoiceAmountRefunded(currency, payments);
     }
 
     @Override
     public BigDecimal getBalance() {
-        return InvoiceCalculatorUtils.computeInvoiceBalance(invoiceItems, payments);
+        return InvoiceCalculatorUtils.computeInvoiceBalance(currency, invoiceItems, payments);
     }
 
     @Override

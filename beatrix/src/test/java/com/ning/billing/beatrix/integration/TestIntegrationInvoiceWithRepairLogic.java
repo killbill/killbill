@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.inject.Inject;
-
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.testng.Assert;
@@ -45,8 +43,6 @@ import com.ning.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.invoice.generator.DefaultInvoiceGeneratorWithSwitchRepairLogic;
-import com.ning.billing.invoice.generator.DefaultInvoiceGeneratorWithSwitchRepairLogic.REPAIR_INVOICE_LOGIC;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentStatus;
 
@@ -57,14 +53,9 @@ import static org.testng.Assert.assertNotNull;
 
 public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
-    @Inject
-    private DefaultInvoiceGeneratorWithSwitchRepairLogic invoiceGenerator;
-
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
         super.afterMethod();
-        // Make sure to reset to default invoice logic so subsequent test will pass
-        invoiceGenerator.setDefaultRepairLogic(REPAIR_INVOICE_LOGIC.PARTIAL_REPAIR);
     }
 
     @Test(groups = "slow")
@@ -138,7 +129,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // Force a plan change
         //
         changeEntitlementAndCheckForCompletion(bpEntitlement, "Blowdart", term, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
-
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 3);
 
@@ -151,9 +141,10 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 5, 2), InvoiceItemType.ITEM_ADJ, new BigDecimal("-10")),
                 // TODO PIERRE The cba start_date/end_date are created using the callcontext
                 new ExpectedInvoiceItemCheck(callContext.getCreatedDate().toLocalDate(), callContext.getCreatedDate().toLocalDate(), InvoiceItemType.CBA_ADJ, new BigDecimal("10")),
-                // You can check here that 239.95 - 249.95/31 = 231.88
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-231.88")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 5, 2), InvoiceItemType.CBA_ADJ, new BigDecimal("231.88")));
+                // The pro-rated piece is ~ 249.95 - (249.95 / 31) ~ 241.88. However we adjusted the item so max available amount is  249.95 - 10 = 239.95.
+                // So we consume all of it since max amount is less than 241.88.
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-239.95")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 5, 2), InvoiceItemType.CBA_ADJ, new BigDecimal("239.95")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -250,8 +241,8 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("599.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-483.86")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("483.86")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-483.83")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("483.83")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -279,15 +270,15 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("599.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-483.86")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("483.86")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-483.83")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("483.83")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("8.02")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("-8.02")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-7.69")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 5, 8), InvoiceItemType.CBA_ADJ, new BigDecimal("7.69")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-7.70")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 5, 8), InvoiceItemType.CBA_ADJ, new BigDecimal("7.70")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -316,15 +307,15 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("599.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-483.86")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("483.86")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-483.83")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("483.83")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("8.02")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("-8.02")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-7.69")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 5, 8), InvoiceItemType.CBA_ADJ, new BigDecimal("7.69")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-7.70")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 5, 8), InvoiceItemType.CBA_ADJ, new BigDecimal("7.70")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -358,15 +349,15 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("599.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-483.86")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("483.86")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-483.83")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("483.83")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("8.02")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 7), new LocalDate(2012, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("-8.02")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-7.69")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 5, 8), InvoiceItemType.CBA_ADJ, new BigDecimal("7.69")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-7.70")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 5, 8), InvoiceItemType.CBA_ADJ, new BigDecimal("7.70")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -494,221 +485,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testInvoiceLogicWithFullRepairFollowedByPartialRepair() throws Exception {
-
-        // START TEST WITH OLD FULL_REPAIR LOGIC
-        invoiceGenerator.setDefaultRepairLogic(REPAIR_INVOICE_LOGIC.FULL_REPAIR);
-
-        final LocalDate today = new LocalDate(2012, 4, 1);
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
-        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
-        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
-
-        final String productName = "Shotgun";
-        final BillingPeriod term = BillingPeriod.ANNUAL;
-        final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
-
-        //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
-        //
-        DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
-        assertNotNull(bpEntitlement);
-
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
-
-        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
-
-        // Move out of trials for interesting invoices adjustments
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        clock.addDays(40);
-        assertListenerStatus();
-
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
-        assertEquals(invoices.size(), 2);
-        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
-        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
-        //
-        // FORCE AN IMMEDIATE CHANGE OF THE BILLING PERIOD
-        //
-        changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.MONTHLY, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
-
-        assertListenerStatus();
-
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
-        assertEquals(invoices.size(), 3);
-
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2399.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("2399.95")));
-        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 11), InvoiceItemType.RECURRING, new BigDecimal("65.76")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("169.32")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("-235.08")));
-        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
-
-        // NOW SWITCH BACK TO PARTIAL REPAIR LOGIC AND GENERATE NEXT 2 INVOICES
-        invoiceGenerator.setDefaultRepairLogic(REPAIR_INVOICE_LOGIC.PARTIAL_REPAIR);
-
-        busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        clock.addMonths(1);
-        assertListenerStatus();
-
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
-        assertEquals(invoices.size(), 4);
-
-        // RECHECK PREVIOUS INVOICE DID NOT CHANGE
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2399.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("2399.95")));
-        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 11), InvoiceItemType.RECURRING, new BigDecimal("65.76")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("169.32")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("-235.08")));
-        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
-
-        // AND THEN CHECK NEW INVOICE
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 11), new LocalDate(2012, 6, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("-249.95")));
-        invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
-
-        busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        clock.addMonths(1);
-        assertListenerStatus();
-
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
-        assertEquals(invoices.size(), 5);
-
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 11), new LocalDate(2012, 7, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("-249.95")));
-        invoiceChecker.checkInvoice(invoices.get(4).getId(), callContext, toBeChecked);
-    }
-
-    @Test(groups = "slow")
-    public void testInvoiceLogicWithFullRepairFollowedByPartialRepairWithItemAdjustment() throws Exception {
-
-        // START TEST WITH OLD FULL_REPAIR LOGIC
-        invoiceGenerator.setDefaultRepairLogic(REPAIR_INVOICE_LOGIC.FULL_REPAIR);
-
-        final LocalDate today = new LocalDate(2012, 4, 1);
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
-        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
-        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
-
-        final String productName = "Shotgun";
-        final BillingPeriod term = BillingPeriod.ANNUAL;
-        final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
-
-        //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
-        //
-        DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
-        assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
-
-        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
-
-        // Move out of trials for interesting invoices adjustments
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        clock.addDays(40);
-        assertListenerStatus();
-
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
-        assertEquals(invoices.size(), 2);
-        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
-        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
-        //
-        // ITEM ADJUSTMENT PRIOR TO DOING THE REPAIR
-        //
-        final Invoice invoice1 = invoices.get(1);
-        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), callContext);
-        final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), PaymentStatus.SUCCESS, invoice1.getId(), Currency.USD);
-        final Payment payment1 = payments.get(0);
-
-        final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
-        iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("10.00"));
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, callContext);
-        assertListenerStatus();
-
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
-        assertEquals(invoices.size(), 2);
-
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
-                // TODO SETPH the  ITEM_ADJ seems to be created with the callcontext getCreatedDate()
-                new ExpectedInvoiceItemCheck(callContext.getCreatedDate().toLocalDate(), callContext.getCreatedDate().toLocalDate(), InvoiceItemType.ITEM_ADJ, new BigDecimal("-10.00")));
-        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
-        //
-        // FORCE AN IMMEDIATE CHANGE OF THE BILLING PERIOD
-        //
-        changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.MONTHLY, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
-
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
-        assertEquals(invoices.size(), 3);
-
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2389.95")),
-                new ExpectedInvoiceItemCheck(callContext.getCreatedDate().toLocalDate(), callContext.getCreatedDate().toLocalDate(), InvoiceItemType.ITEM_ADJ, new BigDecimal("-10.00")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("2389.95")));
-        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 11), InvoiceItemType.RECURRING, new BigDecimal("65.76")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("169.32")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("-235.08")));
-        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
-
-        // NOW SWITCH BACK TO PARTIAL REPAIR LOGIC AND GENERATE NEXT 2 INVOICES
-        invoiceGenerator.setDefaultRepairLogic(REPAIR_INVOICE_LOGIC.PARTIAL_REPAIR);
-
-        busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        clock.addMonths(1);
-        assertListenerStatus();
-
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
-        assertEquals(invoices.size(), 4);
-
-        // RECHECK PREVIOUS INVOICE DID NOT CHANGE
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2389.95")),
-                new ExpectedInvoiceItemCheck(callContext.getCreatedDate().toLocalDate(), callContext.getCreatedDate().toLocalDate(), InvoiceItemType.ITEM_ADJ, new BigDecimal("-10.00")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("2389.95")));
-        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 11), InvoiceItemType.RECURRING, new BigDecimal("65.76")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("169.32")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("-235.08")));
-        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
-
-        // AND THEN CHECK NEW INVOICE
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 11), new LocalDate(2012, 6, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("-249.95")));
-        invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
-    }
-
-    @Test(groups = "slow")
     public void testRepairWithFullItemAdjustment() throws Exception {
-
-        invoiceGenerator.setDefaultRepairLogic(REPAIR_INVOICE_LOGIC.PARTIAL_REPAIR);
 
         final LocalDate today = new LocalDate(2013, 7, 19);
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
@@ -740,7 +517,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
-
         // Move clock to 2013-09-17
         clock.addDays(30);
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
@@ -751,11 +527,9 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 2);
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2014, 8, 18), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2202.67")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2013, 9, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("2202.67")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2014, 8, 18), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2202.69")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2013, 9, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("2202.69")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
-
 
         //
         // ITEM ADJUSTMENT PRIOR TO DOING THE REPAIR
@@ -766,7 +540,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         final Payment payment1 = payments.get(0);
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
-        iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("197.28"));
+        iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("197.26"));
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, callContext);
         assertListenerStatus();
@@ -789,8 +563,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testRepairWithPartialItemAdjustment() throws Exception {
 
-        invoiceGenerator.setDefaultRepairLogic(REPAIR_INVOICE_LOGIC.PARTIAL_REPAIR);
-
         final LocalDate today = new LocalDate(2013, 7, 19);
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
@@ -821,7 +593,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
-
         // Move clock to 2013-09-17
         clock.addDays(30);
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
@@ -832,11 +603,9 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 2);
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2014, 8, 18), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2202.67")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2013, 9, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("2202.67")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2014, 8, 18), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2202.69")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2013, 9, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("2202.69")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
-
 
         //
         // ITEM ADJUSTMENT PRIOR TO DOING THE REPAIR

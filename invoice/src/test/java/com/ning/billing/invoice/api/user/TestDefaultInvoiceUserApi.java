@@ -29,16 +29,17 @@ import org.testng.annotations.Test;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.callcontext.DefaultCallContext;
 import com.ning.billing.clock.ClockMock;
+import com.ning.billing.util.currency.KillBillMoney;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -238,7 +239,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Verify the adjusted invoice balance
         final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
-        verifyAdjustedInvoiceBalance(invoiceBalance, creditAmount, adjustedInvoiceBalance);
+        verifyAdjustedInvoiceBalance(invoiceBalance, creditAmount, accountCurrency, adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
         final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
@@ -281,7 +282,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Verify the adjusted invoice balance
         final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
-        verifyAdjustedInvoiceBalance(invoiceBalance, invoiceItem.getAmount(), adjustedInvoiceBalance);
+        verifyAdjustedInvoiceBalance(invoiceBalance, invoiceItem.getAmount(), invoiceItem.getCurrency(), adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
         final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
@@ -316,7 +317,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Verify the adjusted invoice balance
         final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
-        verifyAdjustedInvoiceBalance(invoiceBalance, adjAmount, adjustedInvoiceBalance);
+        verifyAdjustedInvoiceBalance(invoiceBalance, adjAmount, accountCurrency, adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
         final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
@@ -336,10 +337,9 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         }
     }
 
-    private void verifyAdjustedInvoiceBalance(final BigDecimal invoiceBalance, final BigDecimal adjAmount, final BigDecimal adjustedInvoiceBalance) {
-        Assert.assertEquals(adjustedInvoiceBalance.compareTo(invoiceBalance.add(adjAmount.negate())
-                                                                           .setScale(InvoicingConfiguration.getNumberOfDecimals(),
-                                                                                     InvoicingConfiguration.getRoundingMode())), 0);
+    private void verifyAdjustedInvoiceBalance(final BigDecimal invoiceBalance, final BigDecimal adjAmount, final Currency currency, final BigDecimal adjustedInvoiceBalance) {
+        final BigDecimal expectedBalance = KillBillMoney.of(invoiceBalance.add(adjAmount.negate()), currency);
+        Assert.assertEquals(adjustedInvoiceBalance.compareTo(expectedBalance), 0);
     }
 
     @Test(groups = "slow")

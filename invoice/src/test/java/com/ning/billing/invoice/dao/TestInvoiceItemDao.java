@@ -26,7 +26,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.callcontext.InternalCallContext;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
@@ -35,8 +37,6 @@ import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceItemFactory;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.entity.EntityPersistenceException;
 
 import static com.ning.billing.invoice.TestInvoiceHelper.TEN;
 import static org.testng.Assert.assertEquals;
@@ -191,6 +191,41 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertSameInvoiceItem(externalChargeInvoiceItem, savedItem);
     }
 
+    @Test(groups = "slow")
+    public void testExternalChargeForVariousCurrenciesInvoiceSqlDao() throws Exception {
+        // 1 decimal place
+        createAndVerifyExternalCharge(new BigDecimal("10"), Currency.VND);
+        createAndVerifyExternalCharge(new BigDecimal("10.1"), Currency.VND);
+        // 2 decimal places
+        createAndVerifyExternalCharge(new BigDecimal("10"), Currency.USD);
+        createAndVerifyExternalCharge(new BigDecimal("10.1"), Currency.USD);
+        createAndVerifyExternalCharge(new BigDecimal("10.01"), Currency.USD);
+        // 3 decimal places
+        createAndVerifyExternalCharge(new BigDecimal("10"), Currency.BHD);
+        createAndVerifyExternalCharge(new BigDecimal("10.1"), Currency.BHD);
+        createAndVerifyExternalCharge(new BigDecimal("10.01"), Currency.BHD);
+        createAndVerifyExternalCharge(new BigDecimal("10.001"), Currency.BHD);
+        // 8 decimal places
+        createAndVerifyExternalCharge(new BigDecimal("10"), Currency.BTC);
+        createAndVerifyExternalCharge(new BigDecimal("10.1"), Currency.BTC);
+        createAndVerifyExternalCharge(new BigDecimal("10.01"), Currency.BTC);
+        createAndVerifyExternalCharge(new BigDecimal("10.001"), Currency.BTC);
+        createAndVerifyExternalCharge(new BigDecimal("10.0001"), Currency.BTC);
+        createAndVerifyExternalCharge(new BigDecimal("10.00001"), Currency.BTC);
+        createAndVerifyExternalCharge(new BigDecimal("10.000001"), Currency.BTC);
+        createAndVerifyExternalCharge(new BigDecimal("10.0000001"), Currency.BTC);
+        createAndVerifyExternalCharge(new BigDecimal("10.00000001"), Currency.BTC);
+    }
+
+    private void createAndVerifyExternalCharge(final BigDecimal amount, final Currency currency) throws EntityPersistenceException {
+        final InvoiceItem externalChargeInvoiceItem = new ExternalChargeInvoiceItem(UUID.randomUUID(), account.getId(), UUID.randomUUID(),
+                                                                                    UUID.randomUUID().toString(), new LocalDate(2012, 4, 1), amount, currency);
+        invoiceUtil.createInvoiceItem(externalChargeInvoiceItem, context);
+
+        final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(externalChargeInvoiceItem.getId(), context);
+        assertSameInvoiceItem(externalChargeInvoiceItem, savedItem);
+        Assert.assertEquals(externalChargeInvoiceItem.getAmount().compareTo(amount), 0);
+    }
 
     private void assertSameInvoiceItem(final InvoiceItem initialItem, final InvoiceItemModelDao fromDao) {
         final InvoiceItem newItem = InvoiceItemFactory.fromModelDao(fromDao);

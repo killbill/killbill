@@ -33,7 +33,10 @@ import org.testng.Assert;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.callcontext.InternalCallContext;
+import com.ning.billing.callcontext.InternalTenantContext;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -42,6 +45,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.commons.locker.GlobalLocker;
+import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -55,24 +59,20 @@ import com.ning.billing.invoice.dao.InvoiceModelDaoHelper;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
-import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
-import com.ning.billing.mock.MockAccountBuilder;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.callcontext.InternalTenantContext;
-import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.entity.EntityPersistenceException;
-import com.ning.billing.account.api.AccountInternalApi;
 import com.ning.billing.junction.BillingEvent;
 import com.ning.billing.junction.BillingEventSet;
 import com.ning.billing.junction.BillingInternalApi;
 import com.ning.billing.junction.BillingModeType;
+import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseInternalApi;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.currency.KillBillMoney;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.common.base.Function;
@@ -84,51 +84,53 @@ public class TestInvoiceHelper {
 
     public static final Currency accountCurrency = Currency.USD;
 
-    public static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
-    public static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
+    public static final BigDecimal ZERO = new BigDecimal("0.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal ONE_HALF = new BigDecimal("0.5").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal ONE = new BigDecimal("1.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal ONE_AND_A_HALF = new BigDecimal("1.5").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal TWO = new BigDecimal("2.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal THREE = new BigDecimal("3.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal FOUR = new BigDecimal("4.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal FIVE = new BigDecimal("5.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal SIX = new BigDecimal("6.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal SEVEN = new BigDecimal("7.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal EIGHT = new BigDecimal("8.0").setScale(KillBillMoney.MAX_SCALE);
 
-    public static final BigDecimal ZERO = new BigDecimal("0.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal ONE_HALF = new BigDecimal("0.5").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal ONE = new BigDecimal("1.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal ONE_AND_A_HALF = new BigDecimal("1.5").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal TWO = new BigDecimal("2.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal THREE = new BigDecimal("3.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal FOUR = new BigDecimal("4.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal FIVE = new BigDecimal("5.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal SIX = new BigDecimal("6.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal SEVEN = new BigDecimal("7.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal EIGHT = new BigDecimal("8.0").setScale(NUMBER_OF_DECIMALS);
+    public static final BigDecimal TEN = new BigDecimal("10.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal ELEVEN = new BigDecimal("11.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal TWELVE = new BigDecimal("12.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal THIRTEEN = new BigDecimal("13.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal FOURTEEN = new BigDecimal("14.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal FIFTEEN = new BigDecimal("15.0").setScale(KillBillMoney.MAX_SCALE);
 
-    public static final BigDecimal TEN = new BigDecimal("10.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal ELEVEN = new BigDecimal("11.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal TWELVE = new BigDecimal("12.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal THIRTEEN = new BigDecimal("13.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal FOURTEEN = new BigDecimal("14.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal FIFTEEN = new BigDecimal("15.0").setScale(NUMBER_OF_DECIMALS);
+    public static final BigDecimal NINETEEN = new BigDecimal("19.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal TWENTY = new BigDecimal("20.0").setScale(KillBillMoney.MAX_SCALE);
 
-    public static final BigDecimal NINETEEN = new BigDecimal("19.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal TWENTY = new BigDecimal("20.0").setScale(NUMBER_OF_DECIMALS);
+    public static final BigDecimal TWENTY_FOUR = new BigDecimal("24.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal TWENTY_FIVE = new BigDecimal("25.0").setScale(KillBillMoney.MAX_SCALE);
 
-    public static final BigDecimal TWENTY_FOUR = new BigDecimal("24.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal TWENTY_FIVE = new BigDecimal("25.0").setScale(NUMBER_OF_DECIMALS);
+    public static final BigDecimal TWENTY_EIGHT = new BigDecimal("28.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal TWENTY_NINE = new BigDecimal("29.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal THIRTY = new BigDecimal("30.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal THIRTY_ONE = new BigDecimal("31.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal THIRTY_THREE = new BigDecimal("33.0").setScale(KillBillMoney.MAX_SCALE);
 
-    public static final BigDecimal TWENTY_SEVEN = new BigDecimal("27.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal TWENTY_EIGHT = new BigDecimal("28.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal TWENTY_NINE = new BigDecimal("29.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal THIRTY = new BigDecimal("30.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal THIRTY_ONE = new BigDecimal("31.0").setScale(NUMBER_OF_DECIMALS);
+    public static final BigDecimal FORTY = new BigDecimal("40.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal SIXTY_SIX = new BigDecimal("66.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal SEVENTY_FIVE = new BigDecimal("75.0").setScale(KillBillMoney.MAX_SCALE);
 
-    public static final BigDecimal FORTY = new BigDecimal("40.0").setScale(NUMBER_OF_DECIMALS);
+    public static final BigDecimal EIGHTY_NINE = new BigDecimal("89.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal NINETY = new BigDecimal("90.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal NINETY_ONE = new BigDecimal("91.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal NINETY_TWO = new BigDecimal("92.0").setScale(KillBillMoney.MAX_SCALE);
 
-    public static final BigDecimal EIGHTY_NINE = new BigDecimal("89.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal NINETY = new BigDecimal("90.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal NINETY_ONE = new BigDecimal("91.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal NINETY_TWO = new BigDecimal("92.0").setScale(NUMBER_OF_DECIMALS);
+    public static final BigDecimal ONE_HUNDRED = new BigDecimal("100.0").setScale(KillBillMoney.MAX_SCALE);
 
-    public static final BigDecimal ONE_HUNDRED = new BigDecimal("100.0").setScale(NUMBER_OF_DECIMALS);
+    public static final BigDecimal THREE_HUNDRED_AND_FOURTY_NINE = new BigDecimal("349.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal THREE_HUNDRED_AND_FIFTY_FOUR = new BigDecimal("354.0").setScale(KillBillMoney.MAX_SCALE);
 
-    public static final BigDecimal THREE_HUNDRED_AND_SIXTY_FIVE = new BigDecimal("365.0").setScale(NUMBER_OF_DECIMALS);
-    public static final BigDecimal THREE_HUNDRED_AND_SIXTY_SIX = new BigDecimal("366.0").setScale(NUMBER_OF_DECIMALS);
+    public static final BigDecimal THREE_HUNDRED_AND_SIXTY_FIVE = new BigDecimal("365.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal THREE_HUNDRED_AND_SIXTY_SIX = new BigDecimal("366.0").setScale(KillBillMoney.MAX_SCALE);
 
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
