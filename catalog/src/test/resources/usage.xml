@@ -98,6 +98,7 @@
                 </recurring>
                 <usages>
                     <usage billingMode="IN_ADVANCE" type="CAPACITY">
+                        <billingPeriod>MONTHLY</billingPeriod>
                         <limits>
                             <limit>
                                 <unit>members</unit>
@@ -129,10 +130,15 @@
                 </recurring>
                 <usages>
                     <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
                         <limits>
                             <limit>
                                 <unit>minutes</unit>
-                                <max>1000</max>
+                                <increment>1000</increment>
+                                <price>
+                                    <currency>BTC</currency>
+                                    <value>0.01</value>
+                                </price>
                             </limit>
                         </limits>
                     </usage>
@@ -152,11 +158,17 @@
 
                 <usages>
                     <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
+                        <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
                         <limits>
                             <limit>
                                 <unit>fasttrack_tokens</unit>
                                 <min>5</min>
-                                <increment>5</increment>
+                                <increment>10</increment>
+                                <price>
+                                    <currency>BTC</currency>
+                                    <value>0.5</value>
+                                </price>
+
                             </limit>
                         </limits>
                     </usage>
@@ -176,6 +188,7 @@
 
                 <usages>
                     <usage billingMode="IN_ARREAR" type="CAPACITY">
+                        <billingPeriod>MONTHLY</billingPeriod>
                         <limits>
                             <limit>
                                 <unit>bandwith (Meg/sec)</unit>
@@ -213,6 +226,7 @@
                 </duration>
                 <usages>
                     <usage billingMode="IN_ARREAR" type="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
                         <tiers>
                             <tier>
                                 <limits>
