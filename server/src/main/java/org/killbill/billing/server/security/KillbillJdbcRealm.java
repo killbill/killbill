@@ -23,10 +23,9 @@ import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.codec.Base64;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.util.ByteSource;
-import org.skife.config.ConfigurationObjectFactory;
-
+import org.killbill.billing.server.config.DaoConfig;
 import org.killbill.billing.tenant.security.KillbillCredentialsMatcher;
-import com.ning.jetty.jdbi.config.DaoConfig;
+import org.skife.config.ConfigurationObjectFactory;
 
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;

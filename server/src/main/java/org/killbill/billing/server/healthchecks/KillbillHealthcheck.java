@@ -13,23 +13,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.killbill.billing.server.healthchecks;
 
 import org.weakref.jmx.Managed;
 
-import com.yammer.metrics.core.HealthCheck;
+import com.codahale.metrics.health.HealthCheck;
 
 public class KillbillHealthcheck extends HealthCheck {
-    public KillbillHealthcheck() {
-        super(KillbillHealthcheck.class.getSimpleName());
-    }
 
     @Override
     public Result check() {
         try {
             // STEPH obviously needs more than that
             return Result.healthy();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return Result.unhealthy(e);
         }
     }

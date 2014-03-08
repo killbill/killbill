@@ -29,31 +29,23 @@ import javax.servlet.ServletContext;
 import org.apache.shiro.web.servlet.ShiroFilter;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
-import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
-
 import org.killbill.billing.DBTestingHelper;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.KillbillConfigSource;
 import org.killbill.billing.account.glue.DefaultAccountModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.beatrix.glue.BeatrixModule;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.client.KillBillClient;
 import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.model.Tenant;
-import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.billing.currency.glue.CurrencyModule;
 import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
+import org.killbill.billing.jetty.HttpServer;
+import org.killbill.billing.jetty.HttpServerConfig;
 import org.killbill.billing.junction.glue.DefaultJunctionModule;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.osgi.glue.DefaultOSGIModule;
@@ -84,8 +76,15 @@ import org.killbill.billing.util.glue.NotificationQueueModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
-import com.ning.jetty.core.CoreConfig;
-import com.ning.jetty.core.server.HttpServer;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.commons.embeddeddb.EmbeddedDB;
+import org.skife.config.ConfigSource;
+import org.skife.config.ConfigurationObjectFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -114,7 +113,7 @@ public class TestJaxrsBase extends KillbillClient {
 
     protected static TestKillbillGuiceListener listener;
 
-    protected CoreConfig config;
+    protected HttpServerConfig config;
     private HttpServer server;
 
     public static void loadSystemPropertiesFromClasspath(final String resource) {
@@ -207,7 +206,6 @@ public class TestJaxrsBase extends KillbillClient {
             install(new TagStoreModule());
             install(new AuditModule());
             install(new CatalogModule(configSource));
-            install(new MetricsModule());
             install(new BusModule(configSource));
             install(new NotificationQueueModule(configSource));
             install(new CallContextModule());
@@ -297,7 +295,7 @@ public class TestJaxrsBase extends KillbillClient {
 
     protected void loadConfig() {
         if (config == null) {
-            config = new ConfigurationObjectFactory(System.getProperties()).build(CoreConfig.class);
+            config = new ConfigurationObjectFactory(System.getProperties()).build(HttpServerConfig.class);
         }
 
         // For shiro (outside of Guice control)

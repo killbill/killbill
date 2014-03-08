@@ -150,7 +150,6 @@ public class KillbillServerModule extends AbstractModule {
         install(new CustomFieldModule());
         install(new AuditModule());
         install(new CatalogModule(configSource));
-        install(new MetricsModule());
         install(new BusModule(configSource));
         install(new NotificationQueueModule(configSource));
         install(new CallContextModule());

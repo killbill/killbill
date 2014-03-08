@@ -16,17 +16,9 @@
 
 package org.killbill.billing.server.modules;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.sql.DataSource;
 
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.TimingCollector;
-import org.skife.jdbi.v2.tweak.SQLLog;
-import org.skife.jdbi.v2.tweak.TransactionHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.killbill.billing.server.config.DaoConfig;
 import org.killbill.billing.util.dao.AuditLogModelDaoMapper;
 import org.killbill.billing.util.dao.DateTimeArgumentFactory;
 import org.killbill.billing.util.dao.DateTimeZoneArgumentFactory;
@@ -35,25 +27,30 @@ import org.killbill.billing.util.dao.LocalDateArgumentFactory;
 import org.killbill.billing.util.dao.RecordIdIdMappingsMapper;
 import org.killbill.billing.util.dao.UUIDArgumentFactory;
 import org.killbill.billing.util.dao.UuidMapper;
-import com.ning.jetty.jdbi.config.DaoConfig;
+import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.TimingCollector;
+import org.skife.jdbi.v2.tweak.SQLLog;
+import org.skife.jdbi.v2.tweak.TransactionHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.jdbi.InstrumentedTimingCollector;
+import com.codahale.metrics.jdbi.strategies.BasicSqlNameStrategy;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.yammer.metrics.core.MetricsRegistry;
-import com.yammer.metrics.jdbi.InstrumentedTimingCollector;
-import com.yammer.metrics.jdbi.strategies.BasicSqlNameStrategy;
 
 public class DBIProvider implements Provider<DBI> {
 
     private static final Logger logger = LoggerFactory.getLogger(DBIProvider.class);
 
     private final DataSource ds;
-    private final MetricsRegistry metricsRegistry;
+    private final MetricRegistry metricsRegistry;
     private final DaoConfig config;
     private SQLLog sqlLog;
 
     @Inject
-    public DBIProvider(final DataSource ds, final MetricsRegistry metricsRegistry, final DaoConfig config) {
+    public DBIProvider(final DataSource ds, final MetricRegistry metricsRegistry, final DaoConfig config) {
         this.ds = ds;
         this.metricsRegistry = metricsRegistry;
         this.config = config;
@@ -90,7 +87,7 @@ public class DBIProvider implements Provider<DBI> {
         }
 
         final BasicSqlNameStrategy basicSqlNameStrategy = new BasicSqlNameStrategy();
-        final TimingCollector timingCollector = new InstrumentedTimingCollector(metricsRegistry, basicSqlNameStrategy, TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
+        final TimingCollector timingCollector = new InstrumentedTimingCollector(metricsRegistry, basicSqlNameStrategy);
         dbi.setTimingCollector(timingCollector);
 
         return dbi;

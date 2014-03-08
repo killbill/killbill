@@ -22,9 +22,8 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.sql.DataSource;
 
+import org.killbill.billing.server.config.DaoConfig;
 import org.skife.config.TimeSpan;
-
-import com.ning.jetty.jdbi.config.DaoConfig;
 
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
@@ -47,14 +46,12 @@ public class DataSourceProvider implements Provider<DataSource> {
     private DataSource getDataSource() {
         final DataSource ds;
 
-        // TODO PIERRE DaoConfig is in the skeleton
-        final String dataSource = System.getProperty("com.ning.jetty.jdbi.datasource", "c3p0");
-        if (dataSource.equals("c3p0")) {
+        if (DataSourceConnectionPoolingType.C3P0.equals(config.getConnectionPoolingType())) {
             ds = getC3P0DataSource();
-        } else if (dataSource.equals("bonecp")) {
+        } else if (DataSourceConnectionPoolingType.BONECP.equals(config.getConnectionPoolingType())) {
             ds = getBoneCPDatSource();
         } else {
-            throw new IllegalArgumentException("DataSource " + dataSource + " unsupported");
+            throw new IllegalArgumentException("DataSource " + config.getConnectionPoolingType() + " unsupported");
         }
 
         return ds;

@@ -22,30 +22,39 @@ import javax.management.MBeanServer;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
-import org.skife.config.ConfigurationObjectFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.beatrix.lifecycle.DefaultLifecycle;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
-import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.billing.server.config.KillbillServerConfig;
 import org.killbill.billing.server.healthchecks.KillbillHealthcheck;
 import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.security.TenantFilter;
+import org.killbill.billing.util.jackson.ObjectMapper;
 import org.killbill.billing.util.svcsapi.bus.BusService;
-import com.ning.jetty.base.modules.ServerModuleBuilder;
-import com.ning.jetty.core.listeners.SetupServer;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.commons.skeleton.listeners.GuiceServletContextListener;
+import org.killbill.commons.skeleton.modules.BaseServerModuleBuilder;
+import org.killbill.commons.skeleton.modules.ConfigModule;
+import org.killbill.commons.skeleton.modules.JMXModule;
+import org.killbill.commons.skeleton.modules.JaxrsJacksonModule;
+import org.killbill.commons.skeleton.modules.StatsModule;
+import org.killbill.notificationq.api.NotificationQueueService;
+import org.skife.config.ConfigurationObjectFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.health.HealthCheckRegistry;
+import com.codahale.metrics.servlets.HealthCheckServlet;
+import com.codahale.metrics.servlets.MetricsServlet;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.management.ManagementService;
 
-public class KillbillGuiceListener extends SetupServer {
+public class KillbillGuiceListener extends GuiceServletContextListener {
 
     public static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
 
@@ -70,24 +79,22 @@ public class KillbillGuiceListener extends SetupServer {
     public void contextInitialized(final ServletContextEvent event) {
         config = new ConfigurationObjectFactory(System.getProperties()).build(KillbillServerConfig.class);
 
-        final ServerModuleBuilder builder = new ServerModuleBuilder()
-                .addConfig(KillbillServerConfig.class)
-                .addHealthCheck(KillbillHealthcheck.class)
-                .addJMXExport(KillbillHealthcheck.class)
-                .addJMXExport(NotificationQueueService.class)
-                .addJMXExport(PersistentBus.class)
-                .addModule(getModule(event.getServletContext()))
-                        // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
-                        // things like static resources, favicon, etc. are 404'ed)
-                .setJerseyUriPattern("(" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*")
-                .addJerseyResource("org.killbill.billing.jaxrs.mappers")
-                .addJerseyResource("org.killbill.billing.jaxrs.resources");
+        // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
+        // things like static resources, favicon, etc. are 404'ed)
+        final BaseServerModuleBuilder builder = new BaseServerModuleBuilder().setJaxrsUriPattern("(" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*")
+                                                                             .addJaxrsResource("com.ning.billing.jaxrs.mappers")
+                                                                             .addJaxrsResource("com.ning.billing.jaxrs.resources");
 
         if (config.isMultiTenancyEnabled()) {
             builder.addFilter("/*", TenantFilter.class);
         }
 
-        guiceModule = builder.build();
+        guiceModules = ImmutableList.<Module>of(builder.build(),
+                                                new ConfigModule(KillbillServerConfig.class),
+                                                new JaxrsJacksonModule(new ObjectMapper()),
+                                                new JMXModule(KillbillHealthcheck.class, NotificationQueueService.class, PersistentBus.class),
+                                                new StatsModule(KillbillHealthcheck.class),
+                                                getModule(event.getServletContext()));
 
         super.contextInitialized(event);
 
@@ -96,16 +103,15 @@ public class KillbillGuiceListener extends SetupServer {
         injector = injector(event);
         event.getServletContext().setAttribute(Injector.class.getName(), injector);
 
+        // Metrics initialization
+        event.getServletContext().setAttribute(HealthCheckServlet.HEALTH_CHECK_REGISTRY, injector.getInstance(HealthCheckRegistry.class));
+        event.getServletContext().setAttribute(MetricsServlet.METRICS_REGISTRY, injector.getInstance(MetricRegistry.class));
+
         killbillLifecycle = injector.getInstance(DefaultLifecycle.class);
         killbillBusService = injector.getInstance(BusService.class);
         killbilleventHandler = injector.getInstance(KillbillEventHandler.class);
 
         registerMBeansForCache(injector.getInstance(CacheManager.class));
-
-        /*
-                ObjectMapper mapper = theInjector.getInstance(ObjectMapper.class);
-                mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
-        */
 
         //
         // Fire all Startup levels up to service start
