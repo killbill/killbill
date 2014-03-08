@@ -25,6 +25,7 @@ import javax.servlet.ServletContextEvent;
 import org.killbill.billing.beatrix.lifecycle.DefaultLifecycle;
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
+import org.killbill.billing.server.config.DaoConfig;
 import org.killbill.billing.server.config.KillbillServerConfig;
 import org.killbill.billing.server.healthchecks.KillbillHealthcheck;
 import org.killbill.billing.server.modules.KillbillServerModule;
@@ -90,7 +91,7 @@ public class KillbillGuiceListener extends GuiceServletContextListener {
         }
 
         guiceModules = ImmutableList.<Module>of(builder.build(),
-                                                new ConfigModule(KillbillServerConfig.class),
+                                                new ConfigModule(KillbillServerConfig.class, DaoConfig.class),
                                                 new JaxrsJacksonModule(new ObjectMapper()),
                                                 new JMXModule(KillbillHealthcheck.class, NotificationQueueService.class, PersistentBus.class),
                                                 new StatsModule(KillbillHealthcheck.class),
