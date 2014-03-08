@@ -9,7 +9,7 @@
       </run>
     </groups>
     <classes>
-      <class name="com.ning.billing.subscription.api.user.TestUserApiCancelMemory"/>
+      <class name="org.killbill.billing.subscription.api.user.TestUserApiCancelMemory"/>
     </classes>
   </test>
   <test name="Create">
@@ -20,7 +20,7 @@
       </run>
     </groups>
     <classes>
-      <class name="com.ning.billing.subscription.api.user.TestUserApiCreateMemory"/>
+      <class name="org.killbill.billing.subscription.api.user.TestUserApiCreateMemory"/>
     </classes>
   </test>
 </suite>

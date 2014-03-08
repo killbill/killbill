@@ -14,7 +14,7 @@
             <useTransitiveDependencies>false</useTransitiveDependencies>
             <unpack>false</unpack>
             <excludes>
-                <exclude>com.ning.billing:killbill-osgi-bundles-jruby:jar</exclude>
+                <exclude>org.killbill.billing:killbill-osgi-bundles-jruby:jar</exclude>
             </excludes>
         </dependencySet>
         <dependencySet>
@@ -25,7 +25,7 @@
             <useTransitiveDependencies>false</useTransitiveDependencies>
             <unpack>false</unpack>
             <includes>
-                <include>com.ning.billing:killbill-osgi-bundles-jruby:jar</include>
+                <include>org.killbill.billing:killbill-osgi-bundles-jruby:jar</include>
             </includes>
         </dependencySet>
     </dependencySets>

@@ -18,7 +18,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.ning.billing</groupId>
+        <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-osgi-bundles</artifactId>
         <version>0.9.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -32,30 +32,30 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing</groupId>
+            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-api</artifactId>
 <!--
             <scope>provided</scope>
             -->
         </dependency>
         <dependency>
-            <groupId>com.ning.billing.plugin</groupId>
+            <groupId>org.kill-bill.billing.plugin</groupId>
             <artifactId>killbill-plugin-api-notification</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing.plugin</groupId>
+            <groupId>org.kill-bill.billing.plugin</groupId>
             <artifactId>killbill-plugin-api-payment</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing.plugin</groupId>
+            <groupId>org.kill-bill.billing.plugin</groupId>
             <artifactId>killbill-plugin-api-currency</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing</groupId>
+            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-osgi-bundles-lib-killbill</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing.commons</groupId>
+            <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-concurrent</artifactId>
         </dependency>
         <dependency>
@@ -124,44 +124,44 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-Activator>com.ning.billing.osgi.bundles.jruby.JRubyActivator</Bundle-Activator>
+                        <Bundle-Activator>org.killbill.billing.osgi.bundles.jruby.JRubyActivator</Bundle-Activator>
                         <Export-Package />
-                        <Private-Package>com.ning.billing.osgi.bundles.jruby.*</Private-Package>
+                        <Private-Package>org.killbill.billing.osgi.bundles.jruby.*</Private-Package>
                         <!-- Optional resolution because exported by the Felix system bundle -->
                         <Import-Package>*;resolution:=optional,
-                            com.ning.billing.account.api;
-                            com.ning.billing.analytics.api.sanity;
-                            com.ning.billing.analytics.api.user;
-                            com.ning.billing.beatrix.bus.api;
-                            com.ning.billing.catalog.api;
-                            com.ning.billing.subscription.api;
-                            com.ning.billing.subscription.api.migration;
-                            com.ning.billing.subscription.api.timeline;
-                            com.ning.billing.subscription.api.transfer;
-                            com.ning.billing.subscription.api.user;
-                            com.ning.billing.entitlement.api;
-                            com.ning.billing.invoice.api;
-                            com.ning.billing.junction.api;
-                            com.ning.billing;
-                            com.ning.billing.osgi.api;
-                            com.ning.billing.osgi.api.config;
-                            com.ning.billing.overdue;
-                            com.ning.billing.payment.api;
-                            com.ning.billing.payment.plugin.api;
-                            com.ning.billing.currency.plugin.api;
-                            com.ning.billing.tenant.api;
-                            com.ning.billing.usage.api;
-                            com.ning.billing.util.api;
-                            com.ning.billing.util.audit;
-                            com.ning.billing.util.callcontext;
-                            com.ning.billing.util.customfield;
-                            com.ning.billing.notification.plugin;
-                            com.ning.billing.currency.api;
-                            com.ning.billing.util.email;
-                            com.ning.billing.util.entity;
-                            com.ning.billing.util.tag;
-                            com.ning.billing.util.template;
-                            com.ning.billing.util.template.translation;resolution:=optional,
+                            org.killbill.billing.account.api;
+                            org.killbill.billing.analytics.api.sanity;
+                            org.killbill.billing.analytics.api.user;
+                            org.killbill.billing.beatrix.bus.api;
+                            org.killbill.billing.catalog.api;
+                            org.killbill.billing.subscription.api;
+                            org.killbill.billing.subscription.api.migration;
+                            org.killbill.billing.subscription.api.timeline;
+                            org.killbill.billing.subscription.api.transfer;
+                            org.killbill.billing.subscription.api.user;
+                            org.killbill.billing.entitlement.api;
+                            org.killbill.billing.invoice.api;
+                            org.killbill.billing.junction.api;
+                            org.killbill.billing;
+                            org.killbill.billing.osgi.api;
+                            org.killbill.billing.osgi.api.config;
+                            org.killbill.billing.overdue;
+                            org.killbill.billing.payment.api;
+                            org.killbill.billing.payment.plugin.api;
+                            org.killbill.billing.currency.plugin.api;
+                            org.killbill.billing.tenant.api;
+                            org.killbill.billing.usage.api;
+                            org.killbill.billing.util.api;
+                            org.killbill.billing.util.audit;
+                            org.killbill.billing.util.callcontext;
+                            org.killbill.billing.util.customfield;
+                            org.killbill.billing.notification.plugin;
+                            org.killbill.billing.currency.api;
+                            org.killbill.billing.util.email;
+                            org.killbill.billing.util.entity;
+                            org.killbill.billing.util.tag;
+                            org.killbill.billing.util.template;
+                            org.killbill.billing.util.template.translation;resolution:=optional,
                             org.joda.time;org.joda.time.format;resolution:=optional,
                             sun.misc;
                             sun.misc.*;

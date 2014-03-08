@@ -42,9 +42,9 @@ case "$1" in
         chown -R ${KILLBILL_USER}:${KILLBILL_GROUP} ${KILLBILL_HOME} || true
 
         # Configure Kill Bill properties (see config script)
-        set_property com.ning.jetty.jdbi.url killbill/dburl
-        set_property com.ning.jetty.jdbi.user killbill/dbusername
-        set_property com.ning.jetty.jdbi.password killbill/dbpassword
+        set_property org.killbill.jetty.jdbi.url killbill/dburl
+        set_property org.killbill.jetty.jdbi.user killbill/dbusername
+        set_property org.killbill.jetty.jdbi.password killbill/dbpassword
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

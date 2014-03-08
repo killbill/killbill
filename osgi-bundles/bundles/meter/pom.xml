@@ -18,7 +18,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>killbill-osgi-bundles</artifactId>
-        <groupId>com.ning.billing</groupId>
+        <groupId>org.kill-bill.billing</groupId>
         <version>0.3.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -61,25 +61,25 @@
             <artifactId>bonecp</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing</groupId>
+            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing</groupId>
+            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-util</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing</groupId>
+            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-util</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing.commons</groupId>
+            <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-clock</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing.commons</groupId>
+            <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-clock</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -150,8 +150,8 @@
                 </executions>
                 <configuration>
                     <instructions>
-                        <Bundle-Activator>com.ning.billing.meter.osgi.MeterActivator</Bundle-Activator>
-                        <Import-Package>*;resolution:=optional,com.ning.billing.osgi.api</Import-Package>
+                        <Bundle-Activator>org.killbill.billing.meter.osgi.MeterActivator</Bundle-Activator>
+                        <Import-Package>*;resolution:=optional,org.killbill.billing.osgi.api</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

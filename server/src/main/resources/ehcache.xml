@@ -39,7 +39,7 @@
            statistics="true"
             >
         <cacheEventListenerFactory
-                class="com.ning.billing.util.cache.ExpirationListenerFactory"
+                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
                 properties=""/>
     </cache>
 
@@ -53,7 +53,7 @@
            statistics="true"
             >
         <cacheEventListenerFactory
-                class="com.ning.billing.util.cache.ExpirationListenerFactory"
+                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
                 properties=""/>
     </cache>
 
@@ -67,7 +67,7 @@
            statistics="true"
             >
         <cacheEventListenerFactory
-                class="com.ning.billing.util.cache.ExpirationListenerFactory"
+                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
                 properties=""/>
     </cache>
 
@@ -82,7 +82,7 @@
            statistics="true"
             >
         <cacheEventListenerFactory
-                class="com.ning.billing.util.cache.ExpirationListenerFactory"
+                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
                 properties=""/>
     </cache>
 
@@ -97,7 +97,7 @@
            statistics="true"
             >
         <cacheEventListenerFactory
-                class="com.ning.billing.util.cache.ExpirationListenerFactory"
+                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
                 properties=""/>
     </cache>
 </ehcache>

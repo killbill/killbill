@@ -19,4 +19,4 @@
 ###################################################################################
 
 bin/db-helper -a clean -d killbill; 
-mvn -Dcom.ning.billing.dbi.test.useLocalDb=true clean install 
+mvn -Dorg.killbill.billing.dbi.test.useLocalDb=true clean install 

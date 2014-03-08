@@ -19,7 +19,7 @@ package org.slf4j.impl;
 import org.osgi.service.log.LogService;
 import org.slf4j.spi.LocationAwareLogger;
 
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
+import org.killbill.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public final class OSGISlf4jLoggerAdapter extends SimpleLogger {
 
