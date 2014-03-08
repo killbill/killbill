@@ -22,7 +22,7 @@ import org.skife.config.Description;
 
 public interface CurrencyConfig extends KillbillConfig {
 
-    @Config("killbill.currency.provider.default")
+    @Config("org.killbill.currency.provider.default")
     @Default("killbill-currency-plugin")
     @Description("Default currency provider to use")
     public String getDefaultCurrencyProvider();

@@ -23,7 +23,7 @@ import org.skife.config.TimeSpan;
 
 public interface RbacConfig extends KillbillConfig {
 
-    @Config("killbill.rbac.globalSessionTimeout")
+    @Config("org.killbill.rbac.globalSessionTimeout")
     @Default("1h")
     @Description("System-wide default time that any session may remain idle before expiring")
     public TimeSpan getGlobalSessionTimeout();

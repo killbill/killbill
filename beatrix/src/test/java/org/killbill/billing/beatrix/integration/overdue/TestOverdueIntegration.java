@@ -48,7 +48,7 @@ import org.killbill.billing.payment.api.Payment;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-// For all the tests, we set the the property killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logic does not end with an ABORTED state
+// For all the tests, we set the the property org.killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logic does not end with an ABORTED state
 // preventing final instant payment to succeed.
 //
 // The tests are difficult to follow because there are actually two tracks of retry in logic:

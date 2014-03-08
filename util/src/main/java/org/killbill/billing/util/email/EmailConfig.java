@@ -25,42 +25,42 @@ import org.killbill.billing.util.config.KillbillConfig;
 
 public interface EmailConfig extends KillbillConfig {
 
-    @Config("killbill.mail.smtp.host")
+    @Config("org.killbill.mail.smtp.host")
     @DefaultNull
     @Description("MTA host used for email notifications")
     public String getSmtpServerName();
 
-    @Config("killbill.mail.smtp.port")
+    @Config("org.killbill.mail.smtp.port")
     @DefaultNull
     @Description("MTA port used for email notifications")
     public int getSmtpPort();
 
-    @Config("killbill.mail.smtp.auth")
+    @Config("org.killbill.mail.smtp.auth")
     @Default("false")
     @Description("Whether to authenticate against the MTA")
     public boolean useSmtpAuth();
 
-    @Config("killbill.mail.smtp.user")
+    @Config("org.killbill.mail.smtp.user")
     @DefaultNull
     @Description("Username to use to authenticate against the MTA")
     public String getSmtpUserName();
 
-    @Config("killbill.mail.smtp.password")
+    @Config("org.killbill.mail.smtp.password")
     @DefaultNull
     @Description("Password to use to authenticate against the MTA")
     public String getSmtpPassword();
 
-    @Config("killbill.mail.from")
+    @Config("org.killbill.mail.from")
     @Default("support@example.com")
     @Description("Default From: field for email notifications")
     String getDefaultFrom();
 
-    @Config("killbill.mail.useSSL")
+    @Config("org.killbill.mail.useSSL")
     @Default("false")
     @Description("Whether to use secure SMTP")
     boolean useSSL();
 
-    @Config("killbill.mail.invoiceEmailSubject")
+    @Config("org.killbill.mail.invoiceEmailSubject")
     @Default("Your invoice")
     @Description("Default Subject: field for invoice notifications")
     String getInvoiceEmailSubject();

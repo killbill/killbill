@@ -56,16 +56,16 @@ public class TestKillBillJndiLdapRealm extends UtilTestSuiteNoDB {
     public void testCheckLDAPConnection() throws Exception {
         // Convenience method to verify your LDAP connectivity
         final Properties props = new Properties();
-        props.setProperty("killbill.security.ldap.userDnTemplate", "uid={0},ou=users,dc=mycompany,dc=com");
-        props.setProperty("killbill.security.ldap.searchBase", "ou=groups,dc=mycompany,dc=com");
-        props.setProperty("killbill.security.ldap.groupSearchFilter", "memberOf=uid={0},ou=users,dc=mycompany,dc=com");
-        props.setProperty("killbill.security.ldap.groupNameId", "cn");
-        props.setProperty("killbill.security.ldap.url", "ldap://ldap:389");
-        props.setProperty("killbill.security.ldap.disableSSLCheck", "true");
-        props.setProperty("killbill.security.ldap.systemUsername", "cn=root");
-        props.setProperty("killbill.security.ldap.systemPassword", "password");
-        props.setProperty("killbill.security.ldap.authenticationMechanism", "simple");
-        props.setProperty("killbill.security.ldap.permissionsByGroup", "support-group: entitlement:*\n" +
+        props.setProperty("org.killbill.security.ldap.userDnTemplate", "uid={0},ou=users,dc=mycompany,dc=com");
+        props.setProperty("org.killbill.security.ldap.searchBase", "ou=groups,dc=mycompany,dc=com");
+        props.setProperty("org.killbill.security.ldap.groupSearchFilter", "memberOf=uid={0},ou=users,dc=mycompany,dc=com");
+        props.setProperty("org.killbill.security.ldap.groupNameId", "cn");
+        props.setProperty("org.killbill.security.ldap.url", "ldap://ldap:389");
+        props.setProperty("org.killbill.security.ldap.disableSSLCheck", "true");
+        props.setProperty("org.killbill.security.ldap.systemUsername", "cn=root");
+        props.setProperty("org.killbill.security.ldap.systemPassword", "password");
+        props.setProperty("org.killbill.security.ldap.authenticationMechanism", "simple");
+        props.setProperty("org.killbill.security.ldap.permissionsByGroup", "support-group: entitlement:*\n" +
                                                                        "finance-group: invoice:*, payment:*\n" +
                                                                        "ops-group: *:*");
         final ConfigSource customConfigSource = new SimplePropertyConfigSource(props);
