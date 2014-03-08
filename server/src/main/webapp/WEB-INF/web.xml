@@ -46,7 +46,7 @@
     </filter-mapping>
     <listener>
         <!-- Jersey insists on using java.util.logging (JUL) -->
-        <listener-class>org.killbill.jetty.core.listeners.SetupJULBridge</listener-class>
+        <listener-class>com.ning.jetty.core.listeners.SetupJULBridge</listener-class>
     </listener>
     <listener>
         <!-- Context listener: called at startup time and creates the injector -->

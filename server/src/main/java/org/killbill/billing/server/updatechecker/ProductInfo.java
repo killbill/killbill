@@ -38,7 +38,7 @@ public class ProductInfo {
 
     private static final Logger log = LoggerFactory.getLogger(ProductInfo.class);
 
-    private static final String KILLBILL_SERVER_VERSION_RESOURCE = "/org.killbill/billing/server/version.properties";
+    private static final String KILLBILL_SERVER_VERSION_RESOURCE = "/org/killbill/billing/server/version.properties";
 
     private static final String UNKNOWN = "UNKNOWN";
 

@@ -22,7 +22,7 @@ import org.skife.config.Description;
 
 public interface CatalogConfig extends KillbillConfig {
 
-    @Config("killbill.catalog.uri")
+    @Config("org.killbill.catalog.uri")
     @Default("SpyCarBasic.xml")
     @Description("Catalog location. Either in the classpath or in the filesystem")
     String getCatalogURI();

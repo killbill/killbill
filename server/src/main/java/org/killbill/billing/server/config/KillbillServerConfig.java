@@ -24,12 +24,12 @@ import org.killbill.billing.util.config.KillbillConfig;
 
 public interface KillbillServerConfig extends KillbillConfig {
 
-    @Config("killbill.server.multitenant")
+    @Config("org.killbill.server.multitenant")
     @Default("true")
     @Description("Whether multi-tenancy is enabled")
     public boolean isMultiTenancyEnabled();
 
-    @Config("killbill.server.test.mode")
+    @Config("org.killbill.server.test.mode")
     @Default("false")
     @Description("Whether to start in test mode")
     public boolean isTestModeEnabled();
