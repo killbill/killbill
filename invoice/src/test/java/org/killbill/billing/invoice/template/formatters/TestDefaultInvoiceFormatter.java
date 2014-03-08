@@ -333,7 +333,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
             @Override
             public String getInvoiceTemplateBundlePath() {
-                return "org.killbill/billing/util/template/translation/InvoiceTranslation";
+                return "org/killbill/billing/util/template/translation/InvoiceTranslation";
             }
 
             @Override

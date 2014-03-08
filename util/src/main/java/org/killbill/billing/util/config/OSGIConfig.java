@@ -22,27 +22,27 @@ import org.skife.config.Description;
 
 public interface OSGIConfig extends KillbillConfig {
 
-    @Config("killbill.osgi.bundle.property.name")
+    @Config("org.killbill.osgi.bundle.property.name")
     @Default("killbill.properties")
     @Description("Name of the properties file for OSGI plugins")
     public String getOSGIKillbillPropertyName();
 
-    @Config("killbill.osgi.root.dir")
+    @Config("org.killbill.osgi.root.dir")
     @Default("/var/tmp/felix")
     @Description("Bundles cache area for the OSGI framework")
     public String getOSGIBundleRootDir();
 
-    @Config("killbill.osgi.bundle.cache.name")
+    @Config("org.killbill.osgi.bundle.cache.name")
     @Default("osgi-cache")
     @Description("Bundles cache name")
     public String getOSGIBundleCacheName();
 
-    @Config("killbill.osgi.bundle.install.dir")
+    @Config("org.killbill.osgi.bundle.install.dir")
     @Default("/var/tmp/bundles")
     @Description("Bundles install directory")
     public String getRootInstallationDir();
 
-    @Config("killbill.osgi.system.bundle.export.packages")
+    @Config("org.killbill.osgi.system.bundle.export.packages")
     @Default("org.killbill.billing.account.api," +
              "org.killbill.billing.analytics.api.sanity," +
              "org.killbill.billing.analytics.api.user," +

@@ -75,7 +75,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
         Assert.assertNotNull(url);
 
         configSource.merge(url);
-        configSource.setProperty("killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
+        configSource.setProperty("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
         configSource.setProperty("killbill.payment.engine.events.off", "false");
     }
 

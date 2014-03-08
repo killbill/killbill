@@ -25,41 +25,41 @@ import org.skife.config.TimeSpan;
 
 public interface PaymentConfig extends KillbillConfig {
 
-    @Config("killbill.payment.provider.default")
+    @Config("org.killbill.payment.provider.default")
     // See ExternalPaymentProviderPlugin.PLUGIN_NAME
     @Default("__external_payment__")
     @Description("Default payment provider to use")
     public String getDefaultPaymentProvider();
 
-    @Config("killbill.payment.retry.days")
+    @Config("org.killbill.payment.retry.days")
     @Default("8,8,8")
     @Description("Interval in days between payment retries")
     public List<Integer> getPaymentRetryDays();
 
-    @Config("killbill.payment.failure.retry.start.sec")
+    @Config("orgkillbill.payment.failure.retry.start.sec")
     @Default("300")
     public int getPluginFailureRetryStart();
 
-    @Config("killbill.payment.failure.retry.multiplier")
+    @Config("org.killbill.payment.failure.retry.multiplier")
     @Default("2")
     public int getPluginFailureRetryMultiplier();
 
-    @Config("killbill.payment.failure.retry.max.attempts")
+    @Config("org.killbill.payment.failure.retry.max.attempts")
     @Default("8")
     @Description("Maximum number of retries for failed payments")
     public int getPluginFailureRetryMaxAttempts();
 
-    @Config("killbill.payment.plugin.timeout")
+    @Config("org.killbill.payment.plugin.timeout")
     @Default("90s")
     @Description("Timeout for each payment attempt")
     public TimeSpan getPaymentPluginTimeout();
 
-    @Config("killbill.payment.plugin.threads.nb")
+    @Config("org.killbill.payment.plugin.threads.nb")
     @Default("10")
     @Description("Number of threads for plugin executor dispatcher")
     public int getPaymentPluginThreadNb();
 
-    @Config("killbill.payment.off")
+    @Config("org.killbill.payment.off")
     @Default("false")
     @Description("Whether the payment subsystem is off")
     public boolean isPaymentOff();

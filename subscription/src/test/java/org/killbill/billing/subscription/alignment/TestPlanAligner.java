@@ -63,7 +63,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         super.beforeClass();
         final VersionedCatalogLoader versionedCatalogLoader = new VersionedCatalogLoader(clock);
         final CatalogConfig config = new ConfigurationObjectFactory(new ConfigSource() {
-            final Map<String, String> properties = ImmutableMap.<String, String>of("killbill.catalog.uri", "file:src/test/resources/testInput.xml");
+            final Map<String, String> properties = ImmutableMap.<String, String>of("org.killbill.catalog.uri", "file:src/test/resources/testInput.xml");
 
             @Override
             public String getString(final String propertyName) {

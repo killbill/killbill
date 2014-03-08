@@ -22,12 +22,12 @@ import org.skife.config.Description;
 
 public interface InvoiceConfig extends KillbillConfig {
 
-    @Config("killbill.invoice.maxNumberOfMonthsInFuture")
+    @Config("org.killbill.invoice.maxNumberOfMonthsInFuture")
     @Default("36")
     @Description("Maximum target date to consider when generating an invoice")
     public int getNumberOfMonthsInFuture();
 
-    @Config("killbill.invoice.emailNotificationsEnabled")
+    @Config("org.killbill.invoice.emailNotificationsEnabled")
     @Default("false")
     @Description("Whether to send email notifications on invoice creation (for configured accounts)")
     public boolean isEmailNotificationsEnabled();

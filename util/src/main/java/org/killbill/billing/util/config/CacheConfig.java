@@ -22,7 +22,7 @@ import org.skife.config.Description;
 
 public interface CacheConfig extends KillbillConfig {
 
-    @Config("killbill.cache.config.location")
+    @Config("org.killbill.cache.config.location")
     @Default("/ehcache.xml")
     @Description("Path to Ehcache XML configuration")
     public String getCacheConfigLocation();

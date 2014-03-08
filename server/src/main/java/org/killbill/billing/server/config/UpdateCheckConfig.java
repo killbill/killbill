@@ -26,17 +26,17 @@ import org.killbill.billing.util.config.KillbillConfig;
 
 public interface UpdateCheckConfig extends KillbillConfig {
 
-    @Config("killbill.server.updateCheck.skip")
+    @Config("org.killbill.server.updateCheck.skip")
     @Default("false")
     @Description("Whether to skip update checks")
     public boolean shouldSkipUpdateCheck();
 
-    @Config("killbill.server.updateCheck.url")
+    @Config("org.killbill.server.updateCheck.url")
     @Default("https://raw.github.com/killbill/killbill/master/server/src/main/resources/update-checker/killbill-server-update-list.properties")
     @Description("URL to retrieve the latest version of Kill Bill")
     public URI updateCheckURL();
 
-    @Config("killbill.server.updateCheck.connectTimeout")
+    @Config("org.killbill.server.updateCheck.connectTimeout")
     @Default("3000")
     @Description("Update check connection timeout")
     public int updateCheckConnectionTimeout();

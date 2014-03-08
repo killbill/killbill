@@ -26,35 +26,35 @@ public interface TranslatorConfig {
 
     // Common
 
-    @Config("killbill.default.locale")
+    @Config("org.killbill.default.locale")
     @Default("en_US")
     @Description("Default Killbill locale")
     public String getDefaultLocale();
 
     // Catalog
 
-    @Config("killbill.catalog.bundlePath")
+    @Config("org.killbill.catalog.bundlePath")
     @Default("org/killbill/billing/util/template/translation/CatalogTranslation")
     @Description("Path to the catalog translation bundle")
     String getCatalogBundlePath();
 
     // Invoices
-    @Config("killbill.template.bundlePath")
+    @Config("org.killbill.template.bundlePath")
     @Default("org/killbill/billing/util/template/translation/InvoiceTranslation")
     @Description("Path to the invoice template translation bundle")
     public String getInvoiceTemplateBundlePath();
 
-    @Config("killbill.template.name")
+    @Config("org.killbill.template.name")
     @Default("org/killbill/billing/util/email/templates/HtmlInvoiceTemplate.mustache")
     @Description("Path to the HTML invoice template")
     String getTemplateName();
 
-    @Config("killbill.manualPayTemplate.name")
+    @Config("org.killbill.manualPayTemplate.name")
     @Default("org/killbill/billing/util/email/templates/HtmlInvoiceTemplate.mustache")
     @Description("Path to the invoice template for accounts with MANUAL_PAY tag")
     String getManualPayTemplateName();
 
-    @Config("killbill.template.invoiceFormatterFactoryClass")
+    @Config("org.killbill.template.invoiceFormatterFactoryClass")
     @Default("org.killbill.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory")
     @Description("Invoice formatter class")
     Class<? extends InvoiceFormatterFactory> getInvoiceFormatterFactoryClass();

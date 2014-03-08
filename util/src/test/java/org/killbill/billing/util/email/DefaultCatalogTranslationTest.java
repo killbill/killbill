@@ -40,7 +40,7 @@ public class DefaultCatalogTranslationTest extends UtilTestSuiteNoDB {
     public void beforeClass() throws Exception {
         super.beforeClass();
         final ConfigSource configSource = new ConfigSource() {
-            private final Map<String, String> properties = ImmutableMap.<String, String>of("killbill.template.invoiceFormatterFactoryClass",
+            private final Map<String, String> properties = ImmutableMap.<String, String>of("org.killbill.template.invoiceFormatterFactoryClass",
                                                                                            "org.killbill.billing.mock.MockInvoiceFormatterFactory");
 
             @Override
