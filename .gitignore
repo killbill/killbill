@@ -13,6 +13,7 @@ pom.xml.bak
 pom.xml.releaseBackup
 release.properties
 logs/
+.logs
 .diskspool
 *.classpath
 *.settings
