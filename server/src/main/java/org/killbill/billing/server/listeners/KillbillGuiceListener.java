@@ -82,8 +82,8 @@ public class KillbillGuiceListener extends GuiceServletContextListener {
         // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
         // things like static resources, favicon, etc. are 404'ed)
         final BaseServerModuleBuilder builder = new BaseServerModuleBuilder().setJaxrsUriPattern("(" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*")
-                                                                             .addJaxrsResource("com.ning.billing.jaxrs.mappers")
-                                                                             .addJaxrsResource("com.ning.billing.jaxrs.resources");
+                                                                             .addJaxrsResource("org.killbill.billing.jaxrs.mappers")
+                                                                             .addJaxrsResource("org.killbill.billing.jaxrs.resources");
 
         if (config.isMultiTenancyEnabled()) {
             builder.addFilter("/*", TenantFilter.class);

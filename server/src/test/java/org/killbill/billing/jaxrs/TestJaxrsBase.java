@@ -299,9 +299,9 @@ public class TestJaxrsBase extends KillbillClient {
         }
 
         // For shiro (outside of Guice control)
-        System.setProperty("com.ning.jetty.jdbi.url", DBTestingHelper.get().getJdbcConnectionString());
-        System.setProperty("com.ning.jetty.jdbi.user", DBTestingHelper.get().getUsername());
-        System.setProperty("com.ning.jetty.jdbi.password", DBTestingHelper.get().getPassword());
+        System.setProperty("org.killbill.dao.url", DBTestingHelper.get().getJdbcConnectionString());
+        System.setProperty("org.killbill.dao.user", DBTestingHelper.get().getUsername());
+        System.setProperty("org.killbill.dao.password", DBTestingHelper.get().getPassword());
     }
 
     @BeforeSuite(groups = "slow")

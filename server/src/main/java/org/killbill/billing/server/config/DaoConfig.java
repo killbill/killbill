@@ -79,7 +79,7 @@ public interface DaoConfig extends KillbillConfig {
 
     @Description("The TransactionHandler to use for all Handle instances")
     @Config("org.killbill.dao.transactionHandler")
-    @Default("com.ning.billing.commons.jdbi.transaction.RestartTransactionRunner")
+    @Default("org.killbill.commons.jdbi.transaction.RestartTransactionRunner")
     String getTransactionHandlerClass();
 
     @Description("Connection pooling type")
