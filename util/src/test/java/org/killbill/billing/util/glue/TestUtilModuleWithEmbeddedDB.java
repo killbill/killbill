@@ -21,7 +21,6 @@ import org.skife.config.ConfigSource;
 import org.killbill.billing.DBTestingHelper;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
-import org.killbill.billing.util.globallocker.TestGlobalLockerModule;
 
 public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
 
@@ -41,7 +40,7 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
         install(new BusModule(configSource));
         install(new NotificationQueueModule(configSource));
         install(new NonEntityDaoModule());
-        install(new TestGlobalLockerModule(DBTestingHelper.get()));
+        install(new GlobalLockerModule(DBTestingHelper.get().getDBEngine()));
 
         bind(TestApiListener.class).asEagerSingleton();
     }

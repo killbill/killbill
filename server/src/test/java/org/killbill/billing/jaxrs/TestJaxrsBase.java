@@ -52,6 +52,7 @@ import org.killbill.billing.osgi.glue.DefaultOSGIModule;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.provider.MockPaymentProviderPluginModule;
+import org.killbill.billing.server.config.DaoConfig;
 import org.killbill.billing.server.listeners.KillbillGuiceListener;
 import org.killbill.billing.server.modules.KillBillShiroWebModule;
 import org.killbill.billing.server.modules.KillbillServerModule;
@@ -62,22 +63,20 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
-import org.killbill.billing.util.globallocker.TestGlobalLockerModule;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.BusModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.ExportModule;
+import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.KillBillShiroAopModule;
-import org.killbill.billing.util.glue.MetricsModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.NotificationQueueModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
 import org.killbill.bus.api.PersistentBus;
-import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.AfterMethod;
@@ -103,7 +102,8 @@ public class TestJaxrsBase extends KillbillClient {
     protected CacheControllerDispatcher cacheControllerDispatcher;
 
     @Inject
-    protected @javax.inject.Named(BeatrixModule.EXTERNAL_BUS) PersistentBus externalBus;
+    protected @javax.inject.Named(BeatrixModule.EXTERNAL_BUS)
+    PersistentBus externalBus;
 
     @Inject
     protected PersistentBus internalBus;
@@ -128,16 +128,16 @@ public class TestJaxrsBase extends KillbillClient {
 
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {
 
-        private final EmbeddedDB helper;
+        private final DaoConfig daoConfig;
 
-        public TestKillbillGuiceListener(final EmbeddedDB helper) {
+        public TestKillbillGuiceListener(final DaoConfig daoConfig) {
             super();
-            this.helper = helper;
+            this.daoConfig = daoConfig;
         }
 
         @Override
         protected Module getModule(final ServletContext servletContext) {
-            return new TestKillbillServerModule(helper, servletContext);
+            return new TestKillbillServerModule(daoConfig, servletContext);
         }
 
     }
@@ -156,11 +156,8 @@ public class TestJaxrsBase extends KillbillClient {
 
     public static class TestKillbillServerModule extends KillbillServerModule {
 
-        private final EmbeddedDB helper;
-
-        public TestKillbillServerModule(final EmbeddedDB helper, final ServletContext servletContext) {
-            super(servletContext, false);
-            this.helper = helper;
+        public TestKillbillServerModule(final DaoConfig daoConfig, final ServletContext servletContext) {
+            super(servletContext, daoConfig, false);
         }
 
         @Override
@@ -201,7 +198,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new EmailModule(configSource));
             install(new CacheModule(configSource));
             install(new NonEntityDaoModule());
-            install(new TestGlobalLockerModule(DBTestingHelper.get()));
+            install(new GlobalLockerModule(DBTestingHelper.get().getDBEngine()));
             install(new CustomFieldModule());
             install(new TagStoreModule());
             install(new AuditModule());
@@ -310,7 +307,7 @@ public class TestJaxrsBase extends KillbillClient {
         loadSystemPropertiesFromClasspath("/killbill.properties");
         loadConfig();
 
-        listener = new TestKillbillGuiceListener(helper);
+        listener = new TestKillbillGuiceListener(new ConfigurationObjectFactory(System.getProperties()).build(DaoConfig.class));
 
         server = new HttpServer();
         server.configure(config, getListeners(), getFilters());

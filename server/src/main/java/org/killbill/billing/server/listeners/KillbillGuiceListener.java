@@ -16,6 +16,7 @@
 
 package org.killbill.billing.server.listeners;
 
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 
 import javax.management.MBeanServer;
@@ -33,6 +34,7 @@ import org.killbill.billing.server.security.TenantFilter;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.killbill.billing.util.svcsapi.bus.BusService;
 import org.killbill.bus.api.PersistentBus;
+import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.commons.skeleton.listeners.GuiceServletContextListener;
 import org.killbill.commons.skeleton.modules.BaseServerModuleBuilder;
 import org.killbill.commons.skeleton.modules.ConfigModule;
@@ -60,13 +62,15 @@ public class KillbillGuiceListener extends GuiceServletContextListener {
     public static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
 
     private KillbillServerConfig config;
+    private DaoConfig daoConfig;
     private Injector injector;
     private DefaultLifecycle killbillLifecycle;
     private BusService killbillBusService;
     private KillbillEventHandler killbilleventHandler;
+    private EmbeddedDB embeddedDB;
 
     protected Module getModule(final ServletContext servletContext) {
-        return new KillbillServerModule(servletContext, config.isTestModeEnabled());
+        return new KillbillServerModule(servletContext, daoConfig, config.isTestModeEnabled());
     }
 
     private void registerMBeansForCache(final CacheManager cacheManager) {
@@ -79,6 +83,7 @@ public class KillbillGuiceListener extends GuiceServletContextListener {
     @Override
     public void contextInitialized(final ServletContextEvent event) {
         config = new ConfigurationObjectFactory(System.getProperties()).build(KillbillServerConfig.class);
+        daoConfig = new ConfigurationObjectFactory(System.getProperties()).build(DaoConfig.class);
 
         // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
         // things like static resources, favicon, etc. are 404'ed)
@@ -111,6 +116,8 @@ public class KillbillGuiceListener extends GuiceServletContextListener {
         killbillLifecycle = injector.getInstance(DefaultLifecycle.class);
         killbillBusService = injector.getInstance(BusService.class);
         killbilleventHandler = injector.getInstance(KillbillEventHandler.class);
+        // Already started at this point
+        embeddedDB = injector.getInstance(EmbeddedDB.class);
 
         registerMBeansForCache(injector.getInstance(CacheManager.class));
 
@@ -152,6 +159,13 @@ public class KillbillGuiceListener extends GuiceServletContextListener {
 
         // Complete shutdown sequence
         killbillLifecycle.fireShutdownSequencePostEventUnRegistration();
+
+        if (embeddedDB != null) {
+            try {
+                embeddedDB.stop();
+            } catch (final IOException ignored) {
+            }
+        }
     }
 
     @VisibleForTesting

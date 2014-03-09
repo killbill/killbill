@@ -88,6 +88,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.mchange</groupId>
@@ -263,8 +264,13 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>
-            <artifactId>killbill-embeddeddb-common</artifactId>
-            <version>${killbill-commons.version}</version>
+            <artifactId>killbill-embeddeddb-h2</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-embeddeddb-mysql</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,28 +14,16 @@
  * under the License.
  */
 
-package org.killbill.billing.util.globallocker;
+package org.killbill.billing.util.glue;
 
-import org.killbill.commons.embeddeddb.EmbeddedDB;
-import org.killbill.billing.mock.glue.MockGlobalLockerModule;
-import org.killbill.billing.util.glue.GlobalLockerModule;
+import org.killbill.commons.locker.GlobalLocker;
 
 import com.google.inject.AbstractModule;
 
-public class TestGlobalLockerModule extends AbstractModule {
-
-    private final EmbeddedDB helper;
-
-    public TestGlobalLockerModule(final EmbeddedDB helper) {
-        this.helper = helper;
-    }
+public class MySqlGlobalLockerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        if (EmbeddedDB.DBEngine.MYSQL.equals(helper.getDBEngine())) {
-            install(new GlobalLockerModule());
-        } else {
-            install(new MockGlobalLockerModule());
-        }
+        bind(GlobalLocker.class).toProvider(MySqlGlobalLockerProvider.class).asEagerSingleton();
     }
 }

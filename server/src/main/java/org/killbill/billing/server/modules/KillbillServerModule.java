@@ -19,16 +19,9 @@ package org.killbill.billing.server.modules;
 import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 
-import org.skife.config.ConfigSource;
-import org.skife.config.SimplePropertyConfigSource;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.IDBI;
-
 import org.killbill.billing.account.glue.DefaultAccountModule;
 import org.killbill.billing.beatrix.glue.BeatrixModule;
 import org.killbill.billing.catalog.glue.CatalogModule;
-import org.killbill.clock.Clock;
-import org.killbill.clock.ClockMock;
 import org.killbill.billing.currency.glue.CurrencyModule;
 import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
@@ -54,6 +47,7 @@ import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.server.DefaultServerService;
 import org.killbill.billing.server.ServerService;
+import org.killbill.billing.server.config.DaoConfig;
 import org.killbill.billing.server.notifications.PushNotificationListener;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.TenantModule;
@@ -69,22 +63,30 @@ import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.KillBillShiroAopModule;
-import org.killbill.billing.util.glue.MetricsModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.NotificationQueueModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
+import org.killbill.clock.Clock;
+import org.killbill.clock.ClockMock;
+import org.killbill.commons.embeddeddb.EmbeddedDB;
+import org.skife.config.ConfigSource;
+import org.skife.config.SimplePropertyConfigSource;
+import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.AbstractModule;
 
 public class KillbillServerModule extends AbstractModule {
 
     protected final ServletContext servletContext;
+    private final DaoConfig daoConfig;
     private final boolean isTestModeEnabled;
 
-    public KillbillServerModule(final ServletContext servletContext, final boolean testModeEnabled) {
+    public KillbillServerModule(final ServletContext servletContext, final DaoConfig daoConfig, final boolean testModeEnabled) {
         this.servletContext = servletContext;
+        this.daoConfig = daoConfig;
         this.isTestModeEnabled = testModeEnabled;
     }
 
@@ -144,9 +146,14 @@ public class KillbillServerModule extends AbstractModule {
     protected void installKillbillModules() {
         final ConfigSource configSource = new SimplePropertyConfigSource(System.getProperties());
 
+        // TODO Pierre Refactor GlobalLockerModule for this to be a real provider?
+        final EmbeddedDBProvider embeddedDBProvider = new EmbeddedDBProvider(daoConfig);
+        final EmbeddedDB embeddedDB = embeddedDBProvider.get();
+        bind(EmbeddedDB.class).toInstance(embeddedDB);
+
         install(new EmailModule(configSource));
         install(new CacheModule(configSource));
-        install(new GlobalLockerModule());
+        install(new GlobalLockerModule(embeddedDB.getDBEngine()));
         install(new CustomFieldModule());
         install(new AuditModule());
         install(new CatalogModule(configSource));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,25 +16,15 @@
 
 package org.killbill.billing.util.glue;
 
-import org.killbill.commons.embeddeddb.EmbeddedDB;
-import org.killbill.commons.embeddeddb.EmbeddedDB.DBEngine;
+import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 
 import com.google.inject.AbstractModule;
 
-public class GlobalLockerModule extends AbstractModule {
-
-    private final DBEngine engine;
-
-    public GlobalLockerModule(final DBEngine engine) {
-        this.engine = engine;
-    }
+public class MemoryGlobalLockerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        if (EmbeddedDB.DBEngine.MYSQL.equals(engine)) {
-            install(new MySqlGlobalLockerModule());
-        } else {
-            install(new MemoryGlobalLockerModule());
-        }
+        bind(GlobalLocker.class).to(MemoryGlobalLocker.class).asEagerSingleton();
     }
 }

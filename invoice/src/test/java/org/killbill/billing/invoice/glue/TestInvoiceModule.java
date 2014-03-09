@@ -16,12 +16,12 @@
 
 package org.killbill.billing.invoice.glue;
 
+import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
 import org.mockito.Mockito;
 import org.skife.config.ConfigSource;
 
 import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.invoice.TestInvoiceHelper;
-import org.killbill.billing.mock.glue.MockGlobalLockerModule;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.CacheModule;
@@ -48,7 +48,7 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
     protected void configure() {
         super.configure();
         install(new CallContextModule());
-        install(new MockGlobalLockerModule());
+        install(new MemoryGlobalLockerModule());
 
         install(new CatalogModule(configSource));
         install(new CacheModule(configSource));

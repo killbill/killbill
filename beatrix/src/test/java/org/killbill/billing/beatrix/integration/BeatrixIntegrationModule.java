@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
-import org.skife.config.ConfigSource;
-
 import org.killbill.billing.DBTestingHelper;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.account.api.AccountService;
@@ -40,7 +38,6 @@ import org.killbill.billing.beatrix.util.RefundChecker;
 import org.killbill.billing.beatrix.util.SubscriptionChecker;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.glue.CatalogModule;
-import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.billing.currency.glue.CurrencyModule;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
@@ -50,7 +47,6 @@ import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.junction.glue.DefaultJunctionModule;
 import org.killbill.billing.lifecycle.KillbillService;
-import org.killbill.billing.mock.glue.MockGlobalLockerModule;
 import org.killbill.billing.osgi.DefaultOSGIService;
 import org.killbill.billing.osgi.glue.DefaultOSGIModule;
 import org.killbill.billing.overdue.OverdueService;
@@ -77,6 +73,7 @@ import org.killbill.billing.util.glue.NotificationQueueModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.TagStoreModule;
 import org.killbill.billing.util.svcsapi.bus.BusService;
+import org.skife.config.ConfigSource;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -103,12 +100,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         loadSystemPropertiesFromClasspath("/beatrix.properties");
 
         install(new GuicyKillbillTestWithEmbeddedDBModule());
-
-        if (EmbeddedDB.DBEngine.MYSQL.equals(DBTestingHelper.get().getDBEngine())) {
-            install(new GlobalLockerModule());
-        } else {
-            install(new MockGlobalLockerModule());
-        }
+        install(new GlobalLockerModule(DBTestingHelper.get().getDBEngine()));
         install(new CacheModule(configSource));
         install(new EmailModule(configSource));
         install(new CallContextModule());

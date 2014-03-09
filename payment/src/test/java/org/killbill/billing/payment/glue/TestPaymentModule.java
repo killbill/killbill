@@ -18,13 +18,13 @@ package org.killbill.billing.payment.glue;
 
 import java.util.UUID;
 
+import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
 import org.mockito.Mockito;
 import org.skife.config.ConfigSource;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockSubscriptionModule;
-import org.killbill.billing.mock.glue.MockGlobalLockerModule;
 import org.killbill.billing.mock.glue.MockInvoiceModule;
 import org.killbill.billing.mock.glue.MockNotificationQueueModule;
 import org.killbill.billing.payment.TestPaymentHelper;
@@ -68,7 +68,7 @@ public class TestPaymentModule extends PaymentModule {
         install(new MockInvoiceModule());
         install(new MockAccountModule());
         install(new MockSubscriptionModule());
-        install(new MockGlobalLockerModule());
+        install(new MemoryGlobalLockerModule());
         install(new CacheModule(configSource));
         installExternalApis();
 
