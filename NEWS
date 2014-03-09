@@ -1,3 +1,6 @@
+0.9.0
+    Update packages com.ning -> org.killbill
+
 0.8.13
     Fix SQL query typo in unmarkPaymentMethodAsDeleted
 
