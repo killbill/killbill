@@ -2,66 +2,35 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/currency/currency.iml" filepath="$PROJECT_DIR$/currency/currency.iml" />
-      <module fileurl="file://$PROJECT_DIR$/killbill.iml" filepath="$PROJECT_DIR$/killbill.iml" />
       <module fileurl="file://$PROJECT_DIR$/killbill.iml" filepath="$PROJECT_DIR$/killbill.iml" />
       <module fileurl="file://$PROJECT_DIR$/account/killbill-account.iml" filepath="$PROJECT_DIR$/account/killbill-account.iml" />
-      <module fileurl="file://$PROJECT_DIR$/account/killbill-account.iml" filepath="$PROJECT_DIR$/account/killbill-account.iml" />
-      <module fileurl="file://$PROJECT_DIR$/beatrix/killbill-beatrix.iml" filepath="$PROJECT_DIR$/beatrix/killbill-beatrix.iml" />
       <module fileurl="file://$PROJECT_DIR$/beatrix/killbill-beatrix.iml" filepath="$PROJECT_DIR$/beatrix/killbill-beatrix.iml" />
       <module fileurl="file://$PROJECT_DIR$/catalog/killbill-catalog.iml" filepath="$PROJECT_DIR$/catalog/killbill-catalog.iml" />
-      <module fileurl="file://$PROJECT_DIR$/catalog/killbill-catalog.iml" filepath="$PROJECT_DIR$/catalog/killbill-catalog.iml" />
-      <module fileurl="file://$PROJECT_DIR$/currency/killbill-currency.iml" filepath="$PROJECT_DIR$/currency/killbill-currency.iml" />
       <module fileurl="file://$PROJECT_DIR$/currency/killbill-currency.iml" filepath="$PROJECT_DIR$/currency/killbill-currency.iml" />
       <module fileurl="file://$PROJECT_DIR$/entitlement/killbill-entitlement.iml" filepath="$PROJECT_DIR$/entitlement/killbill-entitlement.iml" />
-      <module fileurl="file://$PROJECT_DIR$/entitlement/killbill-entitlement.iml" filepath="$PROJECT_DIR$/entitlement/killbill-entitlement.iml" />
-      <module fileurl="file://$PROJECT_DIR$/api/killbill-internal-api.iml" filepath="$PROJECT_DIR$/api/killbill-internal-api.iml" />
       <module fileurl="file://$PROJECT_DIR$/api/killbill-internal-api.iml" filepath="$PROJECT_DIR$/api/killbill-internal-api.iml" />
       <module fileurl="file://$PROJECT_DIR$/invoice/killbill-invoice.iml" filepath="$PROJECT_DIR$/invoice/killbill-invoice.iml" />
-      <module fileurl="file://$PROJECT_DIR$/invoice/killbill-invoice.iml" filepath="$PROJECT_DIR$/invoice/killbill-invoice.iml" />
-      <module fileurl="file://$PROJECT_DIR$/jaxrs/killbill-jaxrs.iml" filepath="$PROJECT_DIR$/jaxrs/killbill-jaxrs.iml" />
       <module fileurl="file://$PROJECT_DIR$/jaxrs/killbill-jaxrs.iml" filepath="$PROJECT_DIR$/jaxrs/killbill-jaxrs.iml" />
       <module fileurl="file://$PROJECT_DIR$/junction/killbill-junction.iml" filepath="$PROJECT_DIR$/junction/killbill-junction.iml" />
-      <module fileurl="file://$PROJECT_DIR$/junction/killbill-junction.iml" filepath="$PROJECT_DIR$/junction/killbill-junction.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi/killbill-osgi.iml" filepath="$PROJECT_DIR$/osgi/killbill-osgi.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi/killbill-osgi.iml" filepath="$PROJECT_DIR$/osgi/killbill-osgi.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/killbill-osgi-all-bundles.iml" filepath="$PROJECT_DIR$/osgi-bundles/killbill-osgi-all-bundles.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/killbill-osgi-all-bundles.iml" filepath="$PROJECT_DIR$/osgi-bundles/killbill-osgi-all-bundles.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/bundles/killbill-osgi-bundles.iml" filepath="$PROJECT_DIR$/osgi-bundles/bundles/killbill-osgi-bundles.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/bundles/killbill-osgi-bundles.iml" filepath="$PROJECT_DIR$/osgi-bundles/bundles/killbill-osgi-bundles.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/defaultbundles/killbill-osgi-bundles-defaultbundles.iml" filepath="$PROJECT_DIR$/osgi-bundles/defaultbundles/killbill-osgi-bundles-defaultbundles.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/defaultbundles/killbill-osgi-bundles-defaultbundles.iml" filepath="$PROJECT_DIR$/osgi-bundles/defaultbundles/killbill-osgi-bundles-defaultbundles.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/bundles/jruby/killbill-osgi-bundles-jruby.iml" filepath="$PROJECT_DIR$/osgi-bundles/bundles/jruby/killbill-osgi-bundles-jruby.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/bundles/jruby/killbill-osgi-bundles-jruby.iml" filepath="$PROJECT_DIR$/osgi-bundles/bundles/jruby/killbill-osgi-bundles-jruby.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/libs/killbill/killbill-osgi-bundles-lib-killbill.iml" filepath="$PROJECT_DIR$/osgi-bundles/libs/killbill/killbill-osgi-bundles-lib-killbill.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/libs/killbill/killbill-osgi-bundles-lib-killbill.iml" filepath="$PROJECT_DIR$/osgi-bundles/libs/killbill/killbill-osgi-bundles-lib-killbill.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/libs/slf4j-osgi/killbill-osgi-bundles-lib-slf4j-osgi.iml" filepath="$PROJECT_DIR$/osgi-bundles/libs/slf4j-osgi/killbill-osgi-bundles-lib-slf4j-osgi.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/libs/slf4j-osgi/killbill-osgi-bundles-lib-slf4j-osgi.iml" filepath="$PROJECT_DIR$/osgi-bundles/libs/slf4j-osgi/killbill-osgi-bundles-lib-slf4j-osgi.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/bundles/logger/killbill-osgi-bundles-logger.iml" filepath="$PROJECT_DIR$/osgi-bundles/bundles/logger/killbill-osgi-bundles-logger.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/bundles/logger/killbill-osgi-bundles-logger.iml" filepath="$PROJECT_DIR$/osgi-bundles/bundles/logger/killbill-osgi-bundles-logger.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/tests/beatrix/killbill-osgi-bundles-test-beatrix.iml" filepath="$PROJECT_DIR$/osgi-bundles/tests/beatrix/killbill-osgi-bundles-test-beatrix.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/tests/beatrix/killbill-osgi-bundles-test-beatrix.iml" filepath="$PROJECT_DIR$/osgi-bundles/tests/beatrix/killbill-osgi-bundles-test-beatrix.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/tests/payment/killbill-osgi-bundles-test-payment.iml" filepath="$PROJECT_DIR$/osgi-bundles/tests/payment/killbill-osgi-bundles-test-payment.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/tests/payment/killbill-osgi-bundles-test-payment.iml" filepath="$PROJECT_DIR$/osgi-bundles/tests/payment/killbill-osgi-bundles-test-payment.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/bundles/webconsolebranding/killbill-osgi-bundles-webconsolebranding.iml" filepath="$PROJECT_DIR$/osgi-bundles/bundles/webconsolebranding/killbill-osgi-bundles-webconsolebranding.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/bundles/webconsolebranding/killbill-osgi-bundles-webconsolebranding.iml" filepath="$PROJECT_DIR$/osgi-bundles/bundles/webconsolebranding/killbill-osgi-bundles-webconsolebranding.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/libs/killbill-osgi-lib-bundles.iml" filepath="$PROJECT_DIR$/osgi-bundles/libs/killbill-osgi-lib-bundles.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/libs/killbill-osgi-lib-bundles.iml" filepath="$PROJECT_DIR$/osgi-bundles/libs/killbill-osgi-lib-bundles.iml" />
-      <module fileurl="file://$PROJECT_DIR$/osgi-bundles/tests/killbill-osgi-test-bundles.iml" filepath="$PROJECT_DIR$/osgi-bundles/tests/killbill-osgi-test-bundles.iml" />
       <module fileurl="file://$PROJECT_DIR$/osgi-bundles/tests/killbill-osgi-test-bundles.iml" filepath="$PROJECT_DIR$/osgi-bundles/tests/killbill-osgi-test-bundles.iml" />
       <module fileurl="file://$PROJECT_DIR$/overdue/killbill-overdue.iml" filepath="$PROJECT_DIR$/overdue/killbill-overdue.iml" />
-      <module fileurl="file://$PROJECT_DIR$/overdue/killbill-overdue.iml" filepath="$PROJECT_DIR$/overdue/killbill-overdue.iml" />
-      <module fileurl="file://$PROJECT_DIR$/payment/killbill-payment.iml" filepath="$PROJECT_DIR$/payment/killbill-payment.iml" />
       <module fileurl="file://$PROJECT_DIR$/payment/killbill-payment.iml" filepath="$PROJECT_DIR$/payment/killbill-payment.iml" />
       <module fileurl="file://$PROJECT_DIR$/server/killbill-server.iml" filepath="$PROJECT_DIR$/server/killbill-server.iml" />
-      <module fileurl="file://$PROJECT_DIR$/server/killbill-server.iml" filepath="$PROJECT_DIR$/server/killbill-server.iml" />
-      <module fileurl="file://$PROJECT_DIR$/subscription/killbill-subscription.iml" filepath="$PROJECT_DIR$/subscription/killbill-subscription.iml" />
       <module fileurl="file://$PROJECT_DIR$/subscription/killbill-subscription.iml" filepath="$PROJECT_DIR$/subscription/killbill-subscription.iml" />
       <module fileurl="file://$PROJECT_DIR$/tenant/killbill-tenant.iml" filepath="$PROJECT_DIR$/tenant/killbill-tenant.iml" />
-      <module fileurl="file://$PROJECT_DIR$/tenant/killbill-tenant.iml" filepath="$PROJECT_DIR$/tenant/killbill-tenant.iml" />
       <module fileurl="file://$PROJECT_DIR$/usage/killbill-usage.iml" filepath="$PROJECT_DIR$/usage/killbill-usage.iml" />
-      <module fileurl="file://$PROJECT_DIR$/usage/killbill-usage.iml" filepath="$PROJECT_DIR$/usage/killbill-usage.iml" />
-      <module fileurl="file://$PROJECT_DIR$/util/killbill-util.iml" filepath="$PROJECT_DIR$/util/killbill-util.iml" />
       <module fileurl="file://$PROJECT_DIR$/util/killbill-util.iml" filepath="$PROJECT_DIR$/util/killbill-util.iml" />
     </modules>
   </component>
