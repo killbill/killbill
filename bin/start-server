@@ -55,8 +55,8 @@ function build_properties() {
     local opts=
     local prop=
     for prop in `cat  $PROPERTIES | grep =`; do
-        local k=`echo $prop | awk '  BEGIN {FS="="} { print $1 }'`
-        local v=`echo $prop | awk 'BEGIN {FS="="} { print $2 }'`
+        local k=`echo $prop | awk 'BEGIN {FS="="} { print $1 }'`
+        local v=`echo $prop | awk 'BEGIN {FS="="} {for (i=2; i<NF; i++) printf $i "="; print $NF}'`
         opts="$opts -D$k=$v"
     done
     echo $opts

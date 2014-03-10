@@ -1,0 +1,125 @@
+group PaymentSqlDao: EntitySqlDao;
+
+
+extraTableFieldsWithComma(prefix) ::= <<
+, <prefix>record_id as payment_number
+>>
+
+defaultOrderBy(prefix) ::= <<
+order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
+>>
+
+tableFields(prefix) ::= <<
+  <prefix>account_id
+, <prefix>invoice_id
+, <prefix>payment_method_id
+, <prefix>amount
+, <prefix>currency
+, <prefix>processed_amount
+, <prefix>processed_currency
+, <prefix>effective_date
+, <prefix>payment_status
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
+>>
+
+tableValues() ::= <<
+  :accountId
+, :invoiceId
+, :paymentMethodId
+, :amount
+, :currency
+, :processedAmount
+, :processedCurrency
+, :effectiveDate
+, :paymentStatus
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
+>>
+
+tableName() ::= "payments"
+
+historyTableName() ::= "payment_history"
+
+
+getPaymentsForAccount() ::= <<
+select <allTableFields()>
+, record_id as payment_number
+from payments
+where account_id = :accountId
+<AND_CHECK_TENANT()>
+<defaultOrderBy()>
+;
+>>
+
+getPaymentsForInvoice() ::= <<
+select <allTableFields()>
+, record_id as payment_number
+from payments
+where invoice_id = :invoiceId
+<AND_CHECK_TENANT()>
+<defaultOrderBy()>
+;
+>>
+
+
+getLastPaymentForAccountAndPaymentMethod() ::= <<
+select <allTableFields()>
+, record_id as payment_number
+from payments
+where account_id = :accountId
+and payment_method_id = :paymentMethodId
+<AND_CHECK_TENANT()>
+order by effective_date desc limit 1
+;
+>>
+
+
+updatePaymentStatus() ::= <<
+update payments
+set payment_status = :paymentStatus
+, processed_amount = :processedAmount
+, processed_currency = :processedCurrency
+, updated_by = :updatedBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
+
+updatePaymentForNewAttempt() ::= <<
+update <tableName()>
+set amount = :amount
+, effective_date = :effectiveDate
+, payment_method_id= :paymentMethodId
+, updated_by = :updatedBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
+getByPluginName() ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+join payment_methods pm on pm.id = t.payment_method_id
+where pm.plugin_name = :pluginName
+order by record_id
+limit :offset, :rowCount
+;
+>>
+
+getCountByPluginName() ::= <<
+select
+  count(1) as count
+from <tableName()> t
+join payment_methods pm on pm.id = t.payment_method_id
+where pm.plugin_name = :pluginName
+;
+>>

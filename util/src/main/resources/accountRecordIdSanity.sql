@@ -289,7 +289,7 @@ from (
     , class_name
     from bus_events
     where 1 = 1
-    and class_name in ('com.ning.billing.account.api.user.DefaultAccountChangeEvent', 'com.ning.billing.invoice.api.user.DefaultNullInvoiceEvent', 'com.ning.billing.payment.api.DefaultPaymentInfoEvent', 'com.ning.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent', 'com.ning.billing.payment.api.DefaultPaymentErrorEvent')
+    and class_name in ('org.killbill.billing.account.api.user.DefaultAccountChangeEvent', 'org.killbill.billing.invoice.api.user.DefaultNullInvoiceEvent', 'org.killbill.billing.payment.api.DefaultPaymentInfoEvent', 'org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent', 'org.killbill.billing.payment.api.DefaultPaymentErrorEvent')
     union all
     select
       substr(event_json,position('objectId' in event_json) + 11, 36) id
@@ -297,7 +297,7 @@ from (
     , class_name
     from bus_events
     where 1 = 1
-    and class_name in ('com.ning.billing.util.tag.api.user.DefaultUserTagCreationEvent', 'com.ning.billing.util.tag.api.user.DefaultControlTagCreationEvent', 'com.ning.billing.util.tag.api.user.DefaultControlTagDeletionEvent', 'com.ning.billing.util.tag.api.user.DefaultUserTagDeletionEvent')
+    and class_name in ('org.killbill.billing.util.tag.api.user.DefaultUserTagCreationEvent', 'org.killbill.billing.util.tag.api.user.DefaultControlTagCreationEvent', 'org.killbill.billing.util.tag.api.user.DefaultControlTagDeletionEvent', 'org.killbill.billing.util.tag.api.user.DefaultUserTagDeletionEvent')
   ) be
   left outer join accounts a using (id)
   where 1 = 1
@@ -317,7 +317,7 @@ from (
     , class_name
     from bus_events
     where 1 = 1
-    and class_name in ('com.ning.billing.entitlement.api.user.DefaultRequestedSubscriptionEvent', 'com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent')
+    and class_name in ('org.killbill.billing.entitlement.api.user.DefaultRequestedSubscriptionEvent', 'org.killbill.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent')
   ) be
   left outer join subscriptions s using (id)
   where 1 = 1
@@ -337,7 +337,7 @@ from (
     , class_name
     from bus_events
     where 1 = 1
-    and class_name in ('com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent')
+    and class_name in ('org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent')
   ) be
   left outer join invoices i using (id)
   where 1 = 1
@@ -357,7 +357,7 @@ from (
     , class_name
     from bus_events
     where 1 = 1
-    and class_name in ('com.ning.billing.overdue.applicator.DefaultOverdueChangeEvent')
+    and class_name in ('org.killbill.billing.overdue.applicator.DefaultOverdueChangeEvent')
   ) be
   left outer join bundles b using (id)
   where 1 = 1
@@ -439,7 +439,7 @@ from (
     , class_name
     from notifications
     where 1 = 1
-    and class_name = 'com.ning.billing.invoice.notification.NextBillingDateNotificationKey'
+    and class_name = 'org.killbill.billing.invoice.notification.NextBillingDateNotificationKey'
   ) n
   left outer join subscriptions s using (id)
   where 1 = 1
@@ -459,7 +459,7 @@ from (
     , class_name
     from notifications
     where 1 = 1
-    and class_name in ('com.ning.billing.ovedue.notification.OverdueCheckNotificationKey', 'com.ning.billing.irs.callbacks.CallbackNotificationKey')
+    and class_name in ('org.killbill.billing.ovedue.notification.OverdueCheckNotificationKey', 'org.killbill.billing.irs.callbacks.CallbackNotificationKey')
   ) n
   left outer join bundles b using (id)
   where 1 = 1
@@ -479,7 +479,7 @@ from (
     , class_name
     from notifications
     where 1 = 1
-    and class_name = 'com.ning.billing.payment.retry.PaymentRetryNotificationKey'
+    and class_name = 'org.killbill.billing.payment.retry.PaymentRetryNotificationKey'
   ) n
   left outer join payments p using (id)
   where 1 = 1
@@ -499,7 +499,7 @@ from (
     , class_name
     from notifications
     where 1 = 1
-    and class_name = 'com.ning.billing.entitlement.engine.core.EntitlementNotificationKey'
+    and class_name = 'org.killbill.billing.entitlement.engine.core.EntitlementNotificationKey'
   ) n
   left outer join subscription_events se using (id)
   where 1 = 1

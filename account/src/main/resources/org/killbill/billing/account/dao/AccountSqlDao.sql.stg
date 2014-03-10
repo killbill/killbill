@@ -1,0 +1,102 @@
+group AccountSqlDao: EntitySqlDao;
+
+tableName() ::= "accounts"
+
+historyTableName() ::= "account_history"
+
+tableFields(prefix) ::= <<
+  <prefix>external_key
+, <prefix>email
+, <prefix>name
+, <prefix>first_name_length
+, <prefix>currency
+, <prefix>billing_cycle_day_local
+, <prefix>payment_method_id
+, <prefix>time_zone
+, <prefix>locale
+, <prefix>address1
+, <prefix>address2
+, <prefix>company_name
+, <prefix>city
+, <prefix>state_or_province
+, <prefix>country
+, <prefix>postal_code
+, <prefix>phone
+, <prefix>migrated
+, <prefix>is_notified_for_invoices
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
+>>
+
+tableValues() ::= <<
+  :externalKey
+, :email
+, :name
+, :firstNameLength
+, :currency
+, :billingCycleDayLocal
+, :paymentMethodId
+, :timeZone
+, :locale
+, :address1
+, :address2
+, :companyName
+, :city
+, :stateOrProvince
+, :country
+, :postalCode
+, :phone
+, :migrated
+, :isNotifiedForInvoices
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
+>>
+
+/** The accounts table doesn't have an account_record_id column (it's the record_id) **/
+accountRecordIdFieldWithComma(prefix) ::= ""
+accountRecordIdValueWithComma(prefix) ::= ""
+
+update() ::= <<
+    UPDATE accounts
+    SET email = :email, name = :name, first_name_length = :firstNameLength,
+        currency = :currency, billing_cycle_day_local = :billingCycleDayLocal,
+        payment_method_id = :paymentMethodId, time_zone = :timeZone, locale = :locale,
+        address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
+        country = :country, postal_code = :postalCode, phone = :phone,
+        is_notified_for_invoices = :isNotifiedForInvoices, updated_date = :updatedDate, updated_by = :updatedBy
+    WHERE id = :id <AND_CHECK_TENANT()>;
+>>
+
+
+updatePaymentMethod() ::= <<
+    UPDATE accounts
+    SET payment_method_id = :paymentMethodId
+    , updated_date = :updatedDate
+    , updated_by = :updatedBy
+    WHERE id = :id <AND_CHECK_TENANT()>;
+>>
+
+getAccountByKey() ::= <<
+    select <allTableFields()>
+    from accounts
+    where external_key = :externalKey <AND_CHECK_TENANT()>;
+>>
+
+searchQuery(prefix) ::= <<
+     <idField(prefix)> = :searchKey
+  or <prefix>name like :likeSearchKey
+  or <prefix>email like :likeSearchKey
+  or <prefix>external_key like :likeSearchKey
+  or <prefix>company_name like :likeSearchKey
+>>
+
+getIdFromKey() ::= <<
+    SELECT id
+    FROM accounts
+    WHERE external_key = :externalKey <AND_CHECK_TENANT()>;
+>>
+

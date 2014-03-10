@@ -14,9 +14,9 @@ db_input medium killbill/username || true
 db_input medium killbill/groupname || true
 
 # Set default values for Kill Bill configuration
-db_set killbill/dburl "$(default com.ning.jetty.jdbi.url)"
-db_set killbill/dbusername "$(default com.ning.jetty.jdbi.user)"
-db_set killbill/dbpassword "$(default com.ning.jetty.jdbi.password)"
+db_set killbill/dburl "$(default org.killbill.jetty.jdbi.url)"
+db_set killbill/dbusername "$(default org.killbill.jetty.jdbi.user)"
+db_set killbill/dbpassword "$(default org.killbill.jetty.jdbi.password)"
 
 db_input medium killbill/dburl || true
 db_input medium killbill/dbusername || true

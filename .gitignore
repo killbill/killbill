@@ -13,6 +13,7 @@ pom.xml.bak
 pom.xml.releaseBackup
 release.properties
 logs/
+.logs
 .diskspool
 *.classpath
 *.settings
@@ -24,3 +25,6 @@ catalog/src/test/resources/CatalogSchema.xsd
 server/load
 dependency-reduced-pom.xml
 dependency-reduced-pom.xml.bak
+server/killbill.h2.db
+server/killbill.lock.db
+server/killbill.trace.db

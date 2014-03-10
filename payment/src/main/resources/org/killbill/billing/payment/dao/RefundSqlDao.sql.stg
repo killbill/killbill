@@ -1,0 +1,87 @@
+group RefundSqlDao: EntitySqlDao;
+
+tableName() ::= "refunds"
+
+historyTableName() ::= "refund_history"
+
+tableFields(prefix) ::= <<
+  <prefix>account_id
+, <prefix>payment_id
+, <prefix>amount
+, <prefix>currency
+, <prefix>processed_amount
+, <prefix>processed_currency
+, <prefix>is_adjusted
+, <prefix>refund_status
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
+>>
+
+tableValues() ::= <<
+:accountId
+, :paymentId
+, :amount
+, :currency
+, :processedAmount
+, :processedCurrency
+, :isAdjusted
+, :refundStatus
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
+>>
+
+updateStatus(refundStatus) ::= <<
+update <tableName()>
+set refund_status = :refundStatus
+, processed_amount = :processedAmount
+, processed_currency = :processedCurrency
+, updated_by = :updatedBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
+getRefundsForPayment(paymentId)  ::= <<
+select <allTableFields()>
+from <tableName()>
+where payment_id = :paymentId
+<AND_CHECK_TENANT()>
+<defaultOrderBy()>
+;
+>>
+
+getRefundsForAccount(accountId)  ::= <<
+select <allTableFields()>
+from <tableName()>
+where account_id = :accountId
+<AND_CHECK_TENANT()>
+<defaultOrderBy()>
+;
+>>
+
+getByPluginName() ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+join payments p on p.id = t.payment_id
+join payment_methods pm on pm.id = p.payment_method_id
+where pm.plugin_name = :pluginName
+order by record_id
+limit :offset, :rowCount
+;
+>>
+
+getCountByPluginName() ::= <<
+select
+  count(1) as count
+from <tableName()> t
+join payments p on p.id = t.payment_id
+join payment_methods pm on pm.id = p.payment_method_id
+where pm.plugin_name = :pluginName
+;
+>>

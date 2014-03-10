@@ -1,0 +1,131 @@
+group TagDao: EntitySqlDao;
+
+tableName() ::= "tags"
+
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+
+tableFields(prefix) ::= <<
+  <prefix>tag_definition_id
+, <prefix>object_id
+, <prefix>object_type
+, <prefix>is_active
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
+>>
+
+tableValues() ::= <<
+  :tagDefinitionId
+, :objectId
+, :objectType
+, :isActive
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
+>>
+
+historyTableName() ::= "tag_history"
+
+markTagAsDeleted() ::= <<
+update <tableName()> t
+set t.is_active = 0
+where <idField("t.")> = :id
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+getTagsForObject() ::= <<
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where t.is_active
+and t.object_id = :objectId
+and t.object_type = :objectType
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+getTagsForObjectIncludedDeleted() ::= <<
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where 1 = 1
+and t.object_id = :objectId
+and t.object_type = :objectType
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+userAndSystemTagDefinitions() ::= <<
+  select
+    id
+  , name
+  , description
+  from tag_definitions
+  union
+  select
+    \'00000000-0000-0000-0000-000000000001\' id
+  , \'AUTO_PAY_OFF\' name
+  , \'Suspends payments until removed.\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000002\' id
+  , \'AUTO_INVOICING_OFF\' name
+  , \'Suspends invoicing until removed.\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000003\' id
+  , \'OVERDUE_ENFORCEMENT_OFF\' name
+  , \'Suspends overdue enforcement behaviour until removed.\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000004\' id
+  , \'WRITTEN_OFF\' name
+  , \'Indicates that an invoice is written off. No billing or payment effect.\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000005\' id
+  , \'MANUAL_PAY\' name
+  , \'Indicates that Killbill doesn\\'\\'t process payments for that account (external payments only)\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000006\' id
+  , \'TEST\' name
+  , \'Indicates that this is a test account\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000007\' id
+  , \'PARTNER\' name
+  , \'Indicates that this is a partner account\' description
+>>
+
+searchQuery(tagAlias, tagDefinitionAlias) ::= <<
+     <idField(tagAlias)> = :searchKey
+  or <tagAlias>object_type like :likeSearchKey
+  or <tagDefinitionAlias>name like :likeSearchKey
+  or <tagDefinitionAlias>description like :likeSearchKey
+>>
+
+search() ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+join (<userAndSystemTagDefinitions()>) td on td.id = t.tag_definition_id
+where (<searchQuery(tagAlias="t.", tagDefinitionAlias="td.")>)
+<AND_CHECK_TENANT("t.")>
+order by <recordIdField("t.")> ASC
+limit :offset, :rowCount
+;
+>>
+
+getSearchCount() ::= <<
+select
+  count(1) as count
+from <tableName()> t
+join (<userAndSystemTagDefinitions()>) td on td.id = t.tag_definition_id
+where (<searchQuery(tagAlias="t.", tagDefinitionAlias="td.")>)
+<AND_CHECK_TENANT("t.")>
+;
+>>

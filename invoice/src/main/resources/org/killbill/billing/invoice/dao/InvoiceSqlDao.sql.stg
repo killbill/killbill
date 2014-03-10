@@ -1,0 +1,52 @@
+group InvoiceDao: EntitySqlDao;
+
+tableName() ::= "invoices"
+
+tableFields(prefix) ::= <<
+  <prefix>account_id
+, <prefix>invoice_date
+, <prefix>target_date
+, <prefix>currency
+, <prefix>migrated
+, <prefix>created_by
+, <prefix>created_date
+>>
+
+tableValues() ::= <<
+  :accountId
+, :invoiceDate
+, :targetDate
+, :currency
+, :migrated
+, :createdBy
+, :createdDate
+>>
+
+extraTableFieldsWithComma(prefix) ::= <<
+, <prefix>record_id as invoice_number
+>>
+
+getInvoicesBySubscription() ::= <<
+  SELECT <allTableFields("i.")>
+  FROM <tableName()> i
+  JOIN invoice_items ii ON i.id = ii.invoice_id
+  WHERE ii.subscription_id = :subscriptionId AND i.migrated = '0'
+  <AND_CHECK_TENANT("i.")>
+  <AND_CHECK_TENANT("ii.")>
+  ;
+>>
+
+searchQuery(prefix) ::= <<
+     <idField(prefix)> = :searchKey
+  or <prefix>account_id = :searchKey
+  or <prefix>currency = :searchKey
+>>
+
+getInvoiceIdByPaymentId() ::= <<
+  SELECT i.id
+    FROM <tableName()> i, invoice_payments ip
+   WHERE ip.invoice_id = i.id
+     AND ip.payment_id = :paymentId
+   <AND_CHECK_TENANT("i.")>
+   <AND_CHECK_TENANT("ip.")>
+>>

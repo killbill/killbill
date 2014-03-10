@@ -19,7 +19,7 @@ package org.slf4j.impl;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.spi.LoggerFactoryBinder;
 
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
+import org.killbill.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class StaticLoggerBinder implements LoggerFactoryBinder {
 
