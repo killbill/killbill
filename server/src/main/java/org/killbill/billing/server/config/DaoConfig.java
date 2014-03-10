@@ -28,7 +28,7 @@ public interface DaoConfig extends KillbillConfig {
 
     @Description("The jdbc url for the database")
     @Config("org.killbill.dao.url")
-    @Default("jdbc:mysql://127.0.0.1:3306/killbill")
+    @Default("jdbc:h2:file:killbill;MODE=MYSQL;DB_CLOSE_DELAY=-1;MVCC=true;DB_CLOSE_ON_EXIT=FALSE")
     String getJdbcUrl();
 
     @Description("The jdbc user name for the database")
