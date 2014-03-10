@@ -68,12 +68,9 @@
                         </price>
                     </recurringPrice>
                 </recurring>
-                <!-- New usage sections -->
-                <usages>
-                    <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
-                        <!-- ... -->
-                    </usage>
-                </usages>
+                <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
+                    <!-- ... -->
+                </usage>
             </finalPhase>
         </plan>
 
@@ -96,17 +93,15 @@
                         </price>
                     </recurringPrice>
                 </recurring>
-                <usages>
-                    <usage billingMode="IN_ADVANCE" type="CAPACITY">
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <limits>
-                            <limit>
-                                <unit>members</unit>
-                                <max>100</max>
-                            </limit>
-                        </limits>
-                    </usage>
-                </usages>
+                <usage billingMode="IN_ADVANCE" type="CAPACITY">
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <limits>
+                        <limit>
+                            <unit>members</unit>
+                            <max>100</max>
+                        </limit>
+                    </limits>
+                </usage>
             </finalPhase>
         </plan>
 
@@ -128,21 +123,19 @@
                         </price>
                     </recurringPrice>
                 </recurring>
-                <usages>
-                    <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <limits>
-                            <limit>
-                                <unit>minutes</unit>
-                                <increment>1000</increment>
-                                <price>
-                                    <currency>BTC</currency>
-                                    <value>0.01</value>
-                                </price>
-                            </limit>
-                        </limits>
-                    </usage>
-                </usages>
+                <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <limits>
+                        <limit>
+                            <unit>minutes</unit>
+                            <increment>1000</increment>
+                            <price>
+                                <currency>BTC</currency>
+                                <value>0.01</value>
+                            </price>
+                        </limit>
+                    </limits>
+                </usage>
             </finalPhase>
         </plan>
 
@@ -156,23 +149,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
 
-                <usages>
-                    <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
-                        <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                        <limits>
-                            <limit>
-                                <unit>fasttrack_tokens</unit>
-                                <min>5</min>
-                                <increment>10</increment>
-                                <price>
-                                    <currency>BTC</currency>
-                                    <value>0.5</value>
-                                </price>
+                <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <limits>
+                        <limit>
+                            <unit>fasttrack_tokens</unit>
+                            <min>5</min>
+                            <increment>10</increment>
+                            <price>
+                                <currency>BTC</currency>
+                                <value>0.5</value>
+                            </price>
 
-                            </limit>
-                        </limits>
-                    </usage>
-                </usages>
+                        </limit>
+                    </limits>
+                </usage>
             </finalPhase>
         </plan>
 
@@ -186,32 +177,30 @@
                     <unit>UNLIMITED</unit>
                 </duration>
 
-                <usages>
-                    <usage billingMode="IN_ARREAR" type="CAPACITY">
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <limits>
-                            <limit>
-                                <unit>bandwith (Meg/sec)</unit>
-                                <tiers>
-                                    <tier>
-                                        <max>10</max>
-                                        <price>
-                                            <currency>BTC</currency>
-                                            <value>0.5</value>
-                                        </price>
-                                    </tier>
-                                    <tier>
-                                        <max>20</max>
-                                        <price>
-                                            <currency>BTC</currency>
-                                            <value>1.0</value>
-                                        </price>
-                                    </tier>
-                                </tiers>
-                            </limit>
-                        </limits>
-                    </usage>
-                </usages>
+                <usage billingMode="IN_ARREAR" type="CAPACITY">
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <limits>
+                        <limit>
+                            <unit>bandwith (Meg/sec)</unit>
+                            <tiers>
+                                <tier>
+                                    <max>10</max>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.5</value>
+                                    </price>
+                                </tier>
+                                <tier>
+                                    <max>20</max>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>1.0</value>
+                                    </price>
+                                </tier>
+                            </tiers>
+                        </limit>
+                    </limits>
+                </usage>
             </finalPhase>
         </plan>
 
@@ -224,33 +213,31 @@
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <usages>
-                    <usage billingMode="IN_ARREAR" type="CONSUMABLE">
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <tiers>
-                            <tier>
-                                <limits>
-                                    <limit>
-                                        <unit>minutes</unit>
-                                        <max>1000</max>
-                                        <price>
-                                            <currency>BTC</currency>
-                                            <value>0.5</value>
-                                        </price>
-                                    </limit>
-                                    <limit>
-                                        <unit>Mbytes</unit>
-                                        <max>512</max>
-                                        <price>
-                                            <currency>BTC</currency>
-                                            <value>1.0</value>
-                                        </price>
-                                    </limit>
-                                </limits>
-                            </tier>
-                        </tiers>
-                    </usage>
-                </usages>
+                <usage billingMode="IN_ARREAR" type="CONSUMABLE">
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <tiers>
+                        <tier>
+                            <limits>
+                                <limit>
+                                    <unit>minutes</unit>
+                                    <max>1000</max>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.5</value>
+                                    </price>
+                                </limit>
+                                <limit>
+                                    <unit>Mbytes</unit>
+                                    <max>512</max>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>1.0</value>
+                                    </price>
+                                </limit>
+                            </limits>
+                        </tier>
+                    </tiers>
+                </usage>
             </finalPhase>
         </plan>
 
