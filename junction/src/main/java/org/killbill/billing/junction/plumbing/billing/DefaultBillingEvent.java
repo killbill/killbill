@@ -18,6 +18,8 @@ package org.killbill.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -72,18 +74,18 @@ public class DefaultBillingEvent implements BillingEvent {
         final PlanPhase prevPhase = (prevPhaseName != null) ? catalog.findPhase(prevPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
 
-        fixedPrice = (nextPhase != null && nextPhase.getFixedPrice() != null) ? nextPhase.getFixedPrice().getPrice(currency) : null;
-        recurringPrice = (nextPhase != null && nextPhase.getRecurringPrice() != null) ? nextPhase.getRecurringPrice().getPrice(currency) : null;
+        fixedPrice = getFixedPrice(nextPhase, currency);
+        recurringPrice = getRecurringPrice(nextPhase, currency);
 
         this.currency = currency;
         description = transition.getTransitionType().toString();
         billingModeType = BillingModeType.IN_ADVANCE;
-        billingPeriod = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ?
-                nextPhase.getBillingPeriod() : prevPhase.getBillingPeriod();
+        billingPeriod = getRecurringBillingPeriod((transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase);
         type = transition.getTransitionType();
         totalOrdering = transition.getTotalOrdering();
         timeZone = account.getTimeZone();
     }
+
 
     public DefaultBillingEvent(final Account account, final SubscriptionBase subscription, final DateTime effectiveDate, final Plan plan, final PlanPhase planPhase,
                                final BigDecimal fixedPrice, final BigDecimal recurringPrice, final Currency currency,
@@ -321,5 +323,20 @@ public class DefaultBillingEvent implements BillingEvent {
     @Override
     public DateTimeZone getTimeZone() {
         return timeZone;
+    }
+
+    private BigDecimal getFixedPrice(@Nullable final PlanPhase nextPhase, final Currency currency) throws CatalogApiException {
+        return (nextPhase != null && nextPhase.getFixed() != null && nextPhase.getFixed().getPrice() != null) ? nextPhase.getFixed().getPrice().getPrice(currency) : null;
+    }
+
+    private BigDecimal getRecurringPrice(@Nullable final PlanPhase nextPhase, final Currency currency) throws CatalogApiException {
+        return (nextPhase != null && nextPhase.getRecurring() != null && nextPhase.getRecurring().getRecurringPrice() != null) ? nextPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
+    }
+
+    private BillingPeriod getRecurringBillingPeriod(@Nullable final PlanPhase nextPhase) {
+        if (nextPhase == null) {
+            return BillingPeriod.NO_BILLING_PERIOD;
+        }
+        return nextPhase.getRecurring() != null ? nextPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
     }
 }

@@ -25,16 +25,15 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Duration;
-import org.killbill.billing.catalog.api.InternationalPrice;
-import org.killbill.billing.catalog.api.Limit;
+import org.killbill.billing.catalog.api.Fixed;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.Recurring;
+import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.util.config.catalog.ValidatingConfig;
-import org.killbill.billing.util.config.catalog.ValidationError;
 import org.killbill.billing.util.config.catalog.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -46,22 +45,15 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     @XmlElement(required = true)
     private DefaultDuration duration;
 
-    @XmlElement(required = true)
-    private BillingPeriod billingPeriod;
+    @XmlElement(required = false)
+    private DefaultFixed fixed;
 
     @XmlElement(required = false)
-    private DefaultInternationalPrice recurringPrice;
+    private DefaultRecurring recurring;
 
-    @XmlElement(required = false)
-    private DefaultInternationalPrice fixedPrice;
-
-    @XmlElementWrapper(name = "limits", required = false)
-    @XmlElement(name = "limit", required = true)
-    private DefaultLimit[] limits = new DefaultLimit[0];
-
-//  Not supported: variable pricing
-//	@XmlElement(required=false)
-//	private InternationalPrice unitPrice;
+    @XmlElementWrapper(name = "usages", required = false)
+    @XmlElement(name = "usage", required = false)
+    private DefaultUsage[] usages;
 
     //Not exposed in XML
     private Plan plan;
@@ -79,23 +71,6 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         throw new CatalogApiException(ErrorCode.CAT_BAD_PHASE_NAME, phaseName);
     }
 
-
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPlanPhase#getRecurringPrice()
-      */
-    @Override
-    public DefaultInternationalPrice getRecurringPrice() {
-        return recurringPrice;
-    }
-
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPlanPhase#getInternationalPrice()
-      */
-    @Override
-    public InternationalPrice getFixedPrice() {
-        return fixedPrice;
-    }
-
     /* (non-Javadoc)
       * @see org.killbill.billing.catalog.IPlanPhase#getCohort()
       */
@@ -104,17 +79,30 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         return type;
     }
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPlanPhase#getBillCycleDuration()
-      */
     @Override
-    public BillingPeriod getBillingPeriod() {
-        return billingPeriod;
+    public boolean compliesWithLimits(final String unit, final double value) {
+        // TODO STEPH
+        return true;
+    }
+
+    @Override
+    public Fixed getFixed() {
+        return fixed;
+    }
+
+    @Override
+    public Recurring getRecurring() {
+        return recurring;
+    }
+
+    @Override
+    public Usage[] getUsages() {
+        return usages;
     }
 
     /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPlanPhase#getName()
-      */
+          * @see org.killbill.billing.catalog.IPlanPhase#getName()
+          */
     @Override
     public String getName() {
         return phaseName(plan.getName(), this.getPhaseType());
@@ -138,58 +126,12 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         return duration;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.killbill.billing.catalog.PlanPhase#getLimit()
-     */
-    @Override
-    public DefaultLimit[] getLimits() {
-        return limits;
-    }
-    
-    
-    protected Limit findLimit(String unit) {
-        for(Limit limit: limits) {
-            if(limit.getUnit().getName().equals(unit) ) {
-                    return limit;
-            }
-        }
-        return null;
-    }
-    
-    
-    @Override
-    public boolean compliesWithLimits(String unit, double value) {
-        Limit l = findLimit(unit);
-        if (l == null) {
-            return getPlan().getProduct().compliesWithLimits(unit, value);
-        }
-        return l.compliesWith(value);
-    }
-
-
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        //Validation: check for nulls
-        if (billingPeriod == null) {
-            errors.add(new ValidationError(String.format("Phase %s of plan %s has a recurring price but no billing period", type.toString(), plan.getName()),
-                                           catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
-        }
 
-        //Validation: if there is a recurring price there must be a billing period
-        if ((recurringPrice != null) && (billingPeriod == null || billingPeriod == BillingPeriod.NO_BILLING_PERIOD)) {
-            errors.add(new ValidationError(String.format("Phase %s of plan %s has a recurring price but no billing period", type.toString(), plan.getName()),
-                                           catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
-        }
+        // TODO STEPH check there is either fixed and/or/usage and/or recurring defined.
 
-        //Validation: if there is no recurring price there should be no billing period
-        if ((recurringPrice == null) && billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
-            errors.add(new ValidationError(String.format("Phase %s of plan %s has no recurring price but does have a billing period. The billing period should be set to '%s'",
-                                                         type.toString(), plan.getName(), BillingPeriod.NO_BILLING_PERIOD),
-                                           catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
-        }
-
+        /*
         //Validation: if there BP is set to NO_BILLING_PERIOD there must be a fixed price
         if ((billingPeriod == BillingPeriod.NO_BILLING_PERIOD && fixedPrice == null)) {
             errors.add(new ValidationError(String.format("Phase %s of plan %s has no billing period. It must have a fixed price set.",
@@ -203,36 +145,45 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
                                                          type.toString(), plan.getName()),
                                            catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
         }
+        */
         return errors;
     }
 
     @Override
     public void initialize(final StandaloneCatalog root, final URI uri) {
-        if (fixedPrice != null) {
-            fixedPrice.initialize(root, uri);
+        if (fixed != null) {
+            fixed.initialize(root, uri);
+            fixed.setPhase(this);
         }
-        if (recurringPrice != null) {
-            recurringPrice.initialize(root, uri);
+        if (recurring != null) {
+            recurring.initialize(root, uri);
+            recurring.setPhase(this);
+        }
+        if (usages != null) {
+            for (DefaultUsage usage : usages) {
+                usage.initialize(root, uri);
+                usage.setPhase(this);
+            }
         }
     }
 
-    protected DefaultPlanPhase setFixedPrice(final DefaultInternationalPrice price) {
-        this.fixedPrice = price;
+    protected DefaultPlanPhase setFixed(final DefaultFixed fixed) {
+        this.fixed = fixed;
         return this;
     }
 
-    protected DefaultPlanPhase setRecurringPrice(final DefaultInternationalPrice price) {
-        this.recurringPrice = price;
+    protected DefaultPlanPhase setRecurring(final DefaultRecurring recurring) {
+        this.recurring = recurring;
+        return this;
+    }
+
+    protected DefaultPlanPhase setUsages(final DefaultUsage []  usages) {
+        this.usages = usages;
         return this;
     }
 
     protected DefaultPlanPhase setPhaseType(final PhaseType cohort) {
         this.type = cohort;
-        return this;
-    }
-
-    protected DefaultPlanPhase setBillingPeriod(final BillingPeriod billingPeriod) {
-        this.billingPeriod = billingPeriod;
         return this;
     }
 
@@ -245,10 +196,4 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         this.plan = plan;
         return this;
     }
-
-    protected DefaultPlanPhase setBillCycleDuration(final BillingPeriod billingPeriod) {
-        this.billingPeriod = billingPeriod;
-        return this;
-    }
-
 }

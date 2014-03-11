@@ -37,14 +37,14 @@ public class TestPriceListSet extends CatalogTestSuiteNoDB {
         final DefaultProduct foo = new DefaultProduct("Foo", ProductCategory.BASE);
         final DefaultProduct bar = new DefaultProduct("Bar", ProductCategory.BASE);
         final DefaultPlan[] defaultPlans = new DefaultPlan[]{
-                new MockPlan().setName("plan-foo-monthly").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
-                new MockPlan().setName("plan-bar-monthly").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
-                new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(EVERGREEN)),
-                new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(EVERGREEN))
+                new MockPlan().setName("plan-foo-monthly").setProduct(foo).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(MONTHLY, null)).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-bar-monthly").setProduct(bar).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(MONTHLY, null)).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(ANNUAL, null)).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(ANNUAL, null)).setPhaseType(EVERGREEN))
         };
         final DefaultPlan[] childPlans = new DefaultPlan[]{
-                new MockPlan().setName("plan-foo").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT)),
-                new MockPlan().setName("plan-bar").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT))
+                new MockPlan().setName("plan-foo").setProduct(foo).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(ANNUAL, null)).setPhaseType(DISCOUNT)),
+                new MockPlan().setName("plan-bar").setProduct(bar).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(ANNUAL, null)).setPhaseType(DISCOUNT))
         };
         final PriceListDefault defaultPriceList = new PriceListDefault(defaultPlans);
         final DefaultPriceList[] childPriceLists = new DefaultPriceList[]{
@@ -63,14 +63,14 @@ public class TestPriceListSet extends CatalogTestSuiteNoDB {
         final DefaultProduct foo = new DefaultProduct("Foo", ProductCategory.BASE);
         final DefaultProduct bar = new DefaultProduct("Bar", ProductCategory.BASE);
         final DefaultPlan[] defaultPlans = new DefaultPlan[]{
-                new MockPlan().setName("plan-foo-monthly").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
-                new MockPlan().setName("plan-bar-monthly").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
-                new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(null).setPhaseType(EVERGREEN)),
-                new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(null).setPhaseType(EVERGREEN))
+                new MockPlan().setName("plan-foo-monthly").setProduct(foo).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(MONTHLY, null)).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-bar-monthly").setProduct(bar).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(MONTHLY, null)).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(null, null)).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(null, null)).setPhaseType(EVERGREEN))
         };
         final DefaultPlan[] childPlans = new DefaultPlan[]{
-                new MockPlan().setName("plan-foo").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT)),
-                new MockPlan().setName("plan-bar").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT))
+                new MockPlan().setName("plan-foo").setProduct(foo).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(ANNUAL, null)).setPhaseType(DISCOUNT)),
+                new MockPlan().setName("plan-bar").setProduct(bar).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(ANNUAL, null)).setPhaseType(DISCOUNT))
         };
 
         final PriceListDefault defaultPriceList = new PriceListDefault(defaultPlans);

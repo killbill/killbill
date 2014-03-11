@@ -50,7 +50,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), expProduct);
         assertEquals(currentPlan.getProduct().getCategory(), expCategory);
-        assertEquals(currentPlan.getBillingPeriod(), expBillingPeriod);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), expBillingPeriod);
 
         final PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -298,7 +298,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), "Assault-Rifle");
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         final PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -340,7 +340,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), "Assault-Rifle");
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -356,7 +356,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), "Pistol");
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -373,7 +373,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), "Pistol");
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -402,7 +402,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), "Assault-Rifle");
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         trialPhase = subscription.getCurrentPhase();
         assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);

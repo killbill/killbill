@@ -16,21 +16,23 @@
 
 package org.killbill.billing.catalog.io;
 
+import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
+import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.util.config.catalog.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.io.Resources;
-import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
-import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.util.config.catalog.XMLLoader;
 
 public class TestXMLReader extends CatalogTestSuiteNoDB {
+
     @Test(groups = "fast")
     public void testCatalogLoad() {
         try {
             XMLLoader.getObjectFromString(Resources.getResource("WeaponsHire.xml").toExternalForm(), StandaloneCatalog.class);
             XMLLoader.getObjectFromString(Resources.getResource("WeaponsHireSmall.xml").toExternalForm(), StandaloneCatalog.class);
             XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
+            XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
         } catch (Exception e) {
             Assert.fail(e.toString());
         }

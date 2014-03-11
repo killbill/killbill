@@ -39,6 +39,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.Recurring;
 import org.killbill.billing.util.config.catalog.ValidatingConfig;
 import org.killbill.billing.util.config.catalog.ValidationError;
 import org.killbill.billing.util.config.catalog.ValidationErrors;
@@ -142,8 +143,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     }
 
     @Override
-    public BillingPeriod getBillingPeriod() {
-        return finalPhase.getBillingPeriod();
+    public BillingPeriod getRecurringBillingPeriod() {
+        return finalPhase.getRecurring() != null ? finalPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
     }
 
     /* (non-Javadoc)
@@ -246,7 +247,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
                     skipPhase = false;
                 }
             }
-            if (phase.getRecurringPrice() == null || phase.getRecurringPrice().isZero()) {
+            final Recurring recurring = phase.getRecurring();
+            if (recurring == null || recurring.getRecurringPrice() == null || recurring.getRecurringPrice().isZero()) {
                 result = phase.getDuration().addToDateTime(result);
             } else {
                 break;

@@ -314,9 +314,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     public BillingPeriod getLastActiveBillingPeriod() {
         if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
-            return data.getPreviousPlan().getBillingPeriod();
+            return data.getPreviousPlan().getRecurringBillingPeriod();
         } else {
-            return getCurrentPlan().getBillingPeriod();
+            return getCurrentPlan().getRecurringBillingPeriod();
         }
     }
 

@@ -763,9 +763,9 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final Currency currency = Currency.USD;
 
         return invoiceUtil.createMockBillingEvent(null, sub, startDate.toDateTimeAtStartOfDay(), plan, planPhase,
-                                                  planPhase.getFixedPrice() == null ? null : planPhase.getFixedPrice().getPrice(currency),
-                                                  planPhase.getRecurringPrice() == null ? null : planPhase.getRecurringPrice().getPrice(currency),
-                                                  currency, planPhase.getBillingPeriod(),
+                                                  planPhase.getFixed().getPrice() == null ? null : planPhase.getFixed().getPrice().getPrice(currency),
+                                                  planPhase.getRecurring().getRecurringPrice() == null ? null : planPhase.getRecurring().getRecurringPrice().getPrice(currency),
+                                                  currency, planPhase.getRecurring().getBillingPeriod(),
                                                   billCycleDayLocal, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionBaseTransitionType.CREATE);
     }
 

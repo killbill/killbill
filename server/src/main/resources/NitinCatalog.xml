@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+
+	<effectiveDate>2013-10-01T00:00:00+00:00</effectiveDate>
+	<catalogName>aclcatalog</catalogName>
+
+	<currencies>
+		<currency>USD</currency>
+		<currency>INR</currency>
+		<currency>GBP</currency>
+	</currencies>
+
+   <units>
+       <unit name="shells"/>
+   </units>
+
+	<products>
+		<product name="frenzo-usage">
+			<category>BASE</category>
+           <included>
+           <addonProduct>gift</addonProduct>
+           </included>
+            <available>
+               <addonProduct>extra-gift</addonProduct>
+       </available>
+		</product>
+		<product name="frenzo-mini">
+			<category>BASE</category>
+               <limits>
+                   <limit>
+                       <unit>shells</unit>
+                       <max>5</max>
+                   </limit>
+               </limits>
+		</product>
+		<product name="gift">
+			<category>ADD_ON</category>
+		</product>
+       <product name="extra-gift">
+           <category>ADD_ON</category>
+       </product>
+	</products>
+	 
+	<rules>
+		<changePolicy>
+			<changePolicyCase> 
+				<fromBillingPeriod>MONTHLY</fromBillingPeriod>
+				<toProduct>frenzo-mini</toProduct>
+				<toBillingPeriod>MONTHLY</toBillingPeriod>
+				<policy>END_OF_TERM</policy>
+			</changePolicyCase>
+			<changePolicyCase> 
+				<phaseType>EVERGREEN</phaseType>
+				<policy>IMMEDIATE</policy>
+			</changePolicyCase>	
+		</changePolicy>
+       <changeAlignment>
+           <changeAlignmentCase>
+               <alignment>START_OF_SUBSCRIPTION</alignment>
+           </changeAlignmentCase>
+       </changeAlignment>
+       <createAlignment>
+           <createAlignmentCase>
+               <product>gift</product>
+               <alignment>START_OF_SUBSCRIPTION</alignment>
+           </createAlignmentCase>
+           <createAlignmentCase>
+               <alignment>START_OF_SUBSCRIPTION</alignment>
+           </createAlignmentCase>
+       </createAlignment>
+       <billingAlignment>
+           <billingAlignmentCase>
+               <alignment>ACCOUNT</alignment>
+           </billingAlignmentCase>
+       </billingAlignment>
+       <priceList>
+          <priceListCase>
+               <toPriceList>DEFAULT</toPriceList>
+          </priceListCase>
+       </priceList>
+	</rules> 
+
+	<plans>
+		<plan name="frenzo-usage-monthly">
+			<product>frenzo-usage</product>
+			<!--<initialPhases>
+				<phase type="TRIAL">
+					<duration>
+						<unit>DAYS</unit>
+						<number>1</number>
+					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+					<fixedPrice> 
+					</fixedPrice>
+				</phase>
+			</initialPhases>-->
+			<finalPhase type="EVERGREEN">
+				<duration>
+					<unit>UNLIMITED</unit>
+				</duration>
+				<billingPeriod>MONTHLY</billingPeriod>
+				<recurringPrice>
+					<price><currency>GBP</currency><value>29.95</value></price>
+					<price><currency>INR</currency><value>5</value></price> 
+					<price><currency>USD</currency><value>29.95</value></price>								
+				</recurringPrice>
+              <!-- <limits>
+                   <limit>
+                       <unit>targets</unit>
+                       <min>3</min>
+                   </limit>
+                   <limit>
+                       <unit>misfires</unit>
+                       <max>20</max>
+                   </limit>
+               </limits>-->
+			</finalPhase>
+		</plan>
+		<plan name="frenzo-mini-monthly">
+			<product>frenzo-mini</product>
+			<!--<initialPhases>
+				<phase type="TRIAL">
+					<duration>
+						<unit>DAYS</unit>
+						<number>30</number>
+					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+					<fixedPrice></fixedPrice>
+				   
+				</phase>
+			</initialPhases>-->
+			<finalPhase type="EVERGREEN">
+				<duration>
+					<unit>UNLIMITED</unit>
+					<number>-1</number>
+				</duration>
+				<billingPeriod>MONTHLY</billingPeriod>
+				<recurringPrice>
+					<price><currency>USD</currency><value>249.95</value></price>								
+					<price><currency>INR</currency><value>1</value></price>
+					<price><currency>GBP</currency><value>169.95</value></price>
+				</recurringPrice>
+			</finalPhase>
+		</plan>
+       <plan name="gift-monthly">
+       <product>gift</product>
+           <finalPhase type="EVERGREEN">
+               <duration>
+                   <unit>UNLIMITED</unit>
+               </duration>
+               <billingPeriod>MONTHLY</billingPeriod>
+               <recurringPrice>
+                   <price><currency>USD</currency><value>1999.95</value></price>                               
+                   <price><currency>INR</currency><value>2</value></price>
+                   <price><currency>GBP</currency><value>1999.95</value></price>
+               </recurringPrice>
+           </finalPhase>
+       </plan>
+       <plan name="extra-gift-monthly">
+       <product>extra-gift</product>
+           <finalPhase type="EVERGREEN">
+               <duration>
+                   <unit>UNLIMITED</unit>
+               </duration>
+               <billingPeriod>MONTHLY</billingPeriod>
+               <recurringPrice>
+                   <price><currency>USD</currency><value>1999.95</value></price>                               
+                   <price><currency>INR</currency><value>5</value></price>
+                   <price><currency>GBP</currency><value>1999.95</value></price>
+               </recurringPrice>
+           </finalPhase>
+       </plan>
+	</plans>
+	<priceLists>
+		<defaultPriceList name="DEFAULT">
+				<plans>	
+					<plan>frenzo-usage-monthly</plan>
+					<plan>frenzo-mini-monthly</plan>
+			</plans>
+		</defaultPriceList>
+	</priceLists>
+</catalog>
+

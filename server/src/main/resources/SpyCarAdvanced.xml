@@ -153,38 +153,41 @@
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                    <fixedPrice> <!-- empty price implies $0 -->
-                    </fixedPrice>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>ANNUAL</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>750.00</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>850.00</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>1000.00</value>
-                    </price>
-                    <price>
-                        <currency>JPY</currency>
-                        <value>100.00</value>
-                    </price>
-                    <price>
-                        <currency>BTC</currency>
-                        <value>1.0</value>
-                    </price>
-                </recurringPrice>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>750.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>850.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>1000.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>100.00</value>
+                        </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>1.0</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
         <plan name="standard-monthly">
@@ -195,38 +198,41 @@
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                    <fixedPrice> <!-- empty price implies $0 -->
-                    </fixedPrice>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>75.00</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>85.00</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>100.00</value>
-                    </price>
-                    <price>
-                        <currency>JPY</currency>
-                        <value>10.00</value>
-                    </price>
-                    <price>
-                        <currency>BTC</currency>
-                        <value>0.1</value>
-                    </price>
-                </recurringPrice>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>75.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>85.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>100.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>10.00</value>
+                        </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>0.1</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
         <plan name="sports-monthly">
@@ -237,38 +243,41 @@
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                    <fixedPrice> <!-- empty price implies $0 -->
-                    </fixedPrice>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>375.00</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>425.00</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>500.00</value>
-                    </price>
-                    <price>
-                        <currency>JPY</currency>
-                        <value>50.00</value>
-                    </price>
-                    <price>
-                        <currency>BTC</currency>
-                        <value>0.5</value>
-                    </price>
-                </recurringPrice>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>375.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>425.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>500.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>50.00</value>
+                        </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>0.5</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
         <plan name="super-monthly">
@@ -279,38 +288,41 @@
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                    <fixedPrice> <!-- empty price implies $0 -->
-                    </fixedPrice>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>750.00</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>850.00</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>1000.00</value>
-                    </price>
-                    <price>
-                        <currency>JPY</currency>
-                        <value>100.00</value>
-                    </price>
-                    <price>
-                        <currency>BTC</currency>
-                        <value>1.0</value>
-                    </price>
-                </recurringPrice>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>750.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>850.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>1000.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>100.00</value>
+                        </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>1.0</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
         <plan name="discount-standard-monthly">
@@ -321,67 +333,72 @@
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                    <fixedPrice> <!-- empty price implies $0 -->
-                    </fixedPrice>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
                 </phase>
                 <phase type="DISCOUNT">
                     <duration>
                         <unit>MONTHS</unit>
                         <number>3</number>
                     </duration>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>50.00</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>60.00</value>
-                        </price>
-                        <price>
-                            <currency>USD</currency>
-                            <value>66.00</value>
-                        </price>
-                        <price>
-                            <currency>JPY</currency>
-                            <value>6.60</value>
-                        </price>
-                        <price>
-                            <currency>BTC</currency>
-                            <value>0.06</value>
-                        </price>
-                    </recurringPrice>
+                    <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>50.00</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>60.00</value>
+                            </price>
+                            <price>
+                                <currency>USD</currency>
+                                <value>66.00</value>
+                            </price>
+                            <price>
+                                <currency>JPY</currency>
+                                <value>6.60</value>
+                            </price>
+                            <price>
+                                <currency>BTC</currency>
+                                <value>0.06</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>75.00</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>85.00</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>100.00</value>
-                    </price>
-                    <price>
-                        <currency>JPY</currency>
-                        <value>10.00</value>
-                    </price>
-                    <price>
-                        <currency>BTC</currency>
-                        <value>0.1</value>
-                    </price>
-                </recurringPrice>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>75.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>85.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>100.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>10.00</value>
+                        </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>0.1</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
         <plan name="discount-sports-monthly">
@@ -392,67 +409,72 @@
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                    <fixedPrice> <!-- empty price implies $0 -->
-                    </fixedPrice>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
                 </phase>
                 <phase type="DISCOUNT">
                     <duration>
                         <unit>MONTHS</unit>
                         <number>3</number>
                     </duration>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>250.00</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>300.00</value>
-                        </price>
-                        <price>
-                            <currency>USD</currency>
-                            <value>333.00</value>
-                        </price>
-                        <price>
-                            <currency>JPY</currency>
-                            <value>33.30</value>
-                        </price>
-                        <price>
-                            <currency>BTC</currency>
-                            <value>0.3</value>
-                        </price>
-                    </recurringPrice>
+                    <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>250.00</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>300.00</value>
+                            </price>
+                            <price>
+                                <currency>USD</currency>
+                                <value>333.00</value>
+                            </price>
+                            <price>
+                                <currency>JPY</currency>
+                                <value>33.30</value>
+                            </price>
+                            <price>
+                                <currency>BTC</currency>
+                                <value>0.3</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>375.00</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>425.00</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>500.00</value>
-                    </price>
-                    <price>
-                        <currency>JPY</currency>
-                        <value>50.00</value>
-                    </price>
-                    <price>
-                        <currency>BTC</currency>
-                        <value>0.5</value>
-                    </price>
-                </recurringPrice>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>375.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>425.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>500.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>50.00</value>
+                        </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>0.5</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
         <plan name="discount-super-monthly">
@@ -463,67 +485,72 @@
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                    <fixedPrice> <!-- empty price implies $0 -->
-                    </fixedPrice>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
                 </phase>
                 <phase type="DISCOUNT">
                     <duration>
                         <unit>MONTHS</unit>
                         <number>3</number>
                     </duration>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>500.00</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>600.00</value>
-                        </price>
-                        <price>
-                            <currency>USD</currency>
-                            <value>666.00</value>
-                        </price>
-                        <price>
-                            <currency>JPY</currency>
-                            <value>66.60</value>
-                        </price>
-                        <price>
-                            <currency>BTC</currency>
-                            <value>0.6</value>
-                        </price>
-                    </recurringPrice>
+                    <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>500.00</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>600.00</value>
+                            </price>
+                            <price>
+                                <currency>USD</currency>
+                                <value>666.00</value>
+                            </price>
+                            <price>
+                                <currency>JPY</currency>
+                                <value>66.60</value>
+                            </price>
+                            <price>
+                                <currency>BTC</currency>
+                                <value>0.6</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>750.00</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>850.00</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>1000.00</value>
-                    </price>
-                    <price>
-                        <currency>JPY</currency>
-                        <value>100.00</value>
-                    </price>
-                    <price>
-                        <currency>BTC</currency>
-                        <value>1.0</value>
-                    </price>
-                </recurringPrice>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>750.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>850.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>1000.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>100.00</value>
+                        </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>1.0</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
         <plan name="oilslick-monthly">
@@ -534,77 +561,47 @@
                         <unit>MONTHS</unit>
                         <number>1</number>
                     </duration>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>2.00</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>3.00</value>
-                        </price>
-                        <price>
-                            <currency>USD</currency>
-                            <value>4.00</value>
-                        </price>
-                        <price>
-                            <currency>JPY</currency>
-                            <value>0.40</value>
-                        </price>
-                        <price>
-                            <currency>BTC</currency>
-                            <value>0.01</value>
-                        </price>
-                    </recurringPrice>
+                    <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>2.00</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>3.00</value>
+                            </price>
+                            <price>
+                                <currency>USD</currency>
+                                <value>4.00</value>
+                            </price>
+                            <price>
+                                <currency>JPY</currency>
+                                <value>0.40</value>
+                            </price>
+                            <price>
+                                <currency>BTC</currency>
+                                <value>0.01</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>5.95</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>7.95</value>
-                    </price>
-                    <price>
-                        <currency>JPY</currency>
-                        <value>0.80</value>
-                    </price>
-                    <price>
-                        <currency>BTC</currency>
-                        <value>0.01</value>
-                    </price>
-                </recurringPrice>
-            </finalPhase>
-        </plan>
-        <plan name="remotecontrol-monthly">
-            <product>RemoteControl</product>
-            <initialPhases>
-                <phase type="DISCOUNT">
-                    <duration>
-                        <unit>MONTHS</unit>
-                        <number>1</number>
-                    </duration>
+                <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>
                     <recurringPrice>
                         <price>
                             <currency>GBP</currency>
-                            <value>5.00</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>7.00</value>
+                            <value>5.95</value>
                         </price>
                         <price>
                             <currency>USD</currency>
-                            <value>8.00</value>
+                            <value>7.95</value>
                         </price>
                         <price>
                             <currency>JPY</currency>
@@ -615,35 +612,73 @@
                             <value>0.01</value>
                         </price>
                     </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="remotecontrol-monthly">
+            <product>RemoteControl</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>1</number>
+                    </duration>
+                    <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>5.00</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>7.00</value>
+                            </price>
+                            <price>
+                                <currency>USD</currency>
+                                <value>8.00</value>
+                            </price>
+                            <price>
+                                <currency>JPY</currency>
+                                <value>0.80</value>
+                            </price>
+                            <price>
+                                <currency>BTC</currency>
+                                <value>0.01</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>15.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>16.95</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>17.95</value>
-                    </price>
-                    <price>
-                        <currency>JPY</currency>
-                        <value>1.79</value>
-                    </price>
-                    <price>
-                        <currency>BTC</currency>
-                        <value>0.01</value>
-                    </price>
-                </recurringPrice>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>15.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>16.95</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>17.95</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>1.79</value>
+                        </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>0.01</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
     </plans>

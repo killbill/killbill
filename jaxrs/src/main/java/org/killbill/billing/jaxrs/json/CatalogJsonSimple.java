@@ -70,8 +70,8 @@ public class CatalogJsonSimple {
             final List<PhaseJson> phases = new LinkedList<PhaseJson>();
             for (final PlanPhase phase : plan.getAllPhases()) {
                 final List<PriceJson> prices = new LinkedList<PriceJson>();
-                if (phase.getRecurringPrice() != null) {
-                    for (final Price price : phase.getRecurringPrice().getPrices()) {
+                if (phase.getRecurring() != null && phase.getRecurring().getRecurringPrice() != null) {
+                    for (final Price price : phase.getRecurring().getRecurringPrice().getPrices()) {
                         prices.add(new PriceJson(price));
                     }
                 }

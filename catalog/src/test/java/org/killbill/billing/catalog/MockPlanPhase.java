@@ -68,11 +68,10 @@ public class MockPlanPhase extends DefaultPlanPhase {
             final DefaultDuration duration,
             final DefaultInternationalPrice recurringPrice,
             final DefaultInternationalPrice fixedPrice) {
-        setBillingPeriod(billingPeriod);
         setPhaseType(type);
         setDuration(duration);
-        setRecurringPrice(recurringPrice);
-        setFixedPrice(fixedPrice);
+        setFixed(new MockFixed(fixedPrice));
+        setRecurring(new MockRecurring(billingPeriod, recurringPrice));
     }
 
     public MockPlanPhase() {
@@ -94,29 +93,26 @@ public class MockPlanPhase extends DefaultPlanPhase {
                          @Nullable final MockInternationalPrice fixedPrice,
                          final BillingPeriod billingPeriod,
                          final PhaseType phaseType) {
-        setBillingPeriod(billingPeriod);
         setPhaseType(phaseType);
         setDuration(new DefaultDuration().setNumber(-1).setUnit(TimeUnit.UNLIMITED));
-        setRecurringPrice(recurringPrice);
-        setFixedPrice(fixedPrice);
         setPlan(new MockPlan(this));
+        setFixed(new MockFixed(fixedPrice));
+        setRecurring(new MockRecurring(billingPeriod, recurringPrice));
     }
 
     public MockPlanPhase(final MockPlan mockPlan) {
-        setBillingPeriod(BillingPeriod.MONTHLY);
         setPhaseType(PhaseType.EVERGREEN);
         setDuration(new DefaultDuration().setNumber(-1).setUnit(TimeUnit.UNLIMITED));
-        setRecurringPrice(new MockInternationalPrice());
-        setFixedPrice(null);
         setPlan(mockPlan);
+        setFixed(new MockFixed(null));
+        setRecurring(new MockRecurring(BillingPeriod.MONTHLY, new MockInternationalPrice()));
     }
 
     public MockPlanPhase(final Plan plan, final PhaseType phaseType) {
-        setBillingPeriod(BillingPeriod.MONTHLY);
         setPhaseType(phaseType);
         setDuration(new DefaultDuration().setNumber(-1).setUnit(TimeUnit.UNLIMITED));
-        setRecurringPrice(new MockInternationalPrice());
-        setFixedPrice(null);
         setPlan(plan);
+        setFixed(new MockFixed(null));
+        setRecurring(new MockRecurring(BillingPeriod.MONTHLY, new MockInternationalPrice()));
     }
 }
