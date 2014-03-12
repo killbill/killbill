@@ -125,7 +125,7 @@
                                 <unit>minutes</unit>
                                 <block>1000</block>
                                 <prices>
-                                    <!-- could be either fixed or recurring:
+                                    <!-- could be either fixed (with NO_BILLING_PERIOD) )or recurring:
                                     * In the case of fixed price, we buy one block of units
                                     * In the case of recurring price, we buy one block of units for each period
                                     -->
