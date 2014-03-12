@@ -117,26 +117,25 @@
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>BTC</currency>
-                            <value>100.00</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
                 <usages>
                     <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <limits>
                             <limit>
                                 <unit>minutes</unit>
-                                <increment>1000</increment>
-                                <price>
-                                    <currency>BTC</currency>
-                                    <value>0.01</value>
-                                </price>
+                                <block>1000</block>
+                                <prices>
+                                    <!-- could be either fixed or recurring:
+                                    * In the case of fixed price, we buy one block of units
+                                    * In the case of recurring price, we buy one block of units for each period
+                                    -->
+                                    <recurringPrice>
+                                        <price>
+                                            <currency>BTC</currency>
+                                            <value>0.10</value>
+                                        </price>
+                                    </recurringPrice>
+                                </prices>
                             </limit>
                         </limits>
                     </usage>
