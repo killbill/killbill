@@ -161,7 +161,7 @@
                             <limit>
                                 <unit>fasttrack_tokens</unit>
                                 <min>5</min>
-                                <increment>10</increment>
+                                <block>10</block>
 
                                 <prices>
                                     <topupPrice>
