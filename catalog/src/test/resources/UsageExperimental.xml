@@ -90,14 +90,16 @@
                         <limit>
                             <unit>members</unit>
                             <max>100</max>
-                            <recurringPrice>
-                                <price>
-                                    <currency>BTC</currency>
-                                    <value>100.00</value>
-                                </price>
-                            </recurringPrice>
                         </limit>
                     </limits>
+                    <prices>
+                        <recurringPrice>
+                            <price>
+                                <currency>BTC</currency>
+                                <value>100.00</value>
+                            </price>
+                        </recurringPrice>
+                    </prices>
                 </usage>
             </finalPhase>
         </plan>
