@@ -16,6 +16,8 @@
 
 package org.killbill.billing.catalog;
 
+import java.math.BigDecimal;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -34,18 +36,10 @@ public class TestPlanPhase extends CatalogTestSuiteNoDB {
         errors.log(log);
         Assert.assertEquals(errors.size(), 1);
 
-        /*
-        TODO STEPH
-        pp = MockPlanPhase.createUSDMonthlyEvergreen("1.00", null).setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD).setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());
+        pp = MockPlanPhase.createUSDMonthlyEvergreen("1.00", null).setRecurring(new MockRecurring(BillingPeriod.NO_BILLING_PERIOD, MockInternationalPrice.createUSD("1.00")).setPhase(pp)).setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());
         errors = pp.validate(new MockCatalog(), new ValidationErrors());
         errors.log(log);
-        Assert.assertEquals(errors.size(), 2);
-
-        pp = MockPlanPhase.createUSDMonthlyEvergreen(null, null).setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD).setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());
-        errors = pp.validate(new MockCatalog(), new ValidationErrors());
-        errors.log(log);
-        */
-        Assert.assertEquals(errors.size(), 2);
+        Assert.assertEquals(errors.size(), 1);
     }
 
     @Test(groups = "fast")

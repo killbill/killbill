@@ -18,7 +18,7 @@
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
 
-    <effectiveDate>2011-02-01T00:00:00+00:00</effectiveDate>
+    <effectiveDate>2011-02-02T00:00:00+00:00</effectiveDate>
     <catalogName>WeaponsHireSmall</catalogName>
 
     <currencies>

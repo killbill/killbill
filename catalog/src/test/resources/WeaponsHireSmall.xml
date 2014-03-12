@@ -118,19 +118,22 @@
                             <value>29.95</value>
                         </price>
                     </recurringPrice>
-                    <!--
-                    <limits>
-                        <limit>
-                            <unit>targets</unit>
-                            <min>3</min>
-                        </limit>
-                        <limit>
-                            <unit>misfires</unit>
-                            <max>20</max>
-                        </limit>
-                    </limits>
-                    -->
                 </recurring>
+                <usages>
+                    <usage>
+                        <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                        <limits>
+                            <limit>
+                                <unit>targets</unit>
+                                <min>3</min>
+                            </limit>
+                            <limit>
+                                <unit>misfires</unit>
+                                <max>20</max>
+                            </limit>
+                        </limits>
+                    </usage>
+                </usages>
             </finalPhase>
         </plan>
         <plan name="shotgun-monthly">
@@ -205,15 +208,18 @@
                             <value>1699.95</value>
                         </price>
                     </recurringPrice>
-                    <!--
-                    <limits>
-                        <limit>
-                            <unit>shells</unit>
-                            <max>200</max>
-                        </limit>
-                    </limits>
-                    -->
                 </recurring>
+                <usages>
+                    <usage>
+                        <billingPeriod>ANNUAL</billingPeriod>
+                        <limits>
+                            <limit>
+                                <unit>shells</unit>
+                                <max>200</max>
+                            </limit>
+                        </limits>
+                    </usage>
+                </usages>
             </finalPhase>
         </plan>
         <plan name="laser-scope-monthly">

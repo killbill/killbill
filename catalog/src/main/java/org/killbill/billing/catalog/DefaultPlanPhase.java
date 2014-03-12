@@ -34,6 +34,7 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Recurring;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.util.config.catalog.ValidatingConfig;
+import org.killbill.billing.util.config.catalog.ValidationError;
 import org.killbill.billing.util.config.catalog.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -53,7 +54,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 
     @XmlElementWrapper(name = "usages", required = false)
     @XmlElement(name = "usage", required = false)
-    private DefaultUsage[] usages;
+    private DefaultUsage[] usages = new DefaultUsage[0];
 
     //Not exposed in XML
     private Plan plan;
@@ -81,8 +82,12 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 
     @Override
     public boolean compliesWithLimits(final String unit, final double value) {
-        // TODO STEPH
-        return true;
+        for (DefaultUsage usage : usages) {
+            if (!usage.compliesWithLimits(unit, value)) {
+                return false;
+            }
+        }
+        return plan.getProduct().compliesWithLimits(unit, value);
     }
 
     @Override
@@ -129,23 +134,18 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
 
-        // TODO STEPH check there is either fixed and/or/usage and/or recurring defined.
-
-        /*
-        //Validation: if there BP is set to NO_BILLING_PERIOD there must be a fixed price
-        if ((billingPeriod == BillingPeriod.NO_BILLING_PERIOD && fixedPrice == null)) {
-            errors.add(new ValidationError(String.format("Phase %s of plan %s has no billing period. It must have a fixed price set.",
+        if (fixed == null && recurring == null && usages.length == 0) {
+            errors.add(new ValidationError(String.format("Phase %s of plan %s need to define at least either a fixed or recurrring or usage section.",
                                                          type.toString(), plan.getName()),
                                            catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
         }
-
-        //Validation: there must be at least one of recurringPrice or fixedPrice
-        if ((recurringPrice == null) && fixedPrice == null) {
-            errors.add(new ValidationError(String.format("Phase %s of plan %s has neither a recurring price or a fixed price.",
-                                                         type.toString(), plan.getName()),
-                                           catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
+        if (fixed != null) {
+            fixed.validate(catalog, errors);
         }
-        */
+        if (recurring != null) {
+            recurring.validate(catalog, errors);
+        }
+        validateCollection(catalog, errors, usages);
         return errors;
     }
 

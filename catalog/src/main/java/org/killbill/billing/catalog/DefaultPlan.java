@@ -192,6 +192,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
                                            catalog.getCatalogURI(), DefaultInternationalPrice.class, ""));
         }
 
+        validateCollection(catalog, errors, initialPhases);
+        finalPhase.validate(catalog, errors);
         return errors;
     }
 

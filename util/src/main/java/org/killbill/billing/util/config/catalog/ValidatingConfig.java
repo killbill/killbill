@@ -17,6 +17,7 @@
 package org.killbill.billing.util.config.catalog;
 
 import java.net.URI;
+import java.util.Collection;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -41,4 +42,11 @@ public abstract class ValidatingConfig<Context> {
     public void initialize(final Context root, final URI uri) {
     }
 
+    protected Collection<? extends ValidationError> validateCollection(final Context context,
+                                                                       final ValidationErrors errors, final ValidatingConfig<Context>[] configs) {
+        for (final ValidatingConfig<Context> config : configs) {
+            config.validate(context, errors);
+        }
+        return errors;
+    }
 }

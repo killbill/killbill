@@ -18,7 +18,6 @@ package org.killbill.billing.catalog;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -34,7 +33,6 @@ import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanAlignmentChange;
@@ -49,7 +47,6 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.rules.PlanRules;
 import org.killbill.billing.util.config.catalog.ValidatingConfig;
-import org.killbill.billing.util.config.catalog.ValidationError;
 import org.killbill.billing.util.config.catalog.ValidationErrors;
 
 @XmlRootElement(name = "catalog")
@@ -253,18 +250,10 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        validate(catalog, errors, products);
-        validate(catalog, errors, plans);
+        validateCollection(catalog, errors, products);
+        validateCollection(catalog, errors, plans);
         priceLists.validate(catalog, errors);
         planRules.validate(catalog, errors);
-        return errors;
-    }
-
-    private Collection<? extends ValidationError> validate(final StandaloneCatalog catalog,
-                                                           final ValidationErrors errors, final ValidatingConfig<StandaloneCatalog>[] configs) {
-        for (final ValidatingConfig<StandaloneCatalog> config : configs) {
-            config.validate(catalog, errors);
-        }
         return errors;
     }
 
