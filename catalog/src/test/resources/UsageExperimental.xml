@@ -84,9 +84,6 @@
                     <unit>UNLIMITED</unit>
                 </duration>
 
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                </recurring>
                 <usage billingMode="IN_ADVANCE" type="CAPACITY">
                     <billingPeriod>MONTHLY</billingPeriod>
                     <limits>
