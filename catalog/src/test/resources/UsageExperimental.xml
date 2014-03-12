@@ -86,12 +86,6 @@
 
                 <recurring>
                     <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>BTC</currency>
-                            <value>100.00</value>
-                        </price>
-                    </recurringPrice>
                 </recurring>
                 <usage billingMode="IN_ADVANCE" type="CAPACITY">
                     <billingPeriod>MONTHLY</billingPeriod>
@@ -99,6 +93,12 @@
                         <limit>
                             <unit>members</unit>
                             <max>100</max>
+                            <recurringPrice>
+                                <price>
+                                    <currency>BTC</currency>
+                                    <value>100.00</value>
+                                </price>
+                            </recurringPrice>
                         </limit>
                     </limits>
                 </usage>
