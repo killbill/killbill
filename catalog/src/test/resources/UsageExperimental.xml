@@ -162,11 +162,15 @@
                                 <unit>fasttrack_tokens</unit>
                                 <min>5</min>
                                 <increment>10</increment>
-                                <price>
-                                    <currency>BTC</currency>
-                                    <value>0.5</value>
-                                </price>
 
+                                <prices>
+                                    <topupPrice>
+                                        <price>
+                                            <currency>BTC</currency>
+                                            <value>0.10</value>
+                                        </price>
+                                    </topupPrice>
+                                </prices>
                             </limit>
                         </limits>
                     </usage>
