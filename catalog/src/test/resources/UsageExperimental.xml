@@ -77,7 +77,7 @@
         </plan>
 
 
-        <plan name="capacity-in-advance-annual">
+        <plan name="capacity-in-advance-monthly">
             <product>CapacityInAdvance</product>
             <initialPhases>
             </initialPhases>
@@ -109,7 +109,7 @@
         </plan>
 
 
-        <plan name="consumable-in-advance-prepay-credit-annual">
+        <plan name="consumable-in-advance-prepay-credit-monthly">
             <product>ConsumableInAdvancePrepayCredit</product>
             <initialPhases>
             </initialPhases>
@@ -138,6 +138,7 @@
                                 </prices>
                             </limit>
                         </limits>
+                        <!-- We could instead define the price here as we did for capacity-in-advance if we want to 'bundle' linit/units -->
                     </usage>
                 </usages>
             </finalPhase>
