@@ -268,18 +268,28 @@
                                     <limit>
                                         <unit>minutes</unit>
                                         <max>1000</max>
-                                        <price>
-                                            <currency>BTC</currency>
-                                            <value>0.5</value>
-                                        </price>
+                                        <block>1</block>
+                                        <prices>
+                                            <blockPrice>
+                                                <price>
+                                                    <currency>BTC</currency>
+                                                    <value>0.5</value>
+                                                </price>
+                                            </blockPrice>
+                                        </prices>
                                     </limit>
                                     <limit>
                                         <unit>Mbytes</unit>
                                         <max>512</max>
-                                        <price>
-                                            <currency>BTC</currency>
-                                            <value>1.0</value>
-                                        </price>
+                                        <block>1</block>
+                                        <prices>
+                                            <blockPrice>
+                                                <price>
+                                                    <currency>BTC</currency>
+                                                    <value>0.3</value>
+                                                </price>
+                                            </blockPrice>
+                                        </prices>
                                     </limit>
                                 </limits>
                             </tier>
