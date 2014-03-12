@@ -187,27 +187,60 @@
                 <usages>
                     <usage billingMode="IN_ARREAR" type="CAPACITY">
                         <billingPeriod>MONTHLY</billingPeriod>
-                        <limits>
-                            <limit>
-                                <unit>bandwith (Meg/sec)</unit>
-                                <tiers>
-                                    <tier>
-                                        <max>10</max>
+                        <tiers>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>bandwith (Meg/sec)</unit>
+                                        <max>100</unit>
+                                    </limit>
+                                    <limit>
+                                        <unit>members</unit>
+                                        <max>500</unit>
+                                    </limit>
+                                </limits>
+                                <prices>
+                                    <fixedPrice>
                                         <price>
-                                            <currency>BTC</currency>
-                                            <value>0.5</value>
+                                            <currency></currency>
+                                            <value></value>
                                         </price>
-                                    </tier>
-                                    <tier>
-                                        <max>20</max>
+                                    </fixedPrice>
+                                    <recurringPrice>
                                         <price>
-                                            <currency>BTC</currency>
-                                            <value>1.0</value>
+                                            <currency></currency>
+                                            <value></value>
                                         </price>
-                                    </tier>
-                                </tiers>
-                            </limit>
-                        </limits>
+                                    </recurringPrice>
+                                </prices>
+                            </tier>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>bandwith (Meg/sec)</unit>
+                                        <max>100</unit>
+                                    </limit>
+                                    <limit>
+                                        <unit>members</unit>
+                                        <max>1000</unit>
+                                    </limit>
+                                </limits>
+                                <prices>
+                                    <fixedPrice>
+                                        <price>
+                                            <currency></currency>
+                                            <value></value>
+                                        </price>
+                                    </fixedPrice>
+                                    <recurringPrice>
+                                        <price>
+                                            <currency></currency>
+                                            <value></value>
+                                        </price>
+                                    </recurringPrice>
+                                </prices>
+                            </tier>
+                        </tiers>
                     </usage>
                 </usages>
             </finalPhase>
