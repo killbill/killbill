@@ -20,17 +20,23 @@ import java.io.IOException;
 
 import javax.servlet.ServletContext;
 
+import org.killbill.billing.server.config.UpdateCheckConfig;
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.killbill.billing.server.config.UpdateCheckConfig;
 
 public class UpdateChecker {
 
     private static final Logger log = LoggerFactory.getLogger(UpdateChecker.class);
 
-    final UpdateCheckConfig config = new ConfigurationObjectFactory(System.getProperties()).build(UpdateCheckConfig.class);
+    private final ConfigSource configSource;
+    private final UpdateCheckConfig config;
+
+    public UpdateChecker(final ConfigSource configSource) {
+        this.configSource = configSource;
+        this.config = new ConfigurationObjectFactory(configSource).build(UpdateCheckConfig.class);
+    }
 
     public void check(final ServletContext servletContext) {
         log.info("For Kill Bill Commercial Support, visit http://thebillingproject.com or send an email to support@thebillingproject.com");
@@ -44,7 +50,7 @@ public class UpdateChecker {
             public void run() {
                 try {
                     doCheck(servletContext);
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     // Don't pollute logs, maybe no internet access?
                     log.debug("Unable to perform update check", e);
                 }
@@ -88,10 +94,9 @@ public class UpdateChecker {
         }
 
         // Send anonymous data
-        final Tracker tracker = new Tracker(productInfo, servletContext);
+        final Tracker tracker = new Tracker(configSource, productInfo, servletContext);
         tracker.track();
     }
-
 
     private boolean shouldSkipUpdateCheck() {
         if (config.shouldSkipUpdateCheck()) {
@@ -101,7 +106,7 @@ public class UpdateChecker {
         try {
             Class.forName("org.testng.Assert");
             return true;
-        } catch (ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             return false;
         }
     }

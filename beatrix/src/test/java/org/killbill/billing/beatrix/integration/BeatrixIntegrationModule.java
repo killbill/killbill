@@ -16,8 +16,6 @@
 
 package org.killbill.billing.beatrix.integration;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.Set;
 
 import org.killbill.billing.DBTestingHelper;
@@ -80,8 +78,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import static org.testng.Assert.assertNotNull;
-
 public class BeatrixIntegrationModule extends AbstractModule {
 
     public static final String NON_OSGI_PLUGIN_NAME = "yoyo";
@@ -97,8 +93,6 @@ public class BeatrixIntegrationModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        loadSystemPropertiesFromClasspath("/beatrix.properties");
-
         install(new GuicyKillbillTestWithEmbeddedDBModule());
         install(new GlobalLockerModule(DBTestingHelper.get().getDBEngine()));
         install(new CacheModule(configSource));
@@ -161,16 +155,6 @@ public class BeatrixIntegrationModule extends AbstractModule {
         }
     }
 
-    private static void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = TestIntegration.class.getResource(resource);
-        assertNotNull(url);
-        try {
-            System.getProperties().load(url.openStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private static final class SubsetDefaultLifecycle extends DefaultLifecycle {
 
         @Inject
@@ -180,19 +164,17 @@ public class BeatrixIntegrationModule extends AbstractModule {
 
         @Override
         protected Set<? extends KillbillService> findServices() {
-            final ImmutableSet<? extends KillbillService> services = new ImmutableSet.Builder<KillbillService>()
-                    .add(injector.getInstance(AccountService.class))
-                    .add(injector.getInstance(BusService.class))
-                    .add(injector.getInstance(CatalogService.class))
-                    .add(injector.getInstance(SubscriptionBaseService.class))
-                    .add(injector.getInstance(EntitlementService.class))
-                    .add(injector.getInstance(InvoiceService.class))
-                    .add(injector.getInstance(PaymentService.class))
-                    .add(injector.getInstance(OverdueService.class))
-                    .add(injector.getInstance(DefaultBeatrixService.class))
-                    .add(injector.getInstance(DefaultOSGIService.class))
-                    .build();
-            return services;
+            return new ImmutableSet.Builder<KillbillService>().add(injector.getInstance(AccountService.class))
+                                                              .add(injector.getInstance(BusService.class))
+                                                              .add(injector.getInstance(CatalogService.class))
+                                                              .add(injector.getInstance(SubscriptionBaseService.class))
+                                                              .add(injector.getInstance(EntitlementService.class))
+                                                              .add(injector.getInstance(InvoiceService.class))
+                                                              .add(injector.getInstance(PaymentService.class))
+                                                              .add(injector.getInstance(OverdueService.class))
+                                                              .add(injector.getInstance(DefaultBeatrixService.class))
+                                                              .add(injector.getInstance(DefaultOSGIService.class))
+                                                              .build();
         }
     }
 

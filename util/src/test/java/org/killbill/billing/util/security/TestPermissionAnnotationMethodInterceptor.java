@@ -76,7 +76,7 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
         final Injector injector = Guice.createInjector(Stage.PRODUCTION,
                                                        new KillBillShiroModule(configSource),
                                                        new KillBillShiroAopModule(),
-                                                       new SecurityModule(),
+                                                       new SecurityModule(configSource),
                                                        new AbstractModule() {
                                                            @Override
                                                            protected void configure() {
@@ -104,7 +104,7 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
         final Injector injector = Guice.createInjector(Stage.PRODUCTION,
                                                        new KillBillShiroModule(configSource),
                                                        new KillBillShiroAopModule(),
-                                                       new SecurityModule(),
+                                                       new SecurityModule(configSource),
                                                        new AbstractModule() {
                                                            @Override
                                                            public void configure() {

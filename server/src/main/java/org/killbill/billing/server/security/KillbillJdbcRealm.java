@@ -25,7 +25,6 @@ import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.util.ByteSource;
 import org.killbill.billing.server.config.DaoConfig;
 import org.killbill.billing.tenant.security.KillbillCredentialsMatcher;
-import org.skife.config.ConfigurationObjectFactory;
 
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
@@ -37,8 +36,13 @@ public class KillbillJdbcRealm extends JdbcRealm {
 
     private static final String KILLBILL_AUTHENTICATION_QUERY = "select api_secret, api_salt from tenants where api_key = ?";
 
-    public KillbillJdbcRealm() {
+    private final DaoConfig config;
+
+    public KillbillJdbcRealm(final DaoConfig config) {
         super();
+
+        this.config = config;
+
         configureSecurity();
         configureQueries();
         configureDataSource();
@@ -65,9 +69,6 @@ public class KillbillJdbcRealm extends JdbcRealm {
     }
 
     private void configureDataSource() {
-        // This class is initialized by Shiro, not Guice - we need to retrieve the config manually
-        final DaoConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DaoConfig.class);
-
         final BoneCPConfig dbConfig = new BoneCPConfig();
         dbConfig.setJdbcUrl(config.getJdbcUrl());
         dbConfig.setUsername(config.getUsername());

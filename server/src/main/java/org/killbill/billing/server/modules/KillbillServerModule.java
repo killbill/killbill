@@ -48,6 +48,7 @@ import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.server.DefaultServerService;
 import org.killbill.billing.server.ServerService;
 import org.killbill.billing.server.config.DaoConfig;
+import org.killbill.billing.server.config.KillbillServerConfig;
 import org.killbill.billing.server.notifications.PushNotificationListener;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.TenantModule;
@@ -72,7 +73,7 @@ import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.skife.config.ConfigSource;
-import org.skife.config.SimplePropertyConfigSource;
+import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
@@ -81,13 +82,14 @@ import com.google.inject.AbstractModule;
 public class KillbillServerModule extends AbstractModule {
 
     protected final ServletContext servletContext;
-    private final DaoConfig daoConfig;
-    private final boolean isTestModeEnabled;
 
-    public KillbillServerModule(final ServletContext servletContext, final DaoConfig daoConfig, final boolean testModeEnabled) {
+    private final KillbillServerConfig serverConfig;
+    private final ConfigSource configSource;
+
+    public KillbillServerModule(final ServletContext servletContext, final KillbillServerConfig serverConfig, final ConfigSource configSource) {
         this.servletContext = servletContext;
-        this.daoConfig = daoConfig;
-        this.isTestModeEnabled = testModeEnabled;
+        this.serverConfig = serverConfig;
+        this.configSource = configSource;
     }
 
     @Override
@@ -135,7 +137,7 @@ public class KillbillServerModule extends AbstractModule {
     }
 
     protected void installClock() {
-        if (isTestModeEnabled) {
+        if (serverConfig.isTestModeEnabled()) {
             bind(Clock.class).to(ClockMock.class).asEagerSingleton();
             bind(TestResource.class).asEagerSingleton();
         } else {
@@ -144,7 +146,10 @@ public class KillbillServerModule extends AbstractModule {
     }
 
     protected void installKillbillModules() {
-        final ConfigSource configSource = new SimplePropertyConfigSource(System.getProperties());
+        bind(ConfigSource.class).toInstance(configSource);
+        bind(KillbillServerConfig.class).toInstance(serverConfig);
+        final DaoConfig daoConfig = new ConfigurationObjectFactory(configSource).build(DaoConfig.class);
+        bind(DaoConfig.class).toInstance(daoConfig);
 
         // TODO Pierre Refactor GlobalLockerModule for this to be a real provider?
         final EmbeddedDBProvider embeddedDBProvider = new EmbeddedDBProvider(daoConfig);
@@ -179,7 +184,7 @@ public class KillbillServerModule extends AbstractModule {
         install(new RecordIdModule());
         install(new KillBillShiroWebModule(servletContext, configSource));
         install(new KillBillShiroAopModule());
-        install(new SecurityModule());
+        install(new SecurityModule(configSource));
         installClock();
     }
 }

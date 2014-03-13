@@ -18,10 +18,9 @@ package org.killbill.billing.server.updatechecker;
 
 import javax.servlet.ServletContext;
 
+import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.killbill.billing.server.config.UpdateCheckConfig;
 
 import com.dmurph.tracking.AnalyticsConfigData;
 import com.dmurph.tracking.JGoogleAnalyticsTracker;
@@ -38,9 +37,9 @@ public class Tracker {
     private final ClientInfo clientInfo;
     private final JGoogleAnalyticsTracker tracker;
 
-    public Tracker(final ProductInfo productInfo, final ServletContext context) {
+    public Tracker(final ConfigSource configSource, final ProductInfo productInfo, final ServletContext context) {
         this.productInfo = productInfo;
-        this.clientInfo = new ClientInfo(context);
+        this.clientInfo = new ClientInfo(configSource, context);
 
         final AnalyticsConfigData analyticsConfigData = new AnalyticsConfigData(TRACKING_CODE);
         this.tracker = new JGoogleAnalyticsTracker(analyticsConfigData, GoogleAnalyticsVersion.V_4_7_2);

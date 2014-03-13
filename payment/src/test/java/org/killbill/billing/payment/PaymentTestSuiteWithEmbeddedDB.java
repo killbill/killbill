@@ -16,15 +16,13 @@
 
 package org.killbill.billing.payment;
 
-import java.net.URL;
-
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.TestKillbillConfigSource;
+import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
@@ -35,10 +33,14 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.payment.retry.FailedPaymentRetryService;
 import org.killbill.billing.payment.retry.PluginFailureRetryService;
+import org.killbill.billing.util.KillbillConfigSource;
 import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.invoice.api.InvoiceInternalApi;
+import org.killbill.bus.api.PersistentBus;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -70,19 +72,15 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected TestPaymentHelper testHelper;
 
-    private void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = PaymentTestSuiteNoDB.class.getResource(resource);
-        Assert.assertNotNull(url);
-
-        configSource.merge(url);
-        configSource.setProperty("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
-        configSource.setProperty("killbill.payment.engine.events.off", "false");
+    @Override
+    protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {
+        return new TestKillbillConfigSource("/payment.properties",
+                                            ImmutableMap.<String, String>of("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME,
+                                                                            "killbill.payment.engine.events.off", "false"));
     }
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
-        loadSystemPropertiesFromClasspath("/resource.properties");
-
         final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(configSource, getClock()));
         injector.injectMembers(this);
     }

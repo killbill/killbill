@@ -17,11 +17,10 @@ package org.killbill.billing.util.email;/*
 import java.util.ArrayList;
 import java.util.List;
 
+import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import org.killbill.billing.util.UtilTestSuiteNoDB;
 
 @Test(groups = "slow")
 public class EmailSenderTest extends UtilTestSuiteNoDB {
@@ -31,7 +30,7 @@ public class EmailSenderTest extends UtilTestSuiteNoDB {
     @BeforeClass
     public void beforeClass() throws Exception {
         super.beforeClass();
-        config = new ConfigurationObjectFactory(System.getProperties()).build(EmailConfig.class);
+        config = new ConfigurationObjectFactory(configSource).build(EmailConfig.class);
     }
 
     @Test(enabled = false)

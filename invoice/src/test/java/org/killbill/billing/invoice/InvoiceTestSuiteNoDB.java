@@ -16,34 +16,35 @@
 
 package org.killbill.billing.invoice;
 
-import java.net.URL;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.billing.TestKillbillConfigSource;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
+import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceMigrationApi;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.glue.TestInvoiceModuleNoDB;
+import org.killbill.billing.junction.BillingInternalApi;
+import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.util.KillbillConfigSource;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.clock.Clock;
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
-import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.util.svcsapi.bus.BusService;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLocker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -90,17 +91,13 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected CurrencyConversionApi currencyConversionApi;
 
-    private void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = InvoiceTestSuiteNoDB.class.getResource(resource);
-        Assert.assertNotNull(url);
-
-        configSource.merge(url);
+    @Override
+    protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {
+        return new TestKillbillConfigSource("/resource.properties");
     }
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
-        loadSystemPropertiesFromClasspath("/resource.properties");
-
         final Injector injector = Guice.createInjector(new TestInvoiceModuleNoDB(configSource));
         injector.injectMembers(this);
     }

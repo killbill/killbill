@@ -25,7 +25,6 @@
     <artifactId>killbill-jaxrs</artifactId>
     <packaging>jar</packaging>
     <name>killbill-jaxrs</name>
-
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -79,6 +78,16 @@
             Until we move ClockMock outside of test package
             <scope>test</scope>
             -->
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-embeddeddb-h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-embeddeddb-mysql</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>

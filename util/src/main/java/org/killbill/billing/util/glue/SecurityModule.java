@@ -18,7 +18,6 @@ package org.killbill.billing.util.glue;
 
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.config.SimplePropertyConfigSource;
 
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.util.config.SecurityConfig;
@@ -31,10 +30,6 @@ import com.google.inject.AbstractModule;
 public class SecurityModule extends AbstractModule {
 
     private final ConfigSource configSource;
-
-    public SecurityModule() {
-        this(new SimplePropertyConfigSource(System.getProperties()));
-    }
 
     public SecurityModule(final ConfigSource configSource) {
         this.configSource = configSource;

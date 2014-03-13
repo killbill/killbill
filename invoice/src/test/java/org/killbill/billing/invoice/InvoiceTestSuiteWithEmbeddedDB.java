@@ -16,21 +16,16 @@
 
 package org.killbill.billing.invoice;
 
-import java.net.URL;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import org.killbill.billing.TestKillbillConfigSource;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
+import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceMigrationApi;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceService;
@@ -39,17 +34,23 @@ import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.glue.TestInvoiceModuleWithEmbeddedDb;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
-import org.killbill.notificationq.api.NotificationQueueService;
+import org.killbill.billing.junction.BillingInternalApi;
+import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.util.KillbillConfigSource;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.clock.Clock;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
-import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.util.svcsapi.bus.BusService;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.notificationq.api.NotificationQueueService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -108,17 +109,13 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected TestInvoiceNotificationQListener testInvoiceNotificationQListener;
 
-    private void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = InvoiceTestSuiteNoDB.class.getResource(resource);
-        Assert.assertNotNull(url);
-
-        configSource.merge(url);
+    @Override
+    protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {
+        return new TestKillbillConfigSource("/resource.properties");
     }
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
-        loadSystemPropertiesFromClasspath("/resource.properties");
-
         final Injector injector = Guice.createInjector(new TestInvoiceModuleWithEmbeddedDb(configSource));
         injector.injectMembers(this);
     }

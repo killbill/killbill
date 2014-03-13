@@ -34,13 +34,13 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.realm.Realm;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
+import org.killbill.billing.server.config.DaoConfig;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantUserApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -55,18 +55,17 @@ public class TenantFilter implements Filter {
     @Inject
     private TenantUserApi tenantUserApi;
 
-    private final ModularRealmAuthenticator modularRealmAuthenticator;
+    @Inject
+    private DaoConfig daoConfig;
 
-    public TenantFilter() {
-        final Realm killbillJdbcRealm = new KillbillJdbcRealm();
-
-        // We use Shiro to verify the api credentials - but the Shiro Subject is only used for RBAC
-        modularRealmAuthenticator = new ModularRealmAuthenticator();
-        modularRealmAuthenticator.setRealms(ImmutableList.<Realm>of(killbillJdbcRealm));
-    }
+    private ModularRealmAuthenticator modularRealmAuthenticator;
 
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
+        final Realm killbillJdbcRealm = new KillbillJdbcRealm(daoConfig);
+        // We use Shiro to verify the api credentials - but the Shiro Subject is only used for RBAC
+        modularRealmAuthenticator = new ModularRealmAuthenticator();
+        modularRealmAuthenticator.setRealms(ImmutableList.<Realm>of(killbillJdbcRealm));
     }
 
     @Override
