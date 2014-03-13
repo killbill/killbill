@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2014 The Billing Project, Inc.
+  ~
+  ~ Ning licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
 
@@ -69,7 +85,7 @@
                     </recurringPrice>
                 </recurring>
                 <usages>
-                    <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
+                    <usage billingMode="IN_ADVANCE" usageType="CONSUMABLE">
                         <!-- ... -->
                     </usage>
                 </usages>
@@ -87,7 +103,7 @@
                 </duration>
 
                 <usages>
-                    <usage billingMode="IN_ADVANCE" type="CAPACITY">
+                    <usage billingMode="IN_ADVANCE" usageType="CAPACITY">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <limits>
                             <limit>
@@ -118,12 +134,12 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <usages>
-                    <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
+                    <usage billingMode="IN_ADVANCE" usageType="CONSUMABLE">
                         <billingPeriod>MONTHLY</billingPeriod>
-                        <limits>
-                            <limit>
+                        <blocks>
+                            <block>
                                 <unit>minutes</unit>
-                                <block>1000</block>
+                                <size>1000</size>
                                 <prices>
                                     <!-- could be either fixed (with NO_BILLING_PERIOD) )or recurring:
                                     * In the case of fixed price, we buy one block of units
@@ -136,8 +152,8 @@
                                         </price>
                                     </recurringPrice>
                                 </prices>
-                            </limit>
-                        </limits>
+                            </block>
+                        </blocks>
                         <!-- We could instead define the price here as we did for capacity-in-advance if we want to 'bundle' linit/units -->
                     </usage>
                 </usages>
@@ -155,24 +171,24 @@
                 </duration>
 
                 <usages>
-                    <usage billingMode="IN_ADVANCE" type="CONSUMABLE">
+                    <usage billingMode="IN_ADVANCE" usageType="CONSUMABLE">
                         <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                        <limits>
-                            <limit>
+                        <blocks>
+                            <block>
                                 <unit>fasttrack_tokens</unit>
+                                <size>10</size>
                                 <min>5</min>
-                                <block>10</block>
 
                                 <prices>
-                                    <topupPrice>
+                                    <fixedPrice>
                                         <price>
                                             <currency>BTC</currency>
                                             <value>0.10</value>
                                         </price>
-                                    </topupPrice>
+                                    </fixedPrice>
                                 </prices>
-                            </limit>
-                        </limits>
+                            </block>
+                        </blocks>
                     </usage>
                 </usages>
             </finalPhase>
@@ -189,18 +205,18 @@
                 </duration>
 
                 <usages>
-                    <usage billingMode="IN_ARREAR" type="CAPACITY">
+                    <usage billingMode="IN_ARREAR" usageType="CAPACITY">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <tiers>
                             <tier>
                                 <limits>
                                     <limit>
                                         <unit>bandwith (Meg/sec)</unit>
-                                        <max>100</unit>
+                                        <max>100</max>
                                     </limit>
                                     <limit>
                                         <unit>members</unit>
-                                        <max>500</unit>
+                                        <max>500</max>
                                     </limit>
                                 </limits>
                                 <prices>
@@ -222,11 +238,11 @@
                                 <limits>
                                     <limit>
                                         <unit>bandwith (Meg/sec)</unit>
-                                        <max>100</unit>
+                                        <max>100</max>
                                     </limit>
                                     <limit>
                                         <unit>members</unit>
-                                        <max>1000</unit>
+                                        <max>1000</max>
                                     </limit>
                                 </limits>
                                 <prices>
@@ -260,38 +276,36 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <usages>
-                    <usage billingMode="IN_ARREAR" type="CONSUMABLE">
+                    <usage billingMode="IN_ARREAR" usageType="CONSUMABLE">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <tiers>
                             <tier>
-                                <limits>
-                                    <limit>
+                                <blocks>
+                                    <block>
                                         <unit>minutes</unit>
-                                        <max>1000</max>
-                                        <block>1</block>
+                                        <size>1000</size>
                                         <prices>
-                                            <blockPrice>
+                                            <fixedPrice>
                                                 <price>
                                                     <currency>BTC</currency>
                                                     <value>0.5</value>
                                                 </price>
-                                            </blockPrice>
+                                            </fixedPrice>
                                         </prices>
-                                    </limit>
-                                    <limit>
+                                    </block>
+                                    <block>
                                         <unit>Mbytes</unit>
-                                        <max>512</max>
-                                        <block>1</block>
+                                        <size>512</size>
                                         <prices>
-                                            <blockPrice>
+                                            <fixedPrice>
                                                 <price>
                                                     <currency>BTC</currency>
                                                     <value>0.3</value>
                                                 </price>
-                                            </blockPrice>
+                                            </fixedPrice>
                                         </prices>
-                                    </limit>
-                                </limits>
+                                    </block>
+                                </blocks>
                             </tier>
                         </tiers>
                     </usage>
