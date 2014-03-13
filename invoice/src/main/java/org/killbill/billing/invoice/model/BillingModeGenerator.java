@@ -25,8 +25,8 @@ import org.joda.time.LocalDate;
 
 import org.killbill.billing.catalog.api.BillingPeriod;
 
-public interface BillingMode {
+public interface BillingModeGenerator {
 
-    List<RecurringInvoiceItemData> calculateInvoiceItemData(LocalDate startDate, @Nullable LocalDate endDate, LocalDate targetDate,
-                                                            int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
+    List<RecurringInvoiceItemData> generateInvoiceItemData(LocalDate startDate, @Nullable LocalDate endDate, LocalDate targetDate,
+                                                           int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
 }

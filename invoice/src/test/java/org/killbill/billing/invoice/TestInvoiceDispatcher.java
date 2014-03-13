@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -52,7 +53,6 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.junction.BillingModeType;
 import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
 
 public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
@@ -82,7 +82,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal fixedPrice = null;
         events.add(invoiceUtil.createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase,
                                                       fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
-                                                      BillingModeType.IN_ADVANCE, "", 1L, SubscriptionBaseTransitionType.CREATE));
+                                                      BillingMode.IN_ADVANCE, "", 1L, SubscriptionBaseTransitionType.CREATE));
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
@@ -122,23 +122,23 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final MockPlan bicycleTrialEvergreen1USD = MockPlan.createBicycleTrialEvergreen1USD();
         events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-05-01T00:03:42.000Z"), bicycleTrialEvergreen1USD,
                                                       new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.TRIAL), BigDecimal.ZERO, null, account.getCurrency(), BillingPeriod.NO_BILLING_PERIOD,
-                                                      31, BillingModeType.IN_ADVANCE, "CREATE", 1L, SubscriptionBaseTransitionType.CREATE));
+                                                      31, BillingMode.IN_ADVANCE, "CREATE", 1L, SubscriptionBaseTransitionType.CREATE));
         // Phase change to evergreen
         events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-05-31T00:03:42.000Z"), bicycleTrialEvergreen1USD,
                                                       new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, new BigDecimal("249.95"), account.getCurrency(), BillingPeriod.MONTHLY,
-                                                      31, BillingModeType.IN_ADVANCE, "PHASE", 2L, SubscriptionBaseTransitionType.PHASE));
+                                                      31, BillingMode.IN_ADVANCE, "PHASE", 2L, SubscriptionBaseTransitionType.PHASE));
         // Overdue period
         events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-07-15T00:00:00.000Z"), bicycleTrialEvergreen1USD,
                                                       new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, null, account.getCurrency(), BillingPeriod.NO_BILLING_PERIOD,
-                                                      31, BillingModeType.IN_ADVANCE, "", 0L, SubscriptionBaseTransitionType.START_BILLING_DISABLED));
+                                                      31, BillingMode.IN_ADVANCE, "", 0L, SubscriptionBaseTransitionType.START_BILLING_DISABLED));
         events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-07-25T00:00:00.000Z"), bicycleTrialEvergreen1USD,
                                                       new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, new BigDecimal("249.95"), account.getCurrency(), BillingPeriod.MONTHLY,
-                                                      31, BillingModeType.IN_ADVANCE, "", 1L, SubscriptionBaseTransitionType.END_BILLING_DISABLED));
+                                                      31, BillingMode.IN_ADVANCE, "", 1L, SubscriptionBaseTransitionType.END_BILLING_DISABLED));
         // Upgrade after the overdue period
         final MockPlan jetTrialEvergreen1000USD = MockPlan.createJetTrialEvergreen1000USD();
         events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-07-25T00:04:00.000Z"), jetTrialEvergreen1000USD,
                                                       new MockPlanPhase(jetTrialEvergreen1000USD, PhaseType.EVERGREEN), null, new BigDecimal("1000"), account.getCurrency(), BillingPeriod.MONTHLY,
-                                                      31, BillingModeType.IN_ADVANCE, "CHANGE", 3L, SubscriptionBaseTransitionType.CHANGE));
+                                                      31, BillingMode.IN_ADVANCE, "CHANGE", 3L, SubscriptionBaseTransitionType.CHANGE));
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();

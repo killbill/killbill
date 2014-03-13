@@ -20,9 +20,13 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import org.killbill.billing.catalog.api.BillingMode;
+
 public interface BillingEventSet extends SortedSet<BillingEvent> {
 
     public abstract boolean isAccountAutoInvoiceOff();
+
+    public abstract BillingMode getRecurringBillingMode();
 
     public abstract List<UUID> getSubscriptionIdsWithAutoInvoiceOff();
 }

@@ -22,6 +22,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.catalog.MockCatalog;
 import org.killbill.billing.catalog.api.BillingAlignment;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
@@ -33,7 +34,6 @@ import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.dao.MockBlockingStateDao;
 import org.killbill.billing.junction.JunctionTestSuiteNoDB;
-import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.mock.MockEffectiveSubscriptionEvent;
 import org.killbill.billing.mock.MockSubscription;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -44,7 +44,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.junction.BillingModeType;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.dao.MockTagDao;
@@ -55,7 +54,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -255,7 +253,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         if (!SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(event.getTransitionType())) {
             Assert.assertEquals(nextPhase.getRecurring().getBillingPeriod(), event.getBillingPeriod());
         }
-        Assert.assertEquals(BillingModeType.IN_ADVANCE, event.getBillingMode());
+        Assert.assertEquals(BillingMode.IN_ADVANCE, event.getBillingMode());
         Assert.assertEquals(desc, event.getTransitionType().toString());
     }
 

@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.testng.Assert;
@@ -64,7 +65,6 @@ import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.junction.BillingModeType;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.currency.KillBillMoney;
@@ -1093,7 +1093,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final DateTime effectiveDate1 = new DateTime(2011, 2, 1, 0, 0, 0);
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate1, plan1, phase1, null,
-                                                                       recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+                                                                       recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 1, BillingMode.IN_ADVANCE,
                                                                        "testEvent1", 1L, SubscriptionBaseTransitionType.CREATE);
 
         final BillingEventSet events = new MockBillingEventSet();
@@ -1111,7 +1111,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final DateTime effectiveDate2 = new DateTime(2011, 2, 15, 0, 0, 0);
         final BillingEvent event2 = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate2, plan2, phase2, null,
-                                                                       recurringPrice2.getPrice(currency), currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+                                                                       recurringPrice2.getPrice(currency), currency, BillingPeriod.MONTHLY, 1, BillingMode.IN_ADVANCE,
                                                                        "testEvent2", 2L, SubscriptionBaseTransitionType.CREATE);
         events.add(event2);
 
@@ -1143,7 +1143,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final DateTime effectiveDate = invoiceUtil.buildDate(2011, 1, 1).toDateTimeAtStartOfDay();
 
         final BillingEvent event = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate, plan, phase, null,
-                                                                      recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE,
+                                                                      recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 15, BillingMode.IN_ADVANCE,
                                                                       "testEvent", 1L, SubscriptionBaseTransitionType.CREATE);
         final BillingEventSet events = new MockBillingEventSet();
         events.add(event);
@@ -1186,7 +1186,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final DateTime effectiveDate1 = invoiceUtil.buildDate(2011, 1, 1).toDateTimeAtStartOfDay();
 
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate1, plan, phase1, fixedPrice.getPrice(currency),
-                                                                       null, currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+                                                                       null, currency, BillingPeriod.MONTHLY, 1, BillingMode.IN_ADVANCE,
                                                                        "testEvent1", 1L, SubscriptionBaseTransitionType.CREATE);
         final BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
@@ -1204,7 +1204,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final DateTime effectiveDate2 = effectiveDate1.plusDays(30);
         final BillingEvent event2 = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate2, plan, phase2, null,
-                                                                       recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+                                                                       recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 31, BillingMode.IN_ADVANCE,
                                                                        "testEvent2", 2L, SubscriptionBaseTransitionType.PHASE);
         events.add(event2);
 
@@ -1252,14 +1252,14 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate1, plan, phase1,
                                                                        fixedPrice.getPrice(currency), null, currency,
-                                                                       BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+                                                                       BillingPeriod.MONTHLY, 1, BillingMode.IN_ADVANCE,
                                                                        "testEvent1", 1L, SubscriptionBaseTransitionType.CREATE);
         final BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
         final DateTime effectiveDate2 = effectiveDate1.plusDays(30);
         final BillingEvent event2 = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate2, plan, phase2, null,
-                                                                       recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+                                                                       recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 31, BillingMode.IN_ADVANCE,
                                                                        "testEvent2", 2L, SubscriptionBaseTransitionType.CHANGE);
         events.add(event2);
 
@@ -1331,7 +1331,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, recuringStartDate.toDateTimeAtStartOfDay(), plan, phase1, null,
                                                                        TEN, Currency.USD,
-                                                                       BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+                                                                       BillingPeriod.MONTHLY, 31, BillingMode.IN_ADVANCE,
                                                                        "new-event", 1L, SubscriptionBaseTransitionType.CREATE);
         events.add(event1);
         final Invoice newInvoice = generator.generateInvoice(UUID.randomUUID(), events, invoices, targetDate, Currency.USD);
@@ -1365,7 +1365,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, targetDate1, plan, phase1, null,
                                                                        TEN, currency,
-                                                                       BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+                                                                       BillingPeriod.MONTHLY, 31, BillingMode.IN_ADVANCE,
                                                                        "testEvent1", 1L, SubscriptionBaseTransitionType.CHANGE);
         events.add(event1);
 
@@ -1377,7 +1377,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final BillingEvent event2 = invoiceUtil.createMockBillingEvent(null, subscription, targetDate1, plan, phase2, null,
                                                                        TWENTY, currency,
-                                                                       BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+                                                                       BillingPeriod.MONTHLY, 31, BillingMode.IN_ADVANCE,
                                                                        "testEvent2", 2L, SubscriptionBaseTransitionType.CHANGE);
         events.add(event2);
         Invoice invoice2 = generator.generateInvoice(UUID.randomUUID(), events, invoices, new LocalDate(targetDate2), Currency.USD);

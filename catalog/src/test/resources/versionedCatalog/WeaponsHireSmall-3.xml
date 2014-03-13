@@ -21,6 +21,8 @@
     <effectiveDate>2011-03-03T00:00:00+00:00</effectiveDate>
     <catalogName>WeaponsHireSmall</catalogName>
 
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
     <currencies>
         <currency>USD</currency>
         <currency>EUR</currency>

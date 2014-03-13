@@ -51,7 +51,7 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAddCatalog() throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException, CatalogApiException {
-        vc.add(new StandaloneCatalog(new Date()));
+        vc.add((new StandaloneCatalog(new Date()).setCatalogName(vc.getCatalogName()).setRecurringBillingMode(vc.getRecurringBillingMode())));
         Assert.assertEquals(vc.size(), 4);
     }
 

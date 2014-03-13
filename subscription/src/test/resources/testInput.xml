@@ -22,6 +22,8 @@
     <effectiveDate>2011-01-01T00:00:00+00:00</effectiveDate>
     <catalogName>Firearms</catalogName>
 
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
     <currencies>
         <currency>USD</currency>
         <currency>EUR</currency>

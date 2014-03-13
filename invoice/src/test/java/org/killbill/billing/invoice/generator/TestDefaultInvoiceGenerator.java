@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,6 @@ import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.junction.BillingModeType;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.config.InvoiceConfig;
@@ -564,13 +564,13 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, new DateTime("2012-01-1"),
                                                                        plan, phase1,
                                                                        ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
-                                                                       BillingModeType.IN_ADVANCE, "Test Event 1", 1L,
+                                                                       BillingMode.IN_ADVANCE, "Test Event 1", 1L,
                                                                        SubscriptionBaseTransitionType.CREATE);
 
         final BillingEvent event2 = invoiceUtil.createMockBillingEvent(null, subscription, changeDate,
                                                                        plan, phase2,
                                                                        ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
-                                                                       BillingModeType.IN_ADVANCE, "Test Event 2", 2L,
+                                                                       BillingMode.IN_ADVANCE, "Test Event 2", 2L,
                                                                        SubscriptionBaseTransitionType.PHASE);
 
         events.add(event2);
@@ -766,7 +766,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
                                                   planPhase.getFixed().getPrice() == null ? null : planPhase.getFixed().getPrice().getPrice(currency),
                                                   planPhase.getRecurring().getRecurringPrice() == null ? null : planPhase.getRecurring().getRecurringPrice().getPrice(currency),
                                                   currency, planPhase.getRecurring().getBillingPeriod(),
-                                                  billCycleDayLocal, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionBaseTransitionType.CREATE);
+                                                  billCycleDayLocal, BillingMode.IN_ADVANCE, "Test", 1L, SubscriptionBaseTransitionType.CREATE);
     }
 
     private void testInvoiceGeneration(final UUID accountId, final BillingEventSet events, final List<Invoice> existingInvoices,

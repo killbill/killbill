@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
@@ -57,6 +58,9 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     @XmlElement(required = true)
     private String catalogName;
+
+    @XmlElement(required = true)
+    private BillingMode recurringBillingMode;
 
     private URI catalogURI;
 
@@ -100,6 +104,11 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @Override
     public Date getEffectiveDate() {
         return effectiveDate;
+    }
+
+    @Override
+    public BillingMode getRecurringBillingMode() {
+        return recurringBillingMode;
     }
 
     /* (non-Javadoc)
@@ -306,8 +315,18 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
+    public StandaloneCatalog setCatalogName(final String catalogName) {
+        this.catalogName = catalogName;
+        return this;
+    }
+
     protected StandaloneCatalog setEffectiveDate(final Date effectiveDate) {
         this.effectiveDate = effectiveDate;
+        return this;
+    }
+
+    public StandaloneCatalog setRecurringBillingMode(final BillingMode recurringBillingMode) {
+        this.recurringBillingMode = recurringBillingMode;
         return this;
     }
 

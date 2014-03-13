@@ -21,6 +21,8 @@
     <effectiveDate>2013-02-08T00:00:00+00:00</effectiveDate>
     <catalogName>SpyCarAdvanced</catalogName>
 
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
     <currencies>
         <currency>USD</currency>
         <currency>GBP</currency>

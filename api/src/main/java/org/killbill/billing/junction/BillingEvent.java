@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
@@ -71,7 +72,7 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the billing mode for the current event
      */
-    public BillingModeType getBillingMode();
+    public BillingMode getBillingMode();
 
     /**
      * @return the description of the billing event

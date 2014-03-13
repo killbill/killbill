@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -34,7 +35,6 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.junction.BillingModeType;
 
 public class DefaultBillingEvent implements BillingEvent {
     private final Account account;
@@ -47,7 +47,7 @@ public class DefaultBillingEvent implements BillingEvent {
     private final BigDecimal recurringPrice;
     private final Currency currency;
     private final String description;
-    private final BillingModeType billingModeType;
+    private final BillingMode billingMode;
     private final BillingPeriod billingPeriod;
     private final SubscriptionBaseTransitionType type;
     private final Long totalOrdering;
@@ -79,7 +79,7 @@ public class DefaultBillingEvent implements BillingEvent {
 
         this.currency = currency;
         description = transition.getTransitionType().toString();
-        billingModeType = BillingModeType.IN_ADVANCE;
+        billingMode = BillingMode.IN_ADVANCE;
         billingPeriod = getRecurringBillingPeriod((transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase);
         type = transition.getTransitionType();
         totalOrdering = transition.getTotalOrdering();
@@ -89,7 +89,7 @@ public class DefaultBillingEvent implements BillingEvent {
 
     public DefaultBillingEvent(final Account account, final SubscriptionBase subscription, final DateTime effectiveDate, final Plan plan, final PlanPhase planPhase,
                                final BigDecimal fixedPrice, final BigDecimal recurringPrice, final Currency currency,
-                               final BillingPeriod billingPeriod, final int billCycleDayLocal, final BillingModeType billingModeType,
+                               final BillingPeriod billingPeriod, final int billCycleDayLocal, final BillingMode billingMode,
                                final String description, final long totalOrdering, final SubscriptionBaseTransitionType type, final DateTimeZone timeZone) {
         this.account = account;
         this.subscription = subscription;
@@ -101,7 +101,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.currency = currency;
         this.billingPeriod = billingPeriod;
         this.billCycleDayLocal = billCycleDayLocal;
-        this.billingModeType = billingModeType;
+        this.billingMode = billingMode;
         this.description = description;
         this.type = type;
         this.totalOrdering = totalOrdering;
@@ -190,8 +190,8 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public BillingModeType getBillingMode() {
-        return billingModeType;
+    public BillingMode getBillingMode() {
+        return billingMode;
     }
 
     @Override
@@ -257,7 +257,7 @@ public class DefaultBillingEvent implements BillingEvent {
         if (account != null ? !account.equals(that.account) : that.account != null) {
             return false;
         }
-        if (billingModeType != that.billingModeType) {
+        if (billingMode != that.billingMode) {
             return false;
         }
         if (billingPeriod != that.billingPeriod) {
@@ -312,7 +312,7 @@ public class DefaultBillingEvent implements BillingEvent {
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + (billingModeType != null ? billingModeType.hashCode() : 0);
+        result = 31 * result + (billingMode != null ? billingMode.hashCode() : 0);
         result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
         result = 31 * result + (type != null ? type.hashCode() : 0);
         result = 31 * result + (totalOrdering != null ? totalOrdering.hashCode() : 0);

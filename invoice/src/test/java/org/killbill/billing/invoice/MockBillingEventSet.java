@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 
@@ -38,6 +39,11 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
     @Override
     public boolean isAccountAutoInvoiceOff() {
         return isAccountInvoiceOff;
+    }
+
+    @Override
+    public BillingMode getRecurringBillingMode() {
+        return BillingMode.IN_ADVANCE;
     }
 
     @Override

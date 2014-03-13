@@ -42,6 +42,8 @@ Use Cases to do:
     <effectiveDate>2011-10-08T00:00:00+00:00</effectiveDate>
     <catalogName>Firearms</catalogName>
 
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
     <currencies>
         <currency>USD</currency>
         <currency>EUR</currency>

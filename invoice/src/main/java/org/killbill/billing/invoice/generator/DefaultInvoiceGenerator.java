@@ -26,6 +26,8 @@ import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
+import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.invoice.model.BillingModeGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +38,6 @@ import org.killbill.clock.Clock;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.model.BillingMode;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InAdvanceBillingMode;
@@ -46,7 +47,6 @@ import org.killbill.billing.invoice.model.RecurringInvoiceItemData;
 import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.junction.BillingModeType;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
 
@@ -182,7 +182,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         // Handle recurring items
         final BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
         if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
-            final BillingMode billingMode = instantiateBillingMode(thisEvent.getBillingMode());
+            final BillingModeGenerator billingModeGenerator = instantiateBillingMode(thisEvent.getBillingMode());
             final LocalDate startDate = new LocalDate(thisEvent.getEffectiveDate(), thisEvent.getTimeZone());
 
             if (!startDate.isAfter(targetDate)) {
@@ -192,7 +192,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
                 final List<RecurringInvoiceItemData> itemData;
                 try {
-                    itemData = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod);
+                    itemData = billingModeGenerator.generateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod);
                 } catch (InvalidDateSequenceException e) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                 }
@@ -228,7 +228,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return items;
     }
 
-    private BillingMode instantiateBillingMode(final BillingModeType billingMode) {
+    private BillingModeGenerator instantiateBillingMode(final BillingMode billingMode) {
         switch (billingMode) {
             case IN_ADVANCE:
                 return new InAdvanceBillingMode();

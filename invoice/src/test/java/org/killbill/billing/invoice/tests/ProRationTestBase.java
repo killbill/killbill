@@ -25,7 +25,7 @@ import org.joda.time.LocalDate;
 
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
-import org.killbill.billing.invoice.model.BillingMode;
+import org.killbill.billing.invoice.model.BillingModeGenerator;
 import org.killbill.billing.invoice.model.InvalidDateSequenceException;
 import org.killbill.billing.invoice.model.RecurringInvoiceItemData;
 
@@ -34,7 +34,7 @@ import static org.testng.Assert.fail;
 
 public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
 
-    protected abstract BillingMode getBillingMode();
+    protected abstract BillingModeGenerator getBillingMode();
 
     protected abstract BillingPeriod getBillingPeriod();
 
@@ -65,7 +65,7 @@ public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
     }
 
     protected BigDecimal calculateNumberOfBillingCycles(final LocalDate startDate, final LocalDate endDate, final LocalDate targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
-        final List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod());
+        final List<RecurringInvoiceItemData> items = getBillingMode().generateInvoiceItemData(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod());
 
         BigDecimal numberOfBillingCycles = ZERO;
         for (final RecurringInvoiceItemData item : items) {
@@ -76,7 +76,7 @@ public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
     }
 
     protected BigDecimal calculateNumberOfBillingCycles(final LocalDate startDate, final LocalDate targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
-        final List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, null, targetDate, billingCycleDay, getBillingPeriod());
+        final List<RecurringInvoiceItemData> items = getBillingMode().generateInvoiceItemData(startDate, null, targetDate, billingCycleDay, getBillingPeriod());
 
         BigDecimal numberOfBillingCycles = ZERO;
         for (final RecurringInvoiceItemData item : items) {
