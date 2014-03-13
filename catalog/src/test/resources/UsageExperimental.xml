@@ -142,15 +142,15 @@
                                 <size>1000</size>
                                 <prices>
                                     <!-- could be either fixed (with NO_BILLING_PERIOD) )or recurring:
-                                    * In the case of fixed price, we buy one block of units
-                                    * In the case of recurring price, we buy one block of units for each period
+                                    * In billing period is NO_BILLING_PERIOD, we buy one block of units
+                                    * In billing period ha s been specified, we buy one block of units for each period
                                     -->
-                                    <recurringPrice>
+                                    <fixedPrice>
                                         <price>
                                             <currency>BTC</currency>
                                             <value>0.10</value>
                                         </price>
-                                    </recurringPrice>
+                                    </fixedPrice>
                                 </prices>
                             </block>
                         </blocks>
