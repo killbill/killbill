@@ -32,6 +32,14 @@
         <currency>BTC</currency>
     </currencies>
 
+    <units>
+        <unit name="members"/>
+        <unit name="cell-phone-minutes"/>
+        <unit name="fastrack-tokens"/>
+        <unit name="bandwith-meg-sec"/>
+        <unit name="Mbytes"/>
+    </units>
+
     <products>
         <product name="Dummy">
             <category>BASE</category>
@@ -53,50 +61,13 @@
         </product>
     </products>
 
+    <rules>
+    </rules>
 
     <plans>
 
-        <!-- Shows main layout -->
-        <plan name="dummy-annual">
-            <product>Dummy</product>
-            <initialPhases>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <!-- New Fixed section (maybe not needed,. but for consistency with recurring, usage sections) -->
-                <fixed>
-                    <fixedPrice>
-                        <price>
-                        </price>
-                    </fixedPrice>
-                </fixed>
-                <!-- New recurring section:
-                     - Embeds its own billingPeriod
-                     - Its billingMode is catalog level
-                 -->
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <!-- ... -->
-                        </price>
-                    </recurringPrice>
-                </recurring>
-                <usages>
-                    <usage billingMode="IN_ADVANCE" usageType="CONSUMABLE">
-                        <!-- ... -->
-                    </usage>
-                </usages>
-            </finalPhase>
-        </plan>
-
-
         <plan name="capacity-in-advance-monthly">
             <product>CapacityInAdvance</product>
-            <initialPhases>
-            </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
@@ -111,14 +82,13 @@
                                 <max>100</max>
                             </limit>
                         </limits>
-                        <prices>
-                            <recurringPrice>
-                                <price>
-                                    <currency>BTC</currency>
-                                    <value>100.00</value>
-                                </price>
-                            </recurringPrice>
-                        </prices>
+                        <!-- could accept a fixed price and/or a recurring price -->
+                        <recurringPrice>
+                            <price>
+                                <currency>BTC</currency>
+                                <value>100.00</value>
+                            </price>
+                        </recurringPrice>
                     </usage>
                 </usages>
             </finalPhase>
@@ -127,8 +97,6 @@
 
         <plan name="consumable-in-advance-prepay-credit-monthly">
             <product>ConsumableInAdvancePrepayCredit</product>
-            <initialPhases>
-            </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
@@ -138,19 +106,17 @@
                         <billingPeriod>MONTHLY</billingPeriod>
                         <blocks>
                             <block>
-                                <unit>minutes</unit>
+                                <unit>cell-phone-minutes</unit>
                                 <size>1000</size>
+                                <!-- could be either fixed (with NO_BILLING_PERIOD) )or recurring:
+                                * In billing period is NO_BILLING_PERIOD, we buy one block of units
+                                * In billing period ha s been specified, we buy one block of units for each period
+                                -->
                                 <prices>
-                                    <!-- could be either fixed (with NO_BILLING_PERIOD) )or recurring:
-                                    * In billing period is NO_BILLING_PERIOD, we buy one block of units
-                                    * In billing period ha s been specified, we buy one block of units for each period
-                                    -->
-                                    <fixedPrice>
-                                        <price>
-                                            <currency>BTC</currency>
-                                            <value>0.10</value>
-                                        </price>
-                                    </fixedPrice>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.10</value>
+                                    </price>
                                 </prices>
                             </block>
                         </blocks>
@@ -163,8 +129,6 @@
 
         <plan name="consumable-in-advance-topup">
             <product>ConsumableInAdvanceTopUp</product>
-            <initialPhases>
-            </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
@@ -175,17 +139,18 @@
                         <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
                         <blocks>
                             <block>
-                                <unit>fasttrack_tokens</unit>
+                                <unit>fastrack-tokens</unit>
                                 <size>10</size>
-                                <min>5</min>
+                                <!-- Specify to refill account when 'account' value drops to min
+                                Unclear if this should really be a block attribute.
+                                -->
+                                <!-- <min>5</min> -->
 
                                 <prices>
-                                    <fixedPrice>
-                                        <price>
-                                            <currency>BTC</currency>
-                                            <value>0.10</value>
-                                        </price>
-                                    </fixedPrice>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.10</value>
+                                    </price>
                                 </prices>
                             </block>
                         </blocks>
@@ -197,8 +162,6 @@
 
         <plan name="capacity-in-arrear">
             <product>CapacityInArrear</product>
-            <initialPhases>
-            </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
@@ -211,7 +174,7 @@
                             <tier>
                                 <limits>
                                     <limit>
-                                        <unit>bandwith (Meg/sec)</unit>
+                                        <unit>bandwith-meg-sec</unit>
                                         <max>100</max>
                                     </limit>
                                     <limit>
@@ -219,25 +182,23 @@
                                         <max>500</max>
                                     </limit>
                                 </limits>
-                                <prices>
-                                    <fixedPrice>
-                                        <price>
-                                            <currency></currency>
-                                            <value></value>
-                                        </price>
-                                    </fixedPrice>
-                                    <recurringPrice>
-                                        <price>
-                                            <currency></currency>
-                                            <value></value>
-                                        </price>
-                                    </recurringPrice>
-                                </prices>
+                                <fixedPrice>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.007</value>
+                                    </price>
+                                </fixedPrice>
+                                <recurringPrice>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.8</value>
+                                    </price>
+                                </recurringPrice>
                             </tier>
                             <tier>
                                 <limits>
                                     <limit>
-                                        <unit>bandwith (Meg/sec)</unit>
+                                        <unit>bandwith-meg-sec</unit>
                                         <max>100</max>
                                     </limit>
                                     <limit>
@@ -245,20 +206,18 @@
                                         <max>1000</max>
                                     </limit>
                                 </limits>
-                                <prices>
-                                    <fixedPrice>
-                                        <price>
-                                            <currency></currency>
-                                            <value></value>
-                                        </price>
-                                    </fixedPrice>
-                                    <recurringPrice>
-                                        <price>
-                                            <currency></currency>
-                                            <value></value>
-                                        </price>
-                                    </recurringPrice>
-                                </prices>
+                                <fixedPrice>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.4</value>
+                                    </price>
+                                </fixedPrice>
+                                <recurringPrice>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>1.2</value>
+                                    </price>
+                                </recurringPrice>
                             </tier>
                         </tiers>
                     </usage>
@@ -269,8 +228,6 @@
 
         <plan name="consumable-in-arrear">
             <product>ConsumableInArrear</product>
-            <initialPhases>
-            </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
@@ -282,27 +239,23 @@
                             <tier>
                                 <blocks>
                                     <block>
-                                        <unit>minutes</unit>
+                                        <unit>cell-phone-minutes</unit>
                                         <size>1000</size>
                                         <prices>
-                                            <fixedPrice>
-                                                <price>
-                                                    <currency>BTC</currency>
-                                                    <value>0.5</value>
-                                                </price>
-                                            </fixedPrice>
+                                            <price>
+                                                <currency>BTC</currency>
+                                                <value>0.5</value>
+                                            </price>
                                         </prices>
                                     </block>
                                     <block>
                                         <unit>Mbytes</unit>
                                         <size>512</size>
                                         <prices>
-                                            <fixedPrice>
-                                                <price>
-                                                    <currency>BTC</currency>
-                                                    <value>0.3</value>
-                                                </price>
-                                            </fixedPrice>
+                                            <price>
+                                                <currency>BTC</currency>
+                                                <value>0.3</value>
+                                            </price>
                                         </prices>
                                     </block>
                                 </blocks>
@@ -318,7 +271,11 @@
     <priceLists>
         <defaultPriceList name="DEFAULT">
             <plans>
-                <plan>capacity-in-advance-annual</plan>
+                <plan>capacity-in-advance-monthly</plan>
+                <plan>consumable-in-advance-prepay-credit-monthly</plan>
+                <plan>consumable-in-advance-topup</plan>
+                <plan>capacity-in-arrear</plan>
+                <plan>consumable-in-arrear</plan>
             </plans>
         </defaultPriceList>
     </priceLists>
