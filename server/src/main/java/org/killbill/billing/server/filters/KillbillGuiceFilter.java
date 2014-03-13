@@ -16,7 +16,6 @@
 
 package org.killbill.billing.server.filters;
 
-import javax.inject.Inject;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 
@@ -25,14 +24,12 @@ import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
 
 public class KillbillGuiceFilter extends GuiceFilter {
 
     private static final Logger log = LoggerFactory.getLogger(KillbillGuiceFilter.class);
-
-    @Inject
-    private ConfigSource configSource;
 
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
@@ -41,6 +38,9 @@ public class KillbillGuiceFilter extends GuiceFilter {
         // At this point, Kill Bill server is fully initialized
         log.info("Kill Bill server has started");
 
+        // The magic happens in KillbillGuiceListener
+        final Injector injector = (Injector) filterConfig.getServletContext().getAttribute(Injector.class.getName());
+        final ConfigSource configSource = injector.getInstance(ConfigSource.class);
         final UpdateChecker checker = new UpdateChecker(configSource);
         checker.check(filterConfig.getServletContext());
     }
