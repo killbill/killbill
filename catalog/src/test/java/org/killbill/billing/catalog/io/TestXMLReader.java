@@ -47,6 +47,9 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
             XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
             XMLLoader.getObjectFromString(Resources.getResource("WeaponsHire.xml").toExternalForm(), StandaloneCatalog.class);
             XMLLoader.getObjectFromString(Resources.getResource("WeaponsHireSmall.xml").toExternalForm(), StandaloneCatalog.class);
+
+            XMLLoader.getObjectFromString(Resources.getResource("catalogTest.xml").toExternalForm(), StandaloneCatalog.class);
+
             XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
         } catch (Exception e) {
             Assert.fail(e.toString());

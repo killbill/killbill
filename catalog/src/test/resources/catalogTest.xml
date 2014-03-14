@@ -211,21 +211,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>29.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>29.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>29.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>29.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -249,21 +249,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>29.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>29.95</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>29.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>29.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -287,21 +287,21 @@
                     <number>-1</number>
                 </duration>
                 <recurring>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>249.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>149.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>169.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>249.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>149.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>169.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -324,21 +324,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>599.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>349.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>399.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>599.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>349.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>399.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -361,21 +361,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>QUARTERLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>69.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>69.95</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>69.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>QUARTERLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>69.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>69.95</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>69.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -397,23 +397,23 @@
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-<recurring>
-                <billingPeriod>ANNUAL</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>199.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>199.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>199.95</value>
-                    </price>
-                </recurringPrice>
-</recurring>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>199.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
         <plan name="shotgun-annual">
@@ -435,21 +435,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>ANNUAL</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>2399.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>1499.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>1699.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>2399.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>1499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>1699.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -472,21 +472,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>ANNUAL</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>5999.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>3499.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>3999.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>5999.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>3499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>3999.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -509,21 +509,21 @@
                         <number>6</number>
                     </duration>
                     <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>9.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>9.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>9.95</value>
-                        </price>
-                    </recurringPrice>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>9.95</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>9.95</value>
+                            </price>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>9.95</value>
+                            </price>
+                        </recurringPrice>
                     </recurring>
                 </phase>
             </initialPhases>
@@ -532,21 +532,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>ANNUAL</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>199.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>199.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>199.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>199.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -569,21 +569,21 @@
                         <number>6</number>
                     </duration>
                     <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>19.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>49.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>69.95</value>
-                        </price>
-                    </recurringPrice>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>19.95</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>49.95</value>
+                            </price>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>69.95</value>
+                            </price>
+                        </recurringPrice>
                     </recurring>
                 </phase>
             </initialPhases>
@@ -592,21 +592,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>ANNUAL</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>2399.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>1499.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>1699.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>2399.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>1499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>1699.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -629,21 +629,21 @@
                         <number>6</number>
                     </duration>
                     <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>99.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>99.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>99.95</value>
-                        </price>
-                    </recurringPrice>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>99.95</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>99.95</value>
+                            </price>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>99.95</value>
+                            </price>
+                        </recurringPrice>
                     </recurring>
                 </phase>
             </initialPhases>
@@ -652,21 +652,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>ANNUAL</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>5999.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>3499.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>3999.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>5999.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>3499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>3999.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -679,6 +679,79 @@
                         <number>1</number>
                     </duration>
                     <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>999.95</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>499.95</value>
+                            </price>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>999.95</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>1999.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>1499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>1999.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="telescopic-scope-monthly">
+            <product>Telescopic-Scope</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>1</number>
+                    </duration>
+                    <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>399.95</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>299.95</value>
+                            </price>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>399.95</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>
                     <recurringPrice>
                         <price>
@@ -694,79 +767,6 @@
                             <value>999.95</value>
                         </price>
                     </recurringPrice>
-                    </recurring>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>1999.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>1499.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>1999.95</value>
-                    </price>
-                </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="telescopic-scope-monthly">
-            <product>Telescopic-Scope</product>
-            <initialPhases>
-                <phase type="DISCOUNT">
-                    <duration>
-                        <unit>MONTHS</unit>
-                        <number>1</number>
-                    </duration>
-                    <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>399.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>299.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>399.95</value>
-                        </price>
-                    </recurringPrice>
-                    </recurring>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>999.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>499.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>999.95</value>
-                    </price>
-                </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -777,21 +777,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>999.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>499.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>999.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>999.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>999.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
             <plansAllowedInBundle>-1</plansAllowedInBundle>
@@ -816,21 +816,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>199.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>199.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>199.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>199.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -853,21 +853,21 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
-                <billingPeriod>ANNUAL</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>199.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>199.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>199.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>199.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -880,6 +880,29 @@
                         <number>1</number>
                     </duration>
                     <recurring>
+                        <billingPeriod>ANNUAL</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>5999.95</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>3499.95</value>
+                            </price>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>3999.95</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
                     <billingPeriod>ANNUAL</billingPeriod>
                     <recurringPrice>
                         <price>
@@ -895,29 +918,6 @@
                             <value>3999.95</value>
                         </price>
                     </recurringPrice>
-                    </recurring>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                <billingPeriod>ANNUAL</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>5999.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>3499.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>3999.95</value>
-                    </price>
-                </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
@@ -945,21 +945,21 @@
                     </fixedPrice>
                 </fixed>
                 <recurring>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>USD</currency>
-                        <value>199.95</value>
-                    </price>
-                    <price>
-                        <currency>EUR</currency>
-                        <value>199.95</value>
-                    </price>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>199.95</value>
-                    </price>
-                </recurringPrice>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>199.95</value>
+                        </price>
+                    </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
