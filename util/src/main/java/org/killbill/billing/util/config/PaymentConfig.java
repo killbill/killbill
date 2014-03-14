@@ -36,7 +36,7 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Interval in days between payment retries")
     public List<Integer> getPaymentRetryDays();
 
-    @Config("orgkillbill.payment.failure.retry.start.sec")
+    @Config("org.killbill.payment.failure.retry.start.sec")
     @Default("300")
     public int getPluginFailureRetryStart();
 
