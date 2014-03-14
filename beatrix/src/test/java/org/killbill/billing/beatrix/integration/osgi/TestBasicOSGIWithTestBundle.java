@@ -26,6 +26,12 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.beatrix.osgi.SetupBundleWithAssertion;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.plugin.api.PaymentInfoPlugin;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Query;
@@ -36,15 +42,6 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import org.killbill.billing.DBTestingHelper;
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.beatrix.osgi.SetupBundleWithAssertion;
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.osgi.glue.OSGIDataSourceConfig;
-import org.killbill.billing.payment.plugin.api.PaymentInfoPlugin;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 
 import static com.jayway.awaitility.Awaitility.await;
 
@@ -67,15 +64,6 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
-        // Can't use the injected helper as Guice hasn't injected anything yet
-        final String jdbcConnection = DBTestingHelper.get().getJdbcConnectionString();
-        final String userName = DBTestingHelper.get().getUsername();
-        final String userPwd = DBTestingHelper.get().getPassword();
-
-        System.setProperty(OSGIDataSourceConfig.DATA_SOURCE_PROP_PREFIX + "jdbc.url", jdbcConnection);
-        System.setProperty(OSGIDataSourceConfig.DATA_SOURCE_PROP_PREFIX + "jdbc.user", userName);
-        System.setProperty(OSGIDataSourceConfig.DATA_SOURCE_PROP_PREFIX + "jdbc.password", userPwd);
-
         // OSGIDataSourceConfig
         super.beforeClass();
 
@@ -83,7 +71,6 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
         final String killbillVersion = System.getProperty("killbill.version");
         SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion(BUNDLE_TEST_RESOURCE, osgiConfig, killbillVersion);
         setupTest.setupJavaBundle();
-
     }
 
     @Test(groups = "slow")

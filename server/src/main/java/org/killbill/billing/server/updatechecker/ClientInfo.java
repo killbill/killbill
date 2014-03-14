@@ -17,10 +17,12 @@
 package org.killbill.billing.server.updatechecker;
 
 import java.net.InetAddress;
-import java.util.Properties;
 
 import javax.servlet.ServletContext;
 
+import org.skife.config.ConfigSource;
+
+import com.google.common.base.Objects;
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.base.Strings;
 
@@ -40,17 +42,17 @@ public class ClientInfo {
     static {
         try {
             CLIENT_ID = InetAddress.getLocalHost().hashCode();
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             CLIENT_ID = 0;
         }
     }
 
     private final ServletContext servletContext;
-    private final Properties props;
+    private final ConfigSource props;
 
-    public ClientInfo(final ServletContext servletContext) {
+    public ClientInfo(final ConfigSource configSource, final ServletContext servletContext) {
         this.servletContext = servletContext;
-        this.props = System.getProperties();
+        this.props = configSource;
     }
 
     public String getServletMajorVersion() {
@@ -150,7 +152,7 @@ public class ClientInfo {
     }
 
     private String getProperty(final StandardSystemProperty standardKey) {
-        return getSanitizedString(props.getProperty(standardKey.key(), UNKNOWN));
+        return getSanitizedString(Objects.firstNonNull(props.getString(standardKey.key()), UNKNOWN));
     }
 
     private String getSanitizedString(final String string) {

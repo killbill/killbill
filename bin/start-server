@@ -51,22 +51,10 @@ function usage() {
     exit 1
 }
 
-function build_properties() {
-    local opts=
-    local prop=
-    for prop in `cat  $PROPERTIES | grep =`; do
-        local k=`echo $prop | awk 'BEGIN {FS="="} { print $1 }'`
-        local v=`echo $prop | awk 'BEGIN {FS="="} {for (i=2; i<NF; i++) printf $i "="; print $NF}'`
-        opts="$opts -D$k=$v"
-    done
-    echo $opts
-}
-
 function start() {
     mkdir -p $LOG_DIR
 
-    local opts=`build_properties`
-    local start_cmd="mvn $opts -Dlogback.configurationFile=$LOG jetty:run"
+    local start_cmd="mvn -Dorg.killbill.server.properties=file://$PROPERTIES -Dlogback.configurationFile=$LOG jetty:run"
 
     local debug_opts_eclipse=
     if [ ! -z $DEBUG ]; then

@@ -16,26 +16,18 @@
 
 package org.killbill.billing.subscription;
 
-import java.net.URL;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 import javax.inject.Inject;
 
-import org.mockito.Mockito;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.tweak.HandleCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
+import org.killbill.billing.TestKillbillConfigSource;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogService;
-import org.killbill.clock.ClockMock;
+import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
@@ -45,9 +37,18 @@ import org.killbill.billing.subscription.api.user.TestSubscriptionHelper;
 import org.killbill.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.glue.TestDefaultSubscriptionModuleNoDB;
+import org.killbill.billing.util.KillbillConfigSource;
 import org.killbill.billing.util.config.SubscriptionConfig;
-import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.util.svcsapi.bus.BusService;
+import org.killbill.clock.ClockMock;
+import org.mockito.Mockito;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -95,17 +96,13 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected AccountData accountData;
     protected SubscriptionBaseBundle bundle;
 
-    private void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = DefaultSubscriptionTestInitializer.class.getResource(resource);
-        Assert.assertNotNull(url);
-
-        configSource.merge(url);
+    @Override
+    protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {
+        return new TestKillbillConfigSource("/subscription.properties");
     }
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
-        loadSystemPropertiesFromClasspath("/subscription.properties");
-
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestDefaultSubscriptionModuleNoDB(configSource));
         g.injectMembers(this);
 

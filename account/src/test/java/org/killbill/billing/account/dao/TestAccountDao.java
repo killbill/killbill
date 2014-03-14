@@ -21,9 +21,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.AccountTestSuiteWithEmbeddedDB;
@@ -52,6 +49,8 @@ import org.killbill.billing.util.tag.DescriptiveTag;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
 import org.killbill.billing.util.tag.dao.TagModelDao;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 

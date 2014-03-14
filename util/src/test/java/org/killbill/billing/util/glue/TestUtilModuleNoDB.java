@@ -53,6 +53,6 @@ public class TestUtilModuleNoDB extends TestUtilModule {
 
         install(new KillBillShiroModule(configSource));
         install(new KillBillShiroAopModule());
-        install(new SecurityModule());
+        install(new SecurityModule(configSource));
     }
 }

@@ -68,7 +68,7 @@
             <tr>
                 <td>{{description}}</td>
                 <td>{{planName}}</td>
-                <td>{{formattedStartDate}} - {{formattedEndDate}}</td>
+                <td>{{formattedStartDate}}{{#formattedEndDate}} - {{formattedEndDate}}{{/formattedEndDate}}</td>
                 <td>{{invoice.currency}} {{amount}}</td>
             </tr>
             {{/invoice.invoiceItems}}

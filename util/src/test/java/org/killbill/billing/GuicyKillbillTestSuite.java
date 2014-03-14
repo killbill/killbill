@@ -20,18 +20,17 @@ import java.lang.reflect.Method;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.util.KillbillConfigSource;
+import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.clock.ClockMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.clock.ClockMock;
-
 public class GuicyKillbillTestSuite {
-
 
     // Use the simple name here to save screen real estate
     protected static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
@@ -47,14 +46,22 @@ public class GuicyKillbillTestSuite {
     @Inject
     protected ClockMock clock;
 
-
     private static final ClockMock theStaticClock = new ClockMock();
 
-    protected final KillbillConfigSource configSource = new KillbillConfigSource();
+    protected final KillbillConfigSource configSource;
 
     public GuicyKillbillTestSuite() {
-        // Ignore ehcache checks. Unfortunately, ehcache looks at system properties directly...
-        System.setProperty("net.sf.ehcache.skipUpdateCheck", "true");
+        try {
+            this.configSource = getConfigSource();
+        } catch (final Exception e) {
+            final AssertionError assertionError = new AssertionError("Initialization error");
+            assertionError.initCause(e);
+            throw assertionError;
+        }
+    }
+
+    protected KillbillConfigSource getConfigSource() throws Exception {
+        return new TestKillbillConfigSource();
     }
 
     public static ClockMock getClock() {
@@ -72,8 +79,8 @@ public class GuicyKillbillTestSuite {
     public void afterMethodAlwaysRun(final Method method, final ITestResult result) throws Exception {
         log.info("***************************************************************************************************");
         log.info("***   Ending test {}:{} {} ({} s.)", new Object[]{method.getDeclaringClass().getName(), method.getName(),
-                result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!",
-                (result.getEndMillis() - result.getStartMillis()) / 1000});
+                                                                    result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!",
+                                                                    (result.getEndMillis() - result.getStartMillis()) / 1000});
         log.info("***************************************************************************************************");
         if (!hasFailed && !result.isSuccess()) {
             hasFailed = true;

@@ -34,13 +34,14 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.realm.Realm;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
+import org.killbill.billing.server.config.DaoConfig;
+import org.killbill.billing.server.listeners.KillbillGuiceListener;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantUserApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -55,18 +56,17 @@ public class TenantFilter implements Filter {
     @Inject
     private TenantUserApi tenantUserApi;
 
-    private final ModularRealmAuthenticator modularRealmAuthenticator;
+    @Inject
+    private DaoConfig daoConfig;
 
-    public TenantFilter() {
-        final Realm killbillJdbcRealm = new KillbillJdbcRealm();
-
-        // We use Shiro to verify the api credentials - but the Shiro Subject is only used for RBAC
-        modularRealmAuthenticator = new ModularRealmAuthenticator();
-        modularRealmAuthenticator.setRealms(ImmutableList.<Realm>of(killbillJdbcRealm));
-    }
+    private ModularRealmAuthenticator modularRealmAuthenticator;
 
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
+        final Realm killbillJdbcRealm = new KillbillJdbcRealm(daoConfig);
+        // We use Shiro to verify the api credentials - but the Shiro Subject is only used for RBAC
+        modularRealmAuthenticator = new ModularRealmAuthenticator();
+        modularRealmAuthenticator.setRealms(ImmutableList.<Realm>of(killbillJdbcRealm));
     }
 
     @Override
@@ -121,11 +121,16 @@ public class TenantFilter implements Filter {
     private boolean shouldSkipFilter(final ServletRequest request) {
         boolean shouldSkip = false;
 
-        // Chicken - egg problem
         if (request instanceof HttpServletRequest) {
             final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
             final String path = httpServletRequest.getRequestURI();
-            if ("/1.0/kb/tenants".equals(path) && "POST".equals(httpServletRequest.getMethod())) {
+            if (    // Chicken - egg problem
+                    ("/1.0/kb/tenants".equals(path) && "POST".equals(httpServletRequest.getMethod())) ||
+                    // Metrics servlets
+                    (KillbillGuiceListener.METRICS_SERVLETS_PATHS.contains(path) && "GET".equals(httpServletRequest.getMethod())) ||
+                    // Welcome screen, static resources, etc.
+                    (!path.startsWith("/1.0") && "GET".equals(httpServletRequest.getMethod()))
+               ) {
                 shouldSkip = true;
             }
         }

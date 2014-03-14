@@ -17,7 +17,7 @@
 package org.killbill.billing.jaxrs;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URISyntaxException;
 import java.util.EventListener;
 import java.util.Iterator;
 import java.util.Map;
@@ -31,7 +31,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.killbill.billing.DBTestingHelper;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
-import org.killbill.billing.KillbillConfigSource;
+import org.killbill.billing.TestKillbillConfigSource;
 import org.killbill.billing.account.glue.DefaultAccountModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.beatrix.glue.BeatrixModule;
@@ -53,12 +53,14 @@ import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.provider.MockPaymentProviderPluginModule;
 import org.killbill.billing.server.config.DaoConfig;
+import org.killbill.billing.server.config.KillbillServerConfig;
 import org.killbill.billing.server.listeners.KillbillGuiceListener;
 import org.killbill.billing.server.modules.KillBillShiroWebModule;
 import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.TenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
+import org.killbill.billing.util.KillbillConfigSource;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.email.EmailModule;
@@ -89,8 +91,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 
-import static org.testng.Assert.assertNotNull;
-
 public class TestJaxrsBase extends KillbillClient {
 
     protected static final String PLUGIN_NAME = "noop";
@@ -102,8 +102,7 @@ public class TestJaxrsBase extends KillbillClient {
     protected CacheControllerDispatcher cacheControllerDispatcher;
 
     @Inject
-    protected @javax.inject.Named(BeatrixModule.EXTERNAL_BUS)
-    PersistentBus externalBus;
+    protected @javax.inject.Named(BeatrixModule.EXTERNAL_BUS) PersistentBus externalBus;
 
     @Inject
     protected PersistentBus internalBus;
@@ -111,33 +110,33 @@ public class TestJaxrsBase extends KillbillClient {
     @Inject
     protected TestApiListener busHandler;
 
+    protected DaoConfig daoConfig;
+    protected KillbillServerConfig serverConfig;
+
     protected static TestKillbillGuiceListener listener;
 
     protected HttpServerConfig config;
     private HttpServer server;
 
-    public static void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = TestJaxrsBase.class.getResource(resource);
-        assertNotNull(url);
-        try {
-            System.getProperties().load(url.openStream());
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
+    @Override
+    protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {
+        return new TestKillbillConfigSource("/killbill.properties");
     }
 
-    public static class TestKillbillGuiceListener extends KillbillGuiceListener {
+    public class TestKillbillGuiceListener extends KillbillGuiceListener {
 
-        private final DaoConfig daoConfig;
+        private final KillbillServerConfig serverConfig;
+        private final ConfigSource configSource;
 
-        public TestKillbillGuiceListener(final DaoConfig daoConfig) {
+        public TestKillbillGuiceListener(final KillbillServerConfig serverConfig, final ConfigSource configSource) {
             super();
-            this.daoConfig = daoConfig;
+            this.serverConfig = serverConfig;
+            this.configSource = configSource;
         }
 
         @Override
         protected Module getModule(final ServletContext servletContext) {
-            return new TestKillbillServerModule(daoConfig, servletContext);
+            return new TestKillbillServerModule(servletContext, serverConfig, configSource);
         }
 
     }
@@ -154,10 +153,10 @@ public class TestJaxrsBase extends KillbillClient {
         }
     }
 
-    public static class TestKillbillServerModule extends KillbillServerModule {
+    public class TestKillbillServerModule extends KillbillServerModule {
 
-        public TestKillbillServerModule(final DaoConfig daoConfig, final ServletContext servletContext) {
-            super(servletContext, daoConfig, false);
+        public TestKillbillServerModule(final ServletContext servletContext, final KillbillServerConfig serverConfig, final ConfigSource configSource) {
+            super(servletContext, serverConfig, configSource);
         }
 
         @Override
@@ -170,7 +169,7 @@ public class TestJaxrsBase extends KillbillClient {
             // Already done By Top test class
         }
 
-        private static final class PaymentMockModule extends PaymentModule {
+        private final class PaymentMockModule extends PaymentModule {
 
             public PaymentMockModule(final ConfigSource configSource) {
                 super(configSource);
@@ -184,14 +183,16 @@ public class TestJaxrsBase extends KillbillClient {
 
         @Override
         protected void installKillbillModules() {
-            final KillbillConfigSource configSource = new KillbillConfigSource(System.getProperties());
-
             /*
              * For a lack of getting module override working, copy all install modules from parent class...
              *
             super.installKillbillModules();
             Modules.override(new org.killbill.billing.payment.setup.PaymentModule()).with(new PaymentMockModule());
             */
+
+            bind(ConfigSource.class).toInstance(configSource);
+            bind(KillbillServerConfig.class).toInstance(serverConfig);
+            bind(DaoConfig.class).toInstance(daoConfig);
 
             install(new GuicyKillbillTestWithEmbeddedDBModule());
 
@@ -224,7 +225,7 @@ public class TestJaxrsBase extends KillbillClient {
             installClock();
             install(new KillBillShiroWebModule(servletContext, configSource));
             install(new KillBillShiroAopModule());
-            install(new SecurityModule());
+            install(new SecurityModule(configSource));
         }
     }
 
@@ -285,29 +286,29 @@ public class TestJaxrsBase extends KillbillClient {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
-        loadConfig();
-
-        listener.getInstantiatedInjector().injectMembers(this);
-    }
-
-    protected void loadConfig() {
+        // TODO PIERRE Unclear why both are needed in beforeClass and beforeSuite
         if (config == null) {
             config = new ConfigurationObjectFactory(System.getProperties()).build(HttpServerConfig.class);
         }
-
-        // For shiro (outside of Guice control)
-        System.setProperty("org.killbill.dao.url", DBTestingHelper.get().getJdbcConnectionString());
-        System.setProperty("org.killbill.dao.user", DBTestingHelper.get().getUsername());
-        System.setProperty("org.killbill.dao.password", DBTestingHelper.get().getPassword());
+        if (daoConfig == null) {
+            daoConfig = new ConfigurationObjectFactory(configSource).build(DaoConfig.class);
+        }
+        listener.getInstantiatedInjector().injectMembers(this);
     }
 
     @BeforeSuite(groups = "slow")
     public void beforeSuite() throws Exception {
         super.beforeSuite();
-        loadSystemPropertiesFromClasspath("/killbill.properties");
-        loadConfig();
 
-        listener = new TestKillbillGuiceListener(new ConfigurationObjectFactory(System.getProperties()).build(DaoConfig.class));
+        if (config == null) {
+            config = new ConfigurationObjectFactory(System.getProperties()).build(HttpServerConfig.class);
+        }
+        if (daoConfig == null) {
+            daoConfig = new ConfigurationObjectFactory(configSource).build(DaoConfig.class);
+        }
+
+        serverConfig = new ConfigurationObjectFactory(configSource).build(KillbillServerConfig.class);
+        listener = new TestKillbillGuiceListener(serverConfig, configSource);
 
         server = new HttpServer();
         server.configure(config, getListeners(), getFilters());

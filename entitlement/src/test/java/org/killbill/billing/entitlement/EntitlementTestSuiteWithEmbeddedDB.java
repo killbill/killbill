@@ -16,29 +16,22 @@
 
 package org.killbill.billing.entitlement;
 
-import java.net.URL;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import org.killbill.billing.TestKillbillConfigSource;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.catalog.DefaultCatalogService;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.clock.ClockMock;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
@@ -51,10 +44,18 @@ import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.KillbillConfigSource;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.svcsapi.bus.BusService;
 import org.killbill.billing.util.tag.dao.TagDao;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.clock.ClockMock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -62,7 +63,6 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
@@ -109,16 +109,13 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
 
     protected Catalog catalog;
 
-    private void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = EntitlementTestSuiteWithEmbeddedDB.class.getResource(resource);
-        Assert.assertNotNull(url);
-
-        configSource.merge(url);
+    @Override
+    protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {
+        return new TestKillbillConfigSource("/entitlement.properties");
     }
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
-        loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector injector = Guice.createInjector(Stage.PRODUCTION, new TestEntitlementModuleWithEmbeddedDB(configSource));
         injector.injectMembers(this);
     }
@@ -149,7 +146,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         return catalog;
     }
 
-
     private void startTestFamework(final TestApiListener testListener,
                                    final ClockMock clock,
                                    final BusService busService,
@@ -168,7 +164,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
 
         log.debug("STARTED TEST FRAMEWORK");
     }
-
 
     private void stopTestFramework(final TestApiListener testListener,
                                    final BusService busService,

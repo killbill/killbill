@@ -24,7 +24,7 @@ import org.killbill.billing.util.config.KillbillConfig;
 
 public interface OverdueProperties extends KillbillConfig {
 
-    @Config("killbill.overdue.uri")
+    @Config("org.killbill.overdue.uri")
     @Default("NoOverdueConfig.xml")
     @Description("Overdue configuration location. Either in the classpath or in the filesystem")
     public String getConfigURI();

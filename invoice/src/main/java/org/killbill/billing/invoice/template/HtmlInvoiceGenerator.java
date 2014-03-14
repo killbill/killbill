@@ -33,6 +33,7 @@ import org.killbill.billing.util.LocaleUtils;
 import org.killbill.billing.util.email.templates.TemplateEngine;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 public class HtmlInvoiceGenerator {
@@ -59,7 +60,9 @@ public class HtmlInvoiceGenerator {
 
         final Map<String, Object> data = new HashMap<String, Object>();
         final DefaultInvoiceTranslator invoiceTranslator = new DefaultInvoiceTranslator(config);
-        final Locale locale = LocaleUtils.toLocale(account.getLocale());
+        final String accountLocale = Strings.emptyToNull(account.getLocale());
+        // If no Locale is defined, use the default JVM one
+        final Locale locale = accountLocale == null ? Locale.getDefault() : LocaleUtils.toLocale(accountLocale);
         invoiceTranslator.setLocale(locale);
         data.put("text", invoiceTranslator);
         data.put("account", account);

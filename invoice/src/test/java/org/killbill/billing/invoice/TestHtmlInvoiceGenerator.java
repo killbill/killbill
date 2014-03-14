@@ -24,13 +24,6 @@ import java.util.Locale;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.mockito.Mockito;
-import org.skife.config.ConfigurationObjectFactory;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
@@ -41,6 +34,11 @@ import org.killbill.billing.invoice.template.formatters.DefaultInvoiceFormatterF
 import org.killbill.billing.util.email.templates.MustacheTemplateEngine;
 import org.killbill.billing.util.email.templates.TemplateEngine;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
+import org.mockito.Mockito;
+import org.skife.config.ConfigurationObjectFactory;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
@@ -50,7 +48,7 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
-        final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
+        final TranslatorConfig config = new ConfigurationObjectFactory(configSource).build(TranslatorConfig.class);
         final TemplateEngine templateEngine = new MustacheTemplateEngine();
         final InvoiceFormatterFactory factory = new DefaultInvoiceFormatterFactory();
         g = new HtmlInvoiceGenerator(factory, templateEngine, config, null);

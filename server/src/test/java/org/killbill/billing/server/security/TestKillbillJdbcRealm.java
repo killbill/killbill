@@ -24,15 +24,14 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.support.DelegatingSubject;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.jaxrs.TestJaxrsBase;
 import org.killbill.billing.tenant.api.DefaultTenant;
 import org.killbill.billing.tenant.dao.DefaultTenantDao;
 import org.killbill.billing.tenant.dao.TenantModelDao;
 import org.killbill.billing.util.dao.DefaultNonEntityDao;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
@@ -45,7 +44,6 @@ public class TestKillbillJdbcRealm extends TestJaxrsBase {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
-
         super.beforeMethod();
 
         // Create the tenant
@@ -61,7 +59,7 @@ public class TestKillbillJdbcRealm extends TestJaxrsBase {
         dbConfig.setPassword(helper.getPassword());
 
         final KillbillJdbcRealm jdbcRealm;
-        jdbcRealm = new KillbillJdbcRealm();
+        jdbcRealm = new KillbillJdbcRealm(daoConfig);
         jdbcRealm.setDataSource(new BoneCPDataSource(dbConfig));
 
         securityManager = new DefaultSecurityManager(jdbcRealm);

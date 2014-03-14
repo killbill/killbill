@@ -24,12 +24,6 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
-import org.skife.config.ConfigurationObjectFactory;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -38,6 +32,10 @@ import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.util.LocaleUtils;
 import org.killbill.billing.util.email.templates.MustacheTemplateEngine;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
+import org.skife.config.ConfigurationObjectFactory;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
 
@@ -48,7 +46,7 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
-        config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
+        config = new ConfigurationObjectFactory(configSource).build(TranslatorConfig.class);
         templateEngine = new MustacheTemplateEngine();
     }
 

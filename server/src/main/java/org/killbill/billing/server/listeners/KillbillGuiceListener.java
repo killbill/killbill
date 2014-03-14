@@ -26,27 +26,28 @@ import javax.servlet.ServletContextEvent;
 import org.killbill.billing.beatrix.lifecycle.DefaultLifecycle;
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
-import org.killbill.billing.server.config.DaoConfig;
 import org.killbill.billing.server.config.KillbillServerConfig;
 import org.killbill.billing.server.healthchecks.KillbillHealthcheck;
 import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.security.TenantFilter;
+import org.killbill.billing.util.KillbillConfigSource;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.killbill.billing.util.svcsapi.bus.BusService;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.commons.skeleton.listeners.GuiceServletContextListener;
 import org.killbill.commons.skeleton.modules.BaseServerModuleBuilder;
-import org.killbill.commons.skeleton.modules.ConfigModule;
 import org.killbill.commons.skeleton.modules.JMXModule;
 import org.killbill.commons.skeleton.modules.JaxrsJacksonModule;
 import org.killbill.commons.skeleton.modules.StatsModule;
 import org.killbill.notificationq.api.NotificationQueueService;
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.codahale.metrics.servlets.HealthCheckServlet;
 import com.codahale.metrics.servlets.MetricsServlet;
@@ -59,10 +60,12 @@ import net.sf.ehcache.management.ManagementService;
 
 public class KillbillGuiceListener extends GuiceServletContextListener {
 
-    public static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
+
+    public static final ImmutableList<String> METRICS_SERVLETS_PATHS = ImmutableList.<String>of("/1.0/healthcheck", "/1.0/metrics", "/1.0/ping", "/1.0/threads");
 
     private KillbillServerConfig config;
-    private DaoConfig daoConfig;
+    private ConfigSource configSource;
     private Injector injector;
     private DefaultLifecycle killbillLifecycle;
     private BusService killbillBusService;
@@ -70,7 +73,7 @@ public class KillbillGuiceListener extends GuiceServletContextListener {
     private EmbeddedDB embeddedDB;
 
     protected Module getModule(final ServletContext servletContext) {
-        return new KillbillServerModule(servletContext, daoConfig, config.isTestModeEnabled());
+        return new KillbillServerModule(servletContext, config, configSource);
     }
 
     private void registerMBeansForCache(final CacheManager cacheManager) {
@@ -82,8 +85,8 @@ public class KillbillGuiceListener extends GuiceServletContextListener {
 
     @Override
     public void contextInitialized(final ServletContextEvent event) {
-        config = new ConfigurationObjectFactory(System.getProperties()).build(KillbillServerConfig.class);
-        daoConfig = new ConfigurationObjectFactory(System.getProperties()).build(DaoConfig.class);
+        configSource = new KillbillConfigSource();
+        config = new ConfigurationObjectFactory(configSource).build(KillbillServerConfig.class);
 
         // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
         // things like static resources, favicon, etc. are 404'ed)
@@ -96,10 +99,13 @@ public class KillbillGuiceListener extends GuiceServletContextListener {
         }
 
         guiceModules = ImmutableList.<Module>of(builder.build(),
-                                                new ConfigModule(KillbillServerConfig.class, DaoConfig.class),
                                                 new JaxrsJacksonModule(new ObjectMapper()),
                                                 new JMXModule(KillbillHealthcheck.class, NotificationQueueService.class, PersistentBus.class),
-                                                new StatsModule(KillbillHealthcheck.class),
+                                                new StatsModule(METRICS_SERVLETS_PATHS.get(0),
+                                                                METRICS_SERVLETS_PATHS.get(1),
+                                                                METRICS_SERVLETS_PATHS.get(2),
+                                                                METRICS_SERVLETS_PATHS.get(3),
+                                                                ImmutableList.<Class<? extends HealthCheck>>of(KillbillHealthcheck.class)),
                                                 getModule(event.getServletContext()));
 
         super.contextInitialized(event);

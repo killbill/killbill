@@ -1,3 +1,8 @@
+0.9.2
+    Add org.killbill.server.properties property
+    Add default invoice HTML template
+    Better first time experience when using the jetty-console war
+
 0.9.1
     Update packages com.ning -> org.killbill
 
