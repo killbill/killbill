@@ -47,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.codahale.metrics.servlets.HealthCheckServlet;
 import com.codahale.metrics.servlets.MetricsServlet;
@@ -60,6 +61,8 @@ import net.sf.ehcache.management.ManagementService;
 public class KillbillGuiceListener extends GuiceServletContextListener {
 
     private static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
+
+    public static final ImmutableList<String> METRICS_SERVLETS_PATHS = ImmutableList.<String>of("/1.0/healthcheck", "/1.0/metrics", "/1.0/ping", "/1.0/threads");
 
     private KillbillServerConfig config;
     private ConfigSource configSource;
@@ -98,7 +101,11 @@ public class KillbillGuiceListener extends GuiceServletContextListener {
         guiceModules = ImmutableList.<Module>of(builder.build(),
                                                 new JaxrsJacksonModule(new ObjectMapper()),
                                                 new JMXModule(KillbillHealthcheck.class, NotificationQueueService.class, PersistentBus.class),
-                                                new StatsModule(KillbillHealthcheck.class),
+                                                new StatsModule(METRICS_SERVLETS_PATHS.get(0),
+                                                                METRICS_SERVLETS_PATHS.get(1),
+                                                                METRICS_SERVLETS_PATHS.get(2),
+                                                                METRICS_SERVLETS_PATHS.get(3),
+                                                                ImmutableList.<Class<? extends HealthCheck>>of(KillbillHealthcheck.class)),
                                                 getModule(event.getServletContext()));
 
         super.contextInitialized(event);

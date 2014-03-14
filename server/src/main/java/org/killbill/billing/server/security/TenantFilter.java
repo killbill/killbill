@@ -36,6 +36,7 @@ import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.realm.Realm;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.server.config.DaoConfig;
+import org.killbill.billing.server.listeners.KillbillGuiceListener;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantUserApi;
@@ -120,11 +121,16 @@ public class TenantFilter implements Filter {
     private boolean shouldSkipFilter(final ServletRequest request) {
         boolean shouldSkip = false;
 
-        // Chicken - egg problem
         if (request instanceof HttpServletRequest) {
             final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
             final String path = httpServletRequest.getRequestURI();
-            if ("/1.0/kb/tenants".equals(path) && "POST".equals(httpServletRequest.getMethod())) {
+            if (    // Chicken - egg problem
+                    ("/1.0/kb/tenants".equals(path) && "POST".equals(httpServletRequest.getMethod())) ||
+                    // Metrics servlets
+                    (KillbillGuiceListener.METRICS_SERVLETS_PATHS.contains(path) && "GET".equals(httpServletRequest.getMethod())) ||
+                    // Welcome screen, static resources, etc.
+                    (!path.startsWith("/1.0") && "GET".equals(httpServletRequest.getMethod()))
+               ) {
                 shouldSkip = true;
             }
         }
