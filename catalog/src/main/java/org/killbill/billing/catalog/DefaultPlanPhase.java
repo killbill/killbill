@@ -82,11 +82,13 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 
     @Override
     public boolean compliesWithLimits(final String unit, final double value) {
+        // First check usage section
         for (DefaultUsage usage : usages) {
             if (!usage.compliesWithLimits(unit, value)) {
                 return false;
             }
         }
+        // Second, check if there are limits defined at the product section.
         return plan.getProduct().compliesWithLimits(unit, value);
     }
 

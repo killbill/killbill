@@ -122,8 +122,8 @@
                     </recurringPrice>
                 </recurring>
                 <usages>
-                    <usage>
-                        <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <usage billingMode="IN_ADVANCE" usageType="CAPACITY">
+                        <billingPeriod>MONTHLY</billingPeriod>
                         <limits>
                             <limit>
                                 <unit>targets</unit>
@@ -134,6 +134,20 @@
                                 <max>20</max>
                             </limit>
                         </limits>
+                        <recurringPrice>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>1.95</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>0.95</value>
+                            </price>
+                            <price>
+                                <currency>USD</currency>
+                                <value>1.95</value>
+                            </price>
+                        </recurringPrice>
                     </usage>
                 </usages>
             </finalPhase>
@@ -212,7 +226,7 @@
                     </recurringPrice>
                 </recurring>
                 <usages>
-                    <usage>
+                    <usage billingMode="IN_ADVANCE" usageType="CAPACITY">
                         <billingPeriod>ANNUAL</billingPeriod>
                         <limits>
                             <limit>
@@ -220,6 +234,20 @@
                                 <max>200</max>
                             </limit>
                         </limits>
+                        <recurringPrice>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>1.95</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>0.95</value>
+                            </price>
+                            <price>
+                                <currency>USD</currency>
+                                <value>1.95</value>
+                            </price>
+                        </recurringPrice>
                     </usage>
                 </usages>
             </finalPhase>
