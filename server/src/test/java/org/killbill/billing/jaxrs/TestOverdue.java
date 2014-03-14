@@ -17,14 +17,17 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Invoice;
+import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.Payment;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import com.google.common.collect.Ordering;
 
 import static org.testng.Assert.assertEquals;
 
@@ -55,8 +58,17 @@ public class TestOverdue extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
         Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD3");
 
-        // Post external payments
-        for (final Invoice invoice : killBillClient.getInvoicesForAccount(accountJson.getAccountId())) {
+        // Post external payments, paying the most recent invoice first: this is to avoid a race condition where
+        // a refresh overdue notification kicks in after the first payment, which makes the account goes CLEAR and
+        // triggers an AUTO_INVOICE_OFF tag removal (hence adjustment of the other invoices balance).
+        final Invoices invoicesForAccount = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
+        final List<Invoice> mostRecentInvoiceFirst = Ordering.<Invoice>from(new Comparator<Invoice>() {
+            @Override
+            public int compare(final Invoice invoice1, final Invoice invoice2) {
+                return invoice1.getInvoiceDate().compareTo(invoice2.getInvoiceDate());
+            }
+        }).reverse().sortedCopy(invoicesForAccount);
+        for (final Invoice invoice : mostRecentInvoiceFirst) {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
                 final Payment payment = new Payment();
                 payment.setAccountId(accountJson.getAccountId());
