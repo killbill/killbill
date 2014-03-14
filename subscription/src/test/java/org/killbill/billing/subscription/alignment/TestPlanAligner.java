@@ -54,13 +54,14 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
     private final DefaultClock clock = new DefaultClock();
 
-    private DefaultCatalogService catalogService;
     private PlanAligner planAligner;
 
     @Override
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
+
+        /*
         final VersionedCatalogLoader versionedCatalogLoader = new VersionedCatalogLoader(clock);
         final CatalogConfig config = new ConfigurationObjectFactory(new ConfigSource() {
             final Map<String, String> properties = ImmutableMap.<String, String>of("org.killbill.catalog.uri", "file:src/test/resources/testInput.xml");
@@ -72,9 +73,9 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         }).build(CatalogConfig.class);
 
         catalogService = new DefaultCatalogService(config, versionedCatalogLoader);
+        */
         planAligner = new PlanAligner(catalogService);
 
-        catalogService.loadCatalog();
     }
 
     @Test(groups = "fast")

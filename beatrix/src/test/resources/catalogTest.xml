@@ -85,6 +85,10 @@
                 <policy>IMMEDIATE</policy>
             </changePolicyCase>
             <changePolicyCase>
+                <toPriceList>rescue</toPriceList>
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
+            <changePolicyCase>
                 <toProduct>Assault-Rifle</toProduct>
                 <policy>IMMEDIATE</policy>
             </changePolicyCase>
