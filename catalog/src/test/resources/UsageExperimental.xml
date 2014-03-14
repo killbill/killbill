@@ -138,20 +138,16 @@
                     <usage billingMode="IN_ADVANCE" usageType="CONSUMABLE">
                         <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
                         <blocks>
-                            <block>
+                            <block type="TOP_UP">
                                 <unit>fastrack-tokens</unit>
                                 <size>10</size>
-                                <!-- Specify to refill account when 'account' value drops to min
-                                Unclear if this should really be a block attribute.
-                                -->
-                                <!-- <min>5</min> -->
-
                                 <prices>
                                     <price>
                                         <currency>BTC</currency>
                                         <value>0.10</value>
                                     </price>
                                 </prices>
+                                <minTopUpCredit>5</minTopUpCredit>
                             </block>
                         </blocks>
                     </usage>
@@ -238,7 +234,7 @@
                         <tiers>
                             <tier>
                                 <blocks>
-                                    <block>
+                                    <tieredBlock>
                                         <unit>cell-phone-minutes</unit>
                                         <size>1000</size>
                                         <prices>
@@ -247,8 +243,9 @@
                                                 <value>0.5</value>
                                             </price>
                                         </prices>
-                                    </block>
-                                    <block>
+                                        <max>10000</max>
+                                    </tieredBlock>
+                                    <tieredBlock>
                                         <unit>Mbytes</unit>
                                         <size>512</size>
                                         <prices>
@@ -257,7 +254,8 @@
                                                 <value>0.3</value>
                                             </price>
                                         </prices>
-                                    </block>
+                                        <max>512000</max>
+                                    </tieredBlock>
                                 </blocks>
                             </tier>
                         </tiers>

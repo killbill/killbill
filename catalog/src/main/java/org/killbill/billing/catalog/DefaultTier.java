@@ -25,6 +25,7 @@ import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Block;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Tier;
+import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.util.config.catalog.ValidatingConfig;
 import org.killbill.billing.util.config.catalog.ValidationError;
@@ -38,8 +39,8 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
     private DefaultLimit[] limits = new DefaultLimit[0];
 
     @XmlElementWrapper(name = "blocks", required = false)
-    @XmlElement(name = "block", required = true)
-    private DefaultBlock[] blocks = new DefaultBlock[0];
+    @XmlElement(name = "tieredBlock", required = true)
+    private DefaultTieredBlock[] blocks = new DefaultTieredBlock[0];
 
     // Used to define a fixed price for the whole tier section
     @XmlElement(required = false)
@@ -59,7 +60,7 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
     }
 
     @Override
-    public Block[] getBlocks() {
+    public DefaultTieredBlock[] getTieredBlocks() {
         return blocks;
     }
 
@@ -78,7 +79,7 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
         return this;
     }
 
-    public DefaultTier setBlocks(final DefaultBlock[] blocks) {
+    public DefaultTier setBlocks(final DefaultTieredBlock[] blocks) {
         this.blocks = blocks;
         return this;
     }

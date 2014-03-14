@@ -19,6 +19,7 @@ package org.killbill.billing.catalog.io;
 import java.math.BigDecimal;
 
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
+import org.killbill.billing.catalog.DefaultTieredBlock;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -138,6 +139,9 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
             assertEquals(usage.getBlocks()[0].getPrice().getPrices().length, 1);
             assertEquals(usage.getBlocks()[0].getPrice().getPrices()[0].getCurrency(), Currency.BTC);
             assertEquals(usage.getBlocks()[0].getPrice().getPrices()[0].getValue(), new BigDecimal("0.10"));
+
+            assertEquals(usage.getBlocks()[0].getMinTopUpCredit(), new Double("5"));
+
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -212,19 +216,21 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
 
             assertEquals(usage.getTiers().length, 1);
 
+            assertEquals(usage.getTiers()[0].getTieredBlocks().length, 2);
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getUnit().getName(), "cell-phone-minutes");
 
-            assertEquals(usage.getTiers()[0].getBlocks().length, 2);
-            assertEquals(usage.getTiers()[0].getBlocks()[0].getUnit().getName(), "cell-phone-minutes");
-            assertEquals(usage.getTiers()[0].getBlocks()[0].getSize(), new Double("1000"));
-            assertEquals(usage.getTiers()[0].getBlocks()[0].getPrice().getPrices().length, 1);
-            assertEquals(usage.getTiers()[0].getBlocks()[0].getPrice().getPrices()[0].getCurrency(), Currency.BTC);
-            assertEquals(usage.getTiers()[0].getBlocks()[0].getPrice().getPrices()[0].getValue(), new BigDecimal("0.5"));
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getSize(), new Double("1000"));
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getMax(), new Double("10000"));
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getPrice().getPrices().length, 1);
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getPrice().getPrices()[0].getCurrency(), Currency.BTC);
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getPrice().getPrices()[0].getValue(), new BigDecimal("0.5"));
 
-            assertEquals(usage.getTiers()[0].getBlocks()[1].getUnit().getName(), "Mbytes");
-            assertEquals(usage.getTiers()[0].getBlocks()[1].getSize(), new Double("512"));
-            assertEquals(usage.getTiers()[0].getBlocks()[1].getPrice().getPrices().length, 1);
-            assertEquals(usage.getTiers()[0].getBlocks()[1].getPrice().getPrices()[0].getCurrency(), Currency.BTC);
-            assertEquals(usage.getTiers()[0].getBlocks()[1].getPrice().getPrices()[0].getValue(), new BigDecimal("0.3"));
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getUnit().getName(), "Mbytes");
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getSize(), new Double("512"));
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getMax(), new Double("512000"));
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getPrice().getPrices().length, 1);
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getPrice().getPrices()[0].getCurrency(), Currency.BTC);
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getPrice().getPrices()[0].getValue(), new BigDecimal("0.3"));
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
