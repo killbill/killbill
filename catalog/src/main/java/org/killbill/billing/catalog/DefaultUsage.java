@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlID;
 
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -39,6 +40,10 @@ import org.killbill.billing.util.config.catalog.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements Usage {
+
+    @XmlAttribute(required = true)
+    @XmlID
+    private String name;
 
     @XmlAttribute(required = true)
     private BillingMode billingMode;
@@ -75,6 +80,11 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
 
     // Not exposed in xml.
     private PlanPhase phase;
+
+    @Override
+    public String getName() {
+        return name;
+    }
 
     @Override
     public BillingMode getBillingMode() {
@@ -168,6 +178,11 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
 
     public DefaultUsage setBillingPeriod(final BillingPeriod billingPeriod) {
         this.billingPeriod = billingPeriod;
+        return this;
+    }
+
+    public DefaultUsage setName(final String name) {
+        this.name = name;
         return this;
     }
 

@@ -74,7 +74,7 @@
                 </duration>
 
                 <usages>
-                    <usage billingMode="IN_ADVANCE" usageType="CAPACITY">
+                    <usage name="capacity-in-advance-monthly-usage1" billingMode="IN_ADVANCE" usageType="CAPACITY">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <limits>
                             <limit>
@@ -102,7 +102,7 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <usages>
-                    <usage billingMode="IN_ADVANCE" usageType="CONSUMABLE">
+                    <usage name="consumable-in-advance-prepay-credit-monthly-usage1" billingMode="IN_ADVANCE" usageType="CONSUMABLE">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <blocks>
                             <block>
@@ -135,7 +135,7 @@
                 </duration>
 
                 <usages>
-                    <usage billingMode="IN_ADVANCE" usageType="CONSUMABLE">
+                    <usage name="consumable-in-advance-topup-usage1" billingMode="IN_ADVANCE" usageType="CONSUMABLE">
                         <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
                         <blocks>
                             <block type="TOP_UP">
@@ -164,7 +164,7 @@
                 </duration>
 
                 <usages>
-                    <usage billingMode="IN_ARREAR" usageType="CAPACITY">
+                    <usage name="capacity-in-arrear-usage1" billingMode="IN_ARREAR" usageType="CAPACITY">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <tiers>
                             <tier>
@@ -229,7 +229,7 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <usages>
-                    <usage billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                    <usage name="consumable-in-arrear-usage1" billingMode="IN_ARREAR" usageType="CONSUMABLE">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <tiers>
                             <tier>

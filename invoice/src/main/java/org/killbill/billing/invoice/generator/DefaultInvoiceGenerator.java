@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -51,6 +52,7 @@ import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,12 +71,14 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private final Clock clock;
     private final InvoiceConfig config;
     private final UsageUserApi usageApi;
+    private final NonEntityDao nonEntityDao;
 
     @Inject
-    public DefaultInvoiceGenerator(final Clock clock, final UsageUserApi usageApi, final InvoiceConfig config) {
+    public DefaultInvoiceGenerator(final Clock clock, final UsageUserApi usageApi, final InvoiceConfig config, final NonEntityDao nonEntityDao) {
         this.clock = clock;
         this.config = config;
         this.usageApi = usageApi;
+        this.nonEntityDao = nonEntityDao;
     }
 
     /*
@@ -109,6 +113,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                                         @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
                                                         final InternalCallContext context) throws InvoiceApiException {
 
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
         try {
 
             final List<InvoiceItem> items = Lists.newArrayList();
@@ -120,18 +125,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 final BillingEvent event = events.next();
                 final UUID subscriptionId = event.getSubscription().getId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
-                    //
-                    // STEPH_USAGE unitType issue
-                    // STEPH_USAGE context needs tenantId , hum...
-                    final UUID tenantId = UUID.randomUUID();
-                    SubscriptionConsumableInArrear foo = new SubscriptionConsumableInArrear(invoiceId, "foo", curEvents, usageApi, targetDate, context.toTenantContext(tenantId));
-                    items.addAll(foo.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(subscriptionId, existingInvoices)));
+                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, targetDate, context.toTenantContext(tenantId));
+                    items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(subscriptionId, existingInvoices)));
                     curEvents.clear();
                 }
                 curSubscriptionId = subscriptionId;
                 curEvents.add(event);
             }
-
             return items;
 
         } catch (CatalogApiException e) {

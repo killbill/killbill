@@ -28,19 +28,19 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 
 public class UsageInvoiceItem extends InvoiceItemBase {
 
-    private final String unitType;
+    private final String usageName;
 
     public UsageInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
                             final String planName, final String phaseName,
-                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final String unitType) {
-        this(UUID.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, unitType);
+                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final String usageName) {
+        this(UUID.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, usageName);
     }
 
     public UsageInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
                             final UUID subscriptionId, final String planName, final String phaseName,
-                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final String unitType) {
+                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final String usageName) {
         super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
-        this.unitType = unitType;
+        this.usageName = usageName;
     }
 
     @Override
@@ -50,10 +50,10 @@ public class UsageInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String getDescription() {
-        return String.format("%s (usage item)", unitType);
+        return String.format("%s (usage item)", usageName);
     }
 
-    public String getUnitType() {
-        return unitType;
+    public String getUsageName() {
+        return usageName;
     }
 }

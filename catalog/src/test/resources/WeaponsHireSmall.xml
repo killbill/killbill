@@ -122,7 +122,7 @@
                     </recurringPrice>
                 </recurring>
                 <usages>
-                    <usage billingMode="IN_ADVANCE" usageType="CAPACITY">
+                    <usage name="usage1" billingMode="IN_ADVANCE" usageType="CAPACITY">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <limits>
                             <limit>
@@ -226,7 +226,7 @@
                     </recurringPrice>
                 </recurring>
                 <usages>
-                    <usage billingMode="IN_ADVANCE" usageType="CAPACITY">
+                    <usage name="usage2" billingMode="IN_ADVANCE" usageType="CAPACITY">
                         <billingPeriod>ANNUAL</billingPeriod>
                         <limits>
                             <limit>

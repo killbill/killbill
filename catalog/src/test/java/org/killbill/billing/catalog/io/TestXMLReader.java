@@ -67,6 +67,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
             assertEquals(usages.length, 1);
             final Usage usage = usages[0];
 
+            assertEquals(usage.getName(), "capacity-in-advance-monthly-usage1");
             assertEquals(usage.getBillingPeriod(), BillingPeriod.MONTHLY);
             assertEquals(usage.getUsageType(), UsageType.CAPACITY);
             assertEquals(usage.getBillingMode(), BillingMode.IN_ADVANCE);
@@ -96,6 +97,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
             assertEquals(usages.length, 1);
             final Usage usage = usages[0];
 
+            assertEquals(usage.getName(), "consumable-in-advance-prepay-credit-monthly-usage1");
             assertEquals(usage.getBillingPeriod(), BillingPeriod.MONTHLY);
             assertEquals(usage.getUsageType(), UsageType.CONSUMABLE);
             assertEquals(usage.getBillingMode(), BillingMode.IN_ADVANCE);
@@ -127,6 +129,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
             assertEquals(usages.length, 1);
             final Usage usage = usages[0];
 
+            assertEquals(usage.getName(), "consumable-in-advance-topup-usage1");
             assertEquals(usage.getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD);
             assertEquals(usage.getUsageType(), UsageType.CONSUMABLE);
             assertEquals(usage.getBillingMode(), BillingMode.IN_ADVANCE);
@@ -161,6 +164,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
             assertEquals(usages.length, 1);
             final Usage usage = usages[0];
 
+            assertEquals(usage.getName(), "capacity-in-arrear-usage1");
             assertEquals(usage.getBillingPeriod(), BillingPeriod.MONTHLY);
             assertEquals(usage.getUsageType(), UsageType.CAPACITY);
             assertEquals(usage.getBillingMode(), BillingMode.IN_ARREAR);
@@ -210,6 +214,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
             assertEquals(usages.length, 1);
             final Usage usage = usages[0];
 
+            assertEquals(usage.getName(), "consumable-in-arrear-usage1");
             assertEquals(usage.getBillingPeriod(), BillingPeriod.MONTHLY);
             assertEquals(usage.getUsageType(), UsageType.CONSUMABLE);
             assertEquals(usage.getBillingMode(), BillingMode.IN_ARREAR);

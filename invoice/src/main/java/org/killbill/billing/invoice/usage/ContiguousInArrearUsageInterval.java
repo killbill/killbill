@@ -17,7 +17,12 @@
 package org.killbill.billing.invoice.usage;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -44,29 +49,243 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import static org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear.getTieredBlocks;
+import static org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear.getUnitTypes;
 import static org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear.localDateToEndOfDayInAccountTimezone;
 
+/**
+ * There is one such class per subscriptionId, matching a given in arrear/consumable usage section and
+ * referenced through a contiguous list of billing events.
+ */
 public class ContiguousInArrearUsageInterval {
 
     private final List<LocalDate> transitionTimes;
     private final List<BillingEvent> billingEvents;
 
     private final Usage usage;
-    private final String unitType;
+    private final Set<String> unitTypes;
     private final UsageUserApi usageApi;
     private final LocalDate targetDate;
     private final UUID invoiceId;
     private final TenantContext context;
 
-    public ContiguousInArrearUsageInterval(final Usage usage, final UUID invoiceId, final String unitType, final UsageUserApi usageApi, final LocalDate targetDate, final TenantContext context) {
+    public ContiguousInArrearUsageInterval(final Usage usage, final UUID invoiceId, final UsageUserApi usageApi, final LocalDate targetDate, final TenantContext context) {
         this.usage = usage;
         this.invoiceId = invoiceId;
-        this.unitType = unitType;
+        this.unitTypes = getUnitTypes(usage);
         this.usageApi = usageApi;
         this.targetDate = targetDate;
         this.context = context;
         this.billingEvents = Lists.newLinkedList();
         this.transitionTimes = Lists.newLinkedList();
+    }
+
+    /**
+     * Builds the transitionTimes associated to that usage section. Those are determined based on billing events for when to start and when to stop,
+     * the per usage billingPeriod and finally the targetDate.
+     * <p/>
+     * Those transition dates define the well defined billing granularity periods that should be billed for that specific usage section.
+     *
+     * @param closedInterval whether there was a last billing event referencing the usage section or whether this is ongoing and
+     *                       then targetDate will define the endDate.
+     * @return
+     */
+    public ContiguousInArrearUsageInterval build(final boolean closedInterval) {
+
+        Preconditions.checkState((!closedInterval && billingEvents.size() >= 1) ||
+                                 (closedInterval && billingEvents.size() >= 2));
+
+        final LocalDate startDate = new LocalDate(billingEvents.get(0).getEffectiveDate(), getAccountTimeZone());
+        if (targetDate.isBefore(startDate)) {
+            return this;
+        }
+
+        final LocalDate endDate = closedInterval ? new LocalDate(billingEvents.get(billingEvents.size() - 1), getAccountTimeZone()) : targetDate;
+
+        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, getBCD(), usage.getBillingPeriod());
+
+        int numberOfPeriod = 0;
+        // First billingCycleDate prior startDate
+        LocalDate nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
+        transitionTimes.add(startDate);
+        while (!nextBillCycleDate.isAfter(endDate)) {
+            if (nextBillCycleDate.isAfter(startDate)) {
+                transitionTimes.add(nextBillCycleDate);
+            }
+            numberOfPeriod++;
+            nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
+        }
+        return this;
+    }
+
+    /**
+     * Compute the missing usage invoice items based on what should be billed and what has been billed ($ amount comparison).
+     *
+     * @param existingUsage existing on disk usage items for the subscription
+     * @return
+     * @throws CatalogApiException
+     */
+    public List<InvoiceItem> computeMissingItems(final List<InvoiceItem> existingUsage) throws CatalogApiException {
+
+        final List<InvoiceItem> result = Lists.newLinkedList();
+
+        final RolledUpUsageForUnitTypesFactory factory = new RolledUpUsageForUnitTypesFactory(getRolledUpUsage(), unitTypes, getAccountTimeZone());
+        for (RolledUpUsageForUnitTypes ru : factory.getOrderedRolledUpUsageForUnitTypes()) {
+
+            final BigDecimal billedUsage = computeBilledUsage(ru.getStartDate(), ru.getEndDate(), existingUsage);
+            final BigDecimal toBeBilledUsage = BigDecimal.ZERO;
+            for (final String unitType : unitTypes) {
+                final BigDecimal usageAmountForUnitType = ru.getUsageAmountForUnitType(unitType);
+                final BigDecimal toBeBilledForUnit = computeToBeBilledUsage(usageAmountForUnitType, unitType);
+                toBeBilledUsage.add(toBeBilledForUnit);
+
+                if (billedUsage.compareTo(toBeBilledUsage) < 0) {
+                    InvoiceItem item = new UsageInvoiceItem(invoiceId, getAccountId(), getBundleId(), getSubscriptionId(), getPlanName(),
+                                                            getPhaseName(), ru.getStartDate(), ru.getEndDate(), toBeBilledUsage.subtract(billedUsage), getCurrency(), usage.getName());
+                    result.add(item);
+                }
+            }
+        }
+        return result;
+    }
+
+    List<RolledUpUsage> getRolledUpUsage() {
+
+        final Iterable<DateTime> transitions = Iterables.transform(transitionTimes, new Function<LocalDate, DateTime>() {
+            @Override
+            public DateTime apply(final LocalDate input) {
+                return localDateToEndOfDayInAccountTimezone(input, getAccountTimeZone());
+            }
+        });
+        // STEPH_USAGE optimized api takes set of unitTypes -- for usage section-- and list of transitions date. Should we use dateTime or LocalDate?
+        return usageApi.getAllUsageForSubscription(getSubscriptionId(), unitTypes, ImmutableList.copyOf(transitions), context);
+    }
+
+    BigDecimal computeToBeBilledUsage(final BigDecimal nbUnits, final String unitType) throws CatalogApiException {
+
+        BigDecimal result = BigDecimal.ZERO;
+
+        final List<TieredBlock> tieredBlocks = getTieredBlocks(usage, unitType);
+        int remainingUnits = nbUnits.intValue();
+        for (TieredBlock tieredBlock : tieredBlocks) {
+
+            final int blockTierSize = tieredBlock.getSize().intValue();
+            final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
+            final int nbUsedTierBlocks;
+            if (tmp > tieredBlock.getMax()) {
+                nbUsedTierBlocks = tieredBlock.getMax().intValue();
+                remainingUnits -= tieredBlock.getMax() * blockTierSize;
+            } else {
+                nbUsedTierBlocks = tmp;
+                remainingUnits = 0;
+            }
+            result.add(tieredBlock.getPrice().getPrice(getCurrency()).multiply(new BigDecimal(nbUsedTierBlocks)));
+        }
+        return result;
+    }
+
+    BigDecimal computeBilledUsage(final LocalDate startDate, final LocalDate endDate, final List<InvoiceItem> existingUsage) {
+        final Iterable<InvoiceItem> filteredUsageForInterval = Iterables.filter(existingUsage, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                if (input.getInvoiceItemType() != InvoiceItemType.USAGE) {
+                    return false;
+                }
+
+                // STEPH_USAGE what happens if we discover usage period that overlap (one side or both side) the [startDate, endDate] interval
+                final UsageInvoiceItem usageInput = (UsageInvoiceItem) input;
+                return usageInput.getUsageName().equals(usage.getName()) &&
+                       usageInput.getStartDate().compareTo(startDate) >= 0 &&
+                       usageInput.getEndDate().compareTo(endDate) <= 0;
+            }
+        });
+
+        final BigDecimal billedAmount = BigDecimal.ZERO;
+        for (InvoiceItem ii : filteredUsageForInterval) {
+            billedAmount.add(ii.getAmount());
+        }
+        // Return the billed $ amount (not the # of units)
+        return billedAmount;
+    }
+
+    private static class RolledUpUsageForUnitTypesFactory {
+
+        private final Map<String, RolledUpUsageForUnitTypes> map;
+
+        public RolledUpUsageForUnitTypesFactory(final List<RolledUpUsage> rolledUpUsages, final Set<String> unitTypes, final DateTimeZone accountTimeZone) {
+            map = new HashMap<String, RolledUpUsageForUnitTypes>();
+            for (RolledUpUsage ru : rolledUpUsages) {
+
+                final LocalDate startRolledUpDate = new LocalDate(ru.getStartTime(), accountTimeZone);
+                final LocalDate endRolledUpDate = new LocalDate(ru.getEndTime(), accountTimeZone);
+                final String key = startRolledUpDate + "-" + endRolledUpDate;
+
+                RolledUpUsageForUnitTypes usageForUnitTypes = map.get(key);
+                if (usageForUnitTypes == null) {
+                    usageForUnitTypes = new RolledUpUsageForUnitTypes(startRolledUpDate, endRolledUpDate, unitTypes);
+                    map.put(key, usageForUnitTypes);
+                }
+                usageForUnitTypes.addUsageForUnit(ru.getUnitType(), ru.getAmount());
+            }
+        }
+
+        public List<RolledUpUsageForUnitTypes> getOrderedRolledUpUsageForUnitTypes() {
+            final LinkedList<RolledUpUsageForUnitTypes> result = new LinkedList<RolledUpUsageForUnitTypes>(map.values());
+            Collections.sort(result);
+            return result;
+        }
+    }
+
+    /**
+     * Internal classes to transform RolledUpUsage into a map of usage (types, amount) across each billable interval.
+     */
+    private static class RolledUpUsageForUnitTypes implements Comparable {
+
+        private final LocalDate startDate;
+        private final LocalDate endDate;
+        private final Map<String, BigDecimal> unitAmounts;
+
+        private RolledUpUsageForUnitTypes(final LocalDate endDate, final LocalDate startDate, final Set<String> unitTypes) {
+            this.endDate = endDate;
+            this.startDate = startDate;
+            this.unitAmounts = new HashMap<String, BigDecimal>();
+            for (final String type : unitTypes) {
+                unitAmounts.put(type, BigDecimal.ZERO);
+            }
+        }
+
+        public void addUsageForUnit(final String unitType, BigDecimal amount) {
+            final BigDecimal currentAmount = unitAmounts.get(unitType);
+            unitAmounts.put(unitType, currentAmount.add(amount));
+        }
+
+        public LocalDate getStartDate() {
+            return startDate;
+        }
+
+        public LocalDate getEndDate() {
+            return endDate;
+        }
+
+        public BigDecimal getUsageAmountForUnitType(final String unitType) {
+            return unitAmounts.get(unitType);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = startDate != null ? startDate.hashCode() : 0;
+            result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
+            result = 31 * result + (unitAmounts != null ? unitAmounts.hashCode() : 0);
+            return result;
+        }
+
+        @Override
+        public int compareTo(final Object o) {
+
+            Preconditions.checkArgument(o instanceof RolledUpUsageForUnitTypes);
+            final RolledUpUsageForUnitTypes other = (RolledUpUsageForUnitTypes) o;
+            // We will check later intervals don't overlap.
+            return getEndDate().compareTo(other.getStartDate());
+        }
     }
 
     public void addBillingEvent(final BillingEvent event) {
@@ -109,103 +328,4 @@ public class ContiguousInArrearUsageInterval {
     public DateTimeZone getAccountTimeZone() {
         return billingEvents.get(0).getTimeZone();
     }
-
-
-
-    public ContiguousInArrearUsageInterval build(final boolean closedInterval) {
-
-        Preconditions.checkState((!closedInterval && billingEvents.size() >= 1) ||
-                                 (closedInterval && billingEvents.size() >= 2));
-
-        final LocalDate startDate = new LocalDate(billingEvents.get(0).getEffectiveDate(), getAccountTimeZone());
-        if (targetDate.isBefore(startDate)) {
-            return this;
-        }
-
-        final LocalDate endDate = closedInterval ? new LocalDate(billingEvents.get(billingEvents.size() - 1), getAccountTimeZone()) : targetDate;
-
-        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, getBCD(), usage.getBillingPeriod());
-
-        int numberOfPeriod = 0;
-        // First billingCycleDate prior startDate
-        LocalDate nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
-        transitionTimes.add(startDate);
-        while (!nextBillCycleDate.isAfter(endDate)) {
-            if (nextBillCycleDate.isAfter(startDate)) {
-                transitionTimes.add(nextBillCycleDate);
-            }
-            numberOfPeriod++;
-            nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
-        }
-        return this;
-    }
-
-    public List<InvoiceItem> computeMissingItems(final List<InvoiceItem> existingUsage) throws CatalogApiException {
-
-        final List<InvoiceItem> result = Lists.newLinkedList();
-
-        final List<RolledUpUsage> rolledUpUsages = getRolledUpUsage();
-        for (RolledUpUsage ru : rolledUpUsages) {
-            final LocalDate startRolledUpDate = new LocalDate(ru.getStartTime(), getAccountTimeZone());
-            final LocalDate endRolledUpDate = new LocalDate(ru.getEndTime(), getAccountTimeZone());
-            final BigDecimal billedUsage = computeBilledUsage(startRolledUpDate, endRolledUpDate, existingUsage);
-            final BigDecimal toBeBilledUsage = computeToBeBilledUsage(ru.getAmount());
-            if (billedUsage.compareTo(toBeBilledUsage) < 0) {
-                InvoiceItem item = new UsageInvoiceItem(invoiceId, getAccountId(), getBundleId(), getSubscriptionId(), getPlanName(),
-                                                        getPhaseName(), startRolledUpDate, endRolledUpDate, toBeBilledUsage.subtract(billedUsage), getCurrency(), unitType);
-                result.add(item);
-            }
-        }
-        return result;
-    }
-
-    private List<RolledUpUsage> getRolledUpUsage() {
-
-        final Iterable<DateTime> transitions = Iterables.transform(transitionTimes, new Function<LocalDate, DateTime>() {
-            @Override
-            public DateTime apply(final LocalDate input) {
-                return localDateToEndOfDayInAccountTimezone(input, getAccountTimeZone());
-            }
-        });
-        final List<RolledUpUsage> usagesForInterval = usageApi.getAllUsageForSubscription(getSubscriptionId(), unitType, ImmutableList.copyOf(transitions), context);
-        return usagesForInterval;
-    }
-
-    private final BigDecimal computeToBeBilledUsage(final BigDecimal units) throws CatalogApiException {
-
-        // STEPH_USAGE need to review catalog xml which defines block tiers, ...
-        final int blockSize = 0x1000;
-        final int nbBlocks = units.intValue() / blockSize + ((units.intValue() % blockSize == 0) ? 0 : 1);
-
-        // STEPH_USAGE this is wrong should use from each tier.
-        final List<TieredBlock> tieredBlocks = getTieredBlocks(usage, unitType);
-        for (TieredBlock tier : tieredBlocks) {
-            if (tier.getMax() >= units.doubleValue()) {
-                return tier.getPrice().getPrice(getCurrency());
-            }
-        }
-        // Return from last tier
-        return tieredBlocks.get(tieredBlocks.size() - 1).getPrice().getPrice(getCurrency());
-    }
-
-    private final BigDecimal computeBilledUsage(final LocalDate startDate, final LocalDate endDate, final List<InvoiceItem> existingUsage) {
-        final Iterable<InvoiceItem> filteredUsageForInterval = Iterables.filter(existingUsage, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                // STEPH_USAGE what happens if we discover usage period that overlap (one side or both side) the [startDate, endDate] interval
-                // STEPH_USAGE how to distinguish different usage charges (maybe different sections.) (needs to at least of the unitType in usage element
-                return input.getInvoiceItemType() == InvoiceItemType.USAGE &&
-                       input.getStartDate().compareTo(startDate) >= 0 &&
-                       input.getEndDate().compareTo(endDate) <= 0;
-            }
-        });
-
-        final BigDecimal billedAmount = BigDecimal.ZERO;
-        for (InvoiceItem ii : filteredUsageForInterval) {
-            billedAmount.add(ii.getAmount());
-        }
-        // Return the billed $ amount (not the # of units)
-        return billedAmount;
-    }
-
 }

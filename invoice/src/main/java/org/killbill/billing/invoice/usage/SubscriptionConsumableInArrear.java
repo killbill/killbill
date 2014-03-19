@@ -17,8 +17,10 @@
 package org.killbill.billing.invoice.usage;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -40,34 +42,96 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+/**
+ * There is one such class created for each subscriptionId referenced in the billingEvents.
+ *
+ */
 public class SubscriptionConsumableInArrear {
 
-    private UUID invoiceId;
-    private final String unitType;
+    private final UUID invoiceId;
     private final List<BillingEvent> subscriptionBillingEvents;
     private final UsageUserApi usageApi;
     private final LocalDate targetDate;
     private final TenantContext context;
 
-    public SubscriptionConsumableInArrear(final UUID invoiceId, final String unitType, final List<BillingEvent> subscriptionBillingEvents, final UsageUserApi usageApi, final LocalDate targetDate, final TenantContext context) {
+    public SubscriptionConsumableInArrear(final UUID invoiceId, final List<BillingEvent> subscriptionBillingEvents, final UsageUserApi usageApi, final LocalDate targetDate, final TenantContext context) {
         this.invoiceId = invoiceId;
-        this.unitType = unitType;
         this.subscriptionBillingEvents = subscriptionBillingEvents;
         this.usageApi = usageApi;
         this.targetDate = targetDate;
         this.context = context;
     }
 
+    /**
+     * Based on billing events, (@code existingUsage} and targetDate, figure out what remains to be billed.
+     *
+     * @param existingUsage the existing on disk usage items.
+     * @return
+     * @throws CatalogApiException
+     */
     public List<InvoiceItem> computeMissingUsageInvoiceItems(final List<InvoiceItem> existingUsage) throws CatalogApiException {
 
         final List<InvoiceItem> result = Lists.newLinkedList();
-        final List<ContiguousInArrearUsageInterval> billingEventTransitionTimePeriods = computeBillingEventTransitionTimePeriods();
+        final List<ContiguousInArrearUsageInterval> billingEventTransitionTimePeriods = computeInArrearUsageInterval();
         for (ContiguousInArrearUsageInterval usageInterval : billingEventTransitionTimePeriods) {
             result.addAll(usageInterval.computeMissingItems(existingUsage));
         }
         return result;
     }
 
+    List<ContiguousInArrearUsageInterval> computeInArrearUsageInterval() {
+
+        final List<ContiguousInArrearUsageInterval> usageIntervals = Lists.newLinkedList();
+
+
+        final Map<String, ContiguousInArrearUsageInterval> inFlightInArrearUsageIntervals = new HashMap<String, ContiguousInArrearUsageInterval>();
+        for (BillingEvent event : subscriptionBillingEvents) {
+
+            // All inflight usage interval are candidates to be closed unless we see that current billing event referencing the same usage section.
+            final Set<String> toBeClosed = inFlightInArrearUsageIntervals.keySet();
+
+            // Extract all in arrear /consumable usage section for that billing event.
+            final List<Usage> usages = findConsumableInArrearUsages(event);
+            for (Usage usage : usages) {
+
+                // Add inflight usage interval if non existent
+                ContiguousInArrearUsageInterval existingInterval = inFlightInArrearUsageIntervals.get(usage.getName());
+                if (existingInterval == null) {
+                    existingInterval = new ContiguousInArrearUsageInterval(usage, invoiceId, usageApi, targetDate, context);
+                    inFlightInArrearUsageIntervals.put(usage.getName(), existingInterval);
+                }
+                // Add billing event for that usage interval
+                existingInterval.addBillingEvent(event);
+                // Remove usage interval for toBeClosed set
+                toBeClosed.remove(usage.getName());
+            }
+
+            // Build the usage interval that are no longer referenced
+            for (String usageName : toBeClosed) {
+                usageIntervals.add(inFlightInArrearUsageIntervals.remove(usageName).build(true));
+            }
+        }
+        for (String usageName : inFlightInArrearUsageIntervals.keySet()) {
+            usageIntervals.add(inFlightInArrearUsageIntervals.remove(usageName).build(false));
+        }
+        return usageIntervals;
+    }
+
+    List<Usage> findConsumableInArrearUsages(final BillingEvent event) {
+        if (event.getUsages().size() == 0) {
+            return Collections.emptyList();
+        }
+
+        final List<Usage> result = Lists.newArrayList();
+        for (Usage usage : event.getUsages()) {
+            if (usage.getUsageType() != UsageType.CONSUMABLE ||
+                usage.getBillingMode() != BillingMode.IN_ARREAR) {
+                continue;
+            }
+            result.add(usage);
+        }
+        return result;
+    }
 
     static List<TieredBlock> getTieredBlocks(final Usage usage, final String unitType) {
 
@@ -75,7 +139,6 @@ public class SubscriptionConsumableInArrear {
 
         final List<TieredBlock> result = Lists.newLinkedList();
         for (Tier tier : usage.getTiers()) {
-
             for (TieredBlock tierBlock : tier.getTieredBlocks()) {
                 if (tierBlock.getUnit().getName().equals(unitType)) {
                     result.add(tierBlock);
@@ -90,77 +153,15 @@ public class SubscriptionConsumableInArrear {
         return new DateTime(dateTimeInAccountTimeZone, DateTimeZone.UTC);
     }
 
+    static Set<String> getUnitTypes(final Usage usage) {
+        Preconditions.checkArgument(usage.getTiers().length > 0);
 
-    private List<ContiguousInArrearUsageInterval> computeBillingEventTransitionTimePeriods() {
-
-        final List<ContiguousInArrearUsageInterval> usageInterval = Lists.newLinkedList();
-
-        ContiguousInArrearUsageInterval existingInterval = null;
-        for (BillingEvent event : subscriptionBillingEvents) {
-            final Usage usage = findUsage(event);
-            if (usage == null || !usage.equals(existingInterval.getUsage())) {
-                if (existingInterval != null) {
-                    usageInterval.add(existingInterval.build(true));
-                    existingInterval = null;
-                }
-            }
-
-            if (usage != null) {
-                if (existingInterval == null) {
-                    existingInterval = new ContiguousInArrearUsageInterval(usage, invoiceId, unitType, usageApi, targetDate, context);
-                }
-                existingInterval.addBillingEvent(event);
+        final Set<String> result = new HashSet<String>();
+        for (Tier tier : usage.getTiers()) {
+            for (TieredBlock tierBlock : tier.getTieredBlocks()) {
+                result.add(tierBlock.getUnit().getName());
             }
         }
-        if (existingInterval != null) {
-            usageInterval.add(existingInterval.build(false));
-        }
-        return usageInterval;
+        return result;
     }
-
-    private Usage findUsage(final BillingEvent event) {
-        if (event.getUsages().size() == 0) {
-            return null;
-        }
-        for (Usage usage : event.getUsages()) {
-            if (usage.getUsageType() != UsageType.CONSUMABLE ||
-                usage.getBillingMode() != BillingMode.IN_ARREAR) {
-                continue;
-            }
-
-            List<TieredBlock> tieredBlock = getTieredBlocks(usage, unitType);
-            if (tieredBlock.size() > 0) {
-                return usage;
-            }
-        }
-        return null;
-    }
-
-    private void addMissingTransitionTimes(final List<LocalDate> transitionTimes, final List<UsageInvoiceItem> existingUsage) {
-
-        Preconditions.checkArgument(transitionTimes.size() > 0);
-
-        final LocalDate startDate = transitionTimes.get(0);
-        final LocalDate endDate = transitionTimes.get(transitionTimes.size() - 1);
-
-        for (UsageInvoiceItem ii : existingUsage) {
-            if (ii.getEndDate().compareTo(startDate) <= 0 || ii.getStartDate().compareTo(endDate) >= 0) {
-                continue;
-            }
-            if (ii.getStartDate().compareTo(startDate) < 0 && ii.getEndDate().compareTo(endDate) <= 0) {
-                transitionTimes.add(ii.getEndDate());
-            } else if (ii.getStartDate().compareTo(startDate) >= 0 && ii.getEndDate().compareTo(endDate) > 0) {
-                transitionTimes.add(ii.getStartDate());
-            } else {
-                transitionTimes.add(ii.getStartDate());
-                transitionTimes.add(ii.getEndDate());
-            }
-        }
-
-        final Set<LocalDate> uniqueTransitions = new HashSet<LocalDate>(transitionTimes);
-        transitionTimes.clear();
-        transitionTimes.addAll(uniqueTransitions);
-        Collections.sort(transitionTimes);
-    }
-
 }
