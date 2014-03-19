@@ -78,6 +78,10 @@ public class InvoiceItemFactory {
             case ITEM_ADJ:
                 item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, amount, currency, linkedItemId);
                 break;
+            case USAGE:
+                // STEPH USAGE should we add unitType in schema pr override fields (planName,..) Same for unitAmount
+                item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency,"unitType");
+                break;
             default:
                 throw new RuntimeException("Unexpected type of event item " + type);
         }

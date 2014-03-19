@@ -16,22 +16,21 @@
 
 package org.killbill.billing.invoice.glue;
 
-import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
-import org.mockito.Mockito;
-import org.skife.config.ConfigSource;
-
 import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.invoice.TestInvoiceHelper;
+import org.killbill.billing.junction.BillingInternalApi;
+import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
+import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
 import org.killbill.billing.util.glue.NotificationQueueModule;
 import org.killbill.billing.util.glue.TagStoreModule;
-import org.killbill.billing.junction.BillingInternalApi;
-import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
-
+import org.mockito.Mockito;
+import org.skife.config.ConfigSource;
 
 public class TestInvoiceModule extends DefaultInvoiceModule {
 
@@ -58,7 +57,7 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
         install(new NotificationQueueModule(configSource));
         install(new TagStoreModule());
         install(new CustomFieldModule());
-
+        install(new UsageModule(configSource));
         installExternalApis();
 
         bind(TestInvoiceHelper.class).asEagerSingleton();

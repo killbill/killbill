@@ -17,6 +17,9 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -31,10 +34,13 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.junction.BillingEvent;
+
+import com.google.common.collect.Lists;
 
 public class DefaultBillingEvent implements BillingEvent {
     private final Account account;
@@ -53,19 +59,21 @@ public class DefaultBillingEvent implements BillingEvent {
     private final Long totalOrdering;
     private final DateTimeZone timeZone;
 
+    private final List<Usage> usages;
+
     public DefaultBillingEvent(final Account account, final EffectiveSubscriptionInternalEvent transition, final SubscriptionBase subscription, final int billCycleDayLocal, final Currency currency, final Catalog catalog) throws CatalogApiException {
 
         this.account = account;
         this.billCycleDayLocal = billCycleDayLocal;
         this.subscription = subscription;
-        effectiveDate = transition.getEffectiveTransitionTime();
+        this.effectiveDate = transition.getEffectiveTransitionTime();
         final String planPhaseName = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ?
                 transition.getNextPhase() : transition.getPreviousPhase();
-        planPhase = (planPhaseName != null) ? catalog.findPhase(planPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+        this.planPhase = (planPhaseName != null) ? catalog.findPhase(planPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final String planName = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ?
                 transition.getNextPlan() : transition.getPreviousPlan();
-        plan = (planName != null) ? catalog.findPlan(planName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+        this.plan = (planName != null) ? catalog.findPlan(planName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final String nextPhaseName = transition.getNextPhase();
         final PlanPhase nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
@@ -74,16 +82,17 @@ public class DefaultBillingEvent implements BillingEvent {
         final PlanPhase prevPhase = (prevPhaseName != null) ? catalog.findPhase(prevPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
 
-        fixedPrice = getFixedPrice(nextPhase, currency);
-        recurringPrice = getRecurringPrice(nextPhase, currency);
+        this.fixedPrice = getFixedPrice(nextPhase, currency);
+        this.recurringPrice = getRecurringPrice(nextPhase, currency);
 
         this.currency = currency;
-        description = transition.getTransitionType().toString();
-        billingMode = BillingMode.IN_ADVANCE;
-        billingPeriod = getRecurringBillingPeriod((transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase);
-        type = transition.getTransitionType();
-        totalOrdering = transition.getTotalOrdering();
-        timeZone = account.getTimeZone();
+        this.description = transition.getTransitionType().toString();
+        this.billingMode = BillingMode.IN_ADVANCE;
+        this.billingPeriod = getRecurringBillingPeriod((transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase);
+        this.type = transition.getTransitionType();
+        this.totalOrdering = transition.getTotalOrdering();
+        this.timeZone = account.getTimeZone();
+        this.usages = initializeUsage();
     }
 
 
@@ -106,6 +115,8 @@ public class DefaultBillingEvent implements BillingEvent {
         this.type = type;
         this.totalOrdering = totalOrdering;
         this.timeZone = timeZone;
+        this.usages = initializeUsage();
+
     }
 
     @Override
@@ -225,6 +236,17 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
+    public DateTimeZone getTimeZone() {
+        return timeZone;
+    }
+
+    @Override
+    public List<Usage> getUsages() {
+        return usages;
+    }
+
+
+    @Override
     public String toString() {
         // Note: we don't use all fields here, as the output would be overwhelming
         // (these events are printed in the logs in junction and invoice).
@@ -320,10 +342,6 @@ public class DefaultBillingEvent implements BillingEvent {
         return result;
     }
 
-    @Override
-    public DateTimeZone getTimeZone() {
-        return timeZone;
-    }
 
     private BigDecimal getFixedPrice(@Nullable final PlanPhase nextPhase, final Currency currency) throws CatalogApiException {
         return (nextPhase != null && nextPhase.getFixed() != null && nextPhase.getFixed().getPrice() != null) ? nextPhase.getFixed().getPrice().getPrice(currency) : null;
@@ -338,5 +356,16 @@ public class DefaultBillingEvent implements BillingEvent {
             return BillingPeriod.NO_BILLING_PERIOD;
         }
         return nextPhase.getRecurring() != null ? nextPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+    }
+
+    private List<Usage> initializeUsage() {
+        List<Usage> result = Collections.<Usage>emptyList();
+        if (planPhase != null) {
+            result = Lists.newArrayList();
+            for (Usage usage : planPhase.getUsages()) {
+                result.add(usage);
+            }
+        }
+        return result;
     }
 }

@@ -17,6 +17,7 @@
 package org.killbill.billing.invoice;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +28,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.Usage;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
@@ -385,6 +387,11 @@ public class TestInvoiceHelper {
             @Override
             public DateTimeZone getTimeZone() {
                 return DateTimeZone.UTC;
+            }
+
+            @Override
+            public List<Usage> getUsages() {
+                return Collections.emptyList();
             }
 
             @Override

@@ -60,6 +60,7 @@ public abstract class InvoiceCalculatorUtils {
     public static boolean isCharge(final InvoiceItem invoiceItem) {
         return InvoiceItemType.EXTERNAL_CHARGE.equals(invoiceItem.getInvoiceItemType()) ||
                InvoiceItemType.FIXED.equals(invoiceItem.getInvoiceItemType()) ||
+               InvoiceItemType.USAGE.equals(invoiceItem.getInvoiceItemType()) ||
                InvoiceItemType.RECURRING.equals(invoiceItem.getInvoiceItemType());
     }
 

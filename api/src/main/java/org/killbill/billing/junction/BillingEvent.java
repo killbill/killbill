@@ -17,6 +17,7 @@
 package org.killbill.billing.junction;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -27,6 +28,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 
@@ -105,7 +107,13 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     public Long getTotalOrdering();
 
     /**
-     * @return The TimeZone of the account
+     * @return the TimeZone of the account
      */
     public DateTimeZone getTimeZone();
+
+    /**
+     *
+     * @return the list of {@code Usage} section
+     */
+    public List<Usage> getUsages();
 }
