@@ -38,6 +38,7 @@ public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<In
     private UUID subscriptionId;
     private String planName;
     private String phaseName;
+    private String usageName;
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal amount;
@@ -49,7 +50,7 @@ public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<In
 
     public InvoiceItemModelDao(final UUID id, final DateTime createdDate, final InvoiceItemType type, final UUID invoiceId,
                                final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName,
-                               final String phaseName, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount,
+                               final String phaseName, final String usageName, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount,
                                final BigDecimal rate, final Currency currency, final UUID linkedItemId) {
         super(id, createdDate, createdDate);
         this.type = type;
@@ -59,6 +60,7 @@ public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<In
         this.subscriptionId = subscriptionId;
         this.planName = planName;
         this.phaseName = phaseName;
+        this.usageName = usageName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.amount = amount;
@@ -69,15 +71,15 @@ public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<In
 
     public InvoiceItemModelDao(final DateTime createdDate, final InvoiceItemType type, final UUID invoiceId, final UUID accountId,
                                final UUID bundleId, final UUID subscriptionId, final String planName,
-                               final String phaseName, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount,
+                               final String phaseName, final String usageName, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount,
                                final BigDecimal rate, final Currency currency, final UUID linkedItemId) {
-        this(UUID.randomUUID(), createdDate, type, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
+        this(UUID.randomUUID(), createdDate, type, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName,
              startDate, endDate, amount, rate, currency, linkedItemId);
     }
 
     public InvoiceItemModelDao(final InvoiceItem invoiceItem) {
         this(invoiceItem.getId(), invoiceItem.getCreatedDate(), invoiceItem.getInvoiceItemType(), invoiceItem.getInvoiceId(), invoiceItem.getAccountId(), invoiceItem.getBundleId(),
-             invoiceItem.getSubscriptionId(), invoiceItem.getPlanName(), invoiceItem.getPhaseName(), invoiceItem.getStartDate(), invoiceItem.getEndDate(),
+             invoiceItem.getSubscriptionId(), invoiceItem.getPlanName(), invoiceItem.getPhaseName(), invoiceItem.getUsageName(), invoiceItem.getStartDate(), invoiceItem.getEndDate(),
              invoiceItem.getAmount(), invoiceItem.getRate(), invoiceItem.getCurrency(), invoiceItem.getLinkedItemId());
     }
 
@@ -107,6 +109,10 @@ public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<In
 
     public String getPhaseName() {
         return phaseName;
+    }
+
+    public String getUsageName() {
+        return usageName;
     }
 
     public LocalDate getStartDate() {
@@ -161,6 +167,10 @@ public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<In
         this.phaseName = phaseName;
     }
 
+    public void setUsageName(final String usageName) {
+        this.usageName = usageName;
+    }
+
     public void setStartDate(final LocalDate startDate) {
         this.startDate = startDate;
     }
@@ -196,6 +206,7 @@ public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<In
         sb.append(", subscriptionId=").append(subscriptionId);
         sb.append(", planName='").append(planName).append('\'');
         sb.append(", phaseName='").append(phaseName).append('\'');
+        sb.append(", usageName='").append(usageName).append('\'');
         sb.append(", startDate=").append(startDate);
         sb.append(", endDate=").append(endDate);
         sb.append(", amount=").append(amount);
@@ -247,6 +258,9 @@ public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<In
         if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
             return false;
         }
+        if (usageName != null ? !usageName.equals(that.usageName) : that.usageName != null) {
+            return false;
+        }
         if (rate != null ? rate.compareTo(that.rate) != 0 : that.rate != null) {
             return false;
         }
@@ -273,6 +287,7 @@ public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<In
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (planName != null ? planName.hashCode() : 0);
         result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
+        result = 31 * result + (usageName != null ? usageName.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);

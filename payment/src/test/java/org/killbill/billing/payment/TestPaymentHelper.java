@@ -82,6 +82,7 @@ public class TestPaymentHelper {
                                                                     recurringInvoiceItem.getSubscriptionId(),
                                                                     recurringInvoiceItem.getPlanName(),
                                                                     recurringInvoiceItem.getPhaseName(),
+                                                                    null,
                                                                     recurringInvoiceItem.getStartDate(),
                                                                     recurringInvoiceItem.getEndDate(),
                                                                     recurringInvoiceItem.getAmount(),

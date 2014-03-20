@@ -73,6 +73,7 @@ public class TestRefundJson extends JaxrsTestSuiteNoDB {
         final String subscriptionId = UUID.randomUUID().toString();
         final String planName = UUID.randomUUID().toString();
         final String phaseName = UUID.randomUUID().toString();
+        final String usageName = UUID.randomUUID().toString();
         final String description = UUID.randomUUID().toString();
         final LocalDate startDate = clock.getUTCToday();
         final LocalDate endDate = clock.getUTCToday();
@@ -81,7 +82,7 @@ public class TestRefundJson extends JaxrsTestSuiteNoDB {
         final Currency currency = Currency.MXN;
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         return new InvoiceItemJson(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId, bundleId, subscriptionId,
-                                         planName, phaseName, type, description, startDate, endDate,
+                                         planName, phaseName, usageName, type, description, startDate, endDate,
                                          amount, currency, auditLogs);
     }
 }

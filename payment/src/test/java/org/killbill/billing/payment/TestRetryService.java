@@ -123,7 +123,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
                                                             account.getId(),
                                                             subscriptionId,
                                                             bundleId,
-                                                            "test plan", "test phase",
+                                                            "test plan", "test phase", null,
                                                             startDate,
                                                             endDate,
                                                             amount,

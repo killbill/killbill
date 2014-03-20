@@ -39,7 +39,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
     public RecurringInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
                                 final String planName, final String phaseName, final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final BigDecimal rate, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, null, startDate, endDate, amount, rate, currency);
     }
 
     @Override

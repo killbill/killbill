@@ -28,19 +28,16 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 
 public class UsageInvoiceItem extends InvoiceItemBase {
 
-    private final String usageName;
-
     public UsageInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
-                            final String planName, final String phaseName,
-                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final String usageName) {
-        this(UUID.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, usageName);
+                            final String planName, final String phaseName, final String usageName,
+                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
+        this(UUID.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, amount, currency);
     }
 
     public UsageInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
-                            final UUID subscriptionId, final String planName, final String phaseName,
-                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final String usageName) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
-        this.usageName = usageName;
+                            final UUID subscriptionId, final String planName, final String phaseName, final String usageName,
+                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, amount, currency);
     }
 
     @Override
@@ -53,7 +50,4 @@ public class UsageInvoiceItem extends InvoiceItemBase {
         return String.format("%s (usage item)", usageName);
     }
 
-    public String getUsageName() {
-        return usageName;
-    }
 }

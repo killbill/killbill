@@ -44,6 +44,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         final String subscriptionId = UUID.randomUUID().toString();
         final String planName = UUID.randomUUID().toString();
         final String phaseName = UUID.randomUUID().toString();
+        final String usageName = UUID.randomUUID().toString();
         final String type = "FIXED";
         final String description = UUID.randomUUID().toString();
         final LocalDate startDate = clock.getUTCToday();
@@ -52,7 +53,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         final Currency currency = Currency.MXN;
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final InvoiceItemJson invoiceItemJson = new InvoiceItemJson(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId,
-                                                                                      bundleId, subscriptionId, planName, phaseName, type, description,
+                                                                                      bundleId, subscriptionId, planName, phaseName, usageName, type, description,
                                                                                       startDate, endDate, amount, currency, auditLogs);
         Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItemId);
         Assert.assertEquals(invoiceItemJson.getInvoiceId(), invoiceId);

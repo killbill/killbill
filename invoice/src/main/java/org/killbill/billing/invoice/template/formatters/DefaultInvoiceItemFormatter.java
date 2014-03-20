@@ -135,6 +135,11 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     }
 
     @Override
+    public String getUsageName() {
+        return Strings.nullToEmpty(translator.getTranslation(locale, item.getUsageName()));
+    }
+
+    @Override
     public UUID getId() {
         return item.getId();
     }

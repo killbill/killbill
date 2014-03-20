@@ -140,7 +140,7 @@ public class ContiguousInArrearUsageInterval {
 
                 if (billedUsage.compareTo(toBeBilledUsage) < 0) {
                     InvoiceItem item = new UsageInvoiceItem(invoiceId, getAccountId(), getBundleId(), getSubscriptionId(), getPlanName(),
-                                                            getPhaseName(), ru.getStartDate(), ru.getEndDate(), toBeBilledUsage.subtract(billedUsage), getCurrency(), usage.getName());
+                                                            getPhaseName(), usage.getName(), ru.getStartDate(), ru.getEndDate(), toBeBilledUsage.subtract(billedUsage), getCurrency());
                     result.add(item);
                 }
             }

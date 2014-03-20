@@ -44,6 +44,7 @@ public class InvoiceItemFactory {
         final UUID subscriptionId = invoiceItemModelDao.getSubscriptionId();
         final String planName = invoiceItemModelDao.getPlanName();
         final String phaseName = invoiceItemModelDao.getPhaseName();
+        final String usageName = invoiceItemModelDao.getUsageName();
         final LocalDate startDate = invoiceItemModelDao.getStartDate();
         final LocalDate endDate = invoiceItemModelDao.getEndDate();
         final BigDecimal amount = invoiceItemModelDao.getAmount();
@@ -79,8 +80,7 @@ public class InvoiceItemFactory {
                 item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, amount, currency, linkedItemId);
                 break;
             case USAGE:
-                // STEPH_USAGE should we add unitType in schema or override fields (planName,..) Same for unitAmount
-                item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency,"unitType");
+                item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, amount, currency);
                 break;
             default:
                 throw new RuntimeException("Unexpected type of event item " + type);
