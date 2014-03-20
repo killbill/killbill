@@ -62,7 +62,8 @@ public class DefaultUsageUserApi implements UsageUserApi {
 
     @Override
     public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final Set<String> unitTypes, final List<DateTime> transitionTimes, final TenantContext tenantContext) {
-        // STEPH_USAGE
+        // STEPH_USAGE implement
+        // STEPH_USAGE also dates should be inclusive/exclusive so as to not bill twice for last day
         return null;
     }
 }

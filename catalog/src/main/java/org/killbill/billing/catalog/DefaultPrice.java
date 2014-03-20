@@ -64,12 +64,12 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
         return value;
     }
 
-    protected DefaultPrice setCurrency(final Currency currency) {
+    public DefaultPrice setCurrency(final Currency currency) {
         this.currency = currency;
         return this;
     }
 
-    protected DefaultPrice setValue(final BigDecimal value) {
+    public DefaultPrice setValue(final BigDecimal value) {
         this.value = value;
         return this;
     }

@@ -18,33 +18,25 @@ package org.killbill.billing.invoice.usage;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.Tier;
-import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.callcontext.TenantContext;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
  * There is one such class created for each subscriptionId referenced in the billingEvents.
- *
  */
 public class SubscriptionConsumableInArrear {
 
@@ -72,19 +64,18 @@ public class SubscriptionConsumableInArrear {
     public List<InvoiceItem> computeMissingUsageInvoiceItems(final List<InvoiceItem> existingUsage) throws CatalogApiException {
 
         final List<InvoiceItem> result = Lists.newLinkedList();
-        final List<ContiguousInArrearUsageInterval> billingEventTransitionTimePeriods = computeInArrearUsageInterval();
-        for (ContiguousInArrearUsageInterval usageInterval : billingEventTransitionTimePeriods) {
+        final List<ContiguousIntervalConsumableInArrear> billingEventTransitionTimePeriods = computeInArrearUsageInterval();
+        for (ContiguousIntervalConsumableInArrear usageInterval : billingEventTransitionTimePeriods) {
             result.addAll(usageInterval.computeMissingItems(existingUsage));
         }
         return result;
     }
 
-    List<ContiguousInArrearUsageInterval> computeInArrearUsageInterval() {
+    List<ContiguousIntervalConsumableInArrear> computeInArrearUsageInterval() {
 
-        final List<ContiguousInArrearUsageInterval> usageIntervals = Lists.newLinkedList();
+        final List<ContiguousIntervalConsumableInArrear> usageIntervals = Lists.newLinkedList();
 
-
-        final Map<String, ContiguousInArrearUsageInterval> inFlightInArrearUsageIntervals = new HashMap<String, ContiguousInArrearUsageInterval>();
+        final Map<String, ContiguousIntervalConsumableInArrear> inFlightInArrearUsageIntervals = new HashMap<String, ContiguousIntervalConsumableInArrear>();
         for (BillingEvent event : subscriptionBillingEvents) {
 
             // All inflight usage interval are candidates to be closed unless we see that current billing event referencing the same usage section.
@@ -95,9 +86,9 @@ public class SubscriptionConsumableInArrear {
             for (Usage usage : usages) {
 
                 // Add inflight usage interval if non existent
-                ContiguousInArrearUsageInterval existingInterval = inFlightInArrearUsageIntervals.get(usage.getName());
+                ContiguousIntervalConsumableInArrear existingInterval = inFlightInArrearUsageIntervals.get(usage.getName());
                 if (existingInterval == null) {
-                    existingInterval = new ContiguousInArrearUsageInterval(usage, invoiceId, usageApi, targetDate, context);
+                    existingInterval = new ContiguousIntervalConsumableInArrear(usage, invoiceId, usageApi, targetDate, context);
                     inFlightInArrearUsageIntervals.put(usage.getName(), existingInterval);
                 }
                 // Add billing event for that usage interval
