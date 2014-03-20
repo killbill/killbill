@@ -60,7 +60,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final Map<UUID, DateTime> callbackDateTimePerSubscriptions, final InternalCallContext context) {
+                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final InternalCallContext context) {
         synchronized (monitor) {
             invoices.put(invoice.getId(), invoice);
             for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
@@ -86,6 +86,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
             return invoices.get(id);
         }
     }
+
 
     @Override
     public InvoiceModelDao getByNumber(final Integer number, final InternalTenantContext context) {

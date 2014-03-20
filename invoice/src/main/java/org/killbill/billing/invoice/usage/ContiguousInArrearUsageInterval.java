@@ -48,9 +48,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import static org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear.getTieredBlocks;
-import static org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear.getUnitTypes;
-import static org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear.localDateToEndOfDayInAccountTimezone;
+import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrearTieredBlocks;
+import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrearUnitTypes;
 
 /**
  * There is one such class per subscriptionId, matching a given in arrear/consumable usage section and
@@ -71,7 +70,7 @@ public class ContiguousInArrearUsageInterval {
     public ContiguousInArrearUsageInterval(final Usage usage, final UUID invoiceId, final UsageUserApi usageApi, final LocalDate targetDate, final TenantContext context) {
         this.usage = usage;
         this.invoiceId = invoiceId;
-        this.unitTypes = getUnitTypes(usage);
+        this.unitTypes = getConsumableInArrearUnitTypes(usage);
         this.usageApi = usageApi;
         this.targetDate = targetDate;
         this.context = context;
@@ -164,7 +163,7 @@ public class ContiguousInArrearUsageInterval {
 
         BigDecimal result = BigDecimal.ZERO;
 
-        final List<TieredBlock> tieredBlocks = getTieredBlocks(usage, unitType);
+        final List<TieredBlock> tieredBlocks = getConsumableInArrearTieredBlocks(usage, unitType);
         int remainingUnits = nbUnits.intValue();
         for (TieredBlock tieredBlock : tieredBlocks) {
 
@@ -328,4 +327,10 @@ public class ContiguousInArrearUsageInterval {
     public DateTimeZone getAccountTimeZone() {
         return billingEvents.get(0).getTimeZone();
     }
+
+    static DateTime localDateToEndOfDayInAccountTimezone(final LocalDate input, final DateTimeZone accountTimeZone) {
+        final DateTime dateTimeInAccountTimeZone = new DateTime(input.getYear(), input.getMonthOfYear(), input.getDayOfMonth(), 23, 59, 59, accountTimeZone);
+        return new DateTime(dateTimeInAccountTimeZone, DateTimeZone.UTC);
+    }
+
 }

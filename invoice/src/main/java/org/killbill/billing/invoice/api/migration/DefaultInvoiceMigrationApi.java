@@ -17,6 +17,7 @@
 package org.killbill.billing.invoice.api.migration;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -76,7 +77,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
                                                                                  MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME, null,
                                                                                  targetDate, null, balance, null, currency, null);
         dao.createInvoice(migrationInvoice, ImmutableList.<InvoiceItemModelDao>of(migrationInvoiceItem),
-                          ImmutableList.<InvoicePaymentModelDao>of(), true, ImmutableMap.<UUID, DateTime>of(), internalCallContextFactory.createInternalCallContext(accountId, context));
+                          ImmutableList.<InvoicePaymentModelDao>of(), true, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContextFactory.createInternalCallContext(accountId, context));
 
         return migrationInvoice.getId();
     }

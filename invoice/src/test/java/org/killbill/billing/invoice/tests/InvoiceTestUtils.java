@@ -87,7 +87,7 @@ public class InvoiceTestUtils {
         }
         Mockito.when(invoice.getInvoiceItems()).thenReturn(invoiceItems);
 
-        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, ImmutableList.<InvoicePaymentModelDao>of(), true, ImmutableMap.<UUID, DateTime>of(), internalCallContext);
+        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, ImmutableList.<InvoicePaymentModelDao>of(), true, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContext);
 
         return invoice;
     }

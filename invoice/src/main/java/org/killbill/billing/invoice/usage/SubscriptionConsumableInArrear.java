@@ -132,36 +132,4 @@ public class SubscriptionConsumableInArrear {
         }
         return result;
     }
-
-    static List<TieredBlock> getTieredBlocks(final Usage usage, final String unitType) {
-
-        Preconditions.checkArgument(usage.getTiers().length > 0);
-
-        final List<TieredBlock> result = Lists.newLinkedList();
-        for (Tier tier : usage.getTiers()) {
-            for (TieredBlock tierBlock : tier.getTieredBlocks()) {
-                if (tierBlock.getUnit().getName().equals(unitType)) {
-                    result.add(tierBlock);
-                }
-            }
-        }
-        return result;
-    }
-
-    static DateTime localDateToEndOfDayInAccountTimezone(final LocalDate input, final DateTimeZone accountTimeZone) {
-        final DateTime dateTimeInAccountTimeZone = new DateTime(input.getYear(), input.getMonthOfYear(), input.getDayOfMonth(), 23, 59, 59, accountTimeZone);
-        return new DateTime(dateTimeInAccountTimeZone, DateTimeZone.UTC);
-    }
-
-    static Set<String> getUnitTypes(final Usage usage) {
-        Preconditions.checkArgument(usage.getTiers().length > 0);
-
-        final Set<String> result = new HashSet<String>();
-        for (Tier tier : usage.getTiers()) {
-            for (TieredBlock tierBlock : tier.getTieredBlocks()) {
-                result.add(tierBlock.getUnit().getName());
-            }
-        }
-        return result;
-    }
 }

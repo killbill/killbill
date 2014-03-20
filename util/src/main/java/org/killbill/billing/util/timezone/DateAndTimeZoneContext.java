@@ -59,7 +59,7 @@ public final class DateAndTimeZoneContext {
         // Since we create the targetDate for next invoice using the date from the notificationQ, we need to make sure
         // that this datetime once transformed into a LocalDate points to the correct day.
         //
-        // All we need to do is figure is the transformation from DateTime (point in time) to LocalDate (date in account time zone)
+        // All we need to do is figure if the transformation from DateTime (point in time) to LocalDate (date in account time zone)
         // changed the day; if so, when we recompute a UTC date from LocalDate (date in account time zone), we can simply chose a reference
         // time and apply the offset backward to end up on the right day
         //

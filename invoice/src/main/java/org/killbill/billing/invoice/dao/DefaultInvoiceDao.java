@@ -201,7 +201,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final Map<UUID, DateTime> callbackDateTimePerSubscriptions,
+                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions,
                               final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
@@ -760,10 +760,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId,
-                                             final Map<UUID, DateTime> callbackDateTimePerSubscriptions, final UUID userToken) {
+                                             final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final UUID userToken) {
         for (final UUID subscriptionId : callbackDateTimePerSubscriptions.keySet()) {
-            final DateTime callbackDateTimeUTC = callbackDateTimePerSubscriptions.get(subscriptionId);
-            nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, callbackDateTimeUTC, userToken);
+            final List<DateTime> callbackDateTimeUTC = callbackDateTimePerSubscriptions.get(subscriptionId);
+            for (DateTime cur : callbackDateTimeUTC) {
+                nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, cur, userToken);
+            }
         }
     }
 

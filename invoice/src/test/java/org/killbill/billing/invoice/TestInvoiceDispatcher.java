@@ -206,15 +206,16 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                    nonEntityDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 
-        final Map<UUID, DateTime> result = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), dateAndTimeZoneContext);
+        final Map<UUID, List<DateTime>> result = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), null, dateAndTimeZoneContext);
 
         Assert.assertEquals(result.size(), 1);
 
-        final DateTime receivedDate = result.get(item.getSubscriptionId());
+        final List<DateTime> receivedDates = result.get(item.getSubscriptionId());
+        Assert.assertEquals(receivedDates.size(), 1);
 
-        final LocalDate receivedTargetDate = new LocalDate(receivedDate, DateTimeZone.forID("Pacific/Pitcairn"));
+        final LocalDate receivedTargetDate = new LocalDate(receivedDates.get(0), DateTimeZone.forID("Pacific/Pitcairn"));
         Assert.assertEquals(receivedTargetDate, endDate);
 
-        Assert.assertTrue(receivedDate.compareTo(new DateTime(2012, 11, 27, 1, 12, 23, DateTimeZone.UTC)) <= 0);
+        Assert.assertTrue(receivedDates.get(0).compareTo(new DateTime(2012, 11, 27, 1, 12, 23, DateTimeZone.UTC)) <= 0);
     }
 }
