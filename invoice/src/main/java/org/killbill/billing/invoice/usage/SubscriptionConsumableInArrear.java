@@ -18,10 +18,13 @@ package org.killbill.billing.invoice.usage;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
@@ -33,6 +36,10 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.callcontext.TenantContext;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 /**
@@ -71,18 +78,30 @@ public class SubscriptionConsumableInArrear {
         return result;
     }
 
+    @VisibleForTesting
     List<ContiguousIntervalConsumableInArrear> computeInArrearUsageInterval() {
 
         final List<ContiguousIntervalConsumableInArrear> usageIntervals = Lists.newLinkedList();
 
         final Map<String, ContiguousIntervalConsumableInArrear> inFlightInArrearUsageIntervals = new HashMap<String, ContiguousIntervalConsumableInArrear>();
+
+        final Set<String> allSeenUsage = new HashSet<String>();
+
         for (BillingEvent event : subscriptionBillingEvents) {
 
-            // All inflight usage interval are candidates to be closed unless we see that current billing event referencing the same usage section.
-            final Set<String> toBeClosed = inFlightInArrearUsageIntervals.keySet();
 
             // Extract all in arrear /consumable usage section for that billing event.
             final List<Usage> usages = findConsumableInArrearUsages(event);
+            allSeenUsage.addAll(Collections2.transform(usages, new Function<Usage, String>() {
+                @Override
+                public String apply(final Usage input) {
+                    return input.getName();
+                }
+            }));
+
+            // All inflight usage interval are candidates to be closed unless we see that current billing event referencing the same usage section.
+            final Set<String> toBeClosed = new HashSet<String>(allSeenUsage);
+
             for (Usage usage : usages) {
 
                 // Add inflight usage interval if non existent
@@ -99,12 +118,17 @@ public class SubscriptionConsumableInArrear {
 
             // Build the usage interval that are no longer referenced
             for (String usageName : toBeClosed) {
-                usageIntervals.add(inFlightInArrearUsageIntervals.remove(usageName).build(true));
+                final ContiguousIntervalConsumableInArrear interval = inFlightInArrearUsageIntervals.remove(usageName);
+                if (interval != null) {
+                    interval.addBillingEvent(event);
+                    usageIntervals.add(interval.build(true));
+                }
             }
         }
         for (String usageName : inFlightInArrearUsageIntervals.keySet()) {
-            usageIntervals.add(inFlightInArrearUsageIntervals.remove(usageName).build(false));
+            usageIntervals.add(inFlightInArrearUsageIntervals.get(usageName).build(false));
         }
+        inFlightInArrearUsageIntervals.clear();
         return usageIntervals;
     }
 

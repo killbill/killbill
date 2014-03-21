@@ -242,6 +242,11 @@ public class ContiguousIntervalConsumableInArrear {
         return billedAmount;
     }
 
+    @VisibleForTesting
+    List<LocalDate> getTransitionTimes() {
+        return transitionTimes;
+    }
+
     private static class RolledUpUsageForUnitTypesFactory {
 
         private final Map<String, RolledUpUsageForUnitTypes> map;
