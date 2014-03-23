@@ -361,7 +361,11 @@
                             <shadedClassifierName>jar-with-dependencies</shadedClassifierName>
                             <filters>
                                 <filter>
-                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
+                                    <artifact>*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/LICENSE</exclude>
+                                        <!-- conflicts on OS X with license/ -->
+                                    </excludes>
                                 </filter>
                             </filters>
                         </configuration>
