@@ -29,6 +29,7 @@ import javax.inject.Named;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.usage.api.UsageUserApi;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,6 +187,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     @Inject
     protected AccountInternalApi accountInternalApi;
+
+    @Inject
+    protected UsageUserApi usageUserApi;
 
     @Inject
     protected OSGIConfig osgiConfig;

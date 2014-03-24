@@ -37,12 +37,19 @@
         <currency>GBP</currency>
     </currencies>
 
+    <units>
+        <unit name="bullets"/>
+    </units>
+
     <products>
         <product name="Blowdart">
             <category>BASE</category>
         </product>
         <product name="Pistol">
             <category>BASE</category>
+            <available>
+                <addonProduct>Bullets</addonProduct>
+            </available>
         </product>
         <product name="Shotgun">
             <category>BASE</category>
@@ -50,6 +57,7 @@
                 <addonProduct>Telescopic-Scope</addonProduct>
                 <addonProduct>Laser-Scope</addonProduct>
                 <addonProduct>Holster</addonProduct>
+                <addonProduct>Bullets</addonProduct>
             </available>
         </product>
         <product name="Assault-Rifle">
@@ -59,6 +67,7 @@
             </included>
             <available>
                 <addonProduct>Laser-Scope</addonProduct>
+                <addonProduct>Bullets</addonProduct>
             </available>
         </product>
         <product name="Telescopic-Scope">
@@ -74,6 +83,9 @@
             <category>ADD_ON</category>
         </product>
         <product name="Refurbish-Maintenance">
+            <category>ADD_ON</category>
+        </product>
+        <product name="Bullets">
             <category>ADD_ON</category>
         </product>
     </products>
@@ -963,6 +975,69 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="bullets-usage-in-arrear">
+            <product>Bullets</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="bullets-usage-in-arrear-usage" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>bullets</unit>
+                                        <size>100</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>2.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>EUR</currency>
+                                                <value>1.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>GBP</currency>
+                                                <value>0.95</value>
+                                            </price>
+                                        </prices>
+                                        <max>10</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>bullets</unit>
+                                        <size>1000</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>5.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>EUR</currency>
+                                                <value>4.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>GBP</currency>
+                                                <value>3.95</value>
+                                            </price>
+                                        </prices>
+                                        <max>100</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+            <plansAllowedInBundle>-1</plansAllowedInBundle>
+            <!-- arbitrary number of these (multipack) -->
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
@@ -980,6 +1055,7 @@
                 <plan>extra-ammo-monthly</plan>
                 <plan>holster-monthly-regular</plan>
                 <plan>refurbish-maintenance</plan>
+                <plan>bullets-usage-in-arrear</plan>
             </plans>
         </defaultPriceList>
         <childPriceList name="gunclubDiscount">

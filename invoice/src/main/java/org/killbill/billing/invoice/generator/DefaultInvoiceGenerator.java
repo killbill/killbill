@@ -119,7 +119,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             final List<InvoiceItem> items = Lists.newArrayList();
             final Iterator<BillingEvent> events = eventSet.iterator();
 
-            final List<BillingEvent> curEvents = Lists.newArrayList();
+            List<BillingEvent> curEvents = Lists.newArrayList();
             UUID curSubscriptionId = null;
             while (events.hasNext()) {
                 final BillingEvent event = events.next();
@@ -127,10 +127,14 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
                     final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, targetDate, context.toTenantContext(tenantId));
                     items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(subscriptionId, existingInvoices)));
-                    curEvents.clear();
+                    curEvents = Lists.newArrayList();
                 }
                 curSubscriptionId = subscriptionId;
                 curEvents.add(event);
+            }
+            if (curSubscriptionId != null) {
+                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, targetDate, context.toTenantContext(tenantId));
+                items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(curSubscriptionId, existingInvoices)));
             }
             return items;
 

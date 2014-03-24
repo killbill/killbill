@@ -63,6 +63,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceItemJson.getSubscriptionId(), subscriptionId);
         Assert.assertEquals(invoiceItemJson.getPlanName(), planName);
         Assert.assertEquals(invoiceItemJson.getPhaseName(), phaseName);
+        Assert.assertEquals(invoiceItemJson.getUsageName(), usageName);
         Assert.assertEquals(invoiceItemJson.getItemType(), type);
         Assert.assertEquals(invoiceItemJson.getDescription(), description);
         Assert.assertEquals(invoiceItemJson.getStartDate(), startDate);
@@ -87,6 +88,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         Mockito.when(invoiceItem.getSubscriptionId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoiceItem.getPlanName()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(invoiceItem.getPhaseName()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(invoiceItem.getUsageName()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(invoiceItem.getDescription()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(invoiceItem.getStartDate()).thenReturn(clock.getUTCToday());
         Mockito.when(invoiceItem.getEndDate()).thenReturn(clock.getUTCToday());
@@ -103,6 +105,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceItemJson.getSubscriptionId(), invoiceItem.getSubscriptionId().toString());
         Assert.assertEquals(invoiceItemJson.getPlanName(), invoiceItem.getPlanName());
         Assert.assertEquals(invoiceItemJson.getPhaseName(), invoiceItem.getPhaseName());
+        Assert.assertEquals(invoiceItemJson.getUsageName(), invoiceItem.getUsageName());
         Assert.assertEquals(invoiceItemJson.getDescription(), invoiceItem.getDescription());
         Assert.assertEquals(invoiceItemJson.getStartDate(), invoiceItem.getStartDate());
         Assert.assertEquals(invoiceItemJson.getEndDate(), invoiceItem.getEndDate());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 The Billing Project, Inc.
+ * Copyright 2014 The Billing Project, LLC
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,6 +19,7 @@ package org.killbill.billing.invoice.usage;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,8 +53,9 @@ public class UsageUtils {
         final Iterable<Usage> filteredUsages = (filter != null) ? Iterables.filter(usages, filter) : usages;
 
         final Map<String, Usage> result = (filteredUsages.iterator().hasNext()) ? new HashMap<String, Usage>() : Collections.<String, Usage>emptyMap();
-        while (filteredUsages.iterator().hasNext()) {
-            final Usage next = filteredUsages.iterator().next();
+        final Iterator<Usage> iterator = filteredUsages.iterator();
+        while (iterator.hasNext()) {
+            final Usage next = iterator.next();
             result.put(next.getName(), next);
         }
         return result;
