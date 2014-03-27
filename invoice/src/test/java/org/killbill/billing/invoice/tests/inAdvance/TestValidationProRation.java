@@ -16,15 +16,11 @@
 
 package org.killbill.billing.invoice.tests.inAdvance;
 
-import static org.killbill.billing.invoice.TestInvoiceHelper.*;
-
-import java.math.BigDecimal;
-
 import org.joda.time.LocalDate;
+import org.killbill.billing.invoice.model.BillingModeGenerator;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.invoice.model.BillingMode;
 import org.killbill.billing.invoice.model.InAdvanceBillingMode;
 import org.killbill.billing.invoice.model.InvalidDateSequenceException;
 import org.killbill.billing.invoice.tests.ProRationTestBase;
@@ -39,7 +35,7 @@ public class TestValidationProRation extends ProRationTestBase {
     }
 
     @Override
-    protected BillingMode getBillingMode() {
+    protected BillingModeGenerator getBillingMode() {
         return new InAdvanceBillingMode();
     }
 

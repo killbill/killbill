@@ -37,7 +37,9 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     
     @XmlElement(required = false)
     private Double min;
-    
+
+    // Not defined in catalog
+    private DefaultUsage usage;
     
     /* (non-Javadoc)
      * @see org.killbill.billing.catalog.Limit#getUnit()
@@ -87,5 +89,25 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
             }
         }
         return true;
+    }
+
+    public DefaultLimit setUnit(final DefaultUnit unit) {
+        this.unit = unit;
+        return this;
+    }
+
+    public DefaultLimit setMax(final Double max) {
+        this.max = max;
+        return this;
+    }
+
+    public DefaultLimit setMin(final Double min) {
+        this.min = min;
+        return this;
+    }
+
+    public DefaultLimit setUsage(final DefaultUsage usage) {
+        this.usage = usage;
+        return this;
     }
 }

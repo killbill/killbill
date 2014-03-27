@@ -62,7 +62,7 @@ public class TestSubscription extends TestIntegrationBase {
         assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);

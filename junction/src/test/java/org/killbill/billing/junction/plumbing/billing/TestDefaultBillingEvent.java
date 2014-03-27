@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -45,7 +46,6 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.junction.JunctionTestSuiteNoDB;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.junction.BillingModeType;
 
 public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 
@@ -190,7 +190,7 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
         return new DefaultBillingEvent(account, sub, effectiveDate,
                                        shotgun, shotgunMonthly,
                                        BigDecimal.ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
-                                       BillingModeType.IN_ADVANCE, "Test Event 1", totalOrdering, type, DateTimeZone.UTC);
+                                       BillingMode.IN_ADVANCE, "Test Event 1", totalOrdering, type, DateTimeZone.UTC);
     }
 
     private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,

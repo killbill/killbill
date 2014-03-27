@@ -16,10 +16,12 @@
   -->
 
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
 
     <effectiveDate>2013-02-08T00:00:00+00:00</effectiveDate>
     <catalogName>SpyCarBasic</catalogName>
+
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
 
     <currencies>
         <currency>USD</currency>
@@ -45,7 +47,7 @@
             </changePolicyCase>
         </changePolicy>
         <changeAlignment>
-           <changeAlignmentCase>
+            <changeAlignmentCase>
                 <alignment>START_OF_BUNDLE</alignment>
             </changeAlignmentCase>
         </changeAlignment>
@@ -65,9 +67,9 @@
             </billingAlignmentCase>
         </billingAlignment>
         <priceList>
-           <priceListCase>
+            <priceListCase>
                 <toPriceList>DEFAULT</toPriceList>
-           </priceListCase>
+            </priceListCase>
         </priceList>
     </rules>
 
@@ -80,26 +82,30 @@
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                    <fixedPrice> <!-- empty price implies $0 -->
-                    </fixedPrice>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+
+                    </fixed>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>75.00</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>100.00</value>
-                    </price>
-                </recurringPrice>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>75.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>100.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
         <plan name="sports-monthly">
@@ -110,26 +116,29 @@
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                    <fixedPrice> <!-- empty price implies $0 -->
-                    </fixedPrice>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>375.00</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>500.00</value>
-                    </price>
-                </recurringPrice>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>375.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>500.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
         <plan name="super-monthly">
@@ -140,26 +149,30 @@
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                    <fixedPrice> <!-- empty price implies $0 -->
-                    </fixedPrice>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+
+                    </fixed>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <billingPeriod>MONTHLY</billingPeriod>
-                <recurringPrice>
-                    <price>
-                        <currency>GBP</currency>
-                        <value>750.00</value>
-                    </price>
-                    <price>
-                        <currency>USD</currency>
-                        <value>1000.00</value>
-                    </price>
-                </recurringPrice>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>750.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>1000.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
             </finalPhase>
         </plan>
     </plans>

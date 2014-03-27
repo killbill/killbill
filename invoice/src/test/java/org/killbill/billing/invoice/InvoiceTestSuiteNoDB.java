@@ -32,6 +32,7 @@ import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.glue.TestInvoiceModuleNoDB;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.KillbillConfigSource;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -90,6 +91,8 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected TestInvoiceHelper invoiceUtil;
     @Inject
     protected CurrencyConversionApi currencyConversionApi;
+    @Inject
+    protected UsageUserApi usageUserApi;
 
     @Override
     protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {

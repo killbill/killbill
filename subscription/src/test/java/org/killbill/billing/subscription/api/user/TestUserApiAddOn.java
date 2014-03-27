@@ -444,7 +444,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(aoCurrentPlan);
         assertEquals(aoCurrentPlan.getProduct().getName(), aoProduct);
         assertEquals(aoCurrentPlan.getProduct().getCategory(), ProductCategory.ADD_ON);
-        assertEquals(aoCurrentPlan.getBillingPeriod(), aoTerm);
+        assertEquals(aoCurrentPlan.getRecurringBillingPeriod(), aoTerm);
 
         PlanPhase aoCurrentPhase = aoSubscription.getCurrentPhase();
         assertNotNull(aoCurrentPhase);
@@ -477,7 +477,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(aoCurrentPlan);
         assertEquals(aoCurrentPlan.getProduct().getName(), aoProduct);
         assertEquals(aoCurrentPlan.getProduct().getCategory(), ProductCategory.ADD_ON);
-        assertEquals(aoCurrentPlan.getBillingPeriod(), aoTerm);
+        assertEquals(aoCurrentPlan.getRecurringBillingPeriod(), aoTerm);
 
         aoCurrentPhase = aoSubscription.getCurrentPhase();
         assertNotNull(aoCurrentPhase);

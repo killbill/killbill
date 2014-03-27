@@ -503,7 +503,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) baseEntitlement.getSubscriptionBase();
         final DateTime startDate = subscription.getCurrentPhaseStart();
-        final BigDecimal rate = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
+        final BigDecimal rate = subscription.getCurrentPhase().getFixed().getPrice().getPrice(Currency.USD);
         verifyTestResult(accountId, subscription.getId(), startDate, null, rate, clock.getUTCNow(), 1);
 
         //

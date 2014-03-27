@@ -97,6 +97,7 @@ public class AccountItemTree {
             case CBA_ADJ:
             case CREDIT_ADJ:
             case REFUND_ADJ:
+            case USAGE:
                 return;
 
             case RECURRING:

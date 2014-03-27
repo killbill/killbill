@@ -62,7 +62,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -117,7 +117,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -186,7 +186,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -256,7 +256,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);

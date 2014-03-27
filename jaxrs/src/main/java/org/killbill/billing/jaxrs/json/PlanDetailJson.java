@@ -66,11 +66,14 @@ public class PlanDetailJson {
         } else {
             this.productName = plan.getProduct() == null ? null : plan.getProduct().getName();
             this.planName = plan.getName();
-            this.billingPeriod = plan.getBillingPeriod();
-            if (plan.getFinalPhase() == null || plan.getFinalPhase().getRecurringPrice() == null || plan.getFinalPhase().getRecurringPrice().getPrices() == null) {
+            this.billingPeriod = plan.getRecurringBillingPeriod();
+            if (plan.getFinalPhase() == null ||
+                plan.getFinalPhase().getRecurring() == null ||
+                plan.getFinalPhase().getRecurring().getRecurringPrice() == null ||
+                plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices() == null) {
                 this.finalPhasePrice = ImmutableList.<PriceJson>of();
             } else {
-                this.finalPhasePrice = Lists.transform(ImmutableList.<Price>copyOf(plan.getFinalPhase().getRecurringPrice().getPrices()),
+                this.finalPhasePrice = Lists.transform(ImmutableList.<Price>copyOf(plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices()),
                                                        new Function<Price, PriceJson>() {
                                                            @Override
                                                            public PriceJson apply(final Price price) {

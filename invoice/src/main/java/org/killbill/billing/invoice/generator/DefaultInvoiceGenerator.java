@@ -18,6 +18,7 @@ package org.killbill.billing.invoice.generator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -26,17 +27,18 @@ import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.clock.Clock;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.model.BillingMode;
+import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.model.BillingModeGenerator;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InAdvanceBillingMode;
@@ -44,12 +46,22 @@ import org.killbill.billing.invoice.model.InvalidDateSequenceException;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItemData;
 import org.killbill.billing.invoice.tree.AccountItemTree;
+import org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.junction.BillingModeType;
+import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
@@ -58,11 +70,15 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     private final Clock clock;
     private final InvoiceConfig config;
+    private final UsageUserApi usageApi;
+    private final NonEntityDao nonEntityDao;
 
     @Inject
-    public DefaultInvoiceGenerator(final Clock clock, final InvoiceConfig config) {
+    public DefaultInvoiceGenerator(final Clock clock, final UsageUserApi usageApi, final InvoiceConfig config, final NonEntityDao nonEntityDao) {
         this.clock = clock;
         this.config = config;
+        this.usageApi = usageApi;
+        this.nonEntityDao = nonEntityDao;
     }
 
     /*
@@ -72,7 +88,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     public Invoice generateInvoice(final UUID accountId, @Nullable final BillingEventSet events,
                                    @Nullable final List<Invoice> existingInvoices,
                                    final LocalDate targetDate,
-                                   final Currency targetCurrency) throws InvoiceApiException {
+                                   final Currency targetCurrency, final InternalCallContext context) throws InvoiceApiException {
         if ((events == null) || (events.size() == 0) || events.isAccountAutoInvoiceOff()) {
             return null;
         }
@@ -86,19 +102,78 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         final List<InvoiceItem> inAdvanceItems = generateInAdvanceInvoiceItems(accountId, invoiceId, events, existingInvoices, adjustedTargetDate, targetCurrency);
         invoice.addInvoiceItems(inAdvanceItems);
 
+        final List<InvoiceItem> usageItems = generateUsageInvoiceItems(invoiceId, events, existingInvoices, targetDate, context);
+        invoice.addInvoiceItems(usageItems);
+
         return inAdvanceItems.size() != 0 ? invoice : null;
     }
 
-    private List<InvoiceItem> generateInAdvanceInvoiceItems(final UUID accountId, final UUID invoiceId, @Nullable final BillingEventSet events,
-                                               @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
-                                               final Currency targetCurrency) throws InvoiceApiException {
+    // STEPH_USAGE Only deals with consumable in arrear usage billing.
+    private List<InvoiceItem> generateUsageInvoiceItems(final UUID invoiceId, final BillingEventSet eventSet,
+                                                        @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
+                                                        final InternalCallContext context) throws InvoiceApiException {
+
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
+        try {
+
+            final List<InvoiceItem> items = Lists.newArrayList();
+            final Iterator<BillingEvent> events = eventSet.iterator();
+
+            List<BillingEvent> curEvents = Lists.newArrayList();
+            UUID curSubscriptionId = null;
+            while (events.hasNext()) {
+                final BillingEvent event = events.next();
+                final UUID subscriptionId = event.getSubscription().getId();
+                if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
+                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, targetDate, context.toTenantContext(tenantId));
+                    items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(subscriptionId, existingInvoices)));
+                    curEvents = Lists.newArrayList();
+                }
+                curSubscriptionId = subscriptionId;
+                curEvents.add(event);
+            }
+            if (curSubscriptionId != null) {
+                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, targetDate, context.toTenantContext(tenantId));
+                items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(curSubscriptionId, existingInvoices)));
+            }
+            return items;
+
+        } catch (CatalogApiException e) {
+            throw new InvoiceApiException(e);
+        }
+    }
+
+    private List<InvoiceItem> extractUsageItemsForSubscription(final UUID subscriptionId, @Nullable final List<Invoice> existingInvoices) {
+
+        if (existingInvoices == null) {
+            return Collections.emptyList();
+        }
+
+        final Iterable usageItems = Iterables.concat(Iterables.transform(existingInvoices, new Function<Invoice, Iterable<InvoiceItem>>() {
+            @Override
+            public Iterable<InvoiceItem> apply(final Invoice input) {
+
+                return Iterables.filter(input.getInvoiceItems(), new Predicate<InvoiceItem>() {
+                    @Override
+                    public boolean apply(final InvoiceItem input) {
+                        return input.getInvoiceItemType() == InvoiceItemType.USAGE && input.getSubscriptionId().equals(subscriptionId);
+                    }
+                });
+            }
+        }));
+        return ImmutableList.<InvoiceItem>copyOf(usageItems);
+    }
+
+    private List<InvoiceItem> generateInAdvanceInvoiceItems(final UUID accountId, final UUID invoiceId, final BillingEventSet eventSet,
+                                                            @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
+                                                            final Currency targetCurrency) throws InvoiceApiException {
         final AccountItemTree accountItemTree = new AccountItemTree(accountId);
         if (existingInvoices != null) {
             for (final Invoice invoice : existingInvoices) {
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {
                     if (item.getSubscriptionId() == null || // Always include migration invoices, credits, external charges etc.
-                        !events.getSubscriptionIdsWithAutoInvoiceOff()
-                               .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
+                        !eventSet.getSubscriptionIdsWithAutoInvoiceOff()
+                                 .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
                         accountItemTree.addExistingItem(item);
                     }
                 }
@@ -106,7 +181,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
         // Generate list of proposed invoice items based on billing events from junction-- proposed items are ALL items since beginning of time
-        final List<InvoiceItem> proposedItems = generateInAdvanceInvoiceItems(invoiceId, accountId, events, targetDate, targetCurrency);
+        final List<InvoiceItem> proposedItems = generateInAdvanceInvoiceItems(invoiceId, accountId, eventSet, targetDate, targetCurrency);
 
         accountItemTree.mergeWithProposedItems(proposedItems);
         return accountItemTree.getResultingItemList();
@@ -182,7 +257,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         // Handle recurring items
         final BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
         if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
-            final BillingMode billingMode = instantiateBillingMode(thisEvent.getBillingMode());
+            final BillingModeGenerator billingModeGenerator = instantiateBillingMode(thisEvent.getBillingMode());
             final LocalDate startDate = new LocalDate(thisEvent.getEffectiveDate(), thisEvent.getTimeZone());
 
             if (!startDate.isAfter(targetDate)) {
@@ -192,7 +267,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
                 final List<RecurringInvoiceItemData> itemData;
                 try {
-                    itemData = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod);
+                    itemData = billingModeGenerator.generateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod);
                 } catch (InvalidDateSequenceException e) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                 }
@@ -228,7 +303,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return items;
     }
 
-    private BillingMode instantiateBillingMode(final BillingModeType billingMode) {
+    private BillingModeGenerator instantiateBillingMode(final BillingMode billingMode) {
         switch (billingMode) {
             case IN_ADVANCE:
                 return new InAdvanceBillingMode();

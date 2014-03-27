@@ -7,6 +7,7 @@
       <module fileurl="file://$PROJECT_DIR$/beatrix/killbill-beatrix.iml" filepath="$PROJECT_DIR$/beatrix/killbill-beatrix.iml" />
       <module fileurl="file://$PROJECT_DIR$/catalog/killbill-catalog.iml" filepath="$PROJECT_DIR$/catalog/killbill-catalog.iml" />
       <module fileurl="file://$PROJECT_DIR$/currency/killbill-currency.iml" filepath="$PROJECT_DIR$/currency/killbill-currency.iml" />
+      <module fileurl="file://$PROJECT_DIR$/currency/killbill-currency.iml" filepath="$PROJECT_DIR$/currency/killbill-currency.iml" />
       <module fileurl="file://$PROJECT_DIR$/entitlement/killbill-entitlement.iml" filepath="$PROJECT_DIR$/entitlement/killbill-entitlement.iml" />
       <module fileurl="file://$PROJECT_DIR$/api/killbill-internal-api.iml" filepath="$PROJECT_DIR$/api/killbill-internal-api.iml" />
       <module fileurl="file://$PROJECT_DIR$/invoice/killbill-invoice.iml" filepath="$PROJECT_DIR$/invoice/killbill-invoice.iml" />

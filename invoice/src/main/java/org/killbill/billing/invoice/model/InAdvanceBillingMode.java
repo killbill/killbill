@@ -33,14 +33,14 @@ import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateN
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate;
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod;
 
-public class InAdvanceBillingMode implements BillingMode {
+public class InAdvanceBillingMode implements BillingModeGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(InAdvanceBillingMode.class);
 
     @Override
-    public List<RecurringInvoiceItemData> calculateInvoiceItemData(final LocalDate startDate, @Nullable final LocalDate endDate,
-                                                                   final LocalDate targetDate,
-                                                                   final int billingCycleDayLocal, final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
+    public List<RecurringInvoiceItemData> generateInvoiceItemData(final LocalDate startDate, @Nullable final LocalDate endDate,
+                                                                  final LocalDate targetDate,
+                                                                  final int billingCycleDayLocal, final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
         if (endDate != null && endDate.isBefore(startDate)) {
             throw new InvalidDateSequenceException();
         }

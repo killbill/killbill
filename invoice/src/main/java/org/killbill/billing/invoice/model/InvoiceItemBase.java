@@ -51,6 +51,10 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     /* RepairAdjInvoiceItem */
     protected final UUID linkedItemId;
 
+    /* Usage specific */
+    protected final String usageName;
+
+
     @Override
     public String toString() {
         // Note: we don't use all fields here, as the output would be overwhelming
@@ -72,27 +76,27 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     */
     // No rate and no reversing item
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
+                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, null, currency, null);
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, amount, null, currency, null);
     }
 
     // With rate but no reversing item
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
+                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency, null);
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, amount, rate, currency, null);
     }
 
     // With  reversing item, no rate
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
+                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final UUID reversedItemId) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, null, currency, reversedItemId);
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, amount, null, currency, reversedItemId);
     }
 
     private InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                            @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
+                            @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                             final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency,
                             final UUID reversedItemId) {
         super(id, createdDate, createdDate);
@@ -102,6 +106,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         this.bundleId = bundleId;
         this.planName = planName;
         this.phaseName = phaseName;
+        this.usageName = usageName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.amount = amount;
@@ -170,6 +175,10 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         return linkedItemId;
     }
 
+    @Override
+    public String getUsageName() {
+        return usageName;
+    }
 
     @Override
     public boolean equals(final Object o) {

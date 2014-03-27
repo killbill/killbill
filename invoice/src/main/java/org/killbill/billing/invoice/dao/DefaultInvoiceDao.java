@@ -201,7 +201,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final Map<UUID, DateTime> callbackDateTimePerSubscriptions,
+                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions,
                               final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
@@ -402,7 +402,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     final BigDecimal requestedPositiveAmountToAdjust = requestedPositiveAmount.compareTo(maxBalanceToAdjust) > 0 ? maxBalanceToAdjust : requestedPositiveAmount;
                     if (requestedPositiveAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
                         final InvoiceItemModelDao adjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.REFUND_ADJ, invoice.getId(), invoice.getAccountId(),
-                                                                                    null, null, null, null, context.getCreatedDate().toLocalDate(), null,
+                                                                                    null, null, null, null, null, context.getCreatedDate().toLocalDate(), null,
                                                                                     requestedPositiveAmountToAdjust.negate(), null, invoice.getCurrency(), null);
                         transInvoiceItemDao.create(adjItem, context);
                     }
@@ -570,7 +570,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.EXTERNAL_CHARGE,
                                                                                    invoiceIdForExternalCharge, accountId,
-                                                                                   bundleId, null, description, null,
+                                                                                   bundleId, null, description, null, null,
                                                                                    effectiveDate, null, amount, null,
                                                                                    currency, null);
                 final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
@@ -620,7 +620,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // Note! The amount is negated here!
                 final InvoiceItemModelDao credit = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CREDIT_ADJ, invoiceIdForCredit,
-                                                                           accountId, null, null, null, null, effectiveDate,
+                                                                           accountId, null, null, null, null, null, effectiveDate,
                                                                            null, positiveCreditAmount.negate(), null,
                                                                            currency, null);
                 invoiceDaoHelper.insertItem(entitySqlDaoWrapperFactory, credit, context);
@@ -677,8 +677,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // First, adjust the same invoice with the CBA amount to "delete"
                 final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoice.getId(), invoice.getAccountId(),
-                                                                               null, null, null, null, context.getCreatedDate().toLocalDate(),
-                                                                               null, cbaItem.getAmount().negate(), null, cbaItem.getCurrency(), cbaItem.getId());
+                                                                               null, null, null, null, null, context.getCreatedDate().toLocalDate(),
+                                                                               null, cbaItem.getAmount().negate(), null,  cbaItem.getCurrency(), cbaItem.getId());
                 invoiceItemSqlDao.create(cbaAdjItem, context);
 
                 // Verify the final invoice balance is not negative
@@ -733,7 +733,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                         // Add the adjustment on that invoice
                         final InvoiceItemModelDao nextCBAAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoiceFollowing.getId(),
-                                                                                           invoice.getAccountId(), null, null, null, null,
+                                                                                           invoice.getAccountId(), null, null, null, null, null,
                                                                                            context.getCreatedDate().toLocalDate(), null,
                                                                                            positiveCBAAdjItemAmount, null, cbaItem.getCurrency(), cbaItem.getId());
                         invoiceItemSqlDao.create(nextCBAAdjItem, context);
@@ -760,10 +760,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId,
-                                             final Map<UUID, DateTime> callbackDateTimePerSubscriptions, final UUID userToken) {
+                                             final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final UUID userToken) {
         for (final UUID subscriptionId : callbackDateTimePerSubscriptions.keySet()) {
-            final DateTime callbackDateTimeUTC = callbackDateTimePerSubscriptions.get(subscriptionId);
-            nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, callbackDateTimeUTC, userToken);
+            final List<DateTime> callbackDateTimeUTC = callbackDateTimePerSubscriptions.get(subscriptionId);
+            for (DateTime cur : callbackDateTimeUTC) {
+                nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, cur, userToken);
+            }
         }
     }
 

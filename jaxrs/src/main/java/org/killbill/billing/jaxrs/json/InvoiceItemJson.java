@@ -40,6 +40,7 @@ public class InvoiceItemJson extends JsonBase {
     private final String subscriptionId;
     private final String planName;
     private final String phaseName;
+    private final String usageName;
     private final String itemType;
     private final String description;
     private final LocalDate startDate;
@@ -56,6 +57,7 @@ public class InvoiceItemJson extends JsonBase {
                            @JsonProperty("subscriptionId") final String subscriptionId,
                            @JsonProperty("planName") final String planName,
                            @JsonProperty("phaseName") final String phaseName,
+                           @JsonProperty("usageName") final String usageName,
                            @JsonProperty("itemType") final String itemType,
                            @JsonProperty("description") final String description,
                            @JsonProperty("startDate") final LocalDate startDate,
@@ -72,6 +74,7 @@ public class InvoiceItemJson extends JsonBase {
         this.subscriptionId = subscriptionId;
         this.planName = planName;
         this.phaseName = phaseName;
+        this.usageName = usageName;
         this.itemType = itemType;
         this.description = description;
         this.startDate = startDate;
@@ -83,7 +86,7 @@ public class InvoiceItemJson extends JsonBase {
     public InvoiceItemJson(final InvoiceItem item, @Nullable final List<AuditLog> auditLogs) {
         this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getLinkedItemId()),
              toString(item.getAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
-             item.getPlanName(), item.getPhaseName(), item.getInvoiceItemType().toString(),
+             item.getPlanName(), item.getPhaseName(), item.getUsageName(), item.getInvoiceItemType().toString(),
              item.getDescription(), item.getStartDate(), item.getEndDate(),
              item.getAmount(), item.getCurrency(), toAuditLogJson(auditLogs));
     }
@@ -124,6 +127,10 @@ public class InvoiceItemJson extends JsonBase {
         return phaseName;
     }
 
+    public String getUsageName() {
+        return usageName;
+    }
+
     public String getItemType() {
         return itemType;
     }
@@ -160,6 +167,7 @@ public class InvoiceItemJson extends JsonBase {
         sb.append(", subscriptionId='").append(subscriptionId).append('\'');
         sb.append(", planName='").append(planName).append('\'');
         sb.append(", phaseName='").append(phaseName).append('\'');
+        sb.append(", usageName='").append(usageName).append('\'');
         sb.append(", description='").append(description).append('\'');
         sb.append(", startDate=").append(startDate);
         sb.append(", endDate=").append(endDate);
@@ -212,6 +220,9 @@ public class InvoiceItemJson extends JsonBase {
         if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
             return false;
         }
+        if (usageName != null ? !usageName.equals(that.usageName) : that.usageName != null) {
+            return false;
+        }
         if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
             return false;
         }
@@ -236,6 +247,7 @@ public class InvoiceItemJson extends JsonBase {
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (planName != null ? planName.hashCode() : 0);
         result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
+        result = 31 * result + (usageName != null ? usageName.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         result = 31 * result + (endDate != null ? endDate.hashCode() : 0);

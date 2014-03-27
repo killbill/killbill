@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,10 +76,11 @@ public class BillCycleDayCalculator {
 
         final PlanPhase phase = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase;
 
+        final BillingPeriod billingPeriod = phase.getRecurring() != null ? phase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
         final BillingAlignment alignment = catalog.billingAlignment(
                 new PlanPhaseSpecifier(product.getName(),
                                        product.getCategory(),
-                                       phase.getBillingPeriod(),
+                                       billingPeriod,
                                        transition.getNextPriceList(),
                                        phase.getPhaseType()),
                 transition.getRequestedTransitionTime());

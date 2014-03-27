@@ -73,7 +73,7 @@ public class MockPlan implements Plan {
     }
 
     @Override
-    public BillingPeriod getBillingPeriod() {
+    public BillingPeriod getRecurringBillingPeriod() {
         throw new UnsupportedOperationException();
     }
 

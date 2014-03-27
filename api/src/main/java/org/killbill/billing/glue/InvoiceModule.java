@@ -18,11 +18,11 @@ package org.killbill.billing.glue;
 
 public interface InvoiceModule {
 
-    public abstract void installInvoiceUserApi();
+    public void installInvoiceUserApi();
 
-    public abstract void installInvoicePaymentApi();
+    public void installInvoicePaymentApi();
 
-    public abstract void installInvoiceMigrationApi();
+    public void installInvoiceMigrationApi();
 
-    public abstract void installInvoiceInternalApi();
+    public void installInvoiceInternalApi();
 }

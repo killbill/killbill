@@ -60,7 +60,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(), account.getId(),
                                                             subscriptionId,
                                                             bundleId,
-                                                            "test plan", "test phase",
+                                                            "test plan", "test phase", null,
                                                             now,
                                                             now.plusMonths(1),
                                                             requestedAmount,

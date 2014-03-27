@@ -17,6 +17,8 @@
 package org.killbill.billing.usage.api.user;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -53,8 +55,15 @@ public class DefaultUsageUserApi implements UsageUserApi {
     }
 
     @Override
-    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final TenantContext context) {
+    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId,  final String unitType, final DateTime startTime, final DateTime endTime, final TenantContext context) {
         final RolledUpUsageModelDao usageForSubscription = rolledUpUsageDao.getUsageForSubscription(subscriptionId, internalCallContextFactory.createInternalTenantContext(context));
         return new DefaultRolledUpUsage(usageForSubscription);
+    }
+
+    @Override
+    public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final Set<String> unitTypes, final List<DateTime> transitionTimes, final TenantContext tenantContext) {
+        // STEPH_USAGE implement
+        // STEPH_USAGE also dates should be inclusive/exclusive so as to not bill twice for last day
+        return null;
     }
 }

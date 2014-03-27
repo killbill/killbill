@@ -11,6 +11,7 @@ CREATE TABLE invoice_items (
     subscription_id char(36),
     plan_name varchar(50),
     phase_name varchar(50),
+    usage_name varchar(50),
     start_date date NOT NULL,
     end_date date,
     amount numeric(15,9) NOT NULL,

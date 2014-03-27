@@ -45,4 +45,8 @@ public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements 
         return errors;
     }
 
+    public DefaultUnit setName(final String name) {
+        this.name = name;
+        return this;
+    }
 }

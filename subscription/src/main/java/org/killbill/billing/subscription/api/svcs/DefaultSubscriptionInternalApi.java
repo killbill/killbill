@@ -374,7 +374,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             final EntitlementAOStatusDryRun status = new DefaultSubscriptionStatusDryRun(cur.getId(),
                                                                                          cur.getCurrentPlan().getProduct().getName(),
                                                                                          cur.getCurrentPhase().getPhaseType(),
-                                                                                         cur.getCurrentPlan().getBillingPeriod(),
+                                                                                         cur.getCurrentPlan().getRecurringBillingPeriod(),
                                                                                          cur.getCurrentPriceList().getName(), reason);
             result.add(status);
         }

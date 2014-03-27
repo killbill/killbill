@@ -22,14 +22,17 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 
 public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements SortedSet<BillingEvent>, BillingEventSet {
+
     private static final long serialVersionUID = 1L;
 
     private boolean accountAutoInvoiceOff = false;
     private List<UUID> subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
+    private BillingMode recurrringBillingMode;
 
     /* (non-Javadoc)
     * @see org.killbill.billing.junction.plumbing.billing.BillingEventSet#isAccountAutoInvoiceOff()
@@ -37,6 +40,11 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     @Override
     public boolean isAccountAutoInvoiceOff() {
         return accountAutoInvoiceOff;
+    }
+
+    @Override
+    public BillingMode getRecurringBillingMode() {
+        return null;
     }
 
     /* (non-Javadoc)
@@ -51,16 +59,19 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
         this.accountAutoInvoiceOff = accountAutoInvoiceIsOff;
     }
 
-    public void setSubscriptionIdsWithAutoInvoiceOff(final List<UUID> subscriptionIdsWithAutoInvoiceOff) {
-        this.subscriptionIdsWithAutoInvoiceOff = subscriptionIdsWithAutoInvoiceOff;
+    public BillingMode getRecurrringBillingMode() {
+        return recurrringBillingMode;
+    }
+
+    public void setRecurrringBillingMode(final BillingMode recurrringBillingMode) {
+        this.recurrringBillingMode = recurrringBillingMode;
     }
 
     @Override
     public String toString() {
         return "DefaultBillingEventSet [accountAutoInvoiceOff=" + accountAutoInvoiceOff
-                + ", subscriptionIdsWithAutoInvoiceOff=" + subscriptionIdsWithAutoInvoiceOff + ", Events="
-                + super.toString() + "]";
+               + ", subscriptionIdsWithAutoInvoiceOff=" + subscriptionIdsWithAutoInvoiceOff + ", Events="
+               + super.toString() + "]";
     }
-
 
 }

@@ -170,7 +170,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), baseProduct);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         final PlanPhase currentPhase = dryRunBaseSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -255,7 +255,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), newBaseProduct);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         final PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -341,7 +341,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), baseProduct);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         PlanPhase currentPhase = dryRunBaseSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -381,7 +381,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), newBaseProduct);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         currentPhase = realRunBaseSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -425,7 +425,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), newBaseProduct);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         final PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -512,7 +512,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), baseProduct);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         PlanPhase currentPhase = dryRunBaseSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -550,7 +550,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), newBaseProduct);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         currentPhase = realRunBaseSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -588,7 +588,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), "Shotgun");
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         final DateTime repairTime = clock.getUTCNow().minusDays(1);
         final BundleBaseTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
@@ -620,7 +620,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), "Assault-Rifle");
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         final PlanPhase currentPhase = baseSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
