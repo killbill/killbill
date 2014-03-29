@@ -32,7 +32,6 @@ import com.google.common.eventbus.Subscribe;
 
 public class KillbillEventObservable extends Observable {
 
-
     private Logger logger = LoggerFactory.getLogger(KillbillEventObservable.class);
 
     private final PersistentBus externalBus;
