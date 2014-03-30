@@ -102,7 +102,6 @@ public class ContiguousIntervalConsumableInArrear {
         if (targetDate.isBefore(startDate)) {
             return this;
         }
-        // STEPH_USAGE should we billed up to endDate to targetDate is targetDate < endDate./ What does targetDate means in arrear
         final LocalDate endDate = closedInterval ? new LocalDate(billingEvents.get(billingEvents.size() - 1).getEffectiveDate(), getAccountTimeZone()) : targetDate;
 
         final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, getBCD(), usage.getBillingPeriod());
@@ -147,10 +146,12 @@ public class ContiguousIntervalConsumableInArrear {
                 toBeBilledUsage = toBeBilledUsage.add(toBeBilledForUnit);
             }
             // Retrieves current price amount billed for that period of time (and usage section)
-            final BigDecimal billedUsage = computeBilledUsage(ru.getStartDate(), ru.getEndDate(), existingUsage);
+            final Iterable<InvoiceItem> billedItems = getBilledItems(ru.getStartDate(), ru.getEndDate(), existingUsage);
+            final BigDecimal billedUsage = computeBilledUsage(billedItems);
 
-            // Compare the two and add the missing piece if required.
-            if (billedUsage.compareTo(toBeBilledUsage) < 0) {
+            // Compare the two and add the missing piece if required. If there has never been any billed item for the period
+            // and if there is nothing to bill for we would also insert a $0 amount
+            if (!billedItems.iterator().hasNext() || billedUsage.compareTo(toBeBilledUsage) < 0) {
                 InvoiceItem item = new UsageInvoiceItem(invoiceId, getAccountId(), getBundleId(), getSubscriptionId(), getPlanName(),
                                                         getPhaseName(), usage.getName(), ru.getStartDate(), ru.getEndDate(), toBeBilledUsage.subtract(billedUsage), getCurrency());
                 result.add(item);
@@ -165,6 +166,10 @@ public class ContiguousIntervalConsumableInArrear {
      * @return a list of {@code RolledUpUsage} for each period (between two transitions) * each unitType.
      */
     List<RolledUpUsage> getRolledUpUsage() {
+        // There needs to be at least two transitions to define an interval to bill
+        if (transitionTimes.size() <= 1) {
+            return Collections.emptyList();
+        }
 
         final Iterable<DateTime> transitions = Iterables.transform(transitionTimes, new Function<LocalDate, DateTime>() {
             @Override
@@ -172,7 +177,6 @@ public class ContiguousIntervalConsumableInArrear {
                 return localDateToEndOfDayInAccountTimezone(input, getAccountTimeZone());
             }
         });
-        // STEPH_USAGE optimized api takes set of unitTypes -- for usage section-- and list of transitions date. Should we use dateTime or LocalDate?
         return usageApi.getAllUsageForSubscription(getSubscriptionId(), unitTypes, ImmutableList.copyOf(transitions), context);
     }
 
@@ -210,36 +214,38 @@ public class ContiguousIntervalConsumableInArrear {
 
     /**
      *
-     * @param startDate the startDate of of billed period
-     * @param endDate the endDate of of billed period
-     * @param existingUsage the list of invoiceItem for that subscription
+     * @param filteredUsageForInterval the list of invoiceItem to consider
      * @return the price amount that was already billed for that period and usage section (across unitTypes)
      */
     @VisibleForTesting
-    BigDecimal computeBilledUsage(final LocalDate startDate, final LocalDate endDate, final List<InvoiceItem> existingUsage) {
+    BigDecimal computeBilledUsage(final Iterable<InvoiceItem> filteredUsageForInterval) {
 
         Preconditions.checkState(isBuilt.get());
-        final Iterable<InvoiceItem> filteredUsageForInterval = Iterables.filter(existingUsage, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                if (input.getInvoiceItemType() != InvoiceItemType.USAGE) {
-                    return false;
-                }
-
-                // STEPH_USAGE what happens if we discover usage period that overlap (one side or both side) the [startDate, endDate] interval
-                final UsageInvoiceItem usageInput = (UsageInvoiceItem) input;
-                return usageInput.getUsageName().equals(usage.getName()) &&
-                       usageInput.getStartDate().compareTo(startDate) >= 0 &&
-                       usageInput.getEndDate().compareTo(endDate) <= 0;
-            }
-        });
-
         BigDecimal billedAmount = BigDecimal.ZERO;
         for (InvoiceItem ii : filteredUsageForInterval) {
             billedAmount = billedAmount.add(ii.getAmount());
         }
         // Return the billed $ amount (not the # of units)
         return billedAmount;
+    }
+
+    Iterable<InvoiceItem> getBilledItems(final LocalDate startDate, final LocalDate endDate, final List<InvoiceItem> existingUsage) {
+
+        Preconditions.checkState(isBuilt.get());
+        return Iterables.filter(existingUsage, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                if (input.getInvoiceItemType() != InvoiceItemType.USAGE) {
+                    return false;
+                }
+
+                // STEPH what happens if we discover usage period that overlap (one side or both side) the [startDate, endDate] interval
+                final UsageInvoiceItem usageInput = (UsageInvoiceItem) input;
+                return usageInput.getUsageName().equals(usage.getName()) &&
+                       usageInput.getStartDate().compareTo(startDate) >= 0 &&
+                       usageInput.getEndDate().compareTo(endDate) <= 0;
+            }
+        });
     }
 
     @VisibleForTesting

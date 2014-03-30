@@ -105,7 +105,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         final List<InvoiceItem> usageItems = generateUsageInvoiceItems(invoiceId, events, existingInvoices, targetDate, context);
         invoice.addInvoiceItems(usageItems);
 
-        return inAdvanceItems.size() != 0 ? invoice : null;
+        return invoice.getInvoiceItems().size() != 0 ? invoice : null;
     }
 
     // STEPH_USAGE Only deals with consumable in arrear usage billing.
@@ -123,10 +123,16 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             UUID curSubscriptionId = null;
             while (events.hasNext()) {
                 final BillingEvent event = events.next();
+                // Skip events that are posterior to the targetDate
+                final LocalDate eventLocalEffectiveDate =  new LocalDate(event.getEffectiveDate(), event.getAccount().getTimeZone());
+                if (eventLocalEffectiveDate.isAfter(targetDate)) {
+                    continue;
+                }
+
                 final UUID subscriptionId = event.getSubscription().getId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
                     final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, targetDate, context.toTenantContext(tenantId));
-                    items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(subscriptionId, existingInvoices)));
+                    items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(curSubscriptionId, existingInvoices)));
                     curEvents = Lists.newArrayList();
                 }
                 curSubscriptionId = subscriptionId;

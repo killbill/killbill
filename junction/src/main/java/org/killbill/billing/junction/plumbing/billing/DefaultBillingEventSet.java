@@ -17,14 +17,27 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements SortedSet<BillingEvent>, BillingEventSet {
 
@@ -53,6 +66,24 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     @Override
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff() {
         return subscriptionIdsWithAutoInvoiceOff;
+    }
+
+    @Override
+    public Map<String, Usage> getUsages() {
+        final Iterable<Usage> allUsages = Iterables.concat(Iterables.transform(this, new Function<BillingEvent, List<Usage>>() {
+            @Override
+            public List<Usage> apply(final BillingEvent input) {
+                return input.getUsages();
+            }
+        }));
+        if (!allUsages.iterator().hasNext()) {
+            return Collections.emptyMap();
+        }
+        final Map<String, Usage> result = new HashMap<String, Usage>();
+        for (Usage cur : Sets.<Usage>newHashSet(allUsages)) {
+            result.put(cur.getName(), cur);
+        }
+        return result;
     }
 
     public void setAccountAutoInvoiceIsOff(final boolean accountAutoInvoiceIsOff) {

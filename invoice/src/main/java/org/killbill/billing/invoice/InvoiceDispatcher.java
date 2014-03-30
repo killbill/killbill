@@ -244,7 +244,7 @@ public class InvoiceDispatcher {
                                                                                                                                                          }
                                                                                                                                                      }));
 
-                    final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions = createNextFutureNotificationDate(invoiceItemModelDaos, UsageUtils.getKnownUsages(billingEvents, null), dateAndTimeZoneContext);
+                    final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents.getUsages(), dateAndTimeZoneContext);
                     invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, callbackDateTimePerSubscriptions, context);
 
                     final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
@@ -317,8 +317,7 @@ public class InvoiceDispatcher {
                     break;
 
                 case USAGE:
-                    final Usage usage = knownUsages.get(item.getUsageName());
-                    final String key = item.getSubscriptionId().toString() + ":" + usage.getName();
+                    final String key = item.getSubscriptionId().toString() + ":" + item.getUsageName();
                     final LocalDate perSubscriptionUsageRecurringDate  = perSubscriptionUsage.get(key);
                     if (perSubscriptionUsageRecurringDate == null || perSubscriptionUsageRecurringDate.compareTo(item.getEndDate()) < 0) {
                         perSubscriptionUsage.put(key, item.getEndDate());
@@ -336,15 +335,19 @@ public class InvoiceDispatcher {
 
             final List<DateTime> perSubscriptionCallback = result.get(subscriptionId);
             final String usageName = parts[1];
-            final Usage usage = knownUsages.get(usageName);
-
             final LocalDate endDate =  perSubscriptionUsage.get(key);
-            // STEPH_USAGE WE should double check this is indeed the right date to be called back for that subscription/usage section.
-            final LocalDate nextCallbackUsageDate = (usage.getBillingMode() == BillingMode.IN_ARREAR) ? endDate.plusMonths(usage.getBillingPeriod().getNumberOfMonths()) : endDate;
-            perSubscriptionCallback.add(dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(nextCallbackUsageDate));
+
+            final DateTime subscriptionUsageCallbackDate = getNextUsageBillingDate(usageName, endDate, dateAndTimeZoneContext, knownUsages);
+            perSubscriptionCallback.add(subscriptionUsageCallbackDate);
         }
 
         return result;
+    }
+
+    private DateTime getNextUsageBillingDate(final String usageName, final LocalDate chargedThroughDate, final DateAndTimeZoneContext dateAndTimeZoneContext, final Map<String, Usage> knownUsages) {
+        final Usage usage = knownUsages.get(usageName);
+        final LocalDate nextCallbackUsageDate = (usage.getBillingMode() == BillingMode.IN_ARREAR) ? chargedThroughDate.plusMonths(usage.getBillingPeriod().getNumberOfMonths()) : chargedThroughDate;
+        return dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(nextCallbackUsageDate);
     }
 
     private void setChargedThroughDates(final DateAndTimeZoneContext dateAndTimeZoneContext,

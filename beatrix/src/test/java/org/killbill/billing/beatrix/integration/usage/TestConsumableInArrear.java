@@ -73,7 +73,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.INVOICE);
         // Check bundle after BP got created otherwise we get an error from auditApi.
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -82,28 +82,50 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         //
         // ADD ADD_ON ON THE SAME DAY
         //
-        setUsage();
+        final List<RolledUpUsage> usageList = new ArrayList<RolledUpUsage>();
+        setUsage(usageList);
         addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE);
 
-        final RolledUpUsage usage = new DefaultRolledUpUsage(UUID.randomUUID(), "bullets", new LocalDate(2012, 4, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new BigDecimal("199"));
-        setUsage(usage);
+        RolledUpUsage usage1 = new DefaultRolledUpUsage(UUID.randomUUID(), "bullets", new LocalDate(2012, 4, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new BigDecimal("199"));
+        usageList.add(usage1);
+        setUsage(usageList);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2012, 5, 1));
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
 
 
+        // No usage for that period, we should still be schedule
+        RolledUpUsage usage2 = new DefaultRolledUpUsage(UUID.randomUUID(), "bullets", new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new LocalDate(2012, 6, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new BigDecimal("0"));
+        usageList.add(usage2);
+        setUsage(usageList);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.setDay(new LocalDate(2012, 6, 1));
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+
+
+        RolledUpUsage usage3 = new DefaultRolledUpUsage(UUID.randomUUID(), "bullets", new LocalDate(2012, 6, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new LocalDate(2012, 7, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new BigDecimal("350"));
+        usageList.add(usage3);
+        setUsage(usageList);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2012, 7, 1));
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+
     }
 
-    private void setUsage(final RolledUpUsage...usages) {
-        final List<RolledUpUsage> usageList = new ArrayList<RolledUpUsage>();
-        for (RolledUpUsage usage : usages) {
-            usageList.add(usage);
-        }
+    private void setUsage(final List<RolledUpUsage> usageList) {
         ((MockUsageUserApi) usageUserApi).setAllUsageForSubscription(usageList);
     }
 }

@@ -313,10 +313,14 @@ public class TestInvoiceHelper {
                                                final BillingMode billingMode, final String description,
                                                final long totalOrdering,
                                                final SubscriptionBaseTransitionType type) {
+
+        final Account mockAccount = Mockito.mock(Account.class);
+        Mockito.when(mockAccount.getTimeZone()).thenReturn(DateTimeZone.UTC);
+        final Account accountOrMockAcount = account != null ? account : mockAccount;
         return new BillingEvent() {
             @Override
             public Account getAccount() {
-                return account;
+                return accountOrMockAcount;
             }
 
             @Override

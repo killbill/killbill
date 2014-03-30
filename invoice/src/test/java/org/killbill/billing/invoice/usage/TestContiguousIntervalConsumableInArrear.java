@@ -92,7 +92,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final FixedPriceInvoiceItem ii5 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, BigDecimal.TEN, currency);
         existingUsage.add(ii5);
 
-        final BigDecimal result = intervalConsumableInArrear.computeBilledUsage(startDate, endDate, existingUsage);
+        final BigDecimal result = intervalConsumableInArrear.computeBilledUsage(intervalConsumableInArrear.getBilledItems(startDate, endDate, existingUsage));
         assertEquals(result, BigDecimal.TEN.add(BigDecimal.TEN));
     }
 

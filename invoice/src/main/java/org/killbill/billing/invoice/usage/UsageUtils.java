@@ -42,25 +42,6 @@ import com.google.common.collect.Lists;
 
 public class UsageUtils {
 
-    public static Map<String, Usage> getKnownUsages(final BillingEventSet billingEvents, @Nullable final Predicate filter) {
-        final Iterable<Usage> usages = Iterables.concat(Iterables.transform(billingEvents, new Function<BillingEvent, List<Usage>>() {
-            @Override
-            public List<Usage> apply(final BillingEvent input) {
-                return input.getUsages();
-            }
-        }));
-
-        final Iterable<Usage> filteredUsages = (filter != null) ? Iterables.filter(usages, filter) : usages;
-
-        final Map<String, Usage> result = (filteredUsages.iterator().hasNext()) ? new HashMap<String, Usage>() : Collections.<String, Usage>emptyMap();
-        final Iterator<Usage> iterator = filteredUsages.iterator();
-        while (iterator.hasNext()) {
-            final Usage next = iterator.next();
-            result.put(next.getName(), next);
-        }
-        return result;
-    }
-
     public static List<TieredBlock> getConsumableInArrearTieredBlocks(final Usage usage, final String unitType) {
 
         Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE);
