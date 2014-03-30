@@ -38,6 +38,7 @@ import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.usage.api.user.DefaultRolledUpUsage;
 import org.killbill.billing.usage.api.user.MockUsageUserApi;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
@@ -82,13 +83,10 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         //
         // ADD ADD_ON ON THE SAME DAY
         //
-        final List<RolledUpUsage> usageList = new ArrayList<RolledUpUsage>();
-        setUsage(usageList);
-        addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE);
+        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE);
 
-        RolledUpUsage usage1 = new DefaultRolledUpUsage(UUID.randomUUID(), "bullets", new LocalDate(2012, 4, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new BigDecimal("199"));
-        usageList.add(usage1);
-        setUsage(usageList);
+        setUsage(aoSubscription.getId(), "bullets", new DateTime(2012, 4, 1, 1, 1, DateTimeZone.UTC), new DateTime(2012, 4, 15, 0, 0, DateTimeZone.UTC), new BigDecimal("99"), callContext);
+        setUsage(aoSubscription.getId(), "bullets", new DateTime(2012, 4, 15, 0, 0, DateTimeZone.UTC), new DateTime(2012, 4, 20, 1, 1, DateTimeZone.UTC), new BigDecimal("100"), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2012, 5, 1));
@@ -99,11 +97,6 @@ public class TestConsumableInArrear extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
 
 
-        // No usage for that period, we should still be schedule
-        RolledUpUsage usage2 = new DefaultRolledUpUsage(UUID.randomUUID(), "bullets", new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new LocalDate(2012, 6, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new BigDecimal("0"));
-        usageList.add(usage2);
-        setUsage(usageList);
-
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.setDay(new LocalDate(2012, 6, 1));
         assertListenerStatus();
@@ -112,9 +105,9 @@ public class TestConsumableInArrear extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
 
 
-        RolledUpUsage usage3 = new DefaultRolledUpUsage(UUID.randomUUID(), "bullets", new LocalDate(2012, 6, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new LocalDate(2012, 7, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), new BigDecimal("350"));
-        usageList.add(usage3);
-        setUsage(usageList);
+        setUsage(aoSubscription.getId(), "bullets", new DateTime(2012, 6, 1, 1, 1, DateTimeZone.UTC), new DateTime(2012, 6, 15, 1, 1, DateTimeZone.UTC), new BigDecimal("50"), callContext);
+        setUsage(aoSubscription.getId(), "bullets", new DateTime(2012, 6, 16, 1, 1, DateTimeZone.UTC), new DateTime(2012, 6, 20, 1, 1, DateTimeZone.UTC), new BigDecimal("300"), callContext);
+
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2012, 7, 1));
@@ -125,7 +118,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
 
     }
 
-    private void setUsage(final List<RolledUpUsage> usageList) {
-        ((MockUsageUserApi) usageUserApi).setAllUsageForSubscription(usageList);
+    private void setUsage(final UUID subscriptionId, final String unitType, final DateTime startTime, final DateTime endTime, final BigDecimal amount, final CallContext context) {
+        usageUserApi.recordRolledUpUsage(subscriptionId, unitType, startTime, endTime, amount, context);
     }
 }

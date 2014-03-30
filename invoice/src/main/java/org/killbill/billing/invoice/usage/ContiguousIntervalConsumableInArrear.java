@@ -377,7 +377,7 @@ public class ContiguousIntervalConsumableInArrear {
     }
 
     static DateTime localDateToEndOfDayInAccountTimezone(final LocalDate input, final DateTimeZone accountTimeZone) {
-        final DateTime dateTimeInAccountTimeZone = new DateTime(input.getYear(), input.getMonthOfYear(), input.getDayOfMonth(), 23, 59, 59, accountTimeZone);
+        final DateTime dateTimeInAccountTimeZone = new DateTime(input.getYear(), input.getMonthOfYear(), input.getDayOfMonth(), 0, 0, 0, accountTimeZone);
         return new DateTime(dateTimeInAccountTimeZone, DateTimeZone.UTC);
     }
 

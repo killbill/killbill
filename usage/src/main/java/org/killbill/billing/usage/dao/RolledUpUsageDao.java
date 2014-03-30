@@ -17,17 +17,21 @@
 package org.killbill.billing.usage.dao;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.usage.api.RolledUpUsage;
+import org.killbill.billing.util.callcontext.TenantContext;
 
 public interface RolledUpUsageDao {
 
     void record(UUID subscriptionId, String unitType, DateTime startTime,
                 DateTime endTime, BigDecimal amount, InternalCallContext context);
 
-    RolledUpUsageModelDao getUsageForSubscription(UUID subscriptionId, InternalTenantContext context);
+    RolledUpUsageModelDao getUsageForSubscription(UUID subscriptionId, DateTime startTime, DateTime endTime, String unitType, InternalTenantContext context);
 }

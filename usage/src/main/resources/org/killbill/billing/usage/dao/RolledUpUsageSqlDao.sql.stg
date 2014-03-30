@@ -1,6 +1,6 @@
-group RolledUpUsageSqlDao;
+group RolledUpUsageSqlDao: EntitySqlDao;
 
-tableName() ::= "usage"
+tableName() ::= "rolled_up_usage"
 
 tableFields(prefix) ::= <<
   <prefix>id
@@ -43,9 +43,13 @@ values (
 
 getUsageForSubscription() ::= <<
 select
-  <tableFields("t.")>
+  sum(amount)
 from <tableName()> t
 where subscription_id = :subscriptionId
+and start_time >= :startTime
+and end_time \<= :endTime
+and unit_type = :unitType
 <AND_CHECK_TENANT()>
 ;
 >>
+

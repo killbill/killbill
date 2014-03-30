@@ -121,10 +121,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new NonEntityDaoModule());
         install(new RecordIdModule());
         install(new BeatrixModuleWithSubsetLifecycle(configSource));
-
-
-        // STEPH_USAGE is that really what we want.
-        install(new TestUsageModule(configSource));
+        install(new UsageModule(configSource));
 
         bind(AccountChecker.class).asEagerSingleton();
         bind(SubscriptionChecker.class).asEagerSingleton();
