@@ -36,7 +36,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 
 public class JRubyCurrencyPlugin extends JRubyPlugin implements CurrencyPluginApi {
 
-    private volatile ServiceRegistration<CurrencyPluginApi> currencyPluginRegistration;
+    private volatile ServiceRegistration currencyPluginRegistration;
 
     public JRubyCurrencyPlugin(final PluginRubyConfig config, final BundleContext bundleContext, final LogService logger) {
         super(config, bundleContext, logger);
@@ -50,7 +50,7 @@ public class JRubyCurrencyPlugin extends JRubyPlugin implements CurrencyPluginAp
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put("name", pluginMainClass);
         props.put(OSGIPluginProperties.PLUGIN_NAME_PROP, pluginGemName);
-        currencyPluginRegistration = (ServiceRegistration<CurrencyPluginApi>) context.registerService(CurrencyPluginApi.class.getName(), this, props);
+        currencyPluginRegistration = context.registerService(CurrencyPluginApi.class.getName(), this, props);
     }
 
     @Override

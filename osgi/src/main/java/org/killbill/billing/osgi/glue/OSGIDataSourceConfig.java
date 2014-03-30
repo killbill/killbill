@@ -27,17 +27,17 @@ public interface OSGIDataSourceConfig {
 
     @Description("The jdbc url for the database")
     @Config(DATA_SOURCE_PROP_PREFIX + "jdbc.url")
-    @Default("jdbc:mysql://127.0.0.1:3306/killbill")
+    @Default("jdbc:h2:file:killbill;MODE=MYSQL;DB_CLOSE_DELAY=-1;MVCC=true;DB_CLOSE_ON_EXIT=FALSE")
     String getJdbcUrl();
 
     @Description("The jdbc user name for the database")
     @Config(DATA_SOURCE_PROP_PREFIX + "jdbc.user")
-    @Default("root")
+    @Default("killbill")
     String getUsername();
 
     @Description("The jdbc password for the database")
     @Config(DATA_SOURCE_PROP_PREFIX + "jdbc.password")
-    @Default("root")
+    @Default("killbill")
     String getPassword();
 
     @Description("The minimum allowed number of idle connections to the database")
@@ -47,7 +47,7 @@ public interface OSGIDataSourceConfig {
 
     @Description("The maximum allowed number of active connections to the database")
     @Config(DATA_SOURCE_PROP_PREFIX + "jdbc.maxActive")
-    @Default("10")
+    @Default("30")
     int getMaxActive();
 
     @Description("How long to wait before a connection attempt to the database is considered timed out")

@@ -42,7 +42,7 @@ import org.killbill.billing.util.entity.Pagination;
 
 public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi {
 
-    private volatile ServiceRegistration<PaymentPluginApi> paymentInfoPluginRegistration;
+    private volatile ServiceRegistration paymentInfoPluginRegistration;
 
     public JRubyPaymentPlugin(final PluginRubyConfig config, final BundleContext bundleContext, final LogService logger) {
         super(config, bundleContext, logger);
@@ -56,7 +56,7 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put("name", pluginMainClass);
         props.put(OSGIPluginProperties.PLUGIN_NAME_PROP, pluginGemName);
-        paymentInfoPluginRegistration = (ServiceRegistration<PaymentPluginApi>) context.registerService(PaymentPluginApi.class.getName(), this, props);
+        paymentInfoPluginRegistration = context.registerService(PaymentPluginApi.class.getName(), this, props);
     }
 
     @Override
