@@ -93,6 +93,9 @@ public interface JaxrsResource {
     public static final String QUERY_PAY_ALL_UNPAID_INVOICES = "payAllUnpaidInvoices";
     public static final String QUERY_PAY_INVOICE = "payInvoice";
 
+    public static final String QUERY_START_TIME = "startTime";
+    public static final String QUERY_END_TIME = "endTime";
+
     public static final String QUERY_BUNDLE_TRANSFER_ADDON = "transferAddOn";
     public static final String QUERY_BUNDLE_TRANSFER_CANCEL_IMM = "cancelImmediately";
 
@@ -164,6 +167,9 @@ public interface JaxrsResource {
 
     public static final String TENANTS = "tenants";
     public static final String TENANTS_PATH = PREFIX + "/" + TENANTS;
+
+    public static final String USAGES = "usages";
+    public static final String USAGES_PATH = PREFIX + "/" + USAGES;
 
     public static final String EXPORT = "export";
     public static final String EXPORT_PATH = PREFIX + "/" + EXPORT;

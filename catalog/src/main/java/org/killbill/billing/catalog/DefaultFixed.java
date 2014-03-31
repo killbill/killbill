@@ -32,7 +32,7 @@ import org.killbill.billing.util.config.catalog.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements Fixed {
-        
+
 
     @XmlAttribute(required = false)
     private FixedType type = FixedType.ONE_TIME;
