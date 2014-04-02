@@ -52,9 +52,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <!-- In compile scope for org.osgi.util.tracker.ServiceTracker -->
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
