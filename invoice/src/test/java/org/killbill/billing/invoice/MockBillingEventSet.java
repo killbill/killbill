@@ -17,10 +17,14 @@
 package org.killbill.billing.invoice;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 
@@ -41,8 +45,18 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
     }
 
     @Override
+    public BillingMode getRecurringBillingMode() {
+        return BillingMode.IN_ADVANCE;
+    }
+
+    @Override
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff() {
         return subscriptionIdsWithAutoInvoiceOff;
+    }
+
+    @Override
+    public Map<String, Usage> getUsages() {
+        return Collections.emptyMap();
     }
 
     public void setAccountInvoiceOff(final boolean isAccountInvoiceOff) {

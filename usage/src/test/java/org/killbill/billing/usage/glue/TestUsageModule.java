@@ -16,6 +16,8 @@
 
 package org.killbill.billing.usage.glue;
 
+import org.killbill.billing.usage.api.UsageUserApi;
+import org.killbill.billing.usage.api.user.MockUsageUserApi;
 import org.skife.config.ConfigSource;
 
 public class TestUsageModule extends UsageModule {
@@ -28,4 +30,10 @@ public class TestUsageModule extends UsageModule {
     protected void configure() {
         super.configure();
     }
+
+    protected void installUsageUserApi() {
+        bind(MockUsageUserApi.class).asEagerSingleton();
+        bind(UsageUserApi.class).to(MockUsageUserApi.class).asEagerSingleton();
+    }
+
 }

@@ -54,6 +54,7 @@ import org.killbill.billing.payment.provider.MockPaymentProviderPluginModule;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.TenantModule;
+import org.killbill.billing.usage.glue.TestUsageModule;
 import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.email.EmailModule;
@@ -114,13 +115,13 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new IntegrationTestOverdueModule(configSource));
         install(new AuditModule());
         install(new CurrencyModule(configSource));
-        install(new UsageModule(configSource));
         install(new TenantModule(configSource));
         install(new ExportModule());
         install(new DefaultOSGIModule(configSource));
         install(new NonEntityDaoModule());
         install(new RecordIdModule());
         install(new BeatrixModuleWithSubsetLifecycle(configSource));
+        install(new UsageModule(configSource));
 
         bind(AccountChecker.class).asEagerSingleton();
         bind(SubscriptionChecker.class).asEagerSingleton();

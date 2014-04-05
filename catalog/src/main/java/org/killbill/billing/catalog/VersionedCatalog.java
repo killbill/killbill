@@ -33,6 +33,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -60,6 +61,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 
     private final Clock clock;
     private String catalogName;
+    private BillingMode recurringBillingMode;
 
     @XmlElement(name = "catalogVersion", required = true)
     private final List<StandaloneCatalog> versions = new ArrayList<StandaloneCatalog>();
@@ -168,8 +170,15 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
         if (catalogName == null) {
             catalogName = e.getCatalogName();
         } else {
-            if (!catalogName.equals(getCatalogName())) {
+            if (!catalogName.equals(e.getCatalogName())) {
                 throw new CatalogApiException(ErrorCode.CAT_CATALOG_NAME_MISMATCH, catalogName, e.getCatalogName());
+            }
+        }
+        if (recurringBillingMode == null) {
+            recurringBillingMode = e.getRecurringBillingMode();
+        } else {
+            if (!recurringBillingMode.equals(e.getRecurringBillingMode())) {
+                throw new CatalogApiException(ErrorCode.CAT_CATALOG_RECURRING_MODE_MISMATCH, recurringBillingMode, e.getRecurringBillingMode());
             }
         }
         versions.add(e);
@@ -355,6 +364,11 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public Date getEffectiveDate() throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).getEffectiveDate();
+    }
+
+    @Override
+    public BillingMode getRecurringBillingMode() {
+        return recurringBillingMode;
     }
 
     @Override

@@ -704,7 +704,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), "Laser-Scope");
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.ADD_ON);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         PlanPhase currentPhase = newAoSubscription.getCurrentPhase();
         assertNotNull(currentPhase);

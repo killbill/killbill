@@ -39,7 +39,7 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     public FixedPriceInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
                                  final UUID subscriptionId, final String planName, final String phaseName,
                                  final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, date, null, amount, currency);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, null, date, null, amount, currency);
     }
 
     @Override

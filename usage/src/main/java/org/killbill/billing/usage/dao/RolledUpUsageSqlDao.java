@@ -16,6 +16,8 @@
 
 package org.killbill.billing.usage.dao;
 
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -36,6 +38,9 @@ public interface RolledUpUsageSqlDao {
                        @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    public RolledUpUsageModelDao getUsageForSubscription(@Bind("subscriptionId") final UUID subscriptionId,
+    public BigDecimal getUsageForSubscription(@Bind("subscriptionId") final UUID subscriptionId,
+                                                         @Bind("startTime") final Date startTime,
+                                                         @Bind("endTime") final Date endTime,
+                                                         @Bind("unitType") final String unitType,
                                                          @InternalTenantContextBinder final InternalTenantContext context);
 }

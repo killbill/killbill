@@ -18,6 +18,9 @@ package org.killbill.billing.junction;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 
 public interface BillingInternalApi {

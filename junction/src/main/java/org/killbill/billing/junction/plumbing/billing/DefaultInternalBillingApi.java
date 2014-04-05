@@ -22,6 +22,13 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
+import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,25 +64,30 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     private final CatalogService catalogService;
     private final BlockingCalculator blockCalculator;
     private final TagInternalApi tagApi;
+    private final Clock clock;
 
     @Inject
     public DefaultInternalBillingApi(final AccountInternalApi accountApi,
                                      final BillCycleDayCalculator bcdCalculator,
                                      final SubscriptionBaseInternalApi subscriptionApi,
                                      final BlockingCalculator blockCalculator,
-                                     final CatalogService catalogService, final TagInternalApi tagApi) {
+                                     final CatalogService catalogService,
+                                     final TagInternalApi tagApi,
+                                     final Clock clock) {
         this.accountApi = accountApi;
         this.bcdCalculator = bcdCalculator;
         this.subscriptionApi = subscriptionApi;
         this.catalogService = catalogService;
         this.blockCalculator = blockCalculator;
         this.tagApi = tagApi;
+        this.clock = clock;
     }
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final InternalCallContext context) {
         final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final DefaultBillingEventSet result = new DefaultBillingEventSet();
+        result.setRecurrringBillingMode(catalogService.getCurrentCatalog().getRecurringBillingMode());
 
         try {
             final Account account = accountApi.getAccountById(accountId, context);

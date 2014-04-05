@@ -318,7 +318,7 @@ public class SubscriptionJson extends JsonBase {
         this.startDate = subscription.getEffectiveStartDate();
         this.productName = subscription.getLastActiveProduct().getName();
         this.productCategory = subscription.getLastActiveProductCategory().name();
-        this.billingPeriod = subscription.getLastActivePlan().getBillingPeriod().toString();
+        this.billingPeriod = subscription.getLastActivePlan().getRecurringBillingPeriod().toString();
         this.priceList = subscription.getLastActivePriceList().getName();
         this.cancelledDate = subscription.getEffectiveEndDate();
         this.chargedThroughDate = subscription.getChargedThroughDate();

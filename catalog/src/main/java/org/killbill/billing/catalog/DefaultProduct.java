@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlIDREF;
 import java.net.URI;
 import java.util.Arrays;
 
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -55,7 +56,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     @XmlIDREF
     @XmlElement(name = "addonProduct", required = true)
     private DefaultProduct[] available = EMPTY_PRODUCT_LIST;
-    
+
     @XmlElementWrapper(name = "limits", required = false)
     @XmlElement(name = "limit", required = true)
     private DefaultLimit[] limits = new DefaultLimit[0];

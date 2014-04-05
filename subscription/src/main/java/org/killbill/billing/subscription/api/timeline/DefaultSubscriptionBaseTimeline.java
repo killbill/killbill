@@ -23,6 +23,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -30,6 +32,7 @@ import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -78,6 +81,14 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
         this.activeVersion = input.getActiveVersion();
     }
 
+    private BillingPeriod getBillingPeriod(final Catalog catalog, @Nullable final String phaseName, final DateTime effectiveDate, DateTime startDate) throws CatalogApiException {
+        if (phaseName == null) {
+            return BillingPeriod.NO_BILLING_PERIOD;
+        }
+        final PlanPhase phase = catalog.findPhase(phaseName, effectiveDate, startDate);
+        return phase.getRecurring() != null ? phase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+    }
+
     private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long activeVersion, final ProductCategory category, final List<SubscriptionBaseEvent> events)
             throws CatalogApiException {
 
@@ -115,7 +126,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                     planPhaseName = phaseEV.getPhase();
                     phaseType = catalog.findPhase(phaseEV.getPhase(), cur.getEffectiveDate(), startDate).getPhaseType();
                     productName = prevProductName;
-                    billingPeriod = catalog.findPhase(phaseEV.getPhase(), cur.getEffectiveDate(), startDate).getBillingPeriod();
+                    billingPeriod = getBillingPeriod(catalog, phaseEV.getPhase(), cur.getEffectiveDate(), startDate);
                     priceListName = prevPriceListName;
                     break;
 
@@ -126,7 +137,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                     final Plan plan = (userEV.getEventPlan() != null) ? catalog.findPlan(userEV.getEventPlan(), cur.getRequestedDate(), startDate) : null;
                     phaseType = (userEV.getEventPlanPhase() != null) ? catalog.findPhase(userEV.getEventPlanPhase(), cur.getEffectiveDate(), startDate).getPhaseType() : prevPhaseType;
                     productName = (plan != null) ? plan.getProduct().getName() : prevProductName;
-                    billingPeriod = (userEV.getEventPlanPhase() != null) ? catalog.findPhase(userEV.getEventPlanPhase(), cur.getEffectiveDate(), startDate).getBillingPeriod() : prevBillingPeriod;
+                    billingPeriod = (userEV.getEventPlanPhase() != null) ? getBillingPeriod(catalog, userEV.getEventPlanPhase(), cur.getEffectiveDate(), startDate) : prevBillingPeriod;
                     priceListName = (userEV.getPriceList() != null) ? userEV.getPriceList() : prevPriceListName;
                     break;
             }

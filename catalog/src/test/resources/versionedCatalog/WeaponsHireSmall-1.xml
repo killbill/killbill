@@ -16,48 +16,65 @@
   -->
 
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:noNamespaceSchemaLocation="../CatalogSchema.xsd ">
+         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
 
-	<effectiveDate>2011-01-01T00:00:00+00:00</effectiveDate>
-	<catalogName>WeaponsHireSmall</catalogName>
+    <effectiveDate>2011-01-01T00:00:00+00:00</effectiveDate>
+    <catalogName>WeaponsHireSmall</catalogName>
 
-	<currencies>
-		<currency>USD</currency>
-		<currency>EUR</currency>
-		<currency>GBP</currency>
-	</currencies>
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
 
-	<products>
-		<product name="Pistol">
-			<category>BASE</category>
-		</product>
-		<product name="Shotgun">
-			<category>BASE</category>
-		</product>
-		<product name="Laser-Scope">
-			<category>ADD_ON</category>
-		</product>
-	</products>
-	 
-	<rules>
-		<changePolicy>
-			<changePolicyCase> 
-				<fromBillingPeriod>MONTHLY</fromBillingPeriod>
-				<toProduct>Shotgun</toProduct>
-				<toBillingPeriod>MONTHLY</toBillingPeriod>
-				<policy>END_OF_TERM</policy>
-			</changePolicyCase>
-			<changePolicyCase> 
-				<phaseType>TRIAL</phaseType>
-				<policy>IMMEDIATE</policy>
-			</changePolicyCase>	
-		</changePolicy>
-		<changeAlignment>
-			<changeAlignmentCase>
-				<alignment>START_OF_SUBSCRIPTION</alignment>
-			</changeAlignmentCase>
-		</changeAlignment>
-		 <createAlignment>
+    <currencies>
+        <currency>USD</currency>
+        <currency>EUR</currency>
+        <currency>GBP</currency>
+    </currencies>
+
+    <units>
+        <unit name="targets"/>
+        <unit name="misfires"/>
+        <unit name="shells"/>
+    </units>
+
+    <products>
+        <product name="Pistol">
+            <category>BASE</category>
+        </product>
+        <product name="Shotgun">
+            <category>BASE</category>
+            <limits>
+                <limit>
+                    <unit>shells</unit>
+                    <max>300</max>
+                </limit>
+            </limits>
+        </product>
+        <product name="Laser-Scope">
+            <category>ADD_ON</category>
+        </product>
+        <product name="Extra-Ammo">
+            <category>ADD_ON</category>
+        </product>
+    </products>
+
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <fromBillingPeriod>MONTHLY</fromBillingPeriod>
+                <toProduct>Shotgun</toProduct>
+                <toBillingPeriod>MONTHLY</toBillingPeriod>
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <phaseType>TRIAL</phaseType>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <changeAlignment>
+            <changeAlignmentCase>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </changeAlignmentCase>
+        </changeAlignment>
+        <createAlignment>
             <createAlignmentCase>
                 <product>Laser-Scope</product>
                 <alignment>START_OF_SUBSCRIPTION</alignment>
@@ -66,93 +83,200 @@
                 <alignment>START_OF_BUNDLE</alignment>
             </createAlignmentCase>
         </createAlignment>
-	</rules>
- 
-	<plans>
-		<plan name="pistol-monthly">
-			<product>Pistol</product>
-			<initialPhases>
-				<phase type="TRIAL">
-					<duration>
-						<unit>DAYS</unit>
-						<number>30</number>
-					</duration>
-					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-					<fixedPrice> <!-- empty price implies $0 -->
-					</fixedPrice>
-				</phase>
-			</initialPhases>
-			<finalPhase type="EVERGREEN">
-				<duration>
-					<unit>UNLIMITED</unit>
-				</duration>
-				<billingPeriod>MONTHLY</billingPeriod>
-				<recurringPrice>
-					<price><currency>GBP</currency><value>1.0</value></price>
-					<price><currency>EUR</currency><value>1.0</value></price> 
-					<price><currency>USD</currency><value>1.0</value></price>								
-				</recurringPrice>
-			</finalPhase>
-		</plan>
-		<plan name="shotgun-monthly">
-			<product>Shotgun</product>
-			<initialPhases>
-				<phase type="TRIAL">
-					<duration>
-						<unit>DAYS</unit>
-						<number>30</number>
-					</duration>
-					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-					<fixedPrice></fixedPrice>
-				    <!-- no price implies $0 -->
-				</phase>
-			</initialPhases>
-			<finalPhase type="EVERGREEN">
-				<duration>
-					<unit>UNLIMITED</unit>
-					<number>-1</number>
-				</duration>
-				<billingPeriod>MONTHLY</billingPeriod>
-				<recurringPrice>
-					<price><currency>USD</currency><value>249.95</value></price>								
-					<price><currency>EUR</currency><value>149.95</value></price>
-					<price><currency>GBP</currency><value>169.95</value></price>
-				</recurringPrice>
-			</finalPhase>
-		</plan>
-		<plan name="shotgun-annual">
-			<product>Shotgun</product>
-			<initialPhases>
-				<phase type="TRIAL">
-					<duration>
-						<unit>DAYS</unit>
-						<number>30</number>
-					</duration>
-					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-					<fixedPrice>
-					</fixedPrice>
-				</phase>
-			</initialPhases>
-			<finalPhase type="EVERGREEN">
-				<duration>
-					<unit>UNLIMITED</unit>
-				</duration>
-				<billingPeriod>ANNUAL</billingPeriod>
-				<recurringPrice>
-					<price><currency>USD</currency><value>2399.95</value></price>								
-					<price><currency>EUR</currency><value>1499.95</value></price>
-					<price><currency>GBP</currency><value>1699.95</value></price>
-				</recurringPrice>
-			</finalPhase>
-		</plan>
-	</plans>
-	<priceLists>
-		<defaultPriceList name="DEFAULT">			
-				<plans>	
-				<plan>pistol-monthly</plan>
-				<plan>shotgun-monthly</plan>
-				<plan>shotgun-annual</plan>
-			</plans>
-		</defaultPriceList>
-	</priceLists>
+    </rules>
+
+    <plans>
+        <plan name="pistol-monthly">
+            <product>Pistol</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>29.95</value>
+                        </price>
+                    </recurringPrice>
+                    <!--
+                    <limits>
+                        <limit>
+                            <unit>targets</unit>
+                            <min>3</min>
+                        </limit>
+                        <limit>
+                            <unit>misfires</unit>
+                            <max>20</max>
+                        </limit>
+                    </limits>
+                    -->
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="shotgun-monthly">
+            <product>Shotgun</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>249.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>149.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>169.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="shotgun-annual">
+            <product>Shotgun</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>2399.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>1499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>1699.95</value>
+                        </price>
+                    </recurringPrice>
+                    <!--
+                    <limits>
+                        <limit>
+                            <unit>shells</unit>
+                            <max>200</max>
+                        </limit>
+                    </limits>
+                    -->
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="laser-scope-monthly">
+            <product>Laser-Scope</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>1999.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>1499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>1999.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="extra-ammo-monthly">
+            <product>Extra-Ammo</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>1999.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>1499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>1999.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>pistol-monthly</plan>
+                <plan>shotgun-monthly</plan>
+                <plan>shotgun-annual</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
 </catalog>

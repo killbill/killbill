@@ -144,7 +144,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), productName);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         final PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
@@ -178,7 +178,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), productName);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         final PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);

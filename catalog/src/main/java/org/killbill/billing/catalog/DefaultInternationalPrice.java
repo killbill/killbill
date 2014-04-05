@@ -49,6 +49,8 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
     }
 
 
+
+
     /* (non-Javadoc)
       * @see org.killbill.billing.catalog.IInternationalPrice#getPrice(org.killbill.billing.catalog.api.Currency)
       */
@@ -62,7 +64,7 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
         throw new CatalogApiException(ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency);
     }
 
-    protected DefaultInternationalPrice setPrices(final DefaultPrice[] prices) {
+    public DefaultInternationalPrice setPrices(final DefaultPrice[] prices) {
         this.prices = prices;
         return this;
     }

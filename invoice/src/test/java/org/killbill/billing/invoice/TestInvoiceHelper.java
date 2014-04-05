@@ -17,6 +17,7 @@
 package org.killbill.billing.invoice;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +27,8 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.Usage;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
@@ -63,7 +66,6 @@ import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
-import org.killbill.billing.junction.BillingModeType;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -182,7 +184,7 @@ public class TestInvoiceHelper {
         final BigDecimal fixedPrice = null;
         events.add(createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase,
                                           fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
-                                          BillingModeType.IN_ADVANCE, "", 1L, SubscriptionBaseTransitionType.CREATE));
+                                          BillingMode.IN_ADVANCE, "", 1L, SubscriptionBaseTransitionType.CREATE));
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
@@ -271,7 +273,7 @@ public class TestInvoiceHelper {
                                                                                                                                          }));
 
         // The test does not use the invoice callback notifier hence the empty map
-        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, ImmutableMap.<UUID, DateTime>of(), internalCallContext);
+        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContext);
     }
 
     public void createPayment(final InvoicePayment invoicePayment, final InternalCallContext internalCallContext) {
@@ -308,13 +310,17 @@ public class TestInvoiceHelper {
                                                @Nullable final BigDecimal fixedPrice, @Nullable final BigDecimal recurringPrice,
                                                final Currency currency, final BillingPeriod billingPeriod,
                                                final int billCycleDayLocal,
-                                               final BillingModeType billingModeType, final String description,
+                                               final BillingMode billingMode, final String description,
                                                final long totalOrdering,
                                                final SubscriptionBaseTransitionType type) {
+
+        final Account mockAccount = Mockito.mock(Account.class);
+        Mockito.when(mockAccount.getTimeZone()).thenReturn(DateTimeZone.UTC);
+        final Account accountOrMockAcount = account != null ? account : mockAccount;
         return new BillingEvent() {
             @Override
             public Account getAccount() {
-                return account;
+                return accountOrMockAcount;
             }
 
             @Override
@@ -348,8 +354,8 @@ public class TestInvoiceHelper {
             }
 
             @Override
-            public BillingModeType getBillingMode() {
-                return billingModeType;
+            public BillingMode getBillingMode() {
+                return billingMode;
             }
 
             @Override
@@ -385,6 +391,11 @@ public class TestInvoiceHelper {
             @Override
             public DateTimeZone getTimeZone() {
                 return DateTimeZone.UTC;
+            }
+
+            @Override
+            public List<Usage> getUsages() {
+                return Collections.emptyList();
             }
 
             @Override

@@ -79,7 +79,7 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     public DefaultPlan findPlan(final Product product, final BillingPeriod period) {
         for (final DefaultPlan cur : getPlans()) {
             if (cur.getProduct().equals(product) &&
-                    (cur.getBillingPeriod() == null || cur.getBillingPeriod().equals(period))) {
+                    (cur.getRecurringBillingPeriod() == null || cur.getRecurringBillingPeriod().equals(period))) {
                 return cur;
             }
         }
@@ -89,11 +89,11 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         for (final DefaultPlan cur : getPlans()) {
-            final int numPlans = findNumberOfPlans(cur.getProduct(), cur.getBillingPeriod());
+            final int numPlans = findNumberOfPlans(cur.getProduct(), cur.getRecurringBillingPeriod());
             if (numPlans > 1) {
                 errors.add(new ValidationError(
                         String.format("There are %d plans in pricelist %s and have the same product/billingPeriod (%s, %s)",
-                                      numPlans, getName(), cur.getProduct().getName(), cur.getBillingPeriod()), catalog.getCatalogURI(),
+                                      numPlans, getName(), cur.getProduct().getName(), cur.getRecurringBillingPeriod()), catalog.getCatalogURI(),
                         DefaultPriceListSet.class, getName()));
             }
         }
@@ -104,7 +104,7 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         int count = 0;
         for (final DefaultPlan cur : getPlans()) {
             if (cur.getProduct().equals(product) &&
-                    (cur.getBillingPeriod() == null || cur.getBillingPeriod().equals(period))) {
+                    (cur.getRecurringBillingPeriod() == null || cur.getRecurringBillingPeriod().equals(period))) {
                 count++;
             }
         }

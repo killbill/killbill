@@ -22,6 +22,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.catalog.MockCatalog;
 import org.killbill.billing.catalog.api.BillingAlignment;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
@@ -33,7 +34,6 @@ import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.dao.MockBlockingStateDao;
 import org.killbill.billing.junction.JunctionTestSuiteNoDB;
-import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.mock.MockEffectiveSubscriptionEvent;
 import org.killbill.billing.mock.MockSubscription;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -44,7 +44,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.junction.BillingModeType;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.dao.MockTagDao;
@@ -55,7 +54,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -189,9 +187,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         Assert.assertEquals(events.size(), 3);
         final Iterator<BillingEvent> it = events.iterator();
 
-        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now, nextPhase, SubscriptionBaseTransitionType.CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
+        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now, nextPhase, SubscriptionBaseTransitionType.CREATE.toString(), nextPhase.getFixed().getPrice(), nextPhase.getRecurring().getRecurringPrice());
         checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now.plusDays(1), nextPhase, SubscriptionBaseTransitionType.START_BILLING_DISABLED.toString(), null, null);
-        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now.plusDays(2), nextPhase, SubscriptionBaseTransitionType.END_BILLING_DISABLED.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
+        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now.plusDays(2), nextPhase, SubscriptionBaseTransitionType.END_BILLING_DISABLED.toString(), nextPhase.getFixed().getPrice(), nextPhase.getRecurring().getRecurringPrice());
     }
 
     @Test(groups = "fast")
@@ -230,7 +228,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
     private void checkFirstEvent(final SortedSet<BillingEvent> events, final Plan nextPlan,
                                  final int BCD, final UUID id, final DateTime time, final PlanPhase nextPhase, final String desc) throws CatalogApiException {
         Assert.assertEquals(events.size(), 1);
-        checkEvent(events.first(), nextPlan, BCD, id, time, nextPhase, desc, nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
+        checkEvent(events.first(), nextPlan, BCD, id, time, nextPhase, desc, nextPhase.getFixed().getPrice(), nextPhase.getRecurring().getRecurringPrice());
     }
 
     private void checkEvent(final BillingEvent event, final Plan nextPlan, final int BCD, final UUID id, final DateTime time,
@@ -253,9 +251,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         Assert.assertEquals(nextPhase, event.getPlanPhase());
         Assert.assertEquals(nextPlan, event.getPlan());
         if (!SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(event.getTransitionType())) {
-            Assert.assertEquals(nextPhase.getBillingPeriod(), event.getBillingPeriod());
+            Assert.assertEquals(nextPhase.getRecurring().getBillingPeriod(), event.getBillingPeriod());
         }
-        Assert.assertEquals(BillingModeType.IN_ADVANCE, event.getBillingMode());
+        Assert.assertEquals(BillingMode.IN_ADVANCE, event.getBillingMode());
         Assert.assertEquals(desc, event.getTransitionType().toString());
     }
 

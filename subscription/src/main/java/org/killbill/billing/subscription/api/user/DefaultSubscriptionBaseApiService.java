@@ -179,7 +179,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final Plan currentPlan = subscription.getCurrentPlan();
         final PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                                                                     currentPlan.getProduct().getCategory(),
-                                                                    subscription.getCurrentPlan().getBillingPeriod(),
+                                                                    subscription.getCurrentPlan().getRecurringBillingPeriod(),
                                                                     subscription.getCurrentPriceList().getName(),
                                                                     subscription.getCurrentPhase().getPhaseType());
 
@@ -331,7 +331,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             final PriceList currentPriceList = subscription.getCurrentPriceList();
             final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                                                                             currentPlan.getProduct().getCategory(),
-                                                                            currentPlan.getBillingPeriod(),
+                                                                            currentPlan.getRecurringBillingPeriod(),
                                                                             currentPriceList.getName(),
                                                                             subscription.getCurrentPhase().getPhaseType());
             final PlanSpecifier toPlanPhase = new PlanSpecifier(productName,
@@ -391,7 +391,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         }
 
         final boolean isChangeImmediate = subscription.getCurrentPlan().getProduct().getName().equals(newProductName) &&
-                                          subscription.getCurrentPlan().getBillingPeriod() == newBillingPeriod;
+                                          subscription.getCurrentPlan().getRecurringBillingPeriod() == newBillingPeriod;
         return effectiveDate;
     }
 

@@ -17,22 +17,30 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.junction.BillingModeType;
+
+import com.google.common.collect.Lists;
 
 public class DefaultBillingEvent implements BillingEvent {
     private final Account account;
@@ -45,25 +53,27 @@ public class DefaultBillingEvent implements BillingEvent {
     private final BigDecimal recurringPrice;
     private final Currency currency;
     private final String description;
-    private final BillingModeType billingModeType;
+    private final BillingMode billingMode;
     private final BillingPeriod billingPeriod;
     private final SubscriptionBaseTransitionType type;
     private final Long totalOrdering;
     private final DateTimeZone timeZone;
+
+    private final List<Usage> usages;
 
     public DefaultBillingEvent(final Account account, final EffectiveSubscriptionInternalEvent transition, final SubscriptionBase subscription, final int billCycleDayLocal, final Currency currency, final Catalog catalog) throws CatalogApiException {
 
         this.account = account;
         this.billCycleDayLocal = billCycleDayLocal;
         this.subscription = subscription;
-        effectiveDate = transition.getEffectiveTransitionTime();
+        this.effectiveDate = transition.getEffectiveTransitionTime();
         final String planPhaseName = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ?
                 transition.getNextPhase() : transition.getPreviousPhase();
-        planPhase = (planPhaseName != null) ? catalog.findPhase(planPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+        this.planPhase = (planPhaseName != null) ? catalog.findPhase(planPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final String planName = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ?
                 transition.getNextPlan() : transition.getPreviousPlan();
-        plan = (planName != null) ? catalog.findPlan(planName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+        this.plan = (planName != null) ? catalog.findPlan(planName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final String nextPhaseName = transition.getNextPhase();
         final PlanPhase nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
@@ -72,22 +82,23 @@ public class DefaultBillingEvent implements BillingEvent {
         final PlanPhase prevPhase = (prevPhaseName != null) ? catalog.findPhase(prevPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
 
-        fixedPrice = (nextPhase != null && nextPhase.getFixedPrice() != null) ? nextPhase.getFixedPrice().getPrice(currency) : null;
-        recurringPrice = (nextPhase != null && nextPhase.getRecurringPrice() != null) ? nextPhase.getRecurringPrice().getPrice(currency) : null;
+        this.fixedPrice = getFixedPrice(nextPhase, currency);
+        this.recurringPrice = getRecurringPrice(nextPhase, currency);
 
         this.currency = currency;
-        description = transition.getTransitionType().toString();
-        billingModeType = BillingModeType.IN_ADVANCE;
-        billingPeriod = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ?
-                nextPhase.getBillingPeriod() : prevPhase.getBillingPeriod();
-        type = transition.getTransitionType();
-        totalOrdering = transition.getTotalOrdering();
-        timeZone = account.getTimeZone();
+        this.description = transition.getTransitionType().toString();
+        this.billingMode = BillingMode.IN_ADVANCE;
+        this.billingPeriod = getRecurringBillingPeriod((transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase);
+        this.type = transition.getTransitionType();
+        this.totalOrdering = transition.getTotalOrdering();
+        this.timeZone = account.getTimeZone();
+        this.usages = initializeUsage();
     }
+
 
     public DefaultBillingEvent(final Account account, final SubscriptionBase subscription, final DateTime effectiveDate, final Plan plan, final PlanPhase planPhase,
                                final BigDecimal fixedPrice, final BigDecimal recurringPrice, final Currency currency,
-                               final BillingPeriod billingPeriod, final int billCycleDayLocal, final BillingModeType billingModeType,
+                               final BillingPeriod billingPeriod, final int billCycleDayLocal, final BillingMode billingMode,
                                final String description, final long totalOrdering, final SubscriptionBaseTransitionType type, final DateTimeZone timeZone) {
         this.account = account;
         this.subscription = subscription;
@@ -99,11 +110,13 @@ public class DefaultBillingEvent implements BillingEvent {
         this.currency = currency;
         this.billingPeriod = billingPeriod;
         this.billCycleDayLocal = billCycleDayLocal;
-        this.billingModeType = billingModeType;
+        this.billingMode = billingMode;
         this.description = description;
         this.type = type;
         this.totalOrdering = totalOrdering;
         this.timeZone = timeZone;
+        this.usages = initializeUsage();
+
     }
 
     @Override
@@ -188,8 +201,8 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public BillingModeType getBillingMode() {
-        return billingModeType;
+    public BillingMode getBillingMode() {
+        return billingMode;
     }
 
     @Override
@@ -221,6 +234,17 @@ public class DefaultBillingEvent implements BillingEvent {
     public Long getTotalOrdering() {
         return totalOrdering;
     }
+
+    @Override
+    public DateTimeZone getTimeZone() {
+        return timeZone;
+    }
+
+    @Override
+    public List<Usage> getUsages() {
+        return usages;
+    }
+
 
     @Override
     public String toString() {
@@ -255,7 +279,7 @@ public class DefaultBillingEvent implements BillingEvent {
         if (account != null ? !account.equals(that.account) : that.account != null) {
             return false;
         }
-        if (billingModeType != that.billingModeType) {
+        if (billingMode != that.billingMode) {
             return false;
         }
         if (billingPeriod != that.billingPeriod) {
@@ -310,7 +334,7 @@ public class DefaultBillingEvent implements BillingEvent {
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + (billingModeType != null ? billingModeType.hashCode() : 0);
+        result = 31 * result + (billingMode != null ? billingMode.hashCode() : 0);
         result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
         result = 31 * result + (type != null ? type.hashCode() : 0);
         result = 31 * result + (totalOrdering != null ? totalOrdering.hashCode() : 0);
@@ -318,8 +342,30 @@ public class DefaultBillingEvent implements BillingEvent {
         return result;
     }
 
-    @Override
-    public DateTimeZone getTimeZone() {
-        return timeZone;
+
+    private BigDecimal getFixedPrice(@Nullable final PlanPhase nextPhase, final Currency currency) throws CatalogApiException {
+        return (nextPhase != null && nextPhase.getFixed() != null && nextPhase.getFixed().getPrice() != null) ? nextPhase.getFixed().getPrice().getPrice(currency) : null;
+    }
+
+    private BigDecimal getRecurringPrice(@Nullable final PlanPhase nextPhase, final Currency currency) throws CatalogApiException {
+        return (nextPhase != null && nextPhase.getRecurring() != null && nextPhase.getRecurring().getRecurringPrice() != null) ? nextPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
+    }
+
+    private BillingPeriod getRecurringBillingPeriod(@Nullable final PlanPhase nextPhase) {
+        if (nextPhase == null) {
+            return BillingPeriod.NO_BILLING_PERIOD;
+        }
+        return nextPhase.getRecurring() != null ? nextPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+    }
+
+    private List<Usage> initializeUsage() {
+        List<Usage> result = Collections.<Usage>emptyList();
+        if (planPhase != null) {
+            result = Lists.newArrayList();
+            for (Usage usage : planPhase.getUsages()) {
+                result.add(usage);
+            }
+        }
+        return result;
     }
 }

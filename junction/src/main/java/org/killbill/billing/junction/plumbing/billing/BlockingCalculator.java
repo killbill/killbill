@@ -32,13 +32,13 @@ import org.joda.time.DateTimeZone;
 
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.junction.BillingModeType;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -204,14 +204,14 @@ public class BlockingCalculator {
 
         final Currency currency = previousEvent.getCurrency();
         final String description = "";
-        final BillingModeType billingModeType = previousEvent.getBillingMode();
+        final BillingMode billingMode = previousEvent.getBillingMode();
         final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.START_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
         final DateTimeZone tz = previousEvent.getTimeZone();
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
                                        fixedPrice, recurringPrice, currency,
-                                       billingPeriod, billCycleDay, billingModeType,
+                                       billingPeriod, billCycleDay, billingMode,
                                        description, totalOrdering, type, tz);
     }
 
@@ -227,7 +227,7 @@ public class BlockingCalculator {
         final BigDecimal recurringPrice = previousEvent.getRecurringPrice();
         final Currency currency = previousEvent.getCurrency();
         final String description = "";
-        final BillingModeType billingModeType = previousEvent.getBillingMode();
+        final BillingMode billingMode  = previousEvent.getBillingMode();
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
         final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.END_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
@@ -235,7 +235,7 @@ public class BlockingCalculator {
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
                                        fixedPrice, recurringPrice, currency,
-                                       billingPeriod, billCycleDay, billingModeType,
+                                       billingPeriod, billCycleDay, billingMode,
                                        description, totalOrdering, type, tz);
     }
 

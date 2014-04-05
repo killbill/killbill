@@ -559,12 +559,12 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                                             in.getPreviousPlan(),
                                             in.getPreviousPhase(),
                                             in.getPreviousPriceList(),
-                                            (in.getPreviousPlan() != null ? in.getPreviousPlan().getBillingPeriod() : null),
+                                            (in.getPreviousPlan() != null ? in.getPreviousPlan().getRecurringBillingPeriod() : null),
                                             (in.getNextPlan() != null ? in.getNextPlan().getProduct() : null),
                                             in.getNextPlan(),
                                             in.getNextPhase(),
                                             in.getNextPriceList(),
-                                            (in.getNextPlan() != null ? in.getNextPlan().getBillingPeriod() : null),
+                                            (in.getNextPlan() != null ? in.getNextPlan().getRecurringBillingPeriod() : null),
                                             in.getCreatedDate(),
                                             accountTimeZone);
     }

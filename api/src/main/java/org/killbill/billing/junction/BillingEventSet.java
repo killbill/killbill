@@ -17,12 +17,20 @@
 package org.killbill.billing.junction;
 
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.Usage;
+
 public interface BillingEventSet extends SortedSet<BillingEvent> {
 
-    public abstract boolean isAccountAutoInvoiceOff();
+    public boolean isAccountAutoInvoiceOff();
 
-    public abstract List<UUID> getSubscriptionIdsWithAutoInvoiceOff();
+    public BillingMode getRecurringBillingMode();
+
+    public List<UUID> getSubscriptionIdsWithAutoInvoiceOff();
+
+    public Map<String, Usage> getUsages();
 }

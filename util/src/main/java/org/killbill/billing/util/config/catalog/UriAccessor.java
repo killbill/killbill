@@ -23,11 +23,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Scanner;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import com.google.common.io.Resources;
 
 public class UriAccessor {
 
+    private static final String URI_SCHEME_FOR_ARCHIVE_FILE = "jar:file";
     private static final String URI_SCHEME_FOR_CLASSPATH = "jar";
     private static final String URI_SCHEME_FOR_FILE = "file";
 
@@ -42,13 +45,34 @@ public class UriAccessor {
         if (scheme == null) {
             uri = new URI(Resources.getResource(uri.toString()).toExternalForm());
         } else if (scheme.equals(URI_SCHEME_FOR_CLASSPATH)) {
-            return UriAccessor.class.getResourceAsStream(uri.getPath());
+            if (uri.toString().startsWith(URI_SCHEME_FOR_ARCHIVE_FILE)) {
+                return getInputStreamFromJarFile(uri.toString());
+            } else {
+                return UriAccessor.class.getResourceAsStream(uri.getPath());
+            }
         } else if (scheme.equals(URI_SCHEME_FOR_FILE) &&
                    !uri.getSchemeSpecificPart().startsWith("/")) { // interpret URIs of this form as relative path uris
             uri = new File(uri.getSchemeSpecificPart()).toURI();
         }
         url = uri.toURL();
         return url.openConnection().getInputStream();
+    }
+
+    /**
+     *
+     * @param classPathFile of the form jar:file:/path!/resource
+     * @return
+     * @throws IOException if fail to extract InputStream
+     */
+    private static InputStream getInputStreamFromJarFile(final String classPathFile) throws IOException {
+
+        final String[] partsPathAndResource = classPathFile.split("!");
+        final String resourceInJar = partsPathAndResource[1].substring(1);
+
+        final String[] partsColumns = partsPathAndResource[0].split(":");
+        final String jarFileName = partsColumns[2];
+
+        return new ZipFile(new File(jarFileName)).getInputStream(new ZipEntry(resourceInJar));
     }
 
     public static String accessUriAsString(final String uri) throws IOException, URISyntaxException {

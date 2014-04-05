@@ -18,6 +18,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.UUID;
 
+import org.killbill.billing.catalog.api.Recurring;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -31,7 +32,7 @@ import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-public class TestPlanDetailJason extends JaxrsTestSuiteNoDB {
+public class TestPlanDetailJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -64,12 +65,14 @@ public class TestPlanDetailJason extends JaxrsTestSuiteNoDB {
 
         final InternationalPrice price = Mockito.mock(InternationalPrice.class);
         final PlanPhase planPhase = Mockito.mock(PlanPhase.class);
-        Mockito.when(planPhase.getRecurringPrice()).thenReturn(price);
+        final Recurring recurring = Mockito.mock(Recurring.class);
+        Mockito.when(recurring.getRecurringPrice()).thenReturn(price);
+        Mockito.when(planPhase.getRecurring()).thenReturn(recurring);
 
         final Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getProduct()).thenReturn(product);
         Mockito.when(plan.getName()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(plan.getBillingPeriod()).thenReturn(BillingPeriod.QUARTERLY);
+        Mockito.when(plan.getRecurringBillingPeriod()).thenReturn(BillingPeriod.QUARTERLY);
         Mockito.when(plan.getFinalPhase()).thenReturn(planPhase);
 
         final PriceList priceList = Mockito.mock(PriceList.class);
@@ -79,11 +82,11 @@ public class TestPlanDetailJason extends JaxrsTestSuiteNoDB {
         Mockito.when(listing.getPlan()).thenReturn(plan);
         Mockito.when(listing.getPriceList()).thenReturn(priceList);
 
-        final PlanDetailJson planDetailJason = new PlanDetailJson(listing);
-        Assert.assertEquals(planDetailJason.getProductName(), plan.getProduct().getName());
-        Assert.assertEquals(planDetailJason.getPlanName(), plan.getName());
-        Assert.assertEquals(planDetailJason.getBillingPeriod(), plan.getBillingPeriod());
-        Assert.assertEquals(planDetailJason.getPriceListName(), priceList.getName());
-        Assert.assertEquals(planDetailJason.getFinalPhasePrice().size(), 0);
+        final PlanDetailJson planDetailJson = new PlanDetailJson(listing);
+        Assert.assertEquals(planDetailJson.getProductName(), plan.getProduct().getName());
+        Assert.assertEquals(planDetailJson.getPlanName(), plan.getName());
+        Assert.assertEquals(planDetailJson.getBillingPeriod(), plan.getRecurringBillingPeriod());
+        Assert.assertEquals(planDetailJson.getPriceListName(), priceList.getName());
+        Assert.assertEquals(planDetailJson.getFinalPhasePrice().size(), 0);
     }
 }

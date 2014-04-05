@@ -51,7 +51,7 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAddCatalog() throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException, CatalogApiException {
-        vc.add(new StandaloneCatalog(new Date()));
+        vc.add((new StandaloneCatalog(new Date()).setCatalogName(vc.getCatalogName()).setRecurringBillingMode(vc.getRecurringBillingMode())));
         Assert.assertEquals(vc.size(), 4);
     }
 
@@ -77,10 +77,10 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         final Plan newSubPlan214 = vc.findPlan("pistol-monthly", dt214, dt214);
         final Plan newSubPlan3 = vc.findPlan("pistol-monthly", dt3, dt3);
 
-        Assert.assertEquals(newSubPlan1.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("1.0"));
-        Assert.assertEquals(newSubPlan2.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("2.0"));
-        Assert.assertEquals(newSubPlan214.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("2.0"));
-        Assert.assertEquals(newSubPlan3.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("3.0"));
+        Assert.assertEquals(newSubPlan1.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
+        Assert.assertEquals(newSubPlan2.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
+        Assert.assertEquals(newSubPlan214.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
+        Assert.assertEquals(newSubPlan3.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("49.95"));
 
         // Existing subscription
 
@@ -88,9 +88,9 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         final Plan exSubPlan214 = vc.findPlan("pistol-monthly", dt214, dt1);
         final Plan exSubPlan3 = vc.findPlan("pistol-monthly", dt3, dt1);
 
-        Assert.assertEquals(exSubPlan2.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("1.0"));
-        Assert.assertEquals(exSubPlan214.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("2.0"));
-        Assert.assertEquals(exSubPlan3.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("2.0"));
+        Assert.assertEquals(exSubPlan2.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
+        Assert.assertEquals(exSubPlan214.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
+        Assert.assertEquals(exSubPlan3.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
 
     }
 

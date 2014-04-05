@@ -16,17 +16,17 @@
 
 package org.killbill.billing.catalog;
 
+import org.killbill.billing.catalog.api.PlanPhase;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.google.common.io.Resources;
-import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.lifecycle.KillbillService.ServiceException;
 
 public class TestLimits extends CatalogTestSuiteNoDB {
+
     private VersionedCatalog catalog;
-    
+
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
@@ -37,17 +37,26 @@ public class TestLimits extends CatalogTestSuiteNoDB {
     public void testLimits() throws Exception {
         PlanPhase phase = catalog.findCurrentPhase("pistol-monthly-evergreen");
         Assert.assertNotNull(phase);
-        
-        //<limits>
-        //    <limit>
-        //        <unit>targets</unit>
-        //        <min>3</min>
-        //    </limit>
-        //    <limit>
-        //        <unit>misfires</unit>
-        //        <max>20</max>
-        //    </limit>
-        //</limits>
+
+
+        /*
+                     <usages>
+                    <usage>
+                        <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                        <limits>
+                            <limit>
+                                <unit>targets</unit>
+                                <min>3</min>
+                            </limit>
+                            <limit>
+                                <unit>misfires</unit>
+                                <max>20</max>
+                            </limit>
+                        </limits>
+                    </usage>
+                </usages>
+         */
+
         Assert.assertTrue(catalog.compliesWithLimits("pistol-monthly-evergreen", "targets", 3));
         Assert.assertTrue(catalog.compliesWithLimits("pistol-monthly-evergreen", "targets", 2000));
         Assert.assertFalse(catalog.compliesWithLimits("pistol-monthly-evergreen", "targets", 2));
@@ -55,38 +64,40 @@ public class TestLimits extends CatalogTestSuiteNoDB {
         Assert.assertTrue(catalog.compliesWithLimits("pistol-monthly-evergreen", "misfires", 3));
         Assert.assertFalse(catalog.compliesWithLimits("pistol-monthly-evergreen", "misfires", 21));
         Assert.assertTrue(catalog.compliesWithLimits("pistol-monthly-evergreen", "misfires", -1));
-/*      <product name="Shotgun">
-            <category>BASE</category>
-            <limits>
+
+
+        /*
+            <product name="Shotgun">
+              <category>BASE</category>
+              <limits>
                 <limit>
                     <unit>shells</unit>
                     <max>300</max>
                 </limit>
-            </limits>
-        </product>
-        <plan name="shotgun-annual">
-            <product>Shotgun</product>
-        ...
-            <finalPhase type="EVERGREEN">
-                <limits>
-                    <limit>
-                        <unit>shells</unit>
-                        <max>200</max>
-                    </limit>
-                </limits>
-            </finalPhase>
-        </plan>
-*/
+              </limits>
+            </product>
+        */
         Assert.assertTrue(catalog.compliesWithLimits("shotgun-monthly-evergreen", "shells", 100));
         Assert.assertFalse(catalog.compliesWithLimits("shotgun-monthly-evergreen", "shells", 400));
         Assert.assertTrue(catalog.compliesWithLimits("shotgun-monthly-evergreen", "shells", 250));
-     
+
+       /*
+                   <!-- shotgun-annual-evergreen -->
+                   <usages>
+                    <usage>
+                        <billingPeriod>ANNUAL</billingPeriod>
+                        <limits>
+                            <limit>
+                                <unit>shells</unit>
+                                <max>200</max>
+                            </limit>
+                        </limits>
+                    </usage>
+                </usages>
+         */
         Assert.assertTrue(catalog.compliesWithLimits("shotgun-annual-evergreen", "shells", 100));
         Assert.assertFalse(catalog.compliesWithLimits("shotgun-annual-evergreen", "shells", 400));
         Assert.assertFalse(catalog.compliesWithLimits("shotgun-annual-evergreen", "shells", 250));
-     
-        
-        
-        
+
     }
 }

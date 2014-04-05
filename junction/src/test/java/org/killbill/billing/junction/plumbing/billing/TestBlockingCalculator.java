@@ -28,6 +28,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -43,7 +44,6 @@ import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.dao.MockBlockingStateDao;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.junction.BillingModeType;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.junction.JunctionTestSuiteNoDB;
 import org.killbill.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
@@ -532,7 +532,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final BigDecimal recurringPrice = BigDecimal.TEN;
         final Currency currency = Currency.USD;
         final String description = "";
-        final BillingModeType billingModeType = BillingModeType.IN_ADVANCE;
+        final BillingMode billingModeType = BillingMode.IN_ADVANCE;
         final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
         final Long totalOrdering = 0L;
         final DateTimeZone tz = DateTimeZone.UTC;
@@ -610,7 +610,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         public MockBillingEvent() {
             super(account, subscription1, clock.getUTCNow(), null, null, BigDecimal.ZERO, BigDecimal.TEN, Currency.USD, BillingPeriod.ANNUAL,
-                  4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionBaseTransitionType.CREATE, DateTimeZone.UTC);
+                  4, BillingMode.IN_ADVANCE, "", 3L, SubscriptionBaseTransitionType.CREATE, DateTimeZone.UTC);
         }
     }
 
