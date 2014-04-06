@@ -31,6 +31,11 @@
         <currency>BTC</currency>
     </currencies>
 
+    <units>
+        <unit name="gallons"/>
+    </units>
+
+
     <products>
         <product name="Standard">
             <category>BASE</category>
@@ -40,6 +45,7 @@
             <available>
                 <addonProduct>OilSlick</addonProduct>
                 <addonProduct>RemoteControl</addonProduct>
+                <addonProduct>Gas</addonProduct>
             </available>
         </product>
         <product name="Super">
@@ -49,12 +55,16 @@
             </included>
             <available>
                 <addonProduct>RemoteControl</addonProduct>
+                <addonProduct>Gas</addonProduct>
             </available>
         </product>
         <product name="OilSlick">
             <category>ADD_ON</category>
         </product>
         <product name="RemoteControl">
+            <category>ADD_ON</category>
+        </product>
+        <product name="Gas">
             <category>ADD_ON</category>
         </product>
     </products>
@@ -683,6 +693,52 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="gas-monthly">
+            <product>Gas</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="gas-monthly-in-arrear" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>gallons</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>GBP</currency>
+                                                <value>1.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>EUR</currency>
+                                                <value>2.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>3.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>JPY</currency>
+                                                <value>0.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>BTC</currency>
+                                                <value>0.001</value>
+                                            </price>
+                                        </prices>
+                                        <max>100</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
@@ -693,6 +749,7 @@
                 <plan>super-monthly</plan>
                 <plan>remotecontrol-monthly</plan>
                 <plan>oilslick-monthly</plan>
+                <plan>gas-monthly</plan>
             </plans>
         </defaultPriceList>
         <childPriceList name="SpecialDiscount">
