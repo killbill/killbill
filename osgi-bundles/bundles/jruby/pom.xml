@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill-osgi-bundles</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.9.3-SNAPSHOT</version>
+        <version>0.10.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-osgi-bundles-jruby</artifactId>
@@ -111,7 +111,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>org.killbill.billing.osgi.bundles.jruby.JRubyActivator</Bundle-Activator>
-                        <Export-Package></Export-Package>
+                        <Export-Package />
                         <Private-Package>org.killbill.billing.osgi.bundles.jruby.*</Private-Package>
 
                         <!--
