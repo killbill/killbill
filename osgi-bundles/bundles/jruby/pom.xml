@@ -158,7 +158,6 @@
                             org.killbill.billing.subscription.api.user;
                             org.killbill.billing.junction.api;
                             org.killbill.billing;
-                            org.killbill.billing.osgi.api;
                             org.killbill.billing.overdue;
                             org.killbill.billing.tenant.api;
                             org.killbill.billing.usage.api;
