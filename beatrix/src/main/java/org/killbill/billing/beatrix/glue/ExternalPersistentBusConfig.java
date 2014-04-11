@@ -49,6 +49,9 @@ public class ExternalPersistentBusConfig extends PersistentBusConfig {
     }
 
     @Override
+    public boolean isSticky() { return externalPersistentBusConfig.isSticky(); }
+
+    @Override
     public int getMaxFailureRetries() {
         return externalPersistentBusConfig.getMaxFailureRetries();
     }
@@ -86,11 +89,6 @@ public class ExternalPersistentBusConfig extends PersistentBusConfig {
     @Override
     public int getQueueCapacity() {
         return externalPersistentBusConfig.getQueueCapacity();
-    }
-
-    @Override
-    public boolean isSticky() {
-        return externalPersistentBusConfig.isSticky();
     }
 
     @Override
