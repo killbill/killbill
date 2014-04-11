@@ -16,13 +16,12 @@
 
 package org.killbill.billing.beatrix.glue;
 
+import org.killbill.bus.api.PersistentBusConfig;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.killbill.bus.api.PersistentBusConfig;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -90,8 +89,8 @@ public class ExternalPersistentBusConfig extends PersistentBusConfig {
     }
 
     @Override
-    public int getPrefetchEntries() {
-        return externalPersistentBusConfig.getPrefetchEntries();
+    public boolean isSticky() {
+        return externalPersistentBusConfig.isSticky();
     }
 
     @Override
