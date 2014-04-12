@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill-osgi-bundles</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.10.1-SNAPSHOT</version>
+        <version>0.10.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-osgi-bundles-jruby</artifactId>
@@ -158,7 +158,6 @@
                             org.killbill.billing.subscription.api.user;
                             org.killbill.billing.junction.api;
                             org.killbill.billing;
-                            org.killbill.billing.osgi.api;
                             org.killbill.billing.overdue;
                             org.killbill.billing.tenant.api;
                             org.killbill.billing.usage.api;

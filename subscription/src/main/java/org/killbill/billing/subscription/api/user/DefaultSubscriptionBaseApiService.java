@@ -1,5 +1,6 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -377,10 +378,10 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final List<SubscriptionBaseEvent> changeEvents = new ArrayList<SubscriptionBaseEvent>();
         // Only add the PHASE if it does not coincide with the CHANGE, if not this is 'just' a CHANGE.
+        changeEvents.add(changeEvent);
         if (nextPhaseEvent != null && !nextPhaseEvent.getEffectiveDate().equals(changeEvent.getEffectiveDate())) {
             changeEvents.add(nextPhaseEvent);
         }
-        changeEvents.add(changeEvent);
 
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         dao.changePlan(subscription, changeEvents, internalCallContext);

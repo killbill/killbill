@@ -68,12 +68,12 @@ public class TestKillbillConfigSource extends KillbillConfigSource {
         properties.put("org.killbill.persistent.bus.main.nbThreads", "1");
         properties.put("org.killbill.persistent.bus.main.prefetch", "1");
         properties.put("org.killbill.persistent.bus.main.claimed", "1");
-        properties.put("org.killbill.persistent.bus.main.useInFlightQ", "false");
+        properties.put("org.killbill.persistent.bus.main.useInFlightQ", "true");
         properties.put("org.killbill.persistent.bus.external.sleep", "100");
         properties.put("org.killbill.persistent.bus.external.nbThreads", "1");
         properties.put("org.killbill.persistent.bus.external.prefetch", "1");
         properties.put("org.killbill.persistent.bus.external.claimed", "1");
-        properties.put("org.killbill.persistent.bus.external.useInFlightQ", "false");
+        properties.put("org.killbill.persistent.bus.external.useInFlightQ", "true");
 
         if (extraDefaults != null) {
             for (final String key : extraDefaults.keySet()) {

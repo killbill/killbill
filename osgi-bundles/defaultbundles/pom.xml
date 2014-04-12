@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill-osgi-all-bundles</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.10.1-SNAPSHOT</version>
+        <version>0.10.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-osgi-bundles-defaultbundles</artifactId>
@@ -93,6 +93,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
+            <classifier>all</classifier>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
