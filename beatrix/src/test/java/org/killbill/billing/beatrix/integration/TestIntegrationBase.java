@@ -1,5 +1,6 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -502,6 +503,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     protected DefaultEntitlement changeEntitlementAndCheckForCompletion(final Entitlement entitlement,
                                                                         final String productName,
                                                                         final BillingPeriod billingPeriod,
+                                                                        final String priceList,
                                                                         final BillingActionPolicy billingPolicy,
                                                                         final NextEvent... events) {
         return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
@@ -511,9 +513,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     if (billingPolicy == null) {
-                        refreshedEntitlement = refreshedEntitlement.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlan(productName, billingPeriod, priceList, callContext);
                     } else {
-                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), billingPolicy, callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, priceList, clock.getUTCNow().toLocalDate(), billingPolicy, callContext);
                     }
                     return refreshedEntitlement;
                 } catch (EntitlementApiException e) {
@@ -522,6 +524,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 }
             }
         }, events);
+    }
+
+
+    protected DefaultEntitlement changeEntitlementAndCheckForCompletion(final Entitlement entitlement,
+                                                                        final String productName,
+                                                                        final BillingPeriod billingPeriod,
+                                                                        final BillingActionPolicy billingPolicy,
+                                                                        final NextEvent... events) {
+        return changeEntitlementAndCheckForCompletion(entitlement, productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, billingPolicy, events);
     }
 
     protected DefaultEntitlement cancelEntitlementAndCheckForCompletion(final Entitlement entitlement,
