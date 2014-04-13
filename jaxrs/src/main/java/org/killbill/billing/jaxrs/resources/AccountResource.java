@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -49,6 +50,7 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.MutableAccountData;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
@@ -461,20 +463,45 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     public Response payAllInvoices(@PathParam("accountId") final String accountId,
                                    @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
+                                   @QueryParam(QUERY_PAYMENT_AMOUNT) final BigDecimal paymentAmount,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
                                    @HeaderParam(HDR_COMMENT) final String comment,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
         final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
-        for (final Invoice invoice : unpaidInvoices) {
-            if (externalPayment) {
-                paymentApi.createExternalPayment(account, invoice.getId(), invoice.getBalance(), callContext);
-            } else {
-                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+
+        BigDecimal remainingRequestPayment = paymentAmount;
+        if (remainingRequestPayment == null) {
+            remainingRequestPayment = BigDecimal.ZERO;
+            for (final Invoice invoice : unpaidInvoices) {
+                remainingRequestPayment = remainingRequestPayment.add(invoice.getBalance());
             }
+        }
+
+        for (final Invoice invoice : unpaidInvoices) {
+            final BigDecimal amountToPay = (remainingRequestPayment.compareTo(invoice.getBalance()) >= 0) ?
+                                           invoice.getBalance() : remainingRequestPayment;
+            if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
+                if (externalPayment) {
+                    paymentApi.createExternalPayment(account, invoice.getId(), amountToPay, callContext);
+                } else {
+                    paymentApi.createPayment(account, invoice.getId(), amountToPay, callContext);
+                }
+            }
+            remainingRequestPayment = remainingRequestPayment.subtract(amountToPay);
+            if (remainingRequestPayment.compareTo(BigDecimal.ZERO) == 0) {
+                break;
+            }
+        }
+        //
+        // If the amount requested is greater than what had to be paid and if this an for an external payment (check, ..)
+        // then we apply some credit on the account.
+        //
+        if (externalPayment && remainingRequestPayment.compareTo(BigDecimal.ZERO) > 0) {
+            invoiceApi.insertCredit(account.getId(), remainingRequestPayment, clock.getUTCToday(), account.getCurrency(), callContext);
         }
         return Response.status(Status.OK).build();
     }
