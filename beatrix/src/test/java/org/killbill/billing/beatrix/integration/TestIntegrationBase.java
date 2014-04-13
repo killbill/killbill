@@ -30,7 +30,12 @@ import javax.inject.Named;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.usage.api.UsageUserApi;
+import org.killbill.billing.util.api.TagApiException;
+import org.killbill.billing.util.api.TagDefinitionApiException;
+import org.killbill.billing.util.tag.ControlTagType;
+import org.killbill.billing.util.tag.Tag;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +106,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -582,6 +588,21 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 return null;
             }
         }, events);
+    }
+
+    protected void add_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        busHandler.pushExpectedEvent(NextEvent.TAG);
+        tagUserApi.addTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
+        assertListenerStatus();
+
+        final List<Tag> tags = tagUserApi.getTagsForObject(id, type, false, callContext);
+        assertEquals(tags.size(), 1);
+    }
+
+    protected void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        busHandler.pushExpectedEvent(NextEvent.TAG);
+        tagUserApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
+        assertListenerStatus();
     }
 
     private <T> T doCallAndCheckForCompletion(Function<Void, T> f, final NextEvent... events) {

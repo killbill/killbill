@@ -24,11 +24,11 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
@@ -42,12 +42,17 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentStatus;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestPaymentRefund extends TestIntegrationBase {
 
@@ -81,7 +86,8 @@ public class TestPaymentRefund extends TestIntegrationBase {
         invoice = invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext,
                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
                                                                            new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.82")),
-                                              new ExpectedInvoiceItemCheck(InvoiceItemType.ITEM_ADJ, new BigDecimal("-233.82")));
+                                              new ExpectedInvoiceItemCheck(InvoiceItemType.ITEM_ADJ, new BigDecimal("-233.82"))
+                                             );
     }
 
     @Test(groups = "slow")
@@ -91,9 +97,11 @@ public class TestPaymentRefund extends TestIntegrationBase {
         invoice = invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext,
                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
                                                                            new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.82")),
-                                              new ExpectedInvoiceItemCheck(InvoiceItemType.REFUND_ADJ, new BigDecimal("-233.82")));
-
+                                              new ExpectedInvoiceItemCheck(InvoiceItemType.REFUND_ADJ, new BigDecimal("-233.82"))
+                                             );
     }
+
+
 
     private void setupRefundTest() throws Exception {
 

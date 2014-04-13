@@ -18,8 +18,6 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.testng.annotations.BeforeMethod;
@@ -35,12 +33,7 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
-import org.killbill.billing.util.api.TagApiException;
-import org.killbill.billing.util.api.TagDefinitionApiException;
-import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.billing.util.tag.ControlTagType;
-import org.killbill.billing.util.tag.Tag;
 
 import com.google.inject.Inject;
 
@@ -49,12 +42,6 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
-
-    @Inject
-    private InvoiceUserApi invoiceApi;
-
-    @Inject
-    private TagUserApi tagApi;
 
     @Inject
     private PaymentConfig paymentConfig;
@@ -84,7 +71,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        Collection<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE);
@@ -93,7 +80,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -107,7 +94,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         assertListenerStatus();
         addDelayBceauseOfLackOfCorrectSynchro();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -127,7 +114,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        Collection<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE);
@@ -136,7 +123,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -151,7 +138,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         assertListenerStatus();
         addDelayBceauseOfLackOfCorrectSynchro();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -168,7 +155,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.addDays(nbDaysBeforeRetry + 1);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
                 continue;
@@ -188,7 +175,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        Collection<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);
 
         // CREATE FIRST NON NULL INVOICE + FIRST PAYMENT/ATTEMPT -> AUTO_PAY_OFF
@@ -197,7 +184,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.addDays(31); // After trial
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -213,7 +200,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         assertListenerStatus();
         addDelayBceauseOfLackOfCorrectSynchro();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -231,7 +218,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.addDays(nbDaysBeforeRetry + 1);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -253,7 +240,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.addDays(nbDaysBeforeRetry + 1);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
                 continue;
@@ -265,20 +252,6 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
     }
 
-    private void add_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        busHandler.pushExpectedEvent(NextEvent.TAG);
-        tagApi.addTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
-        assertListenerStatus();
-
-        final List<Tag> tags = tagApi.getTagsForObject(id, type, false, callContext);
-        assertEquals(tags.size(), 1);
-    }
-
-    private void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        busHandler.pushExpectedEvent(NextEvent.TAG);
-        tagApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
-        assertListenerStatus();
-    }
 
     private void addDelayBceauseOfLackOfCorrectSynchro() {
         // TODO When removing the tag, the payment system will schedule retries for payments that are in non terminal state
