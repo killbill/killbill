@@ -21,21 +21,19 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
+import org.killbill.billing.notification.plugin.api.ExtBusEvent;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
-
-import org.killbill.billing.notification.plugin.api.ExtBusEvent;
 
 public class OSGIKillbillEventDispatcher extends OSGIKillbillLibraryBase {
 
     private static final String OBSERVABLE_SERVICE_NAME = "java.util.Observable";
 
-    private final ServiceTracker<Observable, Observable> observableTracker;
-
+    private final ServiceTracker observableTracker;
 
     private final Map<OSGIKillbillEventHandler, Observer> handlerToObserver;
 
-    public OSGIKillbillEventDispatcher(BundleContext context) {
+    public OSGIKillbillEventDispatcher(final BundleContext context) {
         handlerToObserver = new HashMap<OSGIKillbillEventHandler, Observer>();
         observableTracker = new ServiceTracker(context, OBSERVABLE_SERVICE_NAME, null);
         observableTracker.open();

@@ -16,9 +16,6 @@
 
 package org.killbill.killbill.osgi.libs.killbill;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.util.tracker.ServiceTracker;
-
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
@@ -36,15 +33,16 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.ExportUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagUserApi;
+import org.osgi.framework.BundleContext;
+import org.osgi.util.tracker.ServiceTracker;
 
 public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKillbill {
 
-
     private static final String KILLBILL_SERVICE_NAME = "org.killbill.billing.osgi.api.OSGIKillbill";
 
-    private final ServiceTracker<OSGIKillbill, OSGIKillbill> killbillTracker;
+    private final ServiceTracker killbillTracker;
 
-    public OSGIKillbillAPI(BundleContext context) {
+    public OSGIKillbillAPI(final BundleContext context) {
         killbillTracker = new ServiceTracker(context, KILLBILL_SERVICE_NAME, null);
         killbillTracker.open();
     }
@@ -84,7 +82,6 @@ public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKill
             }
         });
     }
-
 
     @Override
     public InvoicePaymentApi getInvoicePaymentApi() {

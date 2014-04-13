@@ -65,20 +65,6 @@
             <artifactId>org.apache.felix.framework</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>javax.servlet</artifactId>
-                    <groupId>org.apache.felix</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.osgi.foundation</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.jdbi</groupId>
             <artifactId>jdbi</artifactId>
         </dependency>
@@ -93,6 +79,14 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-osgi-bundles-lib-killbill</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>org.osgi.core</artifactId>
+                    <!-- The library is shared by bundles and the core OSGI module, which has these classes
+                         via the Felix framework -->
+                    <groupId>org.osgi</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
@@ -138,6 +132,10 @@
         <dependency>
             <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-queue</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
         </dependency>
         <dependency>
             <groupId>org.skife.config</groupId>

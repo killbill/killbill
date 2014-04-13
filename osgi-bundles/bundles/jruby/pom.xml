@@ -36,16 +36,12 @@
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
+            <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
+            <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.osgi.foundation</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jruby</groupId>
@@ -190,7 +186,8 @@
                             javax.security.auth;
                             javax.security.auth.*;
                             javax.security.auth.x500;
-                            javax.security.auth.x500.*;resolution:=optional</Import-Package>
+                            javax.security.auth.x500.*;resolution:=optional
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

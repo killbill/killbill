@@ -27,10 +27,9 @@ public class OSGIKillbillLogService extends OSGIKillbillLibraryBase implements L
 
     private static final String LOG_SERVICE_NAME = "org.osgi.service.log.LogService";
 
-    private final ServiceTracker<LogService, LogService> logTracker;
+    private final ServiceTracker logTracker;
 
-
-    public OSGIKillbillLogService(BundleContext context) {
+    public OSGIKillbillLogService(final BundleContext context) {
         super();
         logTracker = new ServiceTracker(context, LOG_SERVICE_NAME, null);
         logTracker.open();

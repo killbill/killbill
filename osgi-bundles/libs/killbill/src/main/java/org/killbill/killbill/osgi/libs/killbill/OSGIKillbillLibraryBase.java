@@ -20,13 +20,10 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public abstract class OSGIKillbillLibraryBase {
 
-
     public OSGIKillbillLibraryBase() {
-
     }
 
     public abstract void close();
-
 
     protected abstract class APICallback<API, T> {
 
@@ -43,8 +40,8 @@ public abstract class OSGIKillbillLibraryBase {
         }
     }
 
-    protected <API, S, T> API withServiceTracker(ServiceTracker<S, T> t, APICallback<API, T> cb) {
-        T service = t.getService();
+    protected <API, T> API withServiceTracker(final ServiceTracker t, final APICallback<API, T> cb) {
+        final T service = (T) t.getService();
         if (service == null) {
             return cb.executeWithNoService();
         }
