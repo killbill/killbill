@@ -22,15 +22,16 @@ import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LogService;
-
-import org.killbill.commons.concurrent.Executors;
 import org.killbill.billing.osgi.api.config.PluginConfig.PluginType;
 import org.killbill.billing.osgi.api.config.PluginConfigServiceApi;
 import org.killbill.billing.osgi.api.config.PluginRubyConfig;
+import org.killbill.commons.concurrent.Executors;
 import org.killbill.killbill.osgi.libs.killbill.KillbillActivatorBase;
+import org.killbill.killbill.osgi.libs.killbill.KillbillServiceListener;
+import org.killbill.killbill.osgi.libs.killbill.KillbillServiceListenerCallback;
 import org.killbill.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.log.LogService;
 
 import com.google.common.base.Objects;
 
@@ -51,6 +52,22 @@ public class JRubyActivator extends KillbillActivatorBase {
 
     public void start(final BundleContext context) throws Exception {
         super.start(context);
+
+        final String osgiKillbillClass = "org.killbill.billing.osgi.api.OSGIKillbill";
+        final KillbillServiceListenerCallback listenerCallback = new KillbillServiceListenerCallback() {
+            @Override
+            public void isRegistered(final BundleContext context) {
+                startWithContextClassLoader(context);
+            }
+        };
+        KillbillServiceListener.listenForService(context, osgiKillbillClass, listenerCallback);
+    }
+
+    private void startWithContextClassLoader(final BundleContext context) {
+        if (restartFuture != null) {
+            // If the restart future is already configured, the plugin had already started
+            return;
+        }
 
         withContextClassLoader(new PluginCall() {
             @Override
@@ -108,26 +125,26 @@ public class JRubyActivator extends KillbillActivatorBase {
 
         restartFuture = Executors.newSingleThreadScheduledExecutor("jruby-restarter-" + pluginMain)
                                  .scheduleWithFixedDelay(new Runnable() {
-            long lastRestartMillis = System.currentTimeMillis();
+                                     long lastRestartMillis = System.currentTimeMillis();
 
-            @Override
-            public void run() {
+                                     @Override
+                                     public void run() {
 
-                final File restartFile = new File(tmpDirPath + "/" + RESTART_FILE_NAME);
-                if (!restartFile.isFile()) {
-                    return;
-                }
+                                         final File restartFile = new File(tmpDirPath + "/" + RESTART_FILE_NAME);
+                                         if (!restartFile.isFile()) {
+                                             return;
+                                         }
 
-                if (restartFile.lastModified() > lastRestartMillis) {
-                    logService.log(LogService.LOG_INFO, "Restarting JRuby plugin " + rubyConfig.getRubyMainClass());
+                                         if (restartFile.lastModified() > lastRestartMillis) {
+                                             logService.log(LogService.LOG_INFO, "Restarting JRuby plugin " + rubyConfig.getRubyMainClass());
 
-                    doStopPlugin(context);
-                    doStartPlugin(pluginMain, context, killbillServices);
+                                             doStopPlugin(context);
+                                             doStartPlugin(pluginMain, context, killbillServices);
 
-                    lastRestartMillis = restartFile.lastModified();
-                }
-            }
-        }, JRUBY_PLUGINS_RESTART_DELAY_SECS, JRUBY_PLUGINS_RESTART_DELAY_SECS, TimeUnit.SECONDS);
+                                             lastRestartMillis = restartFile.lastModified();
+                                         }
+                                     }
+                                 }, JRUBY_PLUGINS_RESTART_DELAY_SECS, JRUBY_PLUGINS_RESTART_DELAY_SECS, TimeUnit.SECONDS);
     }
 
     private PluginRubyConfig retrievePluginRubyConfig(final BundleContext context) {
@@ -148,7 +165,7 @@ public class JRubyActivator extends KillbillActivatorBase {
         }, this.getClass().getClassLoader());
     }
 
-    private void  doStartPlugin(final String pluginMain, final BundleContext context, final Map<String, Object> killbillServices) {
+    private void doStartPlugin(final String pluginMain, final BundleContext context, final Map<String, Object> killbillServices) {
         logService.log(LogService.LOG_INFO, "Starting JRuby plugin " + pluginMain);
         plugin.instantiatePlugin(killbillServices, pluginMain);
         plugin.startPlugin(context);
@@ -185,7 +202,6 @@ public class JRubyActivator extends KillbillActivatorBase {
         killbillUserApis.put("currency_conversion_api", killbillAPI.getCurrencyConversionApi());
         return killbillUserApis;
     }
-
 
     private static interface PluginCall {
 
