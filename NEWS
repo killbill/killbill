@@ -1,3 +1,10 @@
+0.10.2
+    Add paymentAmount parameter to payAllInvoices API
+    Fix OSGI dependencies issue
+
+0.10.1
+    Allow configuration of EhCache by specifying a URI
+
 0.10.0
     Merge usage branch (consumable in arrear)
     Upgrade osgi felix framework and resolve osgi errors
