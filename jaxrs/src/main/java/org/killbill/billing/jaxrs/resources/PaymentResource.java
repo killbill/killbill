@@ -365,13 +365,13 @@ public class PaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     // Generate form data to redirect the customer to the gateway
-    public Response createRedirectForm(final HostedPaymentPageFieldsJson json,
-                                       @PathParam("gateway") final String gateway,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+    public Response buildFormDescriptor(final HostedPaymentPageFieldsJson json,
+                                        @PathParam("gateway") final String gateway,
+                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                        @HeaderParam(HDR_REASON) final String reason,
+                                        @HeaderParam(HDR_COMMENT) final String comment,
+                                        @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         throw new UnsupportedOperationException();
     }
 
