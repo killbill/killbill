@@ -45,12 +45,12 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.clock.Clock;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.jaxrs.json.ChargebackJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
+import org.killbill.billing.jaxrs.json.HostedPaymentPageFieldsJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.PaymentJson;
 import org.killbill.billing.jaxrs.json.RefundJson;
@@ -70,6 +70,7 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
+import org.killbill.clock.Clock;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
@@ -78,6 +79,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.WILDCARD;
 
 @Path(JaxrsResource.PAYMENTS_PATH)
 public class PaymentResource extends JaxRsResourceBase {
@@ -268,6 +270,60 @@ public class PaymentResource extends JaxRsResourceBase {
     }
 
     @POST
+    @Path("/" + AUTHORIZATION)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response authorizePayment(final PaymentJson json,
+                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                     @HeaderParam(HDR_REASON) final String reason,
+                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                     @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @POST
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + CAPTURE)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response captureAuthorization(final PaymentJson json,
+                                         @PathParam("paymentId") final String paymentId,
+                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                         @HeaderParam(HDR_REASON) final String reason,
+                                         @HeaderParam(HDR_COMMENT) final String comment,
+                                         @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @POST
+    @Path("/{paymentId:" + UUID_PATTERN + "}/")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response processPayment(final PaymentJson json,
+                                   @PathParam("paymentId") final String paymentId,
+                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                   @HeaderParam(HDR_REASON) final String reason,
+                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @DELETE
+    @Path("/{paymentId:" + UUID_PATTERN + "}/")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response voidPayment(@PathParam("paymentId") final String paymentId,
+                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                @HeaderParam(HDR_REASON) final String reason,
+                                @HeaderParam(HDR_COMMENT) final String comment,
+                                @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -302,6 +358,36 @@ public class PaymentResource extends JaxRsResourceBase {
         }
 
         return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId(), uriInfo.getBaseUri().toString());
+    }
+
+    @POST
+    @Path("/" + HOSTED + "/" + FORM + "/{gateway:" + ANYTHING_PATTERN + "}")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    // Generate form data to redirect the customer to the gateway
+    public Response createRedirectForm(final HostedPaymentPageFieldsJson json,
+                                       @PathParam("gateway") final String gateway,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @POST
+    @Path("/" + HOSTED)
+    @Consumes(WILDCARD)
+    @Produces(APPLICATION_JSON)
+    public Response processNotification(final String body,
+                                        @PathParam("gateway") final String gateway,
+                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                        @HeaderParam(HDR_REASON) final String reason,
+                                        @HeaderParam(HDR_COMMENT) final String comment,
+                                        @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        // Note: the body is opaque here, as it comes from the gateway. The associated payment plugin will now how to deserialize it though
+        throw new UnsupportedOperationException();
     }
 
     @GET

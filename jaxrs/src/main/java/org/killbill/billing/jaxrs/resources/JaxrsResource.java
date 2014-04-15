@@ -184,4 +184,9 @@ public interface JaxrsResource {
     public static final String PAUSE = "pause";
     public static final String RESUME = "resume";
 
+    public static final String AUTHORIZATION = "authorization";
+    public static final String CAPTURE = "capture";
+
+    public static final String HOSTED = "hosted";
+    public static final String FORM = "form";
 }
