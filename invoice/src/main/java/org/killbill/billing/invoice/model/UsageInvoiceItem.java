@@ -26,6 +26,8 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 
+import com.google.common.base.Objects;
+
 public class UsageInvoiceItem extends InvoiceItemBase {
 
     public UsageInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
@@ -37,7 +39,7 @@ public class UsageInvoiceItem extends InvoiceItemBase {
     public UsageInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
                             final UUID subscriptionId, final String planName, final String phaseName, final String usageName,
                             final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, amount, currency);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, null, planName, phaseName, usageName, startDate, endDate, amount, currency);
     }
 
     @Override
@@ -47,7 +49,6 @@ public class UsageInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String getDescription() {
-        return String.format("%s (usage item)", usageName);
+        return Objects.firstNonNull(description, String.format("%s (usage item)", usageName));
     }
-
 }

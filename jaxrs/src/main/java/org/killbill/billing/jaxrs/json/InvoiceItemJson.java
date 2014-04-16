@@ -18,13 +18,15 @@ package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -89,6 +91,105 @@ public class InvoiceItemJson extends JsonBase {
              item.getPlanName(), item.getPhaseName(), item.getUsageName(), item.getInvoiceItemType().toString(),
              item.getDescription(), item.getStartDate(), item.getEndDate(),
              item.getAmount(), item.getCurrency(), toAuditLogJson(auditLogs));
+    }
+
+    public InvoiceItem toInvoiceItem() {
+        return new InvoiceItem() {
+            @Override
+            public InvoiceItemType getInvoiceItemType() {
+                return itemType != null ? InvoiceItemType.valueOf(itemType) : null;
+            }
+
+            @Override
+            public UUID getInvoiceId() {
+                return invoiceId != null ? UUID.fromString(invoiceId) : null;
+            }
+
+            @Override
+            public UUID getAccountId() {
+                return accountId != null ? UUID.fromString(accountId) : null;
+            }
+
+            @Override
+            public LocalDate getStartDate() {
+                return startDate;
+            }
+
+            @Override
+            public LocalDate getEndDate() {
+                return endDate;
+            }
+
+            @Override
+            public BigDecimal getAmount() {
+                return amount;
+            }
+
+            @Override
+            public Currency getCurrency() {
+                return currency;
+            }
+
+            @Override
+            public String getDescription() {
+                return description;
+            }
+
+            @Override
+            public UUID getBundleId() {
+                return bundleId != null ? UUID.fromString(bundleId) : null;
+            }
+
+            @Override
+            public UUID getSubscriptionId() {
+                return subscriptionId != null ? UUID.fromString(subscriptionId) : null;
+            }
+
+            @Override
+            public String getPlanName() {
+                return planName;
+            }
+
+            @Override
+            public String getPhaseName() {
+                return phaseName;
+            }
+
+            @Override
+            public String getUsageName() {
+                return usageName;
+            }
+
+            @Override
+            public BigDecimal getRate() {
+                return null;
+            }
+
+            @Override
+            public UUID getLinkedItemId() {
+                return linkedInvoiceItemId != null ? UUID.fromString(linkedInvoiceItemId) : null;
+            }
+
+            @Override
+            public boolean matches(final Object o) {
+                return false;
+            }
+
+            @Override
+            public UUID getId() {
+                return null;
+            }
+
+            @Override
+            public DateTime getCreatedDate() {
+                return null;
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                return null;
+            }
+        };
     }
 
     public InvoiceItemJson(final InvoiceItem input) {

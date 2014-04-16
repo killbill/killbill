@@ -23,9 +23,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 
 public class FixedPriceInvoiceItem extends InvoiceItemBase {
@@ -39,11 +37,15 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     public FixedPriceInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
                                  final UUID subscriptionId, final String planName, final String phaseName,
                                  final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, null, date, null, amount, currency);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, null, planName, phaseName, null, date, null, amount, currency);
     }
 
     @Override
     public String getDescription() {
+        if (description != null) {
+            return description;
+        }
+
         if (getPhaseName() == null) {
             return "Fixed price charge";
         } else {

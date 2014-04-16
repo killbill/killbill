@@ -23,10 +23,10 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+
+import com.google.common.base.Objects;
 
 public class RecurringInvoiceItem extends InvoiceItemBase {
 
@@ -39,12 +39,12 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
     public RecurringInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
                                 final String planName, final String phaseName, final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final BigDecimal rate, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, null, startDate, endDate, amount, rate, currency);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, null, planName, phaseName, null, startDate, endDate, amount, rate, currency);
     }
 
     @Override
     public String getDescription() {
-        return phaseName;
+        return Objects.firstNonNull(description, phaseName);
     }
 
     @Override

@@ -17,6 +17,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -27,8 +28,11 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertTrue;
 
@@ -46,7 +50,8 @@ public class TestPayment extends TestIntegrationBase {
         clock.setDay(new LocalDate(2012, 4, 1));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        final InvoiceItem item1 = invoiceUserApi.insertExternalCharge(account.getId(), BigDecimal.TEN, "Initial external charge", clock.getToday(DateTimeZone.UTC), Currency.USD, callContext);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null,  "Initial external charge", clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
+        final InvoiceItem item1 = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), callContext).get(0);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);

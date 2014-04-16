@@ -23,10 +23,11 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+
+import com.google.common.base.Objects;
 
 public class ItemAdjInvoiceItem extends AdjInvoiceItem {
 
@@ -53,6 +54,6 @@ public class ItemAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return "Invoice item adjustment";
+        return Objects.firstNonNull(description, "Invoice item adjustment");
     }
 }
