@@ -138,6 +138,9 @@ public interface JaxrsResource {
     public static final String PAYMENTS = "payments";
     public static final String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;
 
+    public static final String DIRECT_PAYMENTS = "directPayments";
+    public static final String DIRECT_PAYMENTS_PATH = PREFIX + "/" + DIRECT_PAYMENTS;
+
     public static final String REFUNDS = "refunds";
     public static final String REFUNDS_PATH = PREFIX + "/" + "refunds";
 

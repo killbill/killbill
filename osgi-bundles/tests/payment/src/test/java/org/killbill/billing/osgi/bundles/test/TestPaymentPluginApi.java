@@ -26,6 +26,9 @@ import org.joda.time.DateTime;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageDescriptorFields;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageNotification;
 import org.killbill.billing.payment.plugin.api.PaymentInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
@@ -50,7 +53,23 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
     }
 
     @Override
+    public PaymentInfoPlugin authorizePayment(UUID kbAccountId, UUID kbPaymentId, UUID kbPaymentMethodId, BigDecimal amount, Currency currency, CallContext context)
+            throws PaymentPluginApiException {
+        return getPaymentInfoPluginResult(kbPaymentId, amount, currency);
+    }
+
+    @Override
+    public PaymentInfoPlugin capturePayment(UUID kbAccountId, UUID kbPaymentId, UUID kbPaymentMethodId, BigDecimal amount, Currency currency, CallContext context)
+            throws PaymentPluginApiException {
+        return getPaymentInfoPluginResult(kbPaymentId, amount, currency);
+    }
+
+    @Override
     public PaymentInfoPlugin processPayment(final UUID accountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
+        return getPaymentInfoPluginResult(kbPaymentId, amount, currency);
+    }
+
+    private PaymentInfoPlugin getPaymentInfoPluginResult(final UUID kbPaymentId, final BigDecimal amount, final Currency currency) throws PaymentPluginApiException {
         return withRuntimeCheckForExceptions(new PaymentInfoPlugin() {
             @Override
             public UUID getKbPaymentId() {
@@ -105,60 +124,17 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
     }
 
     @Override
+    public PaymentInfoPlugin voidPayment(UUID kbAccountId, UUID kbPaymentId, UUID kbPaymentMethodId, CallContext context)
+            throws PaymentPluginApiException {
+        return getPaymentInfoPluginResult(kbPaymentId, BigDecimal.ZERO, null);
+
+    }
+
+    @Override
     public PaymentInfoPlugin getPaymentInfo(final UUID accountId, final UUID kbPaymentId, final TenantContext context) throws PaymentPluginApiException {
 
         final BigDecimal someAmount = new BigDecimal("12.45");
-        return withRuntimeCheckForExceptions(new PaymentInfoPlugin() {
-            @Override
-            public UUID getKbPaymentId() {
-                return kbPaymentId;
-            }
-
-            @Override
-            public BigDecimal getAmount() {
-                return someAmount;
-            }
-
-            @Override
-            public Currency getCurrency() {
-                return null;
-            }
-
-            @Override
-            public DateTime getCreatedDate() {
-                return new DateTime();
-            }
-
-            @Override
-            public DateTime getEffectiveDate() {
-                return new DateTime();
-            }
-
-            @Override
-            public PaymentPluginStatus getStatus() {
-                return PaymentPluginStatus.PROCESSED;
-            }
-
-            @Override
-            public String getGatewayError() {
-                return null;
-            }
-
-            @Override
-            public String getGatewayErrorCode() {
-                return null;
-            }
-
-            @Override
-            public String getFirstPaymentReferenceId() {
-                return null;
-            }
-
-            @Override
-            public String getSecondPaymentReferenceId() {
-                return null;
-            }
-        });
+        return getPaymentInfoPluginResult(kbPaymentId, someAmount, null);
     }
 
     @Override
@@ -335,6 +311,16 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
 
     @Override
     public void resetPaymentMethods(final UUID accountId, final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {
+    }
+
+    @Override
+    public HostedPaymentPageFormDescriptor buildFormDescriptor(final UUID uuid, final HostedPaymentPageDescriptorFields hostedPaymentPageDescriptorFields, final TenantContext tenantContext) {
+        return null;
+    }
+
+    @Override
+    public HostedPaymentPageNotification processNotification(final String s, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return null;
     }
 
     private <T> T withRuntimeCheckForExceptions(final T result) throws PaymentPluginApiException {

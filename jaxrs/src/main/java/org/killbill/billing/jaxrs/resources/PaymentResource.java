@@ -296,19 +296,6 @@ public class PaymentResource extends JaxRsResourceBase {
         throw new UnsupportedOperationException();
     }
 
-    @POST
-    @Path("/{paymentId:" + UUID_PATTERN + "}/")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    public Response processPayment(final PaymentJson json,
-                                   @PathParam("paymentId") final String paymentId,
-                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                   @HeaderParam(HDR_REASON) final String reason,
-                                   @HeaderParam(HDR_COMMENT) final String comment,
-                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        throw new UnsupportedOperationException();
-    }
 
     @DELETE
     @Path("/{paymentId:" + UUID_PATTERN + "}/")

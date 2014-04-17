@@ -27,6 +27,9 @@ import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.bundles.test.dao.TestDao;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageDescriptorFields;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageNotification;
 import org.killbill.billing.payment.plugin.api.PaymentInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -45,6 +48,16 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
     public TestPaymentPluginApi(final String name, final TestDao testDao) {
         this.testDao = testDao;
         this.name = name;
+    }
+
+    @Override
+    public PaymentInfoPlugin authorizePayment(final UUID uuid, final UUID uuid2, final UUID uuid3, final BigDecimal bigDecimal, final Currency currency, final CallContext callContext) throws PaymentPluginApiException {
+        return null;
+    }
+
+    @Override
+    public PaymentInfoPlugin capturePayment(final UUID uuid, final UUID uuid2, final UUID uuid3, final BigDecimal bigDecimal, final Currency currency, final CallContext callContext) throws PaymentPluginApiException {
+        return null;
     }
 
     @Override
@@ -101,6 +114,11 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
                 return null;
             }
         };
+    }
+
+    @Override
+    public PaymentInfoPlugin voidPayment(final UUID uuid, final UUID uuid2, final UUID uuid3, final CallContext callContext) throws PaymentPluginApiException {
+        return null;
     }
 
     @Override
@@ -232,5 +250,15 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
 
     @Override
     public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {
+    }
+
+    @Override
+    public HostedPaymentPageFormDescriptor buildFormDescriptor(final UUID uuid, final HostedPaymentPageDescriptorFields hostedPaymentPageDescriptorFields, final TenantContext tenantContext) {
+        return null;
+    }
+
+    @Override
+    public HostedPaymentPageNotification processNotification(final String s, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return null;
     }
 }

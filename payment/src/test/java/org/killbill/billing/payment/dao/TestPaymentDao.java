@@ -17,11 +17,11 @@
 package org.killbill.billing.payment.dao;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.payment.api.TransactionType;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.catalog.api.Currency;
@@ -31,6 +31,7 @@ import org.killbill.billing.payment.api.RefundStatus;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.fail;
@@ -283,5 +284,68 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(deletedPaymentMethod.getAccountId(), accountId);
         assertEquals(deletedPaymentMethod.getId(), paymentMethodId);
         assertEquals(deletedPaymentMethod.getPluginName(), pluginName);
+    }
+
+    @Test(groups = "slow")
+    public void testDirectPayment() {
+
+        final UUID paymentMethodId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
+        final String externalName = "fo0";
+
+        DateTime utcNow = clock.getUTCNow();
+        final DirectPaymentModelDao dpmd = new DirectPaymentModelDao(utcNow, utcNow, accountId, paymentMethodId, externalName);
+        final DirectPaymentTransactionModelDao dptmd = new DirectPaymentTransactionModelDao(utcNow, utcNow, dpmd.getId(), TransactionType.AUTHORIZE,
+                                                                                            utcNow, PaymentStatus.UNKNOWN, BigDecimal.TEN, Currency.USD, null, null);
+        DirectPaymentModelDao savedDirectPayment = paymentDao.insertDirectPaymentWithFirstTransaction(dpmd, dptmd, internalCallContext);
+        assertNotNull(savedDirectPayment);
+        assertEquals(savedDirectPayment.getAccountId(), accountId);
+        assertEquals(savedDirectPayment.getPaymentMethodId(), paymentMethodId);
+        assertEquals(savedDirectPayment.getExternalKey(), externalName);
+
+        savedDirectPayment = paymentDao.getDirectPayment(dpmd.getId(), internalCallContext);
+        assertNotNull(savedDirectPayment);
+        assertNotNull(savedDirectPayment.getPaymentNumber());
+        assertEquals(savedDirectPayment.getAccountId(), accountId);
+        assertEquals(savedDirectPayment.getPaymentMethodId(), paymentMethodId);
+        assertEquals(savedDirectPayment.getExternalKey(), externalName);
+
+        DirectPaymentTransactionModelDao savedTransaction = paymentDao.getDirectPaymentTransaction(dptmd.getId(), internalCallContext);
+        assertNotNull(savedTransaction);
+        assertEquals(savedTransaction.getDirectPaymentId(), dpmd.getId());
+        assertEquals(savedTransaction.getTransactionType(), TransactionType.AUTHORIZE);
+        assertEquals(savedTransaction.getAmount().compareTo(BigDecimal.TEN), 0);
+        assertEquals(savedTransaction.getEffectiveDate().compareTo(utcNow), 0);
+        assertEquals(savedTransaction.getPaymentStatus(), PaymentStatus.UNKNOWN);
+        assertEquals(savedTransaction.getCurrency(), Currency.USD);
+        assertNull(savedTransaction.getGatewayErrorCode());
+        assertNull(savedTransaction.getGatewayErrorMsg());
+
+        paymentDao.updateDirectPaymentAndTransactionOnCompletion(dpmd.getId(), PaymentStatus.SUCCESS, BigDecimal.TEN, Currency.USD, dptmd.getId(), "100", "Excellent", internalCallContext);
+
+
+        savedDirectPayment = paymentDao.getDirectPayment(dpmd.getId(), internalCallContext);
+        assertNotNull(savedDirectPayment);
+        assertEquals(savedDirectPayment.getAccountId(), accountId);
+        assertEquals(savedDirectPayment.getPaymentMethodId(), paymentMethodId);
+        assertEquals(savedDirectPayment.getExternalKey(), externalName);
+
+        savedTransaction = paymentDao.getDirectPaymentTransaction(dptmd.getId(), internalCallContext);
+        assertNotNull(savedTransaction);
+        assertEquals(savedTransaction.getDirectPaymentId(), dpmd.getId());
+        assertEquals(savedTransaction.getTransactionType(), TransactionType.AUTHORIZE);
+        assertEquals(savedTransaction.getAmount().compareTo(BigDecimal.TEN), 0);
+        assertEquals(savedTransaction.getEffectiveDate().compareTo(utcNow), 0);
+        assertEquals(savedTransaction.getPaymentStatus(), PaymentStatus.SUCCESS);
+        assertEquals(savedTransaction.getCurrency(), Currency.USD);
+        assertEquals(savedTransaction.getGatewayErrorCode(), "100");
+        assertEquals(savedTransaction.getGatewayErrorMsg(), "Excellent");
+
+        List<DirectPaymentModelDao> perAccountPayments = paymentDao.getDirectPaymentsForAccount(accountId, internalCallContext);
+        assertEquals(perAccountPayments.size(), 1);
+
+        List<DirectPaymentTransactionModelDao> perAccountTransactions = paymentDao.getDirectTransactionsForAccount(accountId, internalCallContext);
+        assertEquals(perAccountTransactions.size(), 1);
+
     }
 }

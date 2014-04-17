@@ -20,6 +20,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.svcs.DefaultDirectPaymentApi;
+import org.killbill.billing.payment.core.DirectPaymentProcessor;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
@@ -89,6 +92,7 @@ public class PaymentModule extends AbstractModule {
         });
         bind(ExecutorService.class).annotatedWith(Names.named(PLUGIN_EXECUTOR_NAMED)).toInstance(pluginExecutorService);
         bind(PaymentProcessor.class).asEagerSingleton();
+        bind(DirectPaymentProcessor.class).asEagerSingleton();
         bind(RefundProcessor.class).asEagerSingleton();
         bind(PaymentMethodProcessor.class).asEagerSingleton();
     }
@@ -103,6 +107,7 @@ public class PaymentModule extends AbstractModule {
 
         bind(PaymentInternalApi.class).to(DefaultPaymentInternalApi.class).asEagerSingleton();
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
+        bind(DirectPaymentApi.class).to(DefaultDirectPaymentApi.class).asEagerSingleton();
         bind(InvoiceHandler.class).asEagerSingleton();
         bind(PaymentTagHandler.class).asEagerSingleton();
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();

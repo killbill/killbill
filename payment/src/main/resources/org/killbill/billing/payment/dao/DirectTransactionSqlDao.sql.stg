@@ -1,0 +1,55 @@
+group DirectTransactionSqlDao: EntitySqlDao;
+
+tableName() ::= "direct_transactions"
+
+historyTableName() ::= "direct_transaction_history"
+
+defaultOrderBy(prefix) ::= <<
+order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
+>>
+
+
+tableFields(prefix) ::= <<
+  <prefix>transaction_type
+, <prefix>effective_date
+, <prefix>payment_status
+, <prefix>amount
+, <prefix>currency
+, <prefix>direct_payment_id
+, <prefix>gateway_error_code
+, <prefix>gateway_error_msg
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
+>>
+
+tableValues() ::= <<
+  :transactionType
+, :effectiveDate
+, :paymentStatus
+, :amount
+, :currency
+, :directPaymentId
+, :gatewayErrorCode
+, :gatewayErrorMsg
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
+>>
+
+
+updateTransactionStatus() ::= <<
+update <tableName()>
+set payment_status = :paymentStatus
+, gateway_error_code = :gatewayErrorCode
+, gateway_error_msg = :gatewayErrorMsg
+, updated_by = :updatedBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
+

@@ -1,0 +1,35 @@
+group DirectPaymentSqlDao: EntitySqlDao;
+
+tableName() ::= "direct_payments"
+
+historyTableName() ::= "direct_payment_history"
+
+extraTableFieldsWithComma(prefix) ::= <<
+, <prefix>record_id as payment_number
+>>
+
+defaultOrderBy(prefix) ::= <<
+order by <prefix>created_date ASC, <recordIdField(prefix)> ASC
+>>
+
+tableFields(prefix) ::= <<
+  <prefix>account_id
+, <prefix>payment_method_id
+, <prefix>external_key
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
+>>
+
+tableValues() ::= <<
+:accountId
+, :paymentMethodId
+, :externalKey
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
+>>
+
+

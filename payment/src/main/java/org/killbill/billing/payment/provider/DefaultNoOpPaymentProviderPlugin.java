@@ -25,6 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageDescriptorFields;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageNotification;
 import org.killbill.clock.Clock;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.plugin.api.NoOpPaymentPluginApi;
@@ -90,15 +93,26 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public PaymentInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
-        if (makeNextInvoiceFailWithException.getAndSet(false)) {
-            throw new PaymentPluginApiException("", "test error");
-        }
+    public PaymentInfoPlugin authorizePayment(UUID kbAccountId, UUID kbPaymentId, UUID kbPaymentMethodId, BigDecimal amount, Currency currency, CallContext context)
+            throws PaymentPluginApiException {
+        return getInternalNoopPaymentInfoResult(kbPaymentId, amount, currency);
+    }
 
-        final PaymentPluginStatus status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
-        final PaymentInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, null);
-        payments.put(kbPaymentId.toString(), result);
-        return result;
+    @Override
+    public PaymentInfoPlugin capturePayment(UUID kbAccountId, UUID kbPaymentId, UUID kbPaymentMethodId, BigDecimal amount, Currency currency, CallContext context)
+            throws PaymentPluginApiException {
+        return getInternalNoopPaymentInfoResult(kbPaymentId, amount, currency);
+    }
+
+    @Override
+    public PaymentInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
+        return getInternalNoopPaymentInfoResult(kbPaymentId, amount, currency);
+    }
+
+    @Override
+    public PaymentInfoPlugin voidPayment(UUID kbAccountId, UUID kbPaymentId, UUID kbPaymentMethodId, CallContext context)
+            throws PaymentPluginApiException {
+        return getInternalNoopPaymentInfoResult(kbPaymentId, BigDecimal.ZERO, null);
     }
 
     @Override
@@ -213,6 +227,16 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
+    public HostedPaymentPageFormDescriptor buildFormDescriptor(final UUID uuid, final HostedPaymentPageDescriptorFields hostedPaymentPageDescriptorFields, final TenantContext tenantContext) {
+        return null;
+    }
+
+    @Override
+    public HostedPaymentPageNotification processNotification(final String s, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return null;
+    }
+
+    @Override
     public RefundInfoPlugin processRefund(final UUID kbAccountId, final UUID kbPaymentId, final BigDecimal refundAmount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
         final PaymentInfoPlugin paymentInfoPlugin = getPaymentInfo(kbAccountId, kbPaymentId, context);
         if (paymentInfoPlugin == null) {
@@ -260,4 +284,16 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
         return new DefaultPagination<RefundInfoPlugin>(offset, limit, (long) results.size(), (long) refunds.values().size(), results.iterator());
     }
+
+    private PaymentInfoPlugin getInternalNoopPaymentInfoResult(final UUID kbPaymentId, final BigDecimal amount, final Currency currency) throws PaymentPluginApiException {
+        if (makeNextInvoiceFailWithException.getAndSet(false)) {
+            throw new PaymentPluginApiException("", "test error");
+        }
+
+        final PaymentPluginStatus status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
+        final PaymentInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, null);
+        payments.put(kbPaymentId.toString(), result);
+        return result;
+    }
+
 }

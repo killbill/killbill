@@ -50,12 +50,11 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.MutableAccountData;
-import org.killbill.billing.invoice.api.InvoiceApiException;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
@@ -65,6 +64,8 @@ import org.killbill.billing.jaxrs.json.AccountTimelineJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.ChargebackJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
+import org.killbill.billing.jaxrs.json.DirectPaymentJson;
+import org.killbill.billing.jaxrs.json.DirectTransactionJson;
 import org.killbill.billing.jaxrs.json.InvoiceEmailJson;
 import org.killbill.billing.jaxrs.json.InvoiceJson;
 import org.killbill.billing.jaxrs.json.OverdueStateJson;
@@ -77,11 +78,14 @@ import org.killbill.billing.overdue.OverdueApiException;
 import org.killbill.billing.overdue.OverdueState;
 import org.killbill.billing.overdue.OverdueUserApi;
 import org.killbill.billing.overdue.config.api.OverdueException;
+import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.Refund;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -94,11 +98,13 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
+import org.killbill.clock.Clock;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
@@ -117,6 +123,7 @@ public class AccountResource extends JaxRsResourceBase {
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final PaymentApi paymentApi;
+    private final DirectPaymentApi directPaymentApi;
     private final OverdueUserApi overdueApi;
 
     @Inject
@@ -125,6 +132,7 @@ public class AccountResource extends JaxRsResourceBase {
                            final InvoiceUserApi invoiceApi,
                            final InvoicePaymentApi invoicePaymentApi,
                            final PaymentApi paymentApi,
+                           final DirectPaymentApi directPaymentApi,
                            final TagUserApi tagUserApi,
                            final AuditUserApi auditUserApi,
                            final CustomFieldUserApi customFieldUserApi,
@@ -137,6 +145,7 @@ public class AccountResource extends JaxRsResourceBase {
         this.invoiceApi = invoiceApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.paymentApi = paymentApi;
+        this.directPaymentApi = directPaymentApi;
         this.overdueApi = overdueApi;
     }
 
@@ -177,7 +186,8 @@ public class AccountResource extends JaxRsResourceBase {
                                                         return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext);
                                                     }
                                                 },
-                                                nextPageUri);
+                                                nextPageUri
+                                               );
     }
 
     @GET
@@ -204,7 +214,8 @@ public class AccountResource extends JaxRsResourceBase {
                                                         return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext);
                                                     }
                                                 },
-                                                nextPageUri);
+                                                nextPageUri
+                                               );
     }
 
     @GET
@@ -588,6 +599,74 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     /*
+     * ************************* DIRECT PAYMENTS *****************************
+     */
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + DIRECT_PAYMENTS)
+    @Produces(APPLICATION_JSON)
+    public Response getDirectPaymentsForAccount(@PathParam("accountId") final String accountIdStr,
+                                                @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final List<DirectPayment> payments =  directPaymentApi.getAccountPayments(accountId, withPluginInfo, context.createContext(request));
+        final List<DirectPaymentJson> result = ImmutableList.copyOf(Iterables.transform(payments, new Function<DirectPayment, DirectPaymentJson>() {
+            @Override
+            public DirectPaymentJson apply(final DirectPayment input) {
+                // STEPH_DP audits
+                return new DirectPaymentJson(input, null, null);
+            }
+        }));
+        return Response.status(Response.Status.OK).entity(result).build();
+    }
+
+        @POST
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + DIRECT_PAYMENTS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response processDirectPayment(final DirectTransactionJson json,
+                                         @PathParam("accountId") final String accountIdStr,
+                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                         @HeaderParam(HDR_REASON) final String reason,
+                                         @HeaderParam(HDR_COMMENT) final String comment,
+                                         @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final Account account = accountUserApi.getAccountById(accountId, callContext);
+
+        final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
+        DirectPayment result;
+        switch (transactionType) {
+            case AUTHORIZE:
+                result = directPaymentApi.createAuthorization(account, json.getAmount(), json.getExternalKey(), callContext);
+                break;
+
+            case CAPTURE:
+                result = directPaymentApi.createCapture(account, UUID.fromString(json.getDirectPaymentId()), json.getAmount(), callContext);
+                break;
+
+            case CREDIT:
+                result = directPaymentApi.createCredit(account, UUID.fromString(json.getDirectPaymentId()), callContext);
+                break;
+
+            case PURCHASE:
+                result = directPaymentApi.createPurchase(account, json.getAmount(), json.getExternalKey(), callContext);
+                break;
+
+            case VOID:
+                result = directPaymentApi.createVoid(account, UUID.fromString(json.getDirectPaymentId()), callContext);
+                break;
+
+            default:
+                return Response.status(Status.PRECONDITION_FAILED).entity("Unknown transactionType " + transactionType).build();
+        }
+            // STEPH_DP needs to return 201 with Location
+        return Response.status(Response.Status.OK).entity(new DirectPaymentJson(result, null, null)).build();
+    }
+
+    /*
      * ************************** CHARGEBACKS ********************************
      */
     @GET
@@ -791,7 +870,8 @@ public class AccountResource extends JaxRsResourceBase {
                                                                                public boolean apply(final AccountEmail input) {
                                                                                    return input.getEmail().equals(json.getEmail());
                                                                                }
-                                                                           })
+                                                                           }
+                                                                          )
                                                     .orNull();
         if (existingEmail == null) {
             accountUserApi.addEmail(accountId, json.toAccountEmail(UUID.randomUUID()), callContext);

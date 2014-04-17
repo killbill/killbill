@@ -191,6 +191,93 @@ CREATE INDEX refund_history_target_record_id ON refund_history(target_record_id)
 CREATE INDEX refund_history_tenant_account_record_id ON refund_history(tenant_record_id, account_record_id);
 
 
+DROP TABLE IF EXISTS direct_payments;
+CREATE TABLE direct_payments (
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id char(36) NOT NULL,
+    account_id char(36) NOT NULL,
+    payment_method_id char(36) NOT NULL,
+    external_key varchar(255),
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
+    PRIMARY KEY (record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE UNIQUE INDEX direct_payments_id ON direct_payments(id);
+CREATE UNIQUE INDEX direct_payments_key ON direct_payments(external_key);
+CREATE INDEX direct_payments_accnt ON direct_payments(account_id);
+CREATE INDEX direct_payments_tenant_account_record_id ON direct_payments(tenant_record_id, account_record_id);
 
 
+DROP TABLE IF EXISTS direct_payment_history;
+CREATE TABLE direct_payment_history (
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
+    account_id char(36) NOT NULL,
+    payment_method_id char(36) NOT NULL,
+    external_key varchar(255),
+    change_type char(6) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
+    PRIMARY KEY(record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE INDEX direct_payment_history_target_record_id ON direct_payment_history(target_record_id);
+CREATE INDEX direct_payment_history_tenant_account_record_id ON direct_payment_history(tenant_record_id, account_record_id);
 
+
+DROP TABLE IF EXISTS direct_transactions;
+CREATE TABLE direct_transactions (
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id char(36) NOT NULL,
+    transaction_type varchar(32) NOT NULL,
+    effective_date datetime NOT NULL,
+    payment_status varchar(50),
+    amount numeric(15,9),
+    currency char(3),
+    direct_payment_id char(36) NOT NULL,
+    gateway_error_code varchar(32),
+    gateway_error_msg varchar(256),
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
+    PRIMARY KEY (record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE UNIQUE INDEX direct_transactions_id ON direct_transactions(id);
+CREATE INDEX direct_transactions_direct_id ON direct_transactions(direct_payment_id);
+CREATE INDEX direct_transactions_tenant_account_record_id ON direct_transactions(tenant_record_id, account_record_id);
+
+DROP TABLE IF EXISTS direct_transaction_history;
+CREATE TABLE direct_transaction_history (
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
+    transaction_type varchar(32) NOT NULL,
+    effective_date datetime NOT NULL,
+    payment_status varchar(50),
+    amount numeric(15,9),
+    currency char(3),
+    direct_payment_id char(36) NOT NULL,
+    gateway_error_code varchar(32),
+    gateway_error_msg varchar(256),
+    change_type char(6) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
+    PRIMARY KEY (record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE INDEX direct_transaction_history_target_record_id ON direct_transaction_history(target_record_id);
+CREATE INDEX direct_transaction_history_tenant_account_record_id ON direct_transaction_history(tenant_record_id, account_record_id);

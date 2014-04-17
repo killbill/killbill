@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageDescriptorFields;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageNotification;
 import org.killbill.clock.Clock;
 import org.killbill.billing.payment.api.PaymentMethodKVInfo;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
@@ -59,8 +62,23 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     @Override
+    public PaymentInfoPlugin authorizePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext callContext) throws PaymentPluginApiException {
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, amount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
+    }
+
+    @Override
+    public PaymentInfoPlugin capturePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext callContext) throws PaymentPluginApiException {
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, amount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
+    }
+
+    @Override
     public PaymentInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
         return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, amount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
+    }
+
+    @Override
+    public PaymentInfoPlugin voidPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final CallContext callContext) throws PaymentPluginApiException {
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, BigDecimal.ZERO, null, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
     }
 
     @Override
@@ -117,5 +135,15 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {
+    }
+
+    @Override
+    public HostedPaymentPageFormDescriptor buildFormDescriptor(final UUID uuid, final HostedPaymentPageDescriptorFields hostedPaymentPageDescriptorFields, final TenantContext tenantContext) {
+        return null;
+    }
+
+    @Override
+    public HostedPaymentPageNotification processNotification(final String s, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return null;
     }
 }

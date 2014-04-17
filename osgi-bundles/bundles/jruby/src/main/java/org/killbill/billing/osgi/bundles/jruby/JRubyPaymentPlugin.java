@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.jruby.Ruby;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageDescriptorFields;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
+import org.killbill.billing.payment.plugin.api.HostedPaymentPageNotification;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
@@ -67,6 +70,17 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
         super.stopPlugin(context);
     }
 
+    // STEPH_DP
+    @Override
+    public PaymentInfoPlugin authorizePayment(final UUID uuid, final UUID uuid2, final UUID uuid3, final BigDecimal bigDecimal, final Currency currency, final CallContext callContext) throws PaymentPluginApiException {
+        return null;
+    }
+
+    @Override
+    public PaymentInfoPlugin capturePayment(final UUID uuid, final UUID uuid2, final UUID uuid3, final BigDecimal bigDecimal, final Currency currency, final CallContext callContext) throws PaymentPluginApiException {
+        return null;
+    }
+
     @Override
     public PaymentInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
 
@@ -76,6 +90,11 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
                 return ((PaymentPluginApi) pluginInstance).processPayment(kbAccountId, kbPaymentId, kbPaymentMethodId, amount, currency, context);
             }
         });
+    }
+
+    @Override
+    public PaymentInfoPlugin voidPayment(final UUID uuid, final UUID uuid2, final UUID uuid3, final CallContext callContext) throws PaymentPluginApiException {
+        return null;
     }
 
     @Override
@@ -208,5 +227,15 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
                 return null;
             }
         });
+    }
+
+    @Override
+    public HostedPaymentPageFormDescriptor buildFormDescriptor(final UUID uuid, final HostedPaymentPageDescriptorFields hostedPaymentPageDescriptorFields, final TenantContext tenantContext) {
+        return null;
+    }
+
+    @Override
+    public HostedPaymentPageNotification processNotification(final String s, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return null;
     }
 }

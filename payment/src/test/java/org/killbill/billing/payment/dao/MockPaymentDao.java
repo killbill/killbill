@@ -41,6 +41,36 @@ public class MockPaymentDao implements PaymentDao {
     private final Map<UUID, PaymentAttemptModelDao> attempts = new HashMap<UUID, PaymentAttemptModelDao>();
 
     @Override
+    public DirectPaymentModelDao insertDirectPaymentWithFirstTransaction(final DirectPaymentModelDao directPayment, final DirectPaymentTransactionModelDao directPaymentTransaction, final InternalCallContext context) {
+        return null;
+    }
+
+    @Override
+    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final PaymentStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final UUID directTransactionId, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+
+    }
+
+    @Override
+    public DirectPaymentModelDao getDirectPayment(final UUID directPaymentId, final InternalTenantContext context) {
+        return null;
+    }
+
+    @Override
+    public DirectPaymentTransactionModelDao getDirectPaymentTransaction(final UUID directTransactionId, final InternalTenantContext context) {
+        return null;
+    }
+
+    @Override
+    public List<DirectPaymentModelDao> getDirectPaymentsForAccount(final UUID accountId, final InternalTenantContext context) {
+        return null;
+    }
+
+    @Override
+    public List<DirectPaymentTransactionModelDao> getDirectTransactionsForAccount(final UUID accountId, final InternalTenantContext context) {
+        return null;
+    }
+
+    @Override
     public PaymentModelDao insertPaymentWithFirstAttempt(final PaymentModelDao paymentInfo, final PaymentAttemptModelDao attempt,
                                                          final InternalCallContext context) {
         synchronized (this) {

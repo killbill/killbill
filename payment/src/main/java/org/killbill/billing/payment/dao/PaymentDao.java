@@ -29,6 +29,20 @@ import org.killbill.billing.util.entity.Pagination;
 
 public interface PaymentDao {
 
+    public DirectPaymentModelDao insertDirectPaymentWithFirstTransaction(DirectPaymentModelDao directPayment, DirectPaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
+
+    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final PaymentStatus paymentStatus,
+                                                              final BigDecimal processedAmount, final Currency processedCurrency,
+                                                              final UUID directTransactionId, final String gatewayErrorCode, final String gatewayErrorMsg,  final InternalCallContext context);
+
+    public DirectPaymentModelDao getDirectPayment(UUID directPaymentId, InternalTenantContext context);
+
+    public DirectPaymentTransactionModelDao getDirectPaymentTransaction(UUID directTransactionId, InternalTenantContext context);
+
+    public List<DirectPaymentModelDao> getDirectPaymentsForAccount(UUID accountId, InternalTenantContext context);
+
+    public List<DirectPaymentTransactionModelDao> getDirectTransactionsForAccount(final UUID accountId, final InternalTenantContext context);
+
     public PaymentModelDao insertPaymentWithFirstAttempt(PaymentModelDao paymentInfo, PaymentAttemptModelDao attempt, InternalCallContext context);
 
     public PaymentAttemptModelDao updatePaymentWithNewAttempt(UUID paymentId, PaymentAttemptModelDao attempt, InternalCallContext context);
