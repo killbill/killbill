@@ -357,7 +357,15 @@ public class InvoiceResource extends JaxRsResourceBase {
             }
         }
 
-        return Response.status(Status.CREATED).build();
+        final List<InvoiceItemJson> createdExternalChargesJson = Lists.<InvoiceItem, InvoiceItemJson>transform(createdExternalCharges,
+                                                                                                               new Function<InvoiceItem, InvoiceItemJson>() {
+                                                                                                                   @Override
+                                                                                                                   public InvoiceItemJson apply(final InvoiceItem input) {
+                                                                                                                       return new InvoiceItemJson(input);
+                                                                                                                   }
+                                                                                                               }
+                                                                                                              );
+        return Response.status(Status.OK).entity(createdExternalChargesJson).build();
     }
 
     @GET

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Currency;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -312,7 +313,9 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
-        final Invoice invoiceWithItems = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, createdBy, reason, comment);
+        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, createdBy, reason, comment);
+        final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
         assertEquals(invoiceWithItems.getItems().size(), 1);
         assertNull(invoiceWithItems.getItems().get(0).getBundleId());
@@ -333,7 +336,9 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
-        final Invoice invoiceWithItems = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), true, createdBy, reason, comment);
+        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), true, createdBy, reason, comment);
+        final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceWithItems.getItems().size(), 1);
         assertNull(invoiceWithItems.getItems().get(0).getBundleId());
@@ -355,8 +360,10 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
+        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
         externalCharge.setBundleId(bundleId);
-        final Invoice invoiceWithItems = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, createdBy, reason, comment);
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, createdBy, reason, comment);
+        final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
         assertEquals(invoiceWithItems.getItems().size(), 1);
         assertEquals(invoiceWithItems.getItems().get(0).getBundleId(), bundleId);
@@ -382,8 +389,10 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
+        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
         externalCharge.setInvoiceId(invoiceId);
-        final Invoice invoiceWithItems = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, createdBy, reason, comment);
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, createdBy, reason, comment);
+        final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
         assertNull(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId());
 
@@ -410,8 +419,10 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
+        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
         externalCharge.setInvoiceId(invoiceId);
-        final Invoice invoiceWithItems = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), true, createdBy, reason, comment);
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), true, createdBy, reason, comment);
+        final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
         assertNull(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId());
 
@@ -438,9 +449,11 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
+        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
         externalCharge.setInvoiceId(invoiceId);
         externalCharge.setBundleId(bundleId);
-        final Invoice invoiceWithItems = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, createdBy, reason, comment);
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, createdBy, reason, comment);
+        final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
         assertEquals(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId(), bundleId);
 
