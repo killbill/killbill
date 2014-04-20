@@ -58,6 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -592,7 +593,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                        null,
                                                                                        null,
                                                                                        null,
-                                                                                       charge.getStartDate(),
+                                                                                       Objects.firstNonNull(charge.getStartDate(), effectiveDate),
                                                                                        charge.getEndDate(),
                                                                                        charge.getAmount(),
                                                                                        null,
