@@ -33,7 +33,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.payment.retry.FailedPaymentRetryService;
 import org.killbill.billing.payment.retry.PluginFailureRetryService;
-import org.killbill.billing.util.KillbillConfigSource;
+import org.killbill.billing.util.config.KillbillConfigSource;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.testng.annotations.AfterMethod;

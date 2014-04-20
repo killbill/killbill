@@ -39,7 +39,7 @@ import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
-import org.killbill.billing.util.KillbillConfigSource;
+import org.killbill.billing.util.config.KillbillConfigSource;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.svcsapi.bus.BusService;
 import org.killbill.bus.api.PersistentBus;

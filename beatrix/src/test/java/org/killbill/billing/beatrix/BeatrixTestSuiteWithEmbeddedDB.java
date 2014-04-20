@@ -21,7 +21,7 @@ import java.net.URISyntaxException;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.TestKillbillConfigSource;
-import org.killbill.billing.util.KillbillConfigSource;
+import org.killbill.billing.util.config.KillbillConfigSource;
 
 public abstract class BeatrixTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 

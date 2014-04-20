@@ -36,7 +36,7 @@ import org.killbill.billing.invoice.glue.TestInvoiceModuleWithEmbeddedDb;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
-import org.killbill.billing.util.KillbillConfigSource;
+import org.killbill.billing.util.config.KillbillConfigSource;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;

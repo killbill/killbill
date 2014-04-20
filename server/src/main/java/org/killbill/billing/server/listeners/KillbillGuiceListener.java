@@ -30,7 +30,7 @@ import org.killbill.billing.server.config.KillbillServerConfig;
 import org.killbill.billing.server.healthchecks.KillbillHealthcheck;
 import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.security.TenantFilter;
-import org.killbill.billing.util.KillbillConfigSource;
+import org.killbill.billing.util.config.KillbillConfigSource;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.killbill.billing.util.svcsapi.bus.BusService;
 import org.killbill.bus.api.PersistentBus;

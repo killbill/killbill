@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.util.KillbillConfigSource;
+import org.killbill.billing.util.config.KillbillConfigSource;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.clock.ClockMock;
 import org.slf4j.Logger;

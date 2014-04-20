@@ -21,7 +21,7 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Properties;
 
-import org.killbill.billing.util.KillbillConfigSource;
+import org.killbill.billing.util.config.KillbillConfigSource;
 
 import com.google.common.collect.ImmutableMap;
 

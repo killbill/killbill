@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package org.killbill.billing.util;
+package org.killbill.billing.util.config;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

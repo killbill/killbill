@@ -60,6 +60,7 @@ public interface OSGIConfig extends KillbillConfig {
              "org.killbill.billing.payment.plugin.api," +
              "org.killbill.billing.tenant.api," +
              "org.killbill.billing.usage.api," +
+             "org.killbill.billing.util.config," +
              "org.killbill.billing.util.api," +
              "org.killbill.billing.util.audit," +
              "org.killbill.billing.util.callcontext," +
@@ -84,7 +85,8 @@ public interface OSGIConfig extends KillbillConfig {
              "javax.servlet.http;version=3.0," +
              // Since we are using joda in our APIs we need to export it
              "org.joda.time;org.joda.time.format;version=2.3," +
-
+             // KillbillConfigSource is exported and implements ConfigSource so that needs to be exported
+             "org.skife.config;org.skife.config.cglib.asm;org.skife.config.cglib.beans;org.skife.config.cglib.core;org.skife.config.cglib.proxy;org.skife.config.cglib.reflect;org.skife.config.cglib.transform;org.skife.config.cglib.transform.impl;org.skife.config.cglib.util," +
              "org.osgi.service.log;version=1.3," +
              // Let the world know the System bundle exposes (via org.osgi.compendium) the requirement (osgi.wiring.package=org.osgi.service.http)
              "org.osgi.service.http;version=1.2.0," +
