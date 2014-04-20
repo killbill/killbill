@@ -1,3 +1,6 @@
+0.11.1
+    Introduction of new direct payment APIs (unstable)
+
 0.10.2
     Add paymentAmount parameter to payAllInvoices API
     Fix OSGI dependencies issue
