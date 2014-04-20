@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -48,8 +49,8 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
-import org.killbill.billing.invoice.api.ExternalCharge;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -80,8 +81,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -315,17 +318,31 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
 
+        // TODO Get rid of that check once we truly support multiple currencies per account
+        // See discussion https://github.com/killbill/killbill/commit/942e214d49e9c7ed89da76d972ee017d2d3ade58#commitcomment-6045547
+        final Set<Currency> currencies = new HashSet<Currency>(Lists.<InvoiceItemJson, Currency>transform(ImmutableList.<InvoiceItemJson>copyOf(externalChargesJson),
+                                                                                                          new Function<InvoiceItemJson, Currency>() {
+                                                                                                              @Override
+                                                                                                              public Currency apply(final InvoiceItemJson input) {
+                                                                                                                  return input.getCurrency();
+                                                                                                              }
+                                                                                                          }
+                                                                                                         ));
+        if (currencies.size() != 1 || !currencies.iterator().next().equals(account.getCurrency())) {
+            throw new InvoiceApiException(ErrorCode.EXTERNAL_CHARGE_CURRENCY_INVALID, account.getCurrency());
+        }
+
         // Get the effective date of the external charge, in the account timezone
         final LocalDate requestedDate = toLocalDate(account, requestedDateTimeString, callContext);
 
         final Iterable<InvoiceItem> externalCharges = Iterables.<InvoiceItemJson, InvoiceItem>transform(externalChargesJson,
-                                                                                                              new Function<InvoiceItemJson, InvoiceItem>() {
-                                                                                                                  @Override
-                                                                                                                  public InvoiceItem apply(final InvoiceItemJson invoiceItemJson) {
-                                                                                                                      return invoiceItemJson.toInvoiceItem();
-                                                                                                                  }
-                                                                                                              }
-                                                                                                             );
+                                                                                                        new Function<InvoiceItemJson, InvoiceItem>() {
+                                                                                                            @Override
+                                                                                                            public InvoiceItem apply(final InvoiceItemJson invoiceItemJson) {
+                                                                                                                return invoiceItemJson.toInvoiceItem();
+                                                                                                            }
+                                                                                                        }
+                                                                                                       );
         final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, externalCharges, callContext);
 
         if (payInvoice) {
