@@ -42,6 +42,7 @@ public interface OSGIConfig extends KillbillConfig {
     @Description("Bundles install directory")
     public String getRootInstallationDir();
 
+
     @Config("org.killbill.osgi.system.bundle.export.packages")
     @Default("org.killbill.billing.account.api," +
              "org.killbill.billing.analytics.api.sanity," +
@@ -73,6 +74,96 @@ public interface OSGIConfig extends KillbillConfig {
              "org.killbill.billing.util.tag," +
              "org.killbill.billing.util.template," +
              "org.killbill.billing.util.template.translation," +
+
+             // Add export for all the com.sun.xml.internal.ws required to have apache-cxf working properly within a plugin environment.
+             "com.sun.xml.internal.ws," +
+             "com.sun.xml.internal.ws.addressing," +
+             "com.sun.xml.internal.ws.addressing.model," +
+             "com.sun.xml.internal.ws.addressing.policy," +
+             "com.sun.xml.internal.ws.addressing.v200408," +
+             "com.sun.xml.internal.ws.api," +
+             "com.sun.xml.internal.ws.api.addressing," +
+             "com.sun.xml.internal.ws.api.client," +
+             "com.sun.xml.internal.ws.api.config.management," +
+             "com.sun.xml.internal.ws.api.config.management.policy," +
+             "com.sun.xml.internal.ws.api.fastinfoset," +
+             "com.sun.xml.internal.ws.api.ha," +
+             "com.sun.xml.internal.ws.api.handler," +
+             "com.sun.xml.internal.ws.api.message," +
+             "com.sun.xml.internal.ws.api.message.stream," +
+             "com.sun.xml.internal.ws.api.model," +
+             "com.sun.xml.internal.ws.api.model.soap," +
+             "com.sun.xml.internal.ws.api.model.wsdl," +
+             "com.sun.xml.internal.ws.api.pipe," +
+             "com.sun.xml.internal.ws.api.pipe.helper," +
+             "com.sun.xml.internal.ws.api.policy," +
+             "com.sun.xml.internal.ws.api.server," +
+             "com.sun.xml.internal.ws.api.streaming," +
+             "com.sun.xml.internal.ws.api.wsdl.parser," +
+             "com.sun.xml.internal.ws.api.wsdl.writer," +
+             "com.sun.xml.internal.ws.binding," +
+             "com.sun.xml.internal.ws.client," +
+             "com.sun.xml.internal.ws.client.dispatch," +
+             "com.sun.xml.internal.ws.client.sei," +
+             "com.sun.xml.internal.ws.config.management.policy," +
+             "com.sun.xml.internal.ws.developer," +
+             "com.sun.xml.internal.ws.encoding," +
+             "com.sun.xml.internal.ws.encoding.fastinfoset," +
+             "com.sun.xml.internal.ws.encoding.policy," +
+             "com.sun.xml.internal.ws.encoding.soap," +
+             "com.sun.xml.internal.ws.encoding.soap.streaming," +
+             "com.sun.xml.internal.ws.encoding.xml," +
+             "com.sun.xml.internal.ws.fault," +
+             "com.sun.xml.internal.ws.handler," +
+             "com.sun.xml.internal.ws.message," +
+             "com.sun.xml.internal.ws.message.jaxb," +
+             "com.sun.xml.internal.ws.message.saaj," +
+             "com.sun.xml.internal.ws.message.source," +
+             "com.sun.xml.internal.ws.message.stream," +
+             "com.sun.xml.internal.ws.model," +
+             "com.sun.xml.internal.ws.model.soap," +
+             "com.sun.xml.internal.ws.model.wsdl," +
+             "com.sun.xml.internal.ws.org.objectweb.asm," +
+             "com.sun.xml.internal.ws.policy," +
+             "com.sun.xml.internal.ws.policy.jaxws," +
+             "com.sun.xml.internal.ws.policy.jaxws.spi," +
+             "com.sun.xml.internal.ws.policy.privateutil," +
+             "com.sun.xml.internal.ws.policy.sourcemodel," +
+             "com.sun.xml.internal.ws.policy.sourcemodel.attach," +
+             "com.sun.xml.internal.ws.policy.sourcemodel.wspolicy," +
+             "com.sun.xml.internal.ws.policy.spi," +
+             "com.sun.xml.internal.ws.policy.subject," +
+             "com.sun.xml.internal.ws.protocol.soap," +
+             "com.sun.xml.internal.ws.protocol.xml," +
+             "com.sun.xml.internal.ws.resources," +
+             "com.sun.xml.internal.ws.server," +
+             "com.sun.xml.internal.ws.server.provider," +
+             "com.sun.xml.internal.ws.server.sei," +
+             "com.sun.xml.internal.ws.spi," +
+             "com.sun.xml.internal.ws.streaming," +
+             "com.sun.xml.internal.ws.transport," +
+             "com.sun.xml.internal.ws.transport.http," +
+             "com.sun.xml.internal.ws.transport.http.client," +
+             "com.sun.xml.internal.ws.transport.http.server," +
+             "com.sun.xml.internal.ws.util," +
+             "com.sun.xml.internal.ws.util.exception," +
+             "com.sun.xml.internal.ws.util.localization," +
+             "com.sun.xml.internal.ws.util.pipe," +
+             "com.sun.xml.internal.ws.util.xml," +
+             "com.sun.xml.internal.ws.wsdl," +
+             "com.sun.xml.internal.ws.wsdl.parser," +
+             "com.sun.xml.internal.ws.wsdl.writer," +
+             "com.sun.xml.internal.ws.wsdl.writer.document," +
+             "com.sun.xml.internal.ws.wsdl.writer.document.http," +
+             "com.sun.xml.internal.ws.wsdl.writer.document.soap," +
+             "com.sun.xml.internal.ws.wsdl.writer.document.soap12," +
+             "com.sun.xml.internal.ws.wsdl.writer.document.xsd," +
+
+             // sax parser
+             "javax.annotation," +
+             "javax.jws.soap," +
+             "org.xml.sax.ext;org.xml.sax.helpers;org.xml.sax," +
+
              // javax.servlet and javax.servlet.http are not exported by default - we
              // need the bundles to see them for them to be able to register their servlets.
              // Note: bundles should mark javax.servlet:servlet-api as provided
@@ -83,6 +174,7 @@ public interface OSGIConfig extends KillbillConfig {
              "javax.management," +
              "javax.servlet;version=3.0," +
              "javax.servlet.http;version=3.0," +
+
              // Since we are using joda in our APIs we need to export it
              "org.joda.time;org.joda.time.format;version=2.3," +
              // KillbillConfigSource is exported and implements ConfigSource so that needs to be exported
