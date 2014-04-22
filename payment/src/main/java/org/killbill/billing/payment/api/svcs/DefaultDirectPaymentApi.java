@@ -22,14 +22,18 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.DirectPaymentProcessor;
+import org.killbill.billing.util.cache.CacheController;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 
 public class DefaultDirectPaymentApi implements DirectPaymentApi {

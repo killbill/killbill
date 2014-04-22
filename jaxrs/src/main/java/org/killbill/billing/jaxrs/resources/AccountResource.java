@@ -606,7 +606,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getDirectPaymentsForAccount(@PathParam("accountId") final String accountIdStr,
                                                 @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
-                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+                                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
 
         final UUID accountId = UUID.fromString(accountIdStr);
         final List<DirectPayment> payments =  directPaymentApi.getAccountPayments(accountId, withPluginInfo, context.createContext(request));
@@ -620,7 +620,7 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
-        @POST
+    @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + DIRECT_PAYMENTS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -642,28 +642,13 @@ public class AccountResource extends JaxRsResourceBase {
             case AUTHORIZE:
                 result = directPaymentApi.createAuthorization(account, json.getAmount(), json.getExternalKey(), callContext);
                 break;
-
-            case CAPTURE:
-                result = directPaymentApi.createCapture(account, UUID.fromString(json.getDirectPaymentId()), json.getAmount(), callContext);
-                break;
-
-            case CREDIT:
-                result = directPaymentApi.createCredit(account, UUID.fromString(json.getDirectPaymentId()), callContext);
-                break;
-
             case PURCHASE:
                 result = directPaymentApi.createPurchase(account, json.getAmount(), json.getExternalKey(), callContext);
                 break;
-
-            case VOID:
-                result = directPaymentApi.createVoid(account, UUID.fromString(json.getDirectPaymentId()), callContext);
-                break;
-
             default:
-                return Response.status(Status.PRECONDITION_FAILED).entity("Unknown transactionType " + transactionType).build();
+                return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
         }
-            // STEPH_DP needs to return 201 with Location
-        return Response.status(Response.Status.OK).entity(new DirectPaymentJson(result, null, null)).build();
+        return uriBuilder.buildResponse(DirectPaymentResource.class, "getDirectPayment", result.getId(), uriInfo.getBaseUri().toString());
     }
 
     /*

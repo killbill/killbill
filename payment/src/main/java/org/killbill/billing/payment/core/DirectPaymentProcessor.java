@@ -53,6 +53,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
@@ -78,6 +79,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
 
     private final PluginDispatcher<Payment> paymentPluginDispatcher;
     private final PluginDispatcher<Void> voidPluginDispatcher;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     private static final Logger log = LoggerFactory.getLogger(DirectPaymentProcessor.class);
 
@@ -89,12 +91,14 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                   final PaymentDao paymentDao,
                                   final NonEntityDao nonEntityDao,
                                   final PersistentBus eventBus,
+                                  final InternalCallContextFactory internalCallContextFactory,
                                   final Clock clock,
                                   final GlobalLocker locker,
                                   final PaymentConfig paymentConfig,
                                   @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
         super(pluginRegistry, accountUserApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi);
         this.clock = clock;
+        this.internalCallContextFactory = internalCallContextFactory;
         this.paymentConfig = paymentConfig;
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.paymentPluginDispatcher = new PluginDispatcher<Payment>(paymentPluginTimeoutSec, executor);
@@ -189,43 +193,54 @@ public class DirectPaymentProcessor extends ProcessorBase {
 
         final Iterable<DirectPayment> payments = Iterables.transform(paymentsModelDao, new Function<DirectPaymentModelDao, DirectPayment>() {
 
-            final Ordering<DirectPaymentTransaction> perPaymentTransactionOrdering = Ordering.<DirectPaymentTransaction>from(new Comparator<DirectPaymentTransaction>() {
-                @Override
-                public int compare(final DirectPaymentTransaction o1, final DirectPaymentTransaction o2) {
-                    return o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
-                }
-            });
-
             @Override
             public DirectPayment apply(final DirectPaymentModelDao curDirectPaymentModelDao) {
-
-                final Iterable<DirectPaymentTransactionModelDao> filteredTransactions = Iterables.filter(transactionsModelDao, new Predicate<DirectPaymentTransactionModelDao>() {
-                    @Override
-                    public boolean apply(final DirectPaymentTransactionModelDao curDirectPaymentTransactionModelDao) {
-                        return curDirectPaymentTransactionModelDao.getDirectPaymentId().equals(curDirectPaymentModelDao.getId());
-                    }
-                });
-
-                final Iterable<DirectPaymentTransaction> transactions = Iterables.transform(filteredTransactions, new Function<DirectPaymentTransactionModelDao, DirectPaymentTransaction>() {
-                    @Override
-                    public DirectPaymentTransaction apply(final DirectPaymentTransactionModelDao input) {
-                        return new DefaultDirectPaymentTransaction(input.getId(), input.getCreatedDate(), input.getUpdatedDate(), input.getDirectPaymentId(),
-                                                                   input.getTransactionType(), input.getEffectiveDate(), 0, input.getPaymentStatus(), input.getAmount(), input.getCurrency(),
-                                                                   // STEPH_DP fill in details plugin info if required
-                                                                   input.getGatewayErrorCode(), input.getGatewayErrorMsg(), null);
-                    }
-                });
-
-                final List<DirectPaymentTransaction> sortedTransactions = perPaymentTransactionOrdering.immutableSortedCopy(transactions);
-                return new DefaultDirectPayment(curDirectPaymentModelDao.getId(), curDirectPaymentModelDao.getCreatedDate(), curDirectPaymentModelDao.getUpdatedDate(), curDirectPaymentModelDao.getAccountId(),
-                                                curDirectPaymentModelDao.getPaymentMethodId(), curDirectPaymentModelDao.getPaymentNumber(), curDirectPaymentModelDao.getExternalKey(), sortedTransactions);
+                return toDirectPayment(curDirectPaymentModelDao, transactionsModelDao);
             }
+
         });
         return ImmutableList.copyOf(payments);
     }
 
     public DirectPayment getPayment(final UUID directPaymentId, final boolean withPluginInfo, final InternalTenantContext tenantContext) throws PaymentApiException {
-        return null;
+        final DirectPaymentModelDao paymentModelDao = paymentDao.getDirectPayment(directPaymentId, tenantContext);
+
+        final InternalTenantContext tenantContextWithAccountRecordId =  internalCallContextFactory.createInternalTenantContext(paymentModelDao.getAccountId(), tenantContext);
+        final List<DirectPaymentTransactionModelDao> transactionsForAccount =  paymentDao.getDirectTransactionsForAccount(paymentModelDao.getAccountId(), tenantContextWithAccountRecordId);
+
+        return toDirectPayment(paymentModelDao, transactionsForAccount);
     }
+
+    private DirectPayment toDirectPayment(final DirectPaymentModelDao curDirectPaymentModelDao, final List<DirectPaymentTransactionModelDao> transactionsModelDao) {
+
+        final Ordering<DirectPaymentTransaction> perPaymentTransactionOrdering = Ordering.<DirectPaymentTransaction>from(new Comparator<DirectPaymentTransaction>() {
+            @Override
+            public int compare(final DirectPaymentTransaction o1, final DirectPaymentTransaction o2) {
+                return o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
+            }
+        });
+
+        final Iterable<DirectPaymentTransactionModelDao> filteredTransactions = Iterables.filter(transactionsModelDao, new Predicate<DirectPaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final DirectPaymentTransactionModelDao curDirectPaymentTransactionModelDao) {
+                return curDirectPaymentTransactionModelDao.getDirectPaymentId().equals(curDirectPaymentModelDao.getId());
+            }
+        });
+
+        final Iterable<DirectPaymentTransaction> transactions = Iterables.transform(filteredTransactions, new Function<DirectPaymentTransactionModelDao, DirectPaymentTransaction>() {
+            @Override
+            public DirectPaymentTransaction apply(final DirectPaymentTransactionModelDao input) {
+                return new DefaultDirectPaymentTransaction(input.getId(), input.getCreatedDate(), input.getUpdatedDate(), input.getDirectPaymentId(),
+                                                           input.getTransactionType(), input.getEffectiveDate(), 0, input.getPaymentStatus(), input.getAmount(), input.getCurrency(),
+                                                           // STEPH_DP fill in details plugin info if required
+                                                           input.getGatewayErrorCode(), input.getGatewayErrorMsg(), null);
+            }
+        });
+
+        final List<DirectPaymentTransaction> sortedTransactions = perPaymentTransactionOrdering.immutableSortedCopy(transactions);
+        return new DefaultDirectPayment(curDirectPaymentModelDao.getId(), curDirectPaymentModelDao.getCreatedDate(), curDirectPaymentModelDao.getUpdatedDate(), curDirectPaymentModelDao.getAccountId(),
+                                        curDirectPaymentModelDao.getPaymentMethodId(), curDirectPaymentModelDao.getPaymentNumber(), curDirectPaymentModelDao.getExternalKey(), sortedTransactions);
+    }
+
 
 }

@@ -56,6 +56,7 @@ import org.killbill.billing.jaxrs.json.PaymentJson;
 import org.killbill.billing.jaxrs.json.RefundJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -93,6 +94,7 @@ public class PaymentResource extends JaxRsResourceBase {
     public PaymentResource(final AccountUserApi accountUserApi,
                            final PaymentApi paymentApi,
                            final InvoicePaymentApi invoicePaymentApi,
+                           final DirectPaymentApi directPaymentApi,
                            final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,
@@ -170,7 +172,8 @@ public class PaymentResource extends JaxRsResourceBase {
                                                         return new PaymentJson(payment, accountsAuditLogs.get().get(payment.getAccountId()).getAuditLogsForPayment(payment.getId()));
                                                     }
                                                 },
-                                                nextPageUri);
+                                                nextPageUri
+                                               );
     }
 
     @GET
@@ -208,7 +211,8 @@ public class PaymentResource extends JaxRsResourceBase {
                                                         return new PaymentJson(payment, accountsAuditLogs.get().get(payment.getAccountId()).getAuditLogsForPayment(payment.getId()));
                                                     }
                                                 },
-                                                nextPageUri);
+                                                nextPageUri
+                                               );
     }
 
     @PUT
@@ -267,47 +271,6 @@ public class PaymentResource extends JaxRsResourceBase {
         }));
 
         return Response.status(Status.OK).entity(result).build();
-    }
-
-    @POST
-    @Path("/" + AUTHORIZATION)
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    public Response authorizePayment(final PaymentJson json,
-                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                     @HeaderParam(HDR_REASON) final String reason,
-                                     @HeaderParam(HDR_COMMENT) final String comment,
-                                     @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        throw new UnsupportedOperationException();
-    }
-
-    @POST
-    @Path("/{paymentId:" + UUID_PATTERN + "}/" + CAPTURE)
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    public Response captureAuthorization(final PaymentJson json,
-                                         @PathParam("paymentId") final String paymentId,
-                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                         @HeaderParam(HDR_REASON) final String reason,
-                                         @HeaderParam(HDR_COMMENT) final String comment,
-                                         @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        throw new UnsupportedOperationException();
-    }
-
-
-    @DELETE
-    @Path("/{paymentId:" + UUID_PATTERN + "}/")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    public Response voidPayment(@PathParam("paymentId") final String paymentId,
-                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                @HeaderParam(HDR_REASON) final String reason,
-                                @HeaderParam(HDR_COMMENT) final String comment,
-                                @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        throw new UnsupportedOperationException();
     }
 
     @POST
