@@ -330,7 +330,17 @@ public class ContiguousIntervalConsumableInArrear {
             Preconditions.checkArgument(o instanceof RolledUpUsageForUnitTypes);
             final RolledUpUsageForUnitTypes other = (RolledUpUsageForUnitTypes) o;
             // We will check later intervals don't overlap.
-            return getEndDate().compareTo(other.getStartDate());
+            int i = getEndDate().compareTo(other.getStartDate());
+            if (i != 0) {
+                return i;
+            } else {
+                i = getEndDate().compareTo(other.getEndDate());
+                if (i != 0) {
+                    return i;
+                } else {
+                    return getStartDate().compareTo(other.getStartDate());
+                }
+            }
         }
     }
 

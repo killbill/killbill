@@ -1,7 +1,9 @@
 /*
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
  * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -72,7 +74,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final LocalDate targetDate = startDate.plusDays(1);
         final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, targetDate, false,
                                                                                                                            createMockBillingEvent(targetDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
-                                                                                                                                                  Collections.<Usage>emptyList()));
+                                                                                                                                                  Collections.<Usage>emptyList())
+                                                                                                                          );
 
         final List<InvoiceItem> existingUsage = Lists.newArrayList();
         final UsageInvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
@@ -109,7 +112,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final LocalDate targetDate = new LocalDate(2014, 03, 20);
         final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, targetDate, false,
                                                                                                                            createMockBillingEvent(targetDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
-                                                                                                                           Collections.<Usage>emptyList()));
+                                                                                                                                                  Collections.<Usage>emptyList())
+                                                                                                                          );
 
         final BigDecimal result = intervalConsumableInArrear.computeToBeBilledUsage(new BigDecimal("5325"), "unit");
 
@@ -146,16 +150,16 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, targetDate, true, event1, event2);
 
         final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
-        InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, firstBCDDate, BigDecimal.ONE, currency);
+        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, firstBCDDate, BigDecimal.ONE, currency);
         invoiceItems.add(ii1);
 
-        InvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), firstBCDDate, endDate, BigDecimal.ONE, currency);
+        final InvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), firstBCDDate, endDate, BigDecimal.ONE, currency);
         invoiceItems.add(ii2);
 
         final List<InvoiceItem> result = intervalConsumableInArrear.computeMissingItems(invoiceItems);
         assertEquals(result.size(), 2);
         // Invoiced for 1 BTC and used 130 + 271 = 401 => 5 blocks => 5 BTC so remaining piece should be 4 BTC
-        assertTrue(result.get(0).getAmount().compareTo(new BigDecimal("4.0")) == 0);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("4.0")), 0, String.format("%s != 4.0", result.get(0).getAmount()));
         assertEquals(result.get(0).getCurrency(), Currency.BTC);
         assertEquals(result.get(0).getAccountId(), accountId);
         assertEquals(result.get(0).getBundleId(), bundleId);
@@ -167,7 +171,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertTrue(result.get(0).getEndDate().compareTo(firstBCDDate) == 0);
 
         // Invoiced for 1 BTC and used 199  => 2 blocks => 2 BTC so remaining piece should be 1 BTC
-        assertTrue(result.get(1).getAmount().compareTo(new BigDecimal("1.0")) == 0);
+        assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("1.0")), 0, String.format("%s != 1.0", result.get(0).getAmount()));
         assertEquals(result.get(1).getCurrency(), Currency.BTC);
         assertEquals(result.get(1).getAccountId(), accountId);
         assertEquals(result.get(1).getBundleId(), bundleId);
