@@ -17,13 +17,17 @@
 package org.killbill.billing.payment.provider;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.plugin.api.PaymentInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+
+import com.google.common.collect.ImmutableList;
 
 public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
 
@@ -94,6 +98,11 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
     @Override
     public String getSecondPaymentReferenceId() {
         return null;
+    }
+
+    @Override
+    public List<PluginProperty> getProperties() {
+        return ImmutableList.<PluginProperty>of();
     }
 
     @Override

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,7 +19,6 @@
 package org.killbill.billing.payment.core;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -30,19 +31,13 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
-import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.invoice.api.Invoice;
@@ -56,6 +51,7 @@ import org.killbill.billing.payment.api.DefaultPaymentPluginErrorEvent;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -75,10 +71,16 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.EntityPaginationBuilder;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLocker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.name.Named;
 
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
@@ -140,8 +142,8 @@ public class PaymentProcessor extends ProcessorBase {
         PaymentInfoPlugin pluginInfo = null;
         if (plugin != null) {
             try {
-                pluginInfo = plugin.getPaymentInfo(model.getAccountId(), paymentId, buildTenantContext(context));
-            } catch (PaymentPluginApiException e) {
+                pluginInfo = plugin.getPaymentInfo(model.getAccountId(), paymentId, ImmutableList.<PluginProperty>of(), buildTenantContext(context));
+            } catch (final PaymentPluginApiException e) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_GET_PAYMENT_INFO, paymentId, e.toString());
             }
         }
@@ -157,7 +159,8 @@ public class PaymentProcessor extends ProcessorBase {
                                                   public Pagination<Payment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
                                                       return getPayments(offset, limit, pluginName, tenantContext, internalTenantContext);
                                                   }
-                                              });
+                                              }
+                                             );
     }
 
     public Pagination<Payment> getPayments(final Long offset, final Long limit, final String pluginName, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
@@ -176,7 +179,7 @@ public class PaymentProcessor extends ProcessorBase {
                                        public Payment apply(final PaymentModelDao paymentModelDao) {
                                            PaymentInfoPlugin pluginInfo = null;
                                            try {
-                                               pluginInfo = pluginApi.getPaymentInfo(paymentModelDao.getAccountId(), paymentModelDao.getId(), tenantContext);
+                                               pluginInfo = pluginApi.getPaymentInfo(paymentModelDao.getAccountId(), paymentModelDao.getId(), ImmutableList.<PluginProperty>of(), tenantContext);
                                            } catch (final PaymentPluginApiException e) {
                                                log.warn("Unable to find payment id " + paymentModelDao.getId() + " in plugin " + pluginName);
                                                // We still want to return a payment object, even though the plugin details are missing
@@ -197,7 +200,8 @@ public class PaymentProcessor extends ProcessorBase {
                                                   public Pagination<Payment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
                                                       return searchPayments(searchKey, offset, limit, pluginName, internalTenantContext);
                                                   }
-                                              });
+                                              }
+                                             );
     }
 
     public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final InternalTenantContext internalTenantContext) throws PaymentApiException {
@@ -208,7 +212,7 @@ public class PaymentProcessor extends ProcessorBase {
                                        @Override
                                        public Pagination<PaymentInfoPlugin> build() throws PaymentApiException {
                                            try {
-                                               return pluginApi.searchPayments(searchKey, offset, limit, buildTenantContext(internalTenantContext));
+                                               return pluginApi.searchPayments(searchKey, offset, limit, ImmutableList.<PluginProperty>of(), buildTenantContext(internalTenantContext));
                                            } catch (final PaymentPluginApiException e) {
                                                throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENTS, pluginName, searchKey);
                                            }
@@ -284,7 +288,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                        }
                                                                                                    });
                                                                                                    // Insert one retry event for each payment left in AUTO_PAY_OFF
-                                                                                                   for (PaymentModelDao cur : paymentsToBeCompleted) {
+                                                                                                   for (final PaymentModelDao cur : paymentsToBeCompleted) {
                                                                                                        switch (cur.getPaymentStatus()) {
                                                                                                            case AUTO_PAY_OFF:
                                                                                                                autoPayoffRetryService.scheduleRetry(cur.getId(), clock.getUTCNow());
@@ -304,8 +308,9 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                    }
                                                                                                    return null;
                                                                                                }
-                                                                                           }));
-        } catch (TimeoutException e) {
+                                                                                           }
+            ));
+        } catch (final TimeoutException e) {
             throw new PaymentApiException(ErrorCode.UNEXPECTED_ERROR, "Unexpected timeout for payment creation (AUTO_PAY_OFF)");
         }
     }
@@ -356,7 +361,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                                             plugin = getPaymentProviderPlugin(account, context);
                                                                                                                             paymentMethodId = account.getPaymentMethodId();
                                                                                                                         }
-                                                                                                                    } catch (PaymentApiException e) {
+                                                                                                                    } catch (final PaymentApiException e) {
 
                                                                                                                         // Insert a payment entry with one attempt in a terminal state to keep a record of the failure
                                                                                                                         processNewPaymentForMissingDefaultPaymentMethodWithAccountLocked(account, invoice, requestedAmount, context);
@@ -380,12 +385,13 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                                     } else {
                                                                                                                         return processNewPaymentWithAccountLocked(paymentMethodId, plugin, account, invoice, requestedAmount, isInstantPayment, context);
                                                                                                                     }
-                                                                                                                } catch (InvoiceApiException e) {
+                                                                                                                } catch (final InvoiceApiException e) {
                                                                                                                     throw new PaymentApiException(e);
                                                                                                                 }
                                                                                                             }
-                                                                                                        }));
-        } catch (TimeoutException e) {
+                                                                                                        }
+            ));
+        } catch (final TimeoutException e) {
             if (isInstantPayment) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, account.getId(), invoiceId);
             } else {
@@ -396,7 +402,7 @@ public class PaymentProcessor extends ProcessorBase {
                 // swallowing exception
                 return null;
             }
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
             log.error("Failure when dispatching payment for invoice " + invoiceId, e);
             if (isInstantPayment) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, invoiceId);
@@ -534,16 +540,17 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                        }
                                                                                                        processRetryPaymentWithAccountLocked(plugin, account, invoice, payment, invoice.getBalance(), context);
                                                                                                        return null;
-                                                                                                   } catch (InvoiceApiException e) {
+                                                                                                   } catch (final InvoiceApiException e) {
                                                                                                        throw new PaymentApiException(e);
                                                                                                    }
                                                                                                }
-                                                                                           }));
-        } catch (AccountApiException e) {
+                                                                                           }
+            ));
+        } catch (final AccountApiException e) {
             log.error(String.format("Failed to retry payment for paymentId %s", paymentId), e);
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             log.info(String.format("Failed to retry payment for paymentId %s", paymentId), e);
-        } catch (TimeoutException e) {
+        } catch (final TimeoutException e) {
             log.warn(String.format("Retry for payment %s timedout", paymentId));
             // STEPH we should throw some exception so NotificationQ does not clear status and retries us
         }
@@ -640,8 +647,8 @@ public class PaymentProcessor extends ProcessorBase {
         try {
             try {
                 paymentPluginInfo = plugin.processPayment(account.getId(), paymentInput.getId(), attemptInput.getPaymentMethodId(),
-                                                          attemptInput.getRequestedAmount(), account.getCurrency(), context.toCallContext(tenantId));
-            } catch (RuntimeException e) {
+                                                          attemptInput.getRequestedAmount(), account.getCurrency(), ImmutableList.<PluginProperty>of(), context.toCallContext(tenantId));
+            } catch (final RuntimeException e) {
                 // Handle case of plugin RuntimeException to be handled the same as a Plugin failure (PaymentPluginApiException)
                 final String formatError = String.format("Plugin threw RuntimeException for payment %s", paymentInput.getId());
                 throw new PaymentPluginApiException(formatError, e);
@@ -710,7 +717,7 @@ public class PaymentProcessor extends ProcessorBase {
                     throw new PaymentPluginApiException("", formatError);
             }
 
-        } catch (PaymentPluginApiException e) {
+        } catch (final PaymentPluginApiException e) {
             //
             // An exception occurred, we are left in an unknown state, we need to schedule a retry
             //
@@ -725,7 +732,7 @@ public class PaymentProcessor extends ProcessorBase {
             );
             throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), e.toString());
 
-        } catch (InvoiceApiException e) {
+        } catch (final InvoiceApiException e) {
             throw new PaymentApiException(ErrorCode.INVOICE_NOT_FOUND, invoice.getId(), e.toString());
         } finally {
             if (event != null) {

@@ -1,7 +1,9 @@
 /*
+ * Copyright 2010-2013 Ning, Inc.
  * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,7 +26,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
@@ -33,7 +34,6 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.DefaultDirectPayment;
@@ -43,6 +43,7 @@ import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.DirectPaymentModelDao;
 import org.killbill.billing.payment.dao.DirectPaymentTransactionModelDao;
@@ -109,11 +110,11 @@ public class DirectPaymentProcessor extends ProcessorBase {
 
         final PaymentPluginApi plugin = getPaymentProviderPlugin(account, callContext);
 
-        DateTime utcNow = clock.getUTCNow();
+        final DateTime utcNow = clock.getUTCNow();
         final DirectPaymentModelDao pmd = new DirectPaymentModelDao(utcNow, utcNow, account.getId(), account.getPaymentMethodId(), externalKey);
         final DirectPaymentTransactionModelDao ptmd = new DirectPaymentTransactionModelDao(utcNow, utcNow, pmd.getId(),
-                                                                                                                 TransactionType.AUTHORIZE, utcNow, PaymentStatus.UNKNOWN,
-                                                                                                                 amount, account.getCurrency(), null, null);
+                                                                                           TransactionType.AUTHORIZE, utcNow, PaymentStatus.UNKNOWN,
+                                                                                           amount, account.getCurrency(), null, null);
 
         final DirectPaymentModelDao inserted = paymentDao.insertDirectPaymentWithFirstTransaction(pmd, ptmd, callContext);
         final UUID tenantId = nonEntityDao.retrieveIdFromObject(callContext.getTenantRecordId(), ObjectType.TENANT);
@@ -122,10 +123,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
         PaymentInfoPlugin infoPlugin;
         try {
 
-
             try {
-                infoPlugin = plugin.authorizePayment(account.getId(), pmd.getId(), ptmd.getId(), amount, account.getCurrency(), callContext.toCallContext(tenantId));
-            } catch (RuntimeException e) {
+                infoPlugin = plugin.authorizePayment(account.getId(), pmd.getId(), ptmd.getId(), amount, account.getCurrency(), ImmutableList.<PluginProperty>of(), callContext.toCallContext(tenantId));
+            } catch (final RuntimeException e) {
                 // Handle case of plugin RuntimeException to be handled the same as a Plugin failure (PaymentPluginApiException)
                 final String formatError = String.format("Plugin threw RuntimeException for payment %s", pmd.getId());
                 throw new PaymentPluginApiException(formatError, e);
@@ -152,7 +152,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
                     // This caught right below as a retryable Plugin failure
                     throw new PaymentPluginApiException("", formatError);
             }
-        } catch (PaymentPluginApiException e) {
+        } catch (final PaymentPluginApiException e) {
             paymentStatus = PaymentStatus.PAYMENT_FAILURE_ABORTED;
             infoPlugin = null;
             paymentDao.updateDirectPaymentAndTransactionOnCompletion(pmd.getId(), paymentStatus, amount, account.getCurrency(),
@@ -160,11 +160,11 @@ public class DirectPaymentProcessor extends ProcessorBase {
         } finally {
         }
 
-        DirectPaymentTransaction transaction = new DefaultDirectPaymentTransaction(ptmd.getId(), utcNow, utcNow, pmd.getId(), ptmd.getTransactionType(), utcNow, 0,
-                                                                                paymentStatus, amount, account.getCurrency(),
-                                                                                ((infoPlugin != null) ? infoPlugin.getGatewayErrorCode() : null),
-                                                                                ((infoPlugin != null) ? infoPlugin.getGatewayError() : null),
-                                                                                infoPlugin);
+        final DirectPaymentTransaction transaction = new DefaultDirectPaymentTransaction(ptmd.getId(), utcNow, utcNow, pmd.getId(), ptmd.getTransactionType(), utcNow, 0,
+                                                                                         paymentStatus, amount, account.getCurrency(),
+                                                                                         ((infoPlugin != null) ? infoPlugin.getGatewayErrorCode() : null),
+                                                                                         ((infoPlugin != null) ? infoPlugin.getGatewayError() : null),
+                                                                                         infoPlugin);
         final List<DirectPaymentTransaction> transactions = Collections.singletonList(transaction);
         final DirectPayment result = new DefaultDirectPayment(inserted.getId(), utcNow, utcNow, account.getId(), account.getPaymentMethodId(), inserted.getPaymentNumber(), externalKey, transactions);
         return result;
@@ -205,8 +205,8 @@ public class DirectPaymentProcessor extends ProcessorBase {
     public DirectPayment getPayment(final UUID directPaymentId, final boolean withPluginInfo, final InternalTenantContext tenantContext) throws PaymentApiException {
         final DirectPaymentModelDao paymentModelDao = paymentDao.getDirectPayment(directPaymentId, tenantContext);
 
-        final InternalTenantContext tenantContextWithAccountRecordId =  internalCallContextFactory.createInternalTenantContext(paymentModelDao.getAccountId(), tenantContext);
-        final List<DirectPaymentTransactionModelDao> transactionsForAccount =  paymentDao.getDirectTransactionsForAccount(paymentModelDao.getAccountId(), tenantContextWithAccountRecordId);
+        final InternalTenantContext tenantContextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(paymentModelDao.getAccountId(), tenantContext);
+        final List<DirectPaymentTransactionModelDao> transactionsForAccount = paymentDao.getDirectTransactionsForAccount(paymentModelDao.getAccountId(), tenantContextWithAccountRecordId);
 
         return toDirectPayment(paymentModelDao, transactionsForAccount);
     }
@@ -241,6 +241,4 @@ public class DirectPaymentProcessor extends ProcessorBase {
         return new DefaultDirectPayment(curDirectPaymentModelDao.getId(), curDirectPaymentModelDao.getCreatedDate(), curDirectPaymentModelDao.getUpdatedDate(), curDirectPaymentModelDao.getAccountId(),
                                         curDirectPaymentModelDao.getPaymentMethodId(), curDirectPaymentModelDao.getPaymentNumber(), curDirectPaymentModelDao.getExternalKey(), sortedTransactions);
     }
-
-
 }

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,11 +26,10 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.payment.api.PaymentMethod;
-import org.killbill.billing.payment.api.PaymentMethodKVInfo;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -66,9 +67,9 @@ public class PaymentMethodJson extends JsonBase {
         if (pluginDetail != null) {
             List<PaymentMethodProperties> properties = null;
             if (pluginDetail.getProperties() != null) {
-                properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>(Collections2.transform(pluginDetail.getProperties(), new Function<PaymentMethodKVInfo, PaymentMethodProperties>() {
+                properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>(Collections2.transform(pluginDetail.getProperties(), new Function<PluginProperty, PaymentMethodProperties>() {
                     @Override
-                    public PaymentMethodProperties apply(final PaymentMethodKVInfo input) {
+                    public PaymentMethodProperties apply(final PluginProperty input) {
                         return new PaymentMethodProperties(input.getKey(), input.getValue() == null ? null : input.getValue().toString(), input.getIsUpdatable());
                     }
                 }));
@@ -217,11 +218,11 @@ public class PaymentMethodJson extends JsonBase {
                     }
 
                     @Override
-                    public List<PaymentMethodKVInfo> getProperties() {
+                    public List<PluginProperty> getProperties() {
                         if (pluginInfo.getProperties() != null) {
-                            final List<PaymentMethodKVInfo> result = new LinkedList<PaymentMethodKVInfo>();
+                            final List<PluginProperty> result = new LinkedList<PluginProperty>();
                             for (final PaymentMethodProperties cur : pluginInfo.getProperties()) {
-                                result.add(new PaymentMethodKVInfo(cur.getKey(), cur.getValue(), cur.isUpdatable));
+                                result.add(new PluginProperty(cur.getKey(), cur.getValue(), cur.isUpdatable));
                             }
                             return result;
                         }

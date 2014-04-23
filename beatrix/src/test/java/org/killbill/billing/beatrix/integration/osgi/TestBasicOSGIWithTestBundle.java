@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -30,6 +32,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.beatrix.osgi.SetupBundleWithAssertion;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.plugin.api.PaymentInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.skife.jdbi.v2.Handle;
@@ -42,6 +45,8 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static com.jayway.awaitility.Awaitility.await;
 
@@ -69,7 +74,7 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
 
         // This is extracted from surefire system configuration-- needs to be added explicitly in IntelliJ for correct running
         final String killbillVersion = System.getProperty("killbill.version");
-        SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion(BUNDLE_TEST_RESOURCE, osgiConfig, killbillVersion);
+        final SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion(BUNDLE_TEST_RESOURCE, osgiConfig, killbillVersion);
         setupTest.setupJavaBundle();
     }
 
@@ -91,12 +96,12 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
         // Make a payment and expect test bundle to correcly write in its table the input values
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal paymentAmount = new BigDecimal("14.32");
-        final PaymentInfoPlugin r = paymentPluginApi.processPayment(account.getId(), paymentId, account.getPaymentMethodId(), paymentAmount, Currency.USD, callContext);
+        final PaymentInfoPlugin r = paymentPluginApi.processPayment(account.getId(), paymentId, account.getPaymentMethodId(), paymentAmount, Currency.USD, ImmutableList.<PluginProperty>of(), callContext);
         assertTor.assertPluginCreatedPayment(paymentId, account.getPaymentMethodId(), paymentAmount);
     }
 
     private PaymentPluginApi getTestPluginPaymentApi() {
-        PaymentPluginApi result = paymentPluginApiOSGIServiceRegistration.getServiceForName("test");
+        final PaymentPluginApi result = paymentPluginApiOSGIServiceRegistration.getServiceForName("test");
         Assert.assertNotNull(result);
         return result;
     }
@@ -144,34 +149,34 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
                         return callback.isSuccess();
                     }
                 });
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 Assert.fail(error, e);
             }
         }
 
         private boolean isValidPayment(final UUID expectedPaymentId, final UUID expectedPaymentMethodId, final BigDecimal expectedAmount) {
-            TestModel test = getTestModelFirstRecord();
+            final TestModel test = getTestModelFirstRecord();
             return expectedPaymentId.equals(test.getPaymentId()) &&
                    expectedPaymentMethodId.equals(test.getPaymentMethodId()) &&
                    expectedAmount.compareTo(test.getAmount()) == 0;
         }
 
         private boolean isPluginInitialized() {
-            TestModel test = getTestModelFirstRecord();
+            final TestModel test = getTestModelFirstRecord();
             return test.isStarted();
         }
 
         private boolean isValidAccountExternalKey(final String expectedExternalKey) {
-            TestModel test = getTestModelFirstRecord();
+            final TestModel test = getTestModelFirstRecord();
             return expectedExternalKey.equals(test.getAccountExternalKey());
         }
 
         private TestModel getTestModelFirstRecord() {
-            TestModel test = dbi.inTransaction(new TransactionCallback<TestModel>() {
+            final TestModel test = dbi.inTransaction(new TransactionCallback<TestModel>() {
                 @Override
                 public TestModel inTransaction(final Handle conn, final TransactionStatus status) throws Exception {
-                    Query<Map<String, Object>> q = conn.createQuery("SELECT is_started, external_key, payment_id, payment_method_id, payment_amount FROM test_bundle WHERE record_id = 1;");
-                    TestModel test = q.map(new TestMapper()).first();
+                    final Query<Map<String, Object>> q = conn.createQuery("SELECT is_started, external_key, payment_id, payment_method_id, payment_amount FROM test_bundle WHERE record_id = 1;");
+                    final TestModel test = q.map(new TestMapper()).first();
                     return test;
                 }
             });

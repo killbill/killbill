@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -21,15 +23,15 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.killbill.billing.payment.api.PaymentMethodKVInfo;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
+import org.killbill.billing.payment.api.PluginProperty;
 
 public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
 
     private final UUID kbPaymentMethodId;
     private final String externalId;
     private final boolean isDefault;
-    private List<PaymentMethodKVInfo> props;
+    private List<PluginProperty> props;
 
     public DefaultNoOpPaymentMethodPlugin(final UUID kbPaymentMethodId, final PaymentMethodPlugin src) {
         this.kbPaymentMethodId = kbPaymentMethodId;
@@ -40,14 +42,14 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
 
     public DefaultNoOpPaymentMethodPlugin(final String externalId,
                                           final boolean isDefault,
-                                          final List<PaymentMethodKVInfo> props) {
+                                          final List<PluginProperty> props) {
         this(null, externalId, isDefault, props);
     }
 
     public DefaultNoOpPaymentMethodPlugin(@Nullable final UUID kbPaymentMethodId,
                                           final String externalId,
                                           final boolean isDefault,
-                                          final List<PaymentMethodKVInfo> props) {
+                                          final List<PluginProperty> props) {
         this.kbPaymentMethodId = kbPaymentMethodId;
         this.externalId = externalId;
         this.isDefault = isDefault;
@@ -70,11 +72,11 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
     }
 
     @Override
-    public List<PaymentMethodKVInfo> getProperties() {
+    public List<PluginProperty> getProperties() {
         return props;
     }
 
-    public void setProps(final List<PaymentMethodKVInfo> props) {
+    public void setProps(final List<PluginProperty> props) {
         this.props = props;
     }
 

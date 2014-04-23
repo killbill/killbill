@@ -1,8 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -31,19 +32,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.usage.api.UsageUserApi;
-import org.killbill.billing.util.api.TagApiException;
-import org.killbill.billing.util.api.TagDefinitionApiException;
-import org.killbill.billing.util.tag.ControlTagType;
-import org.killbill.billing.util.tag.Tag;
-import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -60,7 +48,6 @@ import org.killbill.billing.beatrix.util.InvoiceChecker;
 import org.killbill.billing.beatrix.util.PaymentChecker;
 import org.killbill.billing.beatrix.util.RefundChecker;
 import org.killbill.billing.beatrix.util.SubscriptionChecker;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
@@ -85,8 +72,8 @@ import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentMethodKVInfo;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -94,11 +81,23 @@ import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
+import org.killbill.billing.util.api.TagApiException;
+import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.OSGIConfig;
 import org.killbill.billing.util.svcsapi.bus.BusService;
+import org.killbill.billing.util.tag.ControlTagType;
+import org.killbill.billing.util.tag.Tag;
+import org.killbill.bus.api.PersistentBus;
+import org.skife.jdbi.v2.IDBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -222,7 +221,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource));
         g.injectMembers(this);
 
-        SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion("whatever", osgiConfig, "whatever");
+        final SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion("whatever", osgiConfig, "whatever");
         setupTest.cleanBundleInstallDir();
     }
 
@@ -306,9 +305,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     private class TestPaymentMethodPlugin extends TestPaymentMethodPluginBase {
 
         @Override
-        public List<PaymentMethodKVInfo> getProperties() {
-            PaymentMethodKVInfo prop = new PaymentMethodKVInfo("whatever", "cool", Boolean.TRUE);
-            List<PaymentMethodKVInfo> res = new ArrayList<PaymentMethodKVInfo>();
+        public List<PluginProperty> getProperties() {
+            final PluginProperty prop = new PluginProperty("whatever", "cool", Boolean.TRUE);
+            final List<PluginProperty> res = new ArrayList<PluginProperty>();
             res.add(prop);
             return res;
         }
@@ -375,7 +374,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Void apply(@Nullable final Void input) {
                 try {
                     paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
-                } catch (PaymentApiException e) {
+                } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
                 return null;
@@ -389,7 +388,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Void apply(@Nullable final Void input) {
                 try {
                     paymentApi.createExternalPayment(account, invoice.getId(), invoice.getBalance(), callContext);
-                } catch (PaymentApiException e) {
+                } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
                 return null;
@@ -403,7 +402,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Void apply(@Nullable final Void input) {
                 try {
                     paymentApi.createRefund(account, payment.getId(), payment.getPaidAmount(), callContext);
-                } catch (PaymentApiException e) {
+                } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
                 return null;
@@ -417,7 +416,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Void apply(@Nullable final Void input) {
                 try {
                     paymentApi.createRefundWithAdjustment(account, payment.getId(), payment.getPaidAmount(), callContext);
-                } catch (PaymentApiException e) {
+                } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
                 return null;
@@ -431,7 +430,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Void apply(@Nullable final Void input) {
                 try {
                     paymentApi.createRefundWithItemsAdjustments(account, payment.getId(), invoiceItems, callContext);
-                } catch (PaymentApiException e) {
+                } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
                 return null;
@@ -445,7 +444,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Void apply(@Nullable final Void input) {
                 try {
                     invoicePaymentApi.createChargeback(payment.getId(), payment.getAmount(), callContext);
-                } catch (InvoiceApiException e) {
+                } catch (final InvoiceApiException e) {
                     fail(e.toString());
                 }
                 return null;
@@ -472,7 +471,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, effectiveDate, callContext);
                     assertNotNull(entitlement);
                     return entitlement;
-                } catch (EntitlementApiException e) {
+                } catch (final EntitlementApiException e) {
                     fail();
                     return null;
                 }
@@ -498,7 +497,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     final Entitlement entitlement = entitlementApi.addEntitlement(bundleId, spec, effectiveDate, callContext);
                     assertNotNull(entitlement);
                     return entitlement;
-                } catch (EntitlementApiException e) {
+                } catch (final EntitlementApiException e) {
                     fail(e.getMessage());
                     return null;
                 }
@@ -524,14 +523,13 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                         refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, priceList, clock.getUTCNow().toLocalDate(), billingPolicy, callContext);
                     }
                     return refreshedEntitlement;
-                } catch (EntitlementApiException e) {
+                } catch (final EntitlementApiException e) {
                     fail(e.getMessage());
                     return null;
                 }
             }
         }, events);
     }
-
 
     protected DefaultEntitlement changeEntitlementAndCheckForCompletion(final Entitlement entitlement,
                                                                         final String productName,
@@ -552,7 +550,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithDate(requestedDate.toLocalDate(), false, callContext);
                     return refreshedEntitlement;
-                } catch (EntitlementApiException e) {
+                } catch (final EntitlementApiException e) {
                     fail(e.getMessage());
                     return null;
                 }
@@ -567,7 +565,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 try {
                     invoiceUserApi.insertCreditForInvoice(account.getId(), invoice.getId(), invoice.getBalance(), invoice.getInvoiceDate(),
                                                           account.getCurrency(), callContext);
-                } catch (InvoiceApiException e) {
+                } catch (final InvoiceApiException e) {
                     fail(e.toString());
                 }
                 return null;
@@ -582,7 +580,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 try {
                     invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), invoice.getInvoiceItems().get(itemNb - 1).getId(),
                                                                invoice.getInvoiceDate(), callContext);
-                } catch (InvoiceApiException e) {
+                } catch (final InvoiceApiException e) {
                     fail(e.toString());
                 }
                 return null;
@@ -605,8 +603,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         assertListenerStatus();
     }
 
-    private <T> T doCallAndCheckForCompletion(Function<Void, T> f, final NextEvent... events) {
-        Joiner joiner = Joiner.on(", ");
+    private <T> T doCallAndCheckForCompletion(final Function<Void, T> f, final NextEvent... events) {
+        final Joiner joiner = Joiner.on(", ");
         log.debug("            ************    STARTING BUS HANDLER CHECK : {} ********************", joiner.join(events));
 
         busHandler.pushExpectedEvents(events);
