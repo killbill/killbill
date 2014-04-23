@@ -23,7 +23,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 
@@ -47,6 +46,10 @@ public class CreditBalanceAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
+        if (description != null) {
+            return description;
+        }
+
         final String secondDescription;
         if (getAmount().compareTo(BigDecimal.ZERO) >= 0) {
             secondDescription = "account credit";

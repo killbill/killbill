@@ -22,26 +22,28 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.callcontext.DefaultCallContext;
-import org.killbill.clock.ClockMock;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
+import org.killbill.clock.ClockMock;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 
@@ -66,8 +68,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
-        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharge(accountId, externalChargeAmount, UUID.randomUUID().toString(),
-                                                                                          clock.getUTCToday(), accountCurrency, callContext);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), externalChargeAmount, accountCurrency);
+        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), callContext).get(0);
         verifyExternalChargeOnNewInvoice(accountBalance, null, externalChargeAmount, externalChargeInvoiceItem);
     }
 
@@ -79,9 +81,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
         final UUID bundleId = UUID.randomUUID();
-        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForBundle(accountId, bundleId, externalChargeAmount,
-                                                                                                   UUID.randomUUID().toString(), clock.getUTCToday(),
-                                                                                                   accountCurrency, callContext);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, bundleId, UUID.randomUUID().toString(), clock.getUTCToday(), externalChargeAmount, accountCurrency);
+        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), callContext).get(0);
         verifyExternalChargeOnNewInvoice(accountBalance, bundleId, externalChargeAmount, externalChargeInvoiceItem);
     }
 
@@ -116,13 +117,12 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(accountBalance, invoiceBalance);
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
-        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForInvoice(accountId, invoiceId,
-                                                                                                    externalChargeAmount, UUID.randomUUID().toString(),
-                                                                                                    clock.getUTCToday(), accountCurrency, callContext);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(invoiceId, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), externalChargeAmount, accountCurrency);
+        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), callContext).get(0);
         verifyExternalChargeOnExistingInvoice(invoiceBalance, null, externalChargeAmount, externalChargeInvoiceItem);
     }
 
-    @Test(groups = "slow", enabled= false)
+    @Test(groups = "slow", enabled = false)
     public void testOriginalAmountCharged() throws Exception {
 
         final Invoice initialInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
@@ -136,9 +136,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         CallContext newCallContextLater = new DefaultCallContext(callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getUserToken(), clock);
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
-        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForInvoice(accountId, invoiceId,
-                                                                                                    externalChargeAmount, UUID.randomUUID().toString(),
-                                                                                                    clock.getUTCToday(), accountCurrency, newCallContextLater);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(invoiceId, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), externalChargeAmount, accountCurrency);
+        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), newCallContextLater).get(0);
 
         final Invoice newInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
         final BigDecimal newOriginalAmountCharged = newInvoice.getOriginalChargedAmount();
@@ -162,9 +161,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
         final UUID bundleId = UUID.randomUUID();
-        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForInvoiceAndBundle(accountId, invoiceId, bundleId,
-                                                                                                             externalChargeAmount, UUID.randomUUID().toString(),
-                                                                                                             clock.getUTCToday(), accountCurrency, callContext);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(invoiceId, accountId, bundleId, UUID.randomUUID().toString(), clock.getUTCToday(), externalChargeAmount, accountCurrency);
+        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), callContext).get(0);
         verifyExternalChargeOnExistingInvoice(invoiceBalance, bundleId, externalChargeAmount, externalChargeInvoiceItem);
     }
 

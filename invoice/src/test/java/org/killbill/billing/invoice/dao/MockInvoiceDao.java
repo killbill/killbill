@@ -28,8 +28,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -39,6 +37,7 @@ import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
+import org.killbill.bus.api.PersistentBus;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -86,7 +85,6 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
             return invoices.get(id);
         }
     }
-
 
     @Override
     public InvoiceModelDao getByNumber(final Integer number, final InternalTenantContext context) {
@@ -288,9 +286,8 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public InvoiceItemModelDao insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId,
-                                                    @Nullable final String description, final BigDecimal amount, final LocalDate effectiveDate,
-                                                    final Currency currency, final InternalCallContext context) {
+    public List<InvoiceItemModelDao> insertExternalCharges(final UUID accountId, final LocalDate effectiveDate,
+                                                           final Iterable<InvoiceItemModelDao> charges, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }
 

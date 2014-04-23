@@ -9,6 +9,7 @@ CREATE TABLE invoice_items (
     account_id char(36) NOT NULL,
     bundle_id char(36),
     subscription_id char(36),
+    description varchar(255),
     plan_name varchar(50),
     phase_name varchar(50),
     usage_name varchar(50),
