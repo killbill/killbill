@@ -56,6 +56,7 @@ import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.TenantModule;
 import org.killbill.billing.usage.glue.TestUsageModule;
 import org.killbill.billing.usage.glue.UsageModule;
+import org.killbill.billing.util.config.KillbillConfigSource;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
@@ -86,9 +87,9 @@ public class BeatrixIntegrationModule extends AbstractModule {
     // Same name the osgi-payment-test plugin uses to register its service
     public static final String OSGI_PLUGIN_NAME = "osgi-payment-plugin";
 
-    private final ConfigSource configSource;
+    private final KillbillConfigSource configSource;
 
-    public BeatrixIntegrationModule(final ConfigSource configSource) {
+    public BeatrixIntegrationModule(final KillbillConfigSource configSource) {
         this.configSource = configSource;
     }
 

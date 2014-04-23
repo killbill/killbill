@@ -16,22 +16,19 @@
 
 package org.killbill.killbill.osgi.libs.killbill;
 
-import org.killbill.billing.util.config.KillbillConfigSource;
+import org.killbill.billing.osgi.api.OSGIConfigProperties;
+import org.killbill.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
-import org.killbill.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
-import org.skife.config.ConfigSource;
-
 public abstract class KillbillActivatorBase implements BundleActivator {
-
 
     protected OSGIKillbillAPI killbillAPI;
     protected OSGIKillbillLogService logService;
     protected OSGIKillbillRegistrar registrar;
     protected OSGIKillbillDataSource dataSource;
     protected OSGIKillbillEventDispatcher dispatcher;
-    protected ConfigSource configSource;
+    protected OSGIConfigProperties configProperties;
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -41,7 +38,7 @@ public abstract class KillbillActivatorBase implements BundleActivator {
         logService = new OSGIKillbillLogService(context);
         dataSource = new OSGIKillbillDataSource(context);
         dispatcher = new OSGIKillbillEventDispatcher(context);
-        configSource = new KillbillConfigSource();
+        configProperties = new OSGIConfigPropertiesService(context);
 
         // Registrar for bundle
         registrar = new OSGIKillbillRegistrar();

@@ -20,6 +20,8 @@ import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
 import javax.sql.DataSource;
 
+import org.killbill.billing.osgi.api.OSGIConfigProperties;
+import org.killbill.billing.util.config.KillbillConfigSource;
 import org.osgi.service.http.HttpService;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
@@ -50,15 +52,16 @@ public class DefaultOSGIModule extends AbstractModule {
 
     public static final String OSGI_NAMED = "osgi";
 
-    protected final ConfigSource configSource;
+    protected final KillbillConfigSource configSource;
 
-    public DefaultOSGIModule(final ConfigSource configSource) {
+    public DefaultOSGIModule(final KillbillConfigSource configSource) {
         this.configSource = configSource;
     }
 
     protected void installConfig() {
         final OSGIConfig config = new ConfigurationObjectFactory(configSource).build(OSGIConfig.class);
         bind(OSGIConfig.class).toInstance(config);
+        bind(OSGIConfigProperties.class).toInstance(configSource);
 
         final OSGIDataSourceConfig osgiDataSourceConfig = new ConfigurationObjectFactory(configSource).build(OSGIDataSourceConfig.class);
         bind(OSGIDataSourceConfig.class).toInstance(osgiDataSourceConfig);

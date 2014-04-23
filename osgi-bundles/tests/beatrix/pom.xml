@@ -67,11 +67,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>osgi-over-slf4j</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -90,7 +85,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>org.killbill.billing.osgi.bundles.test.TestActivator</Bundle-Activator>
-                        <Import-Package>*;resolution:=optional</Import-Package>
+                        <Import-Package>*;resolution:=optional,org.killbill.billing.osgi.api;</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -136,6 +131,13 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

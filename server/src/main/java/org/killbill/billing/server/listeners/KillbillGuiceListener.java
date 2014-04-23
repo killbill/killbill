@@ -65,7 +65,7 @@ public class KillbillGuiceListener extends GuiceServletContextListener {
     public static final ImmutableList<String> METRICS_SERVLETS_PATHS = ImmutableList.<String>of("/1.0/healthcheck", "/1.0/metrics", "/1.0/ping", "/1.0/threads");
 
     private KillbillServerConfig config;
-    private ConfigSource configSource;
+    private KillbillConfigSource configSource;
     private Injector injector;
     private DefaultLifecycle killbillLifecycle;
     private BusService killbillBusService;

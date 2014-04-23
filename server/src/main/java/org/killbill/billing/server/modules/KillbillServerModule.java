@@ -53,6 +53,7 @@ import org.killbill.billing.server.notifications.PushNotificationListener;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.TenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
+import org.killbill.billing.util.config.KillbillConfigSource;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
@@ -84,9 +85,9 @@ public class KillbillServerModule extends AbstractModule {
     protected final ServletContext servletContext;
 
     private final KillbillServerConfig serverConfig;
-    private final ConfigSource configSource;
+    private final KillbillConfigSource configSource;
 
-    public KillbillServerModule(final ServletContext servletContext, final KillbillServerConfig serverConfig, final ConfigSource configSource) {
+    public KillbillServerModule(final ServletContext servletContext, final KillbillServerConfig serverConfig, final KillbillConfigSource configSource) {
         this.servletContext = servletContext;
         this.serverConfig = serverConfig;
         this.configSource = configSource;

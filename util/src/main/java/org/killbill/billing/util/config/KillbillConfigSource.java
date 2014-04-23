@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Properties;
 
+import org.killbill.billing.osgi.api.OSGIConfigProperties;
 import org.killbill.billing.util.config.catalog.UriAccessor;
 import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public class KillbillConfigSource implements ConfigSource {
+public class KillbillConfigSource implements ConfigSource, OSGIConfigProperties {
 
     private static final Logger logger = LoggerFactory.getLogger(KillbillConfigSource.class);
     private static final String PROPERTIES_FILE = "org.killbill.server.properties";
@@ -49,6 +50,11 @@ public class KillbillConfigSource implements ConfigSource {
     @Override
     public String getString(final String propertyName) {
         return properties.getProperty(propertyName);
+    }
+
+    @Override
+    public Properties getProperties() {
+        return properties;
     }
 
     private Properties loadPropertiesFromFileOrSystemProperties() {

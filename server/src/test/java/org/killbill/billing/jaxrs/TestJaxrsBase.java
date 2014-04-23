@@ -126,9 +126,9 @@ public class TestJaxrsBase extends KillbillClient {
     public class TestKillbillGuiceListener extends KillbillGuiceListener {
 
         private final KillbillServerConfig serverConfig;
-        private final ConfigSource configSource;
+        private final KillbillConfigSource configSource;
 
-        public TestKillbillGuiceListener(final KillbillServerConfig serverConfig, final ConfigSource configSource) {
+        public TestKillbillGuiceListener(final KillbillServerConfig serverConfig, final KillbillConfigSource configSource) {
             super();
             this.serverConfig = serverConfig;
             this.configSource = configSource;
@@ -155,7 +155,7 @@ public class TestJaxrsBase extends KillbillClient {
 
     public class TestKillbillServerModule extends KillbillServerModule {
 
-        public TestKillbillServerModule(final ServletContext servletContext, final KillbillServerConfig serverConfig, final ConfigSource configSource) {
+        public TestKillbillServerModule(final ServletContext servletContext, final KillbillServerConfig serverConfig, final KillbillConfigSource configSource) {
             super(servletContext, serverConfig, configSource);
         }
 

@@ -28,6 +28,7 @@ import javax.inject.Named;
 import javax.servlet.Servlet;
 import javax.sql.DataSource;
 
+import org.killbill.billing.osgi.api.OSGIConfigProperties;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
@@ -60,6 +61,7 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
     private final DataSource dataSource;
     private final KillbillEventObservable observable;
     private final OSGIKillbillRegistrar registrar;
+    private final OSGIConfigProperties configProperties;
 
     private final List<OSGIServiceRegistration> allRegistrationHandlers;
 
@@ -71,6 +73,7 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
                              final OSGIKillbill osgiKillbill,
                              final HttpService defaultHttpService,
                              final KillbillEventObservable observable,
+                             final OSGIConfigProperties configProperties,
                              final OSGIServiceRegistration<Servlet> servletRouter,
                              final OSGIServiceRegistration<PaymentPluginApi> paymentProviderPluginRegistry,
                              final OSGIServiceRegistration<CurrencyPluginApi> currencyProviderPluginRegistry) {
@@ -78,6 +81,7 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
         this.defaultHttpService = defaultHttpService;
         this.dataSource = dataSource;
         this.observable = observable;
+        this.configProperties = configProperties;
         this.registrar = new OSGIKillbillRegistrar();
         this.allRegistrationHandlers = ImmutableList.<OSGIServiceRegistration>of(servletRouter, paymentProviderPluginRegistry, currencyProviderPluginRegistry);
     }
@@ -95,6 +99,7 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
         registrar.registerService(context, HttpService.class, defaultHttpService, props);
         registrar.registerService(context, Observable.class, observable, props);
         registrar.registerService(context, DataSource.class, dataSource, props);
+        registrar.registerService(context, OSGIConfigProperties.class, configProperties, props);
 
         context.addServiceListener(this);
     }

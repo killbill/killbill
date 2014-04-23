@@ -154,11 +154,11 @@
                             org.killbill.billing.subscription.api.user;
                             org.killbill.billing.junction.api;
                             org.killbill.billing;
+                            org.killbill.billing.osgi.api;
                             org.killbill.billing.overdue;
                             org.killbill.billing.tenant.api;
                             org.killbill.billing.usage.api;
                             org.killbill.billing.util.audit;
-                            org.killbill.billing.util.config;
                             org.killbill.billing.util.customfield;
                             org.killbill.billing.notification.plugin;
                             org.killbill.billing.util.email;
@@ -166,15 +166,6 @@
                             org.killbill.billing.util.template;
                             org.killbill.billing.util.template.translation;resolution:=optional,
                             org.joda.time.format;resolution:=optional,
-                            org.skife.config;
-                            org.skife.config.cglib.asm;
-                            org.skife.config.cglib.beans;
-                            org.skife.config.cglib.core;
-                            org.skife.config.cglib.proxy;
-                            org.skife.config.cglib.reflect;
-                            org.skife.config.cglib.transform;
-                            org.skife.config.cglib.transform.impl;
-                            org.skife.config.cglib.util;
                             sun.misc;
                             sun.misc.*;
                             sun.misc.unsafe;
