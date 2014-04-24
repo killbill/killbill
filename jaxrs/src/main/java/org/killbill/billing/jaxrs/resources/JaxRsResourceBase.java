@@ -321,15 +321,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
 
         for (final String pluginProperty : pluginProperties) {
-            // Jersey should decode the (double encoded) query parameters, but just in case...
-            final String keyValue;
-            try {
-                keyValue = URLDecoder.decode(pluginProperty, "UTF-8");
-            } catch (final UnsupportedEncodingException e) {
-                throw new IllegalStateException("UTF-8 should be available on any Kill Bill platform");
-            }
-
-            final List<String> property = ImmutableList.<String>copyOf(keyValue.split("="));
+            final List<String> property = ImmutableList.<String>copyOf(pluginProperty.split("="));
             final String key = property.get(0);
             final String value = property.size() == 1 ? null : Joiner.on("=").join(property.subList(1, property.size()));
             properties.add(new PluginProperty(key, value, false));
