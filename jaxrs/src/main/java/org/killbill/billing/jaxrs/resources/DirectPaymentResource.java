@@ -17,6 +17,7 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -44,6 +45,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
@@ -75,8 +77,9 @@ public class DirectPaymentResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getDirectPayment(@PathParam("directPaymentId") final String directPaymentIdStr,
                                      @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                     @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID directPaymentIdId = UUID.fromString(directPaymentIdStr);
         final DirectPayment payment = directPaymentApi.getPayment(directPaymentIdId, withPluginInfo, pluginProperties, context.createContext(request));
         final DirectPaymentJson result = new DirectPaymentJson(payment, null, null);
@@ -89,12 +92,13 @@ public class DirectPaymentResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response captureAuthorization(final PaymentJson json,
                                          @PathParam("directPaymentId") final String directPaymentIdStr,
+                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                          @HeaderParam(HDR_REASON) final String reason,
                                          @HeaderParam(HDR_COMMENT) final String comment,
                                          @javax.ws.rs.core.Context final UriInfo uriInfo,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         // STEPH_DP error code if no such payment
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID directPaymentId = UUID.fromString(directPaymentIdStr);
@@ -111,11 +115,13 @@ public class DirectPaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response voidPayment(@PathParam("directPaymentId") final String directPaymentIdStr,
+                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final UriInfo uriInfo,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID directPaymentId = UUID.fromString(directPaymentIdStr);
         final DirectPayment initialPayment = directPaymentApi.getPayment(directPaymentId, false, pluginProperties, callContext);

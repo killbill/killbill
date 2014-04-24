@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,7 +20,9 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -72,6 +76,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -80,9 +85,6 @@ import com.google.common.collect.Iterables;
 public abstract class JaxRsResourceBase implements JaxrsResource {
 
     static final Logger log = LoggerFactory.getLogger(JaxRsResourceBase.class);
-
-    // TODO PIERRE
-    protected final Iterable<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of();
 
     protected static final ObjectMapper mapper = new ObjectMapper();
 
@@ -268,7 +270,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         Account account = null;
         try {
             account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
             log.info("Failed to retrieve account for id " + accountId);
         }
         final DateTime inputDateTime = inputDate != null ? DATE_TIME_FORMATTER.parseDateTime(inputDate) : clock.getUTCNow();
@@ -306,9 +308,32 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             try {
                 final LocalDate localDate = LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
                 return localDate;
-            } catch (IllegalArgumentException expectedAndIgnore) {
+            } catch (final IllegalArgumentException expectedAndIgnore) {
             }
         }
         return null;
+    }
+
+    protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<String> pluginProperties) {
+        final Collection<PluginProperty> properties = new LinkedList<PluginProperty>();
+        if (pluginProperties == null) {
+            return properties;
+        }
+
+        for (final String pluginProperty : pluginProperties) {
+            // Jersey should decode the (double encoded) query parameters, but just in case...
+            final String keyValue;
+            try {
+                keyValue = URLDecoder.decode(pluginProperty, "UTF-8");
+            } catch (final UnsupportedEncodingException e) {
+                throw new IllegalStateException("UTF-8 should be available on any Kill Bill platform");
+            }
+
+            final List<String> property = ImmutableList.<String>copyOf(keyValue.split("="));
+            final String key = property.get(0);
+            final String value = property.size() == 1 ? null : Joiner.on("=").join(property.subList(1, property.size()));
+            properties.add(new PluginProperty(key, value, false));
+        }
+        return properties;
     }
 }
