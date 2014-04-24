@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -47,18 +48,18 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     }
 
     @Override
-    public DirectPayment createAuthorization(final Account account, final BigDecimal amount, final String externalKey, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        return directPaymentProcessor.createAuthorization(account, amount, externalKey, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
+    public DirectPayment createAuthorization(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency, final String externalKey, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        return directPaymentProcessor.createAuthorization(account, directPaymentId, amount, currency, externalKey, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     @Override
-    public DirectPayment createCapture(final Account account, final UUID directPaymentId, final BigDecimal amount, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        return directPaymentProcessor.createCapture(account, directPaymentId, amount, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
+    public DirectPayment createCapture(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        return directPaymentProcessor.createCapture(account, directPaymentId, amount, currency, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     @Override
-    public DirectPayment createPurchase(final Account account, final BigDecimal amount, final String externalKey, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        return directPaymentProcessor.createPurchase(account, amount, externalKey, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
+    public DirectPayment createPurchase(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency, final String externalKey, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        return directPaymentProcessor.createPurchase(account, directPaymentId, amount, currency, externalKey, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     @Override
@@ -67,8 +68,8 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     }
 
     @Override
-    public DirectPayment createCredit(final Account account, final UUID directPaymentId, final BigDecimal amount, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        return directPaymentProcessor.createCredit(account, directPaymentId, amount, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
+    public DirectPayment createCredit(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        return directPaymentProcessor.createCredit(account, directPaymentId, amount, currency, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     @Override

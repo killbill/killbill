@@ -51,6 +51,7 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.MutableAccountData;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
@@ -644,15 +645,17 @@ public class AccountResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID accountId = UUID.fromString(accountIdStr);
         final Account account = accountUserApi.getAccountById(accountId, callContext);
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+        final UUID directPaymentId = json.getDirectPaymentId() == null ? null : UUID.fromString(json.getDirectPaymentId());
 
         final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
         DirectPayment result;
         switch (transactionType) {
             case AUTHORIZE:
-                result = directPaymentApi.createAuthorization(account, json.getAmount(), json.getExternalKey(), pluginProperties, callContext);
+                result = directPaymentApi.createAuthorization(account, directPaymentId, json.getAmount(), currency, json.getExternalKey(), pluginProperties, callContext);
                 break;
             case PURCHASE:
-                result = directPaymentApi.createPurchase(account, json.getAmount(), json.getExternalKey(), pluginProperties, callContext);
+                result = directPaymentApi.createPurchase(account, directPaymentId, json.getAmount(), currency, json.getExternalKey(), pluginProperties, callContext);
                 break;
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();

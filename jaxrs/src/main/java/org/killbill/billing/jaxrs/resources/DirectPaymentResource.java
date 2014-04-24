@@ -38,6 +38,7 @@ import javax.ws.rs.core.UriInfo;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.jaxrs.json.DirectPaymentJson;
 import org.killbill.billing.jaxrs.json.PaymentJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -105,8 +106,9 @@ public class DirectPaymentResource extends JaxRsResourceBase {
         final DirectPayment initialPayment = directPaymentApi.getPayment(directPaymentId, false, pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
 
-        final DirectPayment payment = directPaymentApi.createCapture(account, directPaymentId, json.getAmount(), pluginProperties, callContext);
+        final DirectPayment payment = directPaymentApi.createCapture(account, directPaymentId, json.getAmount(), currency, pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
     }
 
