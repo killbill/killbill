@@ -41,13 +41,22 @@ public class MockPaymentDao implements PaymentDao {
     private final Map<UUID, PaymentAttemptModelDao> attempts = new HashMap<UUID, PaymentAttemptModelDao>();
 
     @Override
+    public Pagination<DirectPaymentModelDao> getDirectPayments(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
+        return null;
+    }
+
+    @Override
     public DirectPaymentModelDao insertDirectPaymentWithFirstTransaction(final DirectPaymentModelDao directPayment, final DirectPaymentTransactionModelDao directPaymentTransaction, final InternalCallContext context) {
         return null;
     }
 
     @Override
-    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final PaymentStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final UUID directTransactionId, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+    public DirectPaymentTransactionModelDao updateDirectPaymentWithNewTransaction(final UUID dirctPaymentId, final DirectPaymentTransactionModelDao directPaymentTransaction, final InternalCallContext context) {
+        return null;
+    }
 
+    @Override
+    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final PaymentStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final UUID directTransactionId, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
     }
 
     @Override

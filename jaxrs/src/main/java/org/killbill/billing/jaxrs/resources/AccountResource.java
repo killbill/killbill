@@ -615,12 +615,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + DIRECT_PAYMENTS)
     @Produces(APPLICATION_JSON)
     public Response getDirectPaymentsForAccount(@PathParam("accountId") final String accountIdStr,
-                                                @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
-                                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID accountId = UUID.fromString(accountIdStr);
-        final List<DirectPayment> payments = directPaymentApi.getAccountPayments(accountId, withPluginInfo, pluginProperties, context.createContext(request));
+        final List<DirectPayment> payments = directPaymentApi.getAccountPayments(accountId, context.createContext(request));
         final List<DirectPaymentJson> result = ImmutableList.copyOf(Iterables.transform(payments, new Function<DirectPayment, DirectPaymentJson>() {
             @Override
             public DirectPaymentJson apply(final DirectPayment input) {

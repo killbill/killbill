@@ -51,11 +51,11 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
     public DefaultNoOpPaymentMethodPlugin(@Nullable final UUID kbPaymentMethodId,
                                           final String externalId,
                                           final boolean isDefault,
-                                          final Iterable<PluginProperty> props) {
+                                          @Nullable final Iterable<PluginProperty> props) {
         this.kbPaymentMethodId = kbPaymentMethodId;
         this.externalId = externalId;
         this.isDefault = isDefault;
-        this.props = ImmutableList.<PluginProperty>copyOf(props);
+        this.props = props == null ? ImmutableList.<PluginProperty>of() : ImmutableList.<PluginProperty>copyOf(props);
     }
 
     @Override

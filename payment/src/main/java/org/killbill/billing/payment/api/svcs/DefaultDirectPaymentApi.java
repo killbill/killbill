@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentApi;
@@ -31,19 +33,17 @@ import org.killbill.billing.payment.core.DirectPaymentProcessor;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.clock.Clock;
+import org.killbill.billing.util.entity.Pagination;
 
 public class DefaultDirectPaymentApi implements DirectPaymentApi {
 
     private final DirectPaymentProcessor directPaymentProcessor;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final Clock clock;
 
     @Inject
-    public DefaultDirectPaymentApi(final DirectPaymentProcessor directPaymentProcessor, final InternalCallContextFactory internalCallContextFactory, final Clock clock) {
+    public DefaultDirectPaymentApi(final DirectPaymentProcessor directPaymentProcessor, final InternalCallContextFactory internalCallContextFactory) {
         this.directPaymentProcessor = directPaymentProcessor;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.clock = clock;
     }
 
     @Override
@@ -63,21 +63,45 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
 
     @Override
     public DirectPayment createVoid(final Account account, final UUID directPaymentId, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        return null;
+        return directPaymentProcessor.createVoid(account, directPaymentId, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     @Override
-    public DirectPayment createCredit(final Account account, final UUID directPaymentId, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        return null;
+    public DirectPayment createCredit(final Account account, final UUID directPaymentId, final BigDecimal amount, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        return directPaymentProcessor.createCredit(account, directPaymentId, amount, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     @Override
-    public List<DirectPayment> getAccountPayments(final UUID accountId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentApiException {
-        return directPaymentProcessor.getAccountPayments(accountId, withPluginInfo, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
+    public List<DirectPayment> getAccountPayments(final UUID accountId, final TenantContext tenantContext) throws PaymentApiException {
+        return directPaymentProcessor.getAccountPayments(accountId, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
     }
 
     @Override
-    public DirectPayment getPayment(final UUID directPaymentId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentApiException {
-        return directPaymentProcessor.getPayment(directPaymentId, withPluginInfo, internalCallContextFactory.createInternalTenantContext(tenantContext));
+    public Pagination<DirectPayment> getPayments(final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext context) {
+        return directPaymentProcessor.getPayments(offset, limit, properties, context, internalCallContextFactory.createInternalTenantContext(context));
+    }
+
+    @Override
+    public Pagination<DirectPayment> getPayments(final Long offset, final Long limit, final String pluginName, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentApiException {
+        return directPaymentProcessor.getPayments(offset, limit, pluginName, properties, tenantContext, internalCallContextFactory.createInternalTenantContext(tenantContext));
+    }
+
+    @Override
+    public DirectPayment getPayment(final UUID paymentId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
+        final DirectPayment payment = directPaymentProcessor.getPayment(paymentId, withPluginInfo, properties, internalCallContextFactory.createInternalTenantContext(context));
+        if (payment == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentId);
+        }
+        return payment;
+    }
+
+    @Override
+    public Pagination<DirectPayment> searchPayments(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext context) {
+        return directPaymentProcessor.searchPayments(searchKey, offset, limit, properties, internalCallContextFactory.createInternalTenantContext(context));
+    }
+
+    @Override
+    public Pagination<DirectPayment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
+        return directPaymentProcessor.searchPayments(searchKey, offset, limit, pluginName, properties, internalCallContextFactory.createInternalTenantContext(context));
     }
 }

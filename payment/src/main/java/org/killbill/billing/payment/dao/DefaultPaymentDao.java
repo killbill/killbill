@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,16 +26,11 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.ObjectType;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.skife.jdbi.v2.IDBI;
-
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PaymentStatus;
@@ -48,6 +45,8 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -75,6 +74,26 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
+    public Pagination<DirectPaymentModelDao> getDirectPayments(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(DirectPaymentSqlDao.class,
+                                              new PaginationIteratorBuilder<DirectPaymentModelDao, DirectPayment, DirectPaymentSqlDao>() {
+                                                  @Override
+                                                  public Long getCount(final DirectPaymentSqlDao directPaymentSqlDao, final InternalTenantContext context) {
+                                                      return directPaymentSqlDao.getCountByPluginName(pluginName, context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<DirectPaymentModelDao> build(final DirectPaymentSqlDao directPaymentSqlDao, final Long limit, final InternalTenantContext context) {
+                                                      return directPaymentSqlDao.getByPluginName(pluginName, offset, limit, context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context
+                                             );
+    }
+
+    @Override
     public DirectPaymentModelDao insertDirectPaymentWithFirstTransaction(final DirectPaymentModelDao directPayment, final DirectPaymentTransactionModelDao directPaymentTransaction, final InternalCallContext context) {
 
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<DirectPaymentModelDao>() {
@@ -84,7 +103,23 @@ public class DefaultPaymentDao implements PaymentDao {
                 final DirectPaymentSqlDao directPaymentSqlDao = entitySqlDaoWrapperFactory.become(DirectPaymentSqlDao.class);
                 directPaymentSqlDao.create(directPayment, context);
                 entitySqlDaoWrapperFactory.become(DirectTransactionSqlDao.class).create(directPaymentTransaction, context);
-                return  directPaymentSqlDao.getById(directPayment.getId().toString(), context);
+                return directPaymentSqlDao.getById(directPayment.getId().toString(), context);
+            }
+        });
+    }
+
+    @Override
+    public DirectPaymentTransactionModelDao updateDirectPaymentWithNewTransaction(final UUID directPaymentId, final DirectPaymentTransactionModelDao directPaymentTransaction, final InternalCallContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<DirectPaymentTransactionModelDao>() {
+            @Override
+            public DirectPaymentTransactionModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final DirectTransactionSqlDao transactional = entitySqlDaoWrapperFactory.become(DirectTransactionSqlDao.class);
+                transactional.create(directPaymentTransaction, context);
+                final DirectPaymentTransactionModelDao directPaymentTransactionModelDao = transactional.getById(directPaymentTransaction.getId().toString(), context);
+
+                entitySqlDaoWrapperFactory.become(DirectPaymentSqlDao.class).updateDirectPaymentForNewTransaction(directPaymentId.toString(), context);
+
+                return directPaymentTransactionModelDao;
             }
         });
     }
@@ -92,7 +127,7 @@ public class DefaultPaymentDao implements PaymentDao {
     @Override
     public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final PaymentStatus paymentStatus,
                                                               final BigDecimal processedAmount, final Currency processedCurrency,
-                                                              final UUID directTransactionId, final String gatewayErrorCode, final String gatewayErrorMsg,  final InternalCallContext context) {
+                                                              final UUID directTransactionId, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
 
             @Override
@@ -148,7 +183,6 @@ public class DefaultPaymentDao implements PaymentDao {
             }
         });
     }
-
 
     @Override
     public PaymentModelDao insertPaymentWithFirstAttempt(final PaymentModelDao payment, final PaymentAttemptModelDao attempt, final InternalCallContext context) {
@@ -261,7 +295,8 @@ public class DefaultPaymentDao implements PaymentDao {
                                               },
                                               offset,
                                               limit,
-                                              context);
+                                              context
+                                             );
     }
 
     @Override
@@ -340,7 +375,8 @@ public class DefaultPaymentDao implements PaymentDao {
                                               },
                                               offset,
                                               limit,
-                                              context);
+                                              context
+                                             );
     }
 
     @Override
@@ -410,7 +446,8 @@ public class DefaultPaymentDao implements PaymentDao {
                                               },
                                               offset,
                                               limit,
-                                              context);
+                                              context
+                                             );
     }
 
     @Override
@@ -463,7 +500,8 @@ public class DefaultPaymentDao implements PaymentDao {
                                                                                                          public boolean apply(final PaymentMethodModelDao paymentMethod) {
                                                                                                              return pluginName.equals(paymentMethod.getPluginName());
                                                                                                          }
-                                                                                                     });
+                                                                                                     }
+                                                                                                    );
 
                 for (final PaymentMethodModelDao finalPaymentMethod : newPaymentMethods) {
                     PaymentMethodModelDao foundExistingPaymentMethod = null;

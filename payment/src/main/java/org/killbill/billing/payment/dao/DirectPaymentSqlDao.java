@@ -16,15 +16,11 @@
 
 package org.killbill.billing.payment.dao;
 
-import java.math.BigDecimal;
 import java.util.Iterator;
-import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.Refund;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
@@ -38,17 +34,19 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 @EntitySqlDaoStringTemplate
 public interface DirectPaymentSqlDao extends EntitySqlDao<DirectPaymentModelDao, DirectPayment> {
 
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
+    void updateDirectPaymentForNewTransaction(@Bind("id") final String directPaymentId,
+                                              @BindBean final InternalCallContext context);
 
-    /*
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
     public Iterator<DirectPaymentModelDao> getByPluginName(@Bind("pluginName") final String pluginName,
-                                                    @Bind("offset") final Long offset,
-                                                    @Bind("rowCount") final Long rowCount,
-                                                    @BindBean final InternalTenantContext context);
+                                                           @Bind("offset") final Long offset,
+                                                           @Bind("rowCount") final Long rowCount,
+                                                           @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getCountByPluginName(@Bind("pluginName") final String pluginName,
                                      @BindBean final InternalTenantContext context);
-                                     */
 }

@@ -29,11 +29,15 @@ import org.killbill.billing.util.entity.Pagination;
 
 public interface PaymentDao {
 
+    public Pagination<DirectPaymentModelDao> getDirectPayments(String pluginName, Long offset, Long limit, InternalTenantContext context);
+
     public DirectPaymentModelDao insertDirectPaymentWithFirstTransaction(DirectPaymentModelDao directPayment, DirectPaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
+
+    public DirectPaymentTransactionModelDao updateDirectPaymentWithNewTransaction(UUID dirctPaymentId, DirectPaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
 
     public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final PaymentStatus paymentStatus,
                                                               final BigDecimal processedAmount, final Currency processedCurrency,
-                                                              final UUID directTransactionId, final String gatewayErrorCode, final String gatewayErrorMsg,  final InternalCallContext context);
+                                                              final UUID directTransactionId, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context);
 
     public DirectPaymentModelDao getDirectPayment(UUID directPaymentId, InternalTenantContext context);
 

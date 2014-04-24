@@ -23,7 +23,7 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
-:accountId
+  :accountId
 , :paymentMethodId
 , :externalKey
 , :createdBy
@@ -32,4 +32,11 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
-
+updateDirectPaymentForNewTransaction() ::= <<
+update <tableName()>
+set updated_by = :updatedBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
