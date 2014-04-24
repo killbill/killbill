@@ -22,18 +22,15 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.core.DirectPaymentProcessor;
-import org.killbill.billing.util.cache.CacheController;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 
 public class DefaultDirectPaymentApi implements DirectPaymentApi {
@@ -50,37 +47,37 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     }
 
     @Override
-    public DirectPayment createAuthorization(final Account account, final BigDecimal amount, final String externalKey, final CallContext callContext) throws PaymentApiException {
-        return directPaymentProcessor.createAuthorization(account, amount, externalKey, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
+    public DirectPayment createAuthorization(final Account account, final BigDecimal amount, final String externalKey, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        return directPaymentProcessor.createAuthorization(account, amount, externalKey, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     @Override
-    public DirectPayment createCapture(final Account account, final UUID directPaymentId, final BigDecimal amount, final CallContext callContext) throws PaymentApiException {
-        return directPaymentProcessor.createCapture(account, directPaymentId, amount, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
+    public DirectPayment createCapture(final Account account, final UUID directPaymentId, final BigDecimal amount, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        return directPaymentProcessor.createCapture(account, directPaymentId, amount, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     @Override
-    public DirectPayment createPurchase(final Account account, final BigDecimal amount, final String externalKey, final CallContext callContext) throws PaymentApiException {
-        return directPaymentProcessor.createPurchase(account, amount, externalKey, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
+    public DirectPayment createPurchase(final Account account, final BigDecimal amount, final String externalKey, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        return directPaymentProcessor.createPurchase(account, amount, externalKey, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     @Override
-    public DirectPayment createVoid(final Account account, final UUID directPaymentId, final CallContext callContext) throws PaymentApiException {
+    public DirectPayment createVoid(final Account account, final UUID directPaymentId, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
         return null;
     }
 
     @Override
-    public DirectPayment createCredit(final Account account, final UUID directPaymentId, final CallContext callContext) throws PaymentApiException {
+    public DirectPayment createCredit(final Account account, final UUID directPaymentId, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
         return null;
     }
 
     @Override
-    public List<DirectPayment> getAccountPayments(final UUID accountId, final boolean withPluginInfo, final TenantContext tenantContext) throws PaymentApiException {
+    public List<DirectPayment> getAccountPayments(final UUID accountId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentApiException {
         return directPaymentProcessor.getAccountPayments(accountId, withPluginInfo, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
     }
 
     @Override
-    public DirectPayment getPayment(final UUID directPaymentId, final boolean withPluginInfo, final TenantContext tenantContext) throws PaymentApiException {
+    public DirectPayment getPayment(final UUID directPaymentId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentApiException {
         return directPaymentProcessor.getPayment(directPaymentId, withPluginInfo, internalCallContextFactory.createInternalTenantContext(tenantContext));
     }
 }

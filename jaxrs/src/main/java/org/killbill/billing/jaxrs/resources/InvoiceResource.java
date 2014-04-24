@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -65,6 +67,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -309,11 +312,13 @@ public class InvoiceResource extends JaxRsResourceBase {
                                           @PathParam("accountId") final String accountId,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                           @QueryParam(QUERY_PAY_INVOICE) @DefaultValue("false") final Boolean payInvoice,
+                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException, PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
@@ -352,7 +357,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                     paidInvoices.add(externalCharge.getInvoiceId());
 
                     final Invoice invoice = invoiceApi.getInvoice(externalCharge.getInvoiceId(), callContext);
-                    paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+                    paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), pluginProperties, callContext);
                 }
             }
         }
@@ -399,11 +404,13 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
     public Response createInstantPayment(final PaymentJson payment,
                                          @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
+                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                          @HeaderParam(HDR_REASON) final String reason,
                                          @HeaderParam(HDR_COMMENT) final String comment,
                                          @javax.ws.rs.core.Context final HttpServletRequest request,
                                          @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(payment.getAccountId()), callContext);
@@ -412,7 +419,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         if (externalPayment) {
             paymentApi.createExternalPayment(account, invoiceId, payment.getAmount(), callContext);
         } else {
-            paymentApi.createPayment(account, invoiceId, payment.getAmount(), callContext);
+            paymentApi.createPayment(account, invoiceId, payment.getAmount(), pluginProperties, callContext);
         }
 
         return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getPayments", payment.getInvoiceId());

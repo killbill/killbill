@@ -87,7 +87,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
     }
 
     public UUID addPaymentMethod(final String paymentPluginServiceName, final Account account,
-                                 final boolean setDefault, final PaymentMethodPlugin paymentMethodProps, final InternalCallContext context)
+                                 final boolean setDefault, final PaymentMethodPlugin paymentMethodProps,
+                                 final Iterable<PluginProperty> properties, final InternalCallContext context)
             throws PaymentApiException {
         final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
 
@@ -100,7 +101,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 try {
                     pluginApi = getPaymentPluginApi(paymentPluginServiceName);
                     pm = new DefaultPaymentMethod(account.getId(), paymentPluginServiceName, paymentMethodProps);
-                    pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, ImmutableList.<PluginProperty>of(), context.toCallContext(tenantId));
+                    pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, properties, context.toCallContext(tenantId));
                     final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
                                                                                     pm.getAccountId(), pm.getPluginName(), pm.isActive());
                     paymentDao.insertPaymentMethod(pmModel, context);
@@ -120,31 +121,31 @@ public class PaymentMethodProcessor extends ProcessorBase {
         });
     }
 
-    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginInfo, final InternalTenantContext context) throws PaymentApiException {
+    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
 
         final List<PaymentMethodModelDao> paymentMethodModels = paymentDao.getPaymentMethods(account.getId(), context);
         if (paymentMethodModels.size() == 0) {
             return Collections.emptyList();
         }
-        return getPaymentMethodInternal(paymentMethodModels, withPluginInfo, context);
+        return getPaymentMethodInternal(paymentMethodModels, withPluginInfo, properties, context);
     }
 
-    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final boolean includedDeleted, final boolean withPluginInfo, final InternalTenantContext context)
+    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final boolean includedDeleted, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final InternalTenantContext context)
             throws PaymentApiException {
         final PaymentMethodModelDao paymentMethodModel = includedDeleted ? paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, context) : paymentDao.getPaymentMethod(paymentMethodId, context);
         if (paymentMethodModel == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
 
-        return buildDefaultPaymentMethod(paymentMethodModel, withPluginInfo, context);
+        return buildDefaultPaymentMethod(paymentMethodModel, withPluginInfo, properties, context);
     }
 
-    private PaymentMethod buildDefaultPaymentMethod(final PaymentMethodModelDao paymentMethodModelDao, final boolean withPluginInfo, final InternalTenantContext context) throws PaymentApiException {
+    private PaymentMethod buildDefaultPaymentMethod(final PaymentMethodModelDao paymentMethodModelDao, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
         final PaymentMethodPlugin paymentMethodPlugin;
         if (withPluginInfo) {
             try {
                 final PaymentPluginApi pluginApi = getPaymentPluginApi(paymentMethodModelDao.getPluginName());
-                paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), ImmutableList.<PluginProperty>of(), buildTenantContext(context));
+                paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), properties, buildTenantContext(context));
             } catch (final PaymentPluginApiException e) {
                 log.warn("Error retrieving payment method " + paymentMethodModelDao.getId() + " from plugin " + paymentMethodModelDao.getPluginName(), e);
                 throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_METHODS, paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId());
@@ -156,20 +157,20 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin);
     }
 
-    public Pagination<PaymentMethod> getPaymentMethods(final Long offset, final Long limit, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
+    public Pagination<PaymentMethod> getPaymentMethods(final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
         return getEntityPaginationFromPlugins(getAvailablePlugins(),
                                               offset,
                                               limit,
                                               new EntityPaginationBuilder<PaymentMethod, PaymentApiException>() {
                                                   @Override
                                                   public Pagination<PaymentMethod> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                      return getPaymentMethods(offset, limit, pluginName, tenantContext, internalTenantContext);
+                                                      return getPaymentMethods(offset, limit, pluginName, properties, tenantContext, internalTenantContext);
                                                   }
                                               }
                                              );
     }
 
-    public Pagination<PaymentMethod> getPaymentMethods(final Long offset, final Long limit, final String pluginName, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+    public Pagination<PaymentMethod> getPaymentMethods(final Long offset, final Long limit, final String pluginName, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
 
         return getEntityPagination(limit,
@@ -185,7 +186,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                        public PaymentMethod apply(final PaymentMethodModelDao paymentMethodModelDao) {
                                            PaymentMethodPlugin paymentMethodPlugin = null;
                                            try {
-                                               paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), ImmutableList.<PluginProperty>of(), tenantContext);
+                                               paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), properties, tenantContext);
                                            } catch (final PaymentPluginApiException e) {
                                                log.warn("Unable to find payment method id " + paymentMethodModelDao.getId() + " in plugin " + pluginName);
                                                // We still want to return a payment method object, even though the plugin details are missing
@@ -197,20 +198,21 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                   );
     }
 
-    public Pagination<PaymentMethod> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final InternalTenantContext internalTenantContext) {
+    public Pagination<PaymentMethod> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final InternalTenantContext internalTenantContext) {
         return getEntityPaginationFromPlugins(getAvailablePlugins(),
                                               offset,
                                               limit,
                                               new EntityPaginationBuilder<PaymentMethod, PaymentApiException>() {
                                                   @Override
                                                   public Pagination<PaymentMethod> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                      return searchPaymentMethods(searchKey, offset, limit, pluginName, internalTenantContext);
+                                                      return searchPaymentMethods(searchKey, offset, limit, pluginName, properties, internalTenantContext);
                                                   }
                                               }
                                              );
     }
 
-    public Pagination<PaymentMethod> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final String pluginName, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+    public Pagination<PaymentMethod> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final String pluginName,
+                                                          final Iterable<PluginProperty> properties, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
 
         return getEntityPagination(limit,
@@ -218,7 +220,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                        @Override
                                        public Pagination<PaymentMethodPlugin> build() throws PaymentApiException {
                                            try {
-                                               return pluginApi.searchPaymentMethods(searchKey, offset, limit, ImmutableList.<PluginProperty>of(), buildTenantContext(internalTenantContext));
+                                               return pluginApi.searchPaymentMethods(searchKey, offset, limit, properties, buildTenantContext(internalTenantContext));
                                            } catch (final PaymentPluginApiException e) {
                                                throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENT_METHODS, pluginName, searchKey);
                                            }
@@ -245,8 +247,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                   );
     }
 
-    public PaymentMethod getExternalPaymentMethod(final Account account, final InternalTenantContext context) throws PaymentApiException {
-        final List<PaymentMethod> paymentMethods = getPaymentMethods(account, false, context);
+    public PaymentMethod getExternalPaymentMethod(final Account account, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
+        final List<PaymentMethod> paymentMethods = getPaymentMethods(account, false, properties, context);
         for (final PaymentMethod paymentMethod : paymentMethods) {
             if (ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(paymentMethod.getPluginName())) {
                 return paymentMethod;
@@ -256,30 +258,31 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return null;
     }
 
-    public ExternalPaymentProviderPlugin getExternalPaymentProviderPlugin(final Account account, final InternalCallContext context) throws PaymentApiException {
+    public ExternalPaymentProviderPlugin getExternalPaymentProviderPlugin(final Account account, final Iterable<PluginProperty> properties, final InternalCallContext context) throws PaymentApiException {
         // Check if this account has already used the external payment plugin
         // If not, it's the first time - add a payment method for it
-        if (getExternalPaymentMethod(account, context) == null) {
-            final DefaultNoOpPaymentMethodPlugin props = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, ImmutableList.<PluginProperty>of());
-            addPaymentMethod(ExternalPaymentProviderPlugin.PLUGIN_NAME, account, false, props, context);
+        if (getExternalPaymentMethod(account, properties, context) == null) {
+            final DefaultNoOpPaymentMethodPlugin props = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, properties);
+            addPaymentMethod(ExternalPaymentProviderPlugin.PLUGIN_NAME, account, false, props, properties, context);
         }
 
         return (ExternalPaymentProviderPlugin) getPaymentPluginApi(ExternalPaymentProviderPlugin.PLUGIN_NAME);
     }
 
-    private List<PaymentMethod> getPaymentMethodInternal(final List<PaymentMethodModelDao> paymentMethodModels, final boolean withPluginInfo, final InternalTenantContext context)
+    private List<PaymentMethod> getPaymentMethodInternal(final List<PaymentMethodModelDao> paymentMethodModels, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final InternalTenantContext context)
             throws PaymentApiException {
 
         final List<PaymentMethod> result = new ArrayList<PaymentMethod>(paymentMethodModels.size());
         for (final PaymentMethodModelDao paymentMethodModel : paymentMethodModels) {
-            final PaymentMethod pm = buildDefaultPaymentMethod(paymentMethodModel, withPluginInfo, context);
+            final PaymentMethod pm = buildDefaultPaymentMethod(paymentMethodModel, withPluginInfo, properties, context);
             result.add(pm);
         }
         return result;
     }
 
     public void deletedPaymentMethod(final Account account, final UUID paymentMethodId,
-                                     final boolean deleteDefaultPaymentMethodWithAutoPayOff, final InternalCallContext context)
+                                     final boolean deleteDefaultPaymentMethodWithAutoPayOff,
+                                     final Iterable<PluginProperty> properties, final InternalCallContext context)
             throws PaymentApiException {
         final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
 
@@ -307,7 +310,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                         }
                     }
                     final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, context);
-                    pluginApi.deletePaymentMethod(account.getId(), paymentMethodId, ImmutableList.<PluginProperty>of(), context.toCallContext(tenantId));
+                    pluginApi.deletePaymentMethod(account.getId(), paymentMethodId, properties, context.toCallContext(tenantId));
                     paymentDao.deletedPaymentMethod(paymentMethodId, context);
                     return null;
                 } catch (final PaymentPluginApiException e) {
@@ -320,7 +323,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         });
     }
 
-    public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final InternalCallContext context)
+    public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> properties, final InternalCallContext context)
             throws PaymentApiException {
         final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
 
@@ -336,7 +339,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 try {
                     final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, context);
 
-                    pluginApi.setDefaultPaymentMethod(account.getId(), paymentMethodId, ImmutableList.<PluginProperty>of(), context.toCallContext(tenantId));
+                    pluginApi.setDefaultPaymentMethod(account.getId(), paymentMethodId, properties, context.toCallContext(tenantId));
                     accountInternalApi.updatePaymentMethod(account.getId(), paymentMethodId, context);
                     return null;
                 } catch (final PaymentPluginApiException e) {
@@ -368,14 +371,14 @@ public class PaymentMethodProcessor extends ProcessorBase {
      * @return the list of payment methods -- should be identical between KB, the plugin view-- if it keeps a state-- and the gateway.
      * @throws PaymentApiException
      */
-    public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final InternalCallContext context) throws PaymentApiException {
+    public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final Iterable<PluginProperty> properties, final InternalCallContext context) throws PaymentApiException {
         final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
 
         // Don't hold the account lock while fetching the payment methods from the gateway as those could change anyway
         final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
         final List<PaymentMethodInfoPlugin> pluginPms;
         try {
-            pluginPms = pluginApi.getPaymentMethods(account.getId(), true, ImmutableList.<PluginProperty>of(), context.toCallContext(tenantId));
+            pluginPms = pluginApi.getPaymentMethods(account.getId(), true, properties, context.toCallContext(tenantId));
             // The method should never return null by convention, but let's not trust the plugin...
             if (pluginPms == null) {
                 log.debug("No payment methods defined on the account {} for plugin {}", account.getId(), pluginName);
@@ -418,7 +421,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                              finalPaymentMethods,
                                                                                                              context);
                 try {
-                    pluginApi.resetPaymentMethods(account.getId(), pluginPmsWithId, ImmutableList.<PluginProperty>of());
+                    pluginApi.resetPaymentMethods(account.getId(), pluginPmsWithId, properties);
                 } catch (final PaymentPluginApiException e) {
                     log.warn("Error resetting payment methods for account " + account.getId() + " and plugin " + pluginName, e);
                     throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());

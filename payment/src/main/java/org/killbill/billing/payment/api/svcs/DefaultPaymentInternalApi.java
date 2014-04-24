@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -23,13 +25,14 @@ import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentInternalApi;
 import org.killbill.billing.payment.api.PaymentMethod;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
-import org.killbill.billing.callcontext.InternalTenantContext;
 
 public class DefaultPaymentInternalApi implements PaymentInternalApi {
 
@@ -43,8 +46,8 @@ public class DefaultPaymentInternalApi implements PaymentInternalApi {
     }
 
     @Override
-    public Payment getPayment(final UUID paymentId, final InternalTenantContext context) throws PaymentApiException {
-        final Payment payment = paymentProcessor.getPayment(paymentId, false, context);
+    public Payment getPayment(final UUID paymentId, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
+        final Payment payment = paymentProcessor.getPayment(paymentId, false, properties, context);
         if (payment == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentId);
         }
@@ -52,8 +55,8 @@ public class DefaultPaymentInternalApi implements PaymentInternalApi {
     }
 
     @Override
-    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final boolean includedInactive, final InternalTenantContext context) throws PaymentApiException {
-        return methodProcessor.getPaymentMethodById(paymentMethodId, includedInactive, false, context);
+    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final boolean includedInactive, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
+        return methodProcessor.getPaymentMethodById(paymentMethodId, includedInactive, false, properties, context);
     }
 
     @Override
@@ -62,7 +65,7 @@ public class DefaultPaymentInternalApi implements PaymentInternalApi {
     }
 
     @Override
-    public List<PaymentMethod> getPaymentMethods(final Account account, final InternalTenantContext context) throws PaymentApiException {
-        return methodProcessor.getPaymentMethods(account, false, context);
+    public List<PaymentMethod> getPaymentMethods(final Account account, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
+        return methodProcessor.getPaymentMethods(account, false, properties, context);
     }
 }

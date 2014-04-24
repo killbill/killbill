@@ -25,19 +25,21 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
 import org.joda.time.LocalDate;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.PaymentAttempt;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentAttempt;
 import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -132,8 +134,8 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         setPaymentFailure(failureType);
         boolean failed = false;
         try {
-            paymentProcessor.createPayment(account, invoice.getId(), amount, internalCallContext, false, false);
-        } catch (PaymentApiException e) {
+            paymentProcessor.createPayment(account, invoice.getId(), amount, internalCallContext, false, false, ImmutableList.<PluginProperty>of());
+        } catch (final PaymentApiException e) {
             failed = true;
         }
         assertTrue(failed);
@@ -155,7 +157,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
                             return payment.getPaymentStatus() == PaymentStatus.SUCCESS;
                         }
                     });
-                } catch (TimeoutException e) {
+                } catch (final TimeoutException e) {
                     if (curFailure == maxTries - 1) {
                         fail("Failed to find successful payment for attempt " + (curFailure + 1) + "/" + maxTries);
                     }
@@ -166,7 +168,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         final List<PaymentAttempt> attempts = payment.getAttempts();
 
         final int expectedAttempts = maxTries < getMaxRetrySizeForFailureType(failureType) ?
-                maxTries + 1 : getMaxRetrySizeForFailureType(failureType) + 1;
+                                     maxTries + 1 : getMaxRetrySizeForFailureType(failureType) + 1;
         assertEquals(attempts.size(), expectedAttempts);
         Collections.sort(attempts, new Comparator<PaymentAttempt>() {
             @Override

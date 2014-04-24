@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,15 +22,15 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.core.PaymentProcessor;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.clock.Clock;
+import org.killbill.notificationq.api.NotificationQueueService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.killbill.notificationq.api.NotificationQueueService;
-import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.billing.payment.core.PaymentProcessor;
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.clock.Clock;
 
 import com.google.inject.Inject;
 
@@ -50,8 +52,8 @@ public class FailedPaymentRetryService extends BaseRetryService implements Retry
     }
 
     @Override
-    public void retry(final UUID paymentId, final InternalCallContext context) {
-        paymentProcessor.retryFailedPayment(paymentId, context);
+    public void retry(final UUID paymentId, final Iterable<PluginProperty> properties, final InternalCallContext context) {
+        paymentProcessor.retryFailedPayment(paymentId, properties, context);
     }
 
     public static class FailedPaymentRetryServiceScheduler extends RetryServiceScheduler {

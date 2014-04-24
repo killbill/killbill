@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -60,6 +62,7 @@ import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.Refund;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -111,11 +114,13 @@ public class PaymentResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getPayment(@PathParam(ID_PARAM_NAME) final String paymentIdString,
                                @QueryParam(QUERY_PAYMENT_WITH_REFUNDS_AND_CHARGEBACKS) @DefaultValue("false") final Boolean withRefundsAndChargebacks,
+                               @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID paymentId = UUID.fromString(paymentIdString);
-        final Payment payment = paymentApi.getPayment(paymentId, false, tenantContext);
+        final Payment payment = paymentApi.getPayment(paymentId, false, pluginProperties, tenantContext);
 
         final PaymentJson paymentJson;
         if (withRefundsAndChargebacks) {
@@ -146,15 +151,17 @@ public class PaymentResource extends JaxRsResourceBase {
     public Response getPayments(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                 @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                 @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
 
         final Pagination<Payment> payments;
         if (Strings.isNullOrEmpty(pluginName)) {
-            payments = paymentApi.getPayments(offset, limit, tenantContext);
+            payments = paymentApi.getPayments(offset, limit, pluginProperties, tenantContext);
         } else {
-            payments = paymentApi.getPayments(offset, limit, pluginName, tenantContext);
+            payments = paymentApi.getPayments(offset, limit, pluginName, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(PaymentResource.class, "getPayments", payments.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
@@ -183,16 +190,18 @@ public class PaymentResource extends JaxRsResourceBase {
                                    @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                    @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                    @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                   @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                    @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
 
         // Search the plugin(s)
         final Pagination<Payment> payments;
         if (Strings.isNullOrEmpty(pluginName)) {
-            payments = paymentApi.searchPayments(searchKey, offset, limit, tenantContext);
+            payments = paymentApi.searchPayments(searchKey, offset, limit, pluginProperties, tenantContext);
         } else {
-            payments = paymentApi.searchPayments(searchKey, offset, limit, pluginName, tenantContext);
+            payments = paymentApi.searchPayments(searchKey, offset, limit, pluginName, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(PaymentResource.class, "searchPayments", payments.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
@@ -220,17 +229,18 @@ public class PaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response retryFailedPayment(@PathParam(ID_PARAM_NAME) final String paymentIdString,
+                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
-
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID paymentId = UUID.fromString(paymentIdString);
-        final Payment payment = paymentApi.getPayment(paymentId, false, callContext);
+        final Payment payment = paymentApi.getPayment(paymentId, false, pluginProperties, callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
-        final Payment newPayment = paymentApi.retryPayment(account, paymentId, callContext);
+        final Payment newPayment = paymentApi.retryPayment(account, paymentId, pluginProperties, callContext);
 
         return Response.status(Status.OK).entity(new PaymentJson(newPayment, null)).build();
     }
@@ -279,15 +289,17 @@ public class PaymentResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response createRefund(final RefundJson json,
                                  @PathParam("paymentId") final String paymentId,
+                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final UriInfo uriInfo,
                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID paymentUuid = UUID.fromString(paymentId);
-        final Payment payment = paymentApi.getPayment(paymentUuid, false, callContext);
+        final Payment payment = paymentApi.getPayment(paymentUuid, false, pluginProperties, callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
         final Refund result;
@@ -297,14 +309,14 @@ public class PaymentResource extends JaxRsResourceBase {
                 for (final InvoiceItemJson item : json.getAdjustments()) {
                     adjustments.put(UUID.fromString(item.getInvoiceItemId()), item.getAmount());
                 }
-                result = paymentApi.createRefundWithItemsAdjustments(account, paymentUuid, adjustments, callContext);
+                result = paymentApi.createRefundWithItemsAdjustments(account, paymentUuid, adjustments, pluginProperties, callContext);
             } else {
                 // Invoice adjustment
-                result = paymentApi.createRefundWithAdjustment(account, paymentUuid, json.getAmount(), callContext);
+                result = paymentApi.createRefundWithAdjustment(account, paymentUuid, json.getAmount(), pluginProperties, callContext);
             }
         } else {
             // Refund without adjustment
-            result = paymentApi.createRefund(account, paymentUuid, json.getAmount(), callContext);
+            result = paymentApi.createRefund(account, paymentUuid, json.getAmount(), pluginProperties, callContext);
         }
 
         return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId(), uriInfo.getBaseUri().toString());
@@ -382,12 +394,14 @@ public class PaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String paymentIdString,
+                            @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID paymentId = UUID.fromString(paymentIdString);
         final TenantContext tenantContext = context.createContext(request);
-        final Payment payment = paymentApi.getPayment(paymentId, false, tenantContext);
+        final Payment payment = paymentApi.getPayment(paymentId, false, pluginProperties, tenantContext);
         return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
     }
 

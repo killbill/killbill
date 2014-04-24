@@ -37,26 +37,26 @@ import com.google.common.collect.ImmutableList;
 
 public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWithEmbeddedDB {
 
+    private static final ImmutableList<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        getPluginApi().resetPaymentMethods(null, null, ImmutableList.<PluginProperty>of());
+        getPluginApi().resetPaymentMethods(null, null, PLUGIN_PROPERTIES);
     }
 
     @Test(groups = "slow")
     public void testRefreshWithNewPaymentMethod() throws Exception {
-        final ImmutableList<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of();
-
         final Account account = testHelper.createTestAccount("foo@bar.com", true);
-        Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, pluginProperties, callContext).size(), 1);
+        Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, PLUGIN_PROPERTIES, callContext).size(), 1);
         final UUID existingPMId = account.getPaymentMethodId();
 
         // Add new payment in plugin directly
         final UUID newPmId = UUID.randomUUID();
-        getPluginApi().addPaymentMethod(account.getId(), newPmId, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, ImmutableList.<PluginProperty>of()), false, pluginProperties, callContext);
+        getPluginApi().addPaymentMethod(account.getId(), newPmId, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, ImmutableList.<PluginProperty>of()), false, PLUGIN_PROPERTIES, callContext);
 
         // Verify that the refresh does indeed show 2 PMs
-        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, internalCallContext);
+        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, PLUGIN_PROPERTIES, internalCallContext);
         Assert.assertEquals(methods.size(), 2);
         checkPaymentMethodExistsWithStatus(methods, existingPMId, true);
         checkPaymentMethodExistsWithStatus(methods, newPmId, true);
@@ -64,23 +64,21 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
 
     @Test(groups = "slow")
     public void testRefreshWithDeletedPaymentMethod() throws Exception {
-        final ImmutableList<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of();
-
         final Account account = testHelper.createTestAccount("super@bar.com", true);
-        Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, pluginProperties, callContext).size(), 1);
+        Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, PLUGIN_PROPERTIES, callContext).size(), 1);
         final UUID firstPmId = account.getPaymentMethodId();
 
-        final UUID secondPmId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null), callContext);
-        Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, pluginProperties, callContext).size(), 2);
-        Assert.assertEquals(paymentApi.getPaymentMethods(account, false, callContext).size(), 2);
+        final UUID secondPmId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null), PLUGIN_PROPERTIES, callContext);
+        Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, PLUGIN_PROPERTIES, callContext).size(), 2);
+        Assert.assertEquals(paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext).size(), 2);
 
         // Remove second PM from plugin
-        getPluginApi().deletePaymentMethod(account.getId(), secondPmId, pluginProperties, callContext);
-        Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, pluginProperties, callContext).size(), 1);
-        Assert.assertEquals(paymentApi.getPaymentMethods(account, false, callContext).size(), 2);
+        getPluginApi().deletePaymentMethod(account.getId(), secondPmId, PLUGIN_PROPERTIES, callContext);
+        Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, PLUGIN_PROPERTIES, callContext).size(), 1);
+        Assert.assertEquals(paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext).size(), 2);
 
         // Verify that the refresh sees that PM as being deleted now
-        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, internalCallContext);
+        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, PLUGIN_PROPERTIES, internalCallContext);
         Assert.assertEquals(methods.size(), 1);
         checkPaymentMethodExistsWithStatus(methods, firstPmId, true);
 

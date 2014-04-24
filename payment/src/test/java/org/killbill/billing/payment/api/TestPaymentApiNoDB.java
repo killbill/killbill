@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,18 +19,10 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -37,6 +31,14 @@ import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -46,6 +48,8 @@ import static org.testng.Assert.fail;
 public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     private static final Logger log = LoggerFactory.getLogger(TestPaymentApiNoDB.class);
+
+    private final Iterable<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
 
     private Account account;
 
@@ -116,7 +120,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
                                                             Currency.USD));
 
         try {
-            final Payment paymentInfo = paymentApi.createPayment(account, invoice.getId(), requestedAmount, callContext);
+            final Payment paymentInfo = paymentApi.createPayment(account, invoice.getId(), requestedAmount, PLUGIN_PROPERTIES, callContext);
             if (expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
             }
@@ -131,7 +135,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
             final PaymentAttempt paymentAttempt = paymentInfo.getAttempts().get(0);
             assertNotNull(paymentAttempt);
             assertNotNull(paymentAttempt.getId());
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             if (expectedAmount != null) {
                 fail("Failed to create payment", e);
             } else {
@@ -143,37 +147,37 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testPaymentMethods() throws Exception {
-        List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false, callContext);
+        List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 1);
 
         final PaymentMethod initDefaultMethod = methods.get(0);
         assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
 
         final PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
-        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, newPaymenrMethod, callContext);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, newPaymenrMethod, PLUGIN_PROPERTIES, callContext);
         Mockito.when(account.getPaymentMethodId()).thenReturn(newPaymentMethodId);
 
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        methods = paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 2);
 
         assertEquals(newPaymentMethodId, account.getPaymentMethodId());
 
         boolean failed = false;
         try {
-            paymentApi.deletedPaymentMethod(account, newPaymentMethodId, false, callContext);
-        } catch (PaymentApiException e) {
+            paymentApi.deletedPaymentMethod(account, newPaymentMethodId, false, PLUGIN_PROPERTIES, callContext);
+        } catch (final PaymentApiException e) {
             failed = true;
         }
         assertTrue(failed);
 
-        paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), true,  callContext);
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), true, PLUGIN_PROPERTIES, callContext);
+        methods = paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 1);
 
         // NOW retry with default payment method with special flag
-        paymentApi.deletedPaymentMethod(account, newPaymentMethodId, true, callContext);
+        paymentApi.deletedPaymentMethod(account, newPaymentMethodId, true, PLUGIN_PROPERTIES, callContext);
 
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        methods = paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 0);
     }
 }
