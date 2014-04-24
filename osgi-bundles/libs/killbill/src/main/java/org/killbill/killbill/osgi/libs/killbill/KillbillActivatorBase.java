@@ -28,7 +28,7 @@ public abstract class KillbillActivatorBase implements BundleActivator {
     protected OSGIKillbillRegistrar registrar;
     protected OSGIKillbillDataSource dataSource;
     protected OSGIKillbillEventDispatcher dispatcher;
-    protected OSGIConfigProperties configProperties;
+    protected OSGIConfigPropertiesService configProperties;
 
     @Override
     public void start(final BundleContext context) throws Exception {
