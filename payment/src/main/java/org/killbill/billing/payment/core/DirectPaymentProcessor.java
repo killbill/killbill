@@ -150,7 +150,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                      new PluginWrapper() {
                                          @Override
                                          public PaymentInfoPlugin doPluginOperation(final PaymentPluginApi plugin, final Account account, final BigDecimal amount, final UUID directPaymentId, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
-                                             return plugin.authorizePayment(account.getId(), directPaymentId, account.getPaymentMethodId(), amount, currency, properties, callContext);
+                                             return plugin.processPayment(account.getId(), directPaymentId, account.getPaymentMethodId(), amount, currency, properties, callContext);
                                          }
                                      },
                                      directPaymentId,
