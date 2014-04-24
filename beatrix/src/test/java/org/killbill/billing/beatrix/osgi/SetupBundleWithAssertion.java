@@ -155,7 +155,7 @@ public class SetupBundleWithAssertion {
 
     private void installJrubyJar() throws IOException {
 
-        final String resourceName = JRUBY_BUNDLE_RESOURCE + "-" + killbillVersion + ".jar";
+        final String resourceName = JRUBY_BUNDLE_RESOURCE + ".jar";
         final URL resourceUrl = Resources.getResource(resourceName);
         final File rubyJarInput = new File(resourceUrl.getFile());
 
@@ -170,7 +170,7 @@ public class SetupBundleWithAssertion {
 
     private PluginJavaConfig extractJavaBundleTestResource() {
 
-        final String resourceName = bundleName + "-" + killbillVersion + "-jar-with-dependencies.jar";
+        final String resourceName = bundleName + "-jar-with-dependencies.jar";
         final URL resourceUrl = Resources.getResource(resourceName);
         if (resourceUrl != null) {
             final String[] parts = resourceUrl.getPath().split("/");
