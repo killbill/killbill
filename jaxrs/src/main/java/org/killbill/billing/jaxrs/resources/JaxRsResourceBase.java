@@ -39,19 +39,16 @@ import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.JsonBase;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -69,6 +66,9 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Function;
@@ -80,6 +80,9 @@ import com.google.common.collect.Iterables;
 public abstract class JaxRsResourceBase implements JaxrsResource {
 
     static final Logger log = LoggerFactory.getLogger(JaxRsResourceBase.class);
+
+    // TODO PIERRE
+    protected final Iterable<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of();
 
     protected static final ObjectMapper mapper = new ObjectMapper();
 

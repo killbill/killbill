@@ -106,7 +106,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
         this.voidPluginDispatcher = new PluginDispatcher<Void>(paymentPluginTimeoutSec, executor);
     }
 
-    public DirectPayment createAuthorization(final Account account, final BigDecimal amount, final String externalKey, final InternalCallContext callContext) throws PaymentApiException {
+    public DirectPayment createAuthorization(final Account account, final BigDecimal amount, final String externalKey, final Iterable<PluginProperty> properties, final InternalCallContext callContext) throws PaymentApiException {
 
         final PaymentPluginApi plugin = getPaymentProviderPlugin(account, callContext);
 
@@ -124,7 +124,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
         try {
 
             try {
-                infoPlugin = plugin.authorizePayment(account.getId(), pmd.getId(), ptmd.getId(), amount, account.getCurrency(), ImmutableList.<PluginProperty>of(), callContext.toCallContext(tenantId));
+                infoPlugin = plugin.authorizePayment(account.getId(), pmd.getId(), ptmd.getId(), amount, account.getCurrency(), properties, callContext.toCallContext(tenantId));
             } catch (final RuntimeException e) {
                 // Handle case of plugin RuntimeException to be handled the same as a Plugin failure (PaymentPluginApiException)
                 final String formatError = String.format("Plugin threw RuntimeException for payment %s", pmd.getId());
@@ -170,19 +170,19 @@ public class DirectPaymentProcessor extends ProcessorBase {
         return result;
     }
 
-    public DirectPayment createCapture(final Account account, final UUID directPaymentId, final BigDecimal amount, final InternalCallContext callContext) throws PaymentApiException {
+    public DirectPayment createCapture(final Account account, final UUID directPaymentId, final BigDecimal amount, final Iterable<PluginProperty> properties, final InternalCallContext callContext) throws PaymentApiException {
         return null;
     }
 
-    public DirectPayment createPurchase(final Account account, final BigDecimal amount, final String externalKey, final InternalCallContext callContext) throws PaymentApiException {
+    public DirectPayment createPurchase(final Account account, final BigDecimal amount, final String externalKey, final Iterable<PluginProperty> properties, final InternalCallContext callContext) throws PaymentApiException {
         return null;
     }
 
-    public DirectPayment createVoid(final Account account, final UUID directPaymentId, final InternalCallContext callContext) throws PaymentApiException {
+    public DirectPayment createVoid(final Account account, final UUID directPaymentId, final Iterable<PluginProperty> properties, final InternalCallContext callContext) throws PaymentApiException {
         return null;
     }
 
-    public DirectPayment createCredit(final Account account, final UUID directPaymentId, final InternalCallContext callContext) throws PaymentApiException {
+    public DirectPayment createCredit(final Account account, final UUID directPaymentId, final Iterable<PluginProperty> properties, final InternalCallContext callContext) throws PaymentApiException {
         return null;
     }
 

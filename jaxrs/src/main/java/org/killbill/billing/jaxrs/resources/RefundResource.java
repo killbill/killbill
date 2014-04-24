@@ -35,7 +35,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.RefundJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -50,6 +49,7 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
+import org.killbill.clock.Clock;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
@@ -83,7 +83,7 @@ public class RefundResource extends JaxRsResourceBase {
                               @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
-        final Refund refund = paymentApi.getRefund(UUID.fromString(refundId), false, tenantContext);
+        final Refund refund = paymentApi.getRefund(UUID.fromString(refundId), false, pluginProperties, tenantContext);
         final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(refund.getId(), ObjectType.REFUND, auditMode.getLevel(), tenantContext);
         // TODO Return adjusted items
         return Response.status(Status.OK).entity(new RefundJson(refund, null, auditLogs)).build();
@@ -101,9 +101,9 @@ public class RefundResource extends JaxRsResourceBase {
 
         final Pagination<Refund> refunds;
         if (Strings.isNullOrEmpty(pluginName)) {
-            refunds = paymentApi.getRefunds(offset, limit, tenantContext);
+            refunds = paymentApi.getRefunds(offset, limit, pluginProperties, tenantContext);
         } else {
-            refunds = paymentApi.getRefunds(offset, limit, pluginName, tenantContext);
+            refunds = paymentApi.getRefunds(offset, limit, pluginName, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(RefundResource.class, "getRefunds", refunds.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
@@ -118,7 +118,7 @@ public class RefundResource extends JaxRsResourceBase {
                                                         UUID kbAccountId = null;
                                                         if (!AuditLevel.NONE.equals(auditMode.getLevel()) && paymentIdAccountIdMappings.get(refund.getPaymentId()) == null) {
                                                             try {
-                                                                kbAccountId = paymentApi.getPayment(refund.getPaymentId(), false, tenantContext).getAccountId();
+                                                                kbAccountId = paymentApi.getPayment(refund.getPaymentId(), false, pluginProperties, tenantContext).getAccountId();
                                                                 paymentIdAccountIdMappings.put(refund.getPaymentId(), kbAccountId);
                                                             } catch (final PaymentApiException e) {
                                                                 log.warn("Unable to retrieve payment for id " + refund.getPaymentId());
@@ -134,7 +134,8 @@ public class RefundResource extends JaxRsResourceBase {
                                                         return new RefundJson(refund, null, auditLogs);
                                                     }
                                                 },
-                                                nextPageUri);
+                                                nextPageUri
+                                               );
     }
 
     @GET
@@ -151,9 +152,9 @@ public class RefundResource extends JaxRsResourceBase {
         // Search the plugin(s)
         final Pagination<Refund> refunds;
         if (Strings.isNullOrEmpty(pluginName)) {
-            refunds = paymentApi.searchRefunds(searchKey, offset, limit, tenantContext);
+            refunds = paymentApi.searchRefunds(searchKey, offset, limit, pluginProperties, tenantContext);
         } else {
-            refunds = paymentApi.searchRefunds(searchKey, offset, limit, pluginName, tenantContext);
+            refunds = paymentApi.searchRefunds(searchKey, offset, limit, pluginName, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(RefundResource.class, "searchRefunds", refunds.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
@@ -169,7 +170,7 @@ public class RefundResource extends JaxRsResourceBase {
                                                         UUID kbAccountId = null;
                                                         if (!AuditLevel.NONE.equals(auditMode.getLevel()) && paymentIdAccountIdMappings.get(refund.getPaymentId()) == null) {
                                                             try {
-                                                                kbAccountId = paymentApi.getPayment(refund.getPaymentId(), false, tenantContext).getAccountId();
+                                                                kbAccountId = paymentApi.getPayment(refund.getPaymentId(), false, pluginProperties, tenantContext).getAccountId();
                                                                 paymentIdAccountIdMappings.put(refund.getPaymentId(), kbAccountId);
                                                             } catch (final PaymentApiException e) {
                                                                 log.warn("Unable to retrieve payment for id " + refund.getPaymentId());
@@ -185,7 +186,8 @@ public class RefundResource extends JaxRsResourceBase {
                                                         return new RefundJson(refund, null, auditLogs);
                                                     }
                                                 },
-                                                nextPageUri);
+                                                nextPageUri
+                                               );
     }
 
     @Override

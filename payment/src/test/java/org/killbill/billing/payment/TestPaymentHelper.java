@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,27 +21,28 @@ package org.killbill.billing.payment;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.mockito.Mockito;
-
 import org.killbill.billing.account.api.Account;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
-import org.killbill.billing.events.InvoiceCreationInternalEvent;
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.invoice.api.InvoiceInternalApi;
+import org.mockito.Mockito;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class TestPaymentHelper {
@@ -127,7 +130,7 @@ public class TestPaymentHelper {
     }
 
     public void addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, paymentMethodInfo, context);
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, paymentMethodInfo, ImmutableList.<PluginProperty>of(), context);
         Mockito.when(account.getPaymentMethodId()).thenReturn(paymentMethodId);
     }
 }

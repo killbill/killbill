@@ -26,6 +26,8 @@ import javax.annotation.Nullable;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
 
+import com.google.common.collect.ImmutableList;
+
 public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
 
     private final UUID kbPaymentMethodId;
@@ -42,18 +44,18 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
 
     public DefaultNoOpPaymentMethodPlugin(final String externalId,
                                           final boolean isDefault,
-                                          final List<PluginProperty> props) {
+                                          final Iterable<PluginProperty> props) {
         this(null, externalId, isDefault, props);
     }
 
     public DefaultNoOpPaymentMethodPlugin(@Nullable final UUID kbPaymentMethodId,
                                           final String externalId,
                                           final boolean isDefault,
-                                          final List<PluginProperty> props) {
+                                          final Iterable<PluginProperty> props) {
         this.kbPaymentMethodId = kbPaymentMethodId;
         this.externalId = externalId;
         this.isDefault = isDefault;
-        this.props = props;
+        this.props = ImmutableList.<PluginProperty>copyOf(props);
     }
 
     @Override

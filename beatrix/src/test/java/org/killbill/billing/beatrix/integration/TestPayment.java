@@ -1,4 +1,5 @@
 /*
+ * Copyright 2014 Groupon, Inc
  * Copyright 2014 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
@@ -17,9 +18,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -50,12 +49,12 @@ public class TestPayment extends TestIntegrationBase {
         clock.setDay(new LocalDate(2012, 4, 1));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null,  "Initial external charge", clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null, "Initial external charge", clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
         final InvoiceItem item1 = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), callContext).get(0);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        final Payment payment1 = paymentApi.createPayment(account, item1.getInvoiceId(), new BigDecimal("4.00"), callContext);
+        final Payment payment1 = paymentApi.createPayment(account, item1.getInvoiceId(), new BigDecimal("4.00"), PLUGIN_PROPERTIES, callContext);
         assertListenerStatus();
 
         Invoice invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
@@ -67,7 +66,7 @@ public class TestPayment extends TestIntegrationBase {
         assertTrue(accountBalance.compareTo(new BigDecimal("6.00")) == 0);
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        final Payment payment2 = paymentApi.createPayment(account, item1.getInvoiceId(), new BigDecimal("6.00"), callContext);
+        final Payment payment2 = paymentApi.createPayment(account, item1.getInvoiceId(), new BigDecimal("6.00"), PLUGIN_PROPERTIES, callContext);
         assertListenerStatus();
 
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
@@ -92,7 +91,7 @@ public class TestPayment extends TestIntegrationBase {
 
 */
         // And then issue refund with item adjustment on first invoice/item
-        paymentApi.createRefund(account, payment2.getId(), new BigDecimal("5.00"), callContext);
+        paymentApi.createRefund(account, payment2.getId(), new BigDecimal("5.00"), PLUGIN_PROPERTIES, callContext);
 
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(new BigDecimal("5.00")) == 0);

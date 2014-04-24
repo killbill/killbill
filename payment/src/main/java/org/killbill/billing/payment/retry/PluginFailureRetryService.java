@@ -19,17 +19,17 @@ package org.killbill.billing.payment.retry;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.killbill.notificationq.api.NotificationQueueService;
-import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.clock.Clock;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.clock.Clock;
+import org.killbill.notificationq.api.NotificationQueueService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
@@ -50,8 +50,8 @@ public class PluginFailureRetryService extends BaseRetryService implements Retry
     }
 
     @Override
-    public void retry(final UUID paymentId, final InternalCallContext context) {
-        paymentProcessor.retryPluginFailure(paymentId, context);
+    public void retry(final UUID paymentId, final Iterable<PluginProperty> properties, final InternalCallContext context) {
+        paymentProcessor.retryPluginFailure(paymentId, properties, context);
     }
 
     public static class PluginFailureRetryServiceScheduler extends RetryServiceScheduler {

@@ -101,6 +101,7 @@ import org.testng.annotations.BeforeMethod;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
@@ -116,6 +117,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     protected static final Logger log = LoggerFactory.getLogger(TestIntegrationBase.class);
     protected static long AT_LEAST_ONE_MONTH_MS = 32L * 24L * 3600L * 1000L;
+
+    protected final Iterable<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
 
     @Inject
     protected Lifecycle lifecycle;
@@ -298,7 +301,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
         final PaymentMethodPlugin info = createPaymentMethodPlugin();
 
-        paymentApi.addPaymentMethod(paymentPluginName, account, true, info, callContext);
+        paymentApi.addPaymentMethod(paymentPluginName, account, true, info, PLUGIN_PROPERTIES, callContext);
         return accountUserApi.getAccountById(account.getId(), callContext);
     }
 
@@ -373,7 +376,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Void apply(@Nullable final Void input) {
                 try {
-                    paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+                    paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), PLUGIN_PROPERTIES, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
@@ -401,7 +404,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Void apply(@Nullable final Void input) {
                 try {
-                    paymentApi.createRefund(account, payment.getId(), payment.getPaidAmount(), callContext);
+                    paymentApi.createRefund(account, payment.getId(), payment.getPaidAmount(), PLUGIN_PROPERTIES, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
@@ -415,7 +418,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Void apply(@Nullable final Void input) {
                 try {
-                    paymentApi.createRefundWithAdjustment(account, payment.getId(), payment.getPaidAmount(), callContext);
+                    paymentApi.createRefundWithAdjustment(account, payment.getId(), payment.getPaidAmount(), PLUGIN_PROPERTIES, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
@@ -429,7 +432,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Void apply(@Nullable final Void input) {
                 try {
-                    paymentApi.createRefundWithItemsAdjustments(account, payment.getId(), invoiceItems, callContext);
+                    paymentApi.createRefundWithItemsAdjustments(account, payment.getId(), invoiceItems, PLUGIN_PROPERTIES, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }

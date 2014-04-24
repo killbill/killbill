@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -25,7 +27,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -499,7 +500,7 @@ public class AccountResource extends JaxRsResourceBase {
                 if (externalPayment) {
                     paymentApi.createExternalPayment(account, invoice.getId(), amountToPay, callContext);
                 } else {
-                    paymentApi.createPayment(account, invoice.getId(), amountToPay, callContext);
+                    paymentApi.createPayment(account, invoice.getId(), amountToPay, pluginProperties, callContext);
                 }
             }
             remainingRequestPayment = remainingRequestPayment.subtract(amountToPay);
@@ -542,10 +543,10 @@ public class AccountResource extends JaxRsResourceBase {
             return Response.status(Status.BAD_REQUEST).build();
         }
 
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), callContext);
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), pluginProperties, callContext);
         if (payAllUnpaidInvoices && unpaidInvoices.size() > 0) {
             for (final Invoice invoice : unpaidInvoices) {
-                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), pluginProperties, callContext);
             }
         }
         return uriBuilder.buildResponse(PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, uriInfo.getBaseUri().toString());
@@ -561,7 +562,7 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
-        final List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, withPluginInfo, tenantContext);
+        final List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, withPluginInfo, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
         final List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
             @Override
@@ -587,12 +588,12 @@ public class AccountResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
-        paymentApi.setDefaultPaymentMethod(account, UUID.fromString(paymentMethodId), callContext);
+        paymentApi.setDefaultPaymentMethod(account, UUID.fromString(paymentMethodId), pluginProperties, callContext);
 
         if (payAllUnpaidInvoices) {
             final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
             for (final Invoice invoice : unpaidInvoices) {
-                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), pluginProperties, callContext);
             }
         }
         return Response.status(Status.OK).build();
@@ -609,7 +610,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
 
         final UUID accountId = UUID.fromString(accountIdStr);
-        final List<DirectPayment> payments =  directPaymentApi.getAccountPayments(accountId, withPluginInfo, context.createContext(request));
+        final List<DirectPayment> payments = directPaymentApi.getAccountPayments(accountId, withPluginInfo, pluginProperties, context.createContext(request));
         final List<DirectPaymentJson> result = ImmutableList.copyOf(Iterables.transform(payments, new Function<DirectPayment, DirectPaymentJson>() {
             @Override
             public DirectPaymentJson apply(final DirectPayment input) {
@@ -640,10 +641,10 @@ public class AccountResource extends JaxRsResourceBase {
         DirectPayment result;
         switch (transactionType) {
             case AUTHORIZE:
-                result = directPaymentApi.createAuthorization(account, json.getAmount(), json.getExternalKey(), callContext);
+                result = directPaymentApi.createAuthorization(account, json.getAmount(), json.getExternalKey(), pluginProperties, callContext);
                 break;
             case PURCHASE:
-                result = directPaymentApi.createPurchase(account, json.getAmount(), json.getExternalKey(), callContext);
+                result = directPaymentApi.createPurchase(account, json.getAmount(), json.getExternalKey(), pluginProperties, callContext);
                 break;
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();

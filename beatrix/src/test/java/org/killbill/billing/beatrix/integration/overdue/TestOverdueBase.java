@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,9 +22,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.concurrent.Callable;
 
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.beatrix.integration.BeatrixIntegrationModule;
 import org.killbill.billing.beatrix.integration.TestIntegrationBase;
@@ -34,6 +33,8 @@ import org.killbill.billing.overdue.config.OverdueConfig;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
 import org.killbill.billing.util.config.catalog.XMLLoader;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -62,7 +63,7 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
         assertNotNull(account);
 
-        paymentApi.addPaymentMethod(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
+        paymentApi.addPaymentMethod(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, account, true, paymentMethodPlugin, PLUGIN_PROPERTIES, callContext);
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
         paymentPlugin.clear();
@@ -81,7 +82,7 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
                     return expected.equals(blockingApi.getBlockingStateForService(account.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName());
                 }
             });
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Assert.assertEquals(blockingApi.getBlockingStateForService(account.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName(), expected, "Got exception: " + e.toString());
         }
     }
