@@ -69,7 +69,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
         items.add(item1);
         items.add(new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, amount.negate(), currency, item1.getId()));
         items.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency));
-        defaultInvoiceGenerator.removeRepairedAndRepairInvoiceItems(items, new LinkedList<InvoiceItem>());
+        defaultInvoiceGenerator.removeRepairedAndRepairInvoiceItems(items, new LinkedList<InvoiceItem>(), new LinkedList<InvoiceItem>());
         assertEquals(items.size(), 1);
         final InvoiceItem leftItem = items.get(0);
         assertEquals(leftItem.getInvoiceItemType(), InvoiceItemType.RECURRING);
@@ -91,7 +91,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
         items.add(item1);
         items.add(new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, amount1.negate(), currency, item1.getId()));
         items.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency));
-        defaultInvoiceGenerator.removeRepairedAndRepairInvoiceItems(items, new LinkedList<InvoiceItem>());
+        defaultInvoiceGenerator.removeRepairedAndRepairInvoiceItems(items, new LinkedList<InvoiceItem>(), new LinkedList<InvoiceItem>());
         assertEquals(items.size(), 1);
         final InvoiceItem leftItem = items.get(0);
         assertEquals(leftItem.getInvoiceItemType(), InvoiceItemType.RECURRING);

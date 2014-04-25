@@ -141,8 +141,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         // Generate list of proposed invoice items based on billing events from junction-- proposed items are ALL items since beginning of time
         final List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, accountId, events, adjustedTargetDate, targetCurrency);
 
+        final List<InvoiceItem> newRecurringItems = new ArrayList<InvoiceItem>();
         // Remove repaired and repair items -- since they never change and can't be regenerated
-        removeRepairedAndRepairInvoiceItems(existingItems, proposedItems);
+        removeRepairedAndRepairInvoiceItems(existingItems, proposedItems, newRecurringItems);
 
         // Remove from both lists the items in common
         removeMatchingInvoiceItems(existingItems, proposedItems);
@@ -152,6 +153,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         // Add repair items based on what is left in existing items
         addRepairItems(existingItems, proposedItems);
+
+        proposedItems.addAll(newRecurringItems);
 
         // Finally add this new items on the new invoice
         invoice.addInvoiceItems(proposedItems);
@@ -381,7 +384,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      * @param existingItems input list of existing items
      * @param proposedItems input list of proposed item
      */
-    void removeRepairedAndRepairInvoiceItems(final List<InvoiceItem> existingItems, final List<InvoiceItem> proposedItems) {
+    void removeRepairedAndRepairInvoiceItems(final List<InvoiceItem> existingItems, final List<InvoiceItem> proposedItems, final List<InvoiceItem> newRecurringItems)
+    {
 
         final List<UUID> itemsToRemove = new ArrayList<UUID>();
         List<InvoiceItem> itemsToAdd = Lists.newLinkedList();
@@ -410,6 +414,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             }
         }
         existingItems.addAll(itemsToAdd);
+        newRecurringItems.addAll(itemsToAdd);
     }
 
 
