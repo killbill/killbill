@@ -616,14 +616,16 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + DIRECT_PAYMENTS)
     @Produces(APPLICATION_JSON)
     public Response getDirectPaymentsForAccount(@PathParam("accountId") final String accountIdStr,
+                                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final UUID accountId = UUID.fromString(accountIdStr);
-        final List<DirectPayment> payments = directPaymentApi.getAccountPayments(accountId, context.createContext(request));
+        final TenantContext tenantContext = context.createContext(request);
+        final List<DirectPayment> payments = directPaymentApi.getAccountPayments(accountId, tenantContext);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
         final List<DirectPaymentJson> result = ImmutableList.copyOf(Iterables.transform(payments, new Function<DirectPayment, DirectPaymentJson>() {
             @Override
-            public DirectPaymentJson apply(final DirectPayment input) {
-                // STEPH_DP audits
-                return new DirectPaymentJson(input, null, null);
+            public DirectPaymentJson apply(final DirectPayment directPayment) {
+                return new DirectPaymentJson(directPayment, accountAuditLogs);
             }
         }));
         return Response.status(Response.Status.OK).entity(result).build();
@@ -649,7 +651,7 @@ public class AccountResource extends JaxRsResourceBase {
         final UUID directPaymentId = json.getDirectPaymentId() == null ? null : UUID.fromString(json.getDirectPaymentId());
 
         final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
-        DirectPayment result;
+        final DirectPayment result;
         switch (transactionType) {
             case AUTHORIZE:
                 result = directPaymentApi.createAuthorization(account, directPaymentId, json.getAmount(), currency, json.getExternalKey(), pluginProperties, callContext);
@@ -694,7 +696,7 @@ public class AccountResource extends JaxRsResourceBase {
         final List<Refund> refunds = paymentApi.getAccountRefunds(account, tenantContext);
         final List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<Refund, RefundJson>() {
             @Override
-            public RefundJson apply(Refund input) {
+            public RefundJson apply(final Refund input) {
                 // TODO Return adjusted items and audits
                 return new RefundJson(input, null, null);
             }
@@ -889,7 +891,7 @@ public class AccountResource extends JaxRsResourceBase {
         final UUID accountId = UUID.fromString(id);
 
         final List<AccountEmail> emails = accountUserApi.getEmails(accountId, context.createContext(request));
-        for (AccountEmail cur : emails) {
+        for (final AccountEmail cur : emails) {
             if (cur.getEmail().equals(email)) {
                 final AccountEmailJson accountEmailJson = new AccountEmailJson(accountId.toString(), email);
                 final AccountEmail accountEmail = accountEmailJson.toAccountEmail(cur.getId());

@@ -24,13 +24,12 @@ import javax.annotation.Nullable;
 
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentTransaction;
-import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -69,25 +68,25 @@ public class DirectPaymentJson extends JsonBase {
         this.transactions = transactions;
     }
 
-    public DirectPaymentJson(final DirectPayment dp, @Nullable final List<AuditLog> directPaymentLogs, @Nullable final List<AuditLog> directTransactionLogs) {
+    public DirectPaymentJson(final DirectPayment dp, @Nullable final AccountAuditLogs accountAuditLogs) {
         this(dp.getAccountId().toString(),
-              dp.getId().toString(),
-              dp.getPaymentNumber().toString(),
-              dp.getAuthAmount(),
-              dp.getCapturedAmount(),
-              dp.getRefundedAmount(),
-              dp.getCurrency() != null ? dp.getCurrency().toString() : null,
-              dp.getPaymentMethodId() != null ? dp.getPaymentMethodId().toString() : null,
-              getTransactions(dp.getTransactions(), dp.getId(), dp.getExternalKey(), directTransactionLogs),
-              toAuditLogJson(directPaymentLogs));
+             dp.getId().toString(),
+             dp.getPaymentNumber().toString(),
+             dp.getAuthAmount(),
+             dp.getCapturedAmount(),
+             dp.getRefundedAmount(),
+             dp.getCurrency() != null ? dp.getCurrency().toString() : null,
+             dp.getPaymentMethodId() != null ? dp.getPaymentMethodId().toString() : null,
+             getTransactions(dp.getTransactions(), dp.getId(), dp.getExternalKey(), accountAuditLogs),
+             toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForDirectPayment(dp.getId())));
     }
 
-
-    private static List<DirectTransactionJson> getTransactions(final List<DirectPaymentTransaction> transactions, final UUID directPaymentId, final String externalKey, @Nullable final List<AuditLog> directTransactionLogs) {
+    private static List<DirectTransactionJson> getTransactions(final List<DirectPaymentTransaction> transactions, final UUID directPaymentId, final String externalKey, @Nullable final AccountAuditLogs accountAuditLogs) {
         return ImmutableList.copyOf(Iterables.transform(transactions, new Function<DirectPaymentTransaction, DirectTransactionJson>() {
             @Override
             public DirectTransactionJson apply(final DirectPaymentTransaction input) {
-                return new DirectTransactionJson(input,directPaymentId, externalKey, directTransactionLogs);
+                final List<AuditLog> auditLogsForDirectPaymentTransaction = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForDirectPaymentTransaction(input.getId());
+                return new DirectTransactionJson(input, directPaymentId, externalKey, auditLogsForDirectPaymentTransaction);
             }
         }));
     }

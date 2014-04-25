@@ -17,8 +17,12 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -50,8 +54,15 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
+
+import com.google.common.base.Function;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -79,12 +90,97 @@ public class DirectPaymentResource extends JaxRsResourceBase {
     public Response getDirectPayment(@PathParam("directPaymentId") final String directPaymentIdStr,
                                      @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID directPaymentIdId = UUID.fromString(directPaymentIdStr);
-        final DirectPayment payment = directPaymentApi.getPayment(directPaymentIdId, withPluginInfo, pluginProperties, context.createContext(request));
-        final DirectPaymentJson result = new DirectPaymentJson(payment, null, null);
+        final TenantContext tenantContext = context.createContext(request);
+        final DirectPayment directPayment = directPaymentApi.getPayment(directPaymentIdId, withPluginInfo, pluginProperties, tenantContext);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(directPayment.getAccountId(), auditMode.getLevel(), tenantContext);
+        final DirectPaymentJson result = new DirectPaymentJson(directPayment, accountAuditLogs);
+
         return Response.status(Response.Status.OK).entity(result).build();
+    }
+
+    @GET
+    @Path("/" + PAGINATION)
+    @Produces(APPLICATION_JSON)
+    public Response getDirectPayments(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                      @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                      @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final TenantContext tenantContext = context.createContext(request);
+
+        final Pagination<DirectPayment> directPayments;
+        if (Strings.isNullOrEmpty(pluginName)) {
+            directPayments = directPaymentApi.getPayments(offset, limit, pluginProperties, tenantContext);
+        } else {
+            directPayments = directPaymentApi.getPayments(offset, limit, pluginName, pluginProperties, tenantContext);
+        }
+
+        final URI nextPageUri = uriBuilder.nextPage(DirectPaymentResource.class, "getDirectPayments", directPayments.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
+                                                                                                                                                                             QUERY_AUDIT, auditMode.getLevel().toString()));
+        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
+
+        return buildStreamingPaginationResponse(directPayments,
+                                                new Function<DirectPayment, DirectPaymentJson>() {
+                                                    @Override
+                                                    public DirectPaymentJson apply(final DirectPayment directPayment) {
+                                                        // Cache audit logs per account
+                                                        if (accountsAuditLogs.get().get(directPayment.getAccountId()) == null) {
+                                                            accountsAuditLogs.get().put(directPayment.getAccountId(), auditUserApi.getAccountAuditLogs(directPayment.getAccountId(), auditMode.getLevel(), tenantContext));
+                                                        }
+                                                        final AccountAuditLogs accountAuditLogs = accountsAuditLogs.get().get(directPayment.getAccountId());
+                                                        return new DirectPaymentJson(directPayment, accountAuditLogs);
+                                                    }
+                                                },
+                                                nextPageUri
+                                               );
+    }
+
+    @GET
+    @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public Response searchDirectPayments(@PathParam("searchKey") final String searchKey,
+                                         @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                         @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                         @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                         @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final TenantContext tenantContext = context.createContext(request);
+
+        // Search the plugin(s)
+        final Pagination<DirectPayment> directPayments;
+        if (Strings.isNullOrEmpty(pluginName)) {
+            directPayments = directPaymentApi.searchPayments(searchKey, offset, limit, pluginProperties, tenantContext);
+        } else {
+            directPayments = directPaymentApi.searchPayments(searchKey, offset, limit, pluginName, pluginProperties, tenantContext);
+        }
+
+        final URI nextPageUri = uriBuilder.nextPage(DirectPaymentResource.class, "searchDirectPayments", directPayments.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
+                                                                                                                                                                                QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
+                                                                                                                                                                                QUERY_AUDIT, auditMode.getLevel().toString()));
+        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
+
+        return buildStreamingPaginationResponse(directPayments,
+                                                new Function<DirectPayment, DirectPaymentJson>() {
+                                                    @Override
+                                                    public DirectPaymentJson apply(final DirectPayment directPayment) {
+                                                        // Cache audit logs per account
+                                                        if (accountsAuditLogs.get().get(directPayment.getAccountId()) == null) {
+                                                            accountsAuditLogs.get().put(directPayment.getAccountId(), auditUserApi.getAccountAuditLogs(directPayment.getAccountId(), auditMode.getLevel(), tenantContext));
+                                                        }
+                                                        final AccountAuditLogs accountAuditLogs = accountsAuditLogs.get().get(directPayment.getAccountId());
+                                                        return new DirectPaymentJson(directPayment, accountAuditLogs);
+                                                    }
+                                                },
+                                                nextPageUri
+                                               );
     }
 
     @POST
@@ -100,7 +196,6 @@ public class DirectPaymentResource extends JaxRsResourceBase {
                                          @javax.ws.rs.core.Context final UriInfo uriInfo,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        // STEPH_DP error code if no such payment
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID directPaymentId = UUID.fromString(directPaymentIdStr);
         final DirectPayment initialPayment = directPaymentApi.getPayment(directPaymentId, false, pluginProperties, callContext);
@@ -109,6 +204,30 @@ public class DirectPaymentResource extends JaxRsResourceBase {
         final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
 
         final DirectPayment payment = directPaymentApi.createCapture(account, directPaymentId, json.getAmount(), currency, pluginProperties, callContext);
+        return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
+    }
+
+    @POST
+    @Path("/{directPaymentId:" + UUID_PATTERN + "}/" + CREDITS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response creditPayment(final PaymentJson json,
+                                  @PathParam("directPaymentId") final String directPaymentIdStr,
+                                  @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID directPaymentId = UUID.fromString(directPaymentIdStr);
+        final DirectPayment initialPayment = directPaymentApi.getPayment(directPaymentId, false, pluginProperties, callContext);
+
+        final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+
+        final DirectPayment payment = directPaymentApi.createCredit(account, directPaymentId, json.getAmount(), currency, pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
     }
 
