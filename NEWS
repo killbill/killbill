@@ -1,3 +1,8 @@
+0.11.2
+    Iteration on new direct payment APIs (unstable)
+    invoice: change external charges APIs to allow bulk insertion
+    osgi: introduce OSGIConfigProperties as an an osgi service to allow plugins to read system properties
+
 0.11.1
     Introduction of new direct payment APIs (unstable)
 
