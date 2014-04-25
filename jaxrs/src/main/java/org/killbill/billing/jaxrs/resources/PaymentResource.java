@@ -58,7 +58,6 @@ import org.killbill.billing.jaxrs.json.PaymentJson;
 import org.killbill.billing.jaxrs.json.RefundJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -97,7 +96,6 @@ public class PaymentResource extends JaxRsResourceBase {
     public PaymentResource(final AccountUserApi accountUserApi,
                            final PaymentApi paymentApi,
                            final InvoicePaymentApi invoicePaymentApi,
-                           final DirectPaymentApi directPaymentApi,
                            final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,

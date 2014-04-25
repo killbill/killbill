@@ -44,7 +44,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.jaxrs.json.DirectPaymentJson;
-import org.killbill.billing.jaxrs.json.PaymentJson;
+import org.killbill.billing.jaxrs.json.DirectTransactionJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.DirectPayment;
@@ -187,7 +187,7 @@ public class DirectPaymentResource extends JaxRsResourceBase {
     @Path("/{directPaymentId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response captureAuthorization(final PaymentJson json,
+    public Response captureAuthorization(final DirectTransactionJson json,
                                          @PathParam("directPaymentId") final String directPaymentIdStr,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -211,7 +211,7 @@ public class DirectPaymentResource extends JaxRsResourceBase {
     @Path("/{directPaymentId:" + UUID_PATTERN + "}/" + CREDITS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response creditPayment(final PaymentJson json,
+    public Response creditPayment(final DirectTransactionJson json,
                                   @PathParam("directPaymentId") final String directPaymentIdStr,
                                   @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
