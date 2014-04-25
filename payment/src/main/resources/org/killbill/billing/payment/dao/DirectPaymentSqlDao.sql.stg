@@ -40,3 +40,23 @@ where id = :id
 <AND_CHECK_TENANT()>
 ;
 >>
+
+getByPluginName() ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+join payment_methods pm on pm.id = t.payment_method_id
+where pm.plugin_name = :pluginName
+order by record_id
+limit :offset, :rowCount
+;
+>>
+
+getCountByPluginName() ::= <<
+select
+  count(1) as count
+from <tableName()> t
+join payment_methods pm on pm.id = t.payment_method_id
+where pm.plugin_name = :pluginName
+;
+>>
