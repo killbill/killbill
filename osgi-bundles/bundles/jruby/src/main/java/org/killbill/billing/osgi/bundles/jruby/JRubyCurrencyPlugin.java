@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -23,16 +25,15 @@ import java.util.SortedSet;
 
 import org.joda.time.DateTime;
 import org.jruby.Ruby;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.log.LogService;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.currency.api.Rate;
 import org.killbill.billing.currency.plugin.api.CurrencyPluginApi;
 import org.killbill.billing.osgi.api.OSGIPluginProperties;
 import org.killbill.billing.osgi.api.config.PluginRubyConfig;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogService;
 
 public class JRubyCurrencyPlugin extends JRubyPlugin implements CurrencyPluginApi {
 
@@ -43,7 +44,6 @@ public class JRubyCurrencyPlugin extends JRubyPlugin implements CurrencyPluginAp
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void startPlugin(final BundleContext context) {
         super.startPlugin(context);
 
@@ -64,13 +64,13 @@ public class JRubyCurrencyPlugin extends JRubyPlugin implements CurrencyPluginAp
     @Override
     public Set<Currency> getBaseCurrencies() {
         try {
-            return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.CURRENCY) {
+            return callWithRuntimeAndChecking(new PluginCallback<Set<Currency>>(VALIDATION_PLUGIN_TYPE.CURRENCY) {
                 @Override
                 public Set<Currency> doCall(final Ruby runtime) throws PaymentPluginApiException {
                     return ((CurrencyPluginApi) pluginInstance).getBaseCurrencies();
                 }
             });
-        } catch (PaymentPluginApiException e) {
+        } catch (final PaymentPluginApiException e) {
             throw new RuntimeException(e);
         }
     }
@@ -78,13 +78,13 @@ public class JRubyCurrencyPlugin extends JRubyPlugin implements CurrencyPluginAp
     @Override
     public DateTime getLatestConversionDate(final Currency currency) {
         try {
-            return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.CURRENCY) {
+            return callWithRuntimeAndChecking(new PluginCallback<DateTime>(VALIDATION_PLUGIN_TYPE.CURRENCY) {
                 @Override
                 public DateTime doCall(final Ruby runtime) throws PaymentPluginApiException {
                     return ((CurrencyPluginApi) pluginInstance).getLatestConversionDate(currency);
                 }
             });
-        } catch (PaymentPluginApiException e) {
+        } catch (final PaymentPluginApiException e) {
             throw new RuntimeException(e);
         }
     }
@@ -92,13 +92,13 @@ public class JRubyCurrencyPlugin extends JRubyPlugin implements CurrencyPluginAp
     @Override
     public SortedSet<DateTime> getConversionDates(final Currency currency) {
         try {
-            return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.CURRENCY) {
+            return callWithRuntimeAndChecking(new PluginCallback<SortedSet<DateTime>>(VALIDATION_PLUGIN_TYPE.CURRENCY) {
                 @Override
                 public SortedSet<DateTime> doCall(final Ruby runtime) throws PaymentPluginApiException {
                     return ((CurrencyPluginApi) pluginInstance).getConversionDates(currency);
                 }
             });
-        } catch (PaymentPluginApiException e) {
+        } catch (final PaymentPluginApiException e) {
             throw new RuntimeException(e);
         }
     }
@@ -106,13 +106,13 @@ public class JRubyCurrencyPlugin extends JRubyPlugin implements CurrencyPluginAp
     @Override
     public Set<Rate> getCurrentRates(final Currency currency) {
         try {
-            return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.CURRENCY) {
+            return callWithRuntimeAndChecking(new PluginCallback<Set<Rate>>(VALIDATION_PLUGIN_TYPE.CURRENCY) {
                 @Override
                 public Set<Rate> doCall(final Ruby runtime) throws PaymentPluginApiException {
                     return ((CurrencyPluginApi) pluginInstance).getCurrentRates(currency);
                 }
             });
-        } catch (PaymentPluginApiException e) {
+        } catch (final PaymentPluginApiException e) {
             throw new RuntimeException(e);
         }
     }
@@ -120,13 +120,13 @@ public class JRubyCurrencyPlugin extends JRubyPlugin implements CurrencyPluginAp
     @Override
     public Set<Rate> getRates(final Currency currency, final DateTime time) {
         try {
-            return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.CURRENCY) {
+            return callWithRuntimeAndChecking(new PluginCallback<Set<Rate>>(VALIDATION_PLUGIN_TYPE.CURRENCY) {
                 @Override
                 public Set<Rate> doCall(final Ruby runtime) throws PaymentPluginApiException {
                     return ((CurrencyPluginApi) pluginInstance).getRates(currency, time);
                 }
             });
-        } catch (PaymentPluginApiException e) {
+        } catch (final PaymentPluginApiException e) {
             throw new RuntimeException(e);
         }
     }

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -29,14 +31,13 @@ import org.jruby.embed.LocalContextScope;
 import org.jruby.embed.LocalVariableBehavior;
 import org.jruby.embed.ScriptingContainer;
 import org.jruby.runtime.builtin.IRubyObject;
+import org.killbill.billing.osgi.api.config.PluginRubyConfig;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.killbill.billing.osgi.api.config.PluginRubyConfig;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 
 // Bridge between the OSGI bundle and the ruby plugin
 public abstract class JRubyPlugin {
@@ -151,7 +152,7 @@ public abstract class JRubyPlugin {
     private void checkValidPlugin() {
         try {
             container.runScriptlet(checkInstanceOfPlugin(KILLBILL_PLUGIN_BASE));
-        } catch (EvalFailedException e) {
+        } catch (final EvalFailedException e) {
             throw new IllegalArgumentException(e);
         }
     }
@@ -159,7 +160,7 @@ public abstract class JRubyPlugin {
     private void checkValidNotificationPlugin() throws IllegalArgumentException {
         try {
             container.runScriptlet(checkInstanceOfPlugin(KILLBILL_PLUGIN_NOTIFICATION));
-        } catch (EvalFailedException e) {
+        } catch (final EvalFailedException e) {
             throw new IllegalArgumentException(e);
         }
     }
@@ -167,7 +168,7 @@ public abstract class JRubyPlugin {
     private void checkValidPaymentPlugin() throws IllegalArgumentException {
         try {
             container.runScriptlet(checkInstanceOfPlugin(KILLBILL_PLUGIN_PAYMENT));
-        } catch (EvalFailedException e) {
+        } catch (final EvalFailedException e) {
             throw new IllegalArgumentException(e);
         }
     }
@@ -175,7 +176,7 @@ public abstract class JRubyPlugin {
     private void checkValidCurrencyPlugin() throws IllegalArgumentException {
         try {
             container.runScriptlet(checkInstanceOfPlugin(KILLBILL_PLUGIN_CURRENCY));
-        } catch (EvalFailedException e) {
+        } catch (final EvalFailedException e) {
             throw new IllegalArgumentException(e);
         }
     }
@@ -252,7 +253,7 @@ public abstract class JRubyPlugin {
         NONE
     }
 
-    protected abstract class PluginCallback {
+    protected abstract class PluginCallback<T> {
 
         private final VALIDATION_PLUGIN_TYPE pluginType;
 
@@ -260,14 +261,14 @@ public abstract class JRubyPlugin {
             this.pluginType = pluginType;
         }
 
-        public abstract <T> T doCall(final Ruby runtime) throws PaymentPluginApiException;
+        public abstract T doCall(final Ruby runtime) throws PaymentPluginApiException;
 
         public VALIDATION_PLUGIN_TYPE getPluginType() {
             return pluginType;
         }
     }
 
-    protected <T> T callWithRuntimeAndChecking(final PluginCallback cb) throws PaymentPluginApiException {
+    protected <T> T callWithRuntimeAndChecking(final PluginCallback<T> cb) throws PaymentPluginApiException {
         synchronized (pluginMonitor) {
             try {
                 checkPluginIsRunning();
@@ -288,7 +289,7 @@ public abstract class JRubyPlugin {
 
                 final Ruby runtime = getRuntime();
                 return cb.doCall(runtime);
-            } catch (RuntimeException e) {
+            } catch (final RuntimeException e) {
                 log.warn("RuntimeException in jruby plugin ", e);
                 throw e;
             }
