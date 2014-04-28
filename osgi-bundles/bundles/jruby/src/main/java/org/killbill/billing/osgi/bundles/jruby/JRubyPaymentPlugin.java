@@ -30,9 +30,8 @@ import org.killbill.billing.osgi.api.OSGIPluginProperties;
 import org.killbill.billing.osgi.api.config.PluginRubyConfig;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.plugin.api.HostedPaymentPageDescriptorFields;
+import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
-import org.killbill.billing.payment.plugin.api.HostedPaymentPageNotification;
 import org.killbill.billing.payment.plugin.api.PaymentInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -237,20 +236,20 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     }
 
     @Override
-    public HostedPaymentPageFormDescriptor buildFormDescriptor(final UUID kbAccountId, final HostedPaymentPageDescriptorFields hostedPaymentPageDescriptorFields, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentPluginApiException {
+    public HostedPaymentPageFormDescriptor buildFormDescriptor(final UUID kbAccountId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
         return callWithRuntimeAndChecking(new PluginCallback<HostedPaymentPageFormDescriptor>(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
             public HostedPaymentPageFormDescriptor doCall(final Ruby runtime) throws PaymentPluginApiException {
-                return ((PaymentPluginApi) pluginInstance).buildFormDescriptor(kbAccountId, hostedPaymentPageDescriptorFields, properties, context);
+                return ((PaymentPluginApi) pluginInstance).buildFormDescriptor(kbAccountId, customFields, properties, context);
             }
         });
     }
 
     @Override
-    public HostedPaymentPageNotification processNotification(final String notification, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentPluginApiException {
-        return callWithRuntimeAndChecking(new PluginCallback<HostedPaymentPageNotification>(VALIDATION_PLUGIN_TYPE.PAYMENT) {
+    public GatewayNotification processNotification(final String notification, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
+        return callWithRuntimeAndChecking(new PluginCallback<GatewayNotification>(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
-            public HostedPaymentPageNotification doCall(final Ruby runtime) throws PaymentPluginApiException {
+            public GatewayNotification doCall(final Ruby runtime) throws PaymentPluginApiException {
                 return ((PaymentPluginApi) pluginInstance).processNotification(notification, properties, context);
             }
         });

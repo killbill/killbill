@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,20 +22,20 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import org.killbill.billing.payment.api.DirectPaymentApi;
-import org.killbill.billing.payment.api.svcs.DefaultDirectPaymentApi;
-import org.killbill.billing.payment.core.DirectPaymentProcessor;
-import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
-
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.DefaultPaymentApi;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.PaymentGatewayApi;
 import org.killbill.billing.payment.api.PaymentInternalApi;
 import org.killbill.billing.payment.api.PaymentService;
+import org.killbill.billing.payment.api.svcs.DefaultDirectPaymentApi;
+import org.killbill.billing.payment.api.svcs.DefaultPaymentGatewayApi;
 import org.killbill.billing.payment.api.svcs.DefaultPaymentInternalApi;
 import org.killbill.billing.payment.bus.InvoiceHandler;
 import org.killbill.billing.payment.bus.PaymentTagHandler;
+import org.killbill.billing.payment.core.DirectPaymentProcessor;
+import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.RefundProcessor;
@@ -47,6 +49,8 @@ import org.killbill.billing.payment.retry.FailedPaymentRetryService.FailedPaymen
 import org.killbill.billing.payment.retry.PluginFailureRetryService;
 import org.killbill.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.skife.config.ConfigSource;
+import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -93,6 +97,7 @@ public class PaymentModule extends AbstractModule {
         bind(ExecutorService.class).annotatedWith(Names.named(PLUGIN_EXECUTOR_NAMED)).toInstance(pluginExecutorService);
         bind(PaymentProcessor.class).asEagerSingleton();
         bind(DirectPaymentProcessor.class).asEagerSingleton();
+        bind(PaymentGatewayProcessor.class).asEagerSingleton();
         bind(RefundProcessor.class).asEagerSingleton();
         bind(PaymentMethodProcessor.class).asEagerSingleton();
     }
@@ -108,6 +113,7 @@ public class PaymentModule extends AbstractModule {
         bind(PaymentInternalApi.class).to(DefaultPaymentInternalApi.class).asEagerSingleton();
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(DirectPaymentApi.class).to(DefaultDirectPaymentApi.class).asEagerSingleton();
+        bind(PaymentGatewayApi.class).to(DefaultPaymentGatewayApi.class).asEagerSingleton();
         bind(InvoiceHandler.class).asEagerSingleton();
         bind(PaymentTagHandler.class).asEagerSingleton();
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();

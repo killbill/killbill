@@ -52,7 +52,6 @@ import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.jaxrs.json.ChargebackJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
-import org.killbill.billing.jaxrs.json.HostedPaymentPageFieldsJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.PaymentJson;
 import org.killbill.billing.jaxrs.json.RefundJson;
@@ -82,7 +81,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.WILDCARD;
 
 @Path(JaxrsResource.PAYMENTS_PATH)
 public class PaymentResource extends JaxRsResourceBase {
@@ -318,36 +316,6 @@ public class PaymentResource extends JaxRsResourceBase {
         }
 
         return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId(), uriInfo.getBaseUri().toString());
-    }
-
-    @POST
-    @Path("/" + HOSTED + "/" + FORM + "/{gateway:" + ANYTHING_PATTERN + "}")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    // Generate form data to redirect the customer to the gateway
-    public Response buildFormDescriptor(final HostedPaymentPageFieldsJson json,
-                                        @PathParam("gateway") final String gateway,
-                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                        @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                        @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        throw new UnsupportedOperationException();
-    }
-
-    @POST
-    @Path("/" + HOSTED)
-    @Consumes(WILDCARD)
-    @Produces(APPLICATION_JSON)
-    public Response processNotification(final String body,
-                                        @PathParam("gateway") final String gateway,
-                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                        @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                        @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        // Note: the body is opaque here, as it comes from the gateway. The associated payment plugin will now how to deserialize it though
-        throw new UnsupportedOperationException();
     }
 
     @GET

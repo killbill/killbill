@@ -36,7 +36,7 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
     public void testDispatchWithTimeout() throws TimeoutException, PaymentApiException {
         boolean gotIt = false;
         try {
-            voidPluginDispatcher.dispatchWithAccountLockAndTimeout(new Callable<Void>() {
+            voidPluginDispatcher.dispatchWithTimeout(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     Thread.sleep(1000);
@@ -56,7 +56,7 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
     public void testDispatchWithPaymentApiException() throws TimeoutException, PaymentApiException {
         boolean gotIt = false;
         try {
-            voidPluginDispatcher.dispatchWithAccountLockAndTimeout(new Callable<Void>() {
+            voidPluginDispatcher.dispatchWithTimeout(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, "foo", "foo");
@@ -75,7 +75,7 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
     public void testDispatchWithRuntimeExceptionWrappedInPaymentApiException() throws TimeoutException, PaymentApiException {
         boolean gotIt = false;
         try {
-            voidPluginDispatcher.dispatchWithAccountLockAndTimeout(new Callable<Void>() {
+            voidPluginDispatcher.dispatchWithTimeout(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     throw new RuntimeException("whatever");

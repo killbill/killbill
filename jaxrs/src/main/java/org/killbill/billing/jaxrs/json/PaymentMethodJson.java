@@ -65,12 +65,12 @@ public class PaymentMethodJson extends JsonBase {
         final PaymentMethodPlugin pluginDetail = in.getPluginDetail();
         PaymentMethodPluginDetailJson pluginDetailJson = null;
         if (pluginDetail != null) {
-            List<PaymentMethodProperties> properties = null;
+            List<PluginPropertyJson> properties = null;
             if (pluginDetail.getProperties() != null) {
-                properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>(Collections2.transform(pluginDetail.getProperties(), new Function<PluginProperty, PaymentMethodProperties>() {
+                properties = new ArrayList<PluginPropertyJson>(Collections2.transform(pluginDetail.getProperties(), new Function<PluginProperty, PluginPropertyJson>() {
                     @Override
-                    public PaymentMethodProperties apply(final PluginProperty input) {
-                        return new PaymentMethodProperties(input.getKey(), input.getValue() == null ? null : input.getValue().toString(), input.getIsUpdatable());
+                    public PluginPropertyJson apply(final PluginProperty input) {
+                        return new PluginPropertyJson(input.getKey(), input.getValue() == null ? null : input.getValue().toString(), input.getIsUpdatable());
                     }
                 }));
             }
@@ -221,8 +221,8 @@ public class PaymentMethodJson extends JsonBase {
                     public List<PluginProperty> getProperties() {
                         if (pluginInfo.getProperties() != null) {
                             final List<PluginProperty> result = new LinkedList<PluginProperty>();
-                            for (final PaymentMethodProperties cur : pluginInfo.getProperties()) {
-                                result.add(new PluginProperty(cur.getKey(), cur.getValue(), cur.isUpdatable));
+                            for (final PluginPropertyJson cur : pluginInfo.getProperties()) {
+                                result.add(new PluginProperty(cur.getKey(), cur.getValue(), cur.getIsUpdatable()));
                             }
                             return result;
                         }
@@ -322,7 +322,7 @@ public class PaymentMethodJson extends JsonBase {
         private final String state;
         private final String zip;
         private final String country;
-        private final List<PaymentMethodProperties> properties;
+        private final List<PluginPropertyJson> properties;
 
         @JsonCreator
         public PaymentMethodPluginDetailJson(@JsonProperty("externalPaymentId") final String externalPaymentId,
@@ -339,7 +339,7 @@ public class PaymentMethodJson extends JsonBase {
                                              @JsonProperty("state") final String state,
                                              @JsonProperty("zip") final String zip,
                                              @JsonProperty("country") final String country,
-                                             @JsonProperty("properties") final List<PaymentMethodProperties> properties) {
+                                             @JsonProperty("properties") final List<PluginPropertyJson> properties) {
             this.externalPaymentId = externalPaymentId;
             this.isDefaultPaymentMethod = isDefaultPaymentMethod;
             this.type = type;
@@ -413,7 +413,7 @@ public class PaymentMethodJson extends JsonBase {
             return country;
         }
 
-        public List<PaymentMethodProperties> getProperties() {
+        public List<PluginPropertyJson> getProperties() {
             return properties;
         }
 
@@ -516,77 +516,6 @@ public class PaymentMethodJson extends JsonBase {
             result = 31 * result + (zip != null ? zip.hashCode() : 0);
             result = 31 * result + (country != null ? country.hashCode() : 0);
             result = 31 * result + (properties != null ? properties.hashCode() : 0);
-            return result;
-        }
-    }
-
-    public static final class PaymentMethodProperties {
-
-        private final String key;
-        private final String value;
-        private final Boolean isUpdatable;
-
-        @JsonCreator
-        public PaymentMethodProperties(@JsonProperty("key") final String key,
-                                       @JsonProperty("value") final String value,
-                                       @JsonProperty("isUpdatable") final Boolean isUpdatable) {
-            super();
-            this.key = key;
-            this.value = value;
-            this.isUpdatable = isUpdatable;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public Boolean getIsUpdatable() {
-            return isUpdatable;
-        }
-
-        @Override
-        public String toString() {
-            final StringBuilder sb = new StringBuilder("PaymentMethodProperties{");
-            sb.append("key='").append(key).append('\'');
-            sb.append(", value='").append(value).append('\'');
-            sb.append(", isUpdatable=").append(isUpdatable);
-            sb.append('}');
-            return sb.toString();
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            final PaymentMethodProperties that = (PaymentMethodProperties) o;
-
-            if (isUpdatable != null ? !isUpdatable.equals(that.isUpdatable) : that.isUpdatable != null) {
-                return false;
-            }
-            if (key != null ? !key.equals(that.key) : that.key != null) {
-                return false;
-            }
-            if (value != null ? !value.equals(that.value) : that.value != null) {
-                return false;
-            }
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = key != null ? key.hashCode() : 0;
-            result = 31 * result + (value != null ? value.hashCode() : 0);
-            result = 31 * result + (isUpdatable != null ? isUpdatable.hashCode() : 0);
             return result;
         }
     }

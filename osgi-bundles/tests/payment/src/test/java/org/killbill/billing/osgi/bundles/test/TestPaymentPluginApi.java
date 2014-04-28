@@ -28,9 +28,8 @@ import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.plugin.api.HostedPaymentPageDescriptorFields;
+import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
-import org.killbill.billing.payment.plugin.api.HostedPaymentPageNotification;
 import org.killbill.billing.payment.plugin.api.PaymentInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
@@ -328,12 +327,12 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
     }
 
     @Override
-    public HostedPaymentPageFormDescriptor buildFormDescriptor(final UUID kbAccountId, final HostedPaymentPageDescriptorFields hostedPaymentPageDescriptorFields, final Iterable<PluginProperty> properties, final TenantContext tenantContext) {
+    public HostedPaymentPageFormDescriptor buildFormDescriptor(final UUID kbAccountId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext) {
         return null;
     }
 
     @Override
-    public HostedPaymentPageNotification processNotification(final String notification, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentPluginApiException {
+    public GatewayNotification processNotification(final String notification, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
         return null;
     }
 
