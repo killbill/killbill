@@ -64,7 +64,7 @@ public class InvoiceHandler {
         try {
             final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             account = accountApi.getAccountById(event.getAccountId(), internalContext);
-            paymentProcessor.createPayment(account, event.getInvoiceId(), null, internalContext, false, false, ImmutableList.<PluginProperty>of());
+            paymentProcessor.createPayment(account, event.getInvoiceId(), null, false, false, ImmutableList.<PluginProperty>of(), internalContext);
         } catch (final AccountApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {

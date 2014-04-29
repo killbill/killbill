@@ -42,7 +42,7 @@ public class DefaultPaymentGatewayApi implements PaymentGatewayApi {
 
     @Override
     public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        return paymentGatewayProcessor.buildFormDescriptor(account, customFields, properties, internalCallContextFactory.createInternalCallContext(account.getId(), callContext), callContext);
+        return paymentGatewayProcessor.buildFormDescriptor(account, customFields, properties, callContext, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     @Override

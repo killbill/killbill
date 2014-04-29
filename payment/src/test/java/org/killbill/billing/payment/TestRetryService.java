@@ -134,7 +134,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         setPaymentFailure(failureType);
         boolean failed = false;
         try {
-            paymentProcessor.createPayment(account, invoice.getId(), amount, internalCallContext, false, false, ImmutableList.<PluginProperty>of());
+            paymentProcessor.createPayment(account, invoice.getId(), amount, false, false, ImmutableList.<PluginProperty>of(), internalCallContext);
         } catch (final PaymentApiException e) {
             failed = true;
         }

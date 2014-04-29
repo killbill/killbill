@@ -225,11 +225,11 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     }
 
     @Override
-    public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods, final Iterable<PluginProperty> properties) throws PaymentPluginApiException {
+    public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
         callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
             public Void doCall(final Ruby runtime) throws PaymentPluginApiException {
-                ((PaymentPluginApi) pluginInstance).resetPaymentMethods(kbAccountId, paymentMethods, properties);
+                ((PaymentPluginApi) pluginInstance).resetPaymentMethods(kbAccountId, paymentMethods, properties, context);
                 return null;
             }
         });

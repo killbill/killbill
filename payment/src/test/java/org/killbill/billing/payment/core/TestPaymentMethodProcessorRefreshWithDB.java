@@ -42,7 +42,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        getPluginApi().resetPaymentMethods(null, null, PLUGIN_PROPERTIES);
+        getPluginApi().resetPaymentMethods(null, null, PLUGIN_PROPERTIES, callContext);
     }
 
     @Test(groups = "slow")
@@ -56,7 +56,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
         getPluginApi().addPaymentMethod(account.getId(), newPmId, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, ImmutableList.<PluginProperty>of()), false, PLUGIN_PROPERTIES, callContext);
 
         // Verify that the refresh does indeed show 2 PMs
-        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, PLUGIN_PROPERTIES, internalCallContext);
+        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, PLUGIN_PROPERTIES, callContext, internalCallContext);
         Assert.assertEquals(methods.size(), 2);
         checkPaymentMethodExistsWithStatus(methods, existingPMId, true);
         checkPaymentMethodExistsWithStatus(methods, newPmId, true);
@@ -78,7 +78,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
         Assert.assertEquals(paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext).size(), 2);
 
         // Verify that the refresh sees that PM as being deleted now
-        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, PLUGIN_PROPERTIES, internalCallContext);
+        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, PLUGIN_PROPERTIES, callContext, internalCallContext);
         Assert.assertEquals(methods.size(), 1);
         checkPaymentMethodExistsWithStatus(methods, firstPmId, true);
 

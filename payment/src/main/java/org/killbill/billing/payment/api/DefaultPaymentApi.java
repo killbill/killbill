@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -65,15 +67,15 @@ public class DefaultPaymentApi implements PaymentApi {
     public Payment createPayment(final Account account, final UUID invoiceId,
                                  final BigDecimal amount, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentApiException {
         return paymentProcessor.createPayment(account, invoiceId, amount,
-                                              internalCallContextFactory.createInternalCallContext(account.getId(), context),
-                                              true, false, properties);
+                                              true, false, properties, context, internalCallContextFactory.createInternalCallContext(account.getId(), context)
+                                             );
     }
 
     @Override
     public Payment createExternalPayment(final Account account, final UUID invoiceId, final BigDecimal amount, final CallContext context) throws PaymentApiException {
         return paymentProcessor.createPayment(account, invoiceId, amount,
-                                              internalCallContextFactory.createInternalCallContext(account.getId(), context),
-                                              true, true, ImmutableList.<PluginProperty>of());
+                                              true, true, ImmutableList.<PluginProperty>of(), context, internalCallContextFactory.createInternalCallContext(account.getId(), context)
+                                             );
     }
 
     @Override
@@ -85,7 +87,7 @@ public class DefaultPaymentApi implements PaymentApi {
     @Override
     public Payment retryPayment(final Account account, final UUID paymentId, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentApiException {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), context);
-        paymentProcessor.retryPaymentFromApi(paymentId, properties, internalCallContext);
+        paymentProcessor.retryPaymentFromApi(paymentId, properties, context, internalCallContext);
         return getPayment(paymentId, false, properties, context);
     }
 
@@ -101,7 +103,7 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Payment getPayment(final UUID paymentId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
-        final Payment payment = paymentProcessor.getPayment(paymentId, withPluginInfo, properties, internalCallContextFactory.createInternalTenantContext(context));
+        final Payment payment = paymentProcessor.getPayment(paymentId, withPluginInfo, properties, context, internalCallContextFactory.createInternalTenantContext(context));
         if (payment == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentId);
         }
@@ -110,12 +112,12 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext context) {
-        return paymentProcessor.searchPayments(searchKey, offset, limit, properties, internalCallContextFactory.createInternalTenantContext(context));
+        return paymentProcessor.searchPayments(searchKey, offset, limit, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
-        return paymentProcessor.searchPayments(searchKey, offset, limit, pluginName, properties, internalCallContextFactory.createInternalTenantContext(context));
+        return paymentProcessor.searchPayments(searchKey, offset, limit, pluginName, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
@@ -130,12 +132,12 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Pagination<Refund> searchRefunds(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext context) {
-        return refundProcessor.searchRefunds(searchKey, offset, limit, properties, internalCallContextFactory.createInternalTenantContext(context));
+        return refundProcessor.searchRefunds(searchKey, offset, limit, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public Pagination<Refund> searchRefunds(final String searchKey, final Long offset, final Long limit, final String pluginName, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
-        return refundProcessor.searchRefunds(searchKey, offset, limit, pluginName, properties, internalCallContextFactory.createInternalTenantContext(context));
+        return refundProcessor.searchRefunds(searchKey, offset, limit, pluginName, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
@@ -151,7 +153,7 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Refund getRefund(final UUID refundId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
-        return refundProcessor.getRefund(refundId, withPluginInfo, properties, internalCallContextFactory.createInternalTenantContext(context));
+        return refundProcessor.getRefund(refundId, withPluginInfo, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
@@ -160,7 +162,7 @@ public class DefaultPaymentApi implements PaymentApi {
             throw new PaymentApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
         }
         return refundProcessor.createRefund(account, paymentId, refundAmount, false, ImmutableMap.<UUID, BigDecimal>of(), properties,
-                                            internalCallContextFactory.createInternalCallContext(account.getId(), context));
+                                            context, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
@@ -175,7 +177,7 @@ public class DefaultPaymentApi implements PaymentApi {
             throw new PaymentApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
         }
         return refundProcessor.createRefund(account, paymentId, refundAmount, true, ImmutableMap.<UUID, BigDecimal>of(), properties,
-                                            internalCallContextFactory.createInternalCallContext(account.getId(), context));
+                                            context, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
@@ -186,13 +188,13 @@ public class DefaultPaymentApi implements PaymentApi {
         }
 
         return refundProcessor.createRefund(account, paymentId, null, true, invoiceItemIdsWithAmounts, properties,
-                                            internalCallContextFactory.createInternalCallContext(account.getId(), context));
+                                            context, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
     public Refund createRefundWithItemsAdjustments(final Account account, final UUID paymentId, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentApiException {
         return refundProcessor.createRefund(account, paymentId, null, true, invoiceItemIdsWithAmounts, properties,
-                                            internalCallContextFactory.createInternalCallContext(account.getId(), context));
+                                            context, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
@@ -218,19 +220,19 @@ public class DefaultPaymentApi implements PaymentApi {
                                  final Iterable<PluginProperty> properties, final CallContext context)
             throws PaymentApiException {
         return methodProcessor.addPaymentMethod(pluginName, account, setDefault, paymentMethodInfo, properties,
-                                                internalCallContextFactory.createInternalCallContext(account.getId(), context));
+                                                context, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
     public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context)
             throws PaymentApiException {
-        return methodProcessor.getPaymentMethods(account, withPluginInfo, properties, internalCallContextFactory.createInternalTenantContext(context));
+        return methodProcessor.getPaymentMethods(account, withPluginInfo, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final boolean includedDeleted, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context)
             throws PaymentApiException {
-        return methodProcessor.getPaymentMethodById(paymentMethodId, includedDeleted, withPluginInfo, properties, internalCallContextFactory.createInternalTenantContext(context));
+        return methodProcessor.getPaymentMethodById(paymentMethodId, includedDeleted, withPluginInfo, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
@@ -245,30 +247,30 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Pagination<PaymentMethod> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext context) {
-        return methodProcessor.searchPaymentMethods(searchKey, offset, limit, properties, internalCallContextFactory.createInternalTenantContext(context));
+        return methodProcessor.searchPaymentMethods(searchKey, offset, limit, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public Pagination<PaymentMethod> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final String pluginName, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
-        return methodProcessor.searchPaymentMethods(searchKey, offset, limit, pluginName, properties, internalCallContextFactory.createInternalTenantContext(context));
+        return methodProcessor.searchPaymentMethods(searchKey, offset, limit, pluginName, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public void deletedPaymentMethod(final Account account, final UUID paymentMethodId, final boolean deleteDefaultPaymentMethodWithAutoPayOff, final Iterable<PluginProperty> properties, final CallContext context)
             throws PaymentApiException {
-        methodProcessor.deletedPaymentMethod(account, paymentMethodId, deleteDefaultPaymentMethodWithAutoPayOff, properties, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        methodProcessor.deletedPaymentMethod(account, paymentMethodId, deleteDefaultPaymentMethodWithAutoPayOff, properties, context, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
     public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> properties, final CallContext context)
             throws PaymentApiException {
-        methodProcessor.setDefaultPaymentMethod(account, paymentMethodId, properties, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        methodProcessor.setDefaultPaymentMethod(account, paymentMethodId, properties, context, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
     public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final Iterable<PluginProperty> properties, final CallContext context)
             throws PaymentApiException {
-        return methodProcessor.refreshPaymentMethods(pluginName, account, properties, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        return methodProcessor.refreshPaymentMethods(pluginName, account, properties, context, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
@@ -278,7 +280,7 @@ public class DefaultPaymentApi implements PaymentApi {
 
         final List<PaymentMethod> paymentMethods = new LinkedList<PaymentMethod>();
         for (final String pluginName : methodProcessor.getAvailablePlugins()) {
-            paymentMethods.addAll(methodProcessor.refreshPaymentMethods(pluginName, account, properties, callContext));
+            paymentMethods.addAll(methodProcessor.refreshPaymentMethods(pluginName, account, properties, context, callContext));
         }
 
         return paymentMethods;

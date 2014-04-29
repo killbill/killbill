@@ -193,7 +193,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> input, final Iterable<PluginProperty> properties) {
+    public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> input, final Iterable<PluginProperty> properties, final CallContext callContext) {
         paymentMethodsInfo.clear();
         if (input != null) {
             for (final PaymentMethodInfoPlugin cur : input) {

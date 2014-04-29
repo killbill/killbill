@@ -135,7 +135,7 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     @Override
-    public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods, final Iterable<PluginProperty> properties) throws PaymentPluginApiException {
+    public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
     }
 
     @Override

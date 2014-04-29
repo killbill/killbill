@@ -225,7 +225,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods, final Iterable<PluginProperty> properties) {
+    public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods, final Iterable<PluginProperty> properties, final CallContext callContext) {
     }
 
     @Override

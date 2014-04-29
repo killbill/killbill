@@ -323,7 +323,7 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
     }
 
     @Override
-    public void resetPaymentMethods(final UUID accountId, final List<PaymentMethodInfoPlugin> paymentMethods, final Iterable<PluginProperty> properties) throws PaymentPluginApiException {
+    public void resetPaymentMethods(final UUID accountId, final List<PaymentMethodInfoPlugin> paymentMethods, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
     }
 
     @Override

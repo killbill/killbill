@@ -56,6 +56,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.RefundInfoPlugin;
 import org.killbill.billing.payment.plugin.api.RefundPluginStatus;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -111,16 +112,15 @@ public class RefundProcessor extends ProcessorBase {
      * @param specifiedRefundAmount     amount to refund. If null, the amount will be the sum of adjusted invoice items
      * @param isAdjusted                whether the refund should trigger an invoice or invoice item adjustment
      * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
-     * @param context                   the call callcontext
+     * @param callContext               the call context
+     * @param context                   the internal call context
      * @return the created callcontext
      * @throws PaymentApiException
      */
     public Refund createRefund(final Account account, final UUID paymentId, @Nullable final BigDecimal specifiedRefundAmount,
                                final boolean isAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
-                               final Iterable<PluginProperty> properties, final InternalCallContext context)
+                               final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context)
             throws PaymentApiException {
-        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
-
         return new WithAccountLock<Refund>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Refund>() {
 
             @Override
@@ -138,7 +138,7 @@ public class RefundProcessor extends ProcessorBase {
                     paymentDao.insertRefund(refundInfo, context);
 
                     final PaymentPluginApi plugin = getPaymentProviderPlugin(payment.getPaymentMethodId(), context);
-                    final RefundInfoPlugin refundInfoPlugin = plugin.processRefund(account.getId(), paymentId, refundAmount, account.getCurrency(), properties, context.toCallContext(tenantId));
+                    final RefundInfoPlugin refundInfoPlugin = plugin.processRefund(account.getId(), paymentId, refundAmount, account.getCurrency(), properties, callContext);
 
                     switch (refundInfoPlugin.getStatus()) {
                         case PROCESSED:
@@ -245,7 +245,7 @@ public class RefundProcessor extends ProcessorBase {
         throw new IllegalArgumentException("Unable to find invoice item for id " + itemId);
     }
 
-    public Refund getRefund(final UUID refundId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
+    public Refund getRefund(final UUID refundId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context) throws PaymentApiException {
         RefundModelDao result = paymentDao.getRefund(refundId, context);
         if (result == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_REFUND, refundId);
@@ -269,7 +269,7 @@ public class RefundProcessor extends ProcessorBase {
         List<RefundInfoPlugin> refundInfoPlugins = ImmutableList.<RefundInfoPlugin>of();
         if (plugin != null) {
             try {
-                refundInfoPlugins = plugin.getRefundInfo(result.getAccountId(), result.getPaymentId(), properties, buildTenantContext(context));
+                refundInfoPlugins = plugin.getRefundInfo(result.getAccountId(), result.getPaymentId(), properties, tenantContext);
             } catch (final PaymentPluginApiException e) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_GET_REFUND_INFO, refundId, e.toString());
             }
@@ -346,21 +346,21 @@ public class RefundProcessor extends ProcessorBase {
                                   );
     }
 
-    public Pagination<Refund> searchRefunds(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final InternalTenantContext internalTenantContext) {
+    public Pagination<Refund> searchRefunds(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
         return getEntityPaginationFromPlugins(getAvailablePlugins(),
                                               offset,
                                               limit,
                                               new EntityPaginationBuilder<Refund, PaymentApiException>() {
                                                   @Override
                                                   public Pagination<Refund> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                      return searchRefunds(searchKey, offset, limit, pluginName, properties, internalTenantContext);
+                                                      return searchRefunds(searchKey, offset, limit, pluginName, properties, tenantContext, internalTenantContext);
                                                   }
                                               }
                                              );
     }
 
     public Pagination<Refund> searchRefunds(final String searchKey, final Long offset, final Long limit, final String pluginName,
-                                            final Iterable<PluginProperty> properties, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+                                            final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
 
         final Map<UUID, List<RefundInfoPlugin>> refundsByPaymentId = new HashMap<UUID, List<RefundInfoPlugin>>();
@@ -372,7 +372,7 @@ public class RefundProcessor extends ProcessorBase {
                                        public Pagination<RefundInfoPlugin> build() throws PaymentApiException {
                                            final Pagination<RefundInfoPlugin> refunds;
                                            try {
-                                               refunds = pluginApi.searchRefunds(searchKey, offset, limit, properties, buildTenantContext(internalTenantContext));
+                                               refunds = pluginApi.searchRefunds(searchKey, offset, limit, properties, tenantContext);
                                            } catch (final PaymentPluginApiException e) {
                                                throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_REFUNDS, pluginName, searchKey);
                                            }
