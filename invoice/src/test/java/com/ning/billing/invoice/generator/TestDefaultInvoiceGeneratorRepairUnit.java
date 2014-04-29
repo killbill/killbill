@@ -17,20 +17,39 @@
 package com.ning.billing.invoice.generator;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.DefaultPrice;
+import com.ning.billing.catalog.MockInternationalPrice;
+import com.ning.billing.catalog.MockPlan;
+import com.ning.billing.catalog.MockPlanPhase;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.entity.EntityPersistenceException;
 import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
+import com.ning.billing.invoice.MockBillingEventSet;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
+import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
+import com.ning.billing.junction.BillingEvent;
+import com.ning.billing.junction.BillingEventSet;
+import com.ning.billing.junction.BillingModeType;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -470,5 +489,78 @@ public class TestDefaultInvoiceGeneratorRepairUnit extends InvoiceTestSuiteNoDB 
         defaultInvoiceGenerator.removeProposedRepareesForPartialrepair(repairedItem, repairItem, proposed);
 
         assertEquals(proposed.size(), 0);
+    }
+
+    //
+    // Test inclusion of newly created RecurringItem to proposed item after a repair.
+    //
+    //
+    // 6/30 -> 7/30 : initial recurring shotgun plan
+    // 7/21 -> 7/26 : partial repair
+    // on 7/26 change plan.
+    // The piece from 7/26 -> 7/30 is repaired by adding a new RecurringItem to existing List.
+    //
+    // => Code should add this newly added RecurringItem to proposedItems so that it get persisted.
+    //
+    @Test(groups = "fast")
+    public void testIncludeNewRecurringItemToProposedItem() throws EntityPersistenceException, InvoiceApiException, CatalogApiException
+    {
+
+        final UUID invoiceId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
+        final UUID subscriptionId = UUID.randomUUID();
+
+        final BigDecimal rate = new BigDecimal("2.9500");
+        final DefaultPrice price = new DefaultPrice(rate, Currency.USD);
+        final MockInternationalPrice recurringPrice = new MockInternationalPrice(price);
+        final MockPlanPhase phase = new MockPlanPhase(recurringPrice, null);
+        final MockPlan plan = new MockPlan(phase);
+
+        // Set the existing invoice items
+
+        final LocalDate startDate = new LocalDate(2013, 06, 30);
+        final LocalDate endDate = new LocalDate(2013, 07, 30);
+        final InvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, plan.getName(), phase.getName(), startDate, endDate, rate, rate, Currency.USD);
+
+        final LocalDate repairStartDate = new LocalDate(2013, 07, 21);
+        final LocalDate repairEndDate = new LocalDate(2013, 07, 26);
+        final BigDecimal repairAmount = new BigDecimal("0.4900").negate();
+
+        final InvoiceItem repairItem = new RepairAdjInvoiceItem(invoiceId, accountId, repairStartDate, repairEndDate, repairAmount, Currency.USD, item.getId());
+
+        final DateTime effectiveDate = invoiceUtil.buildDate(2013, 6, 30).toDateTimeAtStartOfDay();
+
+        final LocalDate targetDate = invoiceUtil.buildDate(2013, 10, 30);
+
+        Invoice existingInvoice = new DefaultInvoice(invoiceId, accountId, null, clock.getUTCToday(), targetDate, currency, false);
+
+        existingInvoice.addInvoiceItem(item);
+        existingInvoice.addInvoiceItem(repairItem);
+        // Existing invoice items set-up complete.
+
+        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
+        Mockito.when(subscription.getId()).thenReturn(subscriptionId);
+        Mockito.when(subscription.getBundleId()).thenReturn(bundleId);
+
+        // Create a mock billing event
+        final BillingEvent event =
+            invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate, plan, phase, null, recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE, "testEvent", 1L,
+                SubscriptionBaseTransitionType.CREATE);
+        final BillingEventSet events = new MockBillingEventSet();
+        events.add(event);
+
+        List<Invoice> existingInvoices = new ArrayList<Invoice>();
+        existingInvoices.add(existingInvoice);
+
+        // Generate new Invoice.
+        final Invoice invoice = generator.generateInvoice(accountId, events, existingInvoices, targetDate, Currency.USD);
+
+        // Add newly generated invoice to existing invoices.
+        existingInvoices.add(invoice);
+
+        // Generate next invoice. Invoice generation should succeed without any exception.
+        generator.generateInvoice(accountId, events, existingInvoices, targetDate, Currency.USD);
+
+        assertTrue(true);
     }
 }
