@@ -51,7 +51,7 @@ public class GatewayNotificationJson extends JsonBase {
     }
 
     public GatewayNotificationJson(final GatewayNotification notification) {
-        this.kbPaymentId = notification.getKbPaymentId().toString();
+        this.kbPaymentId = notification.getKbPaymentId() == null ? null : notification.getKbPaymentId().toString();
         this.status = notification.getStatus();
         this.entity = notification.getEntity();
         this.headers = notification.getHeaders();

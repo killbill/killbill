@@ -53,6 +53,8 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.clock.Clock;
 
 import com.google.common.base.Function;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -77,13 +79,12 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/" + HOSTED + "/" + FORM + "/{" + QUERY_PAYMENT_PLUGIN_NAME + ":" + ANYTHING_PATTERN + "}/" + "/{" + QUERY_ACCOUNT_ID + ":" + UUID_PATTERN + "}")
+    @Path("/" + HOSTED + "/" + FORM + "/{" + QUERY_ACCOUNT_ID + ":" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     // Generate form data to redirect the customer to the gateway
     public Response buildFormDescriptor(final HostedPaymentPageFieldsJson json,
                                         @PathParam(QUERY_ACCOUNT_ID) final String accountIdString,
-                                        @PathParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -95,14 +96,19 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
         final UUID accountId = UUID.fromString(accountIdString);
         final Account account = accountUserApi.getAccountById(accountId, callContext);
 
-        final Iterable<PluginProperty> customFields = Iterables.<PluginPropertyJson, PluginProperty>transform(json.getCustomFields(),
-                                                                                                              new Function<PluginPropertyJson, PluginProperty>() {
-                                                                                                                  @Override
-                                                                                                                  public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
-                                                                                                                      return pluginPropertyJson.toPluginProperty();
-                                                                                                                  }
-                                                                                                              }
-                                                                                                             );
+        final Iterable<PluginProperty> customFields;
+        if (json == null) {
+            customFields = ImmutableList.<PluginProperty>of();
+        } else {
+            customFields = Iterables.<PluginPropertyJson, PluginProperty>transform(json.getCustomFields(),
+                                                                                   new Function<PluginPropertyJson, PluginProperty>() {
+                                                                                       @Override
+                                                                                       public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
+                                                                                           return pluginPropertyJson.toPluginProperty();
+                                                                                       }
+                                                                                   }
+                                                                                  );
+        }
         final HostedPaymentPageFormDescriptor descriptor = paymentGatewayApi.buildFormDescriptor(account, customFields, pluginProperties, callContext);
         final HostedPaymentPageFormDescriptorJson result = new HostedPaymentPageFormDescriptorJson(descriptor);
 
@@ -110,7 +116,7 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/{" + QUERY_PAYMENT_PLUGIN_NAME + ":" + ANYTHING_PATTERN + "}")
+    @Path("/" + NOTIFICATION + "/{" + QUERY_PAYMENT_PLUGIN_NAME + ":" + ANYTHING_PATTERN + "}")
     @Consumes(WILDCARD)
     @Produces(APPLICATION_JSON)
     public Response processNotification(final String body,
@@ -124,8 +130,15 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
+        final String notificationPayload;
+        if (Strings.emptyToNull(body) == null && uriInfo.getRequestUri() != null) {
+            notificationPayload = uriInfo.getRequestUri().getRawQuery();
+        } else {
+            notificationPayload = body;
+        }
+
         // Note: the body is opaque here, as it comes from the gateway. The associated payment plugin will know how to deserialize it though
-        final GatewayNotification notification = paymentGatewayApi.processNotification(body, pluginName, pluginProperties, callContext);
+        final GatewayNotification notification = paymentGatewayApi.processNotification(notificationPayload, pluginName, pluginProperties, callContext);
         final GatewayNotificationJson result = new GatewayNotificationJson(notification);
 
         // The plugin told us how to build the response

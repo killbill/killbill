@@ -199,4 +199,5 @@ public interface JaxrsResource {
 
     public static final String HOSTED = "hosted";
     public static final String FORM = "form";
+    public static final String NOTIFICATION = "notification";
 }
