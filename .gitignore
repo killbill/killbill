@@ -28,3 +28,4 @@ dependency-reduced-pom.xml.bak
 killbill.h2.db
 killbill.lock.db
 killbill.trace.db
+server/test.db
