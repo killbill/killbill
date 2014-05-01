@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill-osgi-test-bundles</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.11.3-SNAPSHOT</version>
+        <version>0.11.3</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-osgi-bundles-test-beatrix</artifactId>
