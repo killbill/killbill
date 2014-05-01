@@ -381,7 +381,8 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                                                                                                   final DirectPaymentModelDao paymentModelDao;
                                                                                                                   final DirectPaymentTransactionModelDao paymentTransactionModelDao;
                                                                                                                   if (directPaymentId == null) {
-                                                                                                                      final DirectPaymentModelDao pmd = new DirectPaymentModelDao(utcNow, utcNow, account.getId(), account.getPaymentMethodId(), externalKey);
+                                                                                                                      final UUID paymentMethodId = getDefaultPaymentMethodId(account);
+                                                                                                                      final DirectPaymentModelDao pmd = new DirectPaymentModelDao(utcNow, utcNow, account.getId(), paymentMethodId, externalKey);
                                                                                                                       final DirectPaymentTransactionModelDao ptmd = new DirectPaymentTransactionModelDao(utcNow, utcNow, pmd.getId(),
                                                                                                                                                                                                          transactionType, utcNow, PaymentStatus.UNKNOWN,
                                                                                                                                                                                                          amount, currency, null, null);
