@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill-osgi-lib-bundles</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.11.4-SNAPSHOT</version>
+        <version>0.11.4</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-osgi-bundles-lib-killbill</artifactId>
