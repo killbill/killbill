@@ -1,3 +1,6 @@
+0.11.3
+    Iteration on new direct payment APIs (unstable)
+
 0.11.2
     Iteration on new direct payment APIs (unstable)
     invoice: change external charges APIs to allow bulk insertion

@@ -138,11 +138,16 @@ public abstract class ProcessorBase {
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final Account account, final InternalTenantContext context) throws PaymentApiException {
+        final UUID paymentMethodId = getDefaultPaymentMethodId(account);
+        return getPaymentProviderPlugin(paymentMethodId, context);
+    }
+
+    protected UUID getDefaultPaymentMethodId(final Account account) throws PaymentApiException {
         final UUID paymentMethodId = account.getPaymentMethodId();
         if (paymentMethodId == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, account.getId());
         }
-        return getPaymentProviderPlugin(paymentMethodId, context);
+        return paymentMethodId;
     }
 
     protected void postPaymentEvent(final BusInternalEvent ev, final UUID accountId, final InternalCallContext context) {
