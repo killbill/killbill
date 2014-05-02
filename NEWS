@@ -1,3 +1,7 @@
+0.11.4
+    Upgrade JRuby to 1.7.12
+    Fix NPE in direct payment APIs for accounts without a default payment method
+
 0.11.3
     Iteration on new direct payment APIs (unstable)
 
