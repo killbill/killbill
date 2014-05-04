@@ -409,7 +409,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 iterator.remove();
             }
         }
-        existingItems.addAll(itemsToAdd);
+        proposedItems.addAll(itemsToAdd);
     }
 
 
