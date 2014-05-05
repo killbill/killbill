@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -810,23 +812,25 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testExternalChargeWithCBA() throws InvoiceApiException, EntityPersistenceException {
-
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
 
         invoiceDao.insertCredit(accountId, null, new BigDecimal("20.0"), new LocalDate(), Currency.USD, context);
 
-        final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(null, accountId, bundleId, UUID.randomUUID().toString(), clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD));
+        final String description = UUID.randomUUID().toString();
+        final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(null, accountId, bundleId, description, clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD));
         final InvoiceItemModelDao charge = invoiceDao.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItemModelDao>of(externalCharge), context).get(0);
 
         final InvoiceModelDao newInvoice = invoiceDao.getById(charge.getInvoiceId(), context);
         final List<InvoiceItemModelDao> items = newInvoice.getInvoiceItems();
         assertEquals(items.size(), 2);
         for (final InvoiceItemModelDao cur : items) {
-            if (!cur.getId().equals(charge.getId())) {
+            if (cur.getId().equals(charge.getId())) {
+                assertEquals(cur.getType(), InvoiceItemType.EXTERNAL_CHARGE);
+                assertEquals(cur.getDescription(), description);
+            } else {
                 assertEquals(cur.getType(), InvoiceItemType.CBA_ADJ);
                 assertTrue(cur.getAmount().compareTo(new BigDecimal("-15.00")) == 0);
-                break;
             }
         }
     }

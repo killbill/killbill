@@ -1,7 +1,8 @@
 /*
+ * Copyright 2014 Groupon, Inc
  * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -33,13 +34,13 @@ public class UsageInvoiceItem extends InvoiceItemBase {
     public UsageInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
                             final String planName, final String phaseName, final String usageName,
                             final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, amount, currency);
+        this(UUID.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, null, amount, currency);
     }
 
     public UsageInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
                             final UUID subscriptionId, final String planName, final String phaseName, final String usageName,
-                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, null, planName, phaseName, usageName, startDate, endDate, amount, currency);
+                            final LocalDate startDate, final LocalDate endDate, @Nullable final String description, final BigDecimal amount, final Currency currency) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, startDate, endDate, amount, currency);
     }
 
     @Override

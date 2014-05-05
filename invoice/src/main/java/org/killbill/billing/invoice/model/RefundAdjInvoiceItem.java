@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -37,7 +39,12 @@ public class RefundAdjInvoiceItem extends AdjInvoiceItem {
 
     public RefundAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate date,
                                 final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, date, date, amount, currency);
+        this(id, createdDate, invoiceId, accountId, date, null, amount, currency);
+    }
+
+    public RefundAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate date,
+                                @Nullable final String description, final BigDecimal amount, final Currency currency) {
+        super(id, createdDate, invoiceId, accountId, date, date, description, amount, currency, null);
     }
 
     @Override

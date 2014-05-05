@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -31,13 +33,13 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     public FixedPriceInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
                                  final String planName, final String phaseName,
                                  final LocalDate date, final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, date, amount, currency);
+        this(UUID.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, null, date, amount, currency);
     }
 
     public FixedPriceInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
                                  final UUID subscriptionId, final String planName, final String phaseName,
-                                 final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, null, planName, phaseName, null, date, null, amount, currency);
+                                 @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, date, null, amount, currency);
     }
 
     @Override

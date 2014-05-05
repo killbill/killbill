@@ -314,10 +314,12 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
         externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+        externalCharge.setDescription(UUID.randomUUID().toString());
         final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
         assertEquals(invoiceWithItems.getItems().size(), 1);
+        assertEquals(invoiceWithItems.getItems().get(0).getDescription(), externalCharge.getDescription());
         assertNull(invoiceWithItems.getItems().get(0).getBundleId());
 
         // Verify the total number of invoices

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -45,6 +47,7 @@ public class InvoiceItemFactory {
         final String planName = invoiceItemModelDao.getPlanName();
         final String phaseName = invoiceItemModelDao.getPhaseName();
         final String usageName = invoiceItemModelDao.getUsageName();
+        final String description = invoiceItemModelDao.getDescription();
         final LocalDate startDate = invoiceItemModelDao.getStartDate();
         final LocalDate endDate = invoiceItemModelDao.getEndDate();
         final BigDecimal amount = invoiceItemModelDao.getAmount();
@@ -56,31 +59,31 @@ public class InvoiceItemFactory {
         final InvoiceItemType type = invoiceItemModelDao.getType();
         switch (type) {
             case EXTERNAL_CHARGE:
-                item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, planName, startDate, amount, currency);
+                item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, description, startDate, amount, currency);
                 break;
             case FIXED:
-                item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
+                item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, description, startDate, amount, currency);
                 break;
             case RECURRING:
-                item = new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
+                item = new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, description, startDate, endDate, amount, rate, currency);
                 break;
             case CBA_ADJ:
-                item = new CreditBalanceAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, linkedItemId, amount, currency);
+                item = new CreditBalanceAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, linkedItemId, description, amount, currency);
                 break;
             case CREDIT_ADJ:
-                item = new CreditAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, amount, currency);
+                item = new CreditAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency);
                 break;
             case REFUND_ADJ:
-                item = new RefundAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, amount, currency);
+                item = new RefundAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency);
                 break;
             case REPAIR_ADJ:
-                item = new RepairAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, endDate, amount, currency, linkedItemId);
+                item = new RepairAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, endDate, description, amount, currency, linkedItemId);
                 break;
             case ITEM_ADJ:
-                item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, amount, currency, linkedItemId);
+                item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency, linkedItemId);
                 break;
             case USAGE:
-                item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, amount, currency);
+                item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, description, amount, currency);
                 break;
             default:
                 throw new RuntimeException("Unexpected type of event item " + type);

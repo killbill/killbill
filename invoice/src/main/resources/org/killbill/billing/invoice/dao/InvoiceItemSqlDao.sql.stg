@@ -8,6 +8,7 @@ tableFields(prefix) ::= <<
 , <prefix>account_id
 , <prefix>bundle_id
 , <prefix>subscription_id
+, <prefix>description
 , <prefix>plan_name
 , <prefix>phase_name
 , <prefix>usage_name
@@ -27,6 +28,7 @@ tableValues() ::= <<
 , :accountId
 , :bundleId
 , :subscriptionId
+, :description
 , :planName
 , :phaseName
 , :usageName
