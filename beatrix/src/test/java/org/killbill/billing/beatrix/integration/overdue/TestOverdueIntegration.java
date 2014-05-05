@@ -118,7 +118,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         return configXml;
     }
 
-    @Test(groups = "slow", description = "Test overdue stages and return to clear prior to CTD")
+    @Test(groups = "slow", description = "Test overdue stages and return to clear prior to CTD", enabled=false)
     public void testOverdueStages1() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -203,7 +203,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
     }
 
-    @Test(groups = "slow", description = "Test overdue stages and return to clear on CTD")
+    @Test(groups = "slow", description = "Test overdue stages and return to clear on CTD", enabled=false)
     public void testOverdueStages2() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -300,7 +300,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
     }
 
-    @Test(groups = "slow", description = "Test overdue stages and return to clear after CTD")
+    @Test(groups = "slow", description = "Test overdue stages and return to clear after CTD", enabled=false)
     public void testOverdueStages3() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -404,7 +404,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
     // This test is similar to the previous one except that instead of moving the clock to check we will get the next invoice
     // at the end, we carry a change of plan.
     //
-    @Test(groups = "slow", description = "Test overdue stages and follow with an immediate change of plan")
+    @Test(groups = "slow", description = "Test overdue stages and follow with an immediate change of plan", enabled=false)
     public void testOverdueStagesFollowedWithImmediateChange1() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -571,7 +571,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-1800")), 0);
     }
 
-    @Test(groups = "slow", description = "Test overdue stages with missing payment method")
+    @Test(groups = "slow", description = "Test overdue stages with missing payment method", enabled=false)
     public void testOverdueStateIfNoPaymentMethod() throws Exception {
         // This test is similar to the previous one - but there is no default payment method on the account, so there
         // won't be any payment retry
@@ -666,7 +666,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-12.89")), 0);
     }
 
-    @Test(groups = "slow", description = "Test overdue from non paid external charge")
+    @Test(groups = "slow", description = "Test overdue from non paid external charge", enabled=false)
     public void testShouldBeInOverdueAfterExternalCharge() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -710,7 +710,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
 
-    @Test(groups = "slow", description = "Test overdue after refund with no adjustment")
+    @Test(groups = "slow", description = "Test overdue after refund with no adjustment", enabled=false)
     public void testShouldBeInOverdueAfterRefundWithoutAdjustment() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -753,7 +753,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
     }
 
-    @Test(groups = "slow", description = "Test overdue after chargeback")
+    @Test(groups = "slow", description = "Test overdue after chargeback", enabled=false)
     public void testShouldBeInOverdueAfterChargeback() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -796,7 +796,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
     }
 
-    @Test(groups = "slow", description = "Test overdue clear after external payment")
+    @Test(groups = "slow", description = "Test overdue clear after external payment", enabled=false)
     public void testOverdueStateShouldClearAfterExternalPayment() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -842,7 +842,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
 
-    @Test(groups = "slow", description = "Test overdue clear after item adjustment")
+    @Test(groups = "slow", description = "Test overdue clear after item adjustment", enabled=false)
     public void testOverdueStateShouldClearAfterCreditOrInvoiceItemAdjustment() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
