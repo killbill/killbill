@@ -152,6 +152,8 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("9.63")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 5, 2), InvoiceItemType.CBA_ADJ, new BigDecimal("-9.63")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     @Test(groups = "slow")
@@ -375,6 +377,8 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 8), new LocalDate(2012, 7, 8), InvoiceItemType.CBA_ADJ, new BigDecimal("-29.95")));
         invoiceChecker.checkInvoice(invoices.get(6).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     @Test(groups = "slow")
@@ -483,6 +487,8 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 7, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("-249.95")));
         invoiceChecker.checkInvoice(invoices.get(4).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     @Test(groups = "slow")
@@ -546,12 +552,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, PLUGIN_PROPERTIES, callContext);
         assertListenerStatus();
 
-        try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(clock.getUTCToday()), false, callContext);
-            Assert.fail("Should not gnenerated an new invoice");
-        } catch (final InvoiceApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
-        }
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     //
@@ -622,11 +623,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, PLUGIN_PROPERTIES, callContext);
         assertListenerStatus();
 
-        try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(clock.getUTCToday()), false, callContext);
-            Assert.fail("Should not have generated an new invoice");
-        } catch (final InvoiceApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
-        }
+        checkNoMoreInvoiceToGenerate(account);
     }
 }

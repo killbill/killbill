@@ -90,43 +90,56 @@ public class ItemsInterval {
      *
      * @param output
      * @param mergeMode
+     * @return whether or not the parent should ignore the interval covered by the child interval
      */
-    public void buildFromItems(final List<Item> output, final boolean mergeMode) {
-        final Item item  = getResultingItem(mergeMode);
-        if (item != null) {
-            output.add(item);
+    public boolean buildFromItems(final List<Item> output, final boolean mergeMode) {
+        final ItemWithResult itemWithResult  = getResultingItem(mergeMode);
+        if (itemWithResult.getItem() != null) {
+            output.add(itemWithResult.getItem());
         }
+        return itemWithResult.isIgnorePeriod();
     }
 
-    private Item getResultingItem(final boolean mergeMode) {
+    private ItemWithResult getResultingItem(final boolean mergeMode) {
         return mergeMode ? getResulting_CANCEL_Item() : getResulting_ADD_Item();
     }
 
-    private Item getResulting_CANCEL_Item() {
+    private ItemWithResult getResulting_CANCEL_Item() {
         Preconditions.checkState(items.size() == 0 || items.size() == 1);
-        return Iterables.tryFind(items, new Predicate<Item>() {
+        return new ItemWithResult(Iterables.tryFind(items, new Predicate<Item>() {
             @Override
             public boolean apply(final Item input) {
                 return input.getAction() == ItemAction.CANCEL;
             }
-        }).orNull();
+        }).orNull(), true);
     }
 
 
-    private Item getResulting_ADD_Item() {
+    private ItemWithResult getResulting_ADD_Item() {
 
         final Set<UUID> repairedIds = new HashSet<UUID>();
         final ListIterator<Item> it = items.listIterator(items.size());
 
+        //
+        // We can have an {0,n} pairs of ADD/CANCEL (cancelling each other), and in addition to that we could have:
+        // a - One ADD that has not been cancelled => We want to return that item and let the parent (NodeInterval) know that it should ignore
+        //   the period as this is accounted for with the item returned
+        // b - One CANCEL => We return NO item but we also want the parent to know that it should ignore
+        //   the period as this is accounted -- period should remain unbilled.
+        // c - nothing => The parent should NOT ignore the period as there is no child element that can account for it.
+        //
         while (it.hasPrevious()) {
             final Item cur = it.previous();
             switch (cur.getAction()) {
                 case ADD:
                     // If we found a CANCEL item pointing to that item then don't return it as it was repair (full repair scenario)
                     if (!repairedIds.contains(cur.getId())) {
-                        return cur;
+                        // Case a
+                        return new ItemWithResult(cur, true);
+                    } else {
+                        // Remove from the list so we know if there is anything else (case b or c)
+                        repairedIds.remove(cur.getId());
                     }
-                    break;
 
                 case CANCEL:
                     // In all cases populate the set with the id of target item being repaired
@@ -136,7 +149,9 @@ public class ItemsInterval {
                     break;
             }
         }
-        return null;
+        return repairedIds.size() > 0 ?
+               new ItemWithResult(null, true) :  /* case b */
+               new ItemWithResult(null, false); /* case c */
     }
 
 
@@ -180,7 +195,8 @@ public class ItemsInterval {
      */
     private Item createNewItem(LocalDate startDate, LocalDate endDate, final boolean mergeMode) {
 
-        final Item item  = getResultingItem(mergeMode);
+        final ItemWithResult itemWithResult  = getResultingItem(mergeMode);
+        final Item item = itemWithResult.getItem();
         if (item == null) {
             return null;
         }
@@ -190,5 +206,21 @@ public class ItemsInterval {
             item.incrementCurrentRepairedAmount(result.getAmount());
         }
         return result;
+    }
+
+    private final class ItemWithResult {
+        private final Item item;
+        private final boolean ignorePeriod;
+
+        private ItemWithResult(final Item item, final boolean ignorePeriod) {
+            this.item = item;
+            this.ignorePeriod = ignorePeriod;
+        }
+        public Item getItem() {
+            return item;
+        }
+        public boolean isIgnorePeriod() {
+            return ignorePeriod;
+        }
     }
 }

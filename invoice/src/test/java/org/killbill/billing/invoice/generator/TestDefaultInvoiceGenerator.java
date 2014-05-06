@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,40 +28,43 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.catalog.api.BillingMode;
-import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.MockInternationalPrice;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.clock.Clock;
-import org.killbill.clock.DefaultClock;
+import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.MockBillingEventSet;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
+import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.clock.Clock;
+import org.killbill.clock.DefaultClock;
+import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
 
 import static org.killbill.billing.invoice.TestInvoiceHelper.EIGHT;
 import static org.killbill.billing.invoice.TestInvoiceHelper.FIFTEEN;
@@ -897,6 +901,75 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // ensure that the account balance is correct
         assertEquals(invoice2.getBalance().compareTo(FIVE), 0);
+    }
+
+    // Regression test for #170 (see https://github.com/killbill/killbill/pull/173)
+    @Test(groups = "fast")
+    public void testRegressionFor170() throws EntityPersistenceException, InvoiceApiException, CatalogApiException {
+        final UUID accountId = UUID.randomUUID();
+        final Currency currency = Currency.USD;
+        final SubscriptionBase subscription = createSubscription();
+        final MockInternationalPrice recurringPrice = new MockInternationalPrice(new DefaultPrice(new BigDecimal("2.9500"), Currency.USD));
+        final MockPlanPhase phase = new MockPlanPhase(recurringPrice, null);
+        final Plan plan = new MockPlan(phase);
+
+        final Invoice existingInvoice = new DefaultInvoice(UUID.randomUUID(), accountId, null, clock.getUTCToday(), new LocalDate(2013, 7, 15), currency, false);
+
+        // Set the existing recurring invoice item 2013/06/15 - 2013/07/15
+        final LocalDate startDate = new LocalDate(2013, 06, 15);
+        final LocalDate endDate = new LocalDate(2013, 07, 15);
+        final InvoiceItem recurringInvoiceItem = new RecurringInvoiceItem(existingInvoice.getId(), accountId, subscription.getBundleId(),
+                                                                          subscription.getId(), plan.getName(), phase.getName(),
+                                                                          startDate, endDate, recurringPrice.getPrice(currency),
+                                                                          recurringPrice.getPrice(currency), Currency.USD);
+        existingInvoice.addInvoiceItem(recurringInvoiceItem);
+
+        // Set an existing repair item
+        final LocalDate repairStartDate = new LocalDate(2013, 06, 21);
+        final LocalDate repairEndDate = new LocalDate(2013, 06, 26);
+        final BigDecimal repairAmount = new BigDecimal("0.4900").negate();
+        final InvoiceItem repairItem = new RepairAdjInvoiceItem(existingInvoice.getId(), accountId, repairStartDate, repairEndDate,
+                                                                repairAmount, currency, recurringInvoiceItem.getId());
+        existingInvoice.addInvoiceItem(repairItem);
+
+        // Create the billing event associated with the subscription creation
+        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEvent event = invoiceUtil.createMockBillingEvent(null, subscription, new DateTime("2013-06-15", DateTimeZone.UTC),
+                                                                      plan, phase,
+                                                                      null, recurringPrice.getPrice(currency), currency,
+                                                                      BillingPeriod.MONTHLY, 15, BillingMode.IN_ADVANCE, "testEvent", 1L,
+                                                                      SubscriptionBaseTransitionType.CREATE);
+        events.add(event);
+
+        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
+        existingInvoices.add(existingInvoice);
+
+        // Generate a new invoice
+        final Invoice invoice = generator.generateInvoice(accountId, events, existingInvoices, new LocalDate(2013, 10, 30), currency, internalCallContext);
+        assertEquals(invoice.getNumberOfItems(), 7);
+        assertEquals(invoice.getInvoiceItems().get(0).getStartDate(), new LocalDate(2013, 6, 15));
+        assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), new LocalDate(2013, 7, 15));
+        assertEquals(invoice.getInvoiceItems().get(1).getStartDate(), new LocalDate(2013, 6, 15));
+        assertEquals(invoice.getInvoiceItems().get(1).getEndDate(), new LocalDate(2013, 6, 21));
+        assertEquals(invoice.getInvoiceItems().get(2).getStartDate(), new LocalDate(2013, 6, 26));
+        assertEquals(invoice.getInvoiceItems().get(2).getEndDate(), new LocalDate(2013, 7, 15));
+        assertEquals(invoice.getInvoiceItems().get(3).getStartDate(), new LocalDate(2013, 7, 15));
+        assertEquals(invoice.getInvoiceItems().get(3).getEndDate(), new LocalDate(2013, 8, 15));
+        assertEquals(invoice.getInvoiceItems().get(4).getStartDate(), new LocalDate(2013, 8, 15));
+        assertEquals(invoice.getInvoiceItems().get(4).getEndDate(), new LocalDate(2013, 9, 15));
+        assertEquals(invoice.getInvoiceItems().get(5).getStartDate(), new LocalDate(2013, 9, 15));
+        assertEquals(invoice.getInvoiceItems().get(5).getEndDate(), new LocalDate(2013, 10, 15));
+        assertEquals(invoice.getInvoiceItems().get(6).getStartDate(), new LocalDate(2013, 10, 15));
+        assertEquals(invoice.getInvoiceItems().get(6).getEndDate(), new LocalDate(2013, 11, 15));
+
+        // Add newly generated invoice to existing invoices
+        existingInvoices.add(invoice);
+
+        // Generate next invoice (no-op)
+        final Invoice newInvoice = generator.generateInvoice(accountId, events, existingInvoices, new LocalDate(2013, 10, 30), currency, internalCallContext);
+        assertEquals(newInvoice.getNumberOfItems(), 1);
+        assertEquals(invoice.getInvoiceItems().get(0).getStartDate(), new LocalDate(2013, 6, 15));
+        assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), new LocalDate(2013, 7, 15));
     }
 
     private void distributeItems(final List<Invoice> invoices) {

@@ -49,14 +49,14 @@ public class NodeInterval {
      * Build the tree by calling the callback on the last node in the tree or remaining part with no children.
      *
      * @param callback the callback which perform the build logic.
+     * @return whether or not the parent NodeInterval should ignore the period covered by the child (NodeInterval)
      */
-    public void build(final BuildNodeCallback callback) {
+    public boolean build(final BuildNodeCallback callback) {
 
         Preconditions.checkNotNull(callback);
 
         if (leftChild == null) {
-            callback.onLastNode(this);
-            return;
+            return callback.onLastNode(this);
         }
 
         LocalDate curDate = start;
@@ -65,15 +65,18 @@ public class NodeInterval {
             if (curChild.getStart().compareTo(curDate) > 0) {
                 callback.onMissingInterval(this, curDate, curChild.getStart());
             }
-            curChild.build(callback);
-            curDate = curChild.getEnd();
+            boolean ignorePeriod = curChild.build(callback);
+            if (ignorePeriod) {
+                curDate = curChild.getEnd();
+            }
             curChild = curChild.getRightSibling();
         }
 
-        // Finally if there is a hole at the end, we build the missing piece from ourself
+        // Finally if there is a hole at the end, we build the missing piece from ourselves
         if (curDate.compareTo(end) < 0) {
             callback.onMissingInterval(this, curDate, end);
         }
+        return true;
     }
 
     /**
@@ -369,8 +372,10 @@ public class NodeInterval {
          * Called when we hit a node with no children
          *
          * @param curNode current node
+         * @return true if the curNode's parent should ignore that interval -- accounted for by curChild.
+         *
          */
-        public void onLastNode(NodeInterval curNode);
+        public boolean onLastNode(NodeInterval curNode);
     }
 
     /**

@@ -114,6 +114,8 @@ public class TestSubscription extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("-2334.20")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
 
+        checkNoMoreInvoiceToGenerate(account);
+
     }
 
     @Test(groups = "slow")
@@ -167,5 +169,7 @@ public class TestSubscription extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("5835.57")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("-2334.20")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 }

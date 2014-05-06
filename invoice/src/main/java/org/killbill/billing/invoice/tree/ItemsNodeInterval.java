@@ -83,9 +83,9 @@ public class ItemsNodeInterval extends NodeInterval {
             }
 
             @Override
-            public void onLastNode(final NodeInterval curNode) {
+            public boolean onLastNode(final NodeInterval curNode) {
                 final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
-                items.buildFromItems(output, false);
+                return items.buildFromItems(output, false);
             }
         });
     }
@@ -121,9 +121,9 @@ public class ItemsNodeInterval extends NodeInterval {
             }
 
             @Override
-            public void onLastNode(final NodeInterval curNode) {
+            public boolean onLastNode(final NodeInterval curNode) {
                 final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
-                items.buildFromItems(output, true);
+                return items.buildFromItems(output, true);
             }
         });
     }

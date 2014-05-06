@@ -99,6 +99,9 @@ public class TestBundleTransfer extends TestIntegrationBase {
         assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012, 5, 11)) == 0);
         assertTrue(theItem.getEndDate().compareTo(new LocalDate(2013, 5, 11)) == 0);
         assertTrue(theItem.getAmount().compareTo(new BigDecimal("2399.9500")) == 0);
+
+        checkNoMoreInvoiceToGenerate(account);
+
     }
 
     @Test(groups = "slow")
@@ -157,6 +160,9 @@ public class TestBundleTransfer extends TestIntegrationBase {
         assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012, 5, 3)) == 0);
         assertTrue(theItem.getEndDate().compareTo(new LocalDate(2012, 6, 3)) == 0);
         assertTrue(theItem.getAmount().compareTo(new BigDecimal("249.95")) == 0);
+
+        checkNoMoreInvoiceToGenerate(account);
+
     }
 
     @Test(groups = "slow")
@@ -219,6 +225,9 @@ public class TestBundleTransfer extends TestIntegrationBase {
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("99.98")));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
+
     }
 
     @Test(groups = "slow", description = "Test entitlement-level transfer with add-on")
@@ -308,5 +317,8 @@ public class TestBundleTransfer extends TestIntegrationBase {
             Assert.assertEquals(subscription.getBillingStartDate(), transferDay);
             Assert.assertNull(subscription.getBillingEndDate());
         }
+
+        checkNoMoreInvoiceToGenerate(account);
+
     }
 }
