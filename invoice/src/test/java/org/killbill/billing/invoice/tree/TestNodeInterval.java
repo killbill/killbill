@@ -160,9 +160,9 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
             }
 
             @Override
-            public boolean onLastNode(final NodeInterval curNode) {
+            public void onLastNode(final NodeInterval curNode) {
                 // Nothing
-                return true;
+                return;
             }
         });
 

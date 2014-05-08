@@ -218,7 +218,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         expectedResult.add(expected1);
         expectedResult.add(expected2);
 
-        // First test with items in order
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(first);
         tree.addItem(second);

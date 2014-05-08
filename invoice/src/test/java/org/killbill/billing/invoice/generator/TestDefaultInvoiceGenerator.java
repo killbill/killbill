@@ -47,6 +47,7 @@ import org.killbill.billing.invoice.MockBillingEventSet;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
@@ -913,7 +914,9 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final MockPlanPhase phase = new MockPlanPhase(recurringPrice, null);
         final Plan plan = new MockPlan(phase);
 
-        final Invoice existingInvoice = new DefaultInvoice(UUID.randomUUID(), accountId, null, clock.getUTCToday(), new LocalDate(2013, 7, 15), currency, false);
+        final LocalDate targetDate = new LocalDate(2013, 10, 30);
+
+        final Invoice existingInvoice = new DefaultInvoice(UUID.randomUUID(), accountId, null, clock.getUTCToday(), targetDate, currency, false);
 
         // Set the existing recurring invoice item 2013/06/15 - 2013/07/15
         final LocalDate startDate = new LocalDate(2013, 06, 15);
@@ -933,6 +936,9 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         existingInvoice.addInvoiceItem(repairItem);
 
         // Create the billing event associated with the subscription creation
+        //
+        // Note : this is the interesting part of the test; it does not provide the blocking billing events, which force invoice
+        // to un repair what was previously repaired.
         final BillingEventSet events = new MockBillingEventSet();
         final BillingEvent event = invoiceUtil.createMockBillingEvent(null, subscription, new DateTime("2013-06-15", DateTimeZone.UTC),
                                                                       plan, phase,
@@ -945,20 +951,34 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         existingInvoices.add(existingInvoice);
 
         // Generate a new invoice
-        final Invoice invoice = generator.generateInvoice(accountId, events, existingInvoices, new LocalDate(2013, 10, 30), currency, internalCallContext);
+
+        final Invoice invoice = generator.generateInvoice(accountId, events, existingInvoices, targetDate, currency, internalCallContext);
         assertEquals(invoice.getNumberOfItems(), 7);
+        assertEquals(invoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(invoice.getInvoiceItems().get(0).getStartDate(), new LocalDate(2013, 6, 15));
         assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), new LocalDate(2013, 7, 15));
+
+        assertEquals(invoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
         assertEquals(invoice.getInvoiceItems().get(1).getStartDate(), new LocalDate(2013, 6, 15));
         assertEquals(invoice.getInvoiceItems().get(1).getEndDate(), new LocalDate(2013, 6, 21));
+
+        assertEquals(invoice.getInvoiceItems().get(2).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
         assertEquals(invoice.getInvoiceItems().get(2).getStartDate(), new LocalDate(2013, 6, 26));
         assertEquals(invoice.getInvoiceItems().get(2).getEndDate(), new LocalDate(2013, 7, 15));
+
+        assertEquals(invoice.getInvoiceItems().get(3).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(invoice.getInvoiceItems().get(3).getStartDate(), new LocalDate(2013, 7, 15));
         assertEquals(invoice.getInvoiceItems().get(3).getEndDate(), new LocalDate(2013, 8, 15));
+
+        assertEquals(invoice.getInvoiceItems().get(4).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(invoice.getInvoiceItems().get(4).getStartDate(), new LocalDate(2013, 8, 15));
         assertEquals(invoice.getInvoiceItems().get(4).getEndDate(), new LocalDate(2013, 9, 15));
+
+        assertEquals(invoice.getInvoiceItems().get(5).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(invoice.getInvoiceItems().get(5).getStartDate(), new LocalDate(2013, 9, 15));
         assertEquals(invoice.getInvoiceItems().get(5).getEndDate(), new LocalDate(2013, 10, 15));
+
+        assertEquals(invoice.getInvoiceItems().get(6).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(invoice.getInvoiceItems().get(6).getStartDate(), new LocalDate(2013, 10, 15));
         assertEquals(invoice.getInvoiceItems().get(6).getEndDate(), new LocalDate(2013, 11, 15));
 
@@ -966,10 +986,8 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         existingInvoices.add(invoice);
 
         // Generate next invoice (no-op)
-        final Invoice newInvoice = generator.generateInvoice(accountId, events, existingInvoices, new LocalDate(2013, 10, 30), currency, internalCallContext);
-        assertEquals(newInvoice.getNumberOfItems(), 1);
-        assertEquals(invoice.getInvoiceItems().get(0).getStartDate(), new LocalDate(2013, 6, 15));
-        assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), new LocalDate(2013, 7, 15));
+        final Invoice newInvoice = generator.generateInvoice(accountId, events, existingInvoices, targetDate, currency, internalCallContext);
+        assertNull(newInvoice);
     }
 
     private void distributeItems(final List<Invoice> invoices) {

@@ -17,17 +17,16 @@
 package org.killbill.billing.invoice.tree;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.invoice.tree.Item.ItemAction;
 
 import com.google.common.base.Preconditions;
@@ -92,68 +91,83 @@ public class ItemsInterval {
      * @param mergeMode
      * @return whether or not the parent should ignore the interval covered by the child interval
      */
-    public boolean buildFromItems(final List<Item> output, final boolean mergeMode) {
-        final ItemWithResult itemWithResult  = getResultingItem(mergeMode);
-        if (itemWithResult.getItem() != null) {
-            output.add(itemWithResult.getItem());
+    public void buildFromItems(final List<Item> output, final boolean mergeMode) {
+        final Item item = getResultingItem(mergeMode);
+        if (item != null) {
+            output.add(item);
         }
-        return itemWithResult.isIgnorePeriod();
     }
 
-    private ItemWithResult getResultingItem(final boolean mergeMode) {
+    /**
+     * Remove all the cancelling pairs (ADD/CANCEL) for which CANCEL linkedId points to ADD id.
+     *
+     * @return true if there is no more items
+     */
+    public boolean mergeCancellingPairs() {
+
+        final Map<UUID, List<Item>> tmp = new HashMap<UUID, List<Item>>();
+        for (Item cur : items) {
+            final UUID idToConsider = (cur.getAction() == ItemAction.ADD) ? cur.getId() : cur.getLinkedId();
+            List<Item> listForItem = tmp.get(idToConsider);
+            if (listForItem == null) {
+                listForItem = new ArrayList<Item>(2);
+                tmp.put(idToConsider, listForItem);
+            }
+            listForItem.add(cur);
+        }
+
+        for (List<Item> listForIds : tmp.values()) {
+            if (listForIds.size() == 2) {
+                items.remove(listForIds.get(0));
+                items.remove(listForIds.get(1));
+            }
+        }
+        return items.size() == 0;
+    }
+
+    public Iterable<Item> get_ADD_items() {
+        return Iterables.filter(items, new Predicate<Item>() {
+            @Override
+            public boolean apply(final Item input) {
+                return input.getAction() == ItemAction.ADD;
+            }
+        });
+    }
+
+    public NodeInterval getNodeInterval() {
+        return interval;
+    }
+
+    private Item getResultingItem(final boolean mergeMode) {
         return mergeMode ? getResulting_CANCEL_Item() : getResulting_ADD_Item();
     }
 
-    private ItemWithResult getResulting_CANCEL_Item() {
+    private Item getResulting_CANCEL_Item() {
         Preconditions.checkState(items.size() == 0 || items.size() == 1);
-        return new ItemWithResult(Iterables.tryFind(items, new Predicate<Item>() {
+        return Iterables.tryFind(items, new Predicate<Item>() {
             @Override
             public boolean apply(final Item input) {
                 return input.getAction() == ItemAction.CANCEL;
             }
-        }).orNull(), true);
+        }).orNull();
     }
 
-
-    private ItemWithResult getResulting_ADD_Item() {
-
-        final Set<UUID> repairedIds = new HashSet<UUID>();
-        final ListIterator<Item> it = items.listIterator(items.size());
+    private Item getResulting_ADD_Item() {
 
         //
-        // We can have an {0,n} pairs of ADD/CANCEL (cancelling each other), and in addition to that we could have:
-        // a - One ADD that has not been cancelled => We want to return that item and let the parent (NodeInterval) know that it should ignore
-        //   the period as this is accounted for with the item returned
-        // b - One CANCEL => We return NO item but we also want the parent to know that it should ignore
-        //   the period as this is accounted -- period should remain unbilled.
-        // c - nothing => The parent should NOT ignore the period as there is no child element that can account for it.
+        // At this point we pruned the items so that we can have either:
+        // - 2 items (ADD + CANCEL, where CANCEL does NOT point to ADD item-- otherwise this is a cancelling pair that
+        //            would have been removed in mergeCancellingPairs logic)
+        // - 1 ADD item, simple enough we return it
+        // - 1 CANCEL, there is nothing to return but the period will be ignored by the parent
+        // - Nothing at all; this valid, this just means its original items got removed during mergeCancellingPairs logic,
+        //   but its NodeInterval has children so it could not be deleted.
         //
-        while (it.hasPrevious()) {
-            final Item cur = it.previous();
-            switch (cur.getAction()) {
-                case ADD:
-                    // If we found a CANCEL item pointing to that item then don't return it as it was repair (full repair scenario)
-                    if (!repairedIds.contains(cur.getId())) {
-                        // Case a
-                        return new ItemWithResult(cur, true);
-                    } else {
-                        // Remove from the list so we know if there is anything else (case b or c)
-                        repairedIds.remove(cur.getId());
-                    }
+        Preconditions.checkState(items.size() <= 2);
 
-                case CANCEL:
-                    // In all cases populate the set with the id of target item being repaired
-                    if (cur.getLinkedId() != null) {
-                        repairedIds.add(cur.getLinkedId());
-                    }
-                    break;
-            }
-        }
-        return repairedIds.size() > 0 ?
-               new ItemWithResult(null, true) :  /* case b */
-               new ItemWithResult(null, false); /* case c */
+        final Item item = items.size() > 0 && items.get(0).getAction() == ItemAction.ADD ? items.get(0) : null;
+        return item;
     }
-
 
     // Just ensure that ADD items precedes CANCEL items
     public void insertSortedItem(final Item item) {
@@ -179,6 +193,24 @@ public class ItemsInterval {
         items.clear();
     }
 
+    public void remove(final Item item) {
+        items.remove(item);
+    }
+
+    public Item getCancelledItemIfExists(final UUID targetId) {
+        final Item item = Iterables.tryFind(items, new Predicate<Item>() {
+            @Override
+            public boolean apply(final Item input) {
+                return input.getAction() == ItemAction.CANCEL && input.getLinkedId().equals(targetId);
+            }
+        }).orNull();
+        return item;
+    }
+
+    public int size() {
+        return items.size();
+    }
+
     /**
      * Creates a new item.
      * <p/>
@@ -195,8 +227,7 @@ public class ItemsInterval {
      */
     private Item createNewItem(LocalDate startDate, LocalDate endDate, final boolean mergeMode) {
 
-        final ItemWithResult itemWithResult  = getResultingItem(mergeMode);
-        final Item item = itemWithResult.getItem();
+        final Item item = getResultingItem(mergeMode);
         if (item == null) {
             return null;
         }
@@ -208,19 +239,4 @@ public class ItemsInterval {
         return result;
     }
 
-    private final class ItemWithResult {
-        private final Item item;
-        private final boolean ignorePeriod;
-
-        private ItemWithResult(final Item item, final boolean ignorePeriod) {
-            this.item = item;
-            this.ignorePeriod = ignorePeriod;
-        }
-        public Item getItem() {
-            return item;
-        }
-        public boolean isIgnorePeriod() {
-            return ignorePeriod;
-        }
-    }
 }
