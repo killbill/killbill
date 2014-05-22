@@ -34,7 +34,9 @@ import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.glue.TestInvoiceModuleWithEmbeddedDb;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.junction.BillingInternalApi;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.util.config.KillbillConfigSource;
 import org.killbill.billing.util.api.TagUserApi;
@@ -108,6 +110,8 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected TestInvoiceHelper invoiceUtil;
     @Inject
     protected TestInvoiceNotificationQListener testInvoiceNotificationQListener;
+    @Inject
+    protected OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
 
     @Override
     protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {

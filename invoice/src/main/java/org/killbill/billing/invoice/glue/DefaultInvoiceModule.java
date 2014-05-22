@@ -16,6 +16,8 @@
 
 package org.killbill.billing.invoice.glue;
 
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
@@ -48,6 +50,7 @@ import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 
 public class DefaultInvoiceModule extends AbstractModule implements InvoiceModule {
 
@@ -120,10 +123,15 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
         bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
     }
 
+    protected void installInvoicePluginApi() {
+        bind(new TypeLiteral<OSGIServiceRegistration<InvoicePluginApi>>() {}).toProvider(DefaultInvoiceProviderPluginRegistryProvider.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         installConfig();
 
+        installInvoicePluginApi();
         installInvoiceService();
         installInvoiceNotifier();
         installNotifiers();

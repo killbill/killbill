@@ -88,7 +88,7 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
                                                                           startDate, BigDecimal.TEN, Currency.USD);
         checkOutput(fixedItem,
                     "{{#invoiceItem}}<td>{{formattedStartDate}}{{#formattedEndDate}} - {{formattedEndDate}}{{/formattedEndDate}}</td>{{/invoiceItem}}",
-                    "<td>Dec 1, 2012</td>");
+                    "<td>1 déc. 2012</td>");
     }
 
     @Test(groups = "fast")
@@ -100,7 +100,7 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
                                                                             startDate, endDate, BigDecimal.TEN, BigDecimal.TEN, Currency.USD);
         checkOutput(recurringItem,
                     "{{#invoiceItem}}<td>{{formattedStartDate}}{{#formattedEndDate}} - {{formattedEndDate}}{{/formattedEndDate}}</td>{{/invoiceItem}}",
-                    "<td>Dec 1, 2012 - Dec 31, 2012</td>");
+                    "<td>1 déc. 2012 - 31 déc. 2012</td>");
     }
 
     private void checkOutput(final InvoiceItem invoiceItem, final String template, final String expected) {

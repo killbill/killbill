@@ -29,6 +29,8 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
@@ -137,6 +139,7 @@ public class TestInvoiceHelper {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
+    private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
     private final AccountUserApi accountUserApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final BusService busService;
@@ -152,10 +155,11 @@ public class TestInvoiceHelper {
     private final InvoiceItemSqlDao invoiceItemSqlDao;
 
     @Inject
-    public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
+    public TestInvoiceHelper(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry, final InvoiceGenerator generator, final IDBI dbi,
                              final BillingInternalApi billingApi, final AccountInternalApi accountApi, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
                              final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final InternalCallContext internalCallContext,
                              final InternalCallContextFactory internalCallContextFactory) {
+        this.pluginRegistry = pluginRegistry;
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountApi = accountApi;
@@ -189,7 +193,7 @@ public class TestInvoiceHelper {
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi,
                                                                    invoiceDao, nonEntityDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 

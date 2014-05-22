@@ -28,6 +28,7 @@ import javax.inject.Named;
 import javax.servlet.Servlet;
 import javax.sql.DataSource;
 
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.osgi.api.OSGIConfigProperties;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -76,6 +77,7 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
                              final OSGIConfigProperties configProperties,
                              final OSGIServiceRegistration<Servlet> servletRouter,
                              final OSGIServiceRegistration<PaymentPluginApi> paymentProviderPluginRegistry,
+                             final OSGIServiceRegistration<InvoicePluginApi> invoiceProviderPluginRegistry,
                              final OSGIServiceRegistration<CurrencyPluginApi> currencyProviderPluginRegistry) {
         this.osgiKillbill = osgiKillbill;
         this.defaultHttpService = defaultHttpService;
@@ -83,7 +85,7 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
         this.observable = observable;
         this.configProperties = configProperties;
         this.registrar = new OSGIKillbillRegistrar();
-        this.allRegistrationHandlers = ImmutableList.<OSGIServiceRegistration>of(servletRouter, paymentProviderPluginRegistry, currencyProviderPluginRegistry);
+        this.allRegistrationHandlers = ImmutableList.<OSGIServiceRegistration>of(servletRouter, paymentProviderPluginRegistry, invoiceProviderPluginRegistry, currencyProviderPluginRegistry);
     }
 
     @Override

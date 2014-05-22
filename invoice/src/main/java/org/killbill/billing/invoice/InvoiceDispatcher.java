@@ -32,8 +32,12 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.usage.UsageUtils;
 import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,9 +108,11 @@ public class InvoiceDispatcher {
     private final GlobalLocker locker;
     private final PersistentBus eventBus;
     private final Clock clock;
+    private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
 
     @Inject
-    public InvoiceDispatcher(final InvoiceGenerator generator, final AccountInternalApi accountApi,
+    public InvoiceDispatcher(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry,
+                             final InvoiceGenerator generator, final AccountInternalApi accountApi,
                              final BillingInternalApi billingApi,
                              final SubscriptionBaseInternalApi SubscriptionApi,
                              final InvoiceDao invoiceDao,
@@ -115,6 +121,7 @@ public class InvoiceDispatcher {
                              final GlobalLocker locker,
                              final PersistentBus eventBus,
                              final Clock clock) {
+        this.pluginRegistry = pluginRegistry;
         this.generator = generator;
         this.billingApi = billingApi;
         this.subscriptionApi = SubscriptionApi;
@@ -206,6 +213,15 @@ public class InvoiceDispatcher {
                 }
             } else {
                 if (!dryRun) {
+                    // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
+                    List<InvoicePluginApi> invoicePlugins = this.getInvoicePlugins();
+                    CallContext callContext = buildCallContext(context);
+                    for (InvoicePluginApi invoicePlugin : invoicePlugins) {
+                        List<InvoiceItem> items = invoicePlugin.getAdditionalInvoiceItems(invoice, ImmutableList.<PluginProperty>of(), callContext);
+                        if (items != null) {
+                            invoice.addInvoiceItems(items);
+                        }
+                    }
 
                     // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
                     final Set<UUID> adjustedUniqueOtherInvoiceId = new TreeSet<UUID>();
@@ -288,6 +304,17 @@ public class InvoiceDispatcher {
         return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
     }
 
+    private CallContext buildCallContext(final InternalCallContext context) {
+        return context.toCallContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
+    }
+
+    private List<InvoicePluginApi> getInvoicePlugins() {
+        List<InvoicePluginApi> invoicePlugins = new ArrayList<InvoicePluginApi>();
+        for (String name : this.pluginRegistry.getAllServices()) {
+            invoicePlugins.add(this.pluginRegistry.getServiceForName(name));
+        }
+        return invoicePlugins;
+    }
 
     @VisibleForTesting
     Map<UUID, List<DateTime>> createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final Map<String, Usage> knownUsages, final DateAndTimeZoneContext dateAndTimeZoneContext) {
