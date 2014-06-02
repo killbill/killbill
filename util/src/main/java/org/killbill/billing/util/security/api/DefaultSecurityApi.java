@@ -21,9 +21,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.subject.Subject;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.security.Logical;
 import org.killbill.billing.security.Permission;
@@ -37,6 +38,30 @@ import com.google.common.collect.Lists;
 public class DefaultSecurityApi implements SecurityApi {
 
     private static final String[] allPermissions = new String[Permission.values().length];
+
+    @Override
+    public void login(final Object principal, final Object credentials) {
+        final Subject currentUser = SecurityUtils.getSubject();
+
+        // UsernamePasswordToken is hardcoded in AuthenticatingRealm
+        if (principal instanceof String && credentials instanceof String) {
+            currentUser.login(new UsernamePasswordToken((String) principal, (String) credentials));
+        } else if (principal instanceof String && credentials instanceof char[]) {
+            currentUser.login(new UsernamePasswordToken((String) principal, (char[]) credentials));
+        } else {
+            currentUser.login(new AuthenticationToken() {
+                @Override
+                public Object getPrincipal() {
+                    return principal;
+                }
+
+                @Override
+                public Object getCredentials() {
+                    return credentials;
+                }
+            });
+        }
+    }
 
     @Override
     public Set<Permission> getCurrentUserPermissions(final TenantContext context) {
