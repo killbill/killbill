@@ -52,12 +52,13 @@ public class HtmlInvoiceGenerator {
         this.currencyConversionApi = currencyConversionApi;
     }
 
-    public String generateInvoice(final Account account, @Nullable final Invoice invoice, final boolean manualPay) throws IOException {
+    public HtmlInvoice generateInvoice(final Account account, @Nullable final Invoice invoice, final boolean manualPay) throws IOException {
         // Don't do anything if the invoice is null
         if (invoice == null) {
             return null;
         }
 
+        HtmlInvoice invoiceData = new HtmlInvoice();
         final Map<String, Object> data = new HashMap<String, Object>();
         final DefaultInvoiceTranslator invoiceTranslator = new DefaultInvoiceTranslator(config);
         final String accountLocale = Strings.emptyToNull(account.getLocale());
@@ -70,10 +71,14 @@ public class HtmlInvoiceGenerator {
         final InvoiceFormatter formattedInvoice = factory.createInvoiceFormatter(config, invoice, locale, currencyConversionApi);
         data.put("invoice", formattedInvoice);
 
+        invoiceData.setSubject(invoiceTranslator.getInvoiceEmailSubject());
+
         if (manualPay) {
-            return templateEngine.executeTemplate(config.getManualPayTemplateName(), data);
+            invoiceData.setBody(templateEngine.executeTemplate(config.getManualPayTemplateName(), data));
         } else {
-            return templateEngine.executeTemplate(config.getTemplateName(), data);
+            invoiceData.setBody(templateEngine.executeTemplate(config.getTemplateName(), data));
         }
+
+        return invoiceData;
     }
 }
