@@ -28,6 +28,7 @@ import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.osgi.api.OSGIKillbill;
 import org.killbill.billing.osgi.api.config.PluginConfigServiceApi;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -53,6 +54,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     private final SubscriptionApi subscriptionApi;
     private final CurrencyConversionApi currencyConversionApi;
     private final RecordIdApi recordIdApi;
+    private final SecurityApi securityApi;
 
     private final PluginConfigServiceApi configServiceApi;
 
@@ -72,7 +74,8 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
                                final SubscriptionApi subscriptionApi,
                                final RecordIdApi recordIdApi,
                                final CurrencyConversionApi currencyConversionApi,
-                               final PluginConfigServiceApi configServiceApi) {
+                               final PluginConfigServiceApi configServiceApi,
+                               final SecurityApi securityApi) {
         this.accountUserApi = accountUserApi;
         this.catalogUserApi = catalogUserApi;
         this.invoicePaymentApi = invoicePaymentApi;
@@ -89,6 +92,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
         this.currencyConversionApi = currencyConversionApi;
         this.recordIdApi = recordIdApi;
         this.configServiceApi = configServiceApi;
+        this.securityApi = securityApi;
     }
 
     @Override
@@ -169,5 +173,10 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Override
     public PluginConfigServiceApi getPluginConfigServiceApi() {
         return configServiceApi;
+    }
+
+    @Override
+    public SecurityApi getSecurityApi() {
+        return securityApi;
     }
 }

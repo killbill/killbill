@@ -74,6 +74,7 @@ public interface OSGIConfig extends KillbillConfig {
              "org.killbill.billing.util.template.translation," +
              "org.killbill.billing.currency.plugin.api," +
              "org.killbill.billing.currency.api," +
+             "org.killbill.billing.security.api," +
 
              // Add export for all the com.sun.xml.internal.ws required to have apache-cxf working properly within a plugin environment.
              "com.sun.xml.internal.ws," +
