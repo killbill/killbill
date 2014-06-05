@@ -64,6 +64,12 @@ public class DefaultSecurityApi implements SecurityApi {
     }
 
     @Override
+    public void logout() {
+        final Subject currentUser = SecurityUtils.getSubject();
+        currentUser.logout();
+    }
+
+    @Override
     public Set<Permission> getCurrentUserPermissions(final TenantContext context) {
         final Permission[] killbillPermissions = Permission.values();
         final String[] killbillPermissionsString = getAllPermissionsAsStrings();
