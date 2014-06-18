@@ -27,8 +27,8 @@ import org.killbill.billing.catalog.api.Fixed;
 import org.killbill.billing.catalog.api.FixedType;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.util.config.catalog.ValidatingConfig;
-import org.killbill.billing.util.config.catalog.ValidationErrors;
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements Fixed {

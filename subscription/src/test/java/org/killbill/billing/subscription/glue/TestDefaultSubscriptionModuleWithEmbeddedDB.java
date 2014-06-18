@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,24 +18,20 @@
 
 package org.killbill.billing.subscription.glue;
 
-import org.skife.config.ConfigSource;
-
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
 import org.killbill.billing.subscription.engine.dao.MockSubscriptionDaoSql;
 import org.killbill.billing.subscription.engine.dao.RepairSubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
-import org.killbill.billing.util.glue.BusModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
-import org.killbill.billing.util.glue.MetricsModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
-import org.killbill.billing.util.glue.NotificationQueueModule;
 
 import com.google.inject.name.Names;
 
 public class TestDefaultSubscriptionModuleWithEmbeddedDB extends TestDefaultSubscriptionModule {
 
-    public TestDefaultSubscriptionModuleWithEmbeddedDB(final ConfigSource configSource) {
+    public TestDefaultSubscriptionModuleWithEmbeddedDB(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
@@ -48,16 +46,12 @@ public class TestDefaultSubscriptionModuleWithEmbeddedDB extends TestDefaultSubs
     @Override
     protected void configure() {
 
-        install(new GuicyKillbillTestWithEmbeddedDBModule());
+        install(new GuicyKillbillTestWithEmbeddedDBModule(configSource));
 
-        install(new NonEntityDaoModule());
+        install(new NonEntityDaoModule(configSource));
 
-        //installDBI();
+        install(new CustomFieldModule(configSource));
 
-        install(new NotificationQueueModule(configSource));
-        install(new CustomFieldModule());
-        install(new MetricsModule());
-        install(new BusModule(configSource));
         super.configure();
     }
 }

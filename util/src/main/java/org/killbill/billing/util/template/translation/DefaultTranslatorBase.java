@@ -24,11 +24,11 @@ import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
+import org.killbill.xmlloader.UriAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.killbill.billing.util.LocaleUtils;
-import org.killbill.billing.util.config.catalog.UriAccessor;
 
 import com.google.inject.Inject;
 

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,24 +18,26 @@
 
 package org.killbill.billing.mock.glue;
 
-import org.mockito.Mockito;
-
 import org.killbill.billing.glue.SubscriptionModule;
+import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
-import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.util.glue.KillBillModule;
+import org.mockito.Mockito;
 
-import com.google.inject.AbstractModule;
+public class MockSubscriptionModule extends KillBillModule implements SubscriptionModule {
 
-public class MockSubscriptionModule extends AbstractModule implements SubscriptionModule {
+    public MockSubscriptionModule(final KillbillConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     public void installSubscriptionService() {
         bind(SubscriptionBaseService.class).toInstance(Mockito.mock(SubscriptionBaseService.class));
     }
-
 
     @Override
     public void installSubscriptionMigrationApi() {
@@ -62,6 +66,5 @@ public class MockSubscriptionModule extends AbstractModule implements Subscripti
     @Override
     public void installSubscriptionTransferApi() {
         bind(SubscriptionBaseTransferApi.class).toInstance(Mockito.mock(SubscriptionBaseTransferApi.class));
-
     }
 }

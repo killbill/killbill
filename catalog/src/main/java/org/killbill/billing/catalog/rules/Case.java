@@ -24,8 +24,8 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.util.config.catalog.ValidatingConfig;
-import org.killbill.billing.util.config.catalog.ValidationErrors;
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationErrors;
 
 public abstract class Case<T> extends ValidatingConfig<StandaloneCatalog> {
 

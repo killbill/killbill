@@ -34,9 +34,9 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
-import org.killbill.billing.util.config.catalog.ValidatingConfig;
-import org.killbill.billing.util.config.catalog.ValidationError;
-import org.killbill.billing.util.config.catalog.ValidationErrors;
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationError;
+import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements Usage {

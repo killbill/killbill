@@ -21,12 +21,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
+import org.killbill.automaton.OperationException;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
 
@@ -44,10 +44,12 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
                 }
             }, 100, TimeUnit.MILLISECONDS);
             Assert.fail("Failed : should have had Timeout exception");
-        } catch (TimeoutException e) {
+        } catch (final TimeoutException e) {
             gotIt = true;
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             Assert.fail("Failed : should have had Timeout exception");
+        } catch (OperationException e) {
+            Assert.fail("Failed : should have had OperationException exception");
         }
         Assert.assertTrue(gotIt);
     }
@@ -63,16 +65,18 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
                 }
             }, 100, TimeUnit.MILLISECONDS);
             Assert.fail("Failed : should have had Timeout exception");
-        } catch (TimeoutException e) {
+        } catch (final TimeoutException e) {
             Assert.fail("Failed : should have had PaymentApiException exception");
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             gotIt = true;
+        } catch (OperationException e) {
+            Assert.fail("Failed : should have had OperationException exception");
         }
         Assert.assertTrue(gotIt);
     }
 
     @Test(groups = "fast")
-    public void testDispatchWithRuntimeExceptionWrappedInPaymentApiException() throws TimeoutException, PaymentApiException {
+    public void testDispatchWithRuntimeException() throws TimeoutException, PaymentApiException {
         boolean gotIt = false;
         try {
             voidPluginDispatcher.dispatchWithTimeout(new Callable<Void>() {
@@ -82,11 +86,14 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
                 }
             }, 100, TimeUnit.MILLISECONDS);
             Assert.fail("Failed : should have had Timeout exception");
-        } catch (TimeoutException e) {
+        } catch (final TimeoutException e) {
             Assert.fail("Failed : should have had RuntimeException exception");
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
+            Assert.fail("Failed : should have had RuntimeException exception");
+        } catch (final RuntimeException e) {
             gotIt = true;
-        } catch (RuntimeException e) {
+        } catch (OperationException e) {
+            Assert.fail("Failed : should have had OperationException exception");
         }
         Assert.assertTrue(gotIt);
     }

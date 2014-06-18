@@ -21,17 +21,10 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.beatrix.glue.BeatrixModule;
-import org.killbill.bus.api.BusEvent;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.entitlement.EntitlementTransitionType;
 import org.killbill.billing.events.AccountChangeInternalEvent;
@@ -52,12 +45,18 @@ import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.events.SubscriptionInternalEvent;
 import org.killbill.billing.events.UserTagCreationInternalEvent;
 import org.killbill.billing.events.UserTagDeletionInternalEvent;
+import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.bus.api.BusEvent;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -76,7 +75,7 @@ public class BeatrixListener {
     protected final ObjectMapper objectMapper;
 
     @Inject
-    public BeatrixListener(@Named(BeatrixModule.EXTERNAL_BUS) final PersistentBus externalBus,
+    public BeatrixListener(@Named(BusModule.EXTERNAL_BUS_NAMED) final PersistentBus externalBus,
                            final InternalCallContextFactory internalCallContextFactory,
                            final AccountInternalApi accountApi,
                            final NonEntityDao nonEntityDao) {
@@ -91,41 +90,39 @@ public class BeatrixListener {
 
     @Subscribe
     public void handleAllInternalKillbillEvents(final BusInternalEvent event) {
-
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "BeatrixListener", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
         try {
             final BusEvent externalEvent = computeExtBusEventEntryFromBusInternalEvent(event, internalContext);
             if (externalEvent != null) {
                 externalBus.post(externalEvent);
             }
-        } catch (EventBusException e) {
+        } catch (final EventBusException e) {
             log.warn("Failed to dispatch external bus events", e);
         }
     }
 
     private BusEvent computeExtBusEventEntryFromBusInternalEvent(final BusInternalEvent event, final InternalCallContext context) {
-
         ObjectType objectType = null;
         UUID objectId = null;
         ExtBusEventType eventBusType = null;
 
         switch (event.getBusEventType()) {
             case ACCOUNT_CREATE:
-                AccountCreationInternalEvent realEventACR = (AccountCreationInternalEvent) event;
+                final AccountCreationInternalEvent realEventACR = (AccountCreationInternalEvent) event;
                 objectType = ObjectType.ACCOUNT;
                 objectId = realEventACR.getId();
                 eventBusType = ExtBusEventType.ACCOUNT_CREATION;
                 break;
 
             case ACCOUNT_CHANGE:
-                AccountChangeInternalEvent realEventACH = (AccountChangeInternalEvent) event;
+                final AccountChangeInternalEvent realEventACH = (AccountChangeInternalEvent) event;
                 objectType = ObjectType.ACCOUNT;
                 objectId = realEventACH.getAccountId();
                 eventBusType = ExtBusEventType.ACCOUNT_CHANGE;
                 break;
 
             case SUBSCRIPTION_TRANSITION:
-                SubscriptionInternalEvent realEventST = (SubscriptionInternalEvent) event;
+                final SubscriptionInternalEvent realEventST = (SubscriptionInternalEvent) event;
                 objectType = ObjectType.SUBSCRIPTION;
                 objectId = realEventST.getSubscriptionId();
                 if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.CREATE ||
@@ -145,7 +142,7 @@ public class BeatrixListener {
                 break;
 
             case ENTITLEMENT_TRANSITION:
-                EntitlementInternalEvent realEventET = (EntitlementInternalEvent) event;
+                final EntitlementInternalEvent realEventET = (EntitlementInternalEvent) event;
                 objectType = ObjectType.BUNDLE;
                 objectId = realEventET.getBundleId();
                 if (realEventET.getTransitionType() == EntitlementTransitionType.BLOCK_BUNDLE) {
@@ -156,84 +153,84 @@ public class BeatrixListener {
                 break;
 
             case INVOICE_CREATION:
-                InvoiceCreationInternalEvent realEventInv = (InvoiceCreationInternalEvent) event;
+                final InvoiceCreationInternalEvent realEventInv = (InvoiceCreationInternalEvent) event;
                 objectType = ObjectType.INVOICE;
                 objectId = realEventInv.getInvoiceId();
                 eventBusType = ExtBusEventType.INVOICE_CREATION;
                 break;
 
             case INVOICE_ADJUSTMENT:
-                InvoiceAdjustmentInternalEvent realEventInvAdj = (InvoiceAdjustmentInternalEvent) event;
+                final InvoiceAdjustmentInternalEvent realEventInvAdj = (InvoiceAdjustmentInternalEvent) event;
                 objectType = ObjectType.INVOICE;
                 objectId = realEventInvAdj.getInvoiceId();
                 eventBusType = ExtBusEventType.INVOICE_ADJUSTMENT;
                 break;
 
             case PAYMENT_INFO:
-                PaymentInfoInternalEvent realEventPay = (PaymentInfoInternalEvent) event;
+                final PaymentInfoInternalEvent realEventPay = (PaymentInfoInternalEvent) event;
                 objectType = ObjectType.PAYMENT;
                 objectId = realEventPay.getPaymentId();
                 eventBusType = ExtBusEventType.PAYMENT_SUCCESS;
                 break;
 
             case PAYMENT_ERROR:
-                PaymentErrorInternalEvent realEventPayErr = (PaymentErrorInternalEvent) event;
+                final PaymentErrorInternalEvent realEventPayErr = (PaymentErrorInternalEvent) event;
                 objectType = ObjectType.PAYMENT;
                 objectId = realEventPayErr.getPaymentId();
                 eventBusType = ExtBusEventType.PAYMENT_FAILED;
                 break;
 
             case PAYMENT_PLUGIN_ERROR:
-                PaymentPluginErrorInternalEvent realEventPayPluginErr = (PaymentPluginErrorInternalEvent) event;
+                final PaymentPluginErrorInternalEvent realEventPayPluginErr = (PaymentPluginErrorInternalEvent) event;
                 objectType = ObjectType.PAYMENT;
                 objectId = realEventPayPluginErr.getPaymentId();
                 eventBusType = ExtBusEventType.PAYMENT_FAILED;
                 break;
 
             case OVERDUE_CHANGE:
-                OverdueChangeInternalEvent realEventOC = (OverdueChangeInternalEvent) event;
+                final OverdueChangeInternalEvent realEventOC = (OverdueChangeInternalEvent) event;
                 objectType = ObjectType.ACCOUNT;
                 objectId = realEventOC.getOverdueObjectId();
                 eventBusType = ExtBusEventType.OVERDUE_CHANGE;
                 break;
 
             case USER_TAG_CREATION:
-                UserTagCreationInternalEvent realUserTagEventCr = (UserTagCreationInternalEvent) event;
+                final UserTagCreationInternalEvent realUserTagEventCr = (UserTagCreationInternalEvent) event;
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
                 break;
 
             case CONTROL_TAG_CREATION:
-                ControlTagCreationInternalEvent realTagEventCr = (ControlTagCreationInternalEvent) event;
+                final ControlTagCreationInternalEvent realTagEventCr = (ControlTagCreationInternalEvent) event;
                 objectType = ObjectType.TAG;
                 objectId = realTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
                 break;
 
             case USER_TAG_DELETION:
-                UserTagDeletionInternalEvent realUserTagEventDel = (UserTagDeletionInternalEvent) event;
+                final UserTagDeletionInternalEvent realUserTagEventDel = (UserTagDeletionInternalEvent) event;
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventDel.getObjectId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
                 break;
 
             case CONTROL_TAG_DELETION:
-                ControlTagDeletionInternalEvent realTagEventDel = (ControlTagDeletionInternalEvent) event;
+                final ControlTagDeletionInternalEvent realTagEventDel = (ControlTagDeletionInternalEvent) event;
                 objectType = ObjectType.TAG;
                 objectId = realTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
                 break;
 
             case CUSTOM_FIELD_CREATION:
-                CustomFieldCreationEvent realCustomEveventCr = (CustomFieldCreationEvent) event;
+                final CustomFieldCreationEvent realCustomEveventCr = (CustomFieldCreationEvent) event;
                 objectType = ObjectType.CUSTOM_FIELD;
                 objectId = realCustomEveventCr.getCustomFieldId();
                 eventBusType = ExtBusEventType.CUSTOM_FIELD_CREATION;
                 break;
 
             case CUSTOM_FIELD_DELETION:
-                CustomFieldDeletionEvent realCustomEveventDel = (CustomFieldDeletionEvent) event;
+                final CustomFieldDeletionEvent realCustomEveventDel = (CustomFieldDeletionEvent) event;
                 objectType = ObjectType.CUSTOM_FIELD;
                 objectId = realCustomEveventDel.getCustomFieldId();
                 eventBusType = ExtBusEventType.CUSTOM_FIELD_DELETION;
@@ -249,8 +246,7 @@ public class BeatrixListener {
                null;
     }
 
-    private final UUID getAccountIdFromRecordId(final BusInternalEventType eventType, final UUID objectId, final Long recordId, final InternalCallContext context) {
-
+    private UUID getAccountIdFromRecordId(final BusInternalEventType eventType, final UUID objectId, final Long recordId, final InternalCallContext context) {
         // accountRecord_id is not set for ACCOUNT_CREATE event as we are in the transaction and value is known yet
         if (eventType == BusInternalEventType.ACCOUNT_CREATE) {
             return objectId;
@@ -263,5 +259,4 @@ public class BeatrixListener {
             return null;
         }
     }
-
 }

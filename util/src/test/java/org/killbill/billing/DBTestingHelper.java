@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,59 +20,39 @@ package org.killbill.billing;
 
 import java.io.IOException;
 
-import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.killbill.commons.embeddeddb.EmbeddedDB;
-import org.killbill.commons.embeddeddb.h2.H2EmbeddedDB;
-import org.killbill.commons.embeddeddb.mysql.MySQLEmbeddedDB;
-import org.killbill.commons.embeddeddb.mysql.MySQLStandaloneDB;
-import org.killbill.billing.dbi.DBIProvider;
+import org.killbill.billing.platform.test.PlatformDBTestingHelper;
+import org.killbill.billing.util.dao.AuditLogModelDaoMapper;
+import org.killbill.billing.util.dao.RecordIdIdMappingsMapper;
 import org.killbill.billing.util.io.IOUtils;
+import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.io.Resources;
 
-public class DBTestingHelper {
+public class DBTestingHelper extends PlatformDBTestingHelper {
 
-    private static final Logger log = LoggerFactory.getLogger(DBTestingHelper.class);
+    private static DBTestingHelper dbTestingHelper = null;
 
-    protected static EmbeddedDB instance;
-
-    public static synchronized EmbeddedDB get() {
-        if (instance == null) {
-            if ("true".equals(System.getProperty("org.killbill.billing.dbi.test.h2"))) {
-                log.info("Using h2 as the embedded database");
-                instance = new H2EmbeddedDB();
-            } else {
-                if (isUsingLocalInstance()) {
-                    log.info("Using MySQL local database");
-                    final String databaseName = System.getProperty("org.killbill.billing.dbi.test.localDb.database", "killbill");
-                    final String username = System.getProperty("org.killbill.billing.dbi.test.localDb.password", "root");
-                    final String password = System.getProperty("org.killbill.billing.dbi.test.localDb.username", "root");
-                    instance = new MySQLStandaloneDB(databaseName, username, password);
-                } else {
-                    log.info("Using MySQL as the embedded database");
-                    instance = new MySQLEmbeddedDB();
-                }
-            }
+    public static synchronized DBTestingHelper get() {
+        if (dbTestingHelper == null) {
+            dbTestingHelper = new DBTestingHelper();
         }
-        return instance;
+        return dbTestingHelper;
     }
 
-    public static synchronized IDBI getDBI() throws IOException {
-        return new DBIProvider(get().getDataSource()).get();
+    protected DBTestingHelper() {
+        super();
     }
 
-    public static synchronized void start() throws IOException {
-        final EmbeddedDB instance = get();
-        instance.initialize();
-        instance.start();
+    @Override
+    public synchronized IDBI getDBI() throws IOException {
+        final DBI dbi = (DBI) super.getDBI();
+        dbi.registerMapper(new AuditLogModelDaoMapper());
+        dbi.registerMapper(new RecordIdIdMappingsMapper());
+        return dbi;
+    }
 
-        if (isUsingLocalInstance()) {
-            return;
-        }
-
+    protected synchronized void executePostStartupScripts() throws IOException {
         // We always want the accounts and tenants table
         instance.executeScript("drop table if exists accounts;" +
                                "CREATE TABLE accounts (\n" +
@@ -187,10 +169,5 @@ public class DBTestingHelper {
                 instance.executeScript(ddl);
             }
         }
-        instance.refreshTableNames();
-    }
-
-    private static boolean isUsingLocalInstance() {
-        return (System.getProperty("org.killbill.billing.dbi.test.useLocalDb") != null);
     }
 }

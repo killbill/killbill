@@ -24,7 +24,7 @@
     </parent>
     <artifactId>killbill-internal-api</artifactId>
     <packaging>jar</packaging>
-    <name>Kill Bill internal apis</name>
+    <name>killbill-api</name>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -43,6 +43,10 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing.plugin</groupId>

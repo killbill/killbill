@@ -1,0 +1,71 @@
+group PluginPropertySqlDao;
+
+tableName() ::= "payment_plugin_properties"
+
+recordIdField(prefix) ::= <<
+<prefix>record_id
+>>
+
+recordIdValue() ::= ":recordId"
+
+tableFields(prefix) ::= <<
+  <prefix>payment_external_key
+, <prefix>transaction_external_key
+, <prefix>account_id
+, <prefix>plugin_name
+, <prefix>prop_key
+, <prefix>prop_value
+, <prefix>created_by
+, <prefix>created_date
+>>
+
+tableValues() ::= <<
+  :paymentExternalKey
+, :transactionExternalKey
+, :accountId
+, :pluginName
+, :propKey
+, :propValue
+, :createdBy
+, :createdDate
+>>
+
+allTableFields(prefix) ::= <<
+  <recordIdField(prefix)>
+, <tableFields(prefix)>
+>>
+
+
+allTableValues() ::= <<
+  <recordIdValue()>
+, <tableValues()>
+>>
+
+
+create() ::= <<
+insert into <tableName()> (
+<tableFields("")>
+) values (
+<tableValues()>
+)
+;
+>>
+
+batchCreateFromTransaction() ::= <<
+insert into <tableName()> (
+<tableFields("")>
+) values (
+<tableValues()>
+)
+;
+>>
+
+
+getPluginProperties() ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where transaction_external_key = :transactionExternalKey
+order by record_id asc
+;
+>>

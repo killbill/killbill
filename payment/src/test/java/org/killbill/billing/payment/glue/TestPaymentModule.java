@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,25 +20,23 @@ package org.killbill.billing.payment.glue;
 
 import java.util.UUID;
 
-import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
-import org.mockito.Mockito;
-import org.skife.config.ConfigSource;
-
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.mock.glue.MockAccountModule;
-import org.killbill.billing.mock.glue.MockSubscriptionModule;
 import org.killbill.billing.mock.glue.MockInvoiceModule;
-import org.killbill.billing.mock.glue.MockNotificationQueueModule;
+import org.killbill.billing.mock.glue.MockSubscriptionModule;
 import org.killbill.billing.payment.TestPaymentHelper;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPluginModule;
-import org.killbill.billing.util.bus.InMemoryBusModule;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
+import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.glue.CacheModule;
-import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
 import org.killbill.billing.util.tag.Tag;
+import org.killbill.clock.Clock;
+import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 
@@ -44,34 +44,34 @@ public class TestPaymentModule extends PaymentModule {
 
     private final Clock clock;
 
-    public TestPaymentModule(final ConfigSource configSource, final Clock clock) {
+    public TestPaymentModule(final KillbillConfigSource configSource, final Clock clock) {
         super(configSource);
         this.clock = clock;
     }
 
     @Override
     protected void installPaymentProviderPlugins(final PaymentConfig config) {
-        install(new MockPaymentProviderPluginModule(MockPaymentProviderPlugin.PLUGIN_NAME, clock));
+        install(new MockPaymentProviderPluginModule(MockPaymentProviderPlugin.PLUGIN_NAME, clock, configSource));
     }
 
     private void installExternalApis() {
-        final TagInternalApi tagUserApi = Mockito.mock(TagInternalApi.class);
-        bind(TagInternalApi.class).toInstance(tagUserApi);
-        Mockito.when(tagUserApi.getTags(Mockito.<UUID>any(), Mockito.<ObjectType>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableList.<Tag>of());
+        final TagInternalApi tagInternalApi = Mockito.mock(TagInternalApi.class);
+        bind(TagInternalApi.class).toInstance(tagInternalApi);
+        Mockito.when(tagInternalApi.getTags(Mockito.<UUID>any(), Mockito.<ObjectType>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableList.<Tag>of());
+
+        final TagUserApi tagUserApi = Mockito.mock(TagUserApi.class);
+        bind(TagUserApi.class).toInstance(tagUserApi);
     }
 
     @Override
     protected void configure() {
         super.configure();
-        install(new InMemoryBusModule(configSource));
-        install(new MockNotificationQueueModule(configSource));
-        install(new MockInvoiceModule());
-        install(new MockAccountModule());
-        install(new MockSubscriptionModule());
-        install(new MemoryGlobalLockerModule());
+        install(new MockInvoiceModule(configSource));
+        install(new MockAccountModule(configSource));
+        install(new MockSubscriptionModule(configSource));
+        install(new MemoryGlobalLockerModule(configSource));
         install(new CacheModule(configSource));
         installExternalApis();
-
         bind(TestPaymentHelper.class).asEagerSingleton();
     }
 }

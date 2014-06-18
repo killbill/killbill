@@ -377,9 +377,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     waiter.waitForCompletion(timeoutSec * 1000);
                 }
                 return callback.doResponseOk(operationValue);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-            } catch (TimeoutException e) {
+            } catch (final TimeoutException e) {
                 return Response.status(Status.fromStatusCode(408)).build();
             } finally {
                 if (waiter != null) {

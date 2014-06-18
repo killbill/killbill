@@ -57,11 +57,10 @@ import org.killbill.billing.jaxrs.json.PaymentJson;
 import org.killbill.billing.jaxrs.json.RefundJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.api.Refund;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -116,12 +115,12 @@ public class PaymentResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID paymentId = UUID.fromString(paymentIdString);
-        final Payment payment = paymentApi.getPayment(paymentId, false, pluginProperties, tenantContext);
+        final DirectPayment payment = paymentApi.getPayment(paymentId, false, pluginProperties, tenantContext);
 
         final PaymentJson paymentJson;
         if (withRefundsAndChargebacks) {
             final List<RefundJson> refunds = new ArrayList<RefundJson>();
-            for (final Refund refund : paymentApi.getPaymentRefunds(paymentId, tenantContext)) {
+            for (final DirectPayment refund : paymentApi.getPaymentRefunds(paymentId, tenantContext)) {
                 refunds.add(new RefundJson(refund));
             }
 
@@ -153,7 +152,7 @@ public class PaymentResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
 
-        final Pagination<Payment> payments;
+        final Pagination<DirectPayment> payments;
         if (Strings.isNullOrEmpty(pluginName)) {
             payments = paymentApi.getPayments(offset, limit, pluginProperties, tenantContext);
         } else {
@@ -165,9 +164,9 @@ public class PaymentResource extends JaxRsResourceBase {
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
 
         return buildStreamingPaginationResponse(payments,
-                                                new Function<Payment, PaymentJson>() {
+                                                new Function<DirectPayment, PaymentJson>() {
                                                     @Override
-                                                    public PaymentJson apply(final Payment payment) {
+                                                    public PaymentJson apply(final DirectPayment payment) {
                                                         // Cache audit logs per account
                                                         if (accountsAuditLogs.get().get(payment.getAccountId()) == null) {
                                                             accountsAuditLogs.get().put(payment.getAccountId(), auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext));
@@ -193,7 +192,7 @@ public class PaymentResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         // Search the plugin(s)
-        final Pagination<Payment> payments;
+        final Pagination<DirectPayment> payments;
         if (Strings.isNullOrEmpty(pluginName)) {
             payments = paymentApi.searchPayments(searchKey, offset, limit, pluginProperties, tenantContext);
         } else {
@@ -206,9 +205,9 @@ public class PaymentResource extends JaxRsResourceBase {
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
 
         return buildStreamingPaginationResponse(payments,
-                                                new Function<Payment, PaymentJson>() {
+                                                new Function<DirectPayment, PaymentJson>() {
                                                     @Override
-                                                    public PaymentJson apply(final Payment payment) {
+                                                    public PaymentJson apply(final DirectPayment payment) {
                                                         // Cache audit logs per account
                                                         if (accountsAuditLogs.get().get(payment.getAccountId()) == null) {
                                                             accountsAuditLogs.get().put(payment.getAccountId(), auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext));
@@ -234,9 +233,9 @@ public class PaymentResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID paymentId = UUID.fromString(paymentIdString);
-        final Payment payment = paymentApi.getPayment(paymentId, false, pluginProperties, callContext);
+        final DirectPayment payment = paymentApi.getPayment(paymentId, false, pluginProperties, callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
-        final Payment newPayment = paymentApi.retryPayment(account, paymentId, pluginProperties, callContext);
+        final DirectPayment newPayment = paymentApi.retryPayment(account, paymentId, pluginProperties, callContext);
 
         return Response.status(Status.OK).entity(new PaymentJson(newPayment, null)).build();
     }
@@ -267,10 +266,10 @@ public class PaymentResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getRefunds(@PathParam("paymentId") final String paymentId,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        final List<Refund> refunds = paymentApi.getPaymentRefunds(UUID.fromString(paymentId), context.createContext(request));
-        final List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<Refund, RefundJson>() {
+        final List<DirectPayment> refunds = paymentApi.getPaymentRefunds(UUID.fromString(paymentId), context.createContext(request));
+        final List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<DirectPayment, RefundJson>() {
             @Override
-            public RefundJson apply(final Refund input) {
+            public RefundJson apply(final DirectPayment input) {
                 // TODO Return adjusted items and audits
                 return new RefundJson(input, null, null);
             }
@@ -295,10 +294,10 @@ public class PaymentResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID paymentUuid = UUID.fromString(paymentId);
-        final Payment payment = paymentApi.getPayment(paymentUuid, false, pluginProperties, callContext);
+        final DirectPayment payment = paymentApi.getPayment(paymentUuid, false, pluginProperties, callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
-        final Refund result;
+        final DirectPayment result;
         if (json.isAdjusted()) {
             if (json.getAdjustments() != null && json.getAdjustments().size() > 0) {
                 final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
@@ -367,7 +366,7 @@ public class PaymentResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID paymentId = UUID.fromString(paymentIdString);
         final TenantContext tenantContext = context.createContext(request);
-        final Payment payment = paymentApi.getPayment(paymentId, false, pluginProperties, tenantContext);
+        final DirectPayment payment = paymentApi.getPayment(paymentId, false, pluginProperties, tenantContext);
         return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
     }
 

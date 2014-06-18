@@ -25,10 +25,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.killbill.automaton.OperationException;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Objects;
 
 public class PluginDispatcher<T> {
 
@@ -44,12 +47,13 @@ public class PluginDispatcher<T> {
         this.executor = executor;
     }
 
-    public T dispatchWithTimeout(final Callable<T> task) throws PaymentApiException, TimeoutException {
+    // TODO Once we switch fully to automata, should this throw PaymentPluginApiException instead?
+    public T dispatchWithTimeout(final Callable<T> task) throws PaymentApiException, OperationException, TimeoutException {
         return dispatchWithTimeout(task, timeoutSeconds, DEEFAULT_PLUGIN_TIMEOUT_UNIT);
     }
 
     public T dispatchWithTimeout(final Callable<T> task, final long timeout, final TimeUnit unit)
-            throws PaymentApiException, TimeoutException {
+            throws PaymentApiException, TimeoutException, OperationException {
 
         try {
             final Future<T> future = executor.submit(task);
@@ -57,8 +61,12 @@ public class PluginDispatcher<T> {
         } catch (final ExecutionException e) {
             if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
+            } else if (e.getCause() instanceof OperationException) {
+                throw (OperationException) e.getCause();
+            } else if (e.getCause() instanceof RuntimeException) {
+                throw (RuntimeException) e.getCause();
             } else {
-                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
+                throw new PaymentApiException(Objects.firstNonNull(e.getCause(), e), ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
             }
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();

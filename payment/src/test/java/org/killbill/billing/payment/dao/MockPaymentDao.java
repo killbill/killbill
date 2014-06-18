@@ -18,7 +18,6 @@ package org.killbill.billing.payment.dao;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -30,15 +29,96 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentStatus;
-import org.killbill.billing.payment.api.RefundStatus;
 import org.killbill.billing.util.entity.Pagination;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class MockPaymentDao implements PaymentDao {
 
-    private final Map<UUID, PaymentModelDao> payments = new HashMap<UUID, PaymentModelDao>();
-    private final Map<UUID, PaymentAttemptModelDao> attempts = new HashMap<UUID, PaymentAttemptModelDao>();
+    private final Map<UUID, DirectPaymentModelDao> payments = new HashMap<UUID, DirectPaymentModelDao>();
+    private final Map<UUID, DirectPaymentTransactionModelDao> transactions = new HashMap<UUID, DirectPaymentTransactionModelDao>();
+    private final Map<String, PaymentAttemptModelDao> attempts = new HashMap<String, PaymentAttemptModelDao>();
+
+    public void reset() {
+        payments.clear();
+        transactions.clear();
+        attempts.clear();
+    }
+
+    @Override
+    public List<PluginPropertyModelDao> getProperties(final String transactionExternalKey, final InternalCallContext context) {
+        return null;
+    }
+
+    @Override
+    public PaymentAttemptModelDao insertPaymentAttemptWithProperties(final PaymentAttemptModelDao attempt, final List<PluginPropertyModelDao> properties, final InternalCallContext context) {
+        synchronized (this) {
+            attempts.put(attempt.getTransactionExternalKey(), attempt);
+            return attempt;
+        }
+    }
+
+    @Override
+    public void updatePaymentAttempt(final UUID paymentAttemptId, final UUID transactionId, final String state, final InternalCallContext context) {
+        boolean success = false;
+        synchronized (this) {
+            for (PaymentAttemptModelDao cur : attempts.values()) {
+                if (cur.getId().equals(paymentAttemptId)) {
+                    cur.setStateName(state);
+                    cur.setDirectTransactionId(transactionId);
+                    success = true;
+                    break;
+                }
+            }
+        }
+        if (!success) {
+            throw new RuntimeException("Could not find attempt " + paymentAttemptId);
+        }
+    }
+
+    @Override
+    public List<PaymentAttemptModelDao> getPaymentAttempts(final String paymentExternalKey, final InternalTenantContext context) {
+        final List<PaymentAttemptModelDao> result = new ArrayList<PaymentAttemptModelDao>();
+        for (PaymentAttemptModelDao cur : attempts.values()) {
+            if (cur.getPaymentExternalKey().equals(paymentExternalKey)) {
+                result.add(cur);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public PaymentAttemptModelDao getPaymentAttemptByExternalKey(final String transactionExternalKey, final InternalTenantContext context) {
+        synchronized (this) {
+            return attempts.get(transactionExternalKey);
+        }
+    }
+
+    @Override
+    public DirectPaymentTransactionModelDao getDirectPaymentTransactionByExternalKey(final String transactionExternalKey, final InternalTenantContext context) {
+        synchronized (this) {
+            for (DirectPaymentTransactionModelDao cur : transactions.values()) {
+                if (cur.getTransactionExternalKey().equals(transactionExternalKey)) {
+                    return cur;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public DirectPaymentModelDao getDirectPaymentByExternalKey(final String externalKey, final InternalTenantContext context) {
+        synchronized (this) {
+            for (DirectPaymentModelDao cur : payments.values()) {
+                if (cur.getExternalKey().equals(externalKey)) {
+                    return cur;
+                }
+            }
+        }
+        return null;
+    }
 
     @Override
     public Pagination<DirectPaymentModelDao> getDirectPayments(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
@@ -47,126 +127,97 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public DirectPaymentModelDao insertDirectPaymentWithFirstTransaction(final DirectPaymentModelDao directPayment, final DirectPaymentTransactionModelDao directPaymentTransaction, final InternalCallContext context) {
-        return null;
+        synchronized (this) {
+            payments.put(directPayment.getId(), directPayment);
+            transactions.put(directPaymentTransaction.getId(), directPaymentTransaction);
+        }
+        return directPayment;
     }
 
     @Override
-    public DirectPaymentTransactionModelDao updateDirectPaymentWithNewTransaction(final UUID dirctPaymentId, final DirectPaymentTransactionModelDao directPaymentTransaction, final InternalCallContext context) {
-        return null;
+    public DirectPaymentTransactionModelDao updateDirectPaymentWithNewTransaction(final UUID directPaymentId, final DirectPaymentTransactionModelDao directPaymentTransaction, final InternalCallContext context) {
+        synchronized (this) {
+            transactions.put(directPaymentTransaction.getId(), directPaymentTransaction);
+        }
+        return directPaymentTransaction;
     }
 
     @Override
-    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final PaymentStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final UUID directTransactionId, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final String currentPaymentStateName, final UUID directTransactionId, final PaymentStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+        synchronized (this) {
+            final DirectPaymentModelDao payment = payments.get(directPaymentId);
+            if (payment != null) {
+                payment.setCurrentStateName(currentPaymentStateName);
+            }
+            final DirectPaymentTransactionModelDao transaction = transactions.get(directTransactionId);
+            if (transaction != null) {
+                transaction.setPaymentStatus(paymentStatus);
+                transaction.setProcessedAmount(processedAmount);
+                transaction.setProcessedCurrency(processedCurrency);
+                transaction.setGatewayErrorCode(gatewayErrorCode);
+                transaction.setGatewayErrorMsg(gatewayErrorMsg);
+            }
+        }
     }
 
     @Override
     public DirectPaymentModelDao getDirectPayment(final UUID directPaymentId, final InternalTenantContext context) {
-        return null;
+        synchronized (this) {
+            return payments.get(directPaymentId);
+        }
     }
 
     @Override
     public DirectPaymentTransactionModelDao getDirectPaymentTransaction(final UUID directTransactionId, final InternalTenantContext context) {
-        return null;
+        synchronized (this) {
+            return transactions.get(directTransactionId);
+        }
     }
 
     @Override
     public List<DirectPaymentModelDao> getDirectPaymentsForAccount(final UUID accountId, final InternalTenantContext context) {
-        return null;
+        synchronized (this) {
+            return ImmutableList.copyOf(Iterables.filter(payments.values(), new Predicate<DirectPaymentModelDao>() {
+                @Override
+                public boolean apply(final DirectPaymentModelDao input) {
+                    return input.getAccountId().equals(accountId);
+                }
+            }));
+        }
     }
 
     @Override
     public List<DirectPaymentTransactionModelDao> getDirectTransactionsForAccount(final UUID accountId, final InternalTenantContext context) {
-        return null;
-    }
-
-    @Override
-    public PaymentModelDao insertPaymentWithFirstAttempt(final PaymentModelDao paymentInfo, final PaymentAttemptModelDao attempt,
-                                                         final InternalCallContext context) {
         synchronized (this) {
-            payments.put(paymentInfo.getId(), paymentInfo);
-            attempts.put(attempt.getId(), attempt);
+            return ImmutableList.copyOf(Iterables.filter(transactions.values(), new Predicate<DirectPaymentTransactionModelDao>() {
+                @Override
+                public boolean apply(final DirectPaymentTransactionModelDao input) {
+                    final DirectPaymentModelDao payment = payments.get(input.getDirectPaymentId());
+                    if (payment != null) {
+                        return payment.getAccountId().equals(accountId);
+                    } else {
+                        return false;
+                    }
+                }
+            }));
         }
-        return paymentInfo;
     }
 
     @Override
-    public PaymentAttemptModelDao updatePaymentWithNewAttempt(final UUID paymentId, final PaymentAttemptModelDao attempt, final InternalCallContext context) {
+    public List<DirectPaymentTransactionModelDao> getDirectTransactionsForDirectPayment(final UUID directPaymentId, final InternalTenantContext context) {
         synchronized (this) {
-            attempts.put(attempt.getId(), attempt);
-        }
-        return attempt;
-    }
-
-    @Override
-    public void updatePaymentAndAttemptOnCompletion(final UUID paymentId, final PaymentStatus paymentStatus,
-                                                    BigDecimal processedAmount, Currency processedCurrency,
-                                                    final UUID attemptId, final String gatewayErrorCode,
-                                                    final String gatewayErrorMsg,
-                                                    final InternalCallContext context) {
-        synchronized (this) {
-            final PaymentModelDao entry = payments.remove(paymentId);
-            if (entry != null) {
-                payments.put(paymentId, new PaymentModelDao(entry, paymentStatus));
-            }
-            final PaymentAttemptModelDao tmp = attempts.remove(attemptId);
-            if (tmp != null) {
-                attempts.put(attemptId, new PaymentAttemptModelDao(tmp, paymentStatus, gatewayErrorCode, gatewayErrorMsg));
-            }
+            return ImmutableList.copyOf(Iterables.filter(transactions.values(), new Predicate<DirectPaymentTransactionModelDao>() {
+                @Override
+                public boolean apply(final DirectPaymentTransactionModelDao input) {
+                    return input.getDirectPaymentId().equals(directPaymentId);
+                }
+            }));
         }
     }
 
     @Override
     public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId, final InternalTenantContext context) {
         return attempts.get(attemptId);
-    }
-
-    @Override
-    public List<PaymentModelDao> getPaymentsForInvoice(final UUID invoiceId, final InternalTenantContext context) {
-        final List<PaymentModelDao> result = new ArrayList<PaymentModelDao>();
-        synchronized (this) {
-            for (final PaymentModelDao cur : payments.values()) {
-                if (cur.getInvoiceId().equals(invoiceId)) {
-                    result.add(cur);
-                }
-            }
-        }
-        return result;
-    }
-
-    @Override
-    public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId, final InternalTenantContext context) {
-        final List<PaymentModelDao> result = new ArrayList<PaymentModelDao>();
-        synchronized (this) {
-            for (final PaymentModelDao cur : payments.values()) {
-                if (cur.getAccountId().equals(accountId)) {
-                    result.add(cur);
-                }
-            }
-        }
-        return result;
-    }
-
-    @Override
-    public Pagination<PaymentModelDao> getPayments(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public PaymentModelDao getPayment(final UUID paymentId, final InternalTenantContext context) {
-        return payments.get(paymentId);
-    }
-
-    @Override
-    public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId, final InternalTenantContext context) {
-        final List<PaymentAttemptModelDao> result = new ArrayList<PaymentAttemptModelDao>();
-        synchronized (this) {
-            for (final PaymentAttemptModelDao cur : attempts.values()) {
-                if (cur.getPaymentId().equals(paymentId)) {
-                    result.add(cur);
-                }
-            }
-        }
-        return result;
     }
 
     private final List<PaymentMethodModelDao> paymentMethods = new LinkedList<PaymentMethodModelDao>();
@@ -218,46 +269,6 @@ public class MockPaymentDao implements PaymentDao {
     @Override
     public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final String pluginName, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
         return ImmutableList.<PaymentMethodModelDao>of();
-    }
-
-    @Override
-    public void undeletedPaymentMethod(final UUID paymentMethodId, final InternalCallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RefundModelDao insertRefund(final RefundModelDao refundInfo, final InternalCallContext context) {
-        return null;
-    }
-
-    @Override
-    public void updateRefundStatus(final UUID refundId, final RefundStatus status, final BigDecimal processedAmount, final Currency processedCurrency, final InternalCallContext context) {
-        return;
-    }
-
-    @Override
-    public Pagination<RefundModelDao> getRefunds(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RefundModelDao getRefund(final UUID refundId, final InternalTenantContext context) {
-        return null;
-    }
-
-    @Override
-    public List<RefundModelDao> getRefundsForPayment(final UUID paymentId, final InternalTenantContext context) {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public List<RefundModelDao> getRefundsForAccount(final UUID accountId, final InternalTenantContext context) {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public PaymentModelDao getLastPaymentForPaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalTenantContext context) {
-        return null;
     }
 
     @Override

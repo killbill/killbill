@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,10 +24,9 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-
-import org.killbill.clock.DefaultClock;
-import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.clock.DefaultClock;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -89,26 +90,30 @@ public class PaymentJson extends JsonBase {
         this.chargebacks = chargebacks;
     }
 
-    public PaymentJson(final Payment payment, final String bundleExternalKey,
+    public PaymentJson(final DirectPayment payment, final String bundleExternalKey,
                        final List<RefundJson> refunds, final List<ChargebackJson> chargebacks) {
         this(payment, bundleExternalKey, refunds, chargebacks, null);
     }
 
-    public PaymentJson(final Payment payment, final String bundleExternalKey,
+    public PaymentJson(final DirectPayment payment, final String bundleExternalKey,
                        final List<RefundJson> refunds, final List<ChargebackJson> chargebacks,
                        @Nullable final List<AuditLog> auditLogs) {
-        this(payment.getAmount(), payment.getPaidAmount(), payment.getAccountId().toString(),
-             payment.getInvoiceId().toString(), payment.getId().toString(),
+        this(payment.getAuthAmount() /* TODO [PAYMENT] payment.getAmount() */,
+             payment.getCapturedAmount() /* TODO [PAYMENT] payment.getPaidAmount() */,
+             payment.getAccountId().toString(),
+             null /* TODO [PAYMENT] payment.getInvoiceId().toString() */, payment.getId().toString(),
              payment.getPaymentNumber().toString(),
              payment.getPaymentMethodId().toString(),
-             payment.getEffectiveDate(), payment.getEffectiveDate(),
-             payment.getAttempts().size(), payment.getCurrency().toString(), payment.getPaymentStatus().toString(),
-             payment.getAttempts().get(payment.getAttempts().size() - 1).getGatewayErrorCode(),
-             payment.getAttempts().get(payment.getAttempts().size() - 1).getGatewayErrorMsg(),
+             payment.getCreatedDate(), payment.getCreatedDate(),
+             1 /* TODO [PAYMENT] payment.getAttempts().size() */,
+             payment.getCurrency().toString(),
+             null /*payment.getPaymentStatus().toString() */,
+             null /*payment.getAttempts().get(payment.getAttempts().size() - 1).getGatewayErrorCode() */,
+             null /*payment.getAttempts().get(payment.getAttempts().size() - 1).getGatewayErrorMsg() */,
              bundleExternalKey, refunds, chargebacks, toAuditLogJson(auditLogs));
     }
 
-    public PaymentJson(final Payment payment, final List<AuditLog> auditLogs) {
+    public PaymentJson(final DirectPayment payment, final List<AuditLog> auditLogs) {
         this(payment, null, null, null, auditLogs);
     }
 

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,17 +18,15 @@
 
 package org.killbill.billing.subscription;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 import javax.inject.Inject;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
-import org.killbill.billing.TestKillbillConfigSource;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.lifecycle.api.BusService;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
@@ -36,9 +36,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.TestSubscriptionHelper;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.glue.TestDefaultSubscriptionModuleWithEmbeddedDB;
-import org.killbill.billing.util.config.KillbillConfigSource;
 import org.killbill.billing.util.config.SubscriptionConfig;
-import org.killbill.billing.util.svcsapi.bus.BusService;
 import org.killbill.clock.ClockMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,8 +89,8 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     protected SubscriptionBaseBundle bundle;
 
     @Override
-    protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {
-        return new TestKillbillConfigSource("/subscription.properties");
+    protected KillbillConfigSource getConfigSource() {
+        return getConfigSource("/subscription.properties");
     }
 
     @BeforeClass(groups = "slow")

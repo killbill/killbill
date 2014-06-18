@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,25 +18,25 @@
 
 package org.killbill.billing.util.glue;
 
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.commons.embeddeddb.EmbeddedDB.DBEngine;
 
-import com.google.inject.AbstractModule;
-
-public class GlobalLockerModule extends AbstractModule {
+public class GlobalLockerModule extends KillBillModule {
 
     private final DBEngine engine;
 
-    public GlobalLockerModule(final DBEngine engine) {
+    public GlobalLockerModule(final DBEngine engine, final KillbillConfigSource configSource) {
+        super(configSource);
         this.engine = engine;
     }
 
     @Override
     protected void configure() {
         if (EmbeddedDB.DBEngine.MYSQL.equals(engine)) {
-            install(new MySqlGlobalLockerModule());
+            install(new MySqlGlobalLockerModule(configSource));
         } else {
-            install(new MemoryGlobalLockerModule());
+            install(new MemoryGlobalLockerModule(configSource));
         }
     }
 }

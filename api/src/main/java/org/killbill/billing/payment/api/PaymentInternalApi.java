@@ -18,21 +18,28 @@
 
 package org.killbill.billing.payment.api;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 
 public interface PaymentInternalApi {
 
-    public Payment getPayment(UUID paymentId, Iterable<PluginProperty> properties, InternalTenantContext context)
+    public DirectPayment createPayment(final Account account, final UUID invoiceId,
+                                       @Nullable final BigDecimal amount, final Iterable<PluginProperty> properties, final InternalCallContext internalContext) throws PaymentApiException;
+
+    public DirectPayment getPayment(UUID paymentId, Iterable<PluginProperty> properties, InternalTenantContext context)
             throws PaymentApiException;
 
     public PaymentMethod getPaymentMethodById(UUID paymentMethodId, boolean includedInactive, Iterable<PluginProperty> properties, InternalTenantContext context)
             throws PaymentApiException;
 
-    public List<Payment> getAccountPayments(UUID accountId, InternalTenantContext context)
+    public List<DirectPayment> getAccountPayments(UUID accountId, InternalTenantContext context)
             throws PaymentApiException;
 
     public List<PaymentMethod> getPaymentMethods(Account account, Iterable<PluginProperty> properties, InternalTenantContext context)

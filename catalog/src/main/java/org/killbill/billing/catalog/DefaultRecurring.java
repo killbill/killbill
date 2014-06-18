@@ -25,9 +25,9 @@ import javax.xml.bind.annotation.XmlElement;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Recurring;
-import org.killbill.billing.util.config.catalog.ValidatingConfig;
-import org.killbill.billing.util.config.catalog.ValidationError;
-import org.killbill.billing.util.config.catalog.ValidationErrors;
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationError;
+import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implements Recurring {

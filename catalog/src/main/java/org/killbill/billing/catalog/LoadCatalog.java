@@ -18,7 +18,7 @@ package org.killbill.billing.catalog;
 
 import java.io.File;
 
-import org.killbill.billing.util.config.catalog.XMLLoader;
+import org.killbill.xmlloader.XMLLoader;
 
 public class LoadCatalog {
     public static void main(final String[] args) throws Exception {

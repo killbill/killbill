@@ -64,7 +64,7 @@ import org.killbill.billing.jaxrs.json.InvoiceJson;
 import org.killbill.billing.jaxrs.json.PaymentJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -380,7 +380,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
-        final List<Payment> payments = paymentApi.getInvoicePayments(UUID.fromString(invoiceId), tenantContext);
+        final List<DirectPayment> payments = paymentApi.getInvoicePayments(UUID.fromString(invoiceId), tenantContext);
         final List<PaymentJson> result = new ArrayList<PaymentJson>(payments.size());
         if (payments.size() == 0) {
             return Response.status(Status.OK).entity(result).build();
@@ -391,7 +391,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                                                     auditMode.getLevel(),
                                                                                                     tenantContext);
 
-        for (final Payment cur : payments) {
+        for (final DirectPayment cur : payments) {
             result.add(new PaymentJson(cur, auditLogsForPayments.getAuditLogs(cur.getId())));
         }
 

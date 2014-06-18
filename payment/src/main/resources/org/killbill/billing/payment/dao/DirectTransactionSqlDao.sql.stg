@@ -8,13 +8,15 @@ defaultOrderBy(prefix) ::= <<
 order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
 >>
 
-
 tableFields(prefix) ::= <<
-  <prefix>transaction_type
+  <prefix>transaction_external_key
+, <prefix>transaction_type
 , <prefix>effective_date
 , <prefix>payment_status
 , <prefix>amount
 , <prefix>currency
+, <prefix>processed_amount
+, <prefix>processed_currency
 , <prefix>direct_payment_id
 , <prefix>gateway_error_code
 , <prefix>gateway_error_msg
@@ -25,11 +27,14 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
-  :transactionType
+  :transactionExternalKey
+, :transactionType
 , :effectiveDate
 , :paymentStatus
 , :amount
 , :currency
+, :processedAmount
+, :processedCurrency
 , :directPaymentId
 , :gatewayErrorCode
 , :gatewayErrorMsg
@@ -39,10 +44,20 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
+getDirectPaymentTransactionByExternalKey() ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where transaction_external_key = :transactionExternalKey
+;
+>>
+
 
 updateTransactionStatus() ::= <<
 update <tableName()>
 set payment_status = :paymentStatus
+, processed_amount = :processedAmount
+, processed_currency = :processedCurrency
 , gateway_error_code = :gatewayErrorCode
 , gateway_error_msg = :gatewayErrorMsg
 , updated_by = :updatedBy
@@ -52,4 +67,11 @@ where id = :id
 ;
 >>
 
-
+getByDirectPaymentId() ::= <<
+select <allTableFields()>
+from <tableName()>
+where direct_payment_id = :directPaymentId
+<AND_CHECK_TENANT()>
+<defaultOrderBy()>
+;
+>>

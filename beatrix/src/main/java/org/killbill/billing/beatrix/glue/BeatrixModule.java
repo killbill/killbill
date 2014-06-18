@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,49 +18,26 @@
 
 package org.killbill.billing.beatrix.glue;
 
-import org.skife.config.ConfigSource;
-
 import org.killbill.billing.beatrix.DefaultBeatrixService;
 import org.killbill.billing.beatrix.bus.api.BeatrixService;
 import org.killbill.billing.beatrix.extbus.BeatrixListener;
-import org.killbill.billing.beatrix.lifecycle.DefaultLifecycle;
-import org.killbill.billing.beatrix.lifecycle.Lifecycle;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.bus.api.PersistentBusConfig;
-import org.killbill.billing.util.glue.BusProvider;
+import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.glue.KillBillModule;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
+public class BeatrixModule extends KillBillModule {
 
-public class BeatrixModule extends AbstractModule {
-
-    public static final String EXTERNAL_BUS = "externalBus";
-
-    private final ConfigSource configSource;
-
-    public BeatrixModule(final ConfigSource configSource) {
-        this.configSource = configSource;
+    public BeatrixModule(final KillbillConfigSource configSource) {
+        super(configSource);
     }
 
     @Override
     protected void configure() {
-        installLifecycle();
         installExternalBus();
-    }
-
-    protected void installLifecycle() {
-        bind(Lifecycle.class).to(DefaultLifecycle.class).asEagerSingleton();
     }
 
     protected void installExternalBus() {
         bind(BeatrixService.class).to(DefaultBeatrixService.class);
         bind(DefaultBeatrixService.class).asEagerSingleton();
-
-        final PersistentBusConfig extBusConfig = new ExternalPersistentBusConfig(configSource);
-
-        bind(BusProvider.class).annotatedWith(Names.named(EXTERNAL_BUS)).toInstance(new BusProvider(extBusConfig));
-        bind(PersistentBus.class).annotatedWith(Names.named(EXTERNAL_BUS)).toProvider(Key.get(BusProvider.class, Names.named(EXTERNAL_BUS))).asEagerSingleton();
 
         bind(BeatrixListener.class).asEagerSingleton();
     }

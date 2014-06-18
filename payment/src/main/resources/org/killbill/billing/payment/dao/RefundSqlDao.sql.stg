@@ -21,7 +21,7 @@ tableFields(prefix) ::= <<
 
 tableValues() ::= <<
 :accountId
-, :paymentId
+, :paymentExternalKey
 , :amount
 , :currency
 , :processedAmount
@@ -46,10 +46,10 @@ where id = :id
 ;
 >>
 
-getRefundsForPayment(paymentId)  ::= <<
+getRefundsForPayment(paymentExternalKey)  ::= <<
 select <allTableFields()>
 from <tableName()>
-where payment_id = :paymentId
+where payment_id = :paymentExternalKey
 <AND_CHECK_TENANT()>
 <defaultOrderBy()>
 ;

@@ -55,7 +55,7 @@ public class TestBillingExceptionJson extends JaxrsTestSuiteNoDB {
         try {
             nil.toString();
             Assert.fail();
-        } catch (NullPointerException e) {
+        } catch (final NullPointerException e) {
             final BillingExceptionJson exceptionJson = new BillingExceptionJson(e);
             Assert.assertEquals(exceptionJson.getClassName(), e.getClass().getName());
             Assert.assertNull(exceptionJson.getCode());

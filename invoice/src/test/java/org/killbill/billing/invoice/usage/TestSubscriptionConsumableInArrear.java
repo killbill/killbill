@@ -29,8 +29,8 @@ import org.killbill.billing.junction.BillingEvent;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,13 +24,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.tweak.HandleCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.dao.AccountSqlDao;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
@@ -38,8 +33,8 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.dao.InvoiceItemSqlDao;
 import org.killbill.billing.invoice.dao.InvoiceSqlDao;
-import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.dao.PaymentSqlDao;
+import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.dao.DirectPaymentSqlDao;
 import org.killbill.billing.subscription.engine.dao.BundleSqlDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionEventSqlDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionSqlDao;
@@ -55,6 +50,12 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import com.google.inject.Inject;
 
@@ -87,12 +88,12 @@ public class AuditChecker {
         checkAuditLog(ChangeType.UPDATE, context, result.getAuditLogsForAccount().get(1), account.getId(), AccountSqlDao.class, true, true);
     }
 
-    public void checkPaymentCreated(final Payment payment, final CallContext context) {
+    public void checkPaymentCreated(final DirectPayment payment, final CallContext context) {
         final AccountAuditLogs result = auditUserApi.getAccountAuditLogs(payment.getAccountId(), AuditLevel.FULL, context);
         final List<AuditLog> paymentLogs = result.getAuditLogsForPayment(payment.getId());
         Assert.assertEquals(paymentLogs.size(), 2);
-        checkAuditLog(ChangeType.INSERT, context, paymentLogs.get(0), payment.getId(), PaymentSqlDao.class, true, false);
-        checkAuditLog(ChangeType.UPDATE, context, paymentLogs.get(1), payment.getId(), PaymentSqlDao.class, true, false);
+        checkAuditLog(ChangeType.INSERT, context, paymentLogs.get(0), payment.getId(), DirectPaymentSqlDao.class, true, false);
+        checkAuditLog(ChangeType.UPDATE, context, paymentLogs.get(1), payment.getId(), DirectPaymentSqlDao.class, true, false);
     }
 
     /**

@@ -16,7 +16,9 @@
 
 package org.killbill.billing.payment.dao;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -36,21 +38,20 @@ public interface DirectTransactionSqlDao extends EntitySqlDao<DirectPaymentTrans
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updateTransactionStatus(@Bind("id") final String transactionId,
-                                    @Bind("paymentStatus") final String paymentStatus,
-                                    @Bind("gatewayErrorCode") final String gatewayErrorCode,
-                                    @Bind("gatewayErrorMsg") final String gatewayErrorMsg,
-                                    @BindBean final InternalCallContext context);
-
-    /*
-    @SqlQuery
-    @SmartFetchSize(shouldStream = true)
-    public Iterator<DirectPaymentTransactionModelDao> getByPluginName(@Bind("pluginName") final String pluginName,
-                                                    @Bind("offset") final Long offset,
-                                                    @Bind("rowCount") final Long rowCount,
-                                                    @BindBean final InternalTenantContext context);
+                                 @Bind("processedAmount") final BigDecimal processedAmount,
+                                 @Bind("processedCurrency") final String processedCurrency,
+                                 @Bind("paymentStatus") final String paymentStatus,
+                                 @Bind("gatewayErrorCode") final String gatewayErrorCode,
+                                 @Bind("gatewayErrorMsg") final String gatewayErrorMsg,
+                                 @BindBean final InternalCallContext context);
 
     @SqlQuery
-    public Long getCountByPluginName(@Bind("pluginName") final String pluginName,
-                                     @BindBean final InternalTenantContext context);
-                                     */
+    DirectPaymentTransactionModelDao getDirectPaymentTransactionByExternalKey(@Bind("transactionExternalKey") final String transactionExternalKey,
+                                                                              @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public List<DirectPaymentTransactionModelDao> getByDirectPaymentId(@Bind("directPaymentId") final UUID directPaymentId,
+                                                                       @BindBean final InternalTenantContext context);
 }
+
+

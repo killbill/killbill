@@ -23,7 +23,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.util.config.catalog.ValidationErrors;
+import org.killbill.xmlloader.ValidationErrors;
 
 public class TestPlan extends CatalogTestSuiteNoDB {
 

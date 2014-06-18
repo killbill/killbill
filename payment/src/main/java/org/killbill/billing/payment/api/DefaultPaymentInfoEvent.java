@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.events.BusEventBase;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 
@@ -77,7 +76,6 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
     public BusInternalEventType getBusEventType() {
         return BusInternalEventType.PAYMENT_INFO;
     }
-
 
     @Override
     public UUID getAccountId() {

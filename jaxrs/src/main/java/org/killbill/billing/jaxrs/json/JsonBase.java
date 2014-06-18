@@ -16,6 +16,7 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -81,5 +82,13 @@ public abstract class JsonBase {
             }
         }
         return propertiesMap;
+    }
+
+    protected static List<PluginPropertyJson> toPluginPropertyJson(final Iterable<PluginProperty> properties) {
+        final List<PluginPropertyJson> pluginProperties = new ArrayList<PluginPropertyJson>();
+        for (final PluginProperty pluginProperty : properties) {
+            pluginProperties.add(new PluginPropertyJson(pluginProperty));
+        }
+        return pluginProperties;
     }
 }

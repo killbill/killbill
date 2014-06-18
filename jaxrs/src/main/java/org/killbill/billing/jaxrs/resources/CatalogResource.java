@@ -40,7 +40,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
-import org.killbill.billing.util.config.catalog.XMLWriter;
+import org.killbill.xmlloader.XMLWriter;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

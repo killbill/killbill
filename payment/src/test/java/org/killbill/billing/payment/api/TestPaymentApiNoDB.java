@@ -23,12 +23,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
+import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.mockito.Mockito;
@@ -50,6 +50,16 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
     private static final Logger log = LoggerFactory.getLogger(TestPaymentApiNoDB.class);
 
     private final Iterable<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+    private final static PaymentOptions PAYMENT_OPTIONS = new PaymentOptions() {
+        @Override
+        public boolean isExternalPayment() {
+            return false;
+        }
+        @Override
+        public String getPaymentControlPluginName() {
+            return InvoicePaymentControlPluginApi.PLUGIN_NAME;
+        }
+    };
 
     private Account account;
 
@@ -104,7 +114,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     private void testSimplePayment(final BigDecimal invoiceAmount, final BigDecimal requestedAmount, final BigDecimal expectedAmount) throws Exception {
         final LocalDate now = clock.getUTCToday();
-        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD, callContext);
+        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
 
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -120,27 +130,27 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
                                                             Currency.USD));
 
         try {
-            final Payment paymentInfo = paymentApi.createPayment(account, invoice.getId(), requestedAmount, PLUGIN_PROPERTIES, callContext);
+            final DirectPayment paymentInfo = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+                                                                                          invoice.getId().toString(), UUID.randomUUID().toString(), PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
             if (expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
             }
             assertNotNull(paymentInfo.getId());
-            assertTrue(paymentInfo.getAmount().compareTo(expectedAmount) == 0);
+            assertTrue(paymentInfo.getPurchasedAmount().compareTo(expectedAmount) == 0);
             assertNotNull(paymentInfo.getPaymentNumber());
-            assertEquals(paymentInfo.getPaymentStatus(), PaymentStatus.SUCCESS);
-            assertEquals(paymentInfo.getAttempts().size(), 1);
-            assertEquals(paymentInfo.getInvoiceId(), invoice.getId());
+            assertEquals(paymentInfo.getExternalKey(), invoice.getId().toString());
             assertEquals(paymentInfo.getCurrency(), Currency.USD);
+            assertTrue(paymentInfo.getTransactions().get(0).getAmount().compareTo(expectedAmount) == 0);
+            assertEquals(paymentInfo.getTransactions().get(0).getCurrency(), Currency.USD);
+            assertEquals(paymentInfo.getTransactions().get(0).getDirectPaymentId(), paymentInfo.getId());
+            assertEquals(paymentInfo.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
+            assertEquals(paymentInfo.getTransactions().get(0).getPaymentStatus(), PaymentStatus.SUCCESS);
 
-            final PaymentAttempt paymentAttempt = paymentInfo.getAttempts().get(0);
-            assertNotNull(paymentAttempt);
-            assertNotNull(paymentAttempt.getId());
         } catch (final PaymentApiException e) {
             if (expectedAmount != null) {
                 fail("Failed to create payment", e);
             } else {
                 log.info(e.getMessage());
-                assertEquals(e.getCode(), ErrorCode.PAYMENT_AMOUNT_DENIED.getCode());
             }
         }
     }

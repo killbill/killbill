@@ -26,7 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.killbill.billing.util.config.CacheConfig;
-import org.killbill.billing.util.config.catalog.UriAccessor;
+import org.killbill.xmlloader.UriAccessor;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;

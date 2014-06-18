@@ -18,7 +18,6 @@ package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -38,6 +37,7 @@ public class DirectPaymentJson extends JsonBase {
     private final String accountId;
     private final String directPaymentId;
     private final String paymentNumber;
+    private final String directPaymentExternalKey;
     private final BigDecimal authAmount;
     private final BigDecimal capturedAmount;
     private final BigDecimal refundedAmount;
@@ -49,6 +49,7 @@ public class DirectPaymentJson extends JsonBase {
     public DirectPaymentJson(@JsonProperty("accountId") final String accountId,
                              @JsonProperty("directPaymentId") final String directPaymentId,
                              @JsonProperty("paymentNumber") final String paymentNumber,
+                             @JsonProperty("directPaymentExternalKey") final String directPaymentExternalKey,
                              @JsonProperty("authAmount") final BigDecimal authAmount,
                              @JsonProperty("capturedAmount") final BigDecimal capturedAmount,
                              @JsonProperty("refundedAmount") final BigDecimal refundedAmount,
@@ -60,6 +61,7 @@ public class DirectPaymentJson extends JsonBase {
         this.accountId = accountId;
         this.directPaymentId = directPaymentId;
         this.paymentNumber = paymentNumber;
+        this.directPaymentExternalKey = directPaymentExternalKey;
         this.authAmount = authAmount;
         this.capturedAmount = capturedAmount;
         this.refundedAmount = refundedAmount;
@@ -72,23 +74,26 @@ public class DirectPaymentJson extends JsonBase {
         this(dp.getAccountId().toString(),
              dp.getId().toString(),
              dp.getPaymentNumber().toString(),
+             dp.getExternalKey(),
              dp.getAuthAmount(),
              dp.getCapturedAmount(),
              dp.getRefundedAmount(),
              dp.getCurrency() != null ? dp.getCurrency().toString() : null,
              dp.getPaymentMethodId() != null ? dp.getPaymentMethodId().toString() : null,
-             getTransactions(dp.getTransactions(), dp.getId(), dp.getExternalKey(), accountAuditLogs),
+             getTransactions(dp.getTransactions(), dp.getExternalKey(), accountAuditLogs),
              toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForDirectPayment(dp.getId())));
     }
 
-    private static List<DirectTransactionJson> getTransactions(final List<DirectPaymentTransaction> transactions, final UUID directPaymentId, final String externalKey, @Nullable final AccountAuditLogs accountAuditLogs) {
-        return ImmutableList.copyOf(Iterables.transform(transactions, new Function<DirectPaymentTransaction, DirectTransactionJson>() {
-            @Override
-            public DirectTransactionJson apply(final DirectPaymentTransaction input) {
-                final List<AuditLog> auditLogsForDirectPaymentTransaction = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForDirectPaymentTransaction(input.getId());
-                return new DirectTransactionJson(input, directPaymentId, externalKey, auditLogsForDirectPaymentTransaction);
-            }
-        }));
+    private static List<DirectTransactionJson> getTransactions(final Iterable<DirectPaymentTransaction> transactions, final String directPaymentExternalKey, @Nullable final AccountAuditLogs accountAuditLogs) {
+        return ImmutableList.copyOf(Iterables.transform(transactions,
+                                                        new Function<DirectPaymentTransaction, DirectTransactionJson>() {
+                                                            @Override
+                                                            public DirectTransactionJson apply(final DirectPaymentTransaction directPaymentTransaction) {
+                                                                final List<AuditLog> auditLogsForDirectPaymentTransaction = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForDirectPaymentTransaction(directPaymentTransaction.getId());
+                                                                return new DirectTransactionJson(directPaymentTransaction, directPaymentExternalKey, auditLogsForDirectPaymentTransaction);
+                                                            }
+                                                        }
+                                                       ));
     }
 
     public String getAccountId() {
@@ -101,6 +106,10 @@ public class DirectPaymentJson extends JsonBase {
 
     public String getPaymentNumber() {
         return paymentNumber;
+    }
+
+    public String getDirectPaymentExternalKey() {
+        return directPaymentExternalKey;
     }
 
     public BigDecimal getAuthAmount() {
@@ -129,17 +138,19 @@ public class DirectPaymentJson extends JsonBase {
 
     @Override
     public String toString() {
-        return "DirectPaymentJson{" +
-               "accountId='" + accountId + '\'' +
-               ", directPaymentId='" + directPaymentId + '\'' +
-               ", paymentNumber='" + paymentNumber + '\'' +
-               ", authAmount=" + authAmount +
-               ", capturedAmount=" + capturedAmount +
-               ", refundedAmount=" + refundedAmount +
-               ", currency='" + currency + '\'' +
-               ", paymentMethodId='" + paymentMethodId + '\'' +
-               ", transactions=" + transactions +
-               '}';
+        final StringBuilder sb = new StringBuilder("DirectPaymentJson{");
+        sb.append("accountId='").append(accountId).append('\'');
+        sb.append(", directPaymentId='").append(directPaymentId).append('\'');
+        sb.append(", paymentNumber='").append(paymentNumber).append('\'');
+        sb.append(", directPaymentExternalKey='").append(directPaymentExternalKey).append('\'');
+        sb.append(", authAmount=").append(authAmount);
+        sb.append(", capturedAmount=").append(capturedAmount);
+        sb.append(", refundedAmount=").append(refundedAmount);
+        sb.append(", currency='").append(currency).append('\'');
+        sb.append(", paymentMethodId='").append(paymentMethodId).append('\'');
+        sb.append(", transactions=").append(transactions);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override
@@ -147,7 +158,7 @@ public class DirectPaymentJson extends JsonBase {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof DirectPaymentJson)) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
@@ -163,6 +174,9 @@ public class DirectPaymentJson extends JsonBase {
             return false;
         }
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
+            return false;
+        }
+        if (directPaymentExternalKey != null ? !directPaymentExternalKey.equals(that.directPaymentExternalKey) : that.directPaymentExternalKey != null) {
             return false;
         }
         if (directPaymentId != null ? !directPaymentId.equals(that.directPaymentId) : that.directPaymentId != null) {
@@ -189,6 +203,7 @@ public class DirectPaymentJson extends JsonBase {
         int result = accountId != null ? accountId.hashCode() : 0;
         result = 31 * result + (directPaymentId != null ? directPaymentId.hashCode() : 0);
         result = 31 * result + (paymentNumber != null ? paymentNumber.hashCode() : 0);
+        result = 31 * result + (directPaymentExternalKey != null ? directPaymentExternalKey.hashCode() : 0);
         result = 31 * result + (authAmount != null ? authAmount.hashCode() : 0);
         result = 31 * result + (capturedAmount != null ? capturedAmount.hashCode() : 0);
         result = 31 * result + (refundedAmount != null ? refundedAmount.hashCode() : 0);

@@ -20,8 +20,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.util.config.catalog.ValidationError;
-import org.killbill.billing.util.config.catalog.ValidationErrors;
+import org.killbill.xmlloader.ValidationError;
+import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class PriceListDefault extends DefaultPriceList {

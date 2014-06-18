@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 
-import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterSuite;
@@ -33,13 +32,13 @@ public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
 
     @BeforeSuite(groups = "slow")
     public void startMysqlBeforeTestSuite() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
-        DBTestingHelper.start();
+        DBTestingHelper.get().start();
     }
 
     @BeforeMethod(groups = "slow")
     public void cleanupTablesBetweenMethods() {
         try {
-            DBTestingHelper.get().cleanupAllTables();
+            DBTestingHelper.get().getInstance().cleanupAllTables();
         } catch (final Exception ignored) {
         }
     }
@@ -49,13 +48,13 @@ public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
         if (hasFailed()) {
             log.error("**********************************************************************************************");
             log.error("*** TESTS HAVE FAILED - LEAVING DB RUNNING FOR DEBUGGING - MAKE SURE TO KILL IT ONCE DONE ****");
-            log.error(DBTestingHelper.get().getCmdLineConnectionString());
+            log.error(DBTestingHelper.get().getInstance().getCmdLineConnectionString());
             log.error("**********************************************************************************************");
             return;
         }
 
         try {
-            DBTestingHelper.get().stop();
+            DBTestingHelper.get().getInstance().stop();
         } catch (final Exception ignored) {
         }
     }

@@ -24,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 
+import org.killbill.automaton.OperationException;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -43,6 +44,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
+import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,8 +70,9 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                    final PersistentBus eventBus,
                                    final GlobalLocker locker,
                                    final PaymentConfig paymentConfig,
-                                   @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(pluginRegistry, accountUserApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi);
+                                   @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
+                                  final Clock clock) {
+        super(pluginRegistry, accountUserApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.paymentPluginFormDispatcher = new PluginDispatcher<HostedPaymentPageFormDescriptor>(paymentPluginTimeoutSec, executor);
         this.paymentPluginNotificationDispatcher = new PluginDispatcher<GatewayNotification>(paymentPluginTimeoutSec, executor);
@@ -98,7 +101,9 @@ public class PaymentGatewayProcessor extends ProcessorBase {
         } catch (final TimeoutException e) {
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, account.getId(), null);
         } catch (final RuntimeException e) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, null);
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
+        } catch (OperationException e) {
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
         }
     }
 
@@ -115,7 +120,9 @@ public class PaymentGatewayProcessor extends ProcessorBase {
         } catch (final TimeoutException e) {
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, null, null);
         } catch (final RuntimeException e) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, null);
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
+        } catch (OperationException e) {
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
         }
     }
 }

@@ -22,7 +22,6 @@
         <version>0.11.5-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-
     <artifactId>killbill-currency</artifactId>
     <packaging>jar</packaging>
     <name>killbill-currency</name>
@@ -53,6 +52,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
         </dependency>
@@ -66,11 +70,23 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-osgi-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-util</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing.plugin</groupId>
             <artifactId>killbill-plugin-api-currency</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.skife.config</groupId>
+            <artifactId>config-magic</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

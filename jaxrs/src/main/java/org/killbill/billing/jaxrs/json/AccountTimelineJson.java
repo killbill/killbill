@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -29,8 +31,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
-import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.Refund;
+import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
@@ -87,8 +88,8 @@ public class AccountTimelineJson {
         return tmp.toString();
     }
 
-    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments,
-                               final List<SubscriptionBundle> bundles, final Multimap<UUID, Refund> refundsByPayment,
+    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<DirectPayment> payments,
+                               final List<SubscriptionBundle> bundles, final Multimap<UUID, DirectPayment> refundsByPayment,
                                final Multimap<UUID, InvoicePayment> chargebacksByPayment, final AccountAuditLogs accountAuditLogs) {
         this.account = new AccountJson(account, null, null, accountAuditLogs);
         this.bundles = new LinkedList<BundleJson>();
@@ -119,9 +120,9 @@ public class AccountTimelineJson {
         }
 
         this.payments = new LinkedList<PaymentJson>();
-        for (final Payment payment : payments) {
+        for (final DirectPayment payment : payments) {
             final List<RefundJson> refunds = new ArrayList<RefundJson>();
-            for (final Refund refund : refundsByPayment.get(payment.getId())) {
+            for (final DirectPayment refund : refundsByPayment.get(payment.getId())) {
                 final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForRefund(refund.getId());
                 // TODO add adjusted invoice items?
                 refunds.add(new RefundJson(refund, null, auditLogs));
@@ -135,7 +136,8 @@ public class AccountTimelineJson {
 
             final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForPayment(payment.getId());
             this.payments.add(new PaymentJson(payment,
-                                              getBundleExternalKey(payment.getInvoiceId(), invoices, bundles),
+                                              // TODO [PAYMENT]
+                                              null, //getBundleExternalKey(payment.getInvoiceId(), invoices, bundles),
                                               refunds,
                                               chargebacks,
                                               auditLogs));

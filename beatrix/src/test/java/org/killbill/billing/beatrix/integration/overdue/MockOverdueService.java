@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,6 +20,7 @@ package org.killbill.billing.beatrix.integration.overdue;
 
 import javax.inject.Named;
 
+import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.overdue.OverdueProperties;
 import org.killbill.billing.overdue.OverdueUserApi;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
@@ -25,7 +28,6 @@ import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.notification.OverdueNotifier;
 import org.killbill.billing.overdue.service.DefaultOverdueService;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
-import org.killbill.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Inject;
 
@@ -40,7 +42,5 @@ public class MockOverdueService extends DefaultOverdueService {
     }
 
     public synchronized void loadConfig() throws ServiceException {
-
     }
-
 }

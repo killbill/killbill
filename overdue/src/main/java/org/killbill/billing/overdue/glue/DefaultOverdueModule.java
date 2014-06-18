@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,16 +18,7 @@
 
 package org.killbill.billing.overdue.glue;
 
-import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
-
 import org.killbill.billing.glue.OverdueModule;
-import org.killbill.billing.overdue.notification.OverdueAsyncBusNotifier;
-import org.killbill.billing.overdue.notification.OverdueAsyncBusPoster;
-import org.killbill.billing.overdue.notification.OverdueCheckNotifier;
-import org.killbill.billing.overdue.notification.OverdueCheckPoster;
-import org.killbill.billing.overdue.notification.OverduePoster;
-import org.killbill.billing.overdue.notification.OverdueNotifier;
 import org.killbill.billing.overdue.OverdueProperties;
 import org.killbill.billing.overdue.OverdueService;
 import org.killbill.billing.overdue.OverdueUserApi;
@@ -33,21 +26,27 @@ import org.killbill.billing.overdue.api.DefaultOverdueUserApi;
 import org.killbill.billing.overdue.applicator.OverdueEmailGenerator;
 import org.killbill.billing.overdue.applicator.formatters.DefaultOverdueEmailFormatterFactory;
 import org.killbill.billing.overdue.applicator.formatters.OverdueEmailFormatterFactory;
+import org.killbill.billing.overdue.notification.OverdueAsyncBusNotifier;
+import org.killbill.billing.overdue.notification.OverdueAsyncBusPoster;
+import org.killbill.billing.overdue.notification.OverdueCheckNotifier;
+import org.killbill.billing.overdue.notification.OverdueCheckPoster;
+import org.killbill.billing.overdue.notification.OverdueNotifier;
+import org.killbill.billing.overdue.notification.OverduePoster;
 import org.killbill.billing.overdue.service.DefaultOverdueService;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
+import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.glue.KillBillModule;
+import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
-public class DefaultOverdueModule extends AbstractModule implements OverdueModule {
-
-    protected final ConfigSource configSource;
+public class DefaultOverdueModule extends KillBillModule implements OverdueModule {
 
     public static final String OVERDUE_NOTIFIER_CHECK_NAMED = "overdueNotifierCheck";
     public static final String OVERDUE_NOTIFIER_ASYNC_BUS_NAMED = "overdueNotifierAsyncBus";
 
-    public DefaultOverdueModule(final ConfigSource configSource) {
-        this.configSource = configSource;
+    public DefaultOverdueModule(final KillbillConfigSource configSource) {
+        super(configSource);
     }
 
     @Override
@@ -59,7 +58,7 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
         installOverdueWrapperFactory();
         installOverdueEmail();
 
-        final OverdueProperties config = new ConfigurationObjectFactory(configSource).build(OverdueProperties.class);
+        final OverdueProperties config = new ConfigurationObjectFactory(skifeConfigSource).build(OverdueProperties.class);
         bind(OverdueProperties.class).toInstance(config);
 
         bind(OverdueNotifier.class).annotatedWith(Names.named(OVERDUE_NOTIFIER_CHECK_NAMED)).to(OverdueCheckNotifier.class).asEagerSingleton();

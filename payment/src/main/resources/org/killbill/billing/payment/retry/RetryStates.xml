@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2014 Groupon, Inc
+  ~
+  ~ Groupon licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<stateMachineConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:noNamespaceSchemaLocation="StateMachineConfig.xsd">
+
+    <stateMachines>
+        <stateMachine name="PAYMENT_RETRY">
+            <states>
+                <state name="INIT"/>
+                <state name="SUCCESS"/>
+                <state name="RETRIED"/>
+                <state name="ABORTED"/>
+            </states>
+            <transitions>
+                <transition>
+                    <initialState>INIT</initialState>
+                    <operation>OP_RETRY</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>INIT</initialState>
+                    <operation>OP_RETRY</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>RETRIED</finalState>
+                </transition>
+                <transition>
+                    <initialState>INIT</initialState>
+                    <operation>OP_RETRY</operation>
+                    <!-- We are using EXCEPTION operation result to get out of the RETRIED state and transition to  ABORTED -->
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>ABORTED</finalState>
+                </transition>
+                <transition>
+                    <initialState>RETRIED</initialState>
+                    <operation>OP_RETRY</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>RETRIED</initialState>
+                    <operation>OP_RETRY</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>RETRIED</finalState>
+                </transition>
+                <transition>
+                    <initialState>RETRIED</initialState>
+                    <operation>OP_RETRY</operation>
+                    <!-- We are using EXCEPTION operation result to get out of the RETRIED state and transition to  ABORTED -->
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>ABORTED</finalState>
+                </transition>
+            </transitions>
+            <operations>
+                <operation name="OP_RETRY"/>
+            </operations>
+        </stateMachine>
+    </stateMachines>
+
+    <linkStateMachines>
+        <linkStateMachine>
+            <initialStateMachine>PAYMENT_RETRY</initialStateMachine>
+            <initialState>ABORTED</initialState>
+            <finalStateMachine>PAYMENT_RETRY</finalStateMachine>
+            <finalState>INIT</finalState>
+        </linkStateMachine>
+    </linkStateMachines>
+
+</stateMachineConfig>

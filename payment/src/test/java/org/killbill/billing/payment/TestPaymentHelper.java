@@ -31,11 +31,15 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -49,30 +53,28 @@ public class TestPaymentHelper {
 
     protected final AccountInternalApi AccountApi;
     protected final InvoiceInternalApi invoiceApi;
-    protected PaymentApi paymentApi;
+    protected DirectPaymentApi paymentApi;
     private final PersistentBus eventBus;
     private final Clock clock;
 
     private final CallContext context;
-    private final InternalCallContext internalCallContext;
 
     @Inject
     public TestPaymentHelper(final AccountInternalApi AccountApi, final InvoiceInternalApi invoiceApi,
-                             final PaymentApi paymentApi, final PersistentBus eventBus, final Clock clock,
-                             final CallContext context, final InternalCallContext internalCallContext) {
+                             final DirectPaymentApi paymentApi, final PersistentBus eventBus,
+                             final Clock clock,
+                             final CallContext context) {
         this.eventBus = eventBus;
         this.AccountApi = AccountApi;
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.clock = clock;
         this.context = context;
-        this.internalCallContext = internalCallContext;
     }
 
     public Invoice createTestInvoice(final Account account,
                                      final LocalDate targetDate,
                                      final Currency currency,
-                                     final CallContext context,
                                      final InvoiceItem... items) throws EventBusException, InvoiceApiException {
         final Invoice invoice = new MockInvoice(account.getId(), clock.getUTCToday(), targetDate, currency);
 
@@ -95,6 +97,8 @@ public class TestPaymentHelper {
         }
 
         Mockito.when(invoiceApi.getInvoiceById(Mockito.eq(invoice.getId()), Mockito.<InternalTenantContext>any())).thenReturn(invoice);
+        Mockito.when(invoiceApi.getInvoiceForPaymentId(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(invoice);
+
         final InvoiceCreationInternalEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                 invoice.getBalance(), invoice.getCurrency(),
                                                                                 invoice.getInvoiceDate(), 1L, 2L, null);

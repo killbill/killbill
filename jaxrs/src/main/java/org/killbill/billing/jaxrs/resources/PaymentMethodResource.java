@@ -88,7 +88,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getPaymentMethod(@PathParam("paymentMethodId") final String paymentMethodId,
-                                     @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                     @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {

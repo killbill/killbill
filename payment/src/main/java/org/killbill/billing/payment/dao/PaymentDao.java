@@ -24,20 +24,36 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentStatus;
-import org.killbill.billing.payment.api.RefundStatus;
 import org.killbill.billing.util.entity.Pagination;
 
 public interface PaymentDao {
+
+
+    public List<PluginPropertyModelDao> getProperties(String transactionExternalKey, InternalCallContext context);
+
+    public PaymentAttemptModelDao insertPaymentAttemptWithProperties(PaymentAttemptModelDao attempt, List<PluginPropertyModelDao> properties, InternalCallContext context);
+
+    public void updatePaymentAttempt(UUID paymentAttemptId, UUID transactionId, String state, InternalCallContext context);
+
+    public List<PaymentAttemptModelDao> getPaymentAttempts(String paymentExternalKey, InternalTenantContext context);
+
+    public PaymentAttemptModelDao getPaymentAttemptByExternalKey(String externalKey, InternalTenantContext context);
+
+    public DirectPaymentTransactionModelDao getDirectPaymentTransactionByExternalKey(String transactionExternalKey, InternalTenantContext context);
+
+    public DirectPaymentModelDao getDirectPaymentByExternalKey(String externalKey, InternalTenantContext context);
 
     public Pagination<DirectPaymentModelDao> getDirectPayments(String pluginName, Long offset, Long limit, InternalTenantContext context);
 
     public DirectPaymentModelDao insertDirectPaymentWithFirstTransaction(DirectPaymentModelDao directPayment, DirectPaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
 
-    public DirectPaymentTransactionModelDao updateDirectPaymentWithNewTransaction(UUID dirctPaymentId, DirectPaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
+    public DirectPaymentTransactionModelDao updateDirectPaymentWithNewTransaction(UUID directPaymentId, DirectPaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
 
-    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final PaymentStatus paymentStatus,
-                                                              final BigDecimal processedAmount, final Currency processedCurrency,
-                                                              final UUID directTransactionId, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context);
+    public void updateDirectPaymentAndTransactionOnCompletion(UUID directPaymentId, String currentPaymentStateName,
+                                                              UUID directTransactionId, PaymentStatus paymentStatus,
+                                                              BigDecimal processedAmount, Currency processedCurrency,
+                                                              String gatewayErrorCode, String gatewayErrorMsg,
+                                                              InternalCallContext context);
 
     public DirectPaymentModelDao getDirectPayment(UUID directPaymentId, InternalTenantContext context);
 
@@ -45,41 +61,11 @@ public interface PaymentDao {
 
     public List<DirectPaymentModelDao> getDirectPaymentsForAccount(UUID accountId, InternalTenantContext context);
 
-    public List<DirectPaymentTransactionModelDao> getDirectTransactionsForAccount(final UUID accountId, final InternalTenantContext context);
+    public List<DirectPaymentTransactionModelDao> getDirectTransactionsForAccount(UUID accountId, InternalTenantContext context);
 
-    public PaymentModelDao insertPaymentWithFirstAttempt(PaymentModelDao paymentInfo, PaymentAttemptModelDao attempt, InternalCallContext context);
-
-    public PaymentAttemptModelDao updatePaymentWithNewAttempt(UUID paymentId, PaymentAttemptModelDao attempt, InternalCallContext context);
-
-    public void updatePaymentAndAttemptOnCompletion(UUID paymentId, PaymentStatus paymentStatus,
-                                                    BigDecimal processedAmount, Currency processedCurrency,
-                                                    UUID attemptId, String gatewayErrorMsg, String gatewayErrorCode, InternalCallContext context);
+    public List<DirectPaymentTransactionModelDao> getDirectTransactionsForDirectPayment(UUID directPaymentId, InternalTenantContext context);
 
     public PaymentAttemptModelDao getPaymentAttempt(UUID attemptId, InternalTenantContext context);
-
-    public List<PaymentModelDao> getPaymentsForInvoice(UUID invoiceId, InternalTenantContext context);
-
-    public List<PaymentModelDao> getPaymentsForAccount(UUID accountId, InternalTenantContext context);
-
-    public PaymentModelDao getLastPaymentForPaymentMethod(UUID accountId, UUID paymentMethodId, InternalTenantContext context);
-
-    public Pagination<PaymentModelDao> getPayments(String pluginName, Long offset, Long limit, InternalTenantContext context);
-
-    public PaymentModelDao getPayment(UUID paymentId, InternalTenantContext context);
-
-    public List<PaymentAttemptModelDao> getAttemptsForPayment(UUID paymentId, InternalTenantContext context);
-
-    public RefundModelDao insertRefund(RefundModelDao refundInfo, InternalCallContext context);
-
-    public void updateRefundStatus(UUID refundId, RefundStatus status, BigDecimal processedAmount, Currency processedCurrency, InternalCallContext context);
-
-    public Pagination<RefundModelDao> getRefunds(String pluginName, Long offset, Long limit, InternalTenantContext context);
-
-    public RefundModelDao getRefund(UUID refundId, InternalTenantContext context);
-
-    public List<RefundModelDao> getRefundsForPayment(UUID paymentId, InternalTenantContext context);
-
-    public List<RefundModelDao> getRefundsForAccount(UUID accountId, InternalTenantContext context);
 
     public PaymentMethodModelDao insertPaymentMethod(PaymentMethodModelDao paymentMethod, InternalCallContext context);
 
@@ -94,6 +80,4 @@ public interface PaymentDao {
     public void deletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
 
     public List<PaymentMethodModelDao> refreshPaymentMethods(UUID accountId, String pluginName, List<PaymentMethodModelDao> paymentMethods, InternalCallContext context);
-
-    public void undeletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
 }

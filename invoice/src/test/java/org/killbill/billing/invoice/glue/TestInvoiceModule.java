@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,6 +21,7 @@ package org.killbill.billing.invoice.glue;
 import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.invoice.TestInvoiceHelper;
 import org.killbill.billing.junction.BillingInternalApi;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.email.EmailModule;
@@ -27,14 +30,12 @@ import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
-import org.killbill.billing.util.glue.NotificationQueueModule;
 import org.killbill.billing.util.glue.TagStoreModule;
 import org.mockito.Mockito;
-import org.skife.config.ConfigSource;
 
 public class TestInvoiceModule extends DefaultInvoiceModule {
 
-    public TestInvoiceModule(final ConfigSource configSource) {
+    public TestInvoiceModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
@@ -46,17 +47,16 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
     @Override
     protected void configure() {
         super.configure();
-        install(new CallContextModule());
-        install(new MemoryGlobalLockerModule());
+        install(new CallContextModule(configSource));
+        install(new MemoryGlobalLockerModule(configSource));
 
         install(new CatalogModule(configSource));
         install(new CacheModule(configSource));
-        install(new TemplateModule());
+        install(new TemplateModule(configSource));
         install(new EmailModule(configSource));
 
-        install(new NotificationQueueModule(configSource));
-        install(new TagStoreModule());
-        install(new CustomFieldModule());
+        install(new TagStoreModule(configSource));
+        install(new CustomFieldModule(configSource));
         install(new UsageModule(configSource));
         installExternalApis();
 

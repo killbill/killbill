@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,9 +24,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.payment.api.Refund;
+import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -68,13 +69,13 @@ public class RefundJson extends JsonBase {
         this.adjustments = adjustments;
     }
 
-    public RefundJson(final Refund refund) {
+    public RefundJson(final DirectPayment refund) {
         this(refund, null, null);
     }
 
-    public RefundJson(final Refund refund, @Nullable final List<InvoiceItem> adjustments, @Nullable final List<AuditLog> auditLogs) {
-        this(refund.getId().toString(), refund.getPaymentId().toString(), refund.getRefundAmount(), refund.getCurrency().toString(),
-             refund.getRefundStatus().toString(), refund.isAdjusted(), refund.getEffectiveDate(), refund.getEffectiveDate(),
+    public RefundJson(final DirectPayment refund, @Nullable final List<InvoiceItem> adjustments, @Nullable final List<AuditLog> auditLogs) {
+        this(refund.getId().toString(), refund.getId().toString(), refund.getRefundedAmount(), refund.getCurrency().toString(),
+             null /* TODO [PAYMENT] refund.getRefundStatus().toString() */, false /* TODO [PAYMENT] refund.isAdjusted() */, refund.getCreatedDate(), refund.getCreatedDate(),
              adjustments == null ? null : ImmutableList.<InvoiceItemJson>copyOf(Collections2.transform(adjustments, new Function<InvoiceItem, InvoiceItemJson>() {
                  @Override
                  public InvoiceItemJson apply(@Nullable final InvoiceItem input) {

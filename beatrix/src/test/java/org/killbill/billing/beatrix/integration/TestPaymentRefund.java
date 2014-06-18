@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,11 +26,8 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
@@ -40,9 +39,8 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.PaymentStatus;
-import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -50,16 +48,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestPaymentRefund extends TestIntegrationBase {
 
     // Setup for all tests below
     private Account account;
     private Invoice invoice;
-    private Payment payment;
+    private DirectPayment payment;
     private Set<UUID> invoiceItems;
     private DateTime initialCreationDate;
     private int invoiceItemCount;
@@ -100,8 +96,6 @@ public class TestPaymentRefund extends TestIntegrationBase {
                                               new ExpectedInvoiceItemCheck(InvoiceItemType.REFUND_ADJ, new BigDecimal("-233.82"))
                                              );
     }
-
-
 
     private void setupRefundTest() throws Exception {
 

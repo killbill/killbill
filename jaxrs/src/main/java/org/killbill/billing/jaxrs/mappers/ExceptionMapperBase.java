@@ -178,7 +178,7 @@ public abstract class ExceptionMapperBase {
     private String exceptionToString(final Exception e) {
         try {
             return mapper.writeValueAsString(new BillingExceptionJson(e));
-        } catch (JsonProcessingException jsonException) {
+        } catch (final JsonProcessingException jsonException) {
             log.warn("Unable to serialize exception", jsonException);
         }
         return e.toString();

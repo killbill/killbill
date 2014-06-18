@@ -16,6 +16,7 @@ tableFields(prefix) ::= <<
   <prefix>account_id
 , <prefix>payment_method_id
 , <prefix>external_key
+, <prefix>current_state_name
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -26,6 +27,7 @@ tableValues() ::= <<
   :accountId
 , :paymentMethodId
 , :externalKey
+, :currentStateName
 , :createdBy
 , :createdDate
 , :updatedBy
@@ -40,6 +42,25 @@ where id = :id
 <AND_CHECK_TENANT()>
 ;
 >>
+
+updateCurrentPaymentStateName() ::= <<
+update <tableName()>
+set current_state_name = :currentStateName
+, updated_by = :updatedBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
+getDirectPaymentByExternalKey() ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where external_key = :externalKey
+;
+>>
+
 
 getByPluginName() ::= <<
 select

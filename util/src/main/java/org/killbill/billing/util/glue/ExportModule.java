@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,12 +18,15 @@
 
 package org.killbill.billing.util.glue;
 
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.api.ExportUserApi;
 import org.killbill.billing.util.export.api.DefaultExportUserApi;
 
-import com.google.inject.AbstractModule;
+public class ExportModule extends KillBillModule {
 
-public class ExportModule extends AbstractModule {
+    public ExportModule(final KillbillConfigSource configSource) {
+        super(configSource);
+    }
 
     protected void installUserApi() {
         bind(ExportUserApi.class).to(DefaultExportUserApi.class).asEagerSingleton();

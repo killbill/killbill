@@ -41,9 +41,6 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
-import org.killbill.billing.beatrix.glue.BeatrixModule;
-import org.killbill.billing.beatrix.lifecycle.Lifecycle;
-import org.killbill.billing.beatrix.osgi.SetupBundleWithAssertion;
 import org.killbill.billing.beatrix.util.AccountChecker;
 import org.killbill.billing.beatrix.util.InvoiceChecker;
 import org.killbill.billing.beatrix.util.PaymentChecker;
@@ -67,10 +64,14 @@ import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.junction.BlockingInternalApi;
+import org.killbill.billing.lifecycle.api.BusService;
+import org.killbill.billing.lifecycle.api.Lifecycle;
+import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.mock.MockAccountBuilder;
+import org.killbill.billing.osgi.config.OSGIConfig;
 import org.killbill.billing.overdue.OverdueUserApi;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
-import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
@@ -88,15 +89,12 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.config.OSGIConfig;
-import org.killbill.billing.util.svcsapi.bus.BusService;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -187,7 +185,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     protected AccountChecker accountChecker;
 
     @Inject
-    @Named(BeatrixModule.EXTERNAL_BUS)
+    @Named(BusModule.EXTERNAL_BUS_NAMED)
     protected PersistentBus externalBus;
 
     @Inject
@@ -225,9 +223,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     public void beforeClass() throws Exception {
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource));
         g.injectMembers(this);
-
-        final SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion("whatever", osgiConfig, "whatever");
-        setupTest.cleanBundleInstallDir();
     }
 
     @BeforeMethod(groups = "slow")
@@ -410,12 +405,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected void refundPaymentAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+    protected void refundPaymentAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
             @Override
             public Void apply(@Nullable final Void input) {
                 try {
-                    paymentApi.createRefund(account, payment.getId(), payment.getPaidAmount(), PLUGIN_PROPERTIES, callContext);
+                    paymentApi.createRefund(account, payment.getId(), payment.getCapturedAmount() /* TODO [PAYMENT] payment.getPaidAmount() */, PLUGIN_PROPERTIES, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
@@ -424,12 +419,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected void refundPaymentWithAdjustmenttAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+    protected void refundPaymentWithAdjustmenttAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
             @Override
             public Void apply(@Nullable final Void input) {
                 try {
-                    paymentApi.createRefundWithAdjustment(account, payment.getId(), payment.getPaidAmount(), PLUGIN_PROPERTIES, callContext);
+                    paymentApi.createRefundWithAdjustment(account, payment.getId(), payment.getCapturedAmount() /* TODO [PAYMENT] payment.getPaidAmount() */, PLUGIN_PROPERTIES, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
@@ -438,7 +433,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected void refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final Payment payment, final Set<UUID> invoiceItems, final NextEvent... events) {
+    protected void refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final DirectPayment payment, final Set<UUID> invoiceItems, final NextEvent... events) {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
             @Override
             public Void apply(@Nullable final Void input) {

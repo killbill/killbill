@@ -21,7 +21,8 @@
 
 HERE=`cd \`dirname $0\`; pwd`
 TOP=$HERE/..
-SERVER=$TOP/server
+# Assume killbill profile by default for now
+SERVER=$TOP/profiles/killbill
 
 PROPERTIES=${PROPERTIES-"$SERVER/src/main/resources/killbill-server.properties"}
 

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,28 +18,24 @@
 
 package org.killbill.billing.util.glue;
 
-import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
-
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheControllerDispatcherProvider;
 import org.killbill.billing.util.cache.EhCacheCacheManagerProvider;
 import org.killbill.billing.util.config.CacheConfig;
+import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.AbstractModule;
 import net.sf.ehcache.CacheManager;
 
-public class CacheModule extends AbstractModule {
+public class CacheModule extends KillBillModule {
 
-    private final ConfigSource configSource;
-
-    public CacheModule(final ConfigSource configSource) {
-        this.configSource = configSource;
+    public CacheModule(final KillbillConfigSource configSource) {
+        super(configSource);
     }
 
     @Override
     protected void configure() {
-        final CacheConfig config = new ConfigurationObjectFactory(configSource).build(CacheConfig.class);
+        final CacheConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(CacheConfig.class);
         bind(CacheConfig.class).toInstance(config);
 
         // EhCache specifics

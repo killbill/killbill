@@ -51,7 +51,7 @@ public class Context {
             final Tenant tenant = getTenantFromRequest(request);
             return contextFactory.createCallContext(tenant == null ? null : tenant.getId(), createdBy, origin, userType, reason,
                                                     comment, UUID.randomUUID());
-        } catch (NullPointerException e) {
+        } catch (final NullPointerException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
     }

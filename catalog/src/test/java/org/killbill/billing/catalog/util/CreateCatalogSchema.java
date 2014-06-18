@@ -21,7 +21,7 @@ import java.io.FileWriter;
 import java.io.Writer;
 
 import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.util.config.catalog.XMLSchemaGenerator;
+import org.killbill.xmlloader.XMLSchemaGenerator;
 
 // Tool to print the catalog XML Schema (XSD)
 public class CreateCatalogSchema {

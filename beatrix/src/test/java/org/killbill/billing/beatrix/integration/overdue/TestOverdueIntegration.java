@@ -45,7 +45,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.junction.DefaultBlockingState;
-import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.DirectPayment;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -746,7 +746,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now, refund the second (first non-zero dollar) invoice
-        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), false, PLUGIN_PROPERTIES, callContext);
+        final DirectPayment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), false, PLUGIN_PROPERTIES, callContext);
         refundPaymentAndCheckForCompletion(account, payment, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
         // We should now be in OD1
         checkODState("OD1");

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,10 +18,8 @@
 
 package org.killbill.billing.subscription.glue;
 
-import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
-
 import org.killbill.billing.glue.SubscriptionModule;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.alignment.MigrationPlanAligner;
 import org.killbill.billing.subscription.alignment.PlanAligner;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
@@ -41,22 +41,21 @@ import org.killbill.billing.subscription.engine.dao.DefaultSubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.RepairSubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.util.config.SubscriptionConfig;
+import org.killbill.billing.util.glue.KillBillModule;
+import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
-public class DefaultSubscriptionModule extends AbstractModule implements SubscriptionModule {
+public class DefaultSubscriptionModule extends KillBillModule implements SubscriptionModule {
 
     public static final String REPAIR_NAMED = "repair";
 
-    protected final ConfigSource configSource;
-
-    public DefaultSubscriptionModule(final ConfigSource configSource) {
-        this.configSource = configSource;
+    public DefaultSubscriptionModule(final KillbillConfigSource configSource) {
+        super(configSource);
     }
 
     protected void installConfig() {
-        final SubscriptionConfig config = new ConfigurationObjectFactory(configSource).build(SubscriptionConfig.class);
+        final SubscriptionConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(SubscriptionConfig.class);
         bind(SubscriptionConfig.class).toInstance(config);
     }
 

@@ -90,7 +90,7 @@ public interface JaxrsResource {
     public static final String QUERY_CUSTOM_FIELDS = "customFieldList";
 
     public static final String QUERY_PAYMENT_METHOD_PLUGIN_NAME = "pluginName";
-    public static final String QUERY_PAYMENT_METHOD_PLUGIN_INFO = "withPluginInfo";
+    public static final String QUERY_WITH_PLUGIN_INFO = "withPluginInfo";
     public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "isDefault";
 
     public static final String QUERY_PAY_ALL_UNPAID_INVOICES = "payAllUnpaidInvoices";

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -38,10 +40,10 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.jaxrs.json.RefundJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.api.Refund;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -86,7 +88,7 @@ public class RefundResource extends JaxRsResourceBase {
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
-        final Refund refund = paymentApi.getRefund(UUID.fromString(refundId), false, pluginProperties, tenantContext);
+        final DirectPayment refund = paymentApi.getRefund(UUID.fromString(refundId), false, pluginProperties, tenantContext);
         final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(refund.getId(), ObjectType.REFUND, auditMode.getLevel(), tenantContext);
         // TODO Return adjusted items
         return Response.status(Status.OK).entity(new RefundJson(refund, null, auditLogs)).build();
@@ -104,7 +106,7 @@ public class RefundResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
 
-        final Pagination<Refund> refunds;
+        final Pagination<DirectPayment> refunds;
         if (Strings.isNullOrEmpty(pluginName)) {
             refunds = paymentApi.getRefunds(offset, limit, pluginProperties, tenantContext);
         } else {
@@ -117,16 +119,16 @@ public class RefundResource extends JaxRsResourceBase {
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
         final Map<UUID, UUID> paymentIdAccountIdMappings = new HashMap<UUID, UUID>();
         return buildStreamingPaginationResponse(refunds,
-                                                new Function<Refund, RefundJson>() {
+                                                new Function<DirectPayment, RefundJson>() {
                                                     @Override
-                                                    public RefundJson apply(final Refund refund) {
+                                                    public RefundJson apply(final DirectPayment refund) {
                                                         UUID kbAccountId = null;
-                                                        if (!AuditLevel.NONE.equals(auditMode.getLevel()) && paymentIdAccountIdMappings.get(refund.getPaymentId()) == null) {
+                                                        if (!AuditLevel.NONE.equals(auditMode.getLevel()) && paymentIdAccountIdMappings.get(refund.getId()) == null) {
                                                             try {
-                                                                kbAccountId = paymentApi.getPayment(refund.getPaymentId(), false, pluginProperties, tenantContext).getAccountId();
-                                                                paymentIdAccountIdMappings.put(refund.getPaymentId(), kbAccountId);
+                                                                kbAccountId = paymentApi.getPayment(refund.getId(), false, pluginProperties, tenantContext).getAccountId();
+                                                                paymentIdAccountIdMappings.put(refund.getId(), kbAccountId);
                                                             } catch (final PaymentApiException e) {
-                                                                log.warn("Unable to retrieve payment for id " + refund.getPaymentId());
+                                                                log.warn("Unable to retrieve payment for id " + refund.getId());
                                                             }
                                                         }
 
@@ -157,7 +159,7 @@ public class RefundResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         // Search the plugin(s)
-        final Pagination<Refund> refunds;
+        final Pagination<DirectPayment> refunds;
         if (Strings.isNullOrEmpty(pluginName)) {
             refunds = paymentApi.searchRefunds(searchKey, offset, limit, pluginProperties, tenantContext);
         } else {
@@ -171,16 +173,16 @@ public class RefundResource extends JaxRsResourceBase {
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
         final Map<UUID, UUID> paymentIdAccountIdMappings = new HashMap<UUID, UUID>();
         return buildStreamingPaginationResponse(refunds,
-                                                new Function<Refund, RefundJson>() {
+                                                new Function<DirectPayment, RefundJson>() {
                                                     @Override
-                                                    public RefundJson apply(final Refund refund) {
+                                                    public RefundJson apply(final DirectPayment refund) {
                                                         UUID kbAccountId = null;
-                                                        if (!AuditLevel.NONE.equals(auditMode.getLevel()) && paymentIdAccountIdMappings.get(refund.getPaymentId()) == null) {
+                                                        if (!AuditLevel.NONE.equals(auditMode.getLevel()) && paymentIdAccountIdMappings.get(refund.getId()) == null) {
                                                             try {
-                                                                kbAccountId = paymentApi.getPayment(refund.getPaymentId(), false, pluginProperties, tenantContext).getAccountId();
-                                                                paymentIdAccountIdMappings.put(refund.getPaymentId(), kbAccountId);
+                                                                kbAccountId = paymentApi.getPayment(refund.getId(), false, pluginProperties, tenantContext).getAccountId();
+                                                                paymentIdAccountIdMappings.put(refund.getId(), kbAccountId);
                                                             } catch (final PaymentApiException e) {
-                                                                log.warn("Unable to retrieve payment for id " + refund.getPaymentId());
+                                                                log.warn("Unable to retrieve payment for id " + refund.getId());
                                                             }
                                                         }
 

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,13 +18,11 @@
 
 package org.killbill.billing.invoice.glue;
 
-import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
-
 import org.killbill.billing.glue.InvoiceModule;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.InvoiceTagHandler;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
+import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceMigrationApi;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
@@ -43,20 +43,18 @@ import org.killbill.billing.invoice.notification.EmailInvoiceNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.InvoiceConfig;
-import org.killbill.billing.invoice.api.InvoiceInternalApi;
+import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
+import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.AbstractModule;
-
-public class DefaultInvoiceModule extends AbstractModule implements InvoiceModule {
+public class DefaultInvoiceModule extends KillBillModule implements InvoiceModule {
 
     InvoiceConfig config;
 
-    protected final ConfigSource configSource;
-
-    public DefaultInvoiceModule(final ConfigSource configSource) {
-        this.configSource = configSource;
+    public DefaultInvoiceModule(final KillbillConfigSource configSource) {
+        super(configSource);
     }
 
     protected void installInvoiceDao() {
@@ -79,7 +77,7 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     }
 
     protected void installConfig() {
-        config = new ConfigurationObjectFactory(configSource).build(InvoiceConfig.class);
+        config = new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class);
         bind(InvoiceConfig.class).toInstance(config);
     }
 
@@ -95,7 +93,7 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     protected void installNotifiers() {
         bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
         bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-        final TranslatorConfig config = new ConfigurationObjectFactory(configSource).build(TranslatorConfig.class);
+        final TranslatorConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         bind(TranslatorConfig.class).toInstance(config);
         bind(InvoiceFormatterFactory.class).to(config.getInvoiceFormatterFactoryClass()).asEagerSingleton();
     }

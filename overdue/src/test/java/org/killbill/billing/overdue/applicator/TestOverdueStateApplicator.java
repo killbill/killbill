@@ -31,7 +31,7 @@ import org.killbill.billing.overdue.OverdueState;
 import org.killbill.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import org.killbill.billing.overdue.config.OverdueConfig;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
-import org.killbill.billing.util.config.catalog.XMLLoader;
+import org.killbill.xmlloader.XMLLoader;
 import org.killbill.billing.events.OverdueChangeInternalEvent;
 import org.killbill.billing.junction.DefaultBlockingState;
 

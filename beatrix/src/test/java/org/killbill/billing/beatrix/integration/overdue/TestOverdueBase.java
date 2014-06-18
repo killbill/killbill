@@ -32,7 +32,7 @@ import org.killbill.billing.overdue.OverdueService;
 import org.killbill.billing.overdue.config.OverdueConfig;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
-import org.killbill.billing.util.config.catalog.XMLLoader;
+import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 

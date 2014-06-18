@@ -1,7 +1,9 @@
-package org.killbill.billing.util.email;/*
+/*
  * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -13,6 +15,8 @@ package org.killbill.billing.util.email;/*
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+package org.killbill.billing.util.email;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +34,7 @@ public class EmailSenderTest extends UtilTestSuiteNoDB {
     @BeforeClass
     public void beforeClass() throws Exception {
         super.beforeClass();
-        config = new ConfigurationObjectFactory(configSource).build(EmailConfig.class);
+        config = new ConfigurationObjectFactory(skifeConfigSource).build(EmailConfig.class);
     }
 
     @Test(enabled = false)

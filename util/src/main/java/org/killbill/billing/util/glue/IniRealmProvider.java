@@ -16,17 +16,24 @@
 
 package org.killbill.billing.util.glue;
 
+import java.util.Collection;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.apache.shiro.config.ConfigurationException;
+import org.apache.shiro.config.IniSecurityManagerFactory;
+import org.apache.shiro.mgt.DefaultSecurityManager;
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.realm.Realm;
 import org.apache.shiro.realm.text.IniRealm;
+import org.apache.shiro.util.Factory;
+import org.killbill.billing.util.config.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.killbill.billing.util.config.SecurityConfig;
-
-public class IniRealmProvider implements Provider<IniRealm> {
+// Really Provider<IniRealm>, but avoid an extra cast below
+public class IniRealmProvider implements Provider<Realm> {
 
     private static final Logger log = LoggerFactory.getLogger(IniRealmProvider.class);
 
@@ -38,10 +45,17 @@ public class IniRealmProvider implements Provider<IniRealm> {
     }
 
     @Override
-    public IniRealm get() {
+    public Realm get() {
         try {
-            return new IniRealm(securityConfig.getShiroResourcePath());
-        } catch (ConfigurationException e) {
+            final Factory<SecurityManager> factory = new IniSecurityManagerFactory(securityConfig.getShiroResourcePath());
+            // TODO Pierre hack - lame cast here, but we need to have Shiro go through its reflection magic
+            // to parse the [main] section of the ini file. Without duplicating code, this seems to be possible only
+            // by going through IniSecurityManagerFactory.
+            final DefaultSecurityManager securityManager = (DefaultSecurityManager) factory.getInstance();
+            final Collection<Realm> realms = securityManager.getRealms();
+            // Null check mainly for testing
+            return realms == null ? new IniRealm(securityConfig.getShiroResourcePath()) : realms.iterator().next();
+        } catch (final ConfigurationException e) {
             log.warn("Unable to configure RBAC", e);
             return new IniRealm();
         }

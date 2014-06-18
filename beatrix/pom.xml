@@ -126,26 +126,6 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
-            <artifactId>killbill-osgi</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.kill-bill.billing</groupId>
-            <artifactId>killbill-osgi-bundles-jruby</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.kill-bill.billing</groupId>
-            <artifactId>killbill-osgi-bundles-test-beatrix</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.kill-bill.billing</groupId>
-            <artifactId>killbill-osgi-bundles-test-payment</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-overdue</artifactId>
             <scope>test</scope>
         </dependency>
@@ -157,6 +137,38 @@
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-payment</artifactId>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-base</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-lifecycle</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-osgi</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-osgi-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-osgi-bundles-jruby</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -213,6 +225,10 @@
             <artifactId>killbill-queue</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-xmlloader</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <scope>test</scope>
@@ -232,28 +248,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <id>copy</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <tasks>
-                                <copy file="${basedir}/../osgi-bundles/tests/beatrix/target/killbill-osgi-bundles-test-beatrix-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-beatrix-jar-with-dependencies.jar" />
-                                <copy file="${basedir}/../osgi-bundles/tests/payment/target/killbill-osgi-bundles-test-payment-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-payment-jar-with-dependencies.jar" />
-                                <copy file="${basedir}/../osgi-bundles/bundles/jruby/target/killbill-osgi-bundles-jruby-${project.version}.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-jruby.jar" />
-                            </tasks>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

@@ -135,7 +135,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         final StringBuilder errorMessageBuilder = new StringBuilder("Error during transaction for sql entity {} and method {}");
         if (t instanceof SQLException) {
             final SQLException sqlException = (SQLException) t;
-            errorMessageBuilder.append(" [SQL State: ")
+            errorMessageBuilder.append(" [SQL DefaultState: ")
                                .append(sqlException.getSQLState())
                                .append(", Vendor Error Code: ")
                                .append(sqlException.getErrorCode())

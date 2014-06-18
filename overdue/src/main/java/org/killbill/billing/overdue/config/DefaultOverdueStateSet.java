@@ -27,8 +27,8 @@ import org.killbill.billing.overdue.OverdueApiException;
 import org.killbill.billing.overdue.OverdueState;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
-import org.killbill.billing.util.config.catalog.ValidatingConfig;
-import org.killbill.billing.util.config.catalog.ValidationErrors;
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.billing.junction.DefaultBlockingState;
 
 @XmlAccessorType(XmlAccessType.NONE)

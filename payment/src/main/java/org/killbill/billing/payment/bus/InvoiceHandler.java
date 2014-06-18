@@ -18,18 +18,26 @@
 
 package org.killbill.billing.payment.bus;
 
+import java.util.UUID;
+
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.core.PaymentProcessor;
+import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.core.PluginControlledPaymentProcessor;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,19 +47,22 @@ import com.google.inject.Inject;
 
 public class InvoiceHandler {
 
-    private final PaymentProcessor paymentProcessor;
     private final AccountInternalApi accountApi;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final PluginControlledPaymentProcessor pluginControlledPaymentProcessor;
+    private final NonEntityDao nonEntityDao;
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceHandler.class);
 
     @Inject
     public InvoiceHandler(final AccountInternalApi accountApi,
-                          final PaymentProcessor paymentProcessor,
+                          final PluginControlledPaymentProcessor pluginControlledPaymentProcessor,
+                          final NonEntityDao nonEntityDao,
                           final InternalCallContextFactory internalCallContextFactory) {
         this.accountApi = accountApi;
-        this.paymentProcessor = paymentProcessor;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.pluginControlledPaymentProcessor = pluginControlledPaymentProcessor;
+        this.nonEntityDao = nonEntityDao;
     }
 
     @Subscribe
@@ -64,7 +75,10 @@ public class InvoiceHandler {
         try {
             final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             account = accountApi.getAccountById(event.getAccountId(), internalContext);
-            paymentProcessor.createPayment(account, event.getInvoiceId(), null, false, false, ImmutableList.<PluginProperty>of(), internalContext);
+
+            final CallContext callContext = internalContext.toCallContext(nonEntityDao.retrieveIdFromObject(internalContext.getTenantRecordId(), ObjectType.TENANT));
+            pluginControlledPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, null, account.getCurrency(), event.getInvoiceId().toString(), UUID.randomUUID().toString(),
+                                                            ImmutableList.<PluginProperty>of(), InvoicePaymentControlPluginApi.PLUGIN_NAME, callContext, internalContext);
         } catch (final AccountApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {
