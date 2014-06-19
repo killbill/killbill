@@ -68,14 +68,14 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
         Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, PLUGIN_PROPERTIES, callContext).size(), 1);
         final UUID firstPmId = account.getPaymentMethodId();
 
-        final UUID secondPmId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null), PLUGIN_PROPERTIES, callContext);
+        final UUID secondPmId = paymentApi.addPaymentMethod(account, MockPaymentProviderPlugin.PLUGIN_NAME, true, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null), PLUGIN_PROPERTIES, callContext);
         Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, PLUGIN_PROPERTIES, callContext).size(), 2);
-        Assert.assertEquals(paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext).size(), 2);
+        Assert.assertEquals(paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext).size(), 2);
 
         // Remove second PM from plugin
         getPluginApi().deletePaymentMethod(account.getId(), secondPmId, PLUGIN_PROPERTIES, callContext);
         Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, PLUGIN_PROPERTIES, callContext).size(), 1);
-        Assert.assertEquals(paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext).size(), 2);
+        Assert.assertEquals(paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext).size(), 2);
 
         // Verify that the refresh sees that PM as being deleted now
         final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, PLUGIN_PROPERTIES, callContext, internalCallContext);

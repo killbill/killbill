@@ -32,8 +32,8 @@ import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.DirectPaymentTransaction;
-import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -50,13 +50,13 @@ public class RefundChecker {
 
     private static final Logger log = LoggerFactory.getLogger(RefundChecker.class);
 
-    private final PaymentApi paymentApi;
+    private final DirectPaymentApi paymentApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final AuditChecker auditChecker;
     private final InvoiceUserApi invoiceUserApi;
 
     @Inject
-    public RefundChecker(final PaymentApi paymentApi, final InvoicePaymentApi invoicePaymentApi, final InvoiceUserApi invoiceApi, final AuditChecker auditChecker) {
+    public RefundChecker(final DirectPaymentApi paymentApi, final InvoicePaymentApi invoicePaymentApi, final InvoiceUserApi invoiceApi, final AuditChecker auditChecker) {
         this.paymentApi = paymentApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.auditChecker = auditChecker;
@@ -65,7 +65,9 @@ public class RefundChecker {
 
     public DirectPayment checkRefund(final UUID paymentId, final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
 
-        final List<DirectPayment> refunds = paymentApi.getPaymentRefunds(paymentId, context);
+
+        final DirectPayment payment = null; // STEPH paymentApi.getPaymentRefunds(paymentId, context);
+        final List<DirectPayment> refunds = null; // STEPH paymentApi.getPaymentRefunds(paymentId, context);
         Assert.assertEquals(refunds.size(), 1);
 
         final InvoicePayment refundInvoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.REFUND, context);

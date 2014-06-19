@@ -139,7 +139,7 @@ public interface JaxrsResource {
     public static final String CHARGES = "charges";
     public static final String CHARGES_PATH = PREFIX + "/" + INVOICES + "/" + CHARGES;
 
-    public static final String PAYMENTS = "payments";
+    public static final String PAYMENTS = "invoicePayments";
     public static final String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;
 
     public static final String DIRECT_PAYMENTS = "directPayments";

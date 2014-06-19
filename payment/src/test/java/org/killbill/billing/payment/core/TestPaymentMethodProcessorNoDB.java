@@ -42,11 +42,11 @@ public class TestPaymentMethodProcessorNoDB extends PaymentTestSuiteNoDB {
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.getExternalKey()).thenReturn(accountId.toString());
 
-        Assert.assertEquals(paymentMethodProcessor.getPaymentMethods(account, false, properties, internalCallContext).size(), 0);
+        Assert.assertEquals(paymentMethodProcessor.getPaymentMethods(account.getId(), false, properties, internalCallContext).size(), 0);
 
         // The first call should create the payment method
         final ExternalPaymentProviderPlugin providerPlugin = paymentMethodProcessor.createPaymentMethodAndGetExternalPaymentProviderPlugin(account, properties, callContext, internalCallContext);
-        final List<PaymentMethod> paymentMethods = paymentMethodProcessor.getPaymentMethods(account, false, properties, internalCallContext);
+        final List<PaymentMethod> paymentMethods = paymentMethodProcessor.getPaymentMethods(account.getId(), false, properties, internalCallContext);
         Assert.assertEquals(paymentMethods.size(), 1);
         Assert.assertEquals(paymentMethods.get(0).getPluginName(), ExternalPaymentProviderPlugin.PLUGIN_NAME);
         Assert.assertEquals(paymentMethods.get(0).getAccountId(), account.getId());
@@ -57,7 +57,7 @@ public class TestPaymentMethodProcessorNoDB extends PaymentTestSuiteNoDB {
             final ExternalPaymentProviderPlugin foundProviderPlugin = paymentMethodProcessor.createPaymentMethodAndGetExternalPaymentProviderPlugin(account, properties, callContext, internalCallContext);
             Assert.assertNotNull(foundProviderPlugin);
 
-            final List<PaymentMethod> foundPaymentMethods = paymentMethodProcessor.getPaymentMethods(account, false, properties, internalCallContext);
+            final List<PaymentMethod> foundPaymentMethods = paymentMethodProcessor.getPaymentMethods(account.getId(), false, properties, internalCallContext);
             Assert.assertEquals(foundPaymentMethods.size(), 1);
             Assert.assertEquals(foundPaymentMethods.get(0).getPluginName(), ExternalPaymentProviderPlugin.PLUGIN_NAME);
             Assert.assertEquals(foundPaymentMethods.get(0).getAccountId(), account.getId());

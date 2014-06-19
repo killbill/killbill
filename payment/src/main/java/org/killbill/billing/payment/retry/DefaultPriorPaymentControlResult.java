@@ -18,7 +18,7 @@ package org.killbill.billing.payment.retry;
 
 import java.math.BigDecimal;
 
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi.PriorPaymentControlResult;
+import org.killbill.billing.retry.plugin.api.PriorPaymentControlResult;
 
 public class DefaultPriorPaymentControlResult implements PriorPaymentControlResult {
 

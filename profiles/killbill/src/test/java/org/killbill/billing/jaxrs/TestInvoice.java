@@ -51,7 +51,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, AuditLevel.FULL);
+        final List<Invoice> invoices = null; // STEPH killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, AuditLevel.FULL);
         assertEquals(invoices.size(), 2);
         for (final Invoice invoiceJson : invoices) {
             Assert.assertEquals(invoiceJson.getAuditLogs().size(), 1);

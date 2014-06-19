@@ -67,7 +67,7 @@ public class TestEntitlement extends TestJaxrsBase {
         newInput.setProductName(newProductName);
         newInput.setBillingPeriod(entitlementJson.getBillingPeriod());
         newInput.setPriceList(entitlementJson.getPriceList());
-        objFromJson = killBillClient.updateSubscription(newInput, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+        objFromJson = null; // STEPH  killBillClient.updateSubscription(newInput, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
         Assert.assertNotNull(objFromJson);
 
         // MOVE AFTER TRIAL

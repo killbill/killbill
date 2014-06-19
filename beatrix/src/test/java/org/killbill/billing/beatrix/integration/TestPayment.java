@@ -54,7 +54,7 @@ public class TestPayment extends TestIntegrationBase {
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        final DirectPayment payment1 = paymentApi.createPayment(account, item1.getInvoiceId(), new BigDecimal("4.00"), PLUGIN_PROPERTIES, callContext);
+        final DirectPayment payment1 = null; // STEPH paymentApi.createPurchase(account, item1.getInvoiceId(), new BigDecimal("4.00"), PLUGIN_PROPERTIES, callContext);
         assertListenerStatus();
 
         Invoice invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
@@ -66,7 +66,7 @@ public class TestPayment extends TestIntegrationBase {
         assertTrue(accountBalance.compareTo(new BigDecimal("6.00")) == 0);
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        final DirectPayment payment2 = paymentApi.createPayment(account, item1.getInvoiceId(), new BigDecimal("6.00"), PLUGIN_PROPERTIES, callContext);
+        final DirectPayment payment2 = null; // STEPH paymentApi.createPayment(account, item1.getInvoiceId(), new BigDecimal("6.00"), PLUGIN_PROPERTIES, callContext);
         assertListenerStatus();
 
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
@@ -91,7 +91,7 @@ public class TestPayment extends TestIntegrationBase {
 
 */
         // And then issue refund with item adjustment on first invoice/item
-        paymentApi.createRefund(account, payment2.getId(), new BigDecimal("5.00"), PLUGIN_PROPERTIES, callContext);
+        // STEPH paymentApi.createRefund(account, payment2.getId(), new BigDecimal("5.00"), PLUGIN_PROPERTIES, callContext);
 
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(new BigDecimal("5.00")) == 0);

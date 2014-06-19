@@ -82,11 +82,9 @@ import org.killbill.billing.overdue.OverdueUserApi;
 import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentApi;
-import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.api.Refund;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -124,7 +122,7 @@ public class AccountResource extends JaxRsResourceBase {
     private final SubscriptionApi subscriptionApi;
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
-    private final PaymentApi paymentApi;
+    private final DirectPaymentApi paymentApi;
     private final DirectPaymentApi directPaymentApi;
     private final OverdueUserApi overdueApi;
 
@@ -133,7 +131,7 @@ public class AccountResource extends JaxRsResourceBase {
                            final AccountUserApi accountApi,
                            final InvoiceUserApi invoiceApi,
                            final InvoicePaymentApi invoicePaymentApi,
-                           final PaymentApi paymentApi,
+                           final DirectPaymentApi paymentApi,
                            final DirectPaymentApi directPaymentApi,
                            final TagUserApi tagUserApi,
                            final AuditUserApi auditUserApi,
@@ -335,10 +333,10 @@ public class AccountResource extends JaxRsResourceBase {
         final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), tenantContext);
 
         // Get the payments
-        final List<DirectPayment> payments = paymentApi.getAccountPayments(accountId, tenantContext);
+        final List<DirectPayment> payments = paymentApi.getAccountPayments(accountId, false, ImmutableList.<PluginProperty>of(), tenantContext);
 
         // Get the refunds
-        final List<DirectPayment> refunds = paymentApi.getAccountRefunds(account, tenantContext);
+        final List<DirectPayment> refunds = null; // STEPH paymentApi.getAccountRefunds(account, tenantContext);
         final Multimap<UUID, DirectPayment> refundsByPayment = ArrayListMultimap.<UUID, DirectPayment>create();
         for (final DirectPayment refund : refunds) {
             refundsByPayment.put(refund.getId(), refund);
@@ -461,8 +459,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
     public Response getPayments(@PathParam("accountId") final String accountId,
+                                @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        final List<DirectPayment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId), context.createContext(request));
+        final List<DirectPayment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId), withPluginInfo, ImmutableList.<PluginProperty>of(), context.createContext(request));
         final List<PaymentJson> result = new ArrayList<PaymentJson>(payments.size());
         for (final DirectPayment payment : payments) {
             result.add(new PaymentJson(payment, null));
@@ -501,9 +500,9 @@ public class AccountResource extends JaxRsResourceBase {
                                            invoice.getBalance() : remainingRequestPayment;
             if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
                 if (externalPayment) {
-                    paymentApi.createExternalPayment(account, invoice.getId(), amountToPay, callContext);
+                    // STEPH paymentApi.createExternalPayment(account, invoice.getId(), amountToPay, callContext);
                 } else {
-                    paymentApi.createPayment(account, invoice.getId(), amountToPay, pluginProperties, callContext);
+                    // STEPH  paymentApi.createPayment(account, invoice.getId(), amountToPay, pluginProperties, callContext);
                 }
             }
             remainingRequestPayment = remainingRequestPayment.subtract(amountToPay);
@@ -548,10 +547,10 @@ public class AccountResource extends JaxRsResourceBase {
             return Response.status(Status.BAD_REQUEST).build();
         }
 
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), pluginProperties, callContext);
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, data.getPluginName(), isDefault, data.getPluginDetail(), pluginProperties, callContext);
         if (payAllUnpaidInvoices && unpaidInvoices.size() > 0) {
             for (final Invoice invoice : unpaidInvoices) {
-                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), pluginProperties, callContext);
+                // STEPH paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), pluginProperties, callContext);
             }
         }
         return uriBuilder.buildResponse(PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, uriInfo.getBaseUri().toString());
@@ -569,7 +568,7 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
-        final List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, withPluginInfo, pluginProperties, tenantContext);
+        final List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), withPluginInfo, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
         final List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
             @Override
@@ -602,7 +601,7 @@ public class AccountResource extends JaxRsResourceBase {
         if (payAllUnpaidInvoices) {
             final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
             for (final Invoice invoice : unpaidInvoices) {
-                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), pluginProperties, callContext);
+                // STEPH paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), pluginProperties, callContext);
             }
         }
         return Response.status(Status.OK).build();
@@ -616,10 +615,11 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getDirectPaymentsForAccount(@PathParam("accountId") final String accountIdStr,
                                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                                @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final UUID accountId = UUID.fromString(accountIdStr);
         final TenantContext tenantContext = context.createContext(request);
-        final List<DirectPayment> payments = directPaymentApi.getAccountPayments(accountId, tenantContext);
+        final List<DirectPayment> payments = directPaymentApi.getAccountPayments(accountId, withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
         final List<DirectPaymentJson> result = ImmutableList.copyOf(Iterables.transform(payments, new Function<DirectPayment, DirectPaymentJson>() {
             @Override
@@ -703,12 +703,12 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
-        final List<DirectPayment> refunds = paymentApi.getAccountRefunds(account, tenantContext);
+        final List<DirectPayment> refunds = null; // STEPH paymentApi.getAccountRefunds(account, tenantContext);
         final List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<DirectPayment, RefundJson>() {
             @Override
             public RefundJson apply(final DirectPayment input) {
                 // TODO Return adjusted items and audits
-                return new RefundJson(input, null, null);
+                return null; // STEPH new RefundJson(input, null, null);
             }
         }));
 

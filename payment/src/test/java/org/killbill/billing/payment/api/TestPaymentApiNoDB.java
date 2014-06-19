@@ -157,37 +157,37 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testPaymentMethods() throws Exception {
-        List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext);
+        List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 1);
 
         final PaymentMethod initDefaultMethod = methods.get(0);
         assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
 
         final PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
-        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, newPaymenrMethod, PLUGIN_PROPERTIES, callContext);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(account, MockPaymentProviderPlugin.PLUGIN_NAME, true, newPaymenrMethod, PLUGIN_PROPERTIES, callContext);
         Mockito.when(account.getPaymentMethodId()).thenReturn(newPaymentMethodId);
 
-        methods = paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 2);
 
         assertEquals(newPaymentMethodId, account.getPaymentMethodId());
 
         boolean failed = false;
         try {
-            paymentApi.deletedPaymentMethod(account, newPaymentMethodId, false, PLUGIN_PROPERTIES, callContext);
+            paymentApi.deletePaymentMethod(account, newPaymentMethodId, false, PLUGIN_PROPERTIES, callContext);
         } catch (final PaymentApiException e) {
             failed = true;
         }
         assertTrue(failed);
 
-        paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), true, PLUGIN_PROPERTIES, callContext);
-        methods = paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext);
+        paymentApi.deletePaymentMethod(account, initDefaultMethod.getId(), true, PLUGIN_PROPERTIES, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 1);
 
         // NOW retry with default payment method with special flag
-        paymentApi.deletedPaymentMethod(account, newPaymentMethodId, true, PLUGIN_PROPERTIES, callContext);
+        paymentApi.deletePaymentMethod(account, newPaymentMethodId, true, PLUGIN_PROPERTIES, callContext);
 
-        methods = paymentApi.getPaymentMethods(account, false, PLUGIN_PROPERTIES, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 0);
     }
 }

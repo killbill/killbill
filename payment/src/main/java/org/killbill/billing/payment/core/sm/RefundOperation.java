@@ -39,9 +39,10 @@ public class RefundOperation extends DirectPaymentOperation {
     @Override
     protected PaymentTransactionInfoPlugin doPluginOperation() throws PaymentPluginApiException {
         logger.debug("Starting REFUND for payment {} ({} {})", directPaymentStateContext.getDirectPaymentId(), directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency());
-        return plugin.processRefund(directPaymentStateContext.getAccount().getId(),
+        return plugin.refundPayment(directPaymentStateContext.getAccount().getId(),
                                     directPaymentStateContext.getDirectPaymentId(),
                                     directPaymentStateContext.getTransactionPaymentId(),
+                                    directPaymentStateContext.getPaymentMethodId(),
                                     directPaymentStateContext.getAmount(),
                                     directPaymentStateContext.getCurrency(),
                                     directPaymentStateContext.getProperties(),

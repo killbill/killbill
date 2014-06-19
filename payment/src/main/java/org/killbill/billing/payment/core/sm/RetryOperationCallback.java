@@ -39,11 +39,11 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.DirectPaymentProcessor;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
+import org.killbill.billing.retry.plugin.api.FailureCallResult;
 import org.killbill.billing.retry.plugin.api.PaymentControlApiException;
+import org.killbill.billing.retry.plugin.api.PaymentControlContext;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi.FailureCallResult;
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi.PaymentControlContext;
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi.PriorPaymentControlResult;
+import org.killbill.billing.retry.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
@@ -83,7 +83,7 @@ public abstract class RetryOperationCallback extends PluginOperation implements 
     private void onCompletion(final String pluginName, final PaymentControlContext paymentControlContext) {
         final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
         try {
-            plugin.onCompletionCall(paymentControlContext);
+            plugin.onSuccessCall(paymentControlContext);
         } catch (PaymentControlApiException e) {
             logger.warn("Plugin " + pluginName + " failed to complete onCompletion call for " + paymentControlContext.getPaymentExternalKey(), e);
         }
@@ -221,8 +221,8 @@ public abstract class RetryOperationCallback extends PluginOperation implements 
         }
 
         @Override
-        public Account getAccount() {
-            return account;
+        public UUID getAccountId() {
+            return account.getId();
         }
 
         @Override

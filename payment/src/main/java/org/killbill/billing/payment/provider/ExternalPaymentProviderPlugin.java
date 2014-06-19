@@ -72,7 +72,7 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     @Override
-    public PaymentTransactionInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
+    public PaymentTransactionInfoPlugin purchasePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
         return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.PURCHASE, amount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
     }
 
@@ -88,7 +88,7 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public List<PaymentTransactionInfoPlugin> getPaymentInfo(final UUID kbAccountId, final UUID kbPaymentId, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentPluginApiException {
-        // STEPH broken...
+        // TODO broken...
         return ImmutableList.of();
     }
 
@@ -98,7 +98,7 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     @Override
-    public PaymentTransactionInfoPlugin processRefund(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final BigDecimal refundAmount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
+    public PaymentTransactionInfoPlugin refundPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal refundAmount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
         return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.REFUND, BigDecimal.ZERO, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
     }
 

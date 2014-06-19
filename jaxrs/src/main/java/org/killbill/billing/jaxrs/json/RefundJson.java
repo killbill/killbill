@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -69,12 +70,12 @@ public class RefundJson extends JsonBase {
         this.adjustments = adjustments;
     }
 
-    public RefundJson(final DirectPayment refund) {
+    public RefundJson(final DirectPaymentTransaction refund) {
         this(refund, null, null);
     }
 
-    public RefundJson(final DirectPayment refund, @Nullable final List<InvoiceItem> adjustments, @Nullable final List<AuditLog> auditLogs) {
-        this(refund.getId().toString(), refund.getId().toString(), refund.getRefundedAmount(), refund.getCurrency().toString(),
+    public RefundJson(final DirectPaymentTransaction refund, @Nullable final List<InvoiceItem> adjustments, @Nullable final List<AuditLog> auditLogs) {
+        this(refund.getId().toString(), refund.getDirectPaymentId().toString(), refund.getAmount(), refund.getCurrency().toString(),
              null /* TODO [PAYMENT] refund.getRefundStatus().toString() */, false /* TODO [PAYMENT] refund.isAdjusted() */, refund.getCreatedDate(), refund.getCreatedDate(),
              adjustments == null ? null : ImmutableList.<InvoiceItemJson>copyOf(Collections2.transform(adjustments, new Function<InvoiceItem, InvoiceItemJson>() {
                  @Override

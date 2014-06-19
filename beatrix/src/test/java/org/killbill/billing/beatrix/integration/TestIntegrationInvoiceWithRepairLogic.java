@@ -41,6 +41,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -539,14 +540,14 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // ITEM ADJUSTMENT PRIOR TO DOING THE REPAIR
         //
         final Invoice invoice1 = invoices.get(1);
-        final List<DirectPayment> payments = paymentApi.getAccountPayments(account.getId(), callContext);
+        final List<DirectPayment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
         final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), PaymentStatus.SUCCESS, invoice1.getId(), Currency.USD);
         final DirectPayment payment1 = payments.get(0);
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
         iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("197.26"));
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, PLUGIN_PROPERTIES, callContext);
+        // STEPH paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, PLUGIN_PROPERTIES, callContext);
         assertListenerStatus();
 
         checkNoMoreInvoiceToGenerate(account);
@@ -610,14 +611,14 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // ITEM ADJUSTMENT PRIOR TO DOING THE REPAIR
         //
         final Invoice invoice1 = invoices.get(1);
-        final List<DirectPayment> payments = paymentApi.getAccountPayments(account.getId(), callContext);
+        final List<DirectPayment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
         final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), PaymentStatus.SUCCESS, invoice1.getId(), Currency.USD);
         final DirectPayment payment1 = payments.get(0);
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
         iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("100.00"));
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, PLUGIN_PROPERTIES, callContext);
+        // STEPH paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, PLUGIN_PROPERTIES, callContext);
         assertListenerStatus();
 
         checkNoMoreInvoiceToGenerate(account);

@@ -17,7 +17,7 @@
 package org.killbill.billing.payment.retry;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi.FailureCallResult;
+import org.killbill.billing.retry.plugin.api.FailureCallResult;
 
 public class DefaultFailureCallResult implements FailureCallResult {
 

@@ -18,21 +18,23 @@ package org.killbill.billing.payment.provider;
 
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
+import org.killbill.billing.retry.plugin.api.FailureCallResult;
 import org.killbill.billing.retry.plugin.api.PaymentControlApiException;
+import org.killbill.billing.retry.plugin.api.PaymentControlContext;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
-import org.killbill.billing.retry.plugin.api.UnknownEntryException;
+import org.killbill.billing.retry.plugin.api.PriorPaymentControlResult;
 
 public class DefaultPaymentControlProviderPlugin implements PaymentControlPluginApi {
 
     public static final String PLUGIN_NAME = "__DEFAULT_PAYMENT_CONTROL__";
 
     @Override
-    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException, UnknownEntryException {
+    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
         return new DefaultPriorPaymentControlResult(false, null);
     }
 
     @Override
-    public void onCompletionCall(final PaymentControlContext paymentControlContext) {
+    public void onSuccessCall(final PaymentControlContext paymentControlContext) {
 
     }
 

@@ -18,7 +18,7 @@
 
 package org.killbill.billing.mock.glue;
 
-import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentInternalApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.KillBillModule;
@@ -32,7 +32,7 @@ public class MockPaymentModule extends KillBillModule {
 
     @Override
     protected void configure() {
-        bind(PaymentApi.class).toInstance(Mockito.mock(PaymentApi.class));
+        bind(DirectPaymentApi.class).toInstance(Mockito.mock(DirectPaymentApi.class));
         bind(PaymentInternalApi.class).toInstance(Mockito.mock(PaymentInternalApi.class));
     }
 }

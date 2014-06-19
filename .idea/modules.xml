@@ -15,7 +15,10 @@
       <module fileurl="file://$PROJECT_DIR$/overdue/killbill-overdue.iml" filepath="$PROJECT_DIR$/overdue/killbill-overdue.iml" />
       <module fileurl="file://$PROJECT_DIR$/payment/killbill-payment.iml" filepath="$PROJECT_DIR$/payment/killbill-payment.iml" />
       <module fileurl="file://$PROJECT_DIR$/profiles/killbill-profiles.iml" filepath="$PROJECT_DIR$/profiles/killbill-profiles.iml" />
+      <module fileurl="file://$PROJECT_DIR$/profiles/killbill-profiles.iml" filepath="$PROJECT_DIR$/profiles/killbill-profiles.iml" />
       <module fileurl="file://$PROJECT_DIR$/profiles/killbill/killbill-profiles-killbill.iml" filepath="$PROJECT_DIR$/profiles/killbill/killbill-profiles-killbill.iml" />
+      <module fileurl="file://$PROJECT_DIR$/profiles/killbill/killbill-profiles-killbill.iml" filepath="$PROJECT_DIR$/profiles/killbill/killbill-profiles-killbill.iml" />
+      <module fileurl="file://$PROJECT_DIR$/profiles/killpay/killbill-profiles-killpay.iml" filepath="$PROJECT_DIR$/profiles/killpay/killbill-profiles-killpay.iml" />
       <module fileurl="file://$PROJECT_DIR$/profiles/killpay/killbill-profiles-killpay.iml" filepath="$PROJECT_DIR$/profiles/killpay/killbill-profiles-killpay.iml" />
       <module fileurl="file://$PROJECT_DIR$/subscription/killbill-subscription.iml" filepath="$PROJECT_DIR$/subscription/killbill-subscription.iml" />
       <module fileurl="file://$PROJECT_DIR$/tenant/killbill-tenant.iml" filepath="$PROJECT_DIR$/tenant/killbill-tenant.iml" />

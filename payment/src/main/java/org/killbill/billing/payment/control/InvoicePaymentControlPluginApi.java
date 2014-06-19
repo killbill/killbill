@@ -47,8 +47,11 @@ import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
+import org.killbill.billing.retry.plugin.api.FailureCallResult;
 import org.killbill.billing.retry.plugin.api.PaymentControlApiException;
+import org.killbill.billing.retry.plugin.api.PaymentControlContext;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.retry.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -112,7 +115,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             return new DefaultPriorPaymentControlResult(true);
         }
 
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccount().getId(), paymentControlContext);
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         if (transactionType == TransactionType.PURCHASE) {
             return getPluginPurchaseResult(paymentControlContext, internalContext);
         } else /* TransactionType.REFUND */ {
@@ -121,10 +124,10 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     @Override
-    public void onCompletionCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
+    public void onSuccessCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
 
         final UUID invoiceId = UUID.fromString(paymentControlContext.getPaymentExternalKey());
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccount().getId(), paymentControlContext);
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         try {
             invoiceApi.notifyOfPayment(invoiceId,
                                        paymentControlContext.getAmount(),
@@ -142,7 +145,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     @Override
     public FailureCallResult onFailureCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
 
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccount().getId(), paymentControlContext);
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         switch (paymentControlContext.getTransactionType()) {
             case PURCHASE:
                 final DateTime nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
@@ -377,10 +380,10 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentControlContext paymentControlContext) {
-        if (!isAccountAutoPayOff(paymentControlContext.getAccount().getId(), paymentControlContext)) {
+        if (!isAccountAutoPayOff(paymentControlContext.getAccountId(), paymentControlContext)) {
             return false;
         }
-        final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(), paymentControlContext.getAccount().getId(), PLUGIN_NAME,
+        final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(), paymentControlContext.getAccountId(), PLUGIN_NAME,
                                                                            paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(), paymentControlContext.getAmount(), paymentControlContext.getCurrency(), CREATED_BY, clock.getUTCNow());
         controlDao.insertAutoPayOff(data);
         return true;

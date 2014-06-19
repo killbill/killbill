@@ -110,15 +110,16 @@ public class DirectPaymentResource extends JaxRsResourceBase {
                                       @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                      @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
 
         final Pagination<DirectPayment> directPayments;
         if (Strings.isNullOrEmpty(pluginName)) {
-            directPayments = directPaymentApi.getPayments(offset, limit, pluginProperties, tenantContext);
+            directPayments = directPaymentApi.getPayments(offset, limit, withPluginInfo, pluginProperties, tenantContext);
         } else {
-            directPayments = directPaymentApi.getPayments(offset, limit, pluginName, pluginProperties, tenantContext);
+            directPayments = directPaymentApi.getPayments(offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(DirectPaymentResource.class, "getDirectPayments", directPayments.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
@@ -150,6 +151,7 @@ public class DirectPaymentResource extends JaxRsResourceBase {
                                          @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                         @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
@@ -157,9 +159,9 @@ public class DirectPaymentResource extends JaxRsResourceBase {
         // Search the plugin(s)
         final Pagination<DirectPayment> directPayments;
         if (Strings.isNullOrEmpty(pluginName)) {
-            directPayments = directPaymentApi.searchPayments(searchKey, offset, limit, pluginProperties, tenantContext);
+            directPayments = directPaymentApi.searchPayments(searchKey, offset, limit, withPluginInfo, pluginProperties, tenantContext);
         } else {
-            directPayments = directPaymentApi.searchPayments(searchKey, offset, limit, pluginName, pluginProperties, tenantContext);
+            directPayments = directPaymentApi.searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(DirectPaymentResource.class, "searchDirectPayments", directPayments.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,

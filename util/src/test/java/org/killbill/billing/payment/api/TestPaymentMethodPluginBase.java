@@ -41,66 +41,6 @@ public class TestPaymentMethodPluginBase implements PaymentMethodPlugin {
     }
 
     @Override
-    public String getType() {
-        return "CreditCard";
-    }
-
-    @Override
-    public String getCCName() {
-        return "Bozo";
-    }
-
-    @Override
-    public String getCCType() {
-        return "Visa";
-    }
-
-    @Override
-    public String getCCExpirationMonth() {
-        return "12";
-    }
-
-    @Override
-    public String getCCExpirationYear() {
-        return "2013";
-    }
-
-    @Override
-    public String getCCLast4() {
-        return "4365";
-    }
-
-    @Override
-    public String getAddress1() {
-        return "34, street Foo";
-    }
-
-    @Override
-    public String getAddress2() {
-        return null;
-    }
-
-    @Override
-    public String getCity() {
-        return "SF";
-    }
-
-    @Override
-    public String getState() {
-        return "CA";
-    }
-
-    @Override
-    public String getZip() {
-        return "95321";
-    }
-
-    @Override
-    public String getCountry() {
-        return "Zimbawe";
-    }
-
-    @Override
     public List<PluginProperty> getProperties() {
         return ImmutableList.<PluginProperty>of();
     }

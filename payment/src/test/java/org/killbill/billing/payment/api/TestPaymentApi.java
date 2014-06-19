@@ -436,11 +436,12 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String paymentExternalKey = "couic";
         final String transactionExternalKey = "couac";
         final String transactionExternalKey2 = "couyc";
+        final UUID transactionId = UUID.randomUUID();
 
         final DirectPayment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
                                                                 ImmutableList.<PluginProperty>of(), callContext);
 
-        paymentApi.notifyPaymentPaymentOfChargeback(account, payment.getExternalKey(), transactionExternalKey2, requestedAmount, Currency.AED, callContext);
+        paymentApi.notifyPendingTransactionOfStateChanged(account, transactionId, false, callContext);
         final DirectPayment payment2 = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
 
 

@@ -56,7 +56,7 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
         final UUID kbTransactionId = UUID.randomUUID();
         final UUID paymentMethodId = UUID.randomUUID();
         final BigDecimal amount = BigDecimal.TEN;
-        final PaymentTransactionInfoPlugin paymentInfoPlugin = plugin.processPayment(accountId, paymentId, kbTransactionId, paymentMethodId, amount, Currency.BRL, properties, callContext);
+        final PaymentTransactionInfoPlugin paymentInfoPlugin = plugin.purchasePayment(accountId, paymentId, kbTransactionId, paymentMethodId, amount, Currency.BRL, properties, callContext);
 
         Assert.assertEquals(paymentInfoPlugin.getAmount(), amount);
         Assert.assertNull(paymentInfoPlugin.getGatewayError());

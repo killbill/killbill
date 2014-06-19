@@ -19,8 +19,11 @@ package org.killbill.billing.payment.provider;
 import org.joda.time.DateTime;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
+import org.killbill.billing.retry.plugin.api.FailureCallResult;
 import org.killbill.billing.retry.plugin.api.PaymentControlApiException;
+import org.killbill.billing.retry.plugin.api.PaymentControlContext;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.retry.plugin.api.PriorPaymentControlResult;
 
 public class DefaultNoOpPaymentControlProviderPlugin implements PaymentControlPluginApi {
 
@@ -34,7 +37,7 @@ public class DefaultNoOpPaymentControlProviderPlugin implements PaymentControlPl
     }
 
     @Override
-    public void onCompletionCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
+    public void onSuccessCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
     }
 
     @Override

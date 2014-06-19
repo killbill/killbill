@@ -125,12 +125,12 @@ public class PaymentMethodProcessor extends ProcessorBase {
         }
     }
 
-    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
-        return getPaymentMethods(account, withPluginInfo, properties, buildTenantContext(context), context);
+    public List<PaymentMethod> getPaymentMethods(final UUID accountId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
+        return getPaymentMethods(accountId, withPluginInfo, properties, buildTenantContext(context), context);
     }
 
-    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context) throws PaymentApiException {
-        final List<PaymentMethodModelDao> paymentMethodModels = paymentDao.getPaymentMethods(account.getId(), context);
+    public List<PaymentMethod> getPaymentMethods(final UUID accountId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context) throws PaymentApiException {
+        final List<PaymentMethodModelDao> paymentMethodModels = paymentDao.getPaymentMethods(accountId, context);
         if (paymentMethodModels.size() == 0) {
             return Collections.emptyList();
         }
@@ -259,8 +259,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                   );
     }
 
-    public PaymentMethod getExternalPaymentMethod(final Account account, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context) throws PaymentApiException {
-        final List<PaymentMethod> paymentMethods = getPaymentMethods(account, false, properties, tenantContext, context);
+    public PaymentMethod getExternalPaymentMethod(final UUID accountId, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context) throws PaymentApiException {
+        final List<PaymentMethod> paymentMethods = getPaymentMethods(accountId, false, properties, tenantContext, context);
         for (final PaymentMethod paymentMethod : paymentMethods) {
             if (ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(paymentMethod.getPluginName())) {
                 return paymentMethod;
@@ -273,7 +273,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
     public UUID createOrGetExternalPaymentMethod(final Account account, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context) throws PaymentApiException {
         // Check if this account has already used the external payment plugin
         // If not, it's the first time - add a payment method for it
-        PaymentMethod externalPaymentMethod = getExternalPaymentMethod(account, properties, callContext, context);
+        PaymentMethod externalPaymentMethod = getExternalPaymentMethod(account.getId(), properties, callContext, context);
         if (externalPaymentMethod != null) {
             return externalPaymentMethod.getId();
         }

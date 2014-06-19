@@ -76,18 +76,6 @@ public class PaymentMethodJson extends JsonBase {
             }
             pluginDetailJson = new PaymentMethodPluginDetailJson(pluginDetail.getExternalPaymentMethodId(),
                                                                  pluginDetail.isDefaultPaymentMethod(),
-                                                                 pluginDetail.getType(),
-                                                                 pluginDetail.getCCName(),
-                                                                 pluginDetail.getCCType(),
-                                                                 pluginDetail.getCCExpirationMonth(),
-                                                                 pluginDetail.getCCExpirationYear(),
-                                                                 pluginDetail.getCCLast4(),
-                                                                 pluginDetail.getAddress1(),
-                                                                 pluginDetail.getAddress2(),
-                                                                 pluginDetail.getCity(),
-                                                                 pluginDetail.getState(),
-                                                                 pluginDetail.getZip(),
-                                                                 pluginDetail.getCountry(),
                                                                  properties);
         }
         return new PaymentMethodJson(in.getId().toString(), account.getId().toString(), isDefault, in.getPluginName(),
@@ -139,79 +127,6 @@ public class PaymentMethodJson extends JsonBase {
                         // N/A
                         return false;
                     }
-
-                    @Override
-                    public String getType() {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
-                    public String getCCName() {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
-                    public String getCCType() {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
-                    public String getCCExpirationMonth() {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
-                    public String getCCExpirationYear() {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
-                    public String getCCLast4() {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
-                    public String getAddress1() {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
-                    public String getAddress2() {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
-                    public String getCity() {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
-                    public String getState() {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
-                    public String getZip() {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
-                    public String getCountry() {
-                        // N/A
-                        return null;
-                    }
-
                     @Override
                     public String getExternalPaymentMethodId() {
                         return pluginInfo.getExternalPaymentId();
@@ -310,50 +225,14 @@ public class PaymentMethodJson extends JsonBase {
 
         private final String externalPaymentId;
         private final Boolean isDefaultPaymentMethod;
-        private final String type;
-        private final String ccName;
-        private final String ccType;
-        private final String ccExpirationMonth;
-        private final String ccExpirationYear;
-        private final String ccLast4;
-        private final String address1;
-        private final String address2;
-        private final String city;
-        private final String state;
-        private final String zip;
-        private final String country;
         private final List<PluginPropertyJson> properties;
 
         @JsonCreator
         public PaymentMethodPluginDetailJson(@JsonProperty("externalPaymentId") final String externalPaymentId,
                                              @JsonProperty("isDefaultPaymentMethod") final Boolean isDefaultPaymentMethod,
-                                             @JsonProperty("type") final String type,
-                                             @JsonProperty("ccName") final String ccName,
-                                             @JsonProperty("ccType") final String ccType,
-                                             @JsonProperty("ccExpirationMonth") final String ccExpirationMonth,
-                                             @JsonProperty("ccExpirationYear") final String ccExpirationYear,
-                                             @JsonProperty("ccLast4") final String ccLast4,
-                                             @JsonProperty("address1") final String address1,
-                                             @JsonProperty("address2") final String address2,
-                                             @JsonProperty("city") final String city,
-                                             @JsonProperty("state") final String state,
-                                             @JsonProperty("zip") final String zip,
-                                             @JsonProperty("country") final String country,
                                              @JsonProperty("properties") final List<PluginPropertyJson> properties) {
             this.externalPaymentId = externalPaymentId;
             this.isDefaultPaymentMethod = isDefaultPaymentMethod;
-            this.type = type;
-            this.ccName = ccName;
-            this.ccType = ccType;
-            this.ccExpirationMonth = ccExpirationMonth;
-            this.ccExpirationYear = ccExpirationYear;
-            this.ccLast4 = ccLast4;
-            this.address1 = address1;
-            this.address2 = address2;
-            this.city = city;
-            this.state = state;
-            this.zip = zip;
-            this.country = country;
             this.properties = properties;
         }
 
@@ -365,54 +244,6 @@ public class PaymentMethodJson extends JsonBase {
             return isDefaultPaymentMethod;
         }
 
-        public String getType() {
-            return type;
-        }
-
-        public String getCcName() {
-            return ccName;
-        }
-
-        public String getCcType() {
-            return ccType;
-        }
-
-        public String getCcExpirationMonth() {
-            return ccExpirationMonth;
-        }
-
-        public String getCcExpirationYear() {
-            return ccExpirationYear;
-        }
-
-        public String getCcLast4() {
-            return ccLast4;
-        }
-
-        public String getAddress1() {
-            return address1;
-        }
-
-        public String getAddress2() {
-            return address2;
-        }
-
-        public String getCity() {
-            return city;
-        }
-
-        public String getState() {
-            return state;
-        }
-
-        public String getZip() {
-            return zip;
-        }
-
-        public String getCountry() {
-            return country;
-        }
-
         public List<PluginPropertyJson> getProperties() {
             return properties;
         }
@@ -422,18 +253,6 @@ public class PaymentMethodJson extends JsonBase {
             final StringBuilder sb = new StringBuilder("PaymentMethodPluginDetailJson{");
             sb.append("externalPaymentId='").append(externalPaymentId).append('\'');
             sb.append(", isDefaultPaymentMethod=").append(isDefaultPaymentMethod);
-            sb.append(", type='").append(type).append('\'');
-            sb.append(", ccName='").append(ccName).append('\'');
-            sb.append(", ccType='").append(ccType).append('\'');
-            sb.append(", ccExpirationMonth='").append(ccExpirationMonth).append('\'');
-            sb.append(", ccExpirationYear='").append(ccExpirationYear).append('\'');
-            sb.append(", ccLast4='").append(ccLast4).append('\'');
-            sb.append(", address1='").append(address1).append('\'');
-            sb.append(", address2='").append(address2).append('\'');
-            sb.append(", city='").append(city).append('\'');
-            sb.append(", state='").append(state).append('\'');
-            sb.append(", zip='").append(zip).append('\'');
-            sb.append(", country='").append(country).append('\'');
             sb.append(", properties=").append(properties);
             sb.append('}');
             return sb.toString();
@@ -450,33 +269,6 @@ public class PaymentMethodJson extends JsonBase {
 
             final PaymentMethodPluginDetailJson that = (PaymentMethodPluginDetailJson) o;
 
-            if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
-                return false;
-            }
-            if (address2 != null ? !address2.equals(that.address2) : that.address2 != null) {
-                return false;
-            }
-            if (ccExpirationMonth != null ? !ccExpirationMonth.equals(that.ccExpirationMonth) : that.ccExpirationMonth != null) {
-                return false;
-            }
-            if (ccExpirationYear != null ? !ccExpirationYear.equals(that.ccExpirationYear) : that.ccExpirationYear != null) {
-                return false;
-            }
-            if (ccLast4 != null ? !ccLast4.equals(that.ccLast4) : that.ccLast4 != null) {
-                return false;
-            }
-            if (ccName != null ? !ccName.equals(that.ccName) : that.ccName != null) {
-                return false;
-            }
-            if (ccType != null ? !ccType.equals(that.ccType) : that.ccType != null) {
-                return false;
-            }
-            if (city != null ? !city.equals(that.city) : that.city != null) {
-                return false;
-            }
-            if (country != null ? !country.equals(that.country) : that.country != null) {
-                return false;
-            }
             if (externalPaymentId != null ? !externalPaymentId.equals(that.externalPaymentId) : that.externalPaymentId != null) {
                 return false;
             }
@@ -486,16 +278,6 @@ public class PaymentMethodJson extends JsonBase {
             if (properties != null ? !properties.equals(that.properties) : that.properties != null) {
                 return false;
             }
-            if (state != null ? !state.equals(that.state) : that.state != null) {
-                return false;
-            }
-            if (type != null ? !type.equals(that.type) : that.type != null) {
-                return false;
-            }
-            if (zip != null ? !zip.equals(that.zip) : that.zip != null) {
-                return false;
-            }
-
             return true;
         }
 
@@ -503,18 +285,6 @@ public class PaymentMethodJson extends JsonBase {
         public int hashCode() {
             int result = externalPaymentId != null ? externalPaymentId.hashCode() : 0;
             result = 31 * result + (isDefaultPaymentMethod != null ? isDefaultPaymentMethod.hashCode() : 0);
-            result = 31 * result + (type != null ? type.hashCode() : 0);
-            result = 31 * result + (ccName != null ? ccName.hashCode() : 0);
-            result = 31 * result + (ccType != null ? ccType.hashCode() : 0);
-            result = 31 * result + (ccExpirationMonth != null ? ccExpirationMonth.hashCode() : 0);
-            result = 31 * result + (ccExpirationYear != null ? ccExpirationYear.hashCode() : 0);
-            result = 31 * result + (ccLast4 != null ? ccLast4.hashCode() : 0);
-            result = 31 * result + (address1 != null ? address1.hashCode() : 0);
-            result = 31 * result + (address2 != null ? address2.hashCode() : 0);
-            result = 31 * result + (city != null ? city.hashCode() : 0);
-            result = 31 * result + (state != null ? state.hashCode() : 0);
-            result = 31 * result + (zip != null ? zip.hashCode() : 0);
-            result = 31 * result + (country != null ? country.hashCode() : 0);
             result = 31 * result + (properties != null ? properties.hashCode() : 0);
             return result;
         }

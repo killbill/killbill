@@ -105,7 +105,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public PaymentTransactionInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
+    public PaymentTransactionInfoPlugin purchasePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
         return getInternalNoopPaymentInfoResult(kbPaymentId, kbTransactionId, TransactionType.PURCHASE, amount, currency);
     }
 
@@ -208,13 +208,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
         final ImmutableList<PaymentMethodPlugin> allResults = ImmutableList.<PaymentMethodPlugin>copyOf(Iterables.<PaymentMethodPlugin>filter(Iterables.<PaymentMethodPlugin>concat(paymentMethods.values()), new Predicate<PaymentMethodPlugin>() {
             @Override
             public boolean apply(final PaymentMethodPlugin input) {
-                return (input.getAddress1() != null && input.getAddress1().contains(searchKey)) ||
-                       (input.getAddress2() != null && input.getAddress2().contains(searchKey)) ||
-                       (input.getCCLast4() != null && input.getCCLast4().contains(searchKey)) ||
-                       (input.getCCName() != null && input.getCCName().contains(searchKey)) ||
-                       (input.getCity() != null && input.getCity().contains(searchKey)) ||
-                       (input.getState() != null && input.getState().contains(searchKey)) ||
-                       (input.getCountry() != null && input.getCountry().contains(searchKey));
+                return input.getKbPaymentMethodId().toString().equals(searchKey);
             }
         }));
 
@@ -245,7 +239,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public PaymentTransactionInfoPlugin processRefund(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final BigDecimal refundAmount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
+    public PaymentTransactionInfoPlugin refundPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal refundAmount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
         final List<PaymentTransactionInfoPlugin> transactions = getPaymentInfo(kbAccountId, kbPaymentId, properties, context);
         if (transactions == null || transactions.size() == 0) {
             throw new PaymentPluginApiException("", String.format("No payment found for payment id %s (plugin %s)", kbPaymentId.toString(), PLUGIN_NAME));

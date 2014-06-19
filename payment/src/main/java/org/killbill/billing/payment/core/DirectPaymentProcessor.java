@@ -236,9 +236,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                                                     );
     }
 
-    public void notifyPendingPaymentOfStateChanged(final Account account, String transactionExternalKey, final boolean isSuccess, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+    public void notifyPendingPaymentOfStateChanged(final Account account, UUID transactionId, final boolean isSuccess, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
 
-        final DirectPaymentTransactionModelDao transactionModelDao = paymentDao.getDirectPaymentTransactionByExternalKey(transactionExternalKey, internalCallContext);
+        final DirectPaymentTransactionModelDao transactionModelDao = paymentDao.getDirectPaymentTransaction(transactionId, internalCallContext);
         if (transactionModelDao.getPaymentStatus() != PaymentStatus.PENDING) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, transactionModelDao.getDirectPaymentId());
 
@@ -255,20 +255,19 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                                                  transactionModelDao.getGatewayErrorCode(), transactionModelDao.getGatewayErrorMsg(), internalCallContext);
     }
 
-    public void notifyPaymentPaymentOfChargeback(final Account account, final String paymentExternalKey, final String chargebackExternalKey, BigDecimal amount, Currency currency, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        final DirectPaymentModelDao paymentModelDao = paymentDao.getDirectPaymentByExternalKey(paymentExternalKey, internalCallContext);
-        Preconditions.checkState(paymentModelDao != null);
+    public void notifyPaymentPaymentOfChargeback(final Account account, final UUID transactionId, final String chargebackTransactionExternalKey, final BigDecimal amount, final Currency currency, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+        final DirectPaymentTransactionModelDao transactionModelDao = paymentDao.getDirectPaymentTransaction(transactionId, internalCallContext);
+        Preconditions.checkState(transactionModelDao != null);
 
         final DateTime utcNow = clock.getUTCNow();
-
-        final DirectPaymentTransactionModelDao chargebackTransaction = new DirectPaymentTransactionModelDao(utcNow, utcNow, chargebackExternalKey, paymentModelDao.getId(),
+        final DirectPaymentTransactionModelDao chargebackTransaction = new DirectPaymentTransactionModelDao(utcNow, utcNow, chargebackTransactionExternalKey, transactionModelDao.getId(),
 
                                                                                                             TransactionType.CHARGEBACK, utcNow, PaymentStatus.SUCCESS, amount, currency, null, null);
         final State currentPaymentState = directPaymentAutomatonRunner.fetchNextState("CHARGEBACK_INIT", true);
 
         // TODO STEPH we could create a DAO operation to do both steps at once
-        paymentDao.updateDirectPaymentWithNewTransaction(paymentModelDao.getId(), chargebackTransaction, internalCallContext);
-        paymentDao.updateDirectPaymentAndTransactionOnCompletion(paymentModelDao.getId(), currentPaymentState.getName(), chargebackTransaction.getId(), PaymentStatus.SUCCESS,
+        paymentDao.updateDirectPaymentWithNewTransaction(transactionModelDao.getId(), chargebackTransaction, internalCallContext);
+        paymentDao.updateDirectPaymentAndTransactionOnCompletion(transactionModelDao.getId(), currentPaymentState.getName(), chargebackTransaction.getId(), PaymentStatus.SUCCESS,
                                                                  chargebackTransaction.getAmount(), chargebackTransaction.getCurrency(),
                                                                  chargebackTransaction.getGatewayErrorCode(), chargebackTransaction.getGatewayErrorMsg(), internalCallContext);
 

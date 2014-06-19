@@ -32,14 +32,10 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.payment.api.DirectPaymentApi;
-import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheController;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -134,7 +130,7 @@ public class TestPaymentHelper {
     }
 
     public void addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, paymentMethodInfo, ImmutableList.<PluginProperty>of(), context);
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, MockPaymentProviderPlugin.PLUGIN_NAME, true, paymentMethodInfo, ImmutableList.<PluginProperty>of(), context);
         Mockito.when(account.getPaymentMethodId()).thenReturn(paymentMethodId);
     }
 }

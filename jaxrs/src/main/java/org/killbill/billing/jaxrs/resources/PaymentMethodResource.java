@@ -44,7 +44,7 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.jaxrs.json.PaymentMethodJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -69,10 +69,10 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path(JaxrsResource.PAYMENT_METHODS_PATH)
 public class PaymentMethodResource extends JaxRsResourceBase {
 
-    private final PaymentApi paymentApi;
+    private final DirectPaymentApi paymentApi;
 
     @Inject
-    public PaymentMethodResource(final PaymentApi paymentApi,
+    public PaymentMethodResource(final DirectPaymentApi paymentApi,
                                  final AccountUserApi accountUserApi,
                                  final JaxrsUriBuilder uriBuilder,
                                  final TagUserApi tagUserApi,
@@ -88,9 +88,9 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getPaymentMethod(@PathParam("paymentMethodId") final String paymentMethodId,
-                                     @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                     @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
@@ -111,15 +111,16 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                       @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_NAME) final String pluginName,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                      @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
 
         final Pagination<PaymentMethod> paymentMethods;
         if (Strings.isNullOrEmpty(pluginName)) {
-            paymentMethods = paymentApi.getPaymentMethods(offset, limit, pluginProperties, tenantContext);
+            paymentMethods = paymentApi.getPaymentMethods(offset, limit, withPluginInfo, pluginProperties, tenantContext);
         } else {
-            paymentMethods = paymentApi.getPaymentMethods(offset, limit, pluginName, pluginProperties, tenantContext);
+            paymentMethods = paymentApi.getPaymentMethods(offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "getPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
@@ -164,6 +165,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                          @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_NAME) final String pluginName,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                         @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
@@ -171,9 +173,9 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         // Search the plugin(s)
         final Pagination<PaymentMethod> paymentMethods;
         if (Strings.isNullOrEmpty(pluginName)) {
-            paymentMethods = paymentApi.searchPaymentMethods(searchKey, offset, limit, pluginProperties, tenantContext);
+            paymentMethods = paymentApi.searchPaymentMethods(searchKey, offset, limit, withPluginInfo, pluginProperties, tenantContext);
         } else {
-            paymentMethods = paymentApi.searchPaymentMethods(searchKey, offset, limit, pluginName, pluginProperties, tenantContext);
+            paymentMethods = paymentApi.searchPaymentMethods(searchKey, offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "searchPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
@@ -226,7 +228,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), false, false, pluginProperties, callContext);
         final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), callContext);
 
-        paymentApi.deletedPaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, pluginProperties, callContext);
+        paymentApi.deletePaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, pluginProperties, callContext);
 
         return Response.status(Status.OK).build();
     }

@@ -211,7 +211,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public PaymentTransactionInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
+    public PaymentTransactionInfoPlugin purchasePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
         return getPaymentTransactionInfoPluginResult(kbPaymentId, kbTransactionId, TransactionType.PURCHASE, amount, currency);
     }
 
@@ -291,13 +291,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         final ImmutableList<PaymentMethodPlugin> results = ImmutableList.<PaymentMethodPlugin>copyOf(Iterables.<PaymentMethodPlugin>filter(paymentMethods.values(), new Predicate<PaymentMethodPlugin>() {
             @Override
             public boolean apply(final PaymentMethodPlugin input) {
-                return (input.getAddress1() != null && input.getAddress1().contains(searchKey)) ||
-                       (input.getAddress2() != null && input.getAddress2().contains(searchKey)) ||
-                       (input.getCCLast4() != null && input.getCCLast4().contains(searchKey)) ||
-                       (input.getCCName() != null && input.getCCName().contains(searchKey)) ||
-                       (input.getCity() != null && input.getCity().contains(searchKey)) ||
-                       (input.getState() != null && input.getState().contains(searchKey)) ||
-                       (input.getCountry() != null && input.getCountry().contains(searchKey));
+                return (input.getKbPaymentMethodId().toString().equals(searchKey));
             }
         }));
         return DefaultPagination.<PaymentMethodPlugin>build(offset, limit, results);
@@ -324,7 +318,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public PaymentTransactionInfoPlugin processRefund(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final BigDecimal refundAmount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
+    public PaymentTransactionInfoPlugin refundPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final UUID kbTransactionId, final BigDecimal refundAmount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
 
         final InternalPaymentInfo info = payments.get(kbPaymentId.toString());
         if (info == null) {

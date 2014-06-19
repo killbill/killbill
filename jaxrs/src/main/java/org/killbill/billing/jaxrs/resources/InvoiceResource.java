@@ -65,7 +65,7 @@ import org.killbill.billing.jaxrs.json.PaymentJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -100,13 +100,13 @@ public class InvoiceResource extends JaxRsResourceBase {
     private static final String ID_PARAM_NAME = "invoiceId";
 
     private final InvoiceUserApi invoiceApi;
-    private final PaymentApi paymentApi;
+    private final DirectPaymentApi paymentApi;
     private final InvoiceNotifier invoiceNotifier;
 
     @Inject
     public InvoiceResource(final AccountUserApi accountUserApi,
                            final InvoiceUserApi invoiceApi,
-                           final PaymentApi paymentApi,
+                           final DirectPaymentApi paymentApi,
                            final InvoiceNotifier invoiceNotifier,
                            final Clock clock,
                            final JaxrsUriBuilder uriBuilder,
@@ -357,7 +357,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                     paidInvoices.add(externalCharge.getInvoiceId());
 
                     final Invoice invoice = invoiceApi.getInvoice(externalCharge.getInvoiceId(), callContext);
-                    paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), pluginProperties, callContext);
+                    // STEPH paymentApi.createPurchaseWithPaymentControl(account, invoice.getId(), invoice.getBalance(), pluginProperties, callContext);
                 }
             }
         }
@@ -380,7 +380,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
-        final List<DirectPayment> payments = paymentApi.getInvoicePayments(UUID.fromString(invoiceId), tenantContext);
+        final List<DirectPayment> payments = null; // STEPH paymentApi.getInvoicePayments(UUID.fromString(invoiceId), tenantContext);
         final List<PaymentJson> result = new ArrayList<PaymentJson>(payments.size());
         if (payments.size() == 0) {
             return Response.status(Status.OK).entity(result).build();
@@ -417,9 +417,9 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final UUID invoiceId = UUID.fromString(payment.getInvoiceId());
         if (externalPayment) {
-            paymentApi.createExternalPayment(account, invoiceId, payment.getAmount(), callContext);
+            // STEPH paymentApi.createExternalPayment(account, invoiceId, payment.getAmount(), callContext);
         } else {
-            paymentApi.createPayment(account, invoiceId, payment.getAmount(), pluginProperties, callContext);
+            // STEPH  paymentApi.createPayment(account, invoiceId, payment.getAmount(), pluginProperties, callContext);
         }
 
         return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getPayments", payment.getInvoiceId());
