@@ -32,8 +32,10 @@ import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +43,7 @@ import org.testng.Assert;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class RefundChecker {
@@ -69,11 +72,11 @@ public class RefundChecker {
         final InvoicePayment invoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.ATTEMPT, context);
 
         final DirectPayment refund = refunds.get(0);
-        Assert.assertEquals(refund.getId(), expected.getPaymentId());
+        final DirectPaymentTransaction refundTransaction = getRefundTransaction(refund);
+
+        Assert.assertEquals(refundTransaction.getDirectPaymentId(), expected.getPaymentId());
         Assert.assertEquals(refund.getCurrency(), expected.getCurrency());
-        // TODO [PAYMENT]
-        //Assert.assertEquals(refund.isAdjusted(), expected.isAdjusted);
-        Assert.assertEquals(refund.getRefundedAmount().compareTo(expected.getRefundAmount()), 0);
+        Assert.assertEquals(refundTransaction.getAmount().compareTo(expected.getRefundAmount()), 0);
 
         Assert.assertEquals(refundInvoicePayment.getPaymentId(), paymentId);
         Assert.assertEquals(refundInvoicePayment.getLinkedInvoicePaymentId(), invoicePayment.getId());
@@ -83,6 +86,15 @@ public class RefundChecker {
         Assert.assertEquals(refundInvoicePayment.getCurrency(), expected.getCurrency());
 
         return refund;
+    }
+
+    private DirectPaymentTransaction getRefundTransaction(final DirectPayment payment) {
+        return Iterables.tryFind(payment.getTransactions(), new Predicate<DirectPaymentTransaction>() {
+            @Override
+            public boolean apply(final DirectPaymentTransaction input) {
+                return input.getTransactionType() == TransactionType.REFUND;
+            }
+        }).get();
     }
 
     private InvoicePayment getInvoicePaymentEntry(final UUID paymentId, final InvoicePaymentType type, final CallContext context) {

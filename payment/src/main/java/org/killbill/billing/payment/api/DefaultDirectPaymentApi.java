@@ -87,6 +87,7 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
                                                           final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
 
+        // STEPH should throw PaymentApiException -- at least when coming from API; also add description.
         Preconditions.checkArgument(paymentMethodId != null || paymentOptions.isExternalPayment());
         final UUID nonNulPaymentMethodId = (paymentMethodId != null) ?
                                            paymentMethodId :

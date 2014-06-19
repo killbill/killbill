@@ -34,6 +34,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.dao.InvoiceItemSqlDao;
 import org.killbill.billing.invoice.dao.InvoiceSqlDao;
 import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.dao.DirectPaymentSqlDao;
 import org.killbill.billing.subscription.engine.dao.BundleSqlDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionEventSqlDao;
@@ -86,14 +87,6 @@ public class AuditChecker {
         final AccountAuditLogs result = auditUserApi.getAccountAuditLogs(account.getId(), AuditLevel.FULL, context);
         checkAuditLog(ChangeType.INSERT, context, result.getAuditLogsForAccount().get(0), account.getId(), AccountSqlDao.class, true, true);
         checkAuditLog(ChangeType.UPDATE, context, result.getAuditLogsForAccount().get(1), account.getId(), AccountSqlDao.class, true, true);
-    }
-
-    public void checkPaymentCreated(final DirectPayment payment, final CallContext context) {
-        final AccountAuditLogs result = auditUserApi.getAccountAuditLogs(payment.getAccountId(), AuditLevel.FULL, context);
-        final List<AuditLog> paymentLogs = result.getAuditLogsForPayment(payment.getId());
-        Assert.assertEquals(paymentLogs.size(), 2);
-        checkAuditLog(ChangeType.INSERT, context, paymentLogs.get(0), payment.getId(), DirectPaymentSqlDao.class, true, false);
-        checkAuditLog(ChangeType.UPDATE, context, paymentLogs.get(1), payment.getId(), DirectPaymentSqlDao.class, true, false);
     }
 
     /**
@@ -168,6 +161,22 @@ public class AuditChecker {
         }
     }
 
+    /**
+     * ********************************************  PAYMENT *******************************************************
+     */
+
+    public void checkPaymentCreated(final DirectPayment payment, final CallContext context) {
+        final List<AuditLog> invoiceLogs = getAuditLogForPayment(payment, context);
+        Assert.assertEquals(invoiceLogs.size(), 1);
+        checkAuditLog(ChangeType.INSERT, context, invoiceLogs.get(0), payment.getId(), DirectPaymentSqlDao.class, false, false);
+
+        for (DirectPaymentTransaction cur : payment.getTransactions()) {
+            final List<AuditLog> auditLogs = getAuditLogForPaymentTransaction(payment, cur, context);
+            Assert.assertEquals(auditLogs.size(), 1);
+            checkAuditLog(ChangeType.INSERT, context, auditLogs.get(0), cur.getId(), InvoiceItemSqlDao.class, false, false);
+        }
+    }
+
     private List<AuditLog> getAuditLogsForBundle(final UUID bundleId, final TenantContext context) {
         try {
             final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, context);
@@ -204,6 +213,14 @@ public class AuditChecker {
 
     private List<AuditLog> getAuditLogForInvoiceItem(final InvoiceItem invoiceItem, final TenantContext context) {
         return auditUserApi.getAccountAuditLogs(invoiceItem.getAccountId(), AuditLevel.FULL, context).getAuditLogsForInvoiceItem(invoiceItem.getId());
+    }
+
+    private List<AuditLog> getAuditLogForPayment(final DirectPayment payment, final TenantContext context) {
+        return auditUserApi.getAccountAuditLogs(payment.getAccountId(), AuditLevel.FULL, context).getAuditLogsForDirectPayment(payment.getId());
+    }
+
+    private List<AuditLog> getAuditLogForPaymentTransaction(final DirectPayment payment, final DirectPaymentTransaction paymentTransaction, final TenantContext context) {
+        return auditUserApi.getAccountAuditLogs(payment.getAccountId(), AuditLevel.FULL, context).getAuditLogsForDirectPaymentTransaction(paymentTransaction.getId());
     }
 
     private void checkAuditLog(final ChangeType insert, final AuditLog auditLog) {

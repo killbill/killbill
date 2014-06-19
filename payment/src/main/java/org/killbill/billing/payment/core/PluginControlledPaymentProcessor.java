@@ -195,7 +195,7 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
             final CallContext callContext = internalCallContext.toCallContext(tenantId);
 
 
-            // STEPH
+            // STEPH Nope, keep the original transactionExternalKey
             final String newTransactionExternalKey = UUID.randomUUID().toString();
             final State state = pluginControlledDirectPaymentAutomatonRunner.fetchState(attempt.getStateName());
             pluginControlledDirectPaymentAutomatonRunner.run(state,

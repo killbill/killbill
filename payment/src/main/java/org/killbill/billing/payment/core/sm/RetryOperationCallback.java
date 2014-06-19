@@ -39,13 +39,11 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.DirectPaymentProcessor;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
-import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.retry.plugin.api.PaymentControlApiException;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi.FailureCallResult;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi.PaymentControlContext;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi.PriorPaymentControlResult;
-import org.killbill.billing.retry.plugin.api.UnknownEntryException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
@@ -67,12 +65,8 @@ public abstract class RetryOperationCallback extends PluginOperation implements 
     private PriorPaymentControlResult getPluginResult(final String pluginName, final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
 
         final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
-        try {
-            final PriorPaymentControlResult result = plugin.priorCall(paymentControlContext);
-            return result;
-        } catch (UnknownEntryException e) {
-            return new DefaultPriorPaymentControlResult(true);
-        }
+        final PriorPaymentControlResult result = plugin.priorCall(paymentControlContext);
+        return result;
     }
 
     private DateTime getNextRetryDate(final String pluginName, final PaymentControlContext paymentControlContext) {
@@ -139,7 +133,7 @@ public abstract class RetryOperationCallback extends PluginOperation implements 
                     ((RetryableDirectPaymentStateContext) directPaymentStateContext).setResult(result);
                     final DirectPaymentTransaction transaction = ((RetryableDirectPaymentStateContext) directPaymentStateContext).getCurrentTransaction();
 
-                    success  = transaction.getPaymentStatus() == PaymentStatus.SUCCESS || transaction.getPaymentStatus() == PaymentStatus.PENDING;
+                    success = transaction.getPaymentStatus() == PaymentStatus.SUCCESS || transaction.getPaymentStatus() == PaymentStatus.PENDING;
 
                     if (success) {
                         final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(directPaymentStateContext.account,
@@ -178,8 +172,10 @@ public abstract class RetryOperationCallback extends PluginOperation implements 
                                                                      @Nullable final PaymentApiException e) throws OperationException {
                 final DateTime retryDate = getNextRetryDate(retryableDirectPaymentStateContext.getPluginName(), paymentControlContext);
                 if (retryDate == null) {
+                    // STEPH only throw if e is not null
                     throw new OperationException(e, OperationResult.EXCEPTION);
                 } else {
+                    // STEPH only throw if e is not null
                     ((RetryableDirectPaymentStateContext) directPaymentStateContext).setRetryDate(retryDate);
                     throw new OperationException(e, OperationResult.FAILURE);
                 }

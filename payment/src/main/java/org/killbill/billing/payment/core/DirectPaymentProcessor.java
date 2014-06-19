@@ -20,6 +20,7 @@ package org.killbill.billing.payment.core;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -73,6 +74,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -280,7 +282,6 @@ public class DirectPaymentProcessor extends ProcessorBase {
         return getDirectPayment(paymentModelDao, withPluginInfo, properties, tenantContext, internalTenantContext);
     }
 
-
     public DirectPayment getPaymentByExternalKey(final String paymentExternalKey, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final DirectPaymentModelDao paymentModelDao = paymentDao.getDirectPaymentByExternalKey(paymentExternalKey, internalTenantContext);
         if (paymentModelDao == null) {
@@ -289,8 +290,6 @@ public class DirectPaymentProcessor extends ProcessorBase {
         return getDirectPayment(paymentModelDao, withPluginInfo, properties, tenantContext, internalTenantContext);
 
     }
-
-
 
     public Pagination<DirectPayment> getPayments(final Long offset, final Long limit, final Iterable<PluginProperty> properties,
                                                  final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
@@ -351,33 +350,40 @@ public class DirectPaymentProcessor extends ProcessorBase {
         final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
 
         return getEntityPagination(limit,
-                                   new SourcePaginationBuilder<List<PaymentTransactionInfoPlugin>, PaymentApiException>() {
+                                   new SourcePaginationBuilder<PaymentTransactionInfoPlugin, PaymentApiException>() {
                                        @Override
-                                       public Pagination<List<PaymentTransactionInfoPlugin>> build() throws PaymentApiException {
-/*
-                                           STEPH broken : either return Pagination<List<PaymentTransactionInfoPlugin>> or Pagination<PaymentTransactionInfoPlugin> but then getEntityPagination signature is broken.
-
+                                       public Pagination<PaymentTransactionInfoPlugin> build() throws PaymentApiException {
                                            try {
-                                               // return pluginApi.searchPayments(searchKey, offset, limit, properties, tenantContext);
+                                               return pluginApi.searchPayments(searchKey, offset, limit, properties, tenantContext);
                                            } catch (final PaymentPluginApiException e) {
                                                throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENTS, pluginName, searchKey);
                                            }
-*/
-                                           return null;
                                        }
 
                                    },
-                                   new Function<List<PaymentTransactionInfoPlugin>, DirectPayment>() {
-                                       @Override
-                                       public DirectPayment apply(final List<PaymentTransactionInfoPlugin> pluginTransactions) {
+                                   new Function<PaymentTransactionInfoPlugin, DirectPayment>() {
 
-                                           if (pluginTransactions.size() == 0) {
+                                       final List<PaymentTransactionInfoPlugin> cachedPaymentTransactions = new LinkedList<PaymentTransactionInfoPlugin>();
+
+                                       @Override
+                                       public DirectPayment apply(final PaymentTransactionInfoPlugin pluginTransaction) {
+
+                                           if (pluginTransaction.getKbPaymentId() == null) {
                                                // Garbage from the plugin?
                                                log.debug("Plugin {} returned a payment without a kbPaymentId for searchKey {}", pluginName, searchKey);
                                                return null;
                                            }
 
-                                           return toDirectPayment(pluginTransactions.get(0).getKbPaymentId(), pluginTransactions, internalTenantContext);
+                                           if (cachedPaymentTransactions.isEmpty() ||
+                                               (cachedPaymentTransactions.get(0).getKbPaymentId().equals(pluginTransaction.getKbPaymentId()))) {
+                                               cachedPaymentTransactions.add(pluginTransaction);
+                                               return null;
+                                           } else {
+                                               final DirectPayment result = toDirectPayment(pluginTransaction.getKbPaymentId(), ImmutableList.<PaymentTransactionInfoPlugin>copyOf(cachedPaymentTransactions), internalTenantContext);
+                                               cachedPaymentTransactions.clear();
+                                               cachedPaymentTransactions.add(pluginTransaction);
+                                               return result;
+                                           }
                                        }
                                    }
                                   );
@@ -438,11 +444,11 @@ public class DirectPaymentProcessor extends ProcessorBase {
 
                 final PaymentTransactionInfoPlugin info = pluginTransactions != null ?
                                                           Iterables.tryFind(pluginTransactions, new Predicate<PaymentTransactionInfoPlugin>() {
-                    @Override
-                    public boolean apply(final PaymentTransactionInfoPlugin input) {
-                        return input.getKbTransactionPaymentId().equals(input.getKbTransactionPaymentId());
-                    }
-                }).orNull() : null;
+                                                              @Override
+                                                              public boolean apply(final PaymentTransactionInfoPlugin input) {
+                                                                  return input.getKbTransactionPaymentId().equals(input.getKbTransactionPaymentId());
+                                                              }
+                                                          }).orNull() : null;
 
                 return new DefaultDirectPaymentTransaction(input.getId(), input.getTransactionExternalKey(), input.getCreatedDate(), input.getUpdatedDate(), input.getDirectPaymentId(),
                                                            input.getTransactionType(), input.getEffectiveDate(), input.getPaymentStatus(), input.getAmount(), input.getCurrency(),

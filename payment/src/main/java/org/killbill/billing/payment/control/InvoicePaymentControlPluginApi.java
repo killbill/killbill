@@ -49,7 +49,6 @@ import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.retry.plugin.api.PaymentControlApiException;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
-import org.killbill.billing.retry.plugin.api.UnknownEntryException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -163,8 +162,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     private PriorPaymentControlResult getPluginPurchaseResult(final PaymentControlContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentControlApiException {
-        final UUID invoiceId = UUID.fromString(paymentControlPluginContext.getPaymentExternalKey());
+
         try {
+            final UUID invoiceId = UUID.fromString(paymentControlPluginContext.getPaymentExternalKey());
             final Invoice invoice = rebalanceAndGetInvoice(invoiceId, internalContext);
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
             final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;
@@ -176,8 +176,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return new DefaultPriorPaymentControlResult(isAborted, requestedAmount);
             }
         } catch (InvoiceApiException e) {
-            // Invoice is not known so return UnknownEntryException so caller knows whether or not it should try with other plugins
-            throw new UnknownEntryException();
+            throw new PaymentControlApiException(e);
+        } catch (IllegalArgumentException e) {
+            throw new PaymentControlApiException(e);
         }
     }
 
@@ -192,7 +193,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
         final DirectPaymentModelDao directPayment = paymentDao.getDirectPayment(paymentControlPluginContext.getPaymentId(), internalContext);
         if (directPayment == null) {
-            throw new UnknownEntryException();
+            throw new PaymentControlApiException();
         }
         // STEPH this check for invoice item but we also need to check that refundAmount is less or equal to paymentAmount - all refund.
         final BigDecimal amountToBeRefunded = computeRefundAmount(directPayment.getId(), paymentControlPluginContext.getAmount(), idWithAmount, internalContext);
@@ -239,7 +240,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
             return Objects.firstNonNull(specifiedRefundAmount, amountFromItems);
         } catch (InvoiceApiException e) {
-            throw new UnknownEntryException();
+            throw new PaymentControlApiException(e);
         }
     }
 
@@ -282,7 +283,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         DateTime result = null;
         final List<Integer> retryDays = paymentConfig.getPaymentRetryDays();
         final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, PaymentStatus.PAYMENT_FAILURE_ABORTED);
-        final int retryCount  = (attemptsInState - 1) >= 0 ?  (attemptsInState - 1) : 0;
+        final int retryCount = (attemptsInState - 1) >= 0 ? (attemptsInState - 1) : 0;
         if (retryCount < retryDays.size()) {
             int retryInDays;
             final DateTime nextRetryDate = clock.getUTCNow();
@@ -300,7 +301,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
         DateTime result = null;
         final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, PaymentStatus.PLUGIN_FAILURE_ABORTED);
-        final int retryAttempt  = (attemptsInState - 1) >= 0 ?  (attemptsInState - 1) : 0;
+        final int retryAttempt = (attemptsInState - 1) >= 0 ? (attemptsInState - 1) : 0;
 
         if (retryAttempt < paymentConfig.getPluginFailureRetryMaxAttempts()) {
             int nbSec = paymentConfig.getPluginFailureRetryStart();

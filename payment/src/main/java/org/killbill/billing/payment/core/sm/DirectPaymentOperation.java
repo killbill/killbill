@@ -64,7 +64,7 @@ public abstract class DirectPaymentOperation extends PluginOperation implements 
     private OperationResult doSimpleOperationCallback() throws OperationException {
         try {
             return doOperation();
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             throw new OperationException(e, OperationResult.FAILURE);
         }
     }

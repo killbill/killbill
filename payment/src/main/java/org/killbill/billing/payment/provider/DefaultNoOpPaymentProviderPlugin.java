@@ -20,14 +20,13 @@ package org.killbill.billing.payment.provider;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.annotation.Nullable;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
@@ -50,8 +49,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 
 public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
@@ -132,20 +129,19 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     @Override
     public Pagination<PaymentTransactionInfoPlugin> searchPayments(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentPluginApiException {
 
-        /*
-            STEPH depends on how we fix pagination
-        Collections2.<PaymentTransactionInfoPlugin>filter(payments.values(),
-                                                          new Predicate<List<PaymentTransactionInfoPlugin>>() {
-                                                              @Override
-                                                              public boolean apply(final List<PaymentTransactionInfoPlugin> input) {
-                                                                  return (input.getKbPaymentId() != null && input.getKbPaymentId().toString().equals(searchKey)) ||
-                                                                         (input.getFirstPaymentReferenceId() != null && input.getFirstPaymentReferenceId().contains(searchKey)) ||
-                                                                         (input.getSecondPaymentReferenceId() != null && input.getSecondPaymentReferenceId().contains(searchKey));
-                                                              }
-                                                          }
-                                                         );
+        final List<PaymentTransactionInfoPlugin> flattenedTransactions = ImmutableList.copyOf(Iterables.concat(payments.values()));
+        final Collection<PaymentTransactionInfoPlugin> filteredTransactions = Collections2.<PaymentTransactionInfoPlugin>filter(flattenedTransactions,
+                                                                                                                                new Predicate<PaymentTransactionInfoPlugin>() {
+                                                                                                                                    @Override
+                                                                                                                                    public boolean apply(final PaymentTransactionInfoPlugin input) {
+                                                                                                                                        return (input.getKbPaymentId() != null && input.getKbPaymentId().toString().equals(searchKey)) ||
+                                                                                                                                               (input.getFirstPaymentReferenceId() != null && input.getFirstPaymentReferenceId().contains(searchKey)) ||
+                                                                                                                                               (input.getSecondPaymentReferenceId() != null && input.getSecondPaymentReferenceId().contains(searchKey));
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                               );
 
-        final ImmutableList<PaymentTransactionInfoPlugin> allResults = ImmutableList.<PaymentTransactionInfoPlugin>copyOf();
+        final ImmutableList<PaymentTransactionInfoPlugin> allResults = ImmutableList.<PaymentTransactionInfoPlugin>copyOf(filteredTransactions);
 
         final List<PaymentTransactionInfoPlugin> results;
         if (offset >= allResults.size()) {
@@ -157,8 +153,6 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
         }
 
         return new DefaultPagination<PaymentTransactionInfoPlugin>(offset, limit, (long) results.size(), (long) payments.values().size(), results.iterator());
-        */
-        return null;
     }
 
     @Override
@@ -257,7 +251,6 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
             throw new PaymentPluginApiException("", String.format("No payment found for payment id %s (plugin %s)", kbPaymentId.toString(), PLUGIN_NAME));
         }
 
-
         final Iterable<PaymentTransactionInfoPlugin> refundTransactions = Iterables.filter(transactions, new Predicate<PaymentTransactionInfoPlugin>() {
             @Override
             public boolean apply(final PaymentTransactionInfoPlugin input) {
@@ -276,7 +269,6 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
         }
         return getInternalNoopPaymentInfoResult(kbPaymentId, kbTransactionId, TransactionType.REFUND, refundAmount, currency);
     }
-
 
     private PaymentTransactionInfoPlugin getInternalNoopPaymentInfoResult(final UUID kbPaymentId, final UUID kbTransactionId, final TransactionType transactionType, final BigDecimal amount, final Currency currency) throws PaymentPluginApiException {
         if (makeNextInvoiceFailWithException.getAndSet(false)) {
