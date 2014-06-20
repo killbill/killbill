@@ -23,7 +23,7 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.dao.DirectPaymentModelDao;
+import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PluginPropertyModelDao;
@@ -60,7 +60,7 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
         Preconditions.checkState(stateContext.getDirectPaymentExternalKey() != null || /* AUTH, PURCHASE, CREDIT calls will provide the payment  */
                                  stateContext.getDirectPaymentId() != null);
         if (stateContext.getDirectPaymentExternalKey() == null) {
-            final DirectPaymentModelDao payment = paymentDao.getDirectPayment(stateContext.getDirectPaymentId(), stateContext.internalCallContext);
+            final PaymentModelDao payment = paymentDao.getDirectPayment(stateContext.getDirectPaymentId(), stateContext.internalCallContext);
             Preconditions.checkState(payment != null);
             stateContext.setDirectPaymentExternalKey(payment.getExternalKey());
         }

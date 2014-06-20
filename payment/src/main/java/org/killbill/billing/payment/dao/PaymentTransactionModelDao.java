@@ -32,9 +32,9 @@ import org.killbill.billing.util.entity.dao.EntityModelDao;
 
 import com.google.common.base.Objects;
 
-public class DirectPaymentTransactionModelDao extends EntityBase implements EntityModelDao<DirectPaymentTransaction> {
+public class PaymentTransactionModelDao extends EntityBase implements EntityModelDao<DirectPaymentTransaction> {
 
-    private UUID directPaymentId;
+    private UUID paymentId;
     private String transactionExternalKey;
     private TransactionType transactionType;
     private DateTime effectiveDate;
@@ -45,19 +45,16 @@ public class DirectPaymentTransactionModelDao extends EntityBase implements Enti
     private Currency processedCurrency;
     private String gatewayErrorCode;
     private String gatewayErrorMsg;
-    private String extFirstPaymentRefId;
-    private String extSecondPaymentRefId;
 
 
-    public DirectPaymentTransactionModelDao() { /* For the DAO mapper */ }
+    public PaymentTransactionModelDao() { /* For the DAO mapper */ }
 
-    public DirectPaymentTransactionModelDao(final UUID id, @Nullable final String transactionExternalKey, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
-                                            final UUID directPaymentId, final TransactionType transactionType, final DateTime effectiveDate,
-                                            final PaymentStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg,
-                                            @Nullable  final String extFirstPaymentRefId, @Nullable final String extSecondPaymentRefId) {
+    public PaymentTransactionModelDao(final UUID id, @Nullable final String transactionExternalKey, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                                      final UUID paymentId, final TransactionType transactionType, final DateTime effectiveDate,
+                                      final PaymentStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
         super(id, createdDate, updatedDate);
         this.transactionExternalKey = Objects.firstNonNull(transactionExternalKey, id.toString());
-        this.directPaymentId = directPaymentId;
+        this.paymentId = paymentId;
         this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;
         this.paymentStatus = paymentStatus;
@@ -67,18 +64,16 @@ public class DirectPaymentTransactionModelDao extends EntityBase implements Enti
         this.processedCurrency = null;
         this.gatewayErrorCode = gatewayErrorCode;
         this.gatewayErrorMsg = gatewayErrorMsg;
-        this.extFirstPaymentRefId = extFirstPaymentRefId;
-        this.extSecondPaymentRefId = extSecondPaymentRefId;
     }
 
-    public DirectPaymentTransactionModelDao(@Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
-                                            @Nullable final String transactionExternalKey, final UUID directPaymentId, final TransactionType transactionType, final DateTime effectiveDate,
-                                            final PaymentStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
-        this(UUID.randomUUID(), transactionExternalKey, createdDate, updatedDate, directPaymentId, transactionType, effectiveDate, paymentStatus, amount, currency, gatewayErrorCode, gatewayErrorMsg, null, null);
+    public PaymentTransactionModelDao(@Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                                      @Nullable final String transactionExternalKey, final UUID paymentId, final TransactionType transactionType, final DateTime effectiveDate,
+                                      final PaymentStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
+        this(UUID.randomUUID(), transactionExternalKey, createdDate, updatedDate, paymentId, transactionType, effectiveDate, paymentStatus, amount, currency, gatewayErrorCode, gatewayErrorMsg);
     }
 
-    public UUID getDirectPaymentId() {
-        return directPaymentId;
+    public UUID getPaymentId() {
+        return paymentId;
     }
 
     public String getTransactionExternalKey() {
@@ -121,8 +116,8 @@ public class DirectPaymentTransactionModelDao extends EntityBase implements Enti
         return gatewayErrorMsg;
     }
 
-    public void setDirectPaymentId(final UUID directPaymentId) {
-        this.directPaymentId = directPaymentId;
+    public void setPaymentId(final UUID paymentId) {
+        this.paymentId = paymentId;
     }
 
     public void setTransactionExternalKey(final String transactionExternalKey) {
@@ -165,22 +160,6 @@ public class DirectPaymentTransactionModelDao extends EntityBase implements Enti
         this.gatewayErrorMsg = gatewayErrorMsg;
     }
 
-    public String getExtFirstPaymentRefId() {
-        return extFirstPaymentRefId;
-    }
-
-    public String getExtSecondPaymentRefId() {
-        return extSecondPaymentRefId;
-    }
-
-    public void setExtFirstPaymentRefId(final String extFirstPaymentRefId) {
-        this.extFirstPaymentRefId = extFirstPaymentRefId;
-    }
-
-    public void setExtSecondPaymentRefId(final String extSecondPaymentRefId) {
-        this.extSecondPaymentRefId = extSecondPaymentRefId;
-    }
-
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -193,7 +172,7 @@ public class DirectPaymentTransactionModelDao extends EntityBase implements Enti
             return false;
         }
 
-        final DirectPaymentTransactionModelDao that = (DirectPaymentTransactionModelDao) o;
+        final PaymentTransactionModelDao that = (PaymentTransactionModelDao) o;
 
         if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
             return false;
@@ -201,7 +180,7 @@ public class DirectPaymentTransactionModelDao extends EntityBase implements Enti
         if (currency != that.currency) {
             return false;
         }
-        if (directPaymentId != null ? !directPaymentId.equals(that.directPaymentId) : that.directPaymentId != null) {
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
         if (effectiveDate != null ? effectiveDate.compareTo(that.effectiveDate) != 0 : that.effectiveDate != null) {
@@ -228,19 +207,13 @@ public class DirectPaymentTransactionModelDao extends EntityBase implements Enti
         if (transactionType != that.transactionType) {
             return false;
         }
-        if (extFirstPaymentRefId != null ? !extFirstPaymentRefId.equals(that.extFirstPaymentRefId) : that.extFirstPaymentRefId != null) {
-            return false;
-        }
-        if (extSecondPaymentRefId != null ? !extSecondPaymentRefId.equals(that.extSecondPaymentRefId) : that.extSecondPaymentRefId != null) {
-            return false;
-        }
         return true;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (directPaymentId != null ? directPaymentId.hashCode() : 0);
+        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
         result = 31 * result + (transactionExternalKey != null ? transactionExternalKey.hashCode() : 0);
         result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
@@ -251,18 +224,16 @@ public class DirectPaymentTransactionModelDao extends EntityBase implements Enti
         result = 31 * result + (processedCurrency != null ? processedCurrency.hashCode() : 0);
         result = 31 * result + (gatewayErrorCode != null ? gatewayErrorCode.hashCode() : 0);
         result = 31 * result + (gatewayErrorMsg != null ? gatewayErrorMsg.hashCode() : 0);
-        result = 31 * result + (extFirstPaymentRefId != null ? extFirstPaymentRefId.hashCode() : 0);
-        result = 31 * result + (extSecondPaymentRefId != null ? extSecondPaymentRefId.hashCode() : 0);
         return result;
     }
 
     @Override
     public TableName getTableName() {
-        return TableName.DIRECT_TRANSACTIONS;
+        return TableName.TRANSACTIONS;
     }
 
     @Override
     public TableName getHistoryTableName() {
-        return TableName.DIRECT_TRANSACTION_HISTORY;
+        return TableName.TRANSACTION_HISTORY;
     }
 }

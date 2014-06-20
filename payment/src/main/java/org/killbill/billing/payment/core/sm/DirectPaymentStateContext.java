@@ -27,7 +27,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.dao.DirectPaymentTransactionModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
 
@@ -37,7 +37,7 @@ public class DirectPaymentStateContext {
     protected UUID paymentMethodId;
 
     // Stateful objects created by the callbacks and passed to the other following callbacks in the automaton
-    protected DirectPaymentTransactionModelDao directPaymentTransactionModelDao;
+    protected PaymentTransactionModelDao directPaymentTransactionModelDao;
     protected PaymentTransactionInfoPlugin paymentInfoPlugin;
     protected BigDecimal amount;
     protected UUID transactionPaymentId;
@@ -87,11 +87,11 @@ public class DirectPaymentStateContext {
         this.paymentMethodId = paymentMethodId;
     }
 
-    public DirectPaymentTransactionModelDao getDirectPaymentTransactionModelDao() {
+    public PaymentTransactionModelDao getDirectPaymentTransactionModelDao() {
         return directPaymentTransactionModelDao;
     }
 
-    public void setDirectPaymentTransactionModelDao(final DirectPaymentTransactionModelDao directPaymentTransactionModelDao) {
+    public void setDirectPaymentTransactionModelDao(final PaymentTransactionModelDao directPaymentTransactionModelDao) {
         this.directPaymentTransactionModelDao = directPaymentTransactionModelDao;
     }
 
@@ -104,7 +104,7 @@ public class DirectPaymentStateContext {
     }
 
     public UUID getDirectPaymentId() {
-        return directPaymentId != null ? directPaymentId : (directPaymentTransactionModelDao != null ? directPaymentTransactionModelDao.getDirectPaymentId() : null);
+        return directPaymentId != null ? directPaymentId : (directPaymentTransactionModelDao != null ? directPaymentTransactionModelDao.getPaymentId() : null);
     }
 
     public UUID getTransactionPaymentId() {

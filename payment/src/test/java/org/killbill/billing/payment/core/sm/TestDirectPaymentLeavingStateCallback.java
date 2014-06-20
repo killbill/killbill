@@ -30,8 +30,8 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentStatus;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.dao.DirectPaymentModelDao;
-import org.killbill.billing.payment.dao.DirectPaymentTransactionModelDao;
+import org.killbill.billing.payment.dao.PaymentModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -55,9 +55,9 @@ public class TestDirectPaymentLeavingStateCallback extends PaymentTestSuiteWithE
         verifyDirectPaymentTransaction();
 
         // Verify a new payment was created
-        final DirectPaymentModelDao directPayment = paymentDao.getDirectPayment(directPaymentStateContext.getDirectPaymentTransactionModelDao().getDirectPaymentId(), internalCallContext);
+        final PaymentModelDao directPayment = paymentDao.getDirectPayment(directPaymentStateContext.getDirectPaymentTransactionModelDao().getPaymentId(), internalCallContext);
         Assert.assertEquals(directPayment.getExternalKey(), directPaymentStateContext.getDirectPaymentExternalKey());
-        Assert.assertNull(directPayment.getCurrentStateName());
+        Assert.assertNull(directPayment.getStateName());
 
         // Verify the direct payment has only one transaction
         Assert.assertEquals(paymentDao.getDirectTransactionsForDirectPayment(directPayment.getId(), internalCallContext).size(), 1);
@@ -81,7 +81,7 @@ public class TestDirectPaymentLeavingStateCallback extends PaymentTestSuiteWithE
     }
 
     private void verifyDirectPaymentTransaction() {
-        Assert.assertNotNull(directPaymentStateContext.getDirectPaymentTransactionModelDao().getDirectPaymentId());
+        Assert.assertNotNull(directPaymentStateContext.getDirectPaymentTransactionModelDao().getPaymentId());
         Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getTransactionExternalKey(), directPaymentStateContext.getDirectPaymentTransactionExternalKey());
         Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getPaymentStatus(), PaymentStatus.UNKNOWN);
         Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getAmount().compareTo(directPaymentStateContext.getAmount()), 0);
@@ -110,7 +110,7 @@ public class TestDirectPaymentLeavingStateCallback extends PaymentTestSuiteWithE
 
         if (directPaymentId != null) {
             // Create the first payment manually
-            final DirectPaymentModelDao newPaymentModelDao = new DirectPaymentModelDao(directPaymentId,
+            final PaymentModelDao newPaymentModelDao = new PaymentModelDao(directPaymentId,
                                                                                        clock.getUTCNow(),
                                                                                        clock.getUTCNow(),
                                                                                        directPaymentStateContext.getAccount().getId(),
@@ -118,7 +118,7 @@ public class TestDirectPaymentLeavingStateCallback extends PaymentTestSuiteWithE
                                                                                        1,
                                                                                        directPaymentStateContext.getDirectPaymentExternalKey(),
                                                                                        null, null);
-            final DirectPaymentTransactionModelDao newPaymentTransactionModelDao = new DirectPaymentTransactionModelDao(clock.getUTCNow(),
+            final PaymentTransactionModelDao newPaymentTransactionModelDao = new PaymentTransactionModelDao(clock.getUTCNow(),
                                                                                                                         clock.getUTCNow(),
                                                                                                                         directPaymentStateContext.getDirectPaymentTransactionExternalKey(),
                                                                                                                         directPaymentId,

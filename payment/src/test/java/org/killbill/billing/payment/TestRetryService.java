@@ -32,7 +32,7 @@ import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
-import org.killbill.billing.payment.dao.DirectPaymentTransactionModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
@@ -143,7 +143,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(payment.getExternalKey(), internalCallContext);
         assertEquals(attempts.size(), 1);
 
-        final List<DirectPaymentTransactionModelDao> transactions = paymentDao.getDirectTransactionsForDirectPayment(payment.getId(), internalCallContext);
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectTransactionsForDirectPayment(payment.getId(), internalCallContext);
         assertEquals(transactions.size(), 1);
 
         for (int curFailure = 0; curFailure < maxTries; curFailure++) {

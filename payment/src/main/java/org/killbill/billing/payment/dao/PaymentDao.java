@@ -39,15 +39,15 @@ public interface PaymentDao {
 
     public PaymentAttemptModelDao getPaymentAttemptByExternalKey(String externalKey, InternalTenantContext context);
 
-    public DirectPaymentTransactionModelDao getDirectPaymentTransactionByExternalKey(String transactionExternalKey, InternalTenantContext context);
+    public PaymentTransactionModelDao getDirectPaymentTransactionByExternalKey(String transactionExternalKey, InternalTenantContext context);
 
-    public DirectPaymentModelDao getDirectPaymentByExternalKey(String externalKey, InternalTenantContext context);
+    public PaymentModelDao getDirectPaymentByExternalKey(String externalKey, InternalTenantContext context);
 
-    public Pagination<DirectPaymentModelDao> getDirectPayments(String pluginName, Long offset, Long limit, InternalTenantContext context);
+    public Pagination<PaymentModelDao> getDirectPayments(String pluginName, Long offset, Long limit, InternalTenantContext context);
 
-    public DirectPaymentModelDao insertDirectPaymentWithFirstTransaction(DirectPaymentModelDao directPayment, DirectPaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
+    public PaymentModelDao insertDirectPaymentWithFirstTransaction(PaymentModelDao directPayment, PaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
 
-    public DirectPaymentTransactionModelDao updateDirectPaymentWithNewTransaction(UUID directPaymentId, DirectPaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
+    public PaymentTransactionModelDao updateDirectPaymentWithNewTransaction(UUID directPaymentId, PaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
 
     public void updateDirectPaymentAndTransactionOnCompletion(UUID directPaymentId, String currentPaymentStateName,
                                                               UUID directTransactionId, PaymentStatus paymentStatus,
@@ -55,15 +55,15 @@ public interface PaymentDao {
                                                               String gatewayErrorCode, String gatewayErrorMsg,
                                                               InternalCallContext context);
 
-    public DirectPaymentModelDao getDirectPayment(UUID directPaymentId, InternalTenantContext context);
+    public PaymentModelDao getDirectPayment(UUID directPaymentId, InternalTenantContext context);
 
-    public DirectPaymentTransactionModelDao getDirectPaymentTransaction(UUID directTransactionId, InternalTenantContext context);
+    public PaymentTransactionModelDao getDirectPaymentTransaction(UUID directTransactionId, InternalTenantContext context);
 
-    public List<DirectPaymentModelDao> getDirectPaymentsForAccount(UUID accountId, InternalTenantContext context);
+    public List<PaymentModelDao> getDirectPaymentsForAccount(UUID accountId, InternalTenantContext context);
 
-    public List<DirectPaymentTransactionModelDao> getDirectTransactionsForAccount(UUID accountId, InternalTenantContext context);
+    public List<PaymentTransactionModelDao> getDirectTransactionsForAccount(UUID accountId, InternalTenantContext context);
 
-    public List<DirectPaymentTransactionModelDao> getDirectTransactionsForDirectPayment(UUID directPaymentId, InternalTenantContext context);
+    public List<PaymentTransactionModelDao> getDirectTransactionsForDirectPayment(UUID directPaymentId, InternalTenantContext context);
 
     public PaymentAttemptModelDao getPaymentAttempt(UUID attemptId, InternalTenantContext context);
 

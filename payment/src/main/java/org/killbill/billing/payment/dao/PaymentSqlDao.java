@@ -32,26 +32,26 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 @EntitySqlDaoStringTemplate
-public interface DirectPaymentSqlDao extends EntitySqlDao<DirectPaymentModelDao, DirectPayment> {
+public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, DirectPayment> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void updateDirectPaymentForNewTransaction(@Bind("id") final String directPaymentId,
-                                              @BindBean final InternalCallContext context);
+    void updatePaymentForNewTransaction(@Bind("id") final String directPaymentId,
+                                        @BindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void updateCurrentPaymentStateName(@Bind("id") final String directPaymentId,
-                                       @Bind("currentStateName") final String currentStateName,
-                                       @BindBean final InternalCallContext context);
+    void updatePaymentStateName(@Bind("id") final String directPaymentId,
+                                @Bind("stateName") final String stateName,
+                                @BindBean final InternalCallContext context);
 
 
     @SqlQuery
-    public DirectPaymentModelDao getDirectPaymentByExternalKey(@Bind("externalKey") final String externalKey,
-                                                               @BindBean final InternalTenantContext context);
+    public PaymentModelDao getPaymentByExternalKey(@Bind("externalKey") final String externalKey,
+                                                   @BindBean final InternalTenantContext context);
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
-    public Iterator<DirectPaymentModelDao> getByPluginName(@Bind("pluginName") final String pluginName,
+    public Iterator<PaymentModelDao> getByPluginName(@Bind("pluginName") final String pluginName,
                                                            @Bind("offset") final Long offset,
                                                            @Bind("rowCount") final Long rowCount,
                                                            @BindBean final InternalTenantContext context);

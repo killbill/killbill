@@ -27,8 +27,8 @@ import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentStatus;
 import org.killbill.billing.payment.core.DirectPaymentProcessor;
-import org.killbill.billing.payment.dao.DirectPaymentModelDao;
-import org.killbill.billing.payment.dao.DirectPaymentTransactionModelDao;
+import org.killbill.billing.payment.dao.PaymentModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
@@ -58,13 +58,13 @@ public class MockRetryAuthorizeOperationCallback extends RetryAuthorizeOperation
                 throw new RuntimeException(exception);
             }
         }
-        final DirectPaymentModelDao payment = new DirectPaymentModelDao(clock.getUTCNow(),
+        final PaymentModelDao payment = new PaymentModelDao(clock.getUTCNow(),
                                                                         clock.getUTCNow(),
                                                                         directPaymentStateContext.account.getId(),
                                                                         directPaymentStateContext.paymentMethodId,
                                                                         directPaymentStateContext.directPaymentExternalKey);
 
-        final DirectPaymentTransactionModelDao transaction = new DirectPaymentTransactionModelDao(clock.getUTCNow(),
+        final PaymentTransactionModelDao transaction = new PaymentTransactionModelDao(clock.getUTCNow(),
                                                                                                   clock.getUTCNow(),
                                                                                                   directPaymentStateContext.directPaymentTransactionExternalKey,
                                                                                                   directPaymentStateContext.directPaymentId,
@@ -75,12 +75,12 @@ public class MockRetryAuthorizeOperationCallback extends RetryAuthorizeOperation
                                                                                                   directPaymentStateContext.currency,
                                                                                                   "",
                                                                                                   "");
-        final DirectPaymentModelDao paymentModelDao = paymentDao.insertDirectPaymentWithFirstTransaction(payment, transaction, directPaymentStateContext.internalCallContext);
+        final PaymentModelDao paymentModelDao = paymentDao.insertDirectPaymentWithFirstTransaction(payment, transaction, directPaymentStateContext.internalCallContext);
         final DirectPaymentTransaction convertedTransaction = new DefaultDirectPaymentTransaction(transaction.getId(),
                                                                                                   transaction.getTransactionExternalKey(),
                                                                                                   transaction.getCreatedDate(),
                                                                                                   transaction.getUpdatedDate(),
-                                                                                                  transaction.getDirectPaymentId(),
+                                                                                                  transaction.getPaymentId(),
                                                                                                   transaction.getTransactionType(),
                                                                                                   transaction.getEffectiveDate(),
                                                                                                   transaction.getPaymentStatus(),

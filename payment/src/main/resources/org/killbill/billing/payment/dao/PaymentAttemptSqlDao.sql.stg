@@ -7,7 +7,7 @@ historyTableName() ::= "payment_attempt_history"
 
 tableFields(prefix) ::= <<
   <prefix>payment_external_key
-, <prefix>direct_transaction_id
+, <prefix>transaction_id
 , <prefix>transaction_external_key
 , <prefix>state_name
 , <prefix>operation_name
@@ -20,7 +20,7 @@ tableFields(prefix) ::= <<
 
 tableValues() ::= <<
   :paymentExternalKey
-, :directTransactionId
+, :transactionId
 , :transactionExternalKey
 , :stateName
 , :operationName
@@ -55,7 +55,7 @@ where payment_external_key = :paymentExternalKey
 updateAttempt() ::= <<
 update <tableName()>
 set state_name = :stateName
-, direct_transaction_id = :directTransactionId
+, transaction_id = :transactionId
 , updated_by = :updatedBy
 , updated_date = :createdDate
 where id = :id

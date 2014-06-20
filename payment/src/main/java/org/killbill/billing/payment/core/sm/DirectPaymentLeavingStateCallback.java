@@ -17,12 +17,9 @@
 
 package org.killbill.billing.payment.core.sm;
 
-import java.util.List;
-
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.dao.DirectPaymentTransactionModelDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

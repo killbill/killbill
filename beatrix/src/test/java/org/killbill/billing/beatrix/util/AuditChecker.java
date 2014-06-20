@@ -35,7 +35,7 @@ import org.killbill.billing.invoice.dao.InvoiceItemSqlDao;
 import org.killbill.billing.invoice.dao.InvoiceSqlDao;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentTransaction;
-import org.killbill.billing.payment.dao.DirectPaymentSqlDao;
+import org.killbill.billing.payment.dao.PaymentSqlDao;
 import org.killbill.billing.subscription.engine.dao.BundleSqlDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionEventSqlDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionSqlDao;
@@ -168,7 +168,7 @@ public class AuditChecker {
     public void checkPaymentCreated(final DirectPayment payment, final CallContext context) {
         final List<AuditLog> invoiceLogs = getAuditLogForPayment(payment, context);
         Assert.assertEquals(invoiceLogs.size(), 1);
-        checkAuditLog(ChangeType.INSERT, context, invoiceLogs.get(0), payment.getId(), DirectPaymentSqlDao.class, false, false);
+        checkAuditLog(ChangeType.INSERT, context, invoiceLogs.get(0), payment.getId(), PaymentSqlDao.class, false, false);
 
         for (DirectPaymentTransaction cur : payment.getTransactions()) {
             final List<AuditLog> auditLogs = getAuditLogForPaymentTransaction(payment, cur, context);

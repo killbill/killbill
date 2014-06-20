@@ -40,8 +40,8 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.control.dao.InvoicePaymentControlDao;
 import org.killbill.billing.payment.control.dao.PluginAutoPayOffModelDao;
-import org.killbill.billing.payment.dao.DirectPaymentModelDao;
-import org.killbill.billing.payment.dao.DirectPaymentTransactionModelDao;
+import org.killbill.billing.payment.dao.PaymentModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
@@ -194,7 +194,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                  " aborted: requested refund amount is = " + paymentControlPluginContext.getAmount());
         }
 
-        final DirectPaymentModelDao directPayment = paymentDao.getDirectPayment(paymentControlPluginContext.getPaymentId(), internalContext);
+        final PaymentModelDao directPayment = paymentDao.getDirectPayment(paymentControlPluginContext.getPaymentId(), internalContext);
         if (directPayment == null) {
             throw new PaymentControlApiException();
         }
@@ -263,11 +263,11 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             return null;
         }
 
-        final List<DirectPaymentTransactionModelDao> purchasedTransactions = getPurchasedTransactions(paymentExternalKey, internalContext);
+        final List<PaymentTransactionModelDao> purchasedTransactions = getPurchasedTransactions(paymentExternalKey, internalContext);
         if (purchasedTransactions.size() == 0) {
             return null;
         }
-        final DirectPaymentTransactionModelDao lastTransaction = purchasedTransactions.get(purchasedTransactions.size() - 1);
+        final PaymentTransactionModelDao lastTransaction = purchasedTransactions.get(purchasedTransactions.size() - 1);
         switch (lastTransaction.getPaymentStatus()) {
             case PAYMENT_FAILURE_ABORTED:
                 return getNextRetryDateForPaymentFailure(purchasedTransactions);
@@ -281,7 +281,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
     }
 
-    private DateTime getNextRetryDateForPaymentFailure(final List<DirectPaymentTransactionModelDao> purchasedTransactions) {
+    private DateTime getNextRetryDateForPaymentFailure(final List<PaymentTransactionModelDao> purchasedTransactions) {
 
         DateTime result = null;
         final List<Integer> retryDays = paymentConfig.getPaymentRetryDays();
@@ -300,7 +300,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         return result;
     }
 
-    private DateTime getNextRetryDateForPluginFailure(final List<DirectPaymentTransactionModelDao> purchasedTransactions) {
+    private DateTime getNextRetryDateForPluginFailure(final List<PaymentTransactionModelDao> purchasedTransactions) {
 
         DateTime result = null;
         final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, PaymentStatus.PLUGIN_FAILURE_ABORTED);
@@ -317,13 +317,13 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         return result;
     }
 
-    private int getNumberAttemptsInState(final Collection<DirectPaymentTransactionModelDao> allTransactions, final PaymentStatus... statuses) {
+    private int getNumberAttemptsInState(final Collection<PaymentTransactionModelDao> allTransactions, final PaymentStatus... statuses) {
         if (allTransactions == null || allTransactions.size() == 0) {
             return 0;
         }
-        return Collections2.filter(allTransactions, new Predicate<DirectPaymentTransactionModelDao>() {
+        return Collections2.filter(allTransactions, new Predicate<PaymentTransactionModelDao>() {
             @Override
-            public boolean apply(final DirectPaymentTransactionModelDao input) {
+            public boolean apply(final PaymentTransactionModelDao input) {
                 for (final PaymentStatus cur : statuses) {
                     if (input.getPaymentStatus() == cur) {
                         return true;
@@ -334,18 +334,18 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }).size();
     }
 
-    private List<DirectPaymentTransactionModelDao> getPurchasedTransactions(final String paymentExternalKey, final InternalCallContext internalContext) {
-        final DirectPaymentModelDao payment = paymentDao.getDirectPaymentByExternalKey(paymentExternalKey, internalContext);
+    private List<PaymentTransactionModelDao> getPurchasedTransactions(final String paymentExternalKey, final InternalCallContext internalContext) {
+        final PaymentModelDao payment = paymentDao.getDirectPaymentByExternalKey(paymentExternalKey, internalContext);
         if (payment == null) {
             return Collections.emptyList();
         }
-        final List<DirectPaymentTransactionModelDao> transactions = paymentDao.getDirectTransactionsForDirectPayment(payment.getId(), internalContext);
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectTransactionsForDirectPayment(payment.getId(), internalContext);
         if (transactions == null || transactions.size() == 0) {
             return Collections.emptyList();
         }
-        return ImmutableList.copyOf(Iterables.filter(transactions, new Predicate<DirectPaymentTransactionModelDao>() {
+        return ImmutableList.copyOf(Iterables.filter(transactions, new Predicate<PaymentTransactionModelDao>() {
             @Override
-            public boolean apply(final DirectPaymentTransactionModelDao input) {
+            public boolean apply(final PaymentTransactionModelDao input) {
                 return input.getTransactionType() == TransactionType.PURCHASE;
             }
         }));

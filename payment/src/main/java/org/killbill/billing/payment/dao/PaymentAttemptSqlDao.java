@@ -23,6 +23,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.api.PaymentAttempt;
 import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
@@ -32,12 +33,12 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 @EntitySqlDaoStringTemplate
-public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDao, PaymentAttempt> {
+public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDao, Entity> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updateAttempt(@Bind("id") final String attemptId,
-                       @Bind("directTransactionId") final String transactionId,
+                       @Bind("transactionId") final String transactionId,
                        @Bind("stateName") final String stateName,
                        @BindBean final InternalCallContext context);
 

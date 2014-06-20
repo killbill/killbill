@@ -25,7 +25,6 @@ import org.killbill.automaton.OperationResult;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.ProcessorBase.CallableWithAccountLock;
-import org.killbill.billing.payment.core.ProcessorBase.CallableWithoutAccountLock;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.commons.locker.GlobalLocker;
@@ -35,18 +34,18 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Objects;
 
 // Encapsulates the plugin delegation logic
-public abstract class PluginOperation {
+public abstract class PluginOperationBase {
 
-    private final Logger logger = LoggerFactory.getLogger(PluginOperation.class);
+    private final Logger logger = LoggerFactory.getLogger(PluginOperationBase.class);
 
     private final GlobalLocker locker;
     private final PluginDispatcher<OperationResult> paymentPluginDispatcher;
 
     protected final DirectPaymentStateContext directPaymentStateContext;
 
-    protected PluginOperation(final GlobalLocker locker,
-                              final PluginDispatcher<OperationResult> paymentPluginDispatcher,
-                              final DirectPaymentStateContext directPaymentStateContext) {
+    protected PluginOperationBase(final GlobalLocker locker,
+                                  final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                                  final DirectPaymentStateContext directPaymentStateContext) {
         this.locker = locker;
         this.paymentPluginDispatcher = paymentPluginDispatcher;
         this.directPaymentStateContext = directPaymentStateContext;

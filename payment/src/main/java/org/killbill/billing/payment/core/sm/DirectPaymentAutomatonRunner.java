@@ -45,7 +45,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.dao.DirectPaymentModelDao;
+import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.glue.PaymentModule;
@@ -123,9 +123,9 @@ public class DirectPaymentAutomatonRunner {
         final String currentStateMachineName;
         final String currentStateName;
         if (directPaymentId != null) {
-            final DirectPaymentModelDao directPaymentModelDao = daoHelper.getDirectPayment();
-            nonNullPaymentMethodId = directPaymentModelDao.getPaymentMethodId();
-            currentStateName = directPaymentModelDao.getCurrentStateName();
+            final PaymentModelDao paymentModelDao = daoHelper.getDirectPayment();
+            nonNullPaymentMethodId = paymentModelDao.getPaymentMethodId();
+            currentStateName = paymentModelDao.getStateName();
             currentStateMachineName = getStateMachineName(currentStateName);
 
             // Check for illegal states (should never happen)

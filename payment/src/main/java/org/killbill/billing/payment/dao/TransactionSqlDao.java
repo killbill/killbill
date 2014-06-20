@@ -33,25 +33,25 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 @EntitySqlDaoStringTemplate
-public interface DirectTransactionSqlDao extends EntitySqlDao<DirectPaymentTransactionModelDao, DirectPaymentTransaction> {
+public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelDao, DirectPaymentTransaction> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updateTransactionStatus(@Bind("id") final String transactionId,
                                  @Bind("processedAmount") final BigDecimal processedAmount,
                                  @Bind("processedCurrency") final String processedCurrency,
-                                 @Bind("paymentStatus") final String paymentStatus,
+                                 @Bind("transactionStatus") final String transactionStatus,
                                  @Bind("gatewayErrorCode") final String gatewayErrorCode,
                                  @Bind("gatewayErrorMsg") final String gatewayErrorMsg,
                                  @BindBean final InternalCallContext context);
 
     @SqlQuery
-    DirectPaymentTransactionModelDao getDirectPaymentTransactionByExternalKey(@Bind("transactionExternalKey") final String transactionExternalKey,
-                                                                              @BindBean final InternalTenantContext context);
+    PaymentTransactionModelDao getPaymentTransactionByExternalKey(@Bind("transactionExternalKey") final String transactionExternalKey,
+                                                                        @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<DirectPaymentTransactionModelDao> getByDirectPaymentId(@Bind("directPaymentId") final UUID directPaymentId,
-                                                                       @BindBean final InternalTenantContext context);
+    public List<PaymentTransactionModelDao> getByPaymentId(@Bind("paymentId") final UUID paymentId,
+                                                                 @BindBean final InternalTenantContext context);
 }
 
 

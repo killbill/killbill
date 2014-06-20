@@ -1,8 +1,8 @@
-group DirectTransactionSqlDao: EntitySqlDao;
+group TransactionSqlDao: EntitySqlDao;
 
-tableName() ::= "direct_transactions"
+tableName() ::= "transactions"
 
-historyTableName() ::= "direct_transaction_history"
+historyTableName() ::= "transaction_history"
 
 defaultOrderBy(prefix) ::= <<
 order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
@@ -12,12 +12,12 @@ tableFields(prefix) ::= <<
   <prefix>transaction_external_key
 , <prefix>transaction_type
 , <prefix>effective_date
-, <prefix>payment_status
+, <prefix>transaction_status
 , <prefix>amount
 , <prefix>currency
 , <prefix>processed_amount
 , <prefix>processed_currency
-, <prefix>direct_payment_id
+, <prefix>payment_id
 , <prefix>gateway_error_code
 , <prefix>gateway_error_msg
 , <prefix>created_by
@@ -30,12 +30,12 @@ tableValues() ::= <<
   :transactionExternalKey
 , :transactionType
 , :effectiveDate
-, :paymentStatus
+, :transactionStatus
 , :amount
 , :currency
 , :processedAmount
 , :processedCurrency
-, :directPaymentId
+, :paymentId
 , :gatewayErrorCode
 , :gatewayErrorMsg
 , :createdBy
@@ -44,7 +44,7 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
-getDirectPaymentTransactionByExternalKey() ::= <<
+getPaymentTransactionByExternalKey() ::= <<
 select
 <allTableFields("")>
 from <tableName()>
@@ -55,7 +55,7 @@ where transaction_external_key = :transactionExternalKey
 
 updateTransactionStatus() ::= <<
 update <tableName()>
-set payment_status = :paymentStatus
+set transaction_status = :transactionStatus
 , processed_amount = :processedAmount
 , processed_currency = :processedCurrency
 , gateway_error_code = :gatewayErrorCode
@@ -67,10 +67,10 @@ where id = :id
 ;
 >>
 
-getByDirectPaymentId() ::= <<
+getByPaymentId() ::= <<
 select <allTableFields()>
 from <tableName()>
-where direct_payment_id = :directPaymentId
+where payment_id = :paymentId
 <AND_CHECK_TENANT()>
 <defaultOrderBy()>
 ;
