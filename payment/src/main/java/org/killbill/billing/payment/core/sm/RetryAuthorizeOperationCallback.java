@@ -32,7 +32,7 @@ public class RetryAuthorizeOperationCallback extends RetryOperationCallback {
     }
 
     @Override
-    protected DirectPayment doPluginOperation() throws PaymentApiException {
+    protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
         return directPaymentProcessor.createAuthorization(directPaymentStateContext.account, directPaymentStateContext.paymentMethodId, directPaymentStateContext.directPaymentId, directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency(), directPaymentStateContext.directPaymentExternalKey, directPaymentStateContext.directPaymentTransactionExternalKey, false, directPaymentStateContext.getProperties(), directPaymentStateContext.callContext, directPaymentStateContext.internalCallContext);
     }
 }

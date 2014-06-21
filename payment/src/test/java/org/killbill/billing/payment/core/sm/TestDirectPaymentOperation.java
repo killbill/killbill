@@ -138,7 +138,7 @@ public class TestDirectPaymentOperation extends PaymentTestSuiteNoDB {
         }
 
         @Override
-        protected PaymentTransactionInfoPlugin doPluginOperation() throws PaymentPluginApiException {
+        protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
             if (paymentInfoPlugin == null) {
                 throw new RuntimeException("Exception expected by test");
             } else {

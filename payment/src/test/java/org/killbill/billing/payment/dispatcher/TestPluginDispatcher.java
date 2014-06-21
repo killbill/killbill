@@ -17,6 +17,7 @@
 package org.killbill.billing.payment.dispatcher;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -46,10 +47,10 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
             Assert.fail("Failed : should have had Timeout exception");
         } catch (final TimeoutException e) {
             gotIt = true;
-        } catch (final PaymentApiException e) {
+        } catch (InterruptedException e) {
             Assert.fail("Failed : should have had Timeout exception");
-        } catch (OperationException e) {
-            Assert.fail("Failed : should have had OperationException exception");
+        } catch (ExecutionException e) {
+            Assert.fail("Failed : should have had Timeout exception");
         }
         Assert.assertTrue(gotIt);
     }
@@ -67,10 +68,14 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
             Assert.fail("Failed : should have had Timeout exception");
         } catch (final TimeoutException e) {
             Assert.fail("Failed : should have had PaymentApiException exception");
-        } catch (final PaymentApiException e) {
-            gotIt = true;
-        } catch (OperationException e) {
-            Assert.fail("Failed : should have had OperationException exception");
+        } catch (InterruptedException e) {
+            Assert.fail("Failed : should have had PaymentApiException exception");
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof PaymentApiException) {
+                gotIt = true;
+            } else {
+                Assert.fail("Failed : should have had PaymentApiException exception");
+            }
         }
         Assert.assertTrue(gotIt);
     }
@@ -88,12 +93,16 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
             Assert.fail("Failed : should have had Timeout exception");
         } catch (final TimeoutException e) {
             Assert.fail("Failed : should have had RuntimeException exception");
-        } catch (final PaymentApiException e) {
-            Assert.fail("Failed : should have had RuntimeException exception");
         } catch (final RuntimeException e) {
-            gotIt = true;
-        } catch (OperationException e) {
-            Assert.fail("Failed : should have had OperationException exception");
+            Assert.fail("Failed : should have had RuntimeException (wrapped in an ExecutionException)");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof RuntimeException) {
+                gotIt = true;
+            } else {
+                Assert.fail("Failed : should have had RuntimeException exception");
+            }
         }
         Assert.assertTrue(gotIt);
     }

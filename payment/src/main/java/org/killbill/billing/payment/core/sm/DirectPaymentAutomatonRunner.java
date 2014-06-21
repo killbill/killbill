@@ -258,7 +258,6 @@ public class DirectPaymentAutomatonRunner {
 
             initialState.runOperation(operation, operationCallback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {
-            // TODO ErrorCode State Machine?
             throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
         } catch (final OperationException e) {
             if (e.getCause() == null) {

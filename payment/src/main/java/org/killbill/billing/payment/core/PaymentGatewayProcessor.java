@@ -17,14 +17,16 @@
 
 package org.killbill.billing.payment.core;
 
+import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import org.killbill.automaton.OperationException;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -46,9 +48,11 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Objects;
 import com.google.inject.name.Named;
 
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
@@ -79,50 +83,62 @@ public class PaymentGatewayProcessor extends ProcessorBase {
     }
 
     public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        try {
-            return paymentPluginFormDispatcher.dispatchWithTimeout(new CallableWithAccountLock<HostedPaymentPageFormDescriptor>(locker,
-                                                                                                                                account.getExternalKey(),
-                                                                                                                                new WithAccountLockCallback<HostedPaymentPageFormDescriptor>() {
+        return dispatchWithExceptionHandling(account,
+                                             new CallableWithAccountLock<HostedPaymentPageFormDescriptor, PaymentApiException>(locker,
+                                                                                                                               account.getExternalKey(),
+                                                                                                                               new WithAccountLockCallback<HostedPaymentPageFormDescriptor, PaymentApiException>() {
 
-                                                                                                                                    @Override
-                                                                                                                                    public HostedPaymentPageFormDescriptor doOperation() throws PaymentApiException {
-                                                                                                                                        final PaymentPluginApi plugin = getPaymentProviderPlugin(account, internalCallContext);
+                                                                                                                                   @Override
+                                                                                                                                   public HostedPaymentPageFormDescriptor doOperation() throws PaymentApiException {
+                                                                                                                                       final PaymentPluginApi plugin = getPaymentProviderPlugin(account, internalCallContext);
 
-                                                                                                                                        try {
-                                                                                                                                            return plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
-                                                                                                                                        } catch (final RuntimeException e) {
-                                                                                                                                            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
-                                                                                                                                        } catch (final PaymentPluginApiException e) {
-                                                                                                                                            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
-                                                                                                                                        }
-                                                                                                                                    }
-                                                                                                                                }
-            ));
-        } catch (final TimeoutException e) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, account.getId(), null);
-        } catch (final RuntimeException e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
-        } catch (OperationException e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
-        }
+                                                                                                                                       try {
+                                                                                                                                           return plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
+                                                                                                                                       } catch (final RuntimeException e) {
+                                                                                                                                           throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
+                                                                                                                                       } catch (final PaymentPluginApiException e) {
+                                                                                                                                           throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                                                                                                                                       }
+                                                                                                                                   }
+                                                                                                                               }),
+                                             paymentPluginFormDispatcher);
     }
 
     public GatewayNotification processNotification(final String notification, final String pluginName, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        return dispatchWithExceptionHandling(null,
+                                      new Callable<GatewayNotification>() {
+                                          @Override
+                                          public GatewayNotification call() throws PaymentApiException {
+                                              final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
+                                              try {
+                                                  return plugin.processNotification(notification, properties, callContext);
+                                              } catch (PaymentPluginApiException e) {
+                                                  throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                                              }
+                                          }
+                                      }, paymentPluginNotificationDispatcher);
+    }
+
+    private static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final Callable<ReturnType> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
+        final UUID accountId = account != null ? account.getId() : null;
+        final String accountExternalKey = account != null ? account.getExternalKey() : "";
         try {
-            return paymentPluginNotificationDispatcher.dispatchWithTimeout(new Callable<GatewayNotification>() {
-                                                                               @Override
-                                                                               public GatewayNotification call() throws Exception {
-                                                                                   final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
-                                                                                   return plugin.processNotification(notification, properties, callContext);
-                                                                               }
-                                                                           }
-                                                                          );
+            return pluginFormDispatcher.dispatchWithTimeout(callable);
         } catch (final TimeoutException e) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, null, null);
-        } catch (final RuntimeException e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
-        } catch (OperationException e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
+            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, null);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
+        } catch (final ExecutionException e) {
+            if (e.getCause() instanceof PaymentApiException) {
+                throw (PaymentApiException) e.getCause();
+            } else if (e.getCause() instanceof LockFailedException) {
+                final String format = String.format("Failed to lock account %s", accountExternalKey);
+                log.error(String.format(format), e);
+                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
+            } else {
+                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
+            }
         }
     }
 }

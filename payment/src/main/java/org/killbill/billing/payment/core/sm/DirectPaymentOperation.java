@@ -17,6 +17,9 @@
 
 package org.killbill.billing.payment.core.sm;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
 import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
@@ -29,8 +32,10 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.commons.locker.GlobalLocker;
 
+import com.google.common.base.Objects;
+
 // Encapsulates the payment specific logic
-public abstract class DirectPaymentOperation extends PluginOperation implements OperationCallback {
+public abstract class DirectPaymentOperation extends OperationCallbackBase implements OperationCallback {
 
     protected final PaymentPluginApi plugin;
 
@@ -41,7 +46,6 @@ public abstract class DirectPaymentOperation extends PluginOperation implements 
         this.plugin = daoHelper.getPaymentProviderPlugin();
     }
 
-    protected abstract PaymentTransactionInfoPlugin doPluginOperation() throws PaymentPluginApiException;
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
@@ -52,10 +56,37 @@ public abstract class DirectPaymentOperation extends PluginOperation implements 
         }
     }
 
+    @Override
+    protected OperationException rewrapExecutionException(final DirectPaymentStateContext directPaymentStateContext, final ExecutionException e) {
+        if (e.getCause() instanceof PaymentPluginApiException) {
+            final Throwable realException = Objects.firstNonNull(e.getCause(), e);
+            logger.warn("Unsuccessful plugin call for account {}", directPaymentStateContext.getAccount().getExternalKey(), realException);
+            return new OperationException(realException, OperationResult.FAILURE);
+        } else /* if (e instanceof RuntimeException) */ {
+            logger.warn("Plugin call threw an exception for account {}", directPaymentStateContext.getAccount().getExternalKey(), e);
+            return new OperationException(e, OperationResult.EXCEPTION);
+        }
+    }
+
+    @Override
+    protected OperationException wrapTimeoutException(final DirectPaymentStateContext directPaymentStateContext, final TimeoutException e) {
+        logger.error("Plugin call TIMEOUT for account {}: {}", directPaymentStateContext.getAccount().getExternalKey(), e.getMessage());
+        return new OperationException(e, OperationResult.EXCEPTION);
+    }
+
+    @Override
+    protected OperationException wrapInterruptedException(final DirectPaymentStateContext directPaymentStateContext, final InterruptedException e) {
+        logger.error("Plugin call was interrupted for account {}: {}", directPaymentStateContext.getAccount().getExternalKey(), e.getMessage());
+        return new OperationException(e, OperationResult.EXCEPTION);
+    }
+
+    @Override
+    protected abstract PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException;
+
     private OperationResult doOperationCallbackWithDispatchAndAccountLock() throws OperationException {
-        return dispatchWithTimeout(new WithAccountLockCallback<OperationResult>() {
+        return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<OperationResult, OperationException>() {
             @Override
-            public OperationResult doOperation() throws Exception {
+            public OperationResult doOperation() throws OperationException {
                 return doSimpleOperationCallback();
             }
         });
@@ -71,14 +102,13 @@ public abstract class DirectPaymentOperation extends PluginOperation implements 
 
     private OperationResult doOperation() throws PaymentApiException {
         try {
-            final PaymentTransactionInfoPlugin paymentInfoPlugin = doPluginOperation();
+            final PaymentTransactionInfoPlugin paymentInfoPlugin = doCallSpecificOperationCallback();
 
             directPaymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
 
             return processPaymentInfoPlugin();
         } catch (final PaymentPluginApiException e) {
-            // We don't care about the ErrorCode since it will be unwrapped
-            throw new PaymentApiException(e, ErrorCode.__UNKNOWN_ERROR_CODE, "");
+            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
         }
     }
 

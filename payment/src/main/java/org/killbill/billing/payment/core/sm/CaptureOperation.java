@@ -37,7 +37,7 @@ public class CaptureOperation extends DirectPaymentOperation {
     }
 
     @Override
-    protected PaymentTransactionInfoPlugin doPluginOperation() throws PaymentPluginApiException {
+    protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting CAPTURE for payment {} ({} {})", directPaymentStateContext.getDirectPaymentId(), directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency());
         return plugin.capturePayment(directPaymentStateContext.getAccount().getId(),
                                      directPaymentStateContext.getDirectPaymentId(),
