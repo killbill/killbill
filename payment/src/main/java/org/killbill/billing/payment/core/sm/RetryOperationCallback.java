@@ -47,6 +47,7 @@ import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.retry.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,6 +151,10 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
     protected OperationException rewrapExecutionException(final DirectPaymentStateContext directPaymentStateContext, final ExecutionException e) {
         if (e.getCause() instanceof OperationException) {
             return (OperationException) e.getCause();
+        } else if (e.getCause() instanceof LockFailedException) {
+            final String format = String.format("Failed to lock account %s", directPaymentStateContext.getAccount().getExternalKey());
+            logger.error(String.format(format), e);
+            return new OperationException(e, getOperationResultOnException(directPaymentStateContext));
         } else /* most probably RuntimeException */ {
             logger.warn("RetryOperationCallback failed for account {}", directPaymentStateContext.getAccount().getExternalKey(), e);
             return new OperationException(e, getOperationResultOnException(directPaymentStateContext));

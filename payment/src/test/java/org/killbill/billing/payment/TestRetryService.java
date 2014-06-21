@@ -83,7 +83,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testFailedPpluginWithLastRetrySuccess() throws Exception {
+    public void testFailedPluginWithLastRetrySuccess() throws Exception {
         testSchedulesRetryInternal(paymentConfig.getPluginFailureRetryMaxAttempts(), true, FailureType.PLUGIN_EXCEPTION);
     }
 

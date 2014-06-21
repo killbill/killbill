@@ -181,6 +181,9 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         makeNextInvoiceFailWithException.set(false);
         makeAllInvoicesFailWithError.set(false);
         makeNextInvoiceFailWithError.set(false);
+        paymentMethods.clear();
+        payments.clear();
+        paymentMethodsInfo.clear();
     }
 
     @Override

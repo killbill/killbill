@@ -31,6 +31,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.LockFailedException;
 
 import com.google.common.base.Objects;
 
@@ -58,9 +59,13 @@ public abstract class DirectPaymentOperation extends OperationCallbackBase imple
 
     @Override
     protected OperationException rewrapExecutionException(final DirectPaymentStateContext directPaymentStateContext, final ExecutionException e) {
+        final Throwable realException = Objects.firstNonNull(e.getCause(), e);
         if (e.getCause() instanceof PaymentPluginApiException) {
-            final Throwable realException = Objects.firstNonNull(e.getCause(), e);
             logger.warn("Unsuccessful plugin call for account {}", directPaymentStateContext.getAccount().getExternalKey(), realException);
+            return new OperationException(realException, OperationResult.FAILURE);
+        } else if (e.getCause() instanceof LockFailedException) {
+            final String format = String.format("Failed to lock account %s", directPaymentStateContext.getAccount().getExternalKey());
+            logger.error(String.format(format), e);
             return new OperationException(realException, OperationResult.FAILURE);
         } else /* if (e instanceof RuntimeException) */ {
             logger.warn("Plugin call threw an exception for account {}", directPaymentStateContext.getAccount().getExternalKey(), e);

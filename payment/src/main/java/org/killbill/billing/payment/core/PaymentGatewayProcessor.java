@@ -95,7 +95,7 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                                                                                                                        try {
                                                                                                                                            return plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
                                                                                                                                        } catch (final RuntimeException e) {
-                                                                                                                                           throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
+                                                                                                                                           throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
                                                                                                                                        } catch (final PaymentPluginApiException e) {
                                                                                                                                            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
                                                                                                                                        }
@@ -128,7 +128,7 @@ public class PaymentGatewayProcessor extends ProcessorBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, null);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
+            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
         } catch (final ExecutionException e) {
             if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
@@ -137,7 +137,7 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                 log.error(String.format(format), e);
                 throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
             } else {
-                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
+                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
             }
         }
     }

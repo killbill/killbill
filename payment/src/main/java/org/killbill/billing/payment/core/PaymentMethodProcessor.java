@@ -61,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -121,7 +122,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (Exception e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
         }
     }
 
@@ -340,7 +341,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (Exception e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
         }
     }
 
@@ -370,7 +371,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (Exception e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
         }
     }
 
@@ -464,7 +465,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (Exception e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
         }
     }
 

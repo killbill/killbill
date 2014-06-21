@@ -132,6 +132,13 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                 return MockPaymentControlProviderPlugin.PLUGIN_NAME;
             }
         }, mockRetryProviderPlugin);
+    }
+
+    @BeforeMethod(groups = "fast")
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
+        ((MockPaymentDao) paymentDao).reset();
+        this.utcNow = clock.getUTCNow();
 
         runner = new MockRetryableDirectPaymentAutomatonRunner(
                 stateMachineConfig,
@@ -183,13 +190,6 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                                                          runner,
                                                          clock);
 
-    }
-
-    @BeforeMethod(groups = "fast")
-    public void beforeMethod() throws Exception {
-        super.beforeMethod();
-        ((MockPaymentDao) paymentDao).reset();
-        this.utcNow = clock.getUTCNow();
     }
 
     @Test(groups = "fast")
@@ -400,7 +400,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         } catch (PaymentApiException e) {
             final PaymentAttemptModelDao pa = ((MockPaymentDao) paymentDao).getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
             assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
-            assertEquals(pa.getStateName(), "ABORTED");
+            assertEquals(pa.getStateName(), "RETRIED");
             assertEquals(pa.getOperationName(), "AUTHORIZE");
         }
     }
@@ -667,7 +667,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
 
             final PaymentAttemptModelDao pa = ((MockPaymentDao) paymentDao).getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
             assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
-            assertEquals(pa.getStateName(), "RETRIED");
+            assertEquals(pa.getStateName(), "ABORTED");
             assertEquals(pa.getOperationName(), "AUTHORIZE");
 
         } finally {
