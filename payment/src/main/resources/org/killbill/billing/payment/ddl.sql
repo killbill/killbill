@@ -96,7 +96,7 @@ CREATE TABLE payments (
     account_id char(36) NOT NULL,
     payment_method_id char(36) NOT NULL,
     external_key varchar(255) NOT NULL,
-    state_name varchar(64) NOT NULL,
+    state_name varchar(64) DEFAULT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
@@ -119,7 +119,7 @@ CREATE TABLE payment_history (
     account_id char(36) NOT NULL,
     payment_method_id char(36) NOT NULL,
     external_key varchar(255) NOT NULL,
-    state_name varchar(64) NOT NULL,
+    state_name varchar(64) DEFAULT NULL,
     change_type char(6) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
@@ -157,7 +157,7 @@ CREATE TABLE transactions (
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX transactions_id ON transactions(id);
-CREATE INDEX transactions_id ON transactions(payment_id);
+CREATE INDEX transactions_payment_id ON transactions(payment_id);
 CREATE INDEX transactions_key ON transactions(transaction_external_key);
 CREATE INDEX transactions_tenant_account_record_id ON transactions(tenant_record_id, account_record_id);
 
