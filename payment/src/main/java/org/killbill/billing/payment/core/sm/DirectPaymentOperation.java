@@ -35,6 +35,8 @@ import org.killbill.commons.locker.LockFailedException;
 
 import com.google.common.base.Objects;
 
+import com.google.common.base.Objects;
+
 // Encapsulates the payment specific logic
 public abstract class DirectPaymentOperation extends OperationCallbackBase implements OperationCallback {
 
