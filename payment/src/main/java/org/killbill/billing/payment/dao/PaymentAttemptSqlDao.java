@@ -17,11 +17,9 @@
 package org.killbill.billing.payment.dao;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.payment.api.PaymentAttempt;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.Audited;

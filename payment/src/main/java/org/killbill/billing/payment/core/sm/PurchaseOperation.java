@@ -37,7 +37,7 @@ public class PurchaseOperation extends DirectPaymentOperation {
     }
 
     @Override
-    protected PaymentTransactionInfoPlugin doPluginOperation() throws PaymentPluginApiException {
+    protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting PURCHASE for payment {} ({} {})", directPaymentStateContext.getDirectPaymentId(), directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency());
         return plugin.purchasePayment(directPaymentStateContext.getAccount().getId(),
                                      directPaymentStateContext.getDirectPaymentId(),

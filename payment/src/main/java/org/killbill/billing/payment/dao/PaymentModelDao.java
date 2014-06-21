@@ -42,8 +42,7 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Direct
     public PaymentModelDao() { /* For the DAO mapper */ }
 
     public PaymentModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
-                           final UUID paymentMethodId, final Integer paymentNumber, @Nullable final String externalKey,
-                           @Nullable final String extFirstPaymentRefId, @Nullable final String extSecondPaymentRefId) {
+                           final UUID paymentMethodId, final Integer paymentNumber, @Nullable final String externalKey) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.paymentMethodId = paymentMethodId;
@@ -53,7 +52,7 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Direct
 
     public PaymentModelDao(@Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
                            final UUID paymentMethodId, @Nullable final String externalKey) {
-        this(UUID.randomUUID(), createdDate, updatedDate, accountId, paymentMethodId, INVALID_PAYMENT_NUMBER, externalKey, null, null);
+        this(UUID.randomUUID(), createdDate, updatedDate, accountId, paymentMethodId, INVALID_PAYMENT_NUMBER, externalKey);
     }
 
     public UUID getAccountId() { return accountId; }
