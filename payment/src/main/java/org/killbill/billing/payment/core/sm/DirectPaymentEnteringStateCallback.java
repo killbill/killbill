@@ -25,7 +25,7 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,38 +52,38 @@ public abstract class DirectPaymentEnteringStateCallback implements EnteringStat
         Preconditions.checkState(directPaymentStateContext.getDirectPaymentTransactionModelDao() != null && directPaymentStateContext.getDirectPaymentTransactionModelDao().getId() != null);
 
         final PaymentTransactionInfoPlugin paymentInfoPlugin = directPaymentStateContext.getPaymentInfoPlugin();
-        final PaymentStatus paymentStatus = paymentPluginStatusToPaymentStatus(paymentInfoPlugin, operationResult);
+        final TransactionStatus paymentStatus = paymentPluginStatusToPaymentStatus(paymentInfoPlugin, operationResult);
 
         daoHelper.processPaymentInfoPlugin(paymentStatus, paymentInfoPlugin, newState.getName());
     }
 
-    private PaymentStatus paymentPluginStatusToPaymentStatus(@Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin, final OperationResult operationResult) {
+    private TransactionStatus paymentPluginStatusToPaymentStatus(@Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin, final OperationResult operationResult) {
         if (paymentInfoPlugin == null) {
             if (OperationResult.EXCEPTION.equals(operationResult)) {
                 // We got an exception during the plugin call
-                return PaymentStatus.PLUGIN_FAILURE_ABORTED;
+                return TransactionStatus.PLUGIN_FAILURE;
             } else {
                 // The plugin completed the call but returned null?! Bad plugin...
-                return PaymentStatus.UNKNOWN;
+                return TransactionStatus.UNKNOWN;
             }
         }
 
         if (paymentInfoPlugin.getStatus() == null) {
             // The plugin completed the call but returned an incomplete PaymentInfoPlugin?! Bad plugin...
-            return PaymentStatus.UNKNOWN;
+            return TransactionStatus.UNKNOWN;
         }
 
         switch (paymentInfoPlugin.getStatus()) {
             case UNDEFINED:
-                return PaymentStatus.UNKNOWN;
+                return TransactionStatus.UNKNOWN;
             case PROCESSED:
-                return PaymentStatus.SUCCESS;
+                return TransactionStatus.SUCCESS;
             case PENDING:
-                return PaymentStatus.PENDING;
+                return TransactionStatus.PENDING;
             case ERROR:
-                return PaymentStatus.PAYMENT_FAILURE_ABORTED;
+                return TransactionStatus.PAYMENT_FAILURE;
             default:
-                return PaymentStatus.UNKNOWN;
+                return TransactionStatus.UNKNOWN;
         }
     }
 }

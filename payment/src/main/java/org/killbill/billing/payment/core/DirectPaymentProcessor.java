@@ -47,8 +47,8 @@ import org.killbill.billing.payment.api.DefaultPaymentPluginErrorEvent;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentStatus;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.DirectPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -239,14 +239,14 @@ public class DirectPaymentProcessor extends ProcessorBase {
     public void notifyPendingPaymentOfStateChanged(final Account account, UUID transactionId, final boolean isSuccess, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
 
         final PaymentTransactionModelDao transactionModelDao = paymentDao.getDirectPaymentTransaction(transactionId, internalCallContext);
-        if (transactionModelDao.getPaymentStatus() != PaymentStatus.PENDING) {
+        if (transactionModelDao.getTransactionStatus() != TransactionStatus.PENDING) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, transactionModelDao.getPaymentId());
 
         }
         final PaymentModelDao paymentModelDao = paymentDao.getDirectPayment(transactionModelDao.getPaymentId(), internalCallContext);
         Preconditions.checkState(paymentModelDao != null);
 
-        final PaymentStatus newStatus = isSuccess ? PaymentStatus.SUCCESS : PaymentStatus.PAYMENT_FAILURE_ABORTED;
+        final TransactionStatus newStatus = isSuccess ? TransactionStatus.SUCCESS : TransactionStatus.PAYMENT_FAILURE;
         // STEPH This works if the pending transaction we are trying to update matches is the one that gave the state to the payment. Also can we have multiple PENDING for a given payment?
         final State currentPaymentState = directPaymentAutomatonRunner.fetchNextState(paymentModelDao.getStateName(), isSuccess);
         // STEPH : should we insert a new transaction row to keep the PENDING one?
@@ -262,12 +262,12 @@ public class DirectPaymentProcessor extends ProcessorBase {
         final DateTime utcNow = clock.getUTCNow();
         final PaymentTransactionModelDao chargebackTransaction = new PaymentTransactionModelDao(utcNow, utcNow, chargebackTransactionExternalKey, transactionModelDao.getId(),
 
-                                                                                                            TransactionType.CHARGEBACK, utcNow, PaymentStatus.SUCCESS, amount, currency, null, null);
+                                                                                                            TransactionType.CHARGEBACK, utcNow, TransactionStatus.SUCCESS, amount, currency, null, null);
         final State currentPaymentState = directPaymentAutomatonRunner.fetchNextState("CHARGEBACK_INIT", true);
 
         // TODO STEPH we could create a DAO operation to do both steps at once
         paymentDao.updateDirectPaymentWithNewTransaction(transactionModelDao.getId(), chargebackTransaction, internalCallContext);
-        paymentDao.updateDirectPaymentAndTransactionOnCompletion(transactionModelDao.getId(), currentPaymentState.getName(), chargebackTransaction.getId(), PaymentStatus.SUCCESS,
+        paymentDao.updateDirectPaymentAndTransactionOnCompletion(transactionModelDao.getId(), currentPaymentState.getName(), chargebackTransaction.getId(), TransactionStatus.SUCCESS,
                                                                  chargebackTransaction.getAmount(), chargebackTransaction.getCurrency(),
                                                                  chargebackTransaction.getGatewayErrorCode(), chargebackTransaction.getGatewayErrorMsg(), internalCallContext);
 
@@ -450,7 +450,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                                           }).orNull() : null;
 
                 return new DefaultDirectPaymentTransaction(input.getId(), input.getTransactionExternalKey(), input.getCreatedDate(), input.getUpdatedDate(), input.getPaymentId(),
-                                                           input.getTransactionType(), input.getEffectiveDate(), input.getPaymentStatus(), input.getAmount(), input.getCurrency(),
+                                                           input.getTransactionType(), input.getEffectiveDate(), input.getTransactionStatus(), input.getAmount(), input.getCurrency(),
                                                            input.getProcessedAmount(), input.getProcessedCurrency(),
                                                            input.getGatewayErrorCode(), input.getGatewayErrorMsg(), info);
             }
@@ -476,7 +476,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                                                                                               }
                                                                                                              ).get();
 
-        switch (directPaymentTransaction.getPaymentStatus()) {
+        switch (directPaymentTransaction.getTransactionStatus()) {
             case SUCCESS:
             case PENDING:
                 return new DefaultPaymentInfoEvent(account.getId(),
@@ -484,12 +484,12 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                                    directPayment.getId(),
                                                    directPaymentTransaction.getAmount(),
                                                    directPayment.getPaymentNumber(),
-                                                   directPaymentTransaction.getPaymentStatus(),
+                                                   directPaymentTransaction.getTransactionStatus(),
                                                    directPaymentTransaction.getEffectiveDate(),
                                                    context.getAccountRecordId(),
                                                    context.getTenantRecordId(),
                                                    context.getUserToken());
-            case PAYMENT_FAILURE_ABORTED:
+            case PAYMENT_FAILURE:
                 return new DefaultPaymentErrorEvent(account.getId(),
                                                     null,
                                                     directPayment.getId(),
@@ -497,7 +497,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                                     context.getAccountRecordId(),
                                                     context.getTenantRecordId(),
                                                     context.getUserToken());
-            case PLUGIN_FAILURE_ABORTED:
+            case PLUGIN_FAILURE:
             default:
                 return new DefaultPaymentPluginErrorEvent(account.getId(),
                                                           null,

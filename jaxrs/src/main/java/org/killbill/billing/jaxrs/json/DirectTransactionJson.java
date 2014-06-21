@@ -88,7 +88,7 @@ public class DirectTransactionJson extends JsonBase {
              dpt.getAmount(),
              dpt.getCurrency() != null ? dpt.getCurrency().toString() : null,
              dpt.getEffectiveDate(),
-             dpt.getPaymentStatus() != null ? dpt.getPaymentStatus().toString() : null,
+             dpt.getTransactionStatus() != null ? dpt.getTransactionStatus().toString() : null,
              dpt.getGatewayErrorCode(),
              dpt.getGatewayErrorMsg(),
              dpt.getPaymentInfoPlugin() == null ? null : dpt.getPaymentInfoPlugin().getFirstPaymentReferenceId(),

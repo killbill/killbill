@@ -144,7 +144,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
             assertEquals(paymentInfo.getTransactions().get(0).getCurrency(), Currency.USD);
             assertEquals(paymentInfo.getTransactions().get(0).getDirectPaymentId(), paymentInfo.getId());
             assertEquals(paymentInfo.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
-            assertEquals(paymentInfo.getTransactions().get(0).getPaymentStatus(), PaymentStatus.SUCCESS);
+            assertEquals(paymentInfo.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
 
         } catch (final PaymentApiException e) {
             if (expectedAmount != null) {

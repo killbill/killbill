@@ -98,7 +98,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
         assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.AED);
 
-        assertEquals(payment.getTransactions().get(0).getPaymentStatus(), PaymentStatus.SUCCESS);
+        assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
         assertNull(payment.getTransactions().get(0).getGatewayErrorMsg());
         assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
@@ -134,7 +134,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(authAmount), 0);
         assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.AED);
 
-        assertEquals(payment.getTransactions().get(0).getPaymentStatus(), PaymentStatus.SUCCESS);
+        assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.AUTHORIZE);
         assertNull(payment.getTransactions().get(0).getGatewayErrorMsg());
         assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
@@ -159,7 +159,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment2.getTransactions().get(1).getProcessedAmount().compareTo(captureAmount), 0);
         assertEquals(payment2.getTransactions().get(1).getProcessedCurrency(), Currency.AED);
 
-        assertEquals(payment2.getTransactions().get(1).getPaymentStatus(), PaymentStatus.SUCCESS);
+        assertEquals(payment2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment2.getTransactions().get(1).getTransactionType(), TransactionType.CAPTURE);
         assertNull(payment2.getTransactions().get(1).getGatewayErrorMsg());
         assertNull(payment2.getTransactions().get(1).getGatewayErrorCode());
@@ -209,7 +209,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment4.getTransactions().get(3).getCurrency(), Currency.USD);
         assertEquals(payment4.getTransactions().get(3).getProcessedAmount().compareTo(payment3.getCapturedAmount()), 0);
         assertEquals(payment4.getTransactions().get(3).getProcessedCurrency(), Currency.USD);
-        assertEquals(payment4.getTransactions().get(3).getPaymentStatus(), PaymentStatus.SUCCESS);
+        assertEquals(payment4.getTransactions().get(3).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment4.getTransactions().get(3).getTransactionType(), TransactionType.REFUND);
         assertNull(payment4.getTransactions().get(3).getGatewayErrorMsg());
         assertNull(payment4.getTransactions().get(3).getGatewayErrorCode());
@@ -258,7 +258,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
         assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.USD);
 
-        assertEquals(payment.getTransactions().get(0).getPaymentStatus(), PaymentStatus.SUCCESS);
+        assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
         assertNull(payment.getTransactions().get(0).getGatewayErrorMsg());
         assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
@@ -463,7 +463,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment2.getTransactions().get(1).getProcessedAmount().compareTo(requestedAmount), 0);
         assertEquals(payment2.getTransactions().get(1).getProcessedCurrency(), Currency.AED);
 
-        assertEquals(payment2.getTransactions().get(1).getPaymentStatus(), PaymentStatus.SUCCESS);
+        assertEquals(payment2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment2.getTransactions().get(1).getTransactionType(), TransactionType.CHARGEBACK);
         assertNull(payment2.getTransactions().get(1).getGatewayErrorMsg());
         assertNull(payment2.getTransactions().get(1).getGatewayErrorCode());

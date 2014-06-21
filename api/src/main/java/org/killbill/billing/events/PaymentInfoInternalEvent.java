@@ -20,8 +20,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
 
 public interface PaymentInfoInternalEvent extends BusInternalEvent {
 
@@ -37,5 +36,5 @@ public interface PaymentInfoInternalEvent extends BusInternalEvent {
 
     public Integer getPaymentNumber();
 
-    public PaymentStatus getStatus();
+    public TransactionStatus getStatus();
 }

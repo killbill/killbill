@@ -30,6 +30,7 @@ import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentStatus;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.slf4j.Logger;
@@ -59,7 +60,7 @@ public class PaymentChecker {
         Assert.assertEquals(payments.size(), paymentOrderingNumber);
         final DirectPayment payment = payments.get(paymentOrderingNumber - 1);
         final DirectPaymentTransaction transaction = getPurchaseTransaction(payment);
-        if (transaction.getPaymentStatus() == PaymentStatus.UNKNOWN) {
+        if (transaction.getTransactionStatus() == TransactionStatus.UNKNOWN) {
             checkPaymentNoAuditForRuntimeException(accountId, payment, expected);
         } else {
             checkPayment(accountId, payment, context, expected);
@@ -80,7 +81,7 @@ public class PaymentChecker {
         Assert.assertEquals(payment.getAccountId(), accountId);
         final DirectPaymentTransaction transaction = getPurchaseTransaction(payment);
         Assert.assertTrue(transaction.getAmount().compareTo(expected.getAmount()) == 0);
-        Assert.assertEquals(transaction.getPaymentStatus(), expected.getStatus());
+        Assert.assertEquals(transaction.getTransactionStatus(), expected.getStatus());
         Assert.assertEquals(payment.getExternalKey(), expected.getInvoiceId().toString());
         Assert.assertEquals(payment.getCurrency(), expected.getCurrency());
         auditChecker.checkPaymentCreated(payment, context);
@@ -90,7 +91,7 @@ public class PaymentChecker {
         Assert.assertEquals(payment.getAccountId(), accountId);
         final DirectPaymentTransaction transaction = getPurchaseTransaction(payment);
         Assert.assertTrue(transaction.getAmount().compareTo(expected.getAmount()) == 0);
-        Assert.assertEquals(transaction.getPaymentStatus(), expected.getStatus());
+        Assert.assertEquals(transaction.getTransactionStatus(), expected.getStatus());
         Assert.assertEquals(payment.getExternalKey(), expected.getInvoiceId());
         Assert.assertEquals(payment.getCurrency(), expected.getCurrency());
     }

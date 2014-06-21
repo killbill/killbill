@@ -23,7 +23,7 @@ import java.util.UUID;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.util.entity.Pagination;
 
 public interface PaymentDao {
@@ -50,7 +50,7 @@ public interface PaymentDao {
     public PaymentTransactionModelDao updateDirectPaymentWithNewTransaction(UUID directPaymentId, PaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
 
     public void updateDirectPaymentAndTransactionOnCompletion(UUID directPaymentId, String currentPaymentStateName,
-                                                              UUID directTransactionId, PaymentStatus paymentStatus,
+                                                              UUID directTransactionId, TransactionStatus paymentStatus,
                                                               BigDecimal processedAmount, Currency processedCurrency,
                                                               String gatewayErrorCode, String gatewayErrorMsg,
                                                               InternalCallContext context);

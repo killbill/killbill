@@ -27,8 +27,8 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentStatus;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
@@ -80,14 +80,14 @@ public class TestDirectPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmb
         Mockito.when(paymentInfoPlugin.getStatus()).thenReturn(PaymentPluginStatus.PROCESSED);
         Mockito.when(paymentInfoPlugin.getGatewayErrorCode()).thenReturn(UUID.randomUUID().toString().substring(0, 5));
         Mockito.when(paymentInfoPlugin.getGatewayError()).thenReturn(UUID.randomUUID().toString());
-        daoHelper.processPaymentInfoPlugin(PaymentStatus.SUCCESS, paymentInfoPlugin, "SOME_STATE");
+        daoHelper.processPaymentInfoPlugin(TransactionStatus.SUCCESS, paymentInfoPlugin, "SOME_STATE");
 
         final PaymentModelDao directPayment2 = daoHelper.getDirectPayment();
         Assert.assertEquals(directPayment2.getExternalKey(), directPaymentExternalKey);
         Assert.assertEquals(directPayment2.getStateName(), "SOME_STATE");
         Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getPaymentId(), directPayment2.getId());
         Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getTransactionExternalKey(), directPaymentTransactionExternalKey);
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getPaymentStatus(), PaymentStatus.SUCCESS);
+        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getTransactionStatus(), TransactionStatus.SUCCESS);
         Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getAmount().compareTo(amount), 0);
         Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getCurrency(), currency);
         Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getProcessedAmount().compareTo(paymentInfoPlugin.getAmount()), 0);

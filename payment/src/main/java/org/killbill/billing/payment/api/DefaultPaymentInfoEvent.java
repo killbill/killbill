@@ -34,7 +34,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
     private final UUID paymentId;
     private final BigDecimal amount;
     private final Integer paymentNumber;
-    private final PaymentStatus status;
+    private final TransactionStatus status;
     private final DateTime effectiveDate;
 
     @JsonCreator
@@ -43,7 +43,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
                                    @JsonProperty("paymentId") final UUID paymentId,
                                    @JsonProperty("amount") final BigDecimal amount,
                                    @JsonProperty("paymentNumber") final Integer paymentNumber,
-                                   @JsonProperty("status") final PaymentStatus status,
+                                   @JsonProperty("status") final TransactionStatus status,
                                    @JsonProperty("extFirstPaymentRefId") final String extFirstPaymentRefId /* TODO for backward compatibility only */,
                                    @JsonProperty("extSecondPaymentRefId") final String extSecondPaymentRefId /* TODO for backward compatibility only */,
                                    @JsonProperty("effectiveDate") final DateTime effectiveDate,
@@ -62,7 +62,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
 
     public DefaultPaymentInfoEvent(final UUID accountId, final UUID invoiceId,
                                    final UUID paymentId, final BigDecimal amount, final Integer paymentNumber,
-                                   final PaymentStatus status,
+                                   final TransactionStatus status,
                                    final DateTime effectiveDate,
                                    final Long searchKey1,
                                    final Long searchKey2,
@@ -108,7 +108,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
     }
 
     @Override
-    public PaymentStatus getStatus() {
+    public TransactionStatus getStatus() {
         return status;
     }
 

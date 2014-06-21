@@ -64,7 +64,7 @@ public class DefaultDirectPayment extends EntityBase implements DirectPayment {
         this.isVoided = Iterables.filter(transactions, new Predicate<DirectPaymentTransaction>() {
             @Override
             public boolean apply(final DirectPaymentTransaction input) {
-                return input.getTransactionType() == TransactionType.VOID && PaymentStatus.SUCCESS.equals(input.getPaymentStatus());
+                return input.getTransactionType() == TransactionType.VOID && TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
             }
         }).iterator().hasNext();
         this.currency = (transactions != null && !transactions.isEmpty()) ? transactions.get(0).getCurrency() : null;
@@ -75,7 +75,7 @@ public class DefaultDirectPayment extends EntityBase implements DirectPayment {
         final Iterable<DirectPaymentTransaction> filtered = Iterables.filter(transactions, new Predicate<DirectPaymentTransaction>() {
             @Override
             public boolean apply(final DirectPaymentTransaction input) {
-                return input.getTransactionType() == transactiontype && PaymentStatus.SUCCESS.equals(input.getPaymentStatus());
+                return input.getTransactionType() == transactiontype && TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
             }
         });
         if (TransactionType.AUTHORIZE.equals(transactiontype) && filtered.iterator().hasNext()) {

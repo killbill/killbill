@@ -30,7 +30,7 @@ public class DefaultDirectPaymentTransaction extends EntityBase implements Direc
     private final String externalKey;
     private final TransactionType transactionType;
     private final DateTime effectiveDate;
-    private final PaymentStatus status;
+    private final TransactionStatus status;
     private final BigDecimal amount;
     private final Currency currency;
     private final BigDecimal processedAmount;
@@ -40,7 +40,7 @@ public class DefaultDirectPaymentTransaction extends EntityBase implements Direc
     private final PaymentTransactionInfoPlugin infoPlugin;
 
     public DefaultDirectPaymentTransaction(final UUID id, final String externalKey, final DateTime createdDate, final DateTime updatedDate, final UUID directPaymentId, final TransactionType transactionType,
-                                           final DateTime effectiveDate, final PaymentStatus status, final BigDecimal amount, final Currency currency, final BigDecimal processedAmount, final Currency processedCurrency,
+                                           final DateTime effectiveDate, final TransactionStatus status, final BigDecimal amount, final Currency currency, final BigDecimal processedAmount, final Currency processedCurrency,
                                            final String gatewayErrorCode, final String gatewayErrorMsg, final PaymentTransactionInfoPlugin infoPlugin) {
         super(id, createdDate, updatedDate);
         this.externalKey = externalKey;
@@ -108,7 +108,7 @@ public class DefaultDirectPaymentTransaction extends EntityBase implements Direc
     }
 
     @Override
-    public PaymentStatus getPaymentStatus() {
+    public TransactionStatus getTransactionStatus() {
         return status;
     }
 

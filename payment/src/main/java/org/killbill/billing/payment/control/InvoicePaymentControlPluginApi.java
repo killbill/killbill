@@ -35,14 +35,14 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.payment.api.PaymentStatus;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.control.dao.InvoicePaymentControlDao;
 import org.killbill.billing.payment.control.dao.PluginAutoPayOffModelDao;
+import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
@@ -268,12 +268,12 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             return null;
         }
         final PaymentTransactionModelDao lastTransaction = purchasedTransactions.get(purchasedTransactions.size() - 1);
-        switch (lastTransaction.getPaymentStatus()) {
-            case PAYMENT_FAILURE_ABORTED:
+        switch (lastTransaction.getTransactionStatus()) {
+            case PAYMENT_FAILURE:
                 return getNextRetryDateForPaymentFailure(purchasedTransactions);
 
             case UNKNOWN:
-            case PLUGIN_FAILURE_ABORTED:
+            case PLUGIN_FAILURE:
                 return getNextRetryDateForPluginFailure(purchasedTransactions);
 
             default:
@@ -285,7 +285,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
         DateTime result = null;
         final List<Integer> retryDays = paymentConfig.getPaymentRetryDays();
-        final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, PaymentStatus.PAYMENT_FAILURE_ABORTED);
+        final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, TransactionStatus.PAYMENT_FAILURE);
         final int retryCount = (attemptsInState - 1) >= 0 ? (attemptsInState - 1) : 0;
         if (retryCount < retryDays.size()) {
             int retryInDays;
@@ -303,7 +303,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     private DateTime getNextRetryDateForPluginFailure(final List<PaymentTransactionModelDao> purchasedTransactions) {
 
         DateTime result = null;
-        final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, PaymentStatus.PLUGIN_FAILURE_ABORTED);
+        final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, TransactionStatus.PLUGIN_FAILURE);
         final int retryAttempt = (attemptsInState - 1) >= 0 ? (attemptsInState - 1) : 0;
 
         if (retryAttempt < paymentConfig.getPluginFailureRetryMaxAttempts()) {
@@ -317,15 +317,15 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         return result;
     }
 
-    private int getNumberAttemptsInState(final Collection<PaymentTransactionModelDao> allTransactions, final PaymentStatus... statuses) {
+    private int getNumberAttemptsInState(final Collection<PaymentTransactionModelDao> allTransactions, final TransactionStatus... statuses) {
         if (allTransactions == null || allTransactions.size() == 0) {
             return 0;
         }
         return Collections2.filter(allTransactions, new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao input) {
-                for (final PaymentStatus cur : statuses) {
-                    if (input.getPaymentStatus() == cur) {
+                for (final TransactionStatus cur : statuses) {
+                    if (input.getTransactionStatus() == cur) {
                         return true;
                     }
                 }
