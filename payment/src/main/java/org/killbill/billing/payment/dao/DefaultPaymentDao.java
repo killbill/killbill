@@ -33,7 +33,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.PaymentMethod;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
@@ -211,7 +211,7 @@ public class DefaultPaymentDao implements PaymentDao {
 
     @Override
     public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final String currentPaymentStateName,
-                                                              final UUID directTransactionId, final PaymentStatus paymentStatus,
+                                                              final UUID directTransactionId, final TransactionStatus paymentStatus,
                                                               final BigDecimal processedAmount, final Currency processedCurrency,
                                                               final String gatewayErrorCode, final String gatewayErrorMsg,
                                                               final InternalCallContext context) {

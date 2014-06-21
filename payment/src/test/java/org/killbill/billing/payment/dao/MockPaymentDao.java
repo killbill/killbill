@@ -28,7 +28,7 @@ import java.util.UUID;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.util.entity.Pagination;
 
 import com.google.common.base.Predicate;
@@ -143,7 +143,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final String currentPaymentStateName, final UUID directTransactionId, final PaymentStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final String currentPaymentStateName, final UUID directTransactionId, final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
         synchronized (this) {
             final PaymentModelDao payment = payments.get(directPaymentId);
             if (payment != null) {
@@ -151,7 +151,7 @@ public class MockPaymentDao implements PaymentDao {
             }
             final PaymentTransactionModelDao transaction = transactions.get(directTransactionId);
             if (transaction != null) {
-                transaction.setPaymentStatus(paymentStatus);
+                transaction.setTransactionStatus(paymentStatus);
                 transaction.setProcessedAmount(processedAmount);
                 transaction.setProcessedCurrency(processedCurrency);
                 transaction.setGatewayErrorCode(gatewayErrorCode);

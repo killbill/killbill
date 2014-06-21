@@ -36,8 +36,8 @@ import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentTransaction;
-import org.killbill.billing.payment.api.PaymentStatus;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -244,7 +244,7 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
             } else {
                 Assert.assertEquals(event.getAmount().compareTo(amount), 0);
             }
-            Assert.assertEquals(event.getStatus(), PaymentStatus.SUCCESS);
+            Assert.assertEquals(event.getStatus(), TransactionStatus.SUCCESS);
         }
     }
 }

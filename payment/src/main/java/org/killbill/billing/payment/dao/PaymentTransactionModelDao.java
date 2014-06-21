@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.payment.api.DirectPaymentTransaction;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
@@ -38,7 +38,7 @@ public class PaymentTransactionModelDao extends EntityBase implements EntityMode
     private String transactionExternalKey;
     private TransactionType transactionType;
     private DateTime effectiveDate;
-    private PaymentStatus paymentStatus;
+    private TransactionStatus transactionStatus;
     private BigDecimal amount;
     private Currency currency;
     private BigDecimal processedAmount;
@@ -51,13 +51,13 @@ public class PaymentTransactionModelDao extends EntityBase implements EntityMode
 
     public PaymentTransactionModelDao(final UUID id, @Nullable final String transactionExternalKey, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                       final UUID paymentId, final TransactionType transactionType, final DateTime effectiveDate,
-                                      final PaymentStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
+                                      final TransactionStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
         super(id, createdDate, updatedDate);
         this.transactionExternalKey = Objects.firstNonNull(transactionExternalKey, id.toString());
         this.paymentId = paymentId;
         this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;
-        this.paymentStatus = paymentStatus;
+        this.transactionStatus = paymentStatus;
         this.amount = amount;
         this.currency = currency;
         this.processedAmount = null;
@@ -68,7 +68,7 @@ public class PaymentTransactionModelDao extends EntityBase implements EntityMode
 
     public PaymentTransactionModelDao(@Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                       @Nullable final String transactionExternalKey, final UUID paymentId, final TransactionType transactionType, final DateTime effectiveDate,
-                                      final PaymentStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
+                                      final TransactionStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
         this(UUID.randomUUID(), transactionExternalKey, createdDate, updatedDate, paymentId, transactionType, effectiveDate, paymentStatus, amount, currency, gatewayErrorCode, gatewayErrorMsg);
     }
 
@@ -88,8 +88,8 @@ public class PaymentTransactionModelDao extends EntityBase implements EntityMode
         return effectiveDate;
     }
 
-    public PaymentStatus getPaymentStatus() {
-        return paymentStatus;
+    public TransactionStatus getTransactionStatus() {
+        return transactionStatus;
     }
 
     public BigDecimal getAmount() {
@@ -132,8 +132,8 @@ public class PaymentTransactionModelDao extends EntityBase implements EntityMode
         this.effectiveDate = effectiveDate;
     }
 
-    public void setPaymentStatus(final PaymentStatus paymentStatus) {
-        this.paymentStatus = paymentStatus;
+    public void setTransactionStatus(final TransactionStatus transactionStatus) {
+        this.transactionStatus = transactionStatus;
     }
 
     public void setAmount(final BigDecimal amount) {
@@ -195,7 +195,7 @@ public class PaymentTransactionModelDao extends EntityBase implements EntityMode
         if (gatewayErrorMsg != null ? !gatewayErrorMsg.equals(that.gatewayErrorMsg) : that.gatewayErrorMsg != null) {
             return false;
         }
-        if (paymentStatus != that.paymentStatus) {
+        if (transactionStatus != that.transactionStatus) {
             return false;
         }
         if (processedAmount != null ? processedAmount.compareTo(that.processedAmount) != 0 : that.processedAmount != null) {
@@ -217,7 +217,7 @@ public class PaymentTransactionModelDao extends EntityBase implements EntityMode
         result = 31 * result + (transactionExternalKey != null ? transactionExternalKey.hashCode() : 0);
         result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
-        result = 31 * result + (paymentStatus != null ? paymentStatus.hashCode() : 0);
+        result = 31 * result + (transactionStatus != null ? transactionStatus.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (processedAmount != null ? processedAmount.hashCode() : 0);

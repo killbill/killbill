@@ -28,12 +28,12 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentStatus;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -78,7 +78,7 @@ public class TestDirectPaymentEnteringStateCallback extends PaymentTestSuiteWith
     public void testEnterStateAndProcessPaymentTransactionInfoPlugin() throws Exception {
         // Create the payment and first transaction (would be done by DirectPaymentLeavingStateCallback)
         daoHelper.createNewDirectPaymentTransaction();
-        Assert.assertEquals(paymentDao.getDirectPaymentTransaction(directPaymentStateContext.getDirectPaymentTransactionModelDao().getId(), internalCallContext).getPaymentStatus(), PaymentStatus.UNKNOWN);
+        Assert.assertEquals(paymentDao.getDirectPaymentTransaction(directPaymentStateContext.getDirectPaymentTransactionModelDao().getId(), internalCallContext).getTransactionStatus(), TransactionStatus.UNKNOWN);
 
         // Mock the plugin result
         final PaymentTransactionInfoPlugin paymentInfoPlugin = Mockito.mock(PaymentTransactionInfoPlugin.class);
@@ -98,7 +98,7 @@ public class TestDirectPaymentEnteringStateCallback extends PaymentTestSuiteWith
         Assert.assertEquals(directPaymentTransaction.getCurrency(), directPaymentStateContext.getCurrency());
         Assert.assertEquals(directPaymentTransaction.getProcessedAmount().compareTo(paymentInfoPlugin.getAmount()), 0);
         Assert.assertEquals(directPaymentTransaction.getProcessedCurrency(), paymentInfoPlugin.getCurrency());
-        Assert.assertEquals(directPaymentTransaction.getPaymentStatus(), PaymentStatus.PENDING);
+        Assert.assertEquals(directPaymentTransaction.getTransactionStatus(), TransactionStatus.PENDING);
         Assert.assertEquals(directPaymentTransaction.getGatewayErrorCode(), paymentInfoPlugin.getGatewayErrorCode());
         Assert.assertEquals(directPaymentTransaction.getGatewayErrorMsg(), paymentInfoPlugin.getGatewayError());
     }
@@ -112,7 +112,7 @@ public class TestDirectPaymentEnteringStateCallback extends PaymentTestSuiteWith
 
         callback.enteringState(state, operationCallback, operationResult, leavingStateCallback);
 
-        Assert.assertEquals(paymentDao.getDirectPaymentTransaction(directPaymentStateContext.getDirectPaymentTransactionModelDao().getId(), internalCallContext).getPaymentStatus(), PaymentStatus.PLUGIN_FAILURE_ABORTED);
+        Assert.assertEquals(paymentDao.getDirectPaymentTransaction(directPaymentStateContext.getDirectPaymentTransactionModelDao().getId(), internalCallContext).getTransactionStatus(), TransactionStatus.PLUGIN_FAILURE);
     }
 
     @Test(groups = "slow", expectedExceptions = IllegalStateException.class)

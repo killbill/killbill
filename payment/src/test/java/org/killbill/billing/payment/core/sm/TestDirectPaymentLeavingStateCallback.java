@@ -27,8 +27,8 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentStatus;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -83,7 +83,7 @@ public class TestDirectPaymentLeavingStateCallback extends PaymentTestSuiteWithE
     private void verifyDirectPaymentTransaction() {
         Assert.assertNotNull(directPaymentStateContext.getDirectPaymentTransactionModelDao().getPaymentId());
         Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getTransactionExternalKey(), directPaymentStateContext.getDirectPaymentTransactionExternalKey());
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getPaymentStatus(), PaymentStatus.UNKNOWN);
+        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getTransactionStatus(), TransactionStatus.UNKNOWN);
         Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getAmount().compareTo(directPaymentStateContext.getAmount()), 0);
         Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getCurrency(), directPaymentStateContext.getCurrency());
         Assert.assertNull(directPaymentStateContext.getDirectPaymentTransactionModelDao().getProcessedAmount());

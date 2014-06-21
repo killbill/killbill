@@ -24,7 +24,7 @@ import java.util.UUID;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -64,7 +64,7 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         paymentDao.updateDirectPaymentAndTransactionOnCompletion(specifiedSecondDirectPaymentTransactionModelDao.getPaymentId(),
                                                                  "SOME_ERRORED_STATE",
                                                                  specifiedSecondDirectPaymentTransactionModelDao.getId(),
-                                                                 PaymentStatus.PAYMENT_FAILURE_ABORTED,
+                                                                 TransactionStatus.PAYMENT_FAILURE,
                                                                  processedAmount,
                                                                  processedCurrency,
                                                                  gatewayErrorCode,
@@ -72,7 +72,7 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                  accountCallContext);
 
         final PaymentTransactionModelDao updatedSecondDirectPaymentTransactionModelDao = paymentDao.getDirectPaymentTransaction(specifiedSecondDirectPaymentTransactionModelDao.getId(), accountCallContext);
-        Assert.assertEquals(updatedSecondDirectPaymentTransactionModelDao.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE_ABORTED);
+        Assert.assertEquals(updatedSecondDirectPaymentTransactionModelDao.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
         Assert.assertEquals(updatedSecondDirectPaymentTransactionModelDao.getGatewayErrorMsg(), gatewayErrorMsg);
         Assert.assertEquals(updatedSecondDirectPaymentTransactionModelDao.getGatewayErrorMsg(), gatewayErrorMsg);
 
@@ -119,29 +119,29 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
     private PaymentTransactionModelDao generateDirectPaymentTransactionModelDao(final UUID directPaymentId) {
         return new PaymentTransactionModelDao(UUID.randomUUID(),
-                                                    UUID.randomUUID().toString(),
-                                                    clock.getUTCNow(),
-                                                    clock.getUTCNow(),
-                                                    directPaymentId,
-                                                    TransactionType.CAPTURE,
-                                                    clock.getUTCNow(),
-                                                    PaymentStatus.SUCCESS,
-                                                    new BigDecimal("192.32910002"),
-                                                    Currency.EUR,
-                                                    UUID.randomUUID().toString().substring(0, 5),
-                                                    UUID.randomUUID().toString()
+                                              UUID.randomUUID().toString(),
+                                              clock.getUTCNow(),
+                                              clock.getUTCNow(),
+                                              directPaymentId,
+                                              TransactionType.CAPTURE,
+                                              clock.getUTCNow(),
+                                              TransactionStatus.SUCCESS,
+                                              new BigDecimal("192.32910002"),
+                                              Currency.EUR,
+                                              UUID.randomUUID().toString().substring(0, 5),
+                                              UUID.randomUUID().toString()
         );
     }
 
     private PaymentModelDao generateDirectPaymentModelDao(final UUID accountId) {
         return new PaymentModelDao(UUID.randomUUID(),
-                                         clock.getUTCNow(),
-                                         clock.getUTCNow(),
-                                         accountId,
-                                         UUID.randomUUID(),
-                                         -1,
-                                         UUID.randomUUID().toString(),
-                                         null, null);
+                                   clock.getUTCNow(),
+                                   clock.getUTCNow(),
+                                   accountId,
+                                   UUID.randomUUID(),
+                                   -1,
+                                   UUID.randomUUID().toString()
+        );
     }
 
     private void verifyDirectPayment(final PaymentModelDao loadedPaymentModelDao, final PaymentModelDao specifiedPaymentModelDao) {
@@ -156,7 +156,7 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getTransactionExternalKey(), specifiedDirectPaymentTransactionModelDao.getTransactionExternalKey());
         Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getTransactionType(), specifiedDirectPaymentTransactionModelDao.getTransactionType());
         Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getEffectiveDate().compareTo(specifiedDirectPaymentTransactionModelDao.getEffectiveDate()), 0);
-        Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getPaymentStatus(), specifiedDirectPaymentTransactionModelDao.getPaymentStatus());
+        Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getTransactionStatus(), specifiedDirectPaymentTransactionModelDao.getTransactionStatus());
         Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getAmount().compareTo(specifiedDirectPaymentTransactionModelDao.getAmount()), 0);
         Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getCurrency(), specifiedDirectPaymentTransactionModelDao.getCurrency());
         Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getGatewayErrorCode(), specifiedDirectPaymentTransactionModelDao.getGatewayErrorCode());

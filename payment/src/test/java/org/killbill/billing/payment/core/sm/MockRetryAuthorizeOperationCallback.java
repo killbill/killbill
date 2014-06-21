@@ -25,11 +25,11 @@ import org.killbill.billing.payment.api.DefaultDirectPaymentTransaction;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.DirectPaymentProcessor;
+import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
 import org.killbill.clock.Clock;
@@ -50,7 +50,7 @@ public class MockRetryAuthorizeOperationCallback extends RetryAuthorizeOperation
     }
 
     @Override
-    protected DirectPayment doPluginOperation() throws PaymentApiException {
+    protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
         if (exception != null) {
             if (exception instanceof PaymentApiException) {
                 throw (PaymentApiException) exception;
@@ -83,7 +83,7 @@ public class MockRetryAuthorizeOperationCallback extends RetryAuthorizeOperation
                                                                                                   transaction.getPaymentId(),
                                                                                                   transaction.getTransactionType(),
                                                                                                   transaction.getEffectiveDate(),
-                                                                                                  transaction.getPaymentStatus(),
+                                                                                                  transaction.getTransactionStatus(),
                                                                                                   transaction.getAmount(),
                                                                                                   transaction.getCurrency(),
                                                                                                   transaction.getProcessedAmount(),

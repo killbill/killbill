@@ -28,7 +28,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -75,7 +75,7 @@ public class DirectPaymentAutomatonDAOHelper {
         directPaymentStateContext.setDirectPaymentTransactionModelDao(paymentTransactionModelDao);
     }
 
-    public void processPaymentInfoPlugin(final PaymentStatus paymentStatus, @Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin,
+    public void processPaymentInfoPlugin(final TransactionStatus paymentStatus, @Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin,
                                          final String currentPaymentStateName) {
         final BigDecimal processedAmount = paymentInfoPlugin == null ? null : paymentInfoPlugin.getAmount();
         final Currency processedCurrency = paymentInfoPlugin == null ? null : paymentInfoPlugin.getCurrency();
@@ -147,7 +147,7 @@ public class DirectPaymentAutomatonDAOHelper {
                                                     directPaymentId,
                                                     directPaymentStateContext.getTransactionType(),
                                                     effectiveDate,
-                                                    PaymentStatus.UNKNOWN,
+                                                    TransactionStatus.UNKNOWN,
                                                     directPaymentStateContext.getAmount(),
                                                     directPaymentStateContext.getCurrency(),
                                                     gatewayErrorCode,
