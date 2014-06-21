@@ -39,6 +39,7 @@ import com.google.common.collect.Collections2;
 
 public class PaymentMethodJson extends JsonBase {
 
+    private final String externalKey;
     private final String paymentMethodId;
     private final String accountId;
     private final Boolean isDefault;
@@ -47,12 +48,14 @@ public class PaymentMethodJson extends JsonBase {
 
     @JsonCreator
     public PaymentMethodJson(@JsonProperty("paymentMethodId") final String paymentMethodId,
+                             @JsonProperty("externalKey") final String externalKey,
                              @JsonProperty("accountId") final String accountId,
                              @JsonProperty("isDefault") final Boolean isDefault,
                              @JsonProperty("pluginName") final String pluginName,
                              @JsonProperty("pluginInfo") final PaymentMethodPluginDetailJson pluginInfo,
                              @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
+        this.externalKey = externalKey;
         this.paymentMethodId = paymentMethodId;
         this.accountId = accountId;
         this.isDefault = isDefault;
@@ -78,7 +81,7 @@ public class PaymentMethodJson extends JsonBase {
                                                                  pluginDetail.isDefaultPaymentMethod(),
                                                                  properties);
         }
-        return new PaymentMethodJson(in.getId().toString(), account.getId().toString(), isDefault, in.getPluginName(),
+        return new PaymentMethodJson(in.getId().toString(), in.getExternalKey(), account.getId().toString(), isDefault, in.getPluginName(),
                                      pluginDetailJson, toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentMethod(in.getId())));
     }
 
@@ -97,6 +100,11 @@ public class PaymentMethodJson extends JsonBase {
             @Override
             public UUID getId() {
                 return paymentMethodId != null ? UUID.fromString(paymentMethodId) : null;
+            }
+
+            @Override
+            public String getExternalKey() {
+                return null;
             }
 
             @Override

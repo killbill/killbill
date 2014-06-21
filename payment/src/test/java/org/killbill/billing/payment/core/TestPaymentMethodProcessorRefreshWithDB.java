@@ -68,7 +68,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
         Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, PLUGIN_PROPERTIES, callContext).size(), 1);
         final UUID firstPmId = account.getPaymentMethodId();
 
-        final UUID secondPmId = paymentApi.addPaymentMethod(account, MockPaymentProviderPlugin.PLUGIN_NAME, true, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null), PLUGIN_PROPERTIES, callContext);
+        final UUID secondPmId = paymentApi.addPaymentMethod(UUID.randomUUID().toString(), account, MockPaymentProviderPlugin.PLUGIN_NAME, true, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null), PLUGIN_PROPERTIES, callContext);
         Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, PLUGIN_PROPERTIES, callContext).size(), 2);
         Assert.assertEquals(paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext).size(), 2);
 

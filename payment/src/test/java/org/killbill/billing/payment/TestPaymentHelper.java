@@ -130,7 +130,7 @@ public class TestPaymentHelper {
     }
 
     public void addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, MockPaymentProviderPlugin.PLUGIN_NAME, true, paymentMethodInfo, ImmutableList.<PluginProperty>of(), context);
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(UUID.randomUUID().toString(), account, MockPaymentProviderPlugin.PLUGIN_NAME, true, paymentMethodInfo, ImmutableList.<PluginProperty>of(), context);
         Mockito.when(account.getPaymentMethodId()).thenReturn(paymentMethodId);
     }
 }

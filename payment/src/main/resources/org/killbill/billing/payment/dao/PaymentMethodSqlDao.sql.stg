@@ -9,7 +9,8 @@ historyTableName() ::= "payment_method_history"
 andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
 
 tableFields(prefix) ::= <<
-  <prefix>account_id
+  <prefix>external_key
+, <prefix>account_id
 , <prefix>plugin_name
 , <prefix>is_active
 , <prefix>created_by
@@ -19,7 +20,8 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
-  :accountId
+  :externalKey
+, :accountId
 , :pluginName
 , :isActive
 , :createdBy

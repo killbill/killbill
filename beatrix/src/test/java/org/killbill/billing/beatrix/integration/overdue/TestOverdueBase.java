@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration.overdue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.killbill.billing.account.api.Account;
@@ -63,7 +64,7 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
         assertNotNull(account);
 
-        paymentApi.addPaymentMethod(account, BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, paymentMethodPlugin, PLUGIN_PROPERTIES, callContext);
+        paymentApi.addPaymentMethod(UUID.randomUUID().toString(), account, BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, paymentMethodPlugin, PLUGIN_PROPERTIES, callContext);
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
         paymentPlugin.clear();

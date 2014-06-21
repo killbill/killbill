@@ -45,7 +45,7 @@ public class TestPaymentMethodProcessorNoDB extends PaymentTestSuiteNoDB {
         Assert.assertEquals(paymentMethodProcessor.getPaymentMethods(account.getId(), false, properties, internalCallContext).size(), 0);
 
         // The first call should create the payment method
-        final ExternalPaymentProviderPlugin providerPlugin = paymentMethodProcessor.createPaymentMethodAndGetExternalPaymentProviderPlugin(account, properties, callContext, internalCallContext);
+        final ExternalPaymentProviderPlugin providerPlugin = paymentMethodProcessor.createPaymentMethodAndGetExternalPaymentProviderPlugin(UUID.randomUUID().toString(), account, properties, callContext, internalCallContext);
         final List<PaymentMethod> paymentMethods = paymentMethodProcessor.getPaymentMethods(account.getId(), false, properties, internalCallContext);
         Assert.assertEquals(paymentMethods.size(), 1);
         Assert.assertEquals(paymentMethods.get(0).getPluginName(), ExternalPaymentProviderPlugin.PLUGIN_NAME);
@@ -54,7 +54,7 @@ public class TestPaymentMethodProcessorNoDB extends PaymentTestSuiteNoDB {
         // The succeeding calls should not create any other payment method
         final UUID externalPaymentMethodId = paymentMethods.get(0).getId();
         for (int i = 0; i < 50; i++) {
-            final ExternalPaymentProviderPlugin foundProviderPlugin = paymentMethodProcessor.createPaymentMethodAndGetExternalPaymentProviderPlugin(account, properties, callContext, internalCallContext);
+            final ExternalPaymentProviderPlugin foundProviderPlugin = paymentMethodProcessor.createPaymentMethodAndGetExternalPaymentProviderPlugin(UUID.randomUUID().toString(), account, properties, callContext, internalCallContext);
             Assert.assertNotNull(foundProviderPlugin);
 
             final List<PaymentMethod> foundPaymentMethods = paymentMethodProcessor.getPaymentMethods(account.getId(), false, properties, internalCallContext);

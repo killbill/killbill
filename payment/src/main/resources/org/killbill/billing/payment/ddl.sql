@@ -52,6 +52,7 @@ DROP TABLE IF EXISTS payment_methods;
 CREATE TABLE payment_methods (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    external_key varchar(255) NOT NULL,
     account_id char(36) NOT NULL,
     plugin_name varchar(50) NOT NULL,
     is_active bool DEFAULT true,
@@ -71,7 +72,8 @@ CREATE INDEX payment_methods_tenant_account_record_id ON payment_methods(tenant_
 DROP TABLE IF EXISTS payment_method_history;
 CREATE TABLE payment_method_history (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    id char(36) NOT NULL,
+    id char(36) NOT NULL,'
+    external_key varchar(255) NOT NULL,
     target_record_id int(11) unsigned NOT NULL,
     account_id char(36) NOT NULL,
     plugin_name varchar(50) NOT NULL,

@@ -85,11 +85,11 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                   final TagInternalApi tagUserApi,
                                   final GlobalLocker locker,
                                   @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
-                                 final Clock clock) {
+                                  final Clock clock) {
         super(pluginRegistry, accountInternalApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
     }
 
-    public UUID addPaymentMethod(final String paymentPluginServiceName, final Account account,
+    public UUID addPaymentMethod(final String paymentMethodExternalKey, final String paymentPluginServiceName, final Account account,
                                  final boolean setDefault, final PaymentMethodPlugin paymentMethodProps,
                                  final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context)
             throws PaymentApiException {
@@ -102,7 +102,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     PaymentPluginApi pluginApi;
                     try {
                         pluginApi = getPaymentPluginApi(paymentPluginServiceName);
-                        pm = new DefaultPaymentMethod(account.getId(), paymentPluginServiceName, paymentMethodProps);
+                        pm = new DefaultPaymentMethod(paymentMethodExternalKey, account.getId(), paymentPluginServiceName, paymentMethodProps);
                         pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, properties, callContext);
                         final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
                                                                                         pm.getAccountId(), pm.getPluginName(), pm.isActive());
@@ -271,7 +271,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return null;
     }
 
-    public UUID createOrGetExternalPaymentMethod(final Account account, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context) throws PaymentApiException {
+    public UUID createOrGetExternalPaymentMethod(final String paymentMethodExternalKey, final Account account, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context) throws PaymentApiException {
         // Check if this account has already used the external payment plugin
         // If not, it's the first time - add a payment method for it
         PaymentMethod externalPaymentMethod = getExternalPaymentMethod(account.getId(), properties, callContext, context);
@@ -279,13 +279,13 @@ public class PaymentMethodProcessor extends ProcessorBase {
             return externalPaymentMethod.getId();
         }
         final DefaultNoOpPaymentMethodPlugin props = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, properties);
-        return addPaymentMethod(ExternalPaymentProviderPlugin.PLUGIN_NAME, account, false, props, properties, callContext, context);
+        return addPaymentMethod(paymentMethodExternalKey, ExternalPaymentProviderPlugin.PLUGIN_NAME, account, false, props, properties, callContext, context);
     }
 
-    public ExternalPaymentProviderPlugin createPaymentMethodAndGetExternalPaymentProviderPlugin(final Account account, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalContext) throws PaymentApiException {
+    public ExternalPaymentProviderPlugin createPaymentMethodAndGetExternalPaymentProviderPlugin(final String paymentMethodExternalKey, final Account account, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalContext) throws PaymentApiException {
         // Check if this account has already used the external payment plugin
         // If not, it's the first time - add a payment method for it
-        createOrGetExternalPaymentMethod(account, properties, callContext, internalContext);
+        createOrGetExternalPaymentMethod(paymentMethodExternalKey, account, properties, callContext, internalContext);
         return (ExternalPaymentProviderPlugin) getPaymentPluginApi(ExternalPaymentProviderPlugin.PLUGIN_NAME);
     }
 
@@ -424,7 +424,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     for (final PaymentMethodInfoPlugin cur : pluginPms) {
                         // If the kbPaymentId is NULL, the plugin does not know about it, so we create a new UUID
                         final UUID paymentMethodId = cur.getPaymentMethodId() != null ? cur.getPaymentMethodId() : UUID.randomUUID();
-                        final PaymentMethod input = new DefaultPaymentMethod(paymentMethodId, account.getId(), pluginName);
+                        final PaymentMethod input = new DefaultPaymentMethod(paymentMethodId, paymentMethodId.toString(), account.getId(), pluginName);
                         final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getCreatedDate(), input.getUpdatedDate(),
                                                                                         input.getAccountId(), input.getPluginName(), input.isActive());
                         finalPaymentMethods.add(pmModel);

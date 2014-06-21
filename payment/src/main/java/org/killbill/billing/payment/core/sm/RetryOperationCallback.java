@@ -133,7 +133,11 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
                         return OperationResult.SUCCESS;
                     } else {
                         // Return an ABORTED/FAILURE state based on the retry result.
-                        return getOperationResultAndSetContext(retryableDirectPaymentStateContext, paymentControlContext);
+                        //return getOperationResultAndSetContext(retryableDirectPaymentStateContext, paymentControlContext);
+
+                        // STEPH Do we actually want the purchase call to fail with an exception ?
+                        throw new OperationException(null, getOperationResultAndSetContext(retryableDirectPaymentStateContext, paymentControlContext));
+
                     }
                 } catch (PaymentApiException e) {
                     // Wrap PaymentApiException, and throw a new OperationException with an ABORTED/FAILURE state based on the retry result.
