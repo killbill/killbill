@@ -37,7 +37,7 @@ public class CreditOperation extends DirectPaymentOperation {
     }
 
     @Override
-    protected PaymentTransactionInfoPlugin doPluginOperation() throws PaymentPluginApiException {
+    protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting CREDIT for payment {} ({} {})", directPaymentStateContext.getDirectPaymentId(), directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency());
         return plugin.creditPayment(directPaymentStateContext.getAccount().getId(),
                                     directPaymentStateContext.getDirectPaymentId(),

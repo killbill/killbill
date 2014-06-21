@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 
+import org.killbill.automaton.OperationException;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -166,71 +167,43 @@ public abstract class ProcessorBase {
         }
     }
 
-    protected Invoice rebalanceAndGetInvoice(final UUID accountId, final UUID invoiceId, final InternalCallContext context) throws InvoiceApiException {
-        invoiceApi.consumeExistingCBAOnAccountWithUnpaidInvoices(accountId, context);
-        final Invoice invoice = invoiceApi.getInvoiceById(invoiceId, context);
-        return invoice;
-    }
-
     protected TenantContext buildTenantContext(final InternalTenantContext context) {
         return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
     }
 
-    protected CallContext buildCallContext(final InternalCallContext context) {
-        return context.toCallContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
-    }
-
     // TODO Rename - there is no lock!
-    public interface WithAccountLockCallback<T> {
-        public T doOperation() throws Exception;
+    public interface WithAccountLockCallback<ReturnType, ExceptionType extends Exception> {
+        public ReturnType doOperation() throws ExceptionType;
     }
 
-    public static class CallableWithAccountLock<T> implements Callable<T> {
+    public static class CallableWithAccountLock<ReturnType, ExceptionType extends Exception> implements Callable<ReturnType> {
 
         private final GlobalLocker locker;
         private final String accountExternalKey;
-        private final WithAccountLockCallback<T> callback;
+        private final WithAccountLockCallback<ReturnType, ExceptionType> callback;
 
         public CallableWithAccountLock(final GlobalLocker locker,
                                        final String accountExternalKey,
-                                       final WithAccountLockCallback<T> callback) {
+                                       final WithAccountLockCallback<ReturnType, ExceptionType> callback) {
             this.locker = locker;
             this.accountExternalKey = accountExternalKey;
             this.callback = callback;
         }
 
         @Override
-        public T call() throws Exception {
-            return new WithAccountLock<T>().processAccountWithLock(locker, accountExternalKey, callback);
+        public ReturnType call() throws ExceptionType, LockFailedException {
+            return new WithAccountLock<ReturnType, ExceptionType>().processAccountWithLock(locker, accountExternalKey, callback);
         }
     }
 
-    public static class CallableWithoutAccountLock<T> implements Callable<T> {
+    public static class WithAccountLock<T, ExceptionType extends Exception> {
 
-        private final WithAccountLockCallback<T> callback;
-
-        public CallableWithoutAccountLock(final WithAccountLockCallback<T> callback) {
-            this.callback = callback;
-        }
-
-        @Override
-        public T call() throws Exception {
-            return callback.doOperation();
-        }
-    }
-
-    public static class WithAccountLock<T> {
-
-        public T processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<T> callback)
-                throws Exception {
+        public T processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<T,ExceptionType > callback)
+                throws ExceptionType, LockFailedException {
             GlobalLock lock = null;
             try {
                 lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), accountExternalKey, NB_LOCK_TRY);
                 return callback.doOperation();
-            } catch (final LockFailedException e) {
-                final String format = String.format("Failed to lock account %s", accountExternalKey);
-                log.error(String.format(format), e);
-                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
             } finally {
                 if (lock != null) {
                     lock.release();

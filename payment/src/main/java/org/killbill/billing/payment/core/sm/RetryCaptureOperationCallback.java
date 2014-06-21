@@ -32,7 +32,7 @@ public class RetryCaptureOperationCallback extends RetryOperationCallback {
     }
 
     @Override
-    protected DirectPayment doPluginOperation() throws PaymentApiException {
+    protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
         return directPaymentProcessor.createCapture(directPaymentStateContext.account, directPaymentStateContext.directPaymentId,
                                                     directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency(),
                                                     directPaymentStateContext.directPaymentTransactionExternalKey,

@@ -93,7 +93,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                  final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context)
             throws PaymentApiException {
         try {
-            return new WithAccountLock<UUID>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<UUID>() {
+            return new WithAccountLock<UUID, PaymentApiException>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<UUID, PaymentApiException>() {
 
                 @Override
                 public UUID doOperation() throws PaymentApiException {
@@ -121,7 +121,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (Exception e) {
-            throw new PaymentApiException(ErrorCode.__UNKNOWN_ERROR_CODE, "");
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
         }
     }
 
@@ -304,7 +304,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                      final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context)
             throws PaymentApiException {
         try {
-            new WithAccountLock<Void>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void>() {
+            new WithAccountLock<Void, PaymentApiException>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void, PaymentApiException>() {
 
                 @Override
                 public Void doOperation() throws PaymentApiException {
@@ -340,14 +340,14 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (Exception e) {
-            throw new PaymentApiException(ErrorCode.__UNKNOWN_ERROR_CODE, "");
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
         }
     }
 
     public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context)
             throws PaymentApiException {
         try {
-            new WithAccountLock<Void>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void>() {
+            new WithAccountLock<Void, PaymentApiException>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void, PaymentApiException>() {
 
                 @Override
                 public Void doOperation() throws PaymentApiException {
@@ -370,7 +370,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (Exception e) {
-            throw new PaymentApiException(ErrorCode.__UNKNOWN_ERROR_CODE, e);
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
         }
     }
 
@@ -411,7 +411,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         }
 
         try {
-            return new WithAccountLock<List<PaymentMethod>>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<List<PaymentMethod>>() {
+            return new WithAccountLock<List<PaymentMethod>, PaymentApiException>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<List<PaymentMethod>, PaymentApiException>() {
 
                 @Override
                 public List<PaymentMethod> doOperation() throws PaymentApiException {
@@ -464,7 +464,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (Exception e) {
-            throw new PaymentApiException(ErrorCode.__UNKNOWN_ERROR_CODE, e);
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR);
         }
     }
 

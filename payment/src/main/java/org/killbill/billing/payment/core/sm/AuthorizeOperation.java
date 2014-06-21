@@ -37,7 +37,7 @@ public class AuthorizeOperation extends DirectPaymentOperation {
     }
 
     @Override
-    protected PaymentTransactionInfoPlugin doPluginOperation() throws PaymentPluginApiException {
+    protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting AUTHORIZE for payment {} ({} {})", directPaymentStateContext.getDirectPaymentId(), directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency());
         return plugin.authorizePayment(directPaymentStateContext.getAccount().getId(),
                                        directPaymentStateContext.getDirectPaymentId(),
