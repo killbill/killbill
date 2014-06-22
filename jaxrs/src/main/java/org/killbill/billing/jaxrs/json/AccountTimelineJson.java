@@ -123,15 +123,16 @@ public class AccountTimelineJson {
         for (final DirectPayment payment : payments) {
             final List<RefundJson> refunds = new ArrayList<RefundJson>();
             for (final DirectPayment refund : refundsByPayment.get(payment.getId())) {
-                final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForRefund(refund.getId());
-                // TODO add adjusted invoice items?
-                // STEPH refunds.add(new RefundJson(refund, null, auditLogs));
+                // STEPH add adjusted invoice items? and also audit_logs
+                //final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForRefund(refund.getId());
+                // refunds.add(new RefundJson(refund, null, auditLogs));
             }
 
             final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();
             for (final InvoicePayment chargeback : chargebacksByPayment.get(payment.getId())) {
-                final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForChargeback(chargeback.getId());
-                chargebacks.add(new ChargebackJson(payment.getAccountId(), chargeback, auditLogs));
+                // STEPH
+                //final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForChargeback(chargeback.getId());
+                //chargebacks.add(new ChargebackJson(payment.getAccountId(), chargeback, auditLogs));
             }
 
             final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForPayment(payment.getId());

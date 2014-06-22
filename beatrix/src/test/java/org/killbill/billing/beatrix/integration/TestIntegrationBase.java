@@ -20,7 +20,9 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -73,9 +75,12 @@ import org.killbill.billing.overdue.OverdueUserApi;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
+import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
+import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
@@ -116,6 +121,28 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     protected static final Logger log = LoggerFactory.getLogger(TestIntegrationBase.class);
     protected static long AT_LEAST_ONE_MONTH_MS = 32L * 24L * 3600L * 1000L;
+
+    protected final static PaymentOptions PAYMENT_OPTIONS = new PaymentOptions() {
+        @Override
+        public boolean isExternalPayment() {
+            return false;
+        }
+        @Override
+        public String getPaymentControlPluginName() {
+            return InvoicePaymentControlPluginApi.PLUGIN_NAME;
+        }
+    };
+
+    protected final static PaymentOptions EXTERNAL_PAYMENT_OPTIONS = new PaymentOptions() {
+        @Override
+        public boolean isExternalPayment() {
+            return true;
+        }
+        @Override
+        public String getPaymentControlPluginName() {
+            return InvoicePaymentControlPluginApi.PLUGIN_NAME;
+        }
+    };
 
     protected final Iterable<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
 
@@ -380,13 +407,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
             @Override
             public Void apply(@Nullable final Void input) {
-                /*
                 try {
-                    STEPH paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), PLUGIN_PROPERTIES, callContext);
+                    paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), invoice.getId().toString(),
+                                                                UUID.randomUUID().toString(), PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
-                */
                 return null;
             }
         }, events);
@@ -396,40 +422,38 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
             @Override
             public Void apply(@Nullable final Void input) {
-                /*
-                STEPH
                 try {
-                    paymentApi.createExternalPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+                    paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), invoice.getId().toString(),
+                                                                UUID.randomUUID().toString(), PLUGIN_PROPERTIES, EXTERNAL_PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
-                */
                 return null;
             }
         }, events);
     }
+
 
     protected void refundPaymentAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
             @Override
             public Void apply(@Nullable final Void input) {
-                /*
-                STEPH
                 try {
-                    paymentApi.createRefund(account, payment.getId(), payment.getCapturedAmount()  TODO [PAYMENT] payment.getPaidAmount() , PLUGIN_PROPERTIES, callContext);
+                    paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
+                                                              PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
-            */
                 return null;
             }
         }, events);
     }
 
-    protected void refundPaymentWithAdjustmenttAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
+    protected void refundPaymentWithAdjustmentAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
             @Override
             public Void apply(@Nullable final Void input) {
+
                 /*
                 STEPH
                 try {
@@ -447,14 +471,21 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
             @Override
             public Void apply(@Nullable final Void input) {
-                /*
-                STEPH
+
+                final Map<UUID, BigDecimal> invoiceItemsWithAmount = new HashMap<UUID, BigDecimal>();
+                for (UUID cur : invoiceItems) {
+                    invoiceItemsWithAmount.put(cur, null);
+                }
+                final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+                final PluginProperty prop = new PluginProperty(InvoicePaymentControlPluginApi.IPCD_REFUND_IDS_WITH_AMOUNT_KEY,invoiceItemsWithAmount, false);
+                properties.add(prop);
+
                 try {
-                    paymentApi.createRefundWithItemsAdjustments(account, payment.getId(), invoiceItems, PLUGIN_PROPERTIES, callContext);
+                    paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
+                                                              properties, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                 }
-                */
                 return null;
             }
         }, events);

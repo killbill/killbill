@@ -23,9 +23,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
@@ -41,7 +38,9 @@ import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -254,7 +253,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final DefaultEntitlement aoEntitlement = addAOEntitlementAndCheckForCompletion(bpEntitlement.getBundleId(), aoProductName, ProductCategory.ADD_ON, term,
                                                                                        NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
         final Invoice secondInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
-        paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), PaymentStatus.SUCCESS, secondInvoice.getId(), Currency.USD));
+        paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), TransactionStatus.SUCCESS, secondInvoice.getId(), Currency.USD));
 
         // Move past the phase for simplicity
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -263,7 +262,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final Invoice thirdInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("999.95")),
                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        paymentChecker.checkPayment(account.getId(), 2, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 5, 1), new BigDecimal("1249.90"), PaymentStatus.SUCCESS, thirdInvoice.getId(), Currency.USD));
+        paymentChecker.checkPayment(account.getId(), 2, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 5, 1), new BigDecimal("1249.90"), TransactionStatus.SUCCESS, thirdInvoice.getId(), Currency.USD));
 
         // Align the transfer on the BCD to make pro-rations easier
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -273,7 +272,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final Invoice fourthInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                                                   new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("999.95")),
                                                                   new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        paymentChecker.checkPayment(account.getId(), 3, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 6, 1), new BigDecimal("1249.90"), PaymentStatus.SUCCESS, fourthInvoice.getId(), Currency.USD));
+        paymentChecker.checkPayment(account.getId(), 3, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 6, 1), new BigDecimal("1249.90"), TransactionStatus.SUCCESS, fourthInvoice.getId(), Currency.USD));
 
         final DateTime now = clock.getUTCNow();
         final LocalDate transferDay = now.toLocalDate();
@@ -294,7 +293,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final Invoice firstInvoiceNewAccount = invoiceChecker.checkInvoice(newAccount.getId(), 1, callContext,
                                                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("999.95")),
                                                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        paymentChecker.checkPayment(newAccount.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 6, 1), new BigDecimal("1249.90"), PaymentStatus.SUCCESS, firstInvoiceNewAccount.getId(), Currency.USD));
+        paymentChecker.checkPayment(newAccount.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 6, 1), new BigDecimal("1249.90"), TransactionStatus.SUCCESS, firstInvoiceNewAccount.getId(), Currency.USD));
 
         // Check entitlements and subscriptions on the old account
         final List<Entitlement> oldEntitlements = entitlementApi.getAllEntitlementsForBundle(bpEntitlement.getBundleId(), callContext);

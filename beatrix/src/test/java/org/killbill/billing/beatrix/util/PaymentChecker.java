@@ -28,7 +28,6 @@ import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentStatus;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
@@ -100,11 +99,11 @@ public class PaymentChecker {
 
         private final LocalDate paymentDate;
         private final BigDecimal amount;
-        private final PaymentStatus status;
+        private final TransactionStatus status;
         private final UUID invoiceId;
         private final Currency currency;
 
-        public ExpectedPaymentCheck(final LocalDate paymentDate, final BigDecimal amount, final PaymentStatus status, final UUID invoiceId, final Currency currency) {
+        public ExpectedPaymentCheck(final LocalDate paymentDate, final BigDecimal amount, final TransactionStatus status, final UUID invoiceId, final Currency currency) {
             this.paymentDate = paymentDate;
             this.amount = amount;
             this.status = status;
@@ -124,7 +123,7 @@ public class PaymentChecker {
             return amount;
         }
 
-        public PaymentStatus getStatus() {
+        public TransactionStatus getStatus() {
             return status;
         }
 

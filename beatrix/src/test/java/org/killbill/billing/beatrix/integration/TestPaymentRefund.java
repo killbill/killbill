@@ -40,7 +40,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -88,7 +88,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testRefundWithInvoiceAdjustment() throws Exception {
-        refundPaymentWithAdjustmenttAndCheckForCompletion(account, payment, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentWithAdjustmentAndCheckForCompletion(account, payment, NextEvent.INVOICE_ADJUSTMENT);
         refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), true, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
         invoice = invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext,
                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
@@ -121,7 +121,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
         setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         invoice = invoiceChecker.checkInvoice(account.getId(), ++invoiceItemCount, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
                                                                                                                              new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.82")));
-        payment = paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 3, 2), new BigDecimal("233.82"), PaymentStatus.SUCCESS, invoice.getId(), Currency.USD));
+        payment = paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 3, 2), new BigDecimal("233.82"), TransactionStatus.SUCCESS, invoice.getId(), Currency.USD));
 
         // Filter and extract UUId from all Recuring invoices
         invoiceItems = new HashSet<UUID>(Collections2.transform(Collections2.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
