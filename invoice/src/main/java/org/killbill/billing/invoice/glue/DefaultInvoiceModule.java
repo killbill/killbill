@@ -43,11 +43,15 @@ import org.killbill.billing.invoice.notification.EmailInvoiceNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 import org.skife.config.ConfigurationObjectFactory;
+
+import com.google.inject.TypeLiteral;
 
 public class DefaultInvoiceModule extends KillBillModule implements InvoiceModule {
 
@@ -118,10 +122,15 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
     }
 
+    protected void installInvoicePluginApi() {
+        bind(new TypeLiteral<OSGIServiceRegistration<InvoicePluginApi>>() {}).toProvider(DefaultInvoiceProviderPluginRegistryProvider.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         installConfig();
 
+        installInvoicePluginApi();
         installInvoiceService();
         installInvoiceNotifier();
         installNotifiers();

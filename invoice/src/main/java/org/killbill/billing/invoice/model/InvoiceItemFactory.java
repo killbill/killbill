@@ -85,6 +85,9 @@ public class InvoiceItemFactory {
             case USAGE:
                 item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, description, amount, currency);
                 break;
+            case TAX:
+                item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, description, startDate, amount, currency);
+                break;
             default:
                 throw new RuntimeException("Unexpected type of event item " + type);
         }

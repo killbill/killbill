@@ -47,6 +47,12 @@ public class DefaultInvoiceTranslator extends DefaultTranslatorBase implements I
     }
 
     @Override
+    public String getInvoiceEmailSubject() {
+        String subject = getTranslation(locale, "invoiceEmailSubject");
+        return (!"invoiceEmailSubject".equals(subject)) ? subject : null;
+    }
+
+    @Override
     public String getInvoiceTitle() {
         return getTranslation(locale, "invoiceTitle");
     }

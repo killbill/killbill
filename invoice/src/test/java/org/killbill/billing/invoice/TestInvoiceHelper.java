@@ -59,11 +59,13 @@ import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentSqlDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.mock.MockAccountBuilder;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -138,6 +140,7 @@ public class TestInvoiceHelper {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
+    private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
     private final AccountUserApi accountUserApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final BusService busService;
@@ -153,10 +156,11 @@ public class TestInvoiceHelper {
     private final InvoiceItemSqlDao invoiceItemSqlDao;
 
     @Inject
-    public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
+    public TestInvoiceHelper(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry, final InvoiceGenerator generator, final IDBI dbi,
                              final BillingInternalApi billingApi, final AccountInternalApi accountApi, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
                              final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final InternalCallContext internalCallContext,
                              final InternalCallContextFactory internalCallContextFactory) {
+        this.pluginRegistry = pluginRegistry;
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountApi = accountApi;
@@ -190,7 +194,7 @@ public class TestInvoiceHelper {
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi,
                                                                    invoiceDao, nonEntityDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 

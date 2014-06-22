@@ -45,6 +45,7 @@ import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
+import org.killbill.billing.invoice.template.HtmlInvoice;
 import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
@@ -345,7 +346,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         }
 
-        return generator.generateInvoice(account, invoice, manualPay);
+        HtmlInvoice htmlInvoice = generator.generateInvoice(account, invoice, manualPay);
+        return htmlInvoice.getBody();
     }
 
     @Override
