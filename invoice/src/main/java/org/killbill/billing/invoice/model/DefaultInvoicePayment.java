@@ -38,7 +38,7 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     private final BigDecimal amount;
     private final Currency currency;
     private final Currency processedCurrency;
-    private final UUID paymentCookieId;
+    private final String paymentCookieId;
     private final UUID linkedInvoicePaymentId;
 
     public DefaultInvoicePayment(final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
@@ -47,13 +47,13 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     }
 
     public DefaultInvoicePayment(final UUID id, final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
-                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final Currency processedCurrency, @Nullable final UUID paymentCookieId,
+                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final Currency processedCurrency, @Nullable final String paymentCookieId,
                                  @Nullable final UUID linkedInvoicePaymentId) {
         this(id, null, type, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, paymentCookieId, linkedInvoicePaymentId);
     }
 
     public DefaultInvoicePayment(final UUID id, @Nullable final DateTime createdDate, final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
-                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final Currency processedCurrency, @Nullable final UUID paymentCookieId,
+                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final Currency processedCurrency, @Nullable final String paymentCookieId,
                                  @Nullable final UUID linkedInvoicePaymentId) {
         super(id, createdDate, createdDate);
         this.type = type;
@@ -111,7 +111,7 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     }
 
     @Override
-    public UUID getPaymentCookieId() {
+    public String getPaymentCookieId() {
         return paymentCookieId;
     }
 

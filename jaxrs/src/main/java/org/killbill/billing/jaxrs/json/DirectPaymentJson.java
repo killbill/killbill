@@ -81,7 +81,7 @@ public class DirectPaymentJson extends JsonBase {
              dp.getCurrency() != null ? dp.getCurrency().toString() : null,
              dp.getPaymentMethodId() != null ? dp.getPaymentMethodId().toString() : null,
              getTransactions(dp.getTransactions(), dp.getExternalKey(), accountAuditLogs),
-             toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForDirectPayment(dp.getId())));
+             toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPayment(dp.getId())));
     }
 
     private static List<DirectTransactionJson> getTransactions(final Iterable<DirectPaymentTransaction> transactions, final String directPaymentExternalKey, @Nullable final AccountAuditLogs accountAuditLogs) {
@@ -89,7 +89,7 @@ public class DirectPaymentJson extends JsonBase {
                                                         new Function<DirectPaymentTransaction, DirectTransactionJson>() {
                                                             @Override
                                                             public DirectTransactionJson apply(final DirectPaymentTransaction directPaymentTransaction) {
-                                                                final List<AuditLog> auditLogsForDirectPaymentTransaction = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForDirectPaymentTransaction(directPaymentTransaction.getId());
+                                                                final List<AuditLog> auditLogsForDirectPaymentTransaction = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentTransaction(directPaymentTransaction.getId());
                                                                 return new DirectTransactionJson(directPaymentTransaction, directPaymentExternalKey, auditLogsForDirectPaymentTransaction);
                                                             }
                                                         }

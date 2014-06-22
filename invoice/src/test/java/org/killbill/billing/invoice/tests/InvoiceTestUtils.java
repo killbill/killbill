@@ -108,7 +108,7 @@ public class InvoiceTestUtils {
         Mockito.when(payment.getType()).thenReturn(InvoicePaymentType.ATTEMPT);
         Mockito.when(payment.getInvoiceId()).thenReturn(invoiceId);
         Mockito.when(payment.getPaymentId()).thenReturn(UUID.randomUUID());
-        Mockito.when(payment.getPaymentCookieId()).thenReturn(UUID.randomUUID());
+        Mockito.when(payment.getPaymentCookieId()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(payment.getPaymentDate()).thenReturn(clock.getUTCNow());
         Mockito.when(payment.getAmount()).thenReturn(amount);
         Mockito.when(payment.getCurrency()).thenReturn(currency);

@@ -40,8 +40,8 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.PaymentStatus;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -541,7 +541,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         final Invoice invoice1 = invoices.get(1);
         final List<DirectPayment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
-        final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), PaymentStatus.SUCCESS, invoice1.getId(), Currency.USD);
+        final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), TransactionStatus.SUCCESS, invoice1.getId(), Currency.USD);
         final DirectPayment payment1 = payments.get(0);
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
@@ -612,7 +612,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         final Invoice invoice1 = invoices.get(1);
         final List<DirectPayment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
-        final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), PaymentStatus.SUCCESS, invoice1.getId(), Currency.USD);
+        final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), TransactionStatus.SUCCESS, invoice1.getId(), Currency.USD);
         final DirectPayment payment1 = payments.get(0);
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();

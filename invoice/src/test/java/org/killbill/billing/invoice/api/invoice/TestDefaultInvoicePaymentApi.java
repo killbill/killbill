@@ -117,7 +117,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
 
         // Create a full refund with no adjustment
         final InvoicePayment refund = invoiceInternalApi.createRefund(payment.getPaymentId(), refundAmount, adjusted, invoiceItemIdsWithAmounts,
-                                                                      UUID.randomUUID(), internalCallContext);
+                                                                      UUID.randomUUID().toString(), internalCallContext);
         Assert.assertEquals(refund.getAmount().compareTo(refundAmount.negate()), 0);
         Assert.assertEquals(refund.getCurrency(), CURRENCY);
         Assert.assertEquals(refund.getInvoiceId(), invoice.getId());

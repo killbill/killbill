@@ -70,13 +70,13 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @param amount                    amount to refund
      * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
      * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
-     * @param paymentCookieId           payment cookie id
+     * @param transactionExternalKey    transaction refund externalKey
      * @param context                   the call callcontext
      * @return the created invoice payment object associated with this refund
      * @throws InvoiceApiException
      */
     InvoicePaymentModelDao createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
-                                        UUID paymentCookieId, InternalCallContext context) throws InvoiceApiException;
+                                        String transactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
     BigDecimal getRemainingAmountPaid(UUID invoicePaymentId, InternalTenantContext context);
 
