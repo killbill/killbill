@@ -348,7 +348,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public InvoicePaymentModelDao createRefund(final UUID paymentId, final BigDecimal requestedRefundAmount, final boolean isInvoiceAdjusted,
-                                               final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final UUID paymentCookieId,
+                                               final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final String transactionExternalKey,
                                                final InternalCallContext context) throws InvoiceApiException {
         final boolean isInvoiceItemAdjusted = isInvoiceAdjusted && invoiceItemIdsWithNullAmounts.size() > 0;
 
@@ -375,7 +375,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // Before we go further, check if that refund already got inserted -- the payment system keeps a state machine
                 // and so this call may be called several time for the same  paymentCookieId (which is really the refundId)
-                final InvoicePaymentModelDao existingRefund = transactional.getPaymentsForCookieId(paymentCookieId.toString(), context);
+                final InvoicePaymentModelDao existingRefund = transactional.getPaymentsForCookieId(transactionExternalKey, context);
                 if (existingRefund != null) {
                     return existingRefund;
                 }
@@ -383,7 +383,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final InvoicePaymentModelDao refund = new InvoicePaymentModelDao(UUID.randomUUID(), context.getCreatedDate(), InvoicePaymentType.REFUND,
                                                                                  payment.getInvoiceId(), paymentId,
                                                                                  context.getCreatedDate(), requestedPositiveAmount.negate(),
-                                                                                 payment.getCurrency(), payment.getProcessedCurrency(), paymentCookieId, payment.getId());
+                                                                                 payment.getCurrency(), payment.getProcessedCurrency(), transactionExternalKey, payment.getId());
                 transactional.create(refund, context);
 
                 // Retrieve invoice after the Refund

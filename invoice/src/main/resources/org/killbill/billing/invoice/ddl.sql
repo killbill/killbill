@@ -61,7 +61,7 @@ CREATE TABLE invoice_payments (
     amount numeric(15,9) NOT NULL,
     currency char(3) NOT NULL,
     processed_currency char(3) NOT NULL,
-    payment_cookie_id char(36) DEFAULT NULL,
+    payment_cookie_id varchar(255) DEFAULT NULL,
     linked_invoice_payment_id char(36) DEFAULT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
