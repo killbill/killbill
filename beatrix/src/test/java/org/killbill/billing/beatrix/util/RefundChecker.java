@@ -35,7 +35,9 @@ import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.dao.PluginPropertyModelDao;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +45,7 @@ import org.testng.Assert;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
@@ -63,26 +66,29 @@ public class RefundChecker {
         this.invoiceUserApi = invoiceApi;
     }
 
-    public DirectPayment checkRefund(final UUID paymentId, final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
+    public DirectPaymentTransaction checkRefund(final UUID paymentId, final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
 
 
-        final DirectPayment payment = null; // STEPH paymentApi.getPaymentRefunds(paymentId, context);
-        final List<DirectPayment> refunds = null; // STEPH paymentApi.getPaymentRefunds(paymentId, context);
-        Assert.assertEquals(refunds.size(), 1);
+        final DirectPayment payment = paymentApi.getPayment(paymentId, false, ImmutableList.<PluginProperty>of(), context);
+        final DirectPaymentTransaction refund = Iterables.tryFind(payment.getTransactions(), new Predicate<DirectPaymentTransaction>() {
+            @Override
+            public boolean apply(final DirectPaymentTransaction input) {
+                return input.getTransactionType() == TransactionType.REFUND;
+            }
+        }).orNull();
+
+        Assert.assertNotNull(refund);
 
         final InvoicePayment refundInvoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.REFUND, context);
         final InvoicePayment invoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.ATTEMPT, context);
 
-        final DirectPayment refund = refunds.get(0);
-        final DirectPaymentTransaction refundTransaction = getRefundTransaction(refund);
-
-        Assert.assertEquals(refundTransaction.getDirectPaymentId(), expected.getPaymentId());
+        Assert.assertEquals(refund.getDirectPaymentId(), expected.getPaymentId());
         Assert.assertEquals(refund.getCurrency(), expected.getCurrency());
-        Assert.assertEquals(refundTransaction.getAmount().compareTo(expected.getRefundAmount()), 0);
+        Assert.assertEquals(refund.getAmount().compareTo(expected.getRefundAmount()), 0);
 
         Assert.assertEquals(refundInvoicePayment.getPaymentId(), paymentId);
         Assert.assertEquals(refundInvoicePayment.getLinkedInvoicePaymentId(), invoicePayment.getId());
-        Assert.assertEquals(refundInvoicePayment.getPaymentCookieId(), refund.getId());
+        Assert.assertEquals(refundInvoicePayment.getPaymentCookieId(), refund.getExternalKey());
         Assert.assertEquals(refundInvoicePayment.getInvoiceId(), invoicePayment.getInvoiceId());
         Assert.assertEquals(refundInvoicePayment.getAmount().compareTo(expected.getRefundAmount().negate()), 0);
         Assert.assertEquals(refundInvoicePayment.getCurrency(), expected.getCurrency());

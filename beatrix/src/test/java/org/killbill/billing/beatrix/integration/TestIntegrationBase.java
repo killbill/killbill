@@ -20,10 +20,8 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -127,6 +125,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         public boolean isExternalPayment() {
             return false;
         }
+
         @Override
         public String getPaymentControlPluginName() {
             return InvoicePaymentControlPluginApi.PLUGIN_NAME;
@@ -138,6 +137,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         public boolean isExternalPayment() {
             return true;
         }
+
         @Override
         public String getPaymentControlPluginName() {
             return InvoicePaymentControlPluginApi.PLUGIN_NAME;
@@ -403,90 +403,103 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected void createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
-        doCallAndCheckForCompletion(new Function<Void, Void>() {
+    protected DirectPayment createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final BigDecimal amount, final Currency currency,  final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
             @Override
-            public Void apply(@Nullable final Void input) {
+            public DirectPayment apply(@Nullable final Void input) {
                 try {
-                    paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), invoice.getId().toString(),
-                                                                UUID.randomUUID().toString(), PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
+                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amount, currency, invoice.getId().toString(),
+                                                                       UUID.randomUUID().toString(), PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
+                    return null;
                 }
-                return null;
             }
         }, events);
     }
 
-    protected void createExternalPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
-        doCallAndCheckForCompletion(new Function<Void, Void>() {
+    protected DirectPayment createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
             @Override
-            public Void apply(@Nullable final Void input) {
+            public DirectPayment apply(@Nullable final Void input) {
                 try {
-                    paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), invoice.getId().toString(),
-                                                                UUID.randomUUID().toString(), PLUGIN_PROPERTIES, EXTERNAL_PAYMENT_OPTIONS, callContext);
+                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), invoice.getId().toString(),
+                                                                       UUID.randomUUID().toString(), PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
+                    return null;
                 }
-                return null;
             }
         }, events);
     }
 
-
-    protected void refundPaymentAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
-        doCallAndCheckForCompletion(new Function<Void, Void>() {
+    protected DirectPayment createExternalPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
             @Override
-            public Void apply(@Nullable final Void input) {
+            public DirectPayment apply(@Nullable final Void input) {
                 try {
-                    paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
-                                                              PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
+                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), invoice.getId().toString(),
+                                                                       UUID.randomUUID().toString(), PLUGIN_PROPERTIES, EXTERNAL_PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
+                    return null;
                 }
-                return null;
             }
         }, events);
     }
 
-    protected void refundPaymentWithAdjustmentAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
-        doCallAndCheckForCompletion(new Function<Void, Void>() {
+    protected DirectPayment refundPaymentAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
             @Override
-            public Void apply(@Nullable final Void input) {
-
-                /*
-                STEPH
+            public DirectPayment apply(@Nullable final Void input) {
                 try {
-                    paymentApi.createRefundWithAdjustment(account, payment.getId(), payment.getCapturedAmount()  TODO [PAYMENT] payment.getPaidAmount() , PLUGIN_PROPERTIES, callContext);
+                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
+                                                                     PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
+                    return null;
                 }
-            */
-                return null;
             }
         }, events);
     }
 
-    protected void refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final DirectPayment payment, final Set<UUID> invoiceItems, final NextEvent... events) {
-        doCallAndCheckForCompletion(new Function<Void, Void>() {
+    protected DirectPayment refundPaymentWithAdjustmentAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
             @Override
-            public Void apply(@Nullable final Void input) {
+            public DirectPayment apply(@Nullable final Void input) {
 
-                final Map<UUID, BigDecimal> invoiceItemsWithAmount = new HashMap<UUID, BigDecimal>();
-                for (UUID cur : invoiceItems) {
-                    invoiceItemsWithAmount.put(cur, null);
-                }
                 final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                final PluginProperty prop = new PluginProperty(InvoicePaymentControlPluginApi.IPCD_REFUND_IDS_WITH_AMOUNT_KEY,invoiceItemsWithAmount, false);
-                properties.add(prop);
-
+                final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
+                properties.add(prop1);
                 try {
-                    paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
-                                                              properties, PAYMENT_OPTIONS, callContext);
+                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
+                                                                     properties, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
+                    return null;
                 }
-                return null;
+            }
+        }, events);
+    }
+
+    protected DirectPayment refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final DirectPayment payment, final Map<UUID, BigDecimal> iias, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
+            @Override
+            public DirectPayment apply(@Nullable final Void input) {
+
+                final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+                final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
+                properties.add(prop1);
+                final PluginProperty prop2 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, iias, false);
+                properties.add(prop2);
+
+                try {
+                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
+                                                                     properties, PAYMENT_OPTIONS, callContext);
+                } catch (final PaymentApiException e) {
+                    fail(e.toString());
+                    return null;
+                }
             }
         }, events);
     }

@@ -546,10 +546,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
         iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("197.26"));
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        // STEPH paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, PLUGIN_PROPERTIES, callContext);
-        assertListenerStatus();
-
+        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, iias, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         checkNoMoreInvoiceToGenerate(account);
     }
 
@@ -617,10 +614,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
         iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("100.00"));
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        // STEPH paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, PLUGIN_PROPERTIES, callContext);
-        assertListenerStatus();
-
+        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, iias, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         checkNoMoreInvoiceToGenerate(account);
     }
 }

@@ -308,7 +308,7 @@
         </linkStateMachine>
         <linkStateMachine>
             <initialStateMachine>REFUND</initialStateMachine>
-            <initialState>REFUND_FAILED</initialState>
+            <initialState>REFUND_SUCCESS</initialState>
             <finalStateMachine>REFUND</finalStateMachine>
             <finalState>REFUND_INIT</finalState>
         </linkStateMachine>

@@ -19,7 +19,9 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -71,13 +73,16 @@ public class TestPaymentRefund extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testRefundWithNoAdjustments() throws Exception {
         // Although we don't adjust the invoice, the invoicing system sends an event because invoice balance changes and overdue system-- in particular-- needs to know about it.
-        refundPaymentAndCheckForCompletion(account, payment, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), false, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
     }
 
     @Test(groups = "slow")
     public void testRefundWithInvoiceItemAdjustemts() throws Exception {
-        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment, invoiceItems, NextEvent.INVOICE_ADJUSTMENT);
+
+        final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
+        iias.put(invoice.getInvoiceItems().get(0).getId(), null);
+        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment, iias, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), true, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
         invoice = invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext,
                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
@@ -88,7 +93,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testRefundWithInvoiceAdjustment() throws Exception {
-        refundPaymentWithAdjustmentAndCheckForCompletion(account, payment, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentWithAdjustmentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), true, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
         invoice = invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext,
                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),

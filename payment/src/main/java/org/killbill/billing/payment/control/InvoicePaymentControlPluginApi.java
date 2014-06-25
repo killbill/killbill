@@ -77,6 +77,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public final static String CREATED_BY = "InvoicePaymentControlPluginApi";
 
     public static final String IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REF_IDS_AMOUNTS";
+    public static final String IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
 
     private final PaymentConfig paymentConfig;
     private final InvoiceInternalApi invoiceApi;
@@ -126,16 +127,28 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     @Override
     public void onSuccessCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
 
+        final TransactionType transactionType = paymentControlContext.getTransactionType();
+        Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
+                                    transactionType == TransactionType.REFUND);
+
         final UUID invoiceId = UUID.fromString(paymentControlContext.getPaymentExternalKey());
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         try {
-            invoiceApi.notifyOfPayment(invoiceId,
-                                       paymentControlContext.getAmount(),
-                                       paymentControlContext.getCurrency(),
-                                       paymentControlContext.getProcessedCurrency(),
-                                       paymentControlContext.getPaymentId(),
-                                       paymentControlContext.getCreatedDate(),
-                                       internalContext);
+            if (transactionType == TransactionType.PURCHASE) {
+                invoiceApi.notifyOfPayment(invoiceId,
+                                           paymentControlContext.getAmount(),
+                                           paymentControlContext.getCurrency(),
+                                           paymentControlContext.getProcessedCurrency(),
+                                           paymentControlContext.getPaymentId(),
+                                           paymentControlContext.getCreatedDate(),
+                                           internalContext);
+            } else /* TransactionType.REFUND */ {
+                final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentControlContext.getPluginProperties());
+                final PluginProperty prop = getPluginProperty(paymentControlContext.getPluginProperties(), IPCD_REFUND_WITH_ADJUSTMENTS);
+                final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
+                invoiceApi.createRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted , idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
+            }
+
         } catch (InvoiceApiException e) {
             logger.error("Invoice " + invoiceId + " seems missing", e);
             //throw new PaymentControlApiException(e);
@@ -212,36 +225,49 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     private Map<UUID, BigDecimal> extractIdsWithAmountFromProperties(final Iterable<PluginProperty> properties) {
-        final PluginProperty prop = Iterables.tryFind(properties, new Predicate<PluginProperty>() {
-            @Override
-            public boolean apply(final PluginProperty input) {
-                return input.getKey().equals(IPCD_REFUND_IDS_WITH_AMOUNT_KEY);
-            }
-        }).orNull();
+        final PluginProperty prop = getPluginProperty(properties, PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY);
         if (prop == null) {
             return ImmutableMap.<UUID, BigDecimal>of();
         }
         return (Map<UUID, BigDecimal>) prop.getValue();
     }
 
+    private PluginProperty getPluginProperty(final Iterable<PluginProperty> properties, final String propertyName) {
+        return Iterables.tryFind(properties, new Predicate<PluginProperty>() {
+            @Override
+            public boolean apply(final PluginProperty input) {
+                return input.getKey().equals(propertyName);
+            }
+        }).orNull();
+    }
+
     private BigDecimal computeRefundAmount(final UUID paymentId, @Nullable final BigDecimal specifiedRefundAmount,
                                            final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final InternalTenantContext context)
             throws PaymentControlApiException {
+
+        if (invoiceItemIdsWithAmounts.size() == 0) {
+            if (specifiedRefundAmount == null || specifiedRefundAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new PaymentControlApiException("You need to specify positive a refund amount");
+            }
+            return specifiedRefundAmount;
+        }
+
+        // If we have
         final List<InvoiceItem> items;
         try {
             items = invoiceApi.getInvoiceForPaymentId(paymentId, context).getInvoiceItems();
 
             BigDecimal amountFromItems = BigDecimal.ZERO;
             for (final UUID itemId : invoiceItemIdsWithAmounts.keySet()) {
-                amountFromItems = amountFromItems.add(Objects.firstNonNull(invoiceItemIdsWithAmounts.get(itemId),
-                                                                           getAmountFromItem(items, itemId)));
+                final BigDecimal specifiedItemAmount = invoiceItemIdsWithAmounts.get(itemId);
+                final BigDecimal itemAmount = getAmountFromItem(items, itemId);
+                if (specifiedItemAmount != null &&
+                    (specifiedItemAmount.compareTo(BigDecimal.ZERO) <= 0 || specifiedItemAmount.compareTo(itemAmount) > 0)) {
+                    throw new PaymentControlApiException("You need to specify valid invoice item amount ");
+                }
+                amountFromItems = amountFromItems.add(Objects.firstNonNull(specifiedItemAmount, itemAmount));
             }
-            // Sanity check: if some items were specified, then the sum should be equal to specified refund amount, if specified
-            if (amountFromItems.compareTo(BigDecimal.ZERO) != 0 && specifiedRefundAmount != null && specifiedRefundAmount.compareTo(amountFromItems) != 0) {
-                throw new PaymentControlApiException("You can't specify a refund amount that doesn't match the invoice items amounts");
-            }
-
-            return Objects.firstNonNull(specifiedRefundAmount, amountFromItems);
+            return amountFromItems;
         } catch (InvoiceApiException e) {
             throw new PaymentControlApiException(e);
         }
@@ -380,7 +406,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentControlContext paymentControlContext) {
-        if (!isAccountAutoPayOff(paymentControlContext.getAccountId(), paymentControlContext)) {
+        if (paymentControlContext.isApiPayment() || !isAccountAutoPayOff(paymentControlContext.getAccountId(), paymentControlContext)) {
             return false;
         }
         final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(), paymentControlContext.getAccountId(), PLUGIN_NAME,

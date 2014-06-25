@@ -412,7 +412,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final List<PluginProperty> refundProperties = new ArrayList<PluginProperty>();
         final HashMap<UUID, BigDecimal> uuidBigDecimalHashMap = new HashMap<UUID, BigDecimal>();
         uuidBigDecimalHashMap.put(invoiceItem.getId(), null);
-        final PluginProperty refundIdsProp = new PluginProperty(InvoicePaymentControlPluginApi.IPCD_REFUND_IDS_WITH_AMOUNT_KEY, uuidBigDecimalHashMap, false);
+        final PluginProperty refundIdsProp = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, uuidBigDecimalHashMap, false);
         refundProperties.add(refundIdsProp);
 
         final DirectPayment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, transactionExternalKey2,
