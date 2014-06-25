@@ -114,10 +114,6 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
                                     transactionType == TransactionType.REFUND);
 
-        if (insert_AUTO_PAY_OFF_ifRequired(paymentControlContext)) {
-            return new DefaultPriorPaymentControlResult(true);
-        }
-
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         if (transactionType == TransactionType.PURCHASE) {
             return getPluginPurchaseResult(paymentControlContext, internalContext);
@@ -195,7 +191,12 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             final UUID invoiceId = getInvoiceId(paymentControlPluginContext);
             final Invoice invoice = rebalanceAndGetInvoice(invoiceId, internalContext);
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
+
             final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;
+            if (!isAborted && insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
+                return new DefaultPriorPaymentControlResult(true);
+            }
+
             if (paymentControlPluginContext.isApiPayment() && isAborted) {
                 throw new PaymentControlApiException("Payment for invoice " + invoice.getId() +
                                                      " aborted : invoice balance is = " + invoice.getBalance() +

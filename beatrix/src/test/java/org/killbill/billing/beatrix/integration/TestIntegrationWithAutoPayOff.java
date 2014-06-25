@@ -89,9 +89,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
             assertEquals(cur.getBalance(), cur.getChargedAmount());
         }
 
-        busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertListenerStatus();
+        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT);
         addDelayBceauseOfLackOfCorrectSynchro();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -133,9 +131,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         }
 
         paymentPlugin.makeNextPaymentFailWithError();
-        busHandler.pushExpectedEvents(NextEvent.PAYMENT_ERROR);
-        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertListenerStatus();
+        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT_ERROR);
         addDelayBceauseOfLackOfCorrectSynchro();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -195,9 +191,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         // NOW SET PLUGIN TO THROW FAILURES
         paymentPlugin.makeNextPaymentFailWithError();
-        busHandler.pushExpectedEvents(NextEvent.PAYMENT_ERROR);
-        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertListenerStatus();
+        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT_ERROR);
         addDelayBceauseOfLackOfCorrectSynchro();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -231,14 +225,8 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         // REMOVE AUTO_PAY_OFF -> WILL SCHEDULE A PAYMENT_RETRY
         paymentPlugin.clear();
-        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertListenerStatus();
+        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT);
         addDelayBceauseOfLackOfCorrectSynchro();
-
-        //
-        busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        clock.addDays(nbDaysBeforeRetry + 1);
-        assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         for (Invoice cur : invoices) {

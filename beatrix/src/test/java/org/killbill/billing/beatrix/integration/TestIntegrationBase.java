@@ -676,8 +676,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         assertEquals(tags.size(), 1);
     }
 
-    protected void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+
+    protected void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type, final NextEvent...additionalEvents) throws TagDefinitionApiException, TagApiException {
         busHandler.pushExpectedEvent(NextEvent.TAG);
+        busHandler.pushExpectedEvents(additionalEvents);
         tagUserApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
         assertListenerStatus();
     }
