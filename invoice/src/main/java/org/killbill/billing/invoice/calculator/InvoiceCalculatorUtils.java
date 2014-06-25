@@ -58,7 +58,8 @@ public abstract class InvoiceCalculatorUtils {
 
     // Regular line item (charges)
     public static boolean isCharge(final InvoiceItem invoiceItem) {
-        return InvoiceItemType.EXTERNAL_CHARGE.equals(invoiceItem.getInvoiceItemType()) ||
+        return InvoiceItemType.TAX.equals(invoiceItem.getInvoiceItemType()) ||
+               InvoiceItemType.EXTERNAL_CHARGE.equals(invoiceItem.getInvoiceItemType()) ||
                InvoiceItemType.FIXED.equals(invoiceItem.getInvoiceItemType()) ||
                InvoiceItemType.USAGE.equals(invoiceItem.getInvoiceItemType()) ||
                InvoiceItemType.RECURRING.equals(invoiceItem.getInvoiceItemType());

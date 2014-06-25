@@ -31,6 +31,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
+import org.killbill.billing.invoice.template.HtmlInvoice;
 import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
 import org.killbill.billing.util.email.templates.MustacheTemplateEngine;
@@ -58,20 +59,24 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testGenerateInvoice() throws Exception {
-        final String output = g.generateInvoice(createAccount(), createInvoice(), false);
+        final HtmlInvoice output = g.generateInvoice(createAccount(), createInvoice(), false);
         Assert.assertNotNull(output);
+        Assert.assertNotNull(output.getBody());
+        Assert.assertEquals(output.getSubject(), "Your invoice");
     }
 
     @Test(groups = "fast")
     public void testGenerateEmptyInvoice() throws Exception {
         final Invoice invoice = Mockito.mock(Invoice.class);
-        final String output = g.generateInvoice(createAccount(), invoice, false);
+        final HtmlInvoice output = g.generateInvoice(createAccount(), invoice, false);
         Assert.assertNotNull(output);
+        Assert.assertNotNull(output.getBody());
+        Assert.assertEquals(output.getSubject(), "Your invoice");
     }
 
     @Test(groups = "fast")
     public void testGenerateNullInvoice() throws Exception {
-        final String output = g.generateInvoice(createAccount(), null, false);
+        final HtmlInvoice output = g.generateInvoice(createAccount(), null, false);
         Assert.assertNull(output);
     }
 

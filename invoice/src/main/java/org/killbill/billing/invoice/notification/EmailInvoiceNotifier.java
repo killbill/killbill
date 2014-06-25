@@ -27,6 +27,7 @@ import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
+import org.killbill.billing.invoice.template.HtmlInvoice;
 import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -85,18 +86,22 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
             }
         }
 
-        final String htmlBody;
+        final HtmlInvoice htmlInvoice;
         try {
-            htmlBody = generator.generateInvoice(account, invoice, manualPay);
+            htmlInvoice = generator.generateInvoice(account, invoice, manualPay);
         } catch (IOException e) {
             throw new InvoiceApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
         }
 
-        final String subject = config.getInvoiceEmailSubject();
+        // take localized subject, or the configured one if the localized one is not available
+        String subject = htmlInvoice.getSubject();
+        if (subject == null) {
+            subject = config.getInvoiceEmailSubject();
+        }
 
         final EmailSender sender = new DefaultEmailSender(config);
         try {
-            sender.sendHTMLEmail(to, cc, subject, htmlBody);
+            sender.sendHTMLEmail(to, cc, subject, htmlInvoice.getBody());
         } catch (EmailApiException e) {
             throw new InvoiceApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
         } catch (IOException e) {
