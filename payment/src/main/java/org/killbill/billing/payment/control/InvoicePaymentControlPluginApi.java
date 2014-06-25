@@ -170,7 +170,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public void process_AUTO_PAY_OFF_removal(final Account account, final InternalCallContext internalCallContext) {
         final List<PluginAutoPayOffModelDao> entries = controlDao.getAutoPayOffEntry(account.getId());
         for (PluginAutoPayOffModelDao cur : entries) {
-            retryServiceScheduler.scheduleRetry(cur.getPaymentId(), cur.getTransactionExternalKey(), PLUGIN_NAME, clock.getUTCNow());
+            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, account.getId(), cur.getTransactionExternalKey(), PLUGIN_NAME, clock.getUTCNow());
         }
         controlDao.removeAutoPayOffEntry(account.getId());
     }

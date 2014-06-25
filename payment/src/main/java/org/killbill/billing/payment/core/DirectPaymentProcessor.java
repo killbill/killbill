@@ -467,14 +467,20 @@ public class DirectPaymentProcessor extends ProcessorBase {
     }
 
     private BusInternalEvent buildPaymentEvent(final Account account, final DirectPayment directPayment, final String transactionExternalKey, final InternalCallContext context) {
-        final DirectPaymentTransaction directPaymentTransaction = Iterables.<DirectPaymentTransaction>tryFind(directPayment.getTransactions(),
+
+
+        final DirectPaymentTransaction directPaymentTransaction = directPayment.getTransactions().get(directPayment.getTransactions().size() - 1);
+
+        /* STEPH
+        Iterables.<DirectPaymentTransaction>tryFind(directPayment.getTransactions(),
                                                                                                               new Predicate<DirectPaymentTransaction>() {
                                                                                                                   @Override
                                                                                                                   public boolean apply(final DirectPaymentTransaction input) {
                                                                                                                       return input.getExternalKey().equals(transactionExternalKey);
                                                                                                                   }
                                                                                                               }
-                                                                                                             ).get();
+                                                                                                             ).get()
+                                                                                                             */
 
         switch (directPaymentTransaction.getTransactionStatus()) {
             case SUCCESS:

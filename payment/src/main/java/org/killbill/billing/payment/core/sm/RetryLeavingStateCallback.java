@@ -77,10 +77,14 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
                                                       stateContext.getPluginName(), input.getKey(), value, stateContext.getCallContext().getUserName(), stateContext.getCallContext().getCreatedDate());
                 }
             }));
-            retryableDirectPaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(utcNow, utcNow, stateContext.getDirectPaymentExternalKey(), null,
-                                                                                                                           stateContext.directPaymentTransactionExternalKey, state.getName(),
-                                                                                                                           transactionType.name(), stateContext.getPluginName()),
+            final PaymentAttemptModelDao attempt = retryableDirectPaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
+                                                                                                        utcNow, utcNow, stateContext.getDirectPaymentExternalKey(), null,
+                                                                                                                           stateContext.directPaymentTransactionExternalKey, transactionType, state.getName(),
+                                                                                                                            stateContext.getAmount(), stateContext.getCurrency(),
+                                                                                                                           stateContext.getPluginName()),
                                                                                                 properties, stateContext.internalCallContext);
+
+            stateContext.setAttemptId(attempt.getId());
         }
     }
 }

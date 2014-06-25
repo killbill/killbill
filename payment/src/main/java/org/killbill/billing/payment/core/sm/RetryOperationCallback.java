@@ -119,6 +119,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
                                                                                                                     directPaymentStateContext.paymentMethodId,
                                                                                                                     result.getId(),
                                                                                                                     result.getExternalKey(),
+                                                                                                                    transaction.getId(),
                                                                                                                     directPaymentStateContext.directPaymentTransactionExternalKey,
                                                                                                                     directPaymentStateContext.transactionType,
                                                                                                                     transaction.getAmount(),
@@ -226,6 +227,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
         private final UUID paymentId;
         private final UUID paymentMethodId;
         private final String paymentExternalKey;
+        private final UUID transactionId;
         private final String transactionExternalKey;
         private final TransactionType transactionType;
         private final BigDecimal amount;
@@ -237,16 +239,17 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
 
         public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final String paymentExternalKey, final String transactionExternalKey, final TransactionType transactionType, final BigDecimal amount, final Currency currency,
                                             final Iterable<PluginProperty> properties, final boolean isApiPayment, final CallContext callContext) {
-            this(account, paymentMethodId, paymentId, paymentExternalKey, transactionExternalKey, transactionType, amount, currency, null, null, properties, isApiPayment, callContext);
+            this(account, paymentMethodId, paymentId, paymentExternalKey, null, transactionExternalKey, transactionType, amount, currency, null, null, properties, isApiPayment, callContext);
         }
 
-        public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final String paymentExternalKey, final String transactionExternalKey, final TransactionType transactionType,
+        public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final String paymentExternalKey, @Nullable final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType,
                                             final BigDecimal amount, final Currency currency, @Nullable final BigDecimal processedAmount, @Nullable final Currency processedCurrency, final Iterable<PluginProperty> properties, final boolean isApiPayment, final CallContext callContext) {
             super(callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getUserToken(), callContext.getCreatedDate(), callContext.getUpdatedDate());
             this.account = account;
             this.paymentId = paymentId;
             this.paymentMethodId = paymentMethodId;
             this.paymentExternalKey = paymentExternalKey;
+            this.transactionId = transactionId;
             this.transactionExternalKey = transactionExternalKey;
             this.transactionType = transactionType;
             this.amount = amount;
@@ -311,6 +314,12 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
         public boolean isApiPayment() {
             return isApiPayment;
         }
+
+
+        public UUID getTransactionId() {
+            return transactionId;
+        }
+
 
         @Override
         public Iterable<PluginProperty> getPluginProperties() {

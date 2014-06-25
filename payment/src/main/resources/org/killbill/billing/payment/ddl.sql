@@ -5,11 +5,15 @@ DROP TABLE IF EXISTS payment_attempts;
 CREATE TABLE payment_attempts (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    account_id char(36) NOT NULL,
+    payment_method_id char(36) DEFAULT NULL,
     payment_external_key char(128) NOT NULL,
     transaction_id char(36),
     transaction_external_key char(128) NOT NULL,
+    transaction_type varchar(32) NOT NULL,
     state_name varchar(32) NOT NULL,
-    operation_name varchar(32) NOT NULL,
+    amount numeric(15,9),
+    currency char(3),
     plugin_name varchar(50) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
@@ -30,11 +34,15 @@ CREATE TABLE payment_attempt_history (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
     target_record_id int(11) unsigned NOT NULL,
+    account_id char(36) NOT NULL,
+    payment_method_id char(36) DEFAULT NULL,
     payment_external_key char(128) NOT NULL,
     transaction_id char(36),
     transaction_external_key char(128) NOT NULL,
+    transaction_type varchar(32) NOT NULL,
     state_name varchar(32) NOT NULL,
-    operation_name varchar(32) NOT NULL,
+    amount numeric(15,9),
+    currency char(3),
     plugin_name varchar(50) NOT NULL,
     change_type char(6) NOT NULL,
     created_by varchar(50) NOT NULL,
@@ -206,11 +214,11 @@ CREATE TABLE payment_plugin_properties (
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX payment_plugin_properties_ext ON payment_plugin_properties(transaction_external_key);
 
+
 /*  PaymentControlPlugin lives  here until this becomes a first class citizen plugin */
 DROP TABLE IF EXISTS _invoice_payment_control_plugin_auto_pay_off;
 CREATE TABLE _invoice_payment_control_plugin_auto_pay_off (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    id char(36) NOT NULL,
     payment_external_key varchar(255) NOT NULL,
     transaction_external_key varchar(255) NOT NULL,
     account_id char(36) NOT NULL,
@@ -221,10 +229,6 @@ CREATE TABLE _invoice_payment_control_plugin_auto_pay_off (
     currency char(3),
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
-    updated_by varchar(50) NOT NULL,
-    updated_date datetime NOT NULL,
-    account_record_id int(11) unsigned DEFAULT NULL,
-    tenant_record_id int(11) unsigned DEFAULT NULL,
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX _invoice_payment_control_plugin_auto_pay_off_account ON _invoice_payment_control_plugin_auto_pay_off(account_id);

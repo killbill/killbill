@@ -104,13 +104,13 @@ public abstract class BaseRetryService implements RetryService {
             this.internalCallContextFactory = internalCallContextFactory;
         }
 
-        public boolean scheduleRetry(final UUID paymentId, final String transactionExternalKey, final String pluginName, final DateTime timeOfRetry) {
-            return scheduleRetryInternal(paymentId, transactionExternalKey, pluginName, timeOfRetry, null);
+        public boolean scheduleRetry(final ObjectType objectType, final UUID objectId, final String transactionExternalKey, final String pluginName, final DateTime timeOfRetry) {
+            return scheduleRetryInternal(objectType, objectId, transactionExternalKey, pluginName, timeOfRetry, null);
         }
 
 
-        private boolean scheduleRetryInternal(final UUID paymentId, final String transactionExternalKey, final String pluginName, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
-            final InternalCallContext context = createCallContextFromPaymentId(paymentId);
+        private boolean scheduleRetryInternal(final ObjectType objectType, final UUID objectId, final String transactionExternalKey, final String pluginName, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
+            final InternalCallContext context = createCallContextFromPaymentId(objectType, objectId);
 
             try {
                 final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
@@ -126,14 +126,14 @@ public abstract class BaseRetryService implements RetryService {
                 log.error(String.format("Failed to retrieve notification queue %s:%s", DefaultPaymentService.SERVICE_NAME, getQueueName()));
                 return false;
             } catch (IOException e) {
-                log.error(String.format("Failed to serialize notificationQueue event for paymentId %s", paymentId));
+                log.error(String.format("Failed to serialize notificationQueue event for object %s, objectId %s", objectId));
                 return false;
             }
             return true;
         }
 
-        protected InternalCallContext createCallContextFromPaymentId(final UUID paymentId) {
-            return internalCallContextFactory.createInternalCallContext(paymentId, ObjectType.PAYMENT, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
+        protected InternalCallContext createCallContextFromPaymentId(final ObjectType objectType, final UUID objectId) {
+            return internalCallContextFactory.createInternalCallContext(objectId, objectType, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
         }
 
         public abstract String getQueueName();

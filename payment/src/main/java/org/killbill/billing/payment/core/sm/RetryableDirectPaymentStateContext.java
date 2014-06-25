@@ -33,17 +33,20 @@ import org.killbill.billing.util.callcontext.CallContext;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 
 public class RetryableDirectPaymentStateContext extends DirectPaymentStateContext {
 
+    private UUID attemptId;
     private boolean isApiPayment;
     private DateTime retryDate;
     private String pluginName;
     private DirectPayment result;
 
-    public RetryableDirectPaymentStateContext(@Nullable String pluginName, boolean isApiPayment, @Nullable final UUID directPaymentId, final String directPaymentExternalKey, @Nullable final String directPaymentTransactionExternalKey, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
+    public RetryableDirectPaymentStateContext(@Nullable final String pluginName, final boolean isApiPayment, @Nullable final UUID directPaymentId, final String directPaymentExternalKey, @Nullable final String directPaymentTransactionExternalKey, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
                                               final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext, final CallContext callContext) {
         super(directPaymentId, directPaymentExternalKey, directPaymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, properties, internalCallContext, callContext);
+        this.attemptId = attemptId;
         this.pluginName = pluginName;
         this.isApiPayment = isApiPayment;
     }
@@ -80,15 +83,27 @@ public class RetryableDirectPaymentStateContext extends DirectPaymentStateContex
         this.amount = adjustedAmount;
     }
 
+    public UUID getAttemptId() {
+        return attemptId;
+    }
+
+    public void setAttemptId(final UUID attemptId) {
+        this.attemptId = attemptId;
+    }
+
     public DirectPaymentTransaction getCurrentTransaction() {
-        if (result == null) {
+        if (result == null || result.getTransactions() == null || result.getTransactions().size() == 0) {
             return null;
         }
-        return Iterables.tryFind(result.getTransactions(), new Predicate<DirectPaymentTransaction>() {
+        return result.getTransactions().get(result.getTransactions().size() -1);
+/*
+STEPH
+        Iterables.filter(result.getTransactions(), new Predicate<DirectPaymentTransaction>() {
             @Override
             public boolean apply(final DirectPaymentTransaction input) {
                 return input.getExternalKey().equals(directPaymentTransactionExternalKey);
             }
-        }).orNull();
+        })
+        */
     }
 }

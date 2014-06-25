@@ -176,7 +176,10 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
 
             final PaymentAttemptModelDao attempt = paymentDao.getPaymentAttemptByExternalKey(transactionExternalKey, internalCallContext);
             final PaymentTransactionModelDao transaction = paymentDao.getDirectPaymentTransactionByExternalKey(transactionExternalKey, internalCallContext);
-            final PaymentModelDao payment = paymentDao.getDirectPayment(transaction.getPaymentId(), internalCallContext);
+            final PaymentModelDao payment = transaction != null ?
+                                            paymentDao.getDirectPayment(transaction.getPaymentId(), internalCallContext) :
+                                            null;
+            final UUID paymentId = payment != null ? payment.getId() : null;
 
             final List<PluginPropertyModelDao> properties = paymentDao.getProperties(transactionExternalKey, internalCallContext);
 
@@ -190,24 +193,22 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
                 }
             }));
 
-            final Account account = accountInternalApi.getAccountById(payment.getAccountId(), internalCallContext);
+            final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), internalCallContext);
             final UUID tenantId = nonEntityDao.retrieveIdFromObject(internalCallContext.getTenantRecordId(), ObjectType.TENANT);
             final CallContext callContext = internalCallContext.toCallContext(tenantId);
 
 
-            // STEPH Nope, keep the original transactionExternalKey
-            final String newTransactionExternalKey = UUID.randomUUID().toString();
             final State state = pluginControlledDirectPaymentAutomatonRunner.fetchState(attempt.getStateName());
             pluginControlledDirectPaymentAutomatonRunner.run(state,
                                                       false,
-                                                      transaction.getTransactionType(),
+                                                      attempt.getTransactionType(),
                                                       account,
-                                                      payment.getPaymentMethodId(),
-                                                      payment.getId(),
-                                                      payment.getExternalKey(),
-                                                      newTransactionExternalKey,
-                                                      transaction.getAmount(),
-                                                      transaction.getCurrency(),
+                                                      attempt.getPaymentMethodId(),
+                                                      paymentId,
+                                                      attempt.getPaymentExternalKey(),
+                                                      attempt.getTransactionExternalKey(),
+                                                      attempt.getAmount(),
+                                                      attempt.getCurrency(),
                                                       pluginProperties,
                                                       pluginName,
                                                       callContext,

@@ -16,43 +16,55 @@
 
 package org.killbill.billing.payment.dao;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 
 public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao<Entity> {
 
+    private UUID accountId;
+    private UUID paymentMethodId;
     private String paymentExternalKey;
     private UUID transactionId;
     private String transactionExternalKey;
+    private TransactionType transactionType;
     private String stateName;
-    private String operationName;
+    private BigDecimal amount;
+    private Currency currency;
     private String pluginName;
 
     public PaymentAttemptModelDao() { /* For the DAO mapper */ }
 
-    public PaymentAttemptModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
-                                  final String paymentExternalKey, final UUID transactionId, final String externalKey, final String stateName, final String operationName,
-                                  final String pluginName) {
+    public PaymentAttemptModelDao(final UUID accountId, final UUID paymentMethodId, final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                                  final String paymentExternalKey, final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType,
+                                  final String stateName, final BigDecimal amount, final Currency currency, final String pluginName) {
         super(id, createdDate, updatedDate);
+        this.accountId = accountId;
+        this.paymentMethodId = paymentMethodId;
         this.paymentExternalKey = paymentExternalKey;
         this.transactionId = transactionId;
-        this.transactionExternalKey = externalKey;
+        this.transactionExternalKey = transactionExternalKey;
+        this.transactionType = transactionType;
         this.stateName = stateName;
-        this.operationName = operationName;
+        this.amount = amount;
+        this.currency = currency;
         this.pluginName = pluginName;
     }
 
-    public PaymentAttemptModelDao(@Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
-                                  final String paymentExternalKey, final UUID transactionId, final String externalKey, final String stateName, final String operationName,
-                                  final String pluginName) {
-        this(UUID.randomUUID(), createdDate, updatedDate, paymentExternalKey, transactionId, externalKey, stateName, operationName, pluginName);
+    public PaymentAttemptModelDao(final UUID accountId, final UUID paymentMethodId, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                                  final String paymentExternalKey, final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType, final String stateName,
+                                  final BigDecimal amount, final Currency currency, final String pluginName) {
+        this(accountId, paymentMethodId, UUID.randomUUID(), createdDate, updatedDate, paymentExternalKey, transactionId, transactionExternalKey, transactionType, stateName,
+             amount, currency, pluginName);
     }
 
     public String getPaymentExternalKey() {
@@ -87,20 +99,52 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         this.stateName = stateName;
     }
 
-    public String getOperationName() {
-        return operationName;
-    }
-
-    public void setOperationName(final String operationName) {
-        this.operationName = operationName;
-    }
-
     public String getPluginName() {
         return pluginName;
     }
 
     public void setPluginName(final String pluginName) {
         this.pluginName = pluginName;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
+    }
+
+    public UUID getPaymentMethodId() {
+        return paymentMethodId;
+    }
+
+    public TransactionType getTransactionType() {
+        return transactionType;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public Currency getCurrency() {
+        return currency;
+    }
+
+    public void setAccountId(final UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public void setPaymentMethodId(final UUID paymentMethodId) {
+        this.paymentMethodId = paymentMethodId;
+    }
+
+    public void setTransactionType(final TransactionType transactionType) {
+        this.transactionType = transactionType;
+    }
+
+    public void setAmount(final BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
     }
 
     @Override
@@ -117,16 +161,19 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
 
         final PaymentAttemptModelDao that = (PaymentAttemptModelDao) o;
 
-        if (transactionId != null ? !transactionId.equals(that.transactionId) : that.transactionId != null) {
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
+            return false;
+        }
+        if (currency != that.currency) {
             return false;
         }
         if (paymentExternalKey != null ? !paymentExternalKey.equals(that.paymentExternalKey) : that.paymentExternalKey != null) {
             return false;
         }
-        if (transactionExternalKey != null ? !transactionExternalKey.equals(that.transactionExternalKey) : that.transactionExternalKey != null) {
-            return false;
-        }
-        if (operationName != null ? !operationName.equals(that.operationName) : that.operationName != null) {
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
             return false;
         }
         if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
@@ -135,17 +182,31 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         if (stateName != null ? !stateName.equals(that.stateName) : that.stateName != null) {
             return false;
         }
+        if (transactionExternalKey != null ? !transactionExternalKey.equals(that.transactionExternalKey) : that.transactionExternalKey != null) {
+            return false;
+        }
+        if (transactionId != null ? !transactionId.equals(that.transactionId) : that.transactionId != null) {
+            return false;
+        }
+        if (transactionType != that.transactionType) {
+            return false;
+        }
+
         return true;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (transactionId != null ? transactionId.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (paymentExternalKey != null ? paymentExternalKey.hashCode() : 0);
+        result = 31 * result + (transactionId != null ? transactionId.hashCode() : 0);
         result = 31 * result + (transactionExternalKey != null ? transactionExternalKey.hashCode() : 0);
+        result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
         result = 31 * result + (stateName != null ? stateName.hashCode() : 0);
-        result = 31 * result + (operationName != null ? operationName.hashCode() : 0);
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
         return result;
     }

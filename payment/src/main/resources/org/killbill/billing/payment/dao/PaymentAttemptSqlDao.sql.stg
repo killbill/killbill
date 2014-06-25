@@ -5,12 +5,17 @@ tableName() ::= "payment_attempts"
 historyTableName() ::= "payment_attempt_history"
 
 
+
 tableFields(prefix) ::= <<
-  <prefix>payment_external_key
+  <prefix>account_id
+, <prefix>payment_method_id
+, <prefix>payment_external_key
 , <prefix>transaction_id
 , <prefix>transaction_external_key
+, <prefix>transaction_type
 , <prefix>state_name
-, <prefix>operation_name
+, <prefix>amount
+, <prefix>currency
 , <prefix>plugin_name
 , <prefix>created_by
 , <prefix>created_date
@@ -19,11 +24,15 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
-  :paymentExternalKey
+  :accountId
+, :paymentMethodId
+, :paymentExternalKey
 , :transactionId
 , :transactionExternalKey
+, :transactionType
 , :stateName
-, :operationName
+, :amount
+, :currency
 , :pluginName
 , :createdBy
 , :createdDate

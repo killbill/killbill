@@ -76,6 +76,7 @@ public class DefaultPaymentService implements PaymentService {
 
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
+        retryService.start();
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)

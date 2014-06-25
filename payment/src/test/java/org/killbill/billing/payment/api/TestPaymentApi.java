@@ -35,7 +35,6 @@ import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
-import org.killbill.billing.payment.dao.PluginPropertyModelDao;
 import org.killbill.billing.retry.plugin.api.PaymentControlApiException;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.testng.Assert;

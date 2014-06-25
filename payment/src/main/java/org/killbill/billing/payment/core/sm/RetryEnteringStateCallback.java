@@ -23,6 +23,7 @@ import org.killbill.automaton.OperationResult;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 
@@ -42,14 +43,14 @@ public class RetryEnteringStateCallback implements EnteringStateCallback {
     @Override
     public void enteringState(final State state, final OperationCallback operationCallback, final OperationResult operationResult, final LeavingStateCallback leavingStateCallback) {
 
-        final PaymentAttemptModelDao attempt = retryableDirectPaymentAutomatonRunner.paymentDao.getPaymentAttemptByExternalKey(directPaymentStateContext.getDirectPaymentTransactionExternalKey(), directPaymentStateContext.internalCallContext);
+        final PaymentAttemptModelDao attempt = retryableDirectPaymentAutomatonRunner.paymentDao.getPaymentAttempt(directPaymentStateContext.getAttemptId(), directPaymentStateContext.internalCallContext);
         final UUID transactionId = directPaymentStateContext.getCurrentTransaction() != null ?
                                    directPaymentStateContext.getCurrentTransaction().getId() :
                                    null;
         retryableDirectPaymentAutomatonRunner.paymentDao.updatePaymentAttempt(attempt.getId(), transactionId, state.getName(), directPaymentStateContext.internalCallContext);
 
         if ("RETRIED".equals(state.getName())) {
-            retryServiceScheduler.scheduleRetry(directPaymentStateContext.directPaymentId, directPaymentStateContext.directPaymentTransactionExternalKey,
+            retryServiceScheduler.scheduleRetry(ObjectType.PAYMENT_ATTEMPT, attempt.getId(), directPaymentStateContext.directPaymentTransactionExternalKey,
                                                 directPaymentStateContext.getPluginName(), directPaymentStateContext.getRetryDate());
         }
     }
