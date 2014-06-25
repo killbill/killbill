@@ -180,8 +180,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                                                              properties,
                                                                              callContext,
                                                                              internalCallContext);
-
-        return getPayment(nonNullDirectPaymentId, true, properties, callContext, internalCallContext);
+        final DirectPayment directPayment = getPayment(nonNullDirectPaymentId, true, properties, callContext, internalCallContext);
+        postPaymentEvent(account, directPayment, directPaymentTransactionExternalKey, internalCallContext);
+        return directPayment;
     }
 
     public DirectPayment createRefund(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency,
@@ -260,14 +261,14 @@ public class DirectPaymentProcessor extends ProcessorBase {
         Preconditions.checkState(transactionModelDao != null);
 
         final DateTime utcNow = clock.getUTCNow();
-        final PaymentTransactionModelDao chargebackTransaction = new PaymentTransactionModelDao(utcNow, utcNow, chargebackTransactionExternalKey, transactionModelDao.getId(),
+        final PaymentTransactionModelDao chargebackTransaction = new PaymentTransactionModelDao(utcNow, utcNow, chargebackTransactionExternalKey, transactionModelDao.getPaymentId(),
 
                                                                                                             TransactionType.CHARGEBACK, utcNow, TransactionStatus.SUCCESS, amount, currency, null, null);
         final State currentPaymentState = directPaymentAutomatonRunner.fetchNextState("CHARGEBACK_INIT", true);
 
         // TODO STEPH we could create a DAO operation to do both steps at once
-        paymentDao.updateDirectPaymentWithNewTransaction(transactionModelDao.getId(), chargebackTransaction, internalCallContext);
-        paymentDao.updateDirectPaymentAndTransactionOnCompletion(transactionModelDao.getId(), currentPaymentState.getName(), chargebackTransaction.getId(), TransactionStatus.SUCCESS,
+        paymentDao.updateDirectPaymentWithNewTransaction(transactionModelDao.getPaymentId(), chargebackTransaction, internalCallContext);
+        paymentDao.updateDirectPaymentAndTransactionOnCompletion(transactionModelDao.getPaymentId(), currentPaymentState.getName(), chargebackTransaction.getId(), TransactionStatus.SUCCESS,
                                                                  chargebackTransaction.getAmount(), chargebackTransaction.getCurrency(),
                                                                  chargebackTransaction.getGatewayErrorCode(), chargebackTransaction.getGatewayErrorMsg(), internalCallContext);
 

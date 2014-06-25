@@ -294,7 +294,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         try {
             invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), false, callContext);
             fail("Should not have generated an extra invoice");
-        } catch (InvoiceApiException e) {
+        } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
         }
     }

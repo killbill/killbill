@@ -79,7 +79,7 @@ public class InvoicePaymentControlDao {
                                                                                         (String) row.get("transaction_external_key"),
                                                                                         UUID.fromString((String) row.get("account_id")),
                                                                                         (String) row.get("plugin_name"),
-                                                                                        UUID.fromString((String) row.get("payment_id")),
+                                                                                        row.get("payment_id") != null ? UUID.fromString((String) row.get("payment_method_id")) : null,
                                                                                         UUID.fromString((String) row.get("payment_method_id")),
                                                                                         (BigDecimal) row.get("amount"),
                                                                                         Currency.valueOf((String) row.get("currency")),
