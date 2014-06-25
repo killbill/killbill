@@ -20,7 +20,6 @@ package org.killbill.billing.payment.api;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -57,9 +56,13 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
+
     @Override
     public DirectPayment createAuthorization(final Account account, final UUID paymentMethodId, @Nullable final UUID directPaymentId, final BigDecimal amount, final Currency currency, final String directPaymentExternalKey, final String directPaymentTransactionExternalKey,
                                              final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+
+        checkNotNullArgumentList(account, paymentMethodId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey, properties, callContext);
+        Preconditions.checkArgument(amount.compareTo(BigDecimal.ZERO) > 0, "Amount should be positive");
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         return directPaymentProcessor.createAuthorization(account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey,
@@ -69,6 +72,10 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     @Override
     public DirectPayment createCapture(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency, final String directPaymentTransactionExternalKey,
                                        final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+
+        checkNotNullArgumentList(account, directPaymentId,  amount, currency, directPaymentTransactionExternalKey, properties, callContext);
+        Preconditions.checkArgument(amount.compareTo(BigDecimal.ZERO) > 0, "Amount should be positive");
+
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         return directPaymentProcessor.createCapture(account, directPaymentId, amount, currency, directPaymentTransactionExternalKey,
                                                     SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
@@ -77,6 +84,10 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     @Override
     public DirectPayment createPurchase(final Account account, final UUID paymentMethodId, @Nullable final UUID directPaymentId, final BigDecimal amount, final Currency currency, final String directPaymentExternalKey, final String directPaymentTransactionExternalKey,
                                         final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+
+        checkNotNullArgumentList(account, paymentMethodId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey, properties, callContext);
+        Preconditions.checkArgument(amount.compareTo(BigDecimal.ZERO) > 0, "Amount should be positive");
+
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         return directPaymentProcessor.createPurchase(account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey,
                                                      SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
@@ -85,10 +96,14 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     @Override
     public DirectPayment createPurchaseWithPaymentControl(final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID directPaymentId, final BigDecimal amount, final Currency currency, final String directPaymentExternalKey, final String directPaymentTransactionExternalKey,
                                                           final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
+
+        checkNotNullArgumentList(account, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey, properties, callContext);
+        Preconditions.checkArgument(amount.compareTo(BigDecimal.ZERO) > 0, "Amount should be positive");
+        Preconditions.checkArgument(paymentMethodId != null || paymentOptions.isExternalPayment(), "Payment methodId should be specified for non regular payments");
+
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
 
         // STEPH should throw PaymentApiException -- at least when coming from API; also add description.
-        Preconditions.checkArgument(paymentMethodId != null || paymentOptions.isExternalPayment());
         final UUID nonNulPaymentMethodId = (paymentMethodId != null) ?
                                            paymentMethodId :
                                            paymentMethodProcessor.createOrGetExternalPaymentMethod(UUID.randomUUID().toString(), account, properties, callContext, internalCallContext);
@@ -100,6 +115,9 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     @Override
     public DirectPayment createVoid(final Account account, final UUID directPaymentId, final String directPaymentTransactionExternalKey, final Iterable<PluginProperty> properties,
                                     final CallContext callContext) throws PaymentApiException {
+
+        checkNotNullArgumentList(account, directPaymentId, directPaymentTransactionExternalKey, properties, callContext);
+
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         return directPaymentProcessor.createVoid(account, directPaymentId, directPaymentTransactionExternalKey,
                                                  SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
@@ -109,6 +127,10 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     @Override
     public DirectPayment createRefund(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency, final String directPaymentTransactionExternalKey, final Iterable<PluginProperty> properties,
                                       final CallContext callContext) throws PaymentApiException {
+
+        checkNotNullArgumentList(account, directPaymentId, directPaymentTransactionExternalKey, amount, currency, properties, callContext);
+        Preconditions.checkArgument(amount.compareTo(BigDecimal.ZERO) > 0, "Amount should be positive");
+
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         return directPaymentProcessor.createRefund(account, directPaymentId, amount, currency, directPaymentTransactionExternalKey,
                                                    SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
@@ -117,6 +139,10 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     @Override
     public DirectPayment createRefundWithPaymentControl(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency, final String directPaymentTransactionExternalKey, final Iterable<PluginProperty> properties,
                                                         final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
+
+        checkNotNullArgumentList(account, directPaymentId, directPaymentTransactionExternalKey, amount, currency, properties, callContext);
+        Preconditions.checkArgument(amount.compareTo(BigDecimal.ZERO) > 0, "Amount should be positive");
+
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         return pluginControlledPaymentProcessor.createRefund(true, account, directPaymentId, amount, currency, directPaymentTransactionExternalKey,
                                                              properties, paymentOptions.getPaymentControlPluginName(), callContext, internalCallContext);
@@ -127,6 +153,10 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     public DirectPayment createCredit(final Account account, final UUID paymentMethodId, final UUID directPaymentId, final BigDecimal amount, final Currency currency,
                                       final String directPaymentExternalKey, final String directPaymentTransactionExternalKey,
                                       final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+
+        checkNotNullArgumentList(account, paymentMethodId, directPaymentId, directPaymentExternalKey, directPaymentTransactionExternalKey, amount, currency, properties, callContext);
+        Preconditions.checkArgument(amount.compareTo(BigDecimal.ZERO) > 0, "Amount should be positive");
+
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         return directPaymentProcessor.createCredit(account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey,
                                                    SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
@@ -135,12 +165,19 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
 
     @Override
     public void notifyPendingTransactionOfStateChanged(final Account account, final UUID directPaymentTransactionId, final boolean isSuccess, final CallContext callContext) throws PaymentApiException {
+
+        checkNotNullArgumentList(account, directPaymentTransactionId, callContext);
+
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         directPaymentProcessor.notifyPendingPaymentOfStateChanged(account, directPaymentTransactionId, isSuccess, callContext, internalCallContext);
     }
 
     @Override
     public void notifyChargeback(final Account account, final UUID directPaymentTransactionId, final String chargebackTransactionExternalKey, final BigDecimal amount, final Currency currency, final CallContext callContext) throws PaymentApiException {
+
+        checkNotNullArgumentList(account, directPaymentTransactionId, chargebackTransactionExternalKey, amount, currency, callContext);
+        Preconditions.checkArgument(amount.compareTo(BigDecimal.ZERO) > 0, "Amount should be positive");
+
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         directPaymentProcessor.notifyPaymentPaymentOfChargeback(account, directPaymentTransactionId, chargebackTransactionExternalKey, amount, currency, callContext, internalCallContext);
     }
@@ -258,5 +295,11 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
         }
 
         return paymentMethods;
+    }
+
+    private void checkNotNullArgumentList(Object... nonNullArguments) {
+        for (Object cur : nonNullArguments) {
+            Preconditions.checkNotNull(cur);
+        }
     }
 }
