@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -76,8 +77,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public final static String PLUGIN_NAME = "__INVOICE_PAYMENT_CONTROL_PLUGIN__";
     public final static String CREATED_BY = "InvoicePaymentControlPluginApi";
 
-    public static final String IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REF_IDS_AMOUNTS";
-    public static final String IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
+    public static final String PROP_IPCD_INVOICE_ID = "INVOICE_ID";
+    public static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "REF_IDS_AMOUNTS";
+    public static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "REFUND_WITH_ADJUSTMENTS";
 
     private final PaymentConfig paymentConfig;
     private final InvoiceInternalApi invoiceApi;
@@ -131,10 +133,10 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
                                     transactionType == TransactionType.REFUND);
 
-        final UUID invoiceId = UUID.fromString(paymentControlContext.getPaymentExternalKey());
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         try {
             if (transactionType == TransactionType.PURCHASE) {
+                final UUID invoiceId = getInvoiceId(paymentControlContext);
                 invoiceApi.notifyOfPayment(invoiceId,
                                            paymentControlContext.getAmount(),
                                            paymentControlContext.getCurrency(),
@@ -144,13 +146,13 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                            internalContext);
             } else /* TransactionType.REFUND */ {
                 final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentControlContext.getPluginProperties());
-                final PluginProperty prop = getPluginProperty(paymentControlContext.getPluginProperties(), IPCD_REFUND_WITH_ADJUSTMENTS);
+                final PluginProperty prop = getPluginProperty(paymentControlContext.getPluginProperties(), PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
                 final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
                 invoiceApi.createRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted , idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
             }
 
         } catch (InvoiceApiException e) {
-            logger.error("Invoice " + invoiceId + " seems missing", e);
+            logger.error("Failed to complete call: ", e);
             //throw new PaymentControlApiException(e);
         }
     }
@@ -177,10 +179,20 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         controlDao.removeAutoPayOffEntry(account.getId());
     }
 
+    private UUID getInvoiceId(final PaymentControlContext paymentControlContext) throws PaymentControlApiException  {
+        final PluginProperty invoiceProp = getPluginProperty(paymentControlContext.getPluginProperties(), PROP_IPCD_INVOICE_ID);
+        if (invoiceProp == null ||
+            ! (invoiceProp.getValue() instanceof String)) {
+            throw new PaymentControlApiException("Need to specify a valid invoiceId in property " + PROP_IPCD_INVOICE_ID);
+        }
+        return UUID.fromString((String) invoiceProp.getValue());
+    }
+
+
     private PriorPaymentControlResult getPluginPurchaseResult(final PaymentControlContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentControlApiException {
 
         try {
-            final UUID invoiceId = UUID.fromString(paymentControlPluginContext.getPaymentExternalKey());
+            final UUID invoiceId = getInvoiceId(paymentControlPluginContext);
             final Invoice invoice = rebalanceAndGetInvoice(invoiceId, internalContext);
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
             final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;
@@ -405,12 +417,13 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
     }
 
-    private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentControlContext paymentControlContext) {
+    private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentControlContext paymentControlContext, final BigDecimal computedAmount) {
+
         if (paymentControlContext.isApiPayment() || !isAccountAutoPayOff(paymentControlContext.getAccountId(), paymentControlContext)) {
             return false;
         }
         final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(), paymentControlContext.getAccountId(), PLUGIN_NAME,
-                                                                           paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(), paymentControlContext.getAmount(), paymentControlContext.getCurrency(), CREATED_BY, clock.getUTCNow());
+                                                                           paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(), computedAmount, paymentControlContext.getCurrency(), CREATED_BY, clock.getUTCNow());
         controlDao.insertAutoPayOff(data);
         return true;
     }

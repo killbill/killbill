@@ -18,6 +18,8 @@
 
 package org.killbill.billing.payment.bus;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.ErrorCode;
@@ -76,9 +78,13 @@ public class InvoiceHandler {
             final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             account = accountApi.getAccountById(event.getAccountId(), internalContext);
 
+            final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+            final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, event.getInvoiceId().toString(), false);
+            properties.add(prop1);
+
             final CallContext callContext = internalContext.toCallContext(nonEntityDao.retrieveIdFromObject(internalContext.getTenantRecordId(), ObjectType.TENANT));
-            pluginControlledPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, null, account.getCurrency(), event.getInvoiceId().toString(), UUID.randomUUID().toString(),
-                                                            ImmutableList.<PluginProperty>of(), InvoicePaymentControlPluginApi.PLUGIN_NAME, callContext, internalContext);
+            pluginControlledPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, null, account.getCurrency(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                            properties, InvoicePaymentControlPluginApi.PLUGIN_NAME, callContext, internalContext);
         } catch (final AccountApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {

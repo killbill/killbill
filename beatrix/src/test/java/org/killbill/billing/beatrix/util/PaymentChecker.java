@@ -81,7 +81,6 @@ public class PaymentChecker {
         final DirectPaymentTransaction transaction = getPurchaseTransaction(payment);
         Assert.assertTrue(transaction.getAmount().compareTo(expected.getAmount()) == 0);
         Assert.assertEquals(transaction.getTransactionStatus(), expected.getStatus());
-        Assert.assertEquals(payment.getExternalKey(), expected.getInvoiceId().toString());
         Assert.assertEquals(payment.getCurrency(), expected.getCurrency());
         auditChecker.checkPaymentCreated(payment, context);
     }
@@ -91,7 +90,6 @@ public class PaymentChecker {
         final DirectPaymentTransaction transaction = getPurchaseTransaction(payment);
         Assert.assertTrue(transaction.getAmount().compareTo(expected.getAmount()) == 0);
         Assert.assertEquals(transaction.getTransactionStatus(), expected.getStatus());
-        Assert.assertEquals(payment.getExternalKey(), expected.getInvoiceId());
         Assert.assertEquals(payment.getCurrency(), expected.getCurrency());
     }
 
