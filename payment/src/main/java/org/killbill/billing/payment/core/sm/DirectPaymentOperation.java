@@ -62,7 +62,7 @@ public abstract class DirectPaymentOperation extends OperationCallbackBase imple
     @Override
     protected OperationException rewrapExecutionException(final DirectPaymentStateContext directPaymentStateContext, final ExecutionException e) {
         final Throwable realException = Objects.firstNonNull(e.getCause(), e);
-        if (e.getCause() instanceof PaymentPluginApiException) {
+        if (e.getCause() instanceof PaymentApiException) {
             logger.warn("Unsuccessful plugin call for account {}", directPaymentStateContext.getAccount().getExternalKey(), realException);
             return new OperationException(realException, OperationResult.FAILURE);
         } else if (e.getCause() instanceof LockFailedException) {
@@ -70,6 +70,8 @@ public abstract class DirectPaymentOperation extends OperationCallbackBase imple
             logger.error(String.format(format), e);
             return new OperationException(realException, OperationResult.FAILURE);
         } else /* if (e instanceof RuntimeException) */ {
+
+     // STEPH: should we ever return an OperationResult.EXCEPTION at this layer -- since there is transtion back to init and there cannot be retried?
             logger.warn("Plugin call threw an exception for account {}", directPaymentStateContext.getAccount().getExternalKey(), e);
             return new OperationException(e, OperationResult.EXCEPTION);
         }

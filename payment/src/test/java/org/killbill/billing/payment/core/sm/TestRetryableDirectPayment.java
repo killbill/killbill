@@ -17,9 +17,11 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
+import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
@@ -62,12 +64,15 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
 
@@ -219,7 +224,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                    callContext,
                    internalCallContext);
 
-        final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+        final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext).get(0);
         assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
         assertEquals(pa.getStateName(), "ABORTED");
         assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
@@ -253,7 +258,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                    callContext,
                    internalCallContext);
 
-        final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+        final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext).get(0);
         assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
         assertEquals(pa.getStateName(), "SUCCESS");
         assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
@@ -286,7 +291,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                    null,
                    callContext, internalCallContext);
 
-        final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+        final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext).get(0);
         assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
         assertEquals(pa.getStateName(), "SUCCESS");
         assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
@@ -323,7 +328,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
             Assert.fail("Expected PaymentApiException...");
 
         } catch (final PaymentApiException e) {
-            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext).get(0);
             assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
             assertEquals(pa.getStateName(), "ABORTED");
             assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
@@ -360,7 +365,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
 
             Assert.fail("Expected PaymentApiException...");
         } catch (final PaymentApiException e) {
-            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext).get(0);
             assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
             assertEquals(pa.getStateName(), "RETRIED");
             assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
@@ -397,7 +402,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
 
             Assert.fail("Expected Exception...");
         } catch (final PaymentApiException e) {
-            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext).get(0);
             assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
             assertEquals(pa.getStateName(), "RETRIED");
             assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
@@ -434,7 +439,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
 
             Assert.fail("Expected Exception...");
         } catch (final PaymentApiException e) {
-            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext).get(0);
             assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
             assertEquals(pa.getStateName(), "ABORTED");
             assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
@@ -477,10 +482,16 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                    callContext,
                    internalCallContext);
 
-        final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
-        assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
-        assertEquals(pa.getStateName(), "SUCCESS");
-        assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
+        final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+        assertEquals(pas.size(), 2);
+        final PaymentAttemptModelDao successfulAttempt = Iterables.tryFind(pas, new Predicate<PaymentAttemptModelDao>() {
+            @Override
+            public boolean apply(final PaymentAttemptModelDao input) {
+                return input.getTransactionType() == TransactionType.AUTHORIZE &&
+                       input.getStateName().equals("SUCCESS");
+            }
+        }).orNull();
+        assertNotNull(successfulAttempt);
     }
 
     @Test(groups = "fast")
@@ -523,7 +534,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
 
             Assert.fail("Expecting paymentApiException...");
         } catch (final PaymentApiException e) {
-            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext).get(0);
             assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
             assertEquals(pa.getStateName(), "RETRIED");
             assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
@@ -570,10 +581,18 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
 
             Assert.fail("Expecting paymentApiException...");
         } catch (final PaymentApiException e) {
-            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
-            assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
-            assertEquals(pa.getStateName(), "ABORTED");
-            assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
+
+            final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+            assertEquals(pas.size(), 2);
+
+            final PaymentAttemptModelDao failedAttempts = Iterables.tryFind(pas, new Predicate<PaymentAttemptModelDao>() {
+                @Override
+                public boolean apply(final PaymentAttemptModelDao input) {
+                    return input.getTransactionType() == TransactionType.AUTHORIZE &&
+                           input.getStateName().equals("ABORTED");
+                }
+            }).orNull();
+            assertNotNull(failedAttempts);
         }
     }
 
@@ -594,21 +613,29 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         final State state = runner.fetchState("RETRIED");
         final UUID directTransactionId = UUID.randomUUID();
         final UUID directPaymentId = UUID.randomUUID();
-        paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
-                                                                                 directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
-                                                                                 TransactionType.AUTHORIZE, state.getName(), amount, currency, null),
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
+                                                                    directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
+                                                                    TransactionType.AUTHORIZE, state.getName(), amount, currency, null);
+        paymentDao.insertPaymentAttemptWithProperties(attempt,
                                                       ImmutableList.<PluginPropertyModelDao>of(), internalCallContext
                                                      );
         paymentDao.insertDirectPaymentWithFirstTransaction(new PaymentModelDao(directPaymentId, utcNow, utcNow, account.getId(), paymentMethodId, -1, directPaymentExternalKey),
                                                            new PaymentTransactionModelDao(directTransactionId, directPaymentTransactionExternalKey, utcNow, utcNow, directPaymentId, TransactionType.AUTHORIZE, utcNow, TransactionStatus.PAYMENT_FAILURE, amount, currency, "bla", "foo"),
                                                            internalCallContext);
 
-        processor.retryPaymentTransaction(directPaymentTransactionExternalKey, MockPaymentControlProviderPlugin.PLUGIN_NAME, internalCallContext);
+        processor.retryPaymentTransaction(attempt.getId(), MockPaymentControlProviderPlugin.PLUGIN_NAME, internalCallContext);
 
-        final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
-        assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
-        assertEquals(pa.getStateName(), "SUCCESS");
-        assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
+        final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+        assertEquals(pas.size(), 2);
+
+        final PaymentAttemptModelDao successfulAttempt = Iterables.tryFind(pas, new Predicate<PaymentAttemptModelDao>() {
+            @Override
+            public boolean apply(final PaymentAttemptModelDao input) {
+                return input.getTransactionType() == TransactionType.AUTHORIZE &&
+                       input.getStateName().equals("SUCCESS");
+            }
+        }).orNull();
+        assertNotNull(successfulAttempt);
     }
 
     @Test(groups = "fast")
@@ -628,9 +655,10 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         final State state = runner.fetchState("RETRIED");
         final UUID directTransactionId = UUID.randomUUID();
         final UUID directPaymentId = UUID.randomUUID();
-        paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
-                                                                                 directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
-                                                                                 TransactionType.AUTHORIZE, state.getName(), amount, currency, null),
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
+                                                                    directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
+                                                                    TransactionType.AUTHORIZE, state.getName(), amount, currency, null);
+        paymentDao.insertPaymentAttemptWithProperties(attempt,
                                                       ImmutableList.<PluginPropertyModelDao>of(), internalCallContext
                                                      );
         paymentDao.insertDirectPaymentWithFirstTransaction(new PaymentModelDao(directPaymentId, utcNow, utcNow, account.getId(), paymentMethodId, -1, directPaymentExternalKey),
@@ -639,12 +667,18 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                                                            internalCallContext
                                                           );
 
-        processor.retryPaymentTransaction(directPaymentTransactionExternalKey, MockPaymentControlProviderPlugin.PLUGIN_NAME, internalCallContext);
+        processor.retryPaymentTransaction(attempt.getId(), MockPaymentControlProviderPlugin.PLUGIN_NAME, internalCallContext);
 
-        final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
-        assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
-        assertEquals(pa.getStateName(), "ABORTED");
-        assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
+        final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+        assertEquals(pas.size(), 2);
+        final PaymentAttemptModelDao failedAttempt = Iterables.tryFind(pas, new Predicate<PaymentAttemptModelDao>() {
+            @Override
+            public boolean apply(final PaymentAttemptModelDao input) {
+                return input.getTransactionType() == TransactionType.AUTHORIZE &&
+                       input.getStateName().equals("ABORTED");
+            }
+        }).orNull();
+        assertNotNull(failedAttempt);
     }
 
     @Test(groups = "fast")
@@ -669,9 +703,10 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
             final State state = runner.fetchState("RETRIED");
             final UUID directTransactionId = UUID.randomUUID();
             final UUID directPaymentId = UUID.randomUUID();
-            paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
-                                                                                     directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
-                                                                                     TransactionType.AUTHORIZE, state.getName(), amount, currency, null),
+            final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
+                                                                        directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
+                                                                        TransactionType.AUTHORIZE, state.getName(), amount, currency, null);
+            paymentDao.insertPaymentAttemptWithProperties(attempt,
                                                           ImmutableList.<PluginPropertyModelDao>of(), internalCallContext
                                                          );
             paymentDao.insertDirectPaymentWithFirstTransaction(new PaymentModelDao(directPaymentId, utcNow, utcNow, account.getId(), paymentMethodId, -1, directPaymentExternalKey),
@@ -680,12 +715,18 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                                                                internalCallContext
                                                               );
 
-            processor.retryPaymentTransaction(directPaymentTransactionExternalKey, MockPaymentControlProviderPlugin.PLUGIN_NAME, internalCallContext);
+            processor.retryPaymentTransaction(attempt.getId(), MockPaymentControlProviderPlugin.PLUGIN_NAME, internalCallContext);
 
-            final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByExternalKey(directPaymentTransactionExternalKey, internalCallContext);
-            assertEquals(pa.getTransactionExternalKey(), directPaymentTransactionExternalKey);
-            assertEquals(pa.getStateName(), "ABORTED");
-            assertEquals(pa.getTransactionType(), TransactionType.AUTHORIZE);
+            final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+            assertEquals(pas.size(), 2);
+            final PaymentAttemptModelDao failedAttempt = Iterables.tryFind(pas, new Predicate<PaymentAttemptModelDao>() {
+                @Override
+                public boolean apply(final PaymentAttemptModelDao input) {
+                    return input.getTransactionType() == TransactionType.AUTHORIZE &&
+                           input.getStateName().equals("ABORTED");
+                }
+            }).orNull();
+            assertNotNull(failedAttempt);
         } finally {
             if (lock != null) {
                 lock.release();

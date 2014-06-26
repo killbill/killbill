@@ -37,7 +37,6 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testPaymentAttempt() {
-        final UUID paymentId = UUID.randomUUID();
         final UUID directTransactionId = UUID.randomUUID();
         final String paymentExternalKey = "vraiment?";
         final String transactionExternalKey = "tduteuqweq";
@@ -46,24 +45,28 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final String pluginName = "superPlugin";
 
         final UUID accountId = UUID.randomUUID();
-        final PluginPropertyModelDao prop1 = new PluginPropertyModelDao("foo", transactionExternalKey, accountId, "PLUGIN", "key1", "value1", "yo", clock.getUTCNow());
-        final PluginPropertyModelDao prop2 = new PluginPropertyModelDao("foo2", transactionExternalKey, accountId, "PLUGIN", "key2", "value2", "yo", clock.getUTCNow());
-        final PluginPropertyModelDao prop3 = new PluginPropertyModelDao("foo3", "other", UUID.randomUUID(), "PLUGIN", "key2", "value2", "yo", clock.getUTCNow());
+
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(UUID.randomUUID(), UUID.randomUUID(), clock.getUTCNow(), clock.getUTCNow(),
+                                                                          paymentExternalKey, directTransactionId, transactionExternalKey, transactionType, stateName,
+                                                                          BigDecimal.ZERO, Currency.ALL, pluginName);
+
+
+        final PluginPropertyModelDao prop1 = new PluginPropertyModelDao(attempt.getId(), "foo", transactionExternalKey, accountId, "PLUGIN", "key1", "value1", "yo", clock.getUTCNow());
+        final PluginPropertyModelDao prop2 = new PluginPropertyModelDao(attempt.getId(), "foo2", transactionExternalKey, accountId, "PLUGIN", "key2", "value2", "yo", clock.getUTCNow());
+        final PluginPropertyModelDao prop3 = new PluginPropertyModelDao(UUID.randomUUID()   , "foo3", "other", UUID.randomUUID(), "PLUGIN", "key2", "value2", "yo", clock.getUTCNow());
         final List<PluginPropertyModelDao> props = new ArrayList<PluginPropertyModelDao>();
         props.add(prop1);
         props.add(prop2);
         props.add(prop3);
 
-        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(UUID.randomUUID(), UUID.randomUUID(), clock.getUTCNow(), clock.getUTCNow(),
-                                                                          paymentExternalKey, directTransactionId, transactionExternalKey, transactionType, stateName,
-                                                                          BigDecimal.ZERO, Currency.ALL, pluginName);
+
         PaymentAttemptModelDao savedAttempt = paymentDao.insertPaymentAttemptWithProperties(attempt, props, internalCallContext);
         assertEquals(savedAttempt.getTransactionExternalKey(), transactionExternalKey);
         assertEquals(savedAttempt.getTransactionType(), transactionType);
         assertEquals(savedAttempt.getStateName(), stateName);
         assertEquals(savedAttempt.getPluginName(), pluginName);
 
-        final List<PluginPropertyModelDao> retrievedProperties = paymentDao.getProperties(transactionExternalKey, internalCallContext);
+        final List<PluginPropertyModelDao> retrievedProperties = paymentDao.getProperties(attempt.getId(), internalCallContext);
         assertEquals(retrievedProperties.size(), 2);
         assertEquals(retrievedProperties.get(0).getAccountId(), accountId);
         assertEquals(retrievedProperties.get(0).getTransactionExternalKey(), transactionExternalKey);
@@ -87,11 +90,12 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(retrievedAttempt1.getStateName(), stateName);
         assertEquals(retrievedAttempt1.getPluginName(), pluginName);
 
-        final PaymentAttemptModelDao retrievedAttempt2 = paymentDao.getPaymentAttemptByExternalKey(transactionExternalKey, internalCallContext);
-        assertEquals(retrievedAttempt2.getTransactionExternalKey(), transactionExternalKey);
-        assertEquals(retrievedAttempt2.getTransactionType(), transactionType);
-        assertEquals(retrievedAttempt2.getStateName(), stateName);
-        assertEquals(retrievedAttempt2.getPluginName(), pluginName);
+        final List<PaymentAttemptModelDao> retrievedAttempts = paymentDao.getPaymentAttemptByTransactionExternalKey(transactionExternalKey, internalCallContext);
+        assertEquals(retrievedAttempts.size(), 1);
+        assertEquals(retrievedAttempts.get(0).getTransactionExternalKey(), transactionExternalKey);
+        assertEquals(retrievedAttempts.get(0).getTransactionType(), transactionType);
+        assertEquals(retrievedAttempts.get(0).getStateName(), stateName);
+        assertEquals(retrievedAttempts.get(0).getPluginName(), pluginName);
     }
 
     @Test(groups = "slow")
@@ -140,7 +144,9 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedTransaction.getAmount().compareTo(BigDecimal.TEN), 0);
         assertEquals(savedTransaction.getCurrency(), Currency.AED);
 
-        final PaymentTransactionModelDao savedTransaction2 = paymentDao.getDirectPaymentTransactionByExternalKey(transactionExternalKey, internalCallContext);
+        final List<PaymentTransactionModelDao> savedTransactions = paymentDao.getDirectPaymentTransactionsByExternalKey(transactionExternalKey, internalCallContext);
+        assertEquals(savedTransactions.size(), 1);
+        final PaymentTransactionModelDao savedTransaction2 = savedTransactions.get(0);
         assertEquals(savedTransaction2.getTransactionExternalKey(), transactionExternalKey);
         assertEquals(savedTransaction2.getPaymentId(), paymentModelDao.getId());
         assertEquals(savedTransaction2.getTransactionType(), TransactionType.AUTHORIZE);

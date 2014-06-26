@@ -68,22 +68,23 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
 
         if (state.getName().equals(initialState.getName()) ||
             state.getName().equals(retriedState.getName())) {
+
+            final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
+                                                                              utcNow, utcNow, stateContext.getDirectPaymentExternalKey(), null,
+                                                                              stateContext.directPaymentTransactionExternalKey, transactionType, state.getName(),
+                                                                              stateContext.getAmount(), stateContext.getCurrency(),
+                                                                              stateContext.getPluginName());
+
             final List<PluginPropertyModelDao> properties = ImmutableList.copyOf(Iterables.transform(stateContext.getProperties(), new Function<PluginProperty, PluginPropertyModelDao>() {
                 @Override
                 public PluginPropertyModelDao apply(final PluginProperty input) {
                     // STEPH how to serialize more complex values such as item adjustments. json ?
                     final String value = (input.getValue() instanceof String) ? (String) input.getValue() : "TODO: could not serialize";
-                    return new PluginPropertyModelDao(stateContext.getDirectPaymentExternalKey(), stateContext.directPaymentTransactionExternalKey, stateContext.getAccount().getId(),
+                    return new PluginPropertyModelDao(attempt.getId(), stateContext.getDirectPaymentExternalKey(), stateContext.directPaymentTransactionExternalKey, stateContext.getAccount().getId(),
                                                       stateContext.getPluginName(), input.getKey(), value, stateContext.getCallContext().getUserName(), stateContext.getCallContext().getCreatedDate());
                 }
             }));
-            final PaymentAttemptModelDao attempt = retryableDirectPaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
-                                                                                                        utcNow, utcNow, stateContext.getDirectPaymentExternalKey(), null,
-                                                                                                                           stateContext.directPaymentTransactionExternalKey, transactionType, state.getName(),
-                                                                                                                            stateContext.getAmount(), stateContext.getCurrency(),
-                                                                                                                           stateContext.getPluginName()),
-                                                                                                properties, stateContext.internalCallContext);
-
+            retryableDirectPaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(attempt, properties, stateContext.internalCallContext);
             stateContext.setAttemptId(attempt.getId());
         }
     }

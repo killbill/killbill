@@ -380,6 +380,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
+
         final List<DirectPayment> payments = null; // STEPH paymentApi.getInvoicePayments(UUID.fromString(invoiceId), tenantContext);
         final List<PaymentJson> result = new ArrayList<PaymentJson>(payments.size());
         if (payments.size() == 0) {

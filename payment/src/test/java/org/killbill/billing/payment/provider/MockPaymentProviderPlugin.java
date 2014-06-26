@@ -338,18 +338,15 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
     private PaymentTransactionInfoPlugin getPaymentTransactionInfoPluginResult(final UUID kbPaymentId, final UUID kbTransactionId, final TransactionType type, final BigDecimal amount, final Currency currency) throws PaymentPluginApiException {
 
-        boolean prev = makeNextInvoiceFailWithException.get();
-
-
         if (makeNextInvoiceFailWithException.getAndSet(false)) {
-            System.out.println("################## (STEPH) MockPaymentProviderPlugin getPaymentTransactionInfoPluginResult makeNextInvoiceFailWithException (prev) = " + prev + " => THROW");
+            System.out.println("################## (STEPH) MockPaymentProviderPlugin getPaymentTransactionInfoPluginResult makeNextInvoiceFailWithException  => THROW");
             throw new PaymentPluginApiException("", "test error");
         }
 
 
         final PaymentPluginStatus status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
 
-        System.out.println("################## (STEPH) MockPaymentProviderPlugin getPaymentTransactionInfoPluginResult makeNextInvoiceFailWithException (prev) = " + prev + " => status = " + status);
+        System.out.println("################## (STEPH) MockPaymentProviderPlugin getPaymentTransactionInfoPluginResult makeNextInvoiceFailWithError => status = " + status);
 
         InternalPaymentInfo info = payments.get(kbPaymentId.toString());
         if (info == null) {

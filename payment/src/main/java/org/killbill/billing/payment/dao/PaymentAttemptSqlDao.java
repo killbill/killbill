@@ -41,7 +41,7 @@ public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDa
                        @BindBean final InternalCallContext context);
 
     @SqlQuery
-    PaymentAttemptModelDao getByTransactionExternalKey(@Bind("transactionExternalKey") final String transactionExternalKey,
+    List<PaymentAttemptModelDao> getByTransactionExternalKey(@Bind("transactionExternalKey") final String transactionExternalKey,
                                                        @BindBean final InternalTenantContext context);
 
     @SqlQuery

@@ -16,6 +16,8 @@
 
 package org.killbill.billing.payment.retry;
 
+import java.util.UUID;
+
 import org.killbill.notificationq.api.NotificationEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -23,18 +25,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PaymentRetryNotificationKey implements NotificationEvent {
 
-    private final String transactionExternalKey;
+    private final UUID attemptId;
     private final String pluginName;
 
     @JsonCreator
-    public PaymentRetryNotificationKey(@JsonProperty("transactionExternalKey") String transactionExternalKey,
+    public PaymentRetryNotificationKey(@JsonProperty("attemptId") UUID attemptId,
                                        @JsonProperty("pluginName") String pluginName) {
-        this.transactionExternalKey = transactionExternalKey;
+        this.attemptId = attemptId;
         this.pluginName = pluginName;
     }
 
-    public String getTransactionExternalKey() {
-        return transactionExternalKey;
+    public UUID getAttemptId() {
+        return attemptId;
     }
 
     public String getPluginName() {

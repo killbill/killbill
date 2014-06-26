@@ -170,7 +170,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public void process_AUTO_PAY_OFF_removal(final Account account, final InternalCallContext internalCallContext) {
         final List<PluginAutoPayOffModelDao> entries = controlDao.getAutoPayOffEntry(account.getId());
         for (PluginAutoPayOffModelDao cur : entries) {
-            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, account.getId(), cur.getTransactionExternalKey(), PLUGIN_NAME, clock.getUTCNow());
+            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, account.getId(), cur.getAttemptId(), PLUGIN_NAME, clock.getUTCNow());
         }
         controlDao.removeAutoPayOffEntry(account.getId());
     }
@@ -423,8 +423,10 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         if (paymentControlContext.isApiPayment() || !isAccountAutoPayOff(paymentControlContext.getAccountId(), paymentControlContext)) {
             return false;
         }
-        final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(), paymentControlContext.getAccountId(), PLUGIN_NAME,
-                                                                           paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(), computedAmount, paymentControlContext.getCurrency(), CREATED_BY, clock.getUTCNow());
+        final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getAttemptPaymentId(), paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(),
+                                                                           paymentControlContext.getAccountId(), PLUGIN_NAME,
+                                                                           paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(),
+                                                                           computedAmount, paymentControlContext.getCurrency(), CREATED_BY, clock.getUTCNow());
         controlDao.insertAutoPayOff(data);
         return true;
     }

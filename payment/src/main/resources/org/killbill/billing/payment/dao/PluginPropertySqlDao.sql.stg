@@ -9,7 +9,8 @@ recordIdField(prefix) ::= <<
 recordIdValue() ::= ":recordId"
 
 tableFields(prefix) ::= <<
-  <prefix>payment_external_key
+  <prefix>attempt_id
+, <prefix>payment_external_key
 , <prefix>transaction_external_key
 , <prefix>account_id
 , <prefix>plugin_name
@@ -20,7 +21,8 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
-  :paymentExternalKey
+  :attemptId
+, :paymentExternalKey
 , :transactionExternalKey
 , :accountId
 , :pluginName
@@ -65,7 +67,7 @@ getPluginProperties() ::= <<
 select
 <allTableFields("")>
 from <tableName()>
-where transaction_external_key = :transactionExternalKey
+where attempt_id = :attemptId
 order by record_id asc
 ;
 >>

@@ -44,11 +44,13 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
-getPaymentTransactionByExternalKey() ::= <<
+getPaymentTransactionsByExternalKey() ::= <<
 select
 <allTableFields("")>
 from <tableName()>
 where transaction_external_key = :transactionExternalKey
+<AND_CHECK_TENANT()>
+<defaultOrderBy()>
 ;
 >>
 

@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 public class PluginPropertyModelDao {
 
     private Long recordId;
+    private UUID attemptId;
     private String paymentExternalKey;
     private String transactionExternalKey;
     private UUID accountId;
@@ -35,12 +36,13 @@ public class PluginPropertyModelDao {
     public PluginPropertyModelDao() { /* For the DAO mapper */
     }
 
-    public PluginPropertyModelDao(final String paymentExternalKey, final String transactionExternalKey, final UUID accountId, final String pluginName, final String propKey, final String propValue, final String createdBy, final DateTime createdDate) {
-        this(-1L, paymentExternalKey, transactionExternalKey, accountId, pluginName, propKey, propValue, createdBy, createdDate);
+    public PluginPropertyModelDao(final UUID attemptId, final String paymentExternalKey, final String transactionExternalKey, final UUID accountId, final String pluginName, final String propKey, final String propValue, final String createdBy, final DateTime createdDate) {
+        this(-1L, attemptId, paymentExternalKey, transactionExternalKey, accountId, pluginName, propKey, propValue, createdBy, createdDate);
     }
 
-    public PluginPropertyModelDao(final Long recordId, final String paymentExternalKey, final String transactionExternalKey, final UUID accountId, final String pluginName, final String propKey, final String propValue, final String createdBy, final DateTime createdDate) {
+    public PluginPropertyModelDao(final Long recordId, final UUID attemptId, final String paymentExternalKey, final String transactionExternalKey, final UUID accountId, final String pluginName, final String propKey, final String propValue, final String createdBy, final DateTime createdDate) {
         this.recordId = recordId;
+        this.attemptId = attemptId;
         this.paymentExternalKey = paymentExternalKey;
         this.transactionExternalKey = transactionExternalKey;
         this.accountId = accountId;
@@ -49,6 +51,14 @@ public class PluginPropertyModelDao {
         this.propValue = propValue;
         this.createdBy = createdBy;
         this.createdDate = createdDate;
+    }
+
+    public UUID getAttemptId() {
+        return attemptId;
+    }
+
+    public void setAttemptId(final UUID attemptId) {
+        this.attemptId = attemptId;
     }
 
     public Long getRecordId() {
@@ -134,6 +144,9 @@ public class PluginPropertyModelDao {
 
         final PluginPropertyModelDao that = (PluginPropertyModelDao) o;
 
+        if (attemptId != null ? !attemptId.equals(that.attemptId) : that.attemptId != null) {
+            return false;
+        }
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
@@ -169,6 +182,7 @@ public class PluginPropertyModelDao {
         int result = recordId != null ? recordId.hashCode() : 0;
         result = 31 * result + (paymentExternalKey != null ? paymentExternalKey.hashCode() : 0);
         result = 31 * result + (transactionExternalKey != null ? transactionExternalKey.hashCode() : 0);
+        result = 31 * result + (attemptId != null ? attemptId.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
         result = 31 * result + (propKey != null ? propKey.hashCode() : 0);

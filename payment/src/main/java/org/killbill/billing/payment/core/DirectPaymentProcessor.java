@@ -112,6 +112,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
     public DirectPayment createAuthorization(final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID directPaymentId, final BigDecimal amount, final Currency currency,
                                              final String directPaymentExternalKey, final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                              final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+
+        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+
         final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.AUTHORIZE,
                                                                              account,
                                                                              paymentMethodId,
@@ -133,6 +136,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
     public DirectPayment createCapture(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency,
                                        final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                        final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+
+        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+
         final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.CAPTURE,
                                                                              account,
                                                                              directPaymentId,
@@ -152,6 +158,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
     public DirectPayment createPurchase(final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID directPaymentId, final BigDecimal amount, final Currency currency,
                                         final String directPaymentExternalKey, final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                         final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+
+        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+
         final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.PURCHASE,
                                                                              account,
                                                                              paymentMethodId,
@@ -172,6 +181,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
 
     public DirectPayment createVoid(final Account account, final UUID directPaymentId, final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                     final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+
+        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+
         final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.VOID,
                                                                              account,
                                                                              directPaymentId,
@@ -188,6 +200,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
     public DirectPayment createRefund(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency,
                                       final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                       final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+
+        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+
         final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.REFUND,
                                                                              account,
                                                                              directPaymentId,
@@ -206,6 +221,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
     public DirectPayment createCredit(final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID directPaymentId, final BigDecimal amount, final Currency currency,
                                       final String directPaymentExternalKey, final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                       final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+
+        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+
         final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.CREDIT,
                                                                              account,
                                                                              paymentMethodId,
@@ -257,6 +275,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
     }
 
     public void notifyPaymentPaymentOfChargeback(final Account account, final UUID transactionId, final String chargebackTransactionExternalKey, final BigDecimal amount, final Currency currency, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+
+        validateUniqueTransactionExternalKey(chargebackTransactionExternalKey, internalCallContext);
+
         final PaymentTransactionModelDao transactionModelDao = paymentDao.getDirectPaymentTransaction(transactionId, internalCallContext);
         Preconditions.checkState(transactionModelDao != null);
 
@@ -400,6 +421,19 @@ public class DirectPaymentProcessor extends ProcessorBase {
         final List<PaymentTransactionModelDao> transactionsForAccount = paymentDao.getDirectTransactionsForAccount(paymentModelDao.getAccountId(), tenantContextWithAccountRecordId);
 
         return toDirectPayment(paymentModelDao, transactionsForAccount, pluginTransactions);
+    }
+
+    private void validateUniqueTransactionExternalKey(final String transactionExternalKey, final InternalTenantContext tenantContext) throws PaymentApiException {
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectPaymentTransactionsByExternalKey(transactionExternalKey, tenantContext);
+        final PaymentTransactionModelDao transactionAlreadyExists = Iterables.tryFind(transactions, new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return input.getTransactionStatus() == TransactionStatus.SUCCESS;
+            }
+        }).orNull();
+        if (transactionAlreadyExists != null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, transactionExternalKey);
+        }
     }
 
     private DirectPayment getDirectPayment(final PaymentModelDao paymentModelDao, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context, final InternalTenantContext tenantContext) throws PaymentApiException {

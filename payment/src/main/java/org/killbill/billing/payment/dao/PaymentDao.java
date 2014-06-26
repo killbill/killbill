@@ -29,7 +29,7 @@ import org.killbill.billing.util.entity.Pagination;
 public interface PaymentDao {
 
 
-    public List<PluginPropertyModelDao> getProperties(String transactionExternalKey, InternalCallContext context);
+    public List<PluginPropertyModelDao> getProperties(UUID attenptId, InternalCallContext context);
 
     public PaymentAttemptModelDao insertPaymentAttemptWithProperties(PaymentAttemptModelDao attempt, List<PluginPropertyModelDao> properties, InternalCallContext context);
 
@@ -37,9 +37,9 @@ public interface PaymentDao {
 
     public List<PaymentAttemptModelDao> getPaymentAttempts(String paymentExternalKey, InternalTenantContext context);
 
-    public PaymentAttemptModelDao getPaymentAttemptByExternalKey(String externalKey, InternalTenantContext context);
+    public List<PaymentAttemptModelDao> getPaymentAttemptByTransactionExternalKey(String externalKey, InternalTenantContext context);
 
-    public PaymentTransactionModelDao getDirectPaymentTransactionByExternalKey(String transactionExternalKey, InternalTenantContext context);
+    public List<PaymentTransactionModelDao> getDirectPaymentTransactionsByExternalKey(String transactionExternalKey, InternalTenantContext context);
 
     public PaymentModelDao getDirectPaymentByExternalKey(String externalKey, InternalTenantContext context);
 

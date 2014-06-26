@@ -19,6 +19,7 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -80,7 +81,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
     public void testSimplePaymentWithNoAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = null;
-        final BigDecimal expectedAmount = invoiceAmount;
+        final BigDecimal expectedAmount = null;
 
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
@@ -130,8 +131,13 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
                                                             Currency.USD));
 
         try {
+
+            final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+            final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
+            properties.add(prop1);
+
             final DirectPayment paymentInfo = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
-                                                                                          invoice.getId().toString(), UUID.randomUUID().toString(), PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
+                                                                                          invoice.getId().toString(), UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
             if (expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
             }

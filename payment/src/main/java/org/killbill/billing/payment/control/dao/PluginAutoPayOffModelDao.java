@@ -25,6 +25,7 @@ import org.killbill.billing.catalog.api.Currency;
 public class PluginAutoPayOffModelDao {
 
     private Long recordId;
+    private UUID attemptId;
     private String paymentExternalKey;
     private String transactionExternalKey;
     private UUID accountId;
@@ -39,14 +40,15 @@ public class PluginAutoPayOffModelDao {
     public PluginAutoPayOffModelDao() { /* For the DAO mapper */
     }
 
-    public PluginAutoPayOffModelDao(final String paymentExternalKey, final String transactionExternalKey, final UUID accountId, final String pluginName,
+    public PluginAutoPayOffModelDao(final UUID attemptId, final String paymentExternalKey, final String transactionExternalKey, final UUID accountId, final String pluginName,
                                     final UUID paymentId, final UUID paymentMethodId, final BigDecimal amount, final Currency currency, final String createdBy, final DateTime createdDate) {
-        this(-1L, paymentExternalKey, transactionExternalKey, accountId, pluginName, paymentId, paymentMethodId, amount, currency, createdBy, createdDate);
+        this(-1L, attemptId, paymentExternalKey, transactionExternalKey, accountId, pluginName, paymentId, paymentMethodId, amount, currency, createdBy, createdDate);
     }
 
-    public PluginAutoPayOffModelDao(final Long recordId, final String paymentExternalKey, final String transactionExternalKey, final UUID accountId, final String pluginName,
+    public PluginAutoPayOffModelDao(final Long recordId, UUID attemptId, final String paymentExternalKey, final String transactionExternalKey, final UUID accountId, final String pluginName,
                                     final UUID paymentId, final UUID paymentMethodId, final BigDecimal amount, final Currency currency, final String createdBy, final DateTime createdDate) {
         this.recordId = recordId;
+        this.attemptId = attemptId;
         this.paymentExternalKey = paymentExternalKey;
         this.transactionExternalKey = transactionExternalKey;
         this.accountId = accountId;
@@ -57,6 +59,14 @@ public class PluginAutoPayOffModelDao {
         this.currency = currency;
         this.createdBy = createdBy;
         this.createdDate = createdDate;
+    }
+
+    public UUID getAttemptId() {
+        return attemptId;
+    }
+
+    public void setAttemptId(final UUID attemptId) {
+        this.attemptId = attemptId;
     }
 
     public Long getRecordId() {
@@ -158,6 +168,9 @@ public class PluginAutoPayOffModelDao {
 
         final PluginAutoPayOffModelDao that = (PluginAutoPayOffModelDao) o;
 
+        if (attemptId != null ? !attemptId.equals(that.attemptId) : that.attemptId != null) {
+            return false;
+        }
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
@@ -197,6 +210,7 @@ public class PluginAutoPayOffModelDao {
     @Override
     public int hashCode() {
         int result = recordId != null ? recordId.hashCode() : 0;
+        result = 31 * result + (attemptId != null ? attemptId.hashCode() : 0);
         result = 31 * result + (paymentExternalKey != null ? paymentExternalKey.hashCode() : 0);
         result = 31 * result + (transactionExternalKey != null ? transactionExternalKey.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);

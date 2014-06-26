@@ -42,7 +42,7 @@ public interface PluginPropertySqlDao extends Transactional<PluginPropertySqlDao
 
     @RegisterMapper(PluginPropertySqlDaoMapper.class)
     @SqlQuery
-    List<PluginPropertyModelDao> getPluginProperties(@Bind("transactionExternalKey") final String transactionExternalkey);
+    List<PluginPropertyModelDao> getPluginProperties(@Bind("attemptId") final String attemptId);
 
     @SqlBatch(transactional = false)
     void batchCreateFromTransaction(@BindBean List<PluginPropertyModelDao> dataEntries);

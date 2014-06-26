@@ -171,18 +171,14 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
                                                          callContext, internalCallContext);
     }
 
-    public void retryPaymentTransaction(final String transactionExternalKey, final String pluginName, final InternalCallContext internalCallContext) {
+    public void retryPaymentTransaction(final UUID attemptId, final String pluginName, final InternalCallContext internalCallContext) {
         try {
 
-            final PaymentAttemptModelDao attempt = paymentDao.getPaymentAttemptByExternalKey(transactionExternalKey, internalCallContext);
-            final PaymentTransactionModelDao transaction = paymentDao.getDirectPaymentTransactionByExternalKey(transactionExternalKey, internalCallContext);
-            final PaymentModelDao payment = transaction != null ?
-                                            paymentDao.getDirectPayment(transaction.getPaymentId(), internalCallContext) :
-                                            null;
+            final PaymentAttemptModelDao attempt = paymentDao.getPaymentAttempt(attemptId, internalCallContext);
+            final PaymentModelDao payment = paymentDao.getDirectPaymentByExternalKey(attempt.getPaymentExternalKey(), internalCallContext);
             final UUID paymentId = payment != null ? payment.getId() : null;
 
-            final List<PluginPropertyModelDao> properties = paymentDao.getProperties(transactionExternalKey, internalCallContext);
-
+            final List<PluginPropertyModelDao> properties = paymentDao.getProperties(attempt.getId(), internalCallContext);
             final List<PluginProperty> pluginProperties = properties == null ?
                                                           ImmutableList.<PluginProperty>of() :
                                                           ImmutableList.<PluginProperty>copyOf(Iterables.transform(properties, new Function<PluginPropertyModelDao, PluginProperty>() {

@@ -108,11 +108,7 @@ public class DirectPaymentStateContext {
     }
 
     public UUID getTransactionPaymentId() {
-        return transactionPaymentId;
-    }
-
-    public void setTransactionPaymentId(final UUID transactionPaymentId) {
-        this.transactionPaymentId = transactionPaymentId;
+        return transactionPaymentId != null ? transactionPaymentId : (directPaymentTransactionModelDao != null ? directPaymentTransactionModelDao.getId() : null);
     }
 
     public String getDirectPaymentExternalKey() {

@@ -17,15 +17,12 @@
 package org.killbill.billing.payment.control.dao;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.dao.PluginPropertyModelDao;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -41,15 +38,16 @@ public class TestInvoicePaymentControlDao extends PaymentTestSuiteWithEmbeddedDB
         dao = new InvoicePaymentControlDao(dbi);
     }
 
-        @Test(groups = "slow")
+    @Test(groups = "slow")
     public void testPluginAutoPayOffSimple() {
 
         UUID accountId = UUID.randomUUID();
+        UUID attemptId = UUID.randomUUID();
         UUID paymentId = UUID.randomUUID();
         UUID methodId = UUID.randomUUID();
         BigDecimal amount = new BigDecimal("13.33");
         DateTime utcNow = clock.getUTCNow();
-        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao("key1", "tkey1", accountId, "XXX", paymentId, methodId, amount, Currency.USD, "lulu", utcNow);
+        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao(attemptId, "key1", "tkey1", accountId, "XXX", paymentId, methodId, amount, Currency.USD, "lulu", utcNow);
         dao.insertAutoPayOff(entry1);
 
         final List<PluginAutoPayOffModelDao> entries = dao.getAutoPayOffEntry(accountId);
@@ -70,15 +68,16 @@ public class TestInvoicePaymentControlDao extends PaymentTestSuiteWithEmbeddedDB
     public void testPluginAutoPayOffMutlitpleEntries() {
 
         UUID accountId = UUID.randomUUID();
+        UUID attemptId = UUID.randomUUID();
         UUID paymentId1 = UUID.randomUUID();
         UUID methodId = UUID.randomUUID();
         BigDecimal amount = new BigDecimal("13.33");
         DateTime utcNow = clock.getUTCNow();
-        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao("key1", "tkey1", accountId, "XXX", paymentId1, methodId, amount, Currency.USD, "lulu", utcNow);
+        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao(attemptId, "key1", "tkey1", accountId, "XXX", paymentId1, methodId, amount, Currency.USD, "lulu", utcNow);
         dao.insertAutoPayOff(entry1);
 
         UUID paymentId2 = UUID.randomUUID();
-        final PluginAutoPayOffModelDao entry2 = new PluginAutoPayOffModelDao("key2", "tkey2", accountId, "XXX", paymentId2, methodId, amount, Currency.USD, "lulu", utcNow);
+        final PluginAutoPayOffModelDao entry2 = new PluginAutoPayOffModelDao(attemptId, "key2", "tkey2", accountId, "XXX", paymentId2, methodId, amount, Currency.USD, "lulu", utcNow);
         dao.insertAutoPayOff(entry2);
 
         final List<PluginAutoPayOffModelDao> entries = dao.getAutoPayOffEntry(accountId);
@@ -90,10 +89,11 @@ public class TestInvoicePaymentControlDao extends PaymentTestSuiteWithEmbeddedDB
 
         UUID accountId = UUID.randomUUID();
         UUID paymentId1 = UUID.randomUUID();
+        UUID attemptId = UUID.randomUUID();
         UUID methodId = UUID.randomUUID();
         BigDecimal amount = new BigDecimal("13.33");
         DateTime utcNow = clock.getUTCNow();
-        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao("key1", "tkey1", accountId, "XXX", paymentId1, methodId, amount, Currency.USD, "lulu", utcNow);
+        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao(attemptId, "key1", "tkey1", accountId, "XXX", paymentId1, methodId, amount, Currency.USD, "lulu", utcNow);
         dao.insertAutoPayOff(entry1);
 
         final List<PluginAutoPayOffModelDao> entries = dao.getAutoPayOffEntry(UUID.randomUUID());

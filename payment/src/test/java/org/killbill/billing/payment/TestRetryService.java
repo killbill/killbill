@@ -17,12 +17,15 @@
 package org.killbill.billing.payment;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
@@ -32,6 +35,7 @@ import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.dao.MockPaymentDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
@@ -40,9 +44,14 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
 
 import static com.jayway.awaitility.Awaitility.await;
+import static com.jayway.awaitility.Awaitility.setDefaultPollInterval;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -57,10 +66,15 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
     public void beforeMethod() throws Exception {
         super.beforeMethod();
 
+        setDefaultPollInterval(Duration.ONE_HUNDRED_MILLISECONDS);
+        Awaitility.setDefaultPollDelay(Duration.SAME_AS_POLL_INTERVAL);
+
+        ((MockPaymentDao) paymentDao).reset();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
         mockPaymentProviderPlugin.clear();
         retryService.initialize(DefaultPaymentService.SERVICE_NAME);
         retryService.start();
+
     }
 
     @Override
@@ -70,10 +84,8 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         retryService.stop();
     }
 
-    private DirectPayment getPaymentForInvoice(final UUID invoiceId) throws PaymentApiException {
-        final String paymentExternalKey = invoiceId.toString();
-        final DirectPayment payment = paymentProcessor.getPaymentByExternalKey(paymentExternalKey, false, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
-        assertEquals(payment.getExternalKey(), paymentExternalKey);
+    private DirectPayment getPaymentForExternalKey(final String externalKey) throws PaymentApiException {
+        final DirectPayment payment = paymentProcessor.getPaymentByExternalKey(externalKey, false, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
         return payment;
     }
 
@@ -130,17 +142,18 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         setPaymentFailure(failureType);
 
         boolean failed = false;
+        final String paymentExternalKey = UUID.randomUUID().toString();
         final String transactionExternalKey = UUID.randomUUID().toString();
         try {
-            pluginControlledPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amount, Currency.USD, invoice.getId().toString(), transactionExternalKey,
-                                                            ImmutableList.<PluginProperty>of(), InvoicePaymentControlPluginApi.PLUGIN_NAME, callContext, internalCallContext);
+            pluginControlledPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amount, Currency.USD, paymentExternalKey, transactionExternalKey,
+                                                            createPropertiesForInvoice(invoice), InvoicePaymentControlPluginApi.PLUGIN_NAME, callContext, internalCallContext);
         } catch (final PaymentApiException e) {
             failed = true;
         }
         assertTrue(failed);
 
-        DirectPayment payment = getPaymentForInvoice(invoice.getId());
-        List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(payment.getExternalKey(), internalCallContext);
+        DirectPayment payment = getPaymentForExternalKey(paymentExternalKey);
+        List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
         assertEquals(attempts.size(), 1);
 
         final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectTransactionsForDirectPayment(payment.getId(), internalCallContext);
@@ -225,4 +238,11 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
             return paymentConfig.getPluginFailureRetryMaxAttempts();
         }
     }
+
+    private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {
+        final List<PluginProperty> result = new ArrayList<PluginProperty>();
+        result.add(new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
+        return result;
+    }
+
 }

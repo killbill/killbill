@@ -49,8 +49,8 @@ public class DefaultRetryService extends BaseRetryService implements RetryServic
     }
 
     @Override
-    public void retryPaymentTransaction(final String transactionExternalKey, final String pluginName, final InternalCallContext context) {
-        processor.retryPaymentTransaction(transactionExternalKey, pluginName, context);
+    public void retryPaymentTransaction(final UUID attemptId, final String pluginName, final InternalCallContext context) {
+        processor.retryPaymentTransaction(attemptId, pluginName, context);
     }
 
     public static class DefaultRetryServiceScheduler extends RetryServiceScheduler {

@@ -53,12 +53,12 @@ public class InvoicePaymentControlDao {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                final String paymentId = Objects.firstNonNull(data.getPaymentId(), "").toString();
-                final String paymentMethodId = Objects.firstNonNull(data.getPaymentMethodId(), "").toString();
+                final String paymentId = data.getPaymentId() != null ? data.getPaymentId().toString() : null;
+                final String paymentMethodId = data.getPaymentMethodId() != null ? data.getPaymentMethodId().toString() : null;
                 handle.execute("insert into _invoice_payment_control_plugin_auto_pay_off " +
-                               "(payment_external_key, transaction_external_key, account_id, plugin_name, payment_id, payment_method_id, amount, currency, created_by, created_date) values " +
-                               "(?,?,?,?,?,?,?,?,?,?)",
-                               data.getPaymentExternalKey(), data.getTransactionExternalKey(), data.getAccountId(), data.getPluginName(), paymentId, paymentMethodId,
+                               "(attempt_id, payment_external_key, transaction_external_key, account_id, plugin_name, payment_id, payment_method_id, amount, currency, created_by, created_date) values " +
+                               "(?,?,?,?,?,?,?,?,?,?,?)",
+                               data.getAttemptId().toString(), data.getPaymentExternalKey(), data.getTransactionExternalKey(), data.getAccountId(), data.getPluginName(), paymentId, paymentMethodId,
                                data.getAmount(), data.getCurrency(), data.getCreatedBy(), data.getCreatedDate()
                               );
                 return null;
@@ -75,11 +75,12 @@ public class InvoicePaymentControlDao {
                 for (final Map<String, Object> row : queryResult) {
 
                     final PluginAutoPayOffModelDao entry = new PluginAutoPayOffModelDao(Long.valueOf(row.get("record_id").toString()),
+                                                                                        UUID.fromString((String) row.get("attempt_id")),
                                                                                         (String) row.get("payment_external_key"),
                                                                                         (String) row.get("transaction_external_key"),
                                                                                         UUID.fromString((String) row.get("account_id")),
                                                                                         (String) row.get("plugin_name"),
-                                                                                        row.get("payment_id") != null ? UUID.fromString((String) row.get("payment_method_id")) : null,
+                                                                                        row.get("payment_id") != null ? UUID.fromString((String) row.get("payment_id")) : null,
                                                                                         UUID.fromString((String) row.get("payment_method_id")),
                                                                                         (BigDecimal) row.get("amount"),
                                                                                         Currency.valueOf((String) row.get("currency")),
@@ -93,6 +94,7 @@ public class InvoicePaymentControlDao {
         });
     }
 
+    // STEPH soft delete?
     public void removeAutoPayOffEntry(final UUID accountId) {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override

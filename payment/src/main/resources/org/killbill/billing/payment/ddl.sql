@@ -202,6 +202,7 @@ CREATE INDEX transaction_history_tenant_account_record_id ON transaction_history
 DROP TABLE IF EXISTS payment_plugin_properties;
 CREATE TABLE payment_plugin_properties (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    attempt_id char(36) NOT NULL,
     payment_external_key varchar(255),
     transaction_external_key varchar(255),
     account_id char(36) NOT NULL,
@@ -212,13 +213,14 @@ CREATE TABLE payment_plugin_properties (
     created_date datetime NOT NULL,
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
-CREATE INDEX payment_plugin_properties_ext ON payment_plugin_properties(transaction_external_key);
+CREATE INDEX payment_plugin_properties_attempt_id ON payment_plugin_properties(attempt_id);
 
 
 /*  PaymentControlPlugin lives  here until this becomes a first class citizen plugin */
 DROP TABLE IF EXISTS _invoice_payment_control_plugin_auto_pay_off;
 CREATE TABLE _invoice_payment_control_plugin_auto_pay_off (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    attempt_id char(36) NOT NULL,
     payment_external_key varchar(255) NOT NULL,
     transaction_external_key varchar(255) NOT NULL,
     account_id char(36) NOT NULL,

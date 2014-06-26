@@ -39,23 +39,28 @@ public class MockPaymentDao implements PaymentDao {
 
     private final Map<UUID, PaymentModelDao> payments = new HashMap<UUID, PaymentModelDao>();
     private final Map<UUID, PaymentTransactionModelDao> transactions = new HashMap<UUID, PaymentTransactionModelDao>();
-    private final Map<String, PaymentAttemptModelDao> attempts = new HashMap<String, PaymentAttemptModelDao>();
+    private final Map<UUID, PaymentAttemptModelDao> attempts = new HashMap<UUID, PaymentAttemptModelDao>();
+    private final List<PluginPropertyModelDao> properties = new ArrayList<PluginPropertyModelDao>();
 
     public void reset() {
-        payments.clear();
-        transactions.clear();
-        attempts.clear();
+        synchronized (this) {
+            payments.clear();
+            transactions.clear();
+            attempts.clear();
+            properties.clear();
+        }
     }
 
     @Override
-    public List<PluginPropertyModelDao> getProperties(final String transactionExternalKey, final InternalCallContext context) {
-        return null;
+    public List<PluginPropertyModelDao> getProperties(final UUID attemptId, final InternalCallContext context) {
+        return properties;
     }
 
     @Override
     public PaymentAttemptModelDao insertPaymentAttemptWithProperties(final PaymentAttemptModelDao attempt, final List<PluginPropertyModelDao> properties, final InternalCallContext context) {
         synchronized (this) {
-            attempts.put(attempt.getTransactionExternalKey(), attempt);
+            attempts.put(attempt.getId(), attempt);
+            this.properties.addAll(properties);
             return attempt;
         }
     }
@@ -80,32 +85,41 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public List<PaymentAttemptModelDao> getPaymentAttempts(final String paymentExternalKey, final InternalTenantContext context) {
-        final List<PaymentAttemptModelDao> result = new ArrayList<PaymentAttemptModelDao>();
-        for (PaymentAttemptModelDao cur : attempts.values()) {
-            if (cur.getPaymentExternalKey().equals(paymentExternalKey)) {
-                result.add(cur);
-            }
-        }
-        return result;
-    }
-
-    @Override
-    public PaymentAttemptModelDao getPaymentAttemptByExternalKey(final String transactionExternalKey, final InternalTenantContext context) {
         synchronized (this) {
-            return attempts.get(transactionExternalKey);
+            final List<PaymentAttemptModelDao> result = new ArrayList<PaymentAttemptModelDao>();
+            for (PaymentAttemptModelDao cur : attempts.values()) {
+                if (cur.getPaymentExternalKey().equals(paymentExternalKey)) {
+                    result.add(cur);
+                }
+            }
+            return result;
         }
     }
 
     @Override
-    public PaymentTransactionModelDao getDirectPaymentTransactionByExternalKey(final String transactionExternalKey, final InternalTenantContext context) {
+    public List<PaymentAttemptModelDao> getPaymentAttemptByTransactionExternalKey(final String transactionExternalKey, final InternalTenantContext context) {
+        synchronized (this) {
+            final List<PaymentAttemptModelDao> result = new ArrayList<PaymentAttemptModelDao>();
+            for (PaymentAttemptModelDao cur : attempts.values()) {
+                if (cur.getTransactionExternalKey().equals(transactionExternalKey)) {
+                    result.add(cur);
+                }
+            }
+            return result;
+        }
+    }
+
+    @Override
+    public List<PaymentTransactionModelDao> getDirectPaymentTransactionsByExternalKey(final String transactionExternalKey, final InternalTenantContext context) {
+        final List<PaymentTransactionModelDao> result = new ArrayList<PaymentTransactionModelDao>();
         synchronized (this) {
             for (PaymentTransactionModelDao cur : transactions.values()) {
                 if (cur.getTransactionExternalKey().equals(transactionExternalKey)) {
-                    return cur;
+                    result.add(cur);
                 }
             }
         }
-        return null;
+        return result;
     }
 
     @Override
@@ -217,36 +231,49 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId, final InternalTenantContext context) {
-        return attempts.get(attemptId);
+        synchronized (this) {
+            return Iterables.tryFind(attempts.values(), new Predicate<PaymentAttemptModelDao>() {
+                @Override
+                public boolean apply(final PaymentAttemptModelDao input) {
+                    return input.getId().equals(attemptId);
+                }
+            }).orNull();
+        }
     }
 
     private final List<PaymentMethodModelDao> paymentMethods = new LinkedList<PaymentMethodModelDao>();
 
     @Override
     public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final InternalCallContext context) {
-        paymentMethods.add(paymentMethod);
-        return paymentMethod;
+        synchronized (this) {
+            paymentMethods.add(paymentMethod);
+            return paymentMethod;
+        }
     }
 
     @Override
     public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId, final InternalTenantContext context) {
-        for (final PaymentMethodModelDao cur : paymentMethods) {
-            if (cur.getId().equals(paymentMethodId)) {
-                return cur;
+        synchronized (this) {
+            for (final PaymentMethodModelDao cur : paymentMethods) {
+                if (cur.getId().equals(paymentMethodId)) {
+                    return cur;
+                }
             }
+            return null;
         }
-        return null;
     }
 
     @Override
     public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId, final InternalTenantContext context) {
-        final List<PaymentMethodModelDao> result = new ArrayList<PaymentMethodModelDao>();
-        for (final PaymentMethodModelDao cur : paymentMethods) {
-            if (cur.getAccountId().equals(accountId)) {
-                result.add(cur);
+        synchronized (this) {
+            final List<PaymentMethodModelDao> result = new ArrayList<PaymentMethodModelDao>();
+            for (final PaymentMethodModelDao cur : paymentMethods) {
+                if (cur.getAccountId().equals(accountId)) {
+                    result.add(cur);
+                }
             }
+            return result;
         }
-        return result;
     }
 
     @Override
@@ -256,12 +283,14 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public void deletedPaymentMethod(final UUID paymentMethodId, final InternalCallContext context) {
-        final Iterator<PaymentMethodModelDao> it = paymentMethods.iterator();
-        while (it.hasNext()) {
-            final PaymentMethodModelDao cur = it.next();
-            if (cur.getId().equals(paymentMethodId)) {
-                it.remove();
-                break;
+        synchronized (this) {
+            final Iterator<PaymentMethodModelDao> it = paymentMethods.iterator();
+            while (it.hasNext()) {
+                final PaymentMethodModelDao cur = it.next();
+                if (cur.getId().equals(paymentMethodId)) {
+                    it.remove();
+                    break;
+                }
             }
         }
     }

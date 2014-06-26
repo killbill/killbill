@@ -77,15 +77,16 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
             public OperationResult doOperation() throws OperationException {
 
                 final RetryableDirectPaymentStateContext retryableDirectPaymentStateContext = (RetryableDirectPaymentStateContext) directPaymentStateContext;
-                final PaymentControlContext paymentControlContext = new DefaultPaymentControlContext(directPaymentStateContext.account,
-                                                                                                     directPaymentStateContext.paymentMethodId,
-                                                                                                     directPaymentStateContext.directPaymentId,
-                                                                                                     directPaymentStateContext.directPaymentExternalKey,
-                                                                                                     directPaymentStateContext.directPaymentTransactionExternalKey,
-                                                                                                     directPaymentStateContext.transactionType,
-                                                                                                     directPaymentStateContext.amount,
-                                                                                                     directPaymentStateContext.currency,
-                                                                                                     directPaymentStateContext.properties,
+                final PaymentControlContext paymentControlContext = new DefaultPaymentControlContext(directPaymentStateContext.getAccount(),
+                                                                                                     directPaymentStateContext.getPaymentMethodId(),
+                                                                                                     retryableDirectPaymentStateContext.getAttemptId(),
+                                                                                                     directPaymentStateContext.getDirectPaymentId(),
+                                                                                                     directPaymentStateContext.getDirectPaymentExternalKey(),
+                                                                                                     directPaymentStateContext.getDirectPaymentTransactionExternalKey(),
+                                                                                                     directPaymentStateContext.getTransactionType(),
+                                                                                                     directPaymentStateContext.getAmount(),
+                                                                                                     directPaymentStateContext.getCurrency(),
+                                                                                                     directPaymentStateContext.getProperties(),
                                                                                                      retryableDirectPaymentStateContext.isApiPayment(),
                                                                                                      directPaymentStateContext.callContext);
 
@@ -117,11 +118,12 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
                     if (success) {
                         final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(directPaymentStateContext.account,
                                                                                                                     directPaymentStateContext.paymentMethodId,
+                                                                                                                    retryableDirectPaymentStateContext.getAttemptId(),
                                                                                                                     result.getId(),
                                                                                                                     result.getExternalKey(),
                                                                                                                     transaction.getId(),
-                                                                                                                    directPaymentStateContext.directPaymentTransactionExternalKey,
-                                                                                                                    directPaymentStateContext.transactionType,
+                                                                                                                    directPaymentStateContext.getDirectPaymentTransactionExternalKey(),
+                                                                                                                    directPaymentStateContext.getTransactionType(),
                                                                                                                     transaction.getAmount(),
                                                                                                                     transaction.getCurrency(),
                                                                                                                     transaction.getProcessedAmount(),
@@ -224,8 +226,9 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
     public class DefaultPaymentControlContext extends DefaultCallContext implements PaymentControlContext {
 
         private final Account account;
-        private final UUID paymentId;
         private final UUID paymentMethodId;
+        private final UUID attemptId;
+        private final UUID paymentId;
         private final String paymentExternalKey;
         private final UUID transactionId;
         private final String transactionExternalKey;
@@ -237,17 +240,18 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
         private final boolean isApiPayment;
         private final Iterable<PluginProperty> properties;
 
-        public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final String paymentExternalKey, final String transactionExternalKey, final TransactionType transactionType, final BigDecimal amount, final Currency currency,
+        public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, final UUID attemptId, @Nullable final UUID paymentId, final String paymentExternalKey, final String transactionExternalKey, final TransactionType transactionType, final BigDecimal amount, final Currency currency,
                                             final Iterable<PluginProperty> properties, final boolean isApiPayment, final CallContext callContext) {
-            this(account, paymentMethodId, paymentId, paymentExternalKey, null, transactionExternalKey, transactionType, amount, currency, null, null, properties, isApiPayment, callContext);
+            this(account, paymentMethodId, attemptId, paymentId, paymentExternalKey, null, transactionExternalKey, transactionType, amount, currency, null, null, properties, isApiPayment, callContext);
         }
 
-        public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final String paymentExternalKey, @Nullable final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType,
+        public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, final UUID attemptId, @Nullable final UUID paymentId, final String paymentExternalKey, @Nullable final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType,
                                             final BigDecimal amount, final Currency currency, @Nullable final BigDecimal processedAmount, @Nullable final Currency processedCurrency, final Iterable<PluginProperty> properties, final boolean isApiPayment, final CallContext callContext) {
             super(callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getUserToken(), callContext.getCreatedDate(), callContext.getUpdatedDate());
             this.account = account;
-            this.paymentId = paymentId;
             this.paymentMethodId = paymentMethodId;
+            this.attemptId = attemptId;
+            this.paymentId = paymentId;
             this.paymentExternalKey = paymentExternalKey;
             this.transactionId = transactionId;
             this.transactionExternalKey = transactionExternalKey;
@@ -298,6 +302,11 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
         @Override
         public UUID getPaymentId() {
             return paymentId;
+        }
+
+        @Override
+        public UUID getAttemptPaymentId() {
+            return attemptId;
         }
 
         @Override
