@@ -28,6 +28,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableList;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
@@ -85,8 +86,11 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final UUID paymentId = UUID.randomUUID();
         final Integer paymentNumber = 17;
         final UUID paymentMethodId = UUID.randomUUID();
-        final BigDecimal paidAmount = BigDecimal.TEN;
-        final BigDecimal amount = BigDecimal.ZERO;
+        final BigDecimal authAmount = BigDecimal.TEN;
+        final BigDecimal captureAmount = BigDecimal.ZERO;
+        final BigDecimal purchasedAMount = BigDecimal.ZERO;
+        final BigDecimal creditAmount = BigDecimal.ZERO;
+        final BigDecimal refundAmount = BigDecimal.ZERO;
         final DateTime paymentRequestedDate = clock.getUTCNow();
         final DateTime paymentEffectiveDate = clock.getUTCNow();
         final Integer retryCount = Integer.MAX_VALUE;
@@ -94,7 +98,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final String status = UUID.randomUUID().toString();
         final String gatewayErrorCode = "OK";
         final String gatewayErrorMsg = "Excellent...";
-        return new PaymentJson(amount, paidAmount, accountId.toString(), invoiceId.toString(), paymentId.toString(), paymentNumber.toString(),
+        return new PaymentJson(authAmount, captureAmount, purchasedAMount, creditAmount, refundAmount, Boolean.FALSE, accountId.toString(), invoiceId.toString(), paymentId.toString(), paymentNumber.toString(),
                                      paymentMethodId.toString(), paymentRequestedDate, paymentEffectiveDate, retryCount, currency, status,
                                      gatewayErrorCode, gatewayErrorMsg, null, null, null, null);
     }

@@ -38,7 +38,7 @@ public class TestDateConversion extends JaxRsResourceBase {
     final DateTimeZone dateTimeZone = DateTimeZone.forOffsetHours(-8);
 
     public TestDateConversion() throws AccountApiException {
-        super(null, null, null, null, Mockito.mock(AccountUserApi.class), new ClockMock(), null);
+        super(null, null, null, null, Mockito.mock(AccountUserApi.class), null, new ClockMock(),  null);
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(dateTimeZone);
         Mockito.when(accountUserApi.getAccountById(accountId, null)).thenReturn(account);

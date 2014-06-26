@@ -40,7 +40,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDao, InvoicePayment> {
 
     @SqlQuery
-    public InvoicePaymentModelDao getByPaymentId(@Bind("paymentId") final String paymentId,
+    public List<InvoicePaymentModelDao> getByPaymentId(@Bind("paymentId") final String paymentId,
                                                  @BindBean final InternalTenantContext context);
 
     @SqlBatch(transactional = false)

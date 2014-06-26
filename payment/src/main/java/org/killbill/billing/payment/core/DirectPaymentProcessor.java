@@ -274,7 +274,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                                                  transactionModelDao.getGatewayErrorCode(), transactionModelDao.getGatewayErrorMsg(), internalCallContext);
     }
 
-    public void notifyPaymentPaymentOfChargeback(final Account account, final UUID transactionId, final String chargebackTransactionExternalKey, final BigDecimal amount, final Currency currency, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+    public DirectPayment notifyPaymentPaymentOfChargeback(final Account account, final UUID transactionId, final String chargebackTransactionExternalKey, final BigDecimal amount, final Currency currency, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
 
         validateUniqueTransactionExternalKey(chargebackTransactionExternalKey, internalCallContext);
 
@@ -293,6 +293,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                                                  chargebackTransaction.getAmount(), chargebackTransaction.getCurrency(),
                                                                  chargebackTransaction.getGatewayErrorCode(), chargebackTransaction.getGatewayErrorMsg(), internalCallContext);
 
+        return getPayment(transactionModelDao.getPaymentId(), false, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
     }
 
     public DirectPayment getPayment(final UUID directPaymentId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {

@@ -117,6 +117,17 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public Invoice getInvoiceByPayment(final UUID paymentId, final TenantContext context) throws InvoiceApiException {
+        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        final UUID invoiceId = dao.getInvoiceIdByPaymentId(paymentId, tenantContext);
+        if (invoiceId == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
+        }
+        final InvoiceModelDao invoiceModelDao = invoiceId != null ? dao.getById(invoiceId, tenantContext) : null;
+        return new DefaultInvoice(invoiceModelDao);
+    }
+
+    @Override
     public Pagination<Invoice> getInvoices(final Long offset, final Long limit, final TenantContext context) {
         return getEntityPaginationNoException(limit,
                                               new SourcePaginationBuilder<InvoiceModelDao, InvoiceApiException>() {

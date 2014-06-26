@@ -31,19 +31,26 @@ import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.clock.Clock;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.jaxrs.json.ChargebackJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.clock.Clock;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -54,35 +61,17 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path(JaxrsResource.CHARGEBACKS_PATH)
 public class ChargebackResource extends JaxRsResourceBase {
 
-    private final InvoicePaymentApi invoicePaymentApi;
-
     @Inject
-    public ChargebackResource(final InvoicePaymentApi invoicePaymentApi,
-                              final JaxrsUriBuilder uriBuilder,
+    public ChargebackResource(final JaxrsUriBuilder uriBuilder,
                               final TagUserApi tagUserApi,
                               final CustomFieldUserApi customFieldUserApi,
                               final AuditUserApi auditUserApi,
                               final AccountUserApi accountUserApi,
+                              final DirectPaymentApi paymentApi,
                               final Clock clock,
                               final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
-        this.invoicePaymentApi = invoicePaymentApi;
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
-
-    @GET
-    @Path("/{chargebackId:" + UUID_PATTERN + "}")
-    @Produces(APPLICATION_JSON)
-    public Response getChargeback(@PathParam("chargebackId") final String chargebackId,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
-        final TenantContext tenantContext = context.createContext(request);
-        final InvoicePayment chargeback = invoicePaymentApi.getChargebackById(UUID.fromString(chargebackId), tenantContext);
-        final UUID accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(chargeback.getId(), tenantContext);
-        final ChargebackJson chargebackJson = new ChargebackJson(accountId, chargeback);
-
-        return Response.status(Response.Status.OK).entity(chargebackJson).build();
-    }
-
-
 
     @POST
     @Consumes(APPLICATION_JSON)
@@ -92,20 +81,18 @@ public class ChargebackResource extends JaxRsResourceBase {
                                      @HeaderParam(HDR_REASON) final String reason,
                                      @HeaderParam(HDR_COMMENT) final String comment,
                                      @javax.ws.rs.core.Context final HttpServletRequest request,
-                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws InvoiceApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws InvoiceApiException, AccountApiException, PaymentApiException {
 
-        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePaymentForAttempt(UUID.fromString(json.getPaymentId()), callContext);
-        if (invoicePayment == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, json.getPaymentId());
-        }
-        final InvoicePayment chargeBack = invoicePaymentApi.createChargeback(invoicePayment.getId(), json.getAmount(),
-                                                                             callContext);
-        return uriBuilder.buildResponse(uriInfo, ChargebackResource.class, "getChargeback", chargeBack.getId());
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);
+
+        final DirectPayment payment = paymentApi.notifyChargeback(account, UUID.fromString(json.getChargedBackTransactionId()), json.getChargedBackTransactionId(), json.getAmount(),
+                                                                  Currency.valueOf(json.getCurrency()), callContext);
+        return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
     }
 
     @Override
     protected ObjectType getObjectType() {
-        return ObjectType.INVOICE_PAYMENT;
+        return ObjectType.TRANSACTION;
     }
 }

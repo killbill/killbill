@@ -33,8 +33,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PaymentJson extends JsonBase {
 
-    private final BigDecimal paidAmount;
-    private final BigDecimal amount;
+    private final BigDecimal authAmount;
+    private final BigDecimal captureAmount;
+    private final BigDecimal purchaseAmount;
+    private final BigDecimal creditAmount;
+    private final BigDecimal refundAmount;
+    private final Boolean isVoid;
     private final String accountId;
     private final String invoiceId;
     private final String paymentId;
@@ -52,8 +56,12 @@ public class PaymentJson extends JsonBase {
     private final List<ChargebackJson> chargebacks;
 
     @JsonCreator
-    public PaymentJson(@JsonProperty("amount") final BigDecimal amount,
-                       @JsonProperty("paidAmount") final BigDecimal paidAmount,
+    public PaymentJson(@JsonProperty("authAmount") final BigDecimal authAmount,
+                       @JsonProperty("captureAmount") final BigDecimal captureAmount,
+                       @JsonProperty("purchaseAmount") final BigDecimal purchaseAmount,
+                       @JsonProperty("creditAmount") final BigDecimal creditAmount,
+                       @JsonProperty("refundAmount") final BigDecimal refundAmount,
+                       @JsonProperty("isVoid") final Boolean isVoid,
                        @JsonProperty("accountId") final String accountId,
                        @JsonProperty("invoiceId") final String invoiceId,
                        @JsonProperty("paymentId") final String paymentId,
@@ -71,8 +79,12 @@ public class PaymentJson extends JsonBase {
                        @JsonProperty("chargebacks") final List<ChargebackJson> chargebacks,
                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
-        this.amount = amount;
-        this.paidAmount = paidAmount;
+        this.authAmount = authAmount;
+        this.captureAmount = captureAmount;
+        this.purchaseAmount = purchaseAmount;
+        this.creditAmount = creditAmount;
+        this.refundAmount = refundAmount;
+        this.isVoid = isVoid;
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.paymentId = paymentId;
@@ -98,19 +110,27 @@ public class PaymentJson extends JsonBase {
     public PaymentJson(final DirectPayment payment, final String bundleExternalKey,
                        final List<RefundJson> refunds, final List<ChargebackJson> chargebacks,
                        @Nullable final List<AuditLog> auditLogs) {
-        this(payment.getAuthAmount() /* TODO [PAYMENT] payment.getAmount() */,
-             payment.getCapturedAmount() /* TODO [PAYMENT] payment.getPaidAmount() */,
+        this(payment.getAuthAmount(),
+             payment.getCapturedAmount(),
+             payment.getPurchasedAmount(),
+             payment.getCreditedAmount(),
+             payment.getRefundedAmount(),
+             payment.isAuthVoided(),
              payment.getAccountId().toString(),
-             null /* TODO [PAYMENT] payment.getInvoiceId().toString() */, payment.getId().toString(),
+             null,
+             payment.getId().toString(),
              payment.getPaymentNumber().toString(),
              payment.getPaymentMethodId().toString(),
              payment.getCreatedDate(), payment.getCreatedDate(),
-             1 /* TODO [PAYMENT] payment.getAttempts().size() */,
+             1,
              payment.getCurrency().toString(),
              null /*payment.getPaymentStatus().toString() */,
              null /*payment.getAttempts().get(payment.getAttempts().size() - 1).getGatewayErrorCode() */,
              null /*payment.getAttempts().get(payment.getAttempts().size() - 1).getGatewayErrorMsg() */,
-             bundleExternalKey, refunds, chargebacks, toAuditLogJson(auditLogs));
+             bundleExternalKey,
+             refunds,
+             chargebacks,
+             toAuditLogJson(auditLogs));
     }
 
     public PaymentJson(final DirectPayment payment, final List<AuditLog> auditLogs) {
@@ -121,12 +141,28 @@ public class PaymentJson extends JsonBase {
         return bundleKeys;
     }
 
-    public BigDecimal getPaidAmount() {
-        return paidAmount;
+    public BigDecimal getAuthAmount() {
+        return authAmount;
     }
 
-    public BigDecimal getAmount() {
-        return amount;
+    public BigDecimal getCaptureAmount() {
+        return captureAmount;
+    }
+
+    public BigDecimal getPurchaseAmount() {
+        return purchaseAmount;
+    }
+
+    public BigDecimal getCreditAmount() {
+        return creditAmount;
+    }
+
+    public BigDecimal getRefundAmount() {
+        return refundAmount;
+    }
+
+    public Boolean getIsVoid() {
+        return isVoid;
     }
 
     public String getAccountId() {
@@ -188,8 +224,12 @@ public class PaymentJson extends JsonBase {
     @Override
     public String toString() {
         return "PaymentJson{" +
-               "paidAmount=" + paidAmount +
-               ", amount=" + amount +
+               "authAmount=" + authAmount +
+               ", captureAmount=" + captureAmount +
+               ", purchaseAmount=" + purchaseAmount +
+               ", creditAmount=" + creditAmount +
+               ", refundAmount=" + refundAmount +
+               ", isVoid=" + isVoid +
                ", accountId='" + accountId + '\'' +
                ", invoiceId='" + invoiceId + '\'' +
                ", paymentId='" + paymentId + '\'' +
@@ -222,7 +262,22 @@ public class PaymentJson extends JsonBase {
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
+        if (authAmount != null ? authAmount.compareTo(that.authAmount) != 0 : that.authAmount != null) {
+            return false;
+        }
+        if (captureAmount != null ? captureAmount.compareTo(that.captureAmount) != 0 : that.captureAmount != null) {
+            return false;
+        }
+        if (purchaseAmount != null ? purchaseAmount.compareTo(that.purchaseAmount) != 0 : that.purchaseAmount != null) {
+            return false;
+        }
+        if (creditAmount != null ? creditAmount.compareTo(that.creditAmount) != 0 : that.creditAmount != null) {
+            return false;
+        }
+        if (refundAmount != null ? refundAmount.compareTo(that.refundAmount) != 0 : that.refundAmount != null) {
+            return false;
+        }
+        if (isVoid != null ? !isVoid.equals(that.isVoid) : that.isVoid != null) {
             return false;
         }
         if (bundleKeys != null ? !bundleKeys.equals(that.bundleKeys) : that.bundleKeys != null) {
@@ -244,9 +299,6 @@ public class PaymentJson extends JsonBase {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
-            return false;
-        }
-        if (paidAmount != null ? paidAmount.compareTo(that.paidAmount) != 0 : that.paidAmount != null) {
             return false;
         }
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
@@ -275,8 +327,12 @@ public class PaymentJson extends JsonBase {
 
     @Override
     public int hashCode() {
-        int result = paidAmount != null ? paidAmount.hashCode() : 0;
-        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        int result = authAmount != null ? authAmount.hashCode() : 0;
+        result = 31 * result + (captureAmount != null ? captureAmount.hashCode() : 0);
+        result = 31 * result + (purchaseAmount != null ? purchaseAmount.hashCode() : 0);
+        result = 31 * result + (creditAmount != null ? creditAmount.hashCode() : 0);
+        result = 31 * result + (refundAmount != null ? refundAmount.hashCode() : 0);
+        result = 31 * result + (isVoid != null ? isVoid.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);

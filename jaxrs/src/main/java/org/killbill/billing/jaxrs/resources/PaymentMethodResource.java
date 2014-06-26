@@ -69,19 +69,16 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path(JaxrsResource.PAYMENT_METHODS_PATH)
 public class PaymentMethodResource extends JaxRsResourceBase {
 
-    private final DirectPaymentApi paymentApi;
-
     @Inject
-    public PaymentMethodResource(final DirectPaymentApi paymentApi,
-                                 final AccountUserApi accountUserApi,
+    public PaymentMethodResource(final AccountUserApi accountUserApi,
                                  final JaxrsUriBuilder uriBuilder,
                                  final TagUserApi tagUserApi,
                                  final CustomFieldUserApi customFieldUserApi,
                                  final AuditUserApi auditUserApi,
+                                 final DirectPaymentApi paymentApi,
                                  final Clock clock,
                                  final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
-        this.paymentApi = paymentApi;
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
     @GET

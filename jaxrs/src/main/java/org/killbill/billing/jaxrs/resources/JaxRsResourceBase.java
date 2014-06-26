@@ -21,8 +21,10 @@ package org.killbill.billing.jaxrs.resources;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -47,12 +49,19 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.JsonBase;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -93,6 +102,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final CustomFieldUserApi customFieldUserApi;
     protected final AuditUserApi auditUserApi;
     protected final AccountUserApi accountUserApi;
+    protected final DirectPaymentApi paymentApi;
     protected final Context context;
     protected final Clock clock;
 
@@ -104,6 +114,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                              final CustomFieldUserApi customFieldUserApi,
                              final AuditUserApi auditUserApi,
                              final AccountUserApi accountUserApi,
+                             final DirectPaymentApi paymentApi,
                              final Clock clock,
                              final Context context) {
         this.uriBuilder = uriBuilder;
@@ -111,6 +122,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         this.customFieldUserApi = customFieldUserApi;
         this.auditUserApi = auditUserApi;
         this.accountUserApi = accountUserApi;
+        this.paymentApi = paymentApi;
         this.clock = clock;
         this.context = context;
     }
@@ -314,7 +326,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return null;
     }
 
-    protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<String> pluginProperties) {
+    protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<String> pluginProperties, PluginProperty...additionalProperties) {
         final Collection<PluginProperty> properties = new LinkedList<PluginProperty>();
         if (pluginProperties == null) {
             return properties;
@@ -326,6 +338,51 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             final String value = property.size() == 1 ? null : Joiner.on("=").join(property.subList(1, property.size()));
             properties.add(new PluginProperty(key, value, false));
         }
+        for (PluginProperty  cur : additionalProperties) {
+            properties.add(cur);
+        }
         return properties;
+    }
+
+    protected void createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final Boolean externalPayment, final CallContext callContext) throws PaymentApiException {
+
+        final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey = UUID.randomUUID().toString();
+        final PluginProperty invoiceProperty = new PluginProperty("IPCD_INVOICE_ID" /* InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID (contract with plugin)  */,
+                                                                  invoiceId.toString(), false);
+        properties.add(invoiceProperty);
+
+        paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
+                                                    properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
+    }
+
+
+    protected PaymentOptions createInvoicePaymentControlPluginApiPaymentOptions(final boolean isExternalPayment) {
+        return new PaymentOptions() {
+            @Override
+            public boolean isExternalPayment() {
+                return isExternalPayment;
+            }
+            @Override
+            public String getPaymentControlPluginName() {
+                /* Contract with plugin */
+                return "__INVOICE_PAYMENT_CONTROL_PLUGIN__";
+            }
+        };
+    }
+
+    protected Iterable<DirectPaymentTransaction> getDirectPaymentTransactions(final List<DirectPayment> payments, final TransactionType transactionType) {
+        return Iterables.concat(Iterables.transform(payments, new Function<DirectPayment, Iterable<DirectPaymentTransaction>>() {
+            @Override
+            public Iterable<DirectPaymentTransaction> apply(final DirectPayment input) {
+                return Iterables.filter(input.getTransactions(), new Predicate<DirectPaymentTransaction>() {
+                    @Override
+                    public boolean apply(final DirectPaymentTransaction input) {
+                        return input.getTransactionType() == transactionType;
+                    }
+                });
+            }
+        }));
     }
 }

@@ -45,6 +45,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
@@ -74,6 +75,7 @@ import org.killbill.clock.Clock;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
@@ -84,22 +86,17 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "paymentId";
 
-    private final DirectPaymentApi paymentApi;
-    private final InvoicePaymentApi invoicePaymentApi;
 
     @Inject
     public InvoicePaymentResource(final AccountUserApi accountUserApi,
                                   final DirectPaymentApi paymentApi,
-                                  final InvoicePaymentApi invoicePaymentApi,
                                   final JaxrsUriBuilder uriBuilder,
                                   final TagUserApi tagUserApi,
                                   final CustomFieldUserApi customFieldUserApi,
                                   final AuditUserApi auditUserApi,
                                   final Clock clock,
                                   final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
-        this.paymentApi = paymentApi;
-        this.invoicePaymentApi = invoicePaymentApi;
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
 
@@ -115,31 +112,34 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final UriInfo uriInfo,
                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-
         final UUID paymentUuid = UUID.fromString(paymentId);
-        final DirectPayment payment = paymentApi.getPayment(paymentUuid, false, pluginProperties, callContext);
-        final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
+        final DirectPayment payment = paymentApi.getPayment(paymentUuid, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Account account= accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
-        final DirectPayment result;
+        final Iterable<PluginProperty> pluginProperties;
+        final String transactionExternalKey = UUID.randomUUID().toString();
         if (json.isAdjusted()) {
             if (json.getAdjustments() != null && json.getAdjustments().size() > 0) {
                 final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
                 for (final InvoiceItemJson item : json.getAdjustments()) {
                     adjustments.put(UUID.fromString(item.getInvoiceItemId()), item.getAmount());
                 }
-                result = null; // STEPH  paymentApi.createRefundWithItemsAdjustments(account, paymentUuid, adjustments, pluginProperties, callContext);
+                pluginProperties = extractPluginProperties(pluginPropertiesString,
+                                                           new PluginProperty("IPCD_REF_IDS_AMOUNTS", true, false),
+                                                           new PluginProperty("IPCD_REFUND_WITH_ADJUSTMENTS", adjustments, false));
             } else {
-                // Invoice adjustment
-                result = null; // STEPH  paymentApi.createRefundWithAdjustment(account, paymentUuid, json.getAmount(), pluginProperties, callContext);
+                pluginProperties = extractPluginProperties(pluginPropertiesString,
+                                                           new PluginProperty("IPCD_REF_IDS_AMOUNTS", true, false));
             }
         } else {
-            // Refund without adjustment
-            result = null;//  STEPH paymentApi.createRefund(account, paymentUuid, json.getAmount(), pluginProperties, callContext);
+            pluginProperties = extractPluginProperties(pluginPropertiesString);
         }
-
-        return null; // STEPH uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId(), uriInfo.getBaseUri().toString());
+        final DirectPayment result = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, account.getCurrency(), transactionExternalKey,
+                                                                               pluginProperties, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
+        return uriBuilder.buildResponse(DirectPaymentResource.class, "getDirectPayment", result.getId(), uriInfo.getBaseUri().toString());
     }
 
     @GET
@@ -226,6 +226,6 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
 
     @Override
     protected ObjectType getObjectType() {
-        return ObjectType.INVOICE_PAYMENT;
+        return ObjectType.PAYMENT;
     }
 }

@@ -39,6 +39,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
@@ -69,19 +70,16 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path(JaxrsResource.DIRECT_PAYMENTS_PATH)
 public class DirectPaymentResource extends JaxRsResourceBase {
 
-    private final DirectPaymentApi directPaymentApi;
-
     @Inject
     public DirectPaymentResource(final JaxrsUriBuilder uriBuilder,
                                  final TagUserApi tagUserApi,
                                  final CustomFieldUserApi customFieldUserApi,
                                  final AuditUserApi auditUserApi,
                                  final AccountUserApi accountUserApi,
-                                 final DirectPaymentApi directPaymentApi,
+                                 final DirectPaymentApi paymentApi,
                                  final Clock clock,
                                  final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
-        this.directPaymentApi = directPaymentApi;
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
     @GET
@@ -95,7 +93,7 @@ public class DirectPaymentResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID directPaymentIdId = UUID.fromString(directPaymentIdStr);
         final TenantContext tenantContext = context.createContext(request);
-        final DirectPayment directPayment = directPaymentApi.getPayment(directPaymentIdId, withPluginInfo, pluginProperties, tenantContext);
+        final DirectPayment directPayment = paymentApi.getPayment(directPaymentIdId, withPluginInfo, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(directPayment.getAccountId(), auditMode.getLevel(), tenantContext);
         final DirectPaymentJson result = new DirectPaymentJson(directPayment, accountAuditLogs);
 
@@ -117,9 +115,9 @@ public class DirectPaymentResource extends JaxRsResourceBase {
 
         final Pagination<DirectPayment> directPayments;
         if (Strings.isNullOrEmpty(pluginName)) {
-            directPayments = directPaymentApi.getPayments(offset, limit, withPluginInfo, pluginProperties, tenantContext);
+            directPayments = paymentApi.getPayments(offset, limit, withPluginInfo, pluginProperties, tenantContext);
         } else {
-            directPayments = directPaymentApi.getPayments(offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
+            directPayments = paymentApi.getPayments(offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(DirectPaymentResource.class, "getDirectPayments", directPayments.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
@@ -159,9 +157,9 @@ public class DirectPaymentResource extends JaxRsResourceBase {
         // Search the plugin(s)
         final Pagination<DirectPayment> directPayments;
         if (Strings.isNullOrEmpty(pluginName)) {
-            directPayments = directPaymentApi.searchPayments(searchKey, offset, limit, withPluginInfo, pluginProperties, tenantContext);
+            directPayments = paymentApi.searchPayments(searchKey, offset, limit, withPluginInfo, pluginProperties, tenantContext);
         } else {
-            directPayments = directPaymentApi.searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
+            directPayments = paymentApi.searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(DirectPaymentResource.class, "searchDirectPayments", directPayments.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
@@ -200,12 +198,12 @@ public class DirectPaymentResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID directPaymentId = UUID.fromString(directPaymentIdStr);
-        final DirectPayment initialPayment = directPaymentApi.getPayment(directPaymentId, false, pluginProperties, callContext);
+        final DirectPayment initialPayment = paymentApi.getPayment(directPaymentId, false, pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
         final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
 
-        final DirectPayment payment = directPaymentApi.createCapture(account, directPaymentId, json.getAmount(), currency,
+        final DirectPayment payment = paymentApi.createCapture(account, directPaymentId, json.getAmount(), currency,
                                                                      json.getDirectTransactionExternalKey(), pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
     }
@@ -225,13 +223,13 @@ public class DirectPaymentResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID directPaymentId = UUID.fromString(directPaymentIdStr);
-        final DirectPayment initialPayment = directPaymentApi.getPayment(directPaymentId, false, pluginProperties, callContext);
+        final DirectPayment initialPayment = paymentApi.getPayment(directPaymentId, false, pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
         final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
 
-        final DirectPayment payment = directPaymentApi.createRefund(account, directPaymentId, json.getAmount(), currency,
-                                                                    json.getDirectTransactionExternalKey(), pluginProperties, callContext);
+        final DirectPayment payment = paymentApi.createRefund(account, directPaymentId, json.getAmount(), currency,
+                                                              json.getDirectTransactionExternalKey(), pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
     }
 
@@ -250,11 +248,17 @@ public class DirectPaymentResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID directPaymentId = UUID.fromString(directPaymentIdStr);
-        final DirectPayment initialPayment = directPaymentApi.getPayment(directPaymentId, false, pluginProperties, callContext);
+        final DirectPayment initialPayment = paymentApi.getPayment(directPaymentId, false, pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
 
-        final DirectPayment payment = directPaymentApi.createVoid(account, directPaymentId, json.getDirectTransactionExternalKey(), pluginProperties, callContext);
+        final DirectPayment payment = paymentApi.createVoid(account, directPaymentId, json.getDirectTransactionExternalKey(), pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
     }
+
+    @Override
+    protected ObjectType getObjectType() {
+        return ObjectType.PAYMENT;
+    }
+
 }

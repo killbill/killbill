@@ -41,6 +41,7 @@ import org.killbill.billing.jaxrs.json.HostedPaymentPageFormDescriptorJson;
 import org.killbill.billing.jaxrs.json.PluginPropertyJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -72,9 +73,10 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
                                   final AuditUserApi auditUserApi,
                                   final AccountUserApi accountUserApi,
                                   final PaymentGatewayApi paymentGatewayApi,
+                                  final DirectPaymentApi paymentApi,
                                   final Clock clock,
                                   final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.paymentGatewayApi = paymentGatewayApi;
     }
 

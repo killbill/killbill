@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -32,6 +33,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
@@ -57,44 +59,14 @@ public class AccountTimelineJson {
         this.payments = payments;
     }
 
-    private String getBundleExternalKey(final UUID invoiceId, final List<Invoice> invoices, final List<SubscriptionBundle> bundles) {
-        for (final Invoice cur : invoices) {
-            if (cur.getId().equals(invoiceId)) {
-                return getBundleExternalKey(cur, bundles);
-            }
-        }
-        return null;
-    }
-
-    private String getBundleExternalKey(final Invoice invoice, final List<SubscriptionBundle> bundles) {
-        final Set<UUID> b = new HashSet<UUID>();
-        for (final InvoiceItem cur : invoice.getInvoiceItems()) {
-            b.add(cur.getBundleId());
-        }
-        boolean first = true;
-        final StringBuilder tmp = new StringBuilder();
-        for (final UUID cur : b) {
-            for (final SubscriptionBundle bt : bundles) {
-                if (bt.getId().equals(cur)) {
-                    if (!first) {
-                        tmp.append(",");
-                    }
-                    tmp.append(bt.getExternalKey());
-                    first = false;
-                    break;
-                }
-            }
-        }
-        return tmp.toString();
-    }
 
     public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<DirectPayment> payments,
-                               final List<SubscriptionBundle> bundles, final Multimap<UUID, DirectPayment> refundsByPayment,
-                               final Multimap<UUID, InvoicePayment> chargebacksByPayment, final AccountAuditLogs accountAuditLogs) {
+                               final Map<UUID, UUID> invoiceIdByPayment, final List<SubscriptionBundle> bundles,
+                                final Multimap<UUID, DirectPaymentTransaction> refundsByPayment,
+                               final Multimap<UUID, DirectPaymentTransaction> chargebacksByPayment, final AccountAuditLogs accountAuditLogs) {
         this.account = new AccountJson(account, null, null, accountAuditLogs);
         this.bundles = new LinkedList<BundleJson>();
         for (final SubscriptionBundle bundle : bundles) {
-            final List<AuditLog> bundleAuditLogs = accountAuditLogs.getAuditLogsForBundle(bundle.getId());
             final BundleJson jsonWithSubscriptions = new BundleJson(bundle, accountAuditLogs);
             this.bundles.add(jsonWithSubscriptions);
         }
@@ -122,23 +94,22 @@ public class AccountTimelineJson {
         this.payments = new LinkedList<PaymentJson>();
         for (final DirectPayment payment : payments) {
             final List<RefundJson> refunds = new ArrayList<RefundJson>();
-            for (final DirectPayment refund : refundsByPayment.get(payment.getId())) {
+            for (final DirectPaymentTransaction refund : refundsByPayment.get(payment.getId())) {
                 // STEPH add adjusted invoice items? and also audit_logs
-                //final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForRefund(refund.getId());
-                // refunds.add(new RefundJson(refund, null, auditLogs));
+                final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForPaymentTransaction(refund.getId());
+                refunds.add(new RefundJson(refund, null, auditLogs));
             }
 
             final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();
-            for (final InvoicePayment chargeback : chargebacksByPayment.get(payment.getId())) {
-                // STEPH
-                //final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForChargeback(chargeback.getId());
-                //chargebacks.add(new ChargebackJson(payment.getAccountId(), chargeback, auditLogs));
+            for (final DirectPaymentTransaction chargeback : chargebacksByPayment.get(payment.getId())) {
+                final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForPaymentTransaction(chargeback.getId());
+                chargebacks.add(new ChargebackJson(payment.getAccountId(), chargeback, auditLogs));
             }
 
             final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForPayment(payment.getId());
+            final UUID invoiceId = invoiceIdByPayment.get(payment.getId());
             this.payments.add(new PaymentJson(payment,
-                                              // TODO [PAYMENT]
-                                              null, //getBundleExternalKey(payment.getInvoiceId(), invoices, bundles),
+                                              getBundleExternalKey(invoiceId, invoices, bundles),
                                               refunds,
                                               chargebacks,
                                               auditLogs));
@@ -207,5 +178,39 @@ public class AccountTimelineJson {
         result = 31 * result + (invoices != null ? invoices.hashCode() : 0);
         result = 31 * result + (payments != null ? payments.hashCode() : 0);
         return result;
+    }
+
+    private String getBundleExternalKey(final UUID invoiceId, final List<Invoice> invoices, final List<SubscriptionBundle> bundles) {
+        if (invoiceId == null) {
+            return null;
+        }
+        for (final Invoice cur : invoices) {
+            if (cur.getId().equals(invoiceId)) {
+                return getBundleExternalKey(cur, bundles);
+            }
+        }
+        return null;
+    }
+
+    private String getBundleExternalKey(final Invoice invoice, final List<SubscriptionBundle> bundles) {
+        final Set<UUID> b = new HashSet<UUID>();
+        for (final InvoiceItem cur : invoice.getInvoiceItems()) {
+            b.add(cur.getBundleId());
+        }
+        boolean first = true;
+        final StringBuilder tmp = new StringBuilder();
+        for (final UUID cur : b) {
+            for (final SubscriptionBundle bt : bundles) {
+                if (bt.getId().equals(cur)) {
+                    if (!first) {
+                        tmp.append(",");
+                    }
+                    tmp.append(bt.getExternalKey());
+                    first = false;
+                    break;
+                }
+            }
+        }
+        return tmp.toString();
     }
 }

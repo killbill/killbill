@@ -74,6 +74,11 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
+    public List<InvoicePayment> getInvoicePaymentsByAccount(final UUID uuid, final TenantContext tenantContext) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public InvoicePayment getInvoicePaymentForAttempt(final UUID paymentId, final TenantContext context) {
         for (final InvoicePayment invoicePayment : invoicePayments) {
             if (paymentId.equals(invoicePayment.getPaymentId()) && invoicePayment.getType() == InvoicePaymentType.ATTEMPT) {

@@ -57,6 +57,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
+import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
@@ -100,7 +101,6 @@ public class InvoiceResource extends JaxRsResourceBase {
     private static final String ID_PARAM_NAME = "invoiceId";
 
     private final InvoiceUserApi invoiceApi;
-    private final DirectPaymentApi paymentApi;
     private final InvoiceNotifier invoiceNotifier;
 
     @Inject
@@ -114,9 +114,8 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final CustomFieldUserApi customFieldUserApi,
                            final AuditUserApi auditUserApi,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.invoiceApi = invoiceApi;
-        this.paymentApi = paymentApi;
         this.invoiceNotifier = invoiceNotifier;
     }
 
@@ -355,9 +354,8 @@ public class InvoiceResource extends JaxRsResourceBase {
             for (final InvoiceItem externalCharge : createdExternalCharges) {
                 if (!paidInvoices.contains(externalCharge.getInvoiceId())) {
                     paidInvoices.add(externalCharge.getInvoiceId());
-
                     final Invoice invoice = invoiceApi.getInvoice(externalCharge.getInvoiceId(), callContext);
-                    // STEPH paymentApi.createPurchaseWithPaymentControl(account, invoice.getId(), invoice.getBalance(), pluginProperties, callContext);
+                    createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), false, callContext);
                 }
             }
         }
@@ -378,12 +376,18 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getPayments(@PathParam("invoiceId") final String invoiceId,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+                                @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, InvoiceApiException {
         final TenantContext tenantContext = context.createContext(request);
 
-        final List<DirectPayment> payments = null; // STEPH paymentApi.getInvoicePayments(UUID.fromString(invoiceId), tenantContext);
+        final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId), tenantContext);
+        final List<DirectPayment> payments = new ArrayList<DirectPayment>();
+        for (InvoicePayment cur : invoice.getPayments()) {
+            final DirectPayment payment = paymentApi.getPayment(cur.getId(), withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
+            payments.add(payment);
+        }
         final List<PaymentJson> result = new ArrayList<PaymentJson>(payments.size());
-        if (payments.size() == 0) {
+        if (payments.isEmpty()) {
             return Response.status(Status.OK).entity(result).build();
         }
 
@@ -415,14 +419,8 @@ public class InvoiceResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(payment.getAccountId()), callContext);
-
         final UUID invoiceId = UUID.fromString(payment.getInvoiceId());
-        if (externalPayment) {
-            // STEPH paymentApi.createExternalPayment(account, invoiceId, payment.getAmount(), callContext);
-        } else {
-            // STEPH  paymentApi.createPayment(account, invoiceId, payment.getAmount(), pluginProperties, callContext);
-        }
-
+        createPurchaseForInvoice(account, invoiceId, payment.getPurchaseAmount(), externalPayment, callContext);
         return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getPayments", payment.getInvoiceId());
     }
 

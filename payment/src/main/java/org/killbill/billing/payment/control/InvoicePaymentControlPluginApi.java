@@ -74,12 +74,13 @@ import com.google.common.collect.Iterables;
 
 public final class InvoicePaymentControlPluginApi implements PaymentControlPluginApi {
 
-    public final static String PLUGIN_NAME = "__INVOICE_PAYMENT_CONTROL_PLUGIN__";
     public final static String CREATED_BY = "InvoicePaymentControlPluginApi";
 
-    public static final String PROP_IPCD_INVOICE_ID = "INVOICE_ID";
-    public static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "REF_IDS_AMOUNTS";
-    public static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "REFUND_WITH_ADJUSTMENTS";
+    /* Don't change value String for properties as they are referenced from jaxrs without the constants which are not accessible */
+    public final static String PLUGIN_NAME = "__INVOICE_PAYMENT_CONTROL_PLUGIN__";
+    public static final String PROP_IPCD_INVOICE_ID = "IPCD_INVOICE_ID";
+    public static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REF_IDS_AMOUNTS";
+    public static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
 
     private final PaymentConfig paymentConfig;
     private final InvoiceInternalApi invoiceApi;

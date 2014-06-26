@@ -31,6 +31,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.SubjectJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -61,9 +62,10 @@ public class SecurityResource extends JaxRsResourceBase {
                             final CustomFieldUserApi customFieldUserApi,
                             final AuditUserApi auditUserApi,
                             final AccountUserApi accountUserApi,
+                            final DirectPaymentApi paymentApi,
                             final Clock clock,
                             final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.securityApi = securityApi;
     }
 

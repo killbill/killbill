@@ -37,6 +37,7 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.jaxrs.json.UsageJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -62,9 +63,10 @@ public class UsageResource extends JaxRsResourceBase {
                          final AuditUserApi auditUserApi,
                          final AccountUserApi accountUserApi,
                          final UsageUserApi usageUserApi,
+                         final DirectPaymentApi paymentApi,
                          final Clock clock,
                          final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.usageUserApi = usageUserApi;
     }
 

@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -33,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ChargebackJson extends JsonBase {
 
     private final String chargebackId;
+    private final String chargedBackTransactionId;
     private final String accountId;
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
@@ -43,6 +45,7 @@ public class ChargebackJson extends JsonBase {
     @JsonCreator
     public ChargebackJson(@JsonProperty("chargebackId") final String chargebackId,
                           @JsonProperty("accountId") final String accountId,
+                          @JsonProperty("chargedBackTransactionId") final String chargedBackTransactionId,
                           @JsonProperty("requestedDate") final DateTime requestedDate,
                           @JsonProperty("effectiveDate") final DateTime effectiveDate,
                           @JsonProperty("amount") final BigDecimal chargebackAmount,
@@ -52,6 +55,7 @@ public class ChargebackJson extends JsonBase {
         super(auditLogs);
         this.chargebackId = chargebackId;
         this.accountId = accountId;
+        this.chargedBackTransactionId = chargedBackTransactionId;
         this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
         this.amount = chargebackAmount;
@@ -59,13 +63,13 @@ public class ChargebackJson extends JsonBase {
         this.currency = currency;
     }
 
-    public ChargebackJson(final UUID accountId, final InvoicePayment chargeback) {
+    public ChargebackJson(final UUID accountId, final DirectPaymentTransaction chargeback) {
         this(accountId, chargeback, null);
     }
 
-    public ChargebackJson(final UUID accountId, final InvoicePayment chargeback, @Nullable final List<AuditLog> auditLogs) {
-        this(chargeback.getId().toString(), accountId.toString(), chargeback.getPaymentDate(), chargeback.getPaymentDate(),
-               chargeback.getAmount().negate(), chargeback.getPaymentId().toString(), chargeback.getCurrency().toString(), toAuditLogJson(auditLogs));
+    public ChargebackJson(final UUID accountId, final DirectPaymentTransaction chargeback, @Nullable final List<AuditLog> auditLogs) {
+        this(chargeback.getId().toString(), accountId.toString(), chargeback.getExternalKey(), chargeback.getCreatedDate(), chargeback.getEffectiveDate(),
+               chargeback.getAmount().negate(), chargeback.getDirectPaymentId().toString(), chargeback.getCurrency().toString(), toAuditLogJson(auditLogs));
     }
 
     public String getChargebackId() {
@@ -96,6 +100,10 @@ public class ChargebackJson extends JsonBase {
         return paymentId;
     }
 
+    public String getChargedBackTransactionId() {
+        return chargedBackTransactionId;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -124,6 +132,9 @@ public class ChargebackJson extends JsonBase {
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
+        if (chargedBackTransactionId != null ? !chargedBackTransactionId.equals(that.chargedBackTransactionId) : that.chargedBackTransactionId != null) {
+            return false;
+        }
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
@@ -138,6 +149,7 @@ public class ChargebackJson extends JsonBase {
     public int hashCode() {
         int result = chargebackId != null ? chargebackId.hashCode() : 0;
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (chargedBackTransactionId != null ? chargedBackTransactionId.hashCode() : 0);
         result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);

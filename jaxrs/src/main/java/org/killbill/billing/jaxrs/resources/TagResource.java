@@ -33,6 +33,7 @@ import javax.ws.rs.core.Response;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -64,9 +65,10 @@ public class TagResource extends JaxRsResourceBase {
                        final CustomFieldUserApi customFieldUserApi,
                        final AuditUserApi auditUserApi,
                        final AccountUserApi accountUserApi,
+                       final DirectPaymentApi paymentApi,
                        final Clock clock,
                        final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
     @GET
