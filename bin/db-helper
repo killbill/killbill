@@ -23,6 +23,8 @@
 
 HERE=`cd \`dirname $0\`; pwd`
 TOP=$HERE/..
+PLUGINS='/var/tmp/bundles/plugins'
+
 
 POM="$TOP/pom.xml"
 
@@ -77,6 +79,14 @@ function find_src_ddl() {
         cur_ddl=`find $m/src/main/resources/ -name ddl.sql 2>/dev/null`
         ddl_src="$ddl_src $cur_ddl"
     done
+    for plugin in `ls $PLUGINS/java`; do
+        cur_ddl=`find -L $PLUGINS/java/$plugin/src/main/resources/ -name ddl.sql 2>/dev/null` # -L: follow symlinks
+        ddl_src="$ddl_src $cur_ddl"
+    done
+    for plugin in `ls $PLUGINS/ruby`; do
+        cur_ddl=`find -L $PLUGINS/ruby/$plugin/db/ -name ddl.sql 2>/dev/null` # -L: follow symlinks
+        ddl_src="$ddl_src $cur_ddl"
+    done    
     echo "$ddl_src"
 }
 
