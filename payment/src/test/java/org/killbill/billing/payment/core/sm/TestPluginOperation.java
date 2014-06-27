@@ -213,7 +213,10 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
                                                                                                   ImmutableList.<PluginProperty>of(),
                                                                                                   internalCallContext,
                                                                                                   callContext);
-        return new PluginOperationTest(locker, paymentPluginDispatcher, directPaymentStateContext);
+
+        final DirectPaymentAutomatonDAOHelper daoHelper = Mockito.mock(DirectPaymentAutomatonDAOHelper.class);
+        Mockito.when(daoHelper.getPaymentProviderPlugin()).thenReturn(null);
+        return new PluginOperationTest(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
     }
 
     private static final class CallbackTest implements WithAccountLockCallback<OperationResult, PaymentApiException> {
@@ -286,9 +289,8 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
     private static final class PluginOperationTest extends DirectPaymentOperation {
 
-        protected PluginOperationTest(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
-            // STEPH null ?
-            super(null, locker, paymentPluginDispatcher, directPaymentStateContext);
+        protected PluginOperationTest(final DirectPaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
+            super(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
         }
 
         @Override

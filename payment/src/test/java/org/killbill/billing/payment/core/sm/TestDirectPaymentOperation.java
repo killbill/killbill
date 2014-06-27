@@ -62,8 +62,7 @@ public class TestDirectPaymentOperation extends PaymentTestSuiteNoDB {
         Assert.assertNotNull(directPaymentStateContext.getPaymentInfoPlugin());
     }
 
-    // STEPH understand what is the correct behavior
-    @Test(groups = "fast", enabled=false)
+    @Test(groups = "fast")
     public void testPluginFailure() throws Exception {
         setUp(null);
 

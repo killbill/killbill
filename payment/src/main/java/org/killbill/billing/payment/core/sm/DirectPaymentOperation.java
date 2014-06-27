@@ -73,7 +73,7 @@ public abstract class DirectPaymentOperation extends OperationCallbackBase imple
 
      // STEPH: should we ever return an OperationResult.EXCEPTION at this layer -- since there is transtion back to init and there cannot be retried?
             logger.warn("Plugin call threw an exception for account {}", directPaymentStateContext.getAccount().getExternalKey(), e);
-            return new OperationException(e, OperationResult.EXCEPTION);
+            return new OperationException(realException, OperationResult.EXCEPTION);
         }
     }
 
@@ -106,6 +106,8 @@ public abstract class DirectPaymentOperation extends OperationCallbackBase imple
             return doOperation();
         } catch (final PaymentApiException e) {
             throw new OperationException(e, OperationResult.FAILURE);
+        } catch (RuntimeException e) {
+            throw new OperationException(e, OperationResult.EXCEPTION);
         }
     }
 
