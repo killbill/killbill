@@ -159,6 +159,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectTransactionsForDirectPayment(payment.getId(), internalCallContext);
         assertEquals(transactions.size(), 1);
 
+
         for (int curFailure = 0; curFailure < maxTries; curFailure++) {
 
             // Set plugin to fail with specific type unless this is the last attempt and we want a success
@@ -167,23 +168,30 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
             }
 
             moveClockForFailureType(failureType, curFailure);
-            try {
+            final int curFailureCondition = curFailure;
 
-                final int curFailureCondition = curFailure;
-                await().atMost(3, SECONDS).until(new Callable<Boolean>() {
+
+
+            try {
+                await().atMost(5, SECONDS).until(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
-                        List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(invoice.getId().toString(), internalCallContext);
-                        return attempts.size() == curFailureCondition + 2;
+                        final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
+                        final List<PaymentAttemptModelDao> filteredAttempts = ImmutableList.copyOf(Iterables.filter(attempts, new Predicate<PaymentAttemptModelDao>() {
+                            @Override
+                            public boolean apply(final PaymentAttemptModelDao input) {
+                                return input.getStateName().equals("SUCCESS") ||
+                                       input.getStateName().equals("RETRIED") ||
+                                       input.getStateName().equals("ABORTED");
+                            }
+                        }));
+                        return filteredAttempts.size() == curFailureCondition + 2;
                     }
                 });
             } catch (final TimeoutException e) {
-                if (curFailure == maxTries - 1) {
-                    fail("Failed to find successful payment for attempt " + (curFailure + 1) + "/" + maxTries);
-                }
+                fail("Timeout curFailure = " + curFailureCondition);
             }
         }
-        payment = getPaymentForInvoice(invoice.getId());
         attempts = paymentDao.getPaymentAttempts(payment.getExternalKey(), internalCallContext);
         final int expectedAttempts = maxTries < getMaxRetrySizeForFailureType(failureType) ?
                                      maxTries + 1 : getMaxRetrySizeForFailureType(failureType) + 1;
@@ -222,13 +230,14 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         }
     }
 
-    private void moveClockForFailureType(final FailureType failureType, final int curFailure) {
+    private void moveClockForFailureType(final FailureType failureType, final int curFailure) throws InterruptedException {
+        final int nbDays;
         if (failureType == FailureType.PAYMENT_FAILURE) {
-            final int nbDays = paymentConfig.getPaymentRetryDays().get(curFailure);
-            clock.addDays(nbDays + 1);
+            nbDays = paymentConfig.getPaymentRetryDays().get(curFailure) + 1;
         } else {
-            clock.addDays(1);
+            nbDays = 1;
         }
+        clock.addDays(nbDays);
     }
 
     private int getMaxRetrySizeForFailureType(final FailureType failureType) {

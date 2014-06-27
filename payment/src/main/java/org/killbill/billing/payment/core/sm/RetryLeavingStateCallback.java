@@ -71,7 +71,7 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
 
             final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
                                                                               utcNow, utcNow, stateContext.getDirectPaymentExternalKey(), null,
-                                                                              stateContext.directPaymentTransactionExternalKey, transactionType, state.getName(),
+                                                                              stateContext.directPaymentTransactionExternalKey, transactionType, initialState.getName(),
                                                                               stateContext.getAmount(), stateContext.getCurrency(),
                                                                               stateContext.getPluginName());
 
