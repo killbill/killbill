@@ -23,13 +23,10 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -73,8 +70,8 @@ import org.killbill.billing.jaxrs.json.DirectPaymentJson;
 import org.killbill.billing.jaxrs.json.DirectTransactionJson;
 import org.killbill.billing.jaxrs.json.InvoiceEmailJson;
 import org.killbill.billing.jaxrs.json.InvoiceJson;
+import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
 import org.killbill.billing.jaxrs.json.OverdueStateJson;
-import org.killbill.billing.jaxrs.json.PaymentJson;
 import org.killbill.billing.jaxrs.json.PaymentMethodJson;
 import org.killbill.billing.jaxrs.json.RefundJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -355,12 +352,7 @@ public class AccountResource extends JaxRsResourceBase {
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
 
         final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePaymentsByAccount(accountId, tenantContext);
-        final Map<UUID, UUID> invoicesIdByPayment = new HashMap<UUID, UUID>();
-        for (InvoicePayment cur : invoicePayments) {
-            invoicesIdByPayment.put(cur.getPaymentId(), cur.getInvoiceId());
-        }
-        final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, invoicesIdByPayment, bundles,
-                                                                 refundsByPayment, chargebacksByPayment,
+        final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, invoicePayments, bundles,
                                                                  accountAuditLogs);
         return Response.status(Status.OK).entity(json).build();
     }
@@ -460,15 +452,19 @@ public class AccountResource extends JaxRsResourceBase {
      */
 
     @GET
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICE_PAYMENTS)
     @Produces(APPLICATION_JSON)
-    public Response getPayments(@PathParam("accountId") final String accountId,
-                                @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
-                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        final List<DirectPayment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId), withPluginInfo, ImmutableList.<PluginProperty>of(), context.createContext(request));
-        final List<PaymentJson> result = new ArrayList<PaymentJson>(payments.size());
+    public Response getInvoicePayments(@PathParam("accountId") final String accountIdStr,
+                                       @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final List<DirectPayment> payments = paymentApi.getAccountPayments(accountId, withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
+        final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePaymentsByAccount(accountId, tenantContext);
+        final List<InvoicePaymentJson> result = new ArrayList<InvoicePaymentJson>(payments.size());
         for (final DirectPayment payment : payments) {
-            result.add(new PaymentJson(payment, null));
+            final UUID invoiceId = getInvoiceId(invoicePayments, payment);
+            result.add(new InvoicePaymentJson(payment, invoiceId, null));
         }
         return Response.status(Status.OK).entity(result).build();
     }
@@ -476,7 +472,7 @@ public class AccountResource extends JaxRsResourceBase {
     @POST
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICE_PAYMENTS)
     public Response payAllInvoices(@PathParam("accountId") final String accountId,
                                    @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                    @QueryParam(QUERY_PAYMENT_AMOUNT) final BigDecimal paymentAmount,
@@ -519,7 +515,6 @@ public class AccountResource extends JaxRsResourceBase {
         }
         return Response.status(Status.OK).build();
     }
-
 
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
@@ -609,15 +604,15 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     /*
-     * ************************* DIRECT PAYMENTS *****************************
+     * ************************* PAYMENTS *****************************
      */
     @GET
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + DIRECT_PAYMENTS)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
-    public Response getDirectPaymentsForAccount(@PathParam("accountId") final String accountIdStr,
-                                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                                @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
-                                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+    public Response getPayments(@PathParam("accountId") final String accountIdStr,
+                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final UUID accountId = UUID.fromString(accountIdStr);
         final TenantContext tenantContext = context.createContext(request);
         final List<DirectPayment> payments = paymentApi.getAccountPayments(accountId, withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
@@ -632,7 +627,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + DIRECT_PAYMENTS)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response processDirectPayment(final DirectTransactionJson json,
@@ -650,25 +645,25 @@ public class AccountResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(accountId, callContext);
         final UUID paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
         final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
-        final UUID directPaymentId = json.getDirectPaymentId() == null ? null : UUID.fromString(json.getDirectPaymentId());
+        final UUID directPaymentId = json.getPaymentId() == null ? null : UUID.fromString(json.getPaymentId());
 
         final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
         final DirectPayment result;
         switch (transactionType) {
             case AUTHORIZE:
                 result = paymentApi.createAuthorization(account, paymentMethodId, directPaymentId, json.getAmount(), currency,
-                                                              json.getDirectPaymentExternalKey(), json.getDirectTransactionExternalKey(),
-                                                              pluginProperties, callContext);
+                                                        json.getTransactionExternalKey(), json.getTransactionExternalKey(),
+                                                        pluginProperties, callContext);
                 break;
             case PURCHASE:
                 result = paymentApi.createPurchase(account, paymentMethodId, directPaymentId, json.getAmount(), currency,
-                                                         json.getDirectPaymentExternalKey(), json.getDirectTransactionExternalKey(),
-                                                         pluginProperties, callContext);
+                                                   json.getTransactionExternalKey(), json.getTransactionExternalKey(),
+                                                   pluginProperties, callContext);
                 break;
             case CREDIT:
                 result = paymentApi.createCredit(account, paymentMethodId, directPaymentId, json.getAmount(), currency,
-                                                       json.getDirectPaymentExternalKey(), json.getDirectTransactionExternalKey(),
-                                                       pluginProperties, callContext);
+                                                 json.getTransactionExternalKey(), json.getTransactionExternalKey(),
+                                                 pluginProperties, callContext);
                 break;
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
@@ -718,7 +713,8 @@ public class AccountResource extends JaxRsResourceBase {
                 return new RefundJson(input, null, null);
             }
         });
-        return Response.status(Status.OK).entity(result).build();
+        final List<RefundJson> realResult = ImmutableList.copyOf(result);
+        return Response.status(Status.OK).entity(realResult).build();
     }
 
     /*

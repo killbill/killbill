@@ -181,7 +181,7 @@ public class TestChargeback extends TestJaxrsBase {
     }
 
     private Payment getPayment(final Invoice invoice) throws KillBillClientException {
-        final List<Payment> payments = killBillClient.getPaymentsForInvoice(invoice.getInvoiceId());
+        final List<Payment> payments = null; //killBillClient.getPaymentsForInvoice(invoice.getInvoiceId());
         assertNotNull(payments);
         assertEquals(payments.size(), 1);
         return payments.get(0);

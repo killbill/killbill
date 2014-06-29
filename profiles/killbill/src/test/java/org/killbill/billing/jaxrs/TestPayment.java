@@ -1,5 +1,4 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
  * Copyright 2014 Groupon, Inc
  * Copyright 2014 The Billing Project, LLC
  *
@@ -19,275 +18,135 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.Invoice;
-import org.killbill.billing.client.model.InvoiceItem;
+import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentMethod;
+import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.Payments;
-import org.killbill.billing.client.model.Refund;
-import org.killbill.billing.client.model.Refunds;
-import org.killbill.billing.payment.api.RefundStatus;
+import org.killbill.billing.client.model.Transaction;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Objects;
 
 public class TestPayment extends TestJaxrsBase {
 
     @Test(groups = "slow")
-    public void testRetrievePayment() throws Exception {
-        final Payment paymentJson = setupScenarioWithPayment();
+    public void testCreateRetrievePayment() throws Exception {
+        final Account account = createAccountWithDefaultPaymentMethod();
+        testCreateRetrievePayment(account, null, UUID.randomUUID().toString(), 1);
 
-        final Payment retrievedPaymentJson = killBillClient.getPayment(paymentJson.getPaymentId(), false);
-        Assert.assertEquals(retrievedPaymentJson, paymentJson);
+        final PaymentMethod paymentMethodJson = new PaymentMethod(null, account.getAccountId(), false, PLUGIN_NAME, new PaymentMethodPluginDetail());
+        final PaymentMethod nonDefaultPaymentMethod = killBillClient.createPaymentMethod(paymentMethodJson, createdBy, reason, comment);
+        testCreateRetrievePayment(account, nonDefaultPaymentMethod.getPaymentMethodId(), UUID.randomUUID().toString(), 2);
     }
 
-    @Test(groups = "slow", description = "Can create a full refund with no adjustment")
-    public void testFullRefundWithNoAdjustment() throws Exception {
-        final Payment paymentJson = setupScenarioWithPayment();
+    public void testCreateRetrievePayment(final Account account, @Nullable final UUID paymentMethodId,
+                                          final String PaymentExternalKey, final int PaymentNb) throws Exception {
+        // Authorization
+        final String authTransactionExternalKey = UUID.randomUUID().toString();
+        final Transaction authTransaction = new Transaction();
+        authTransaction.setAmount(BigDecimal.TEN);
+        authTransaction.setCurrency(account.getCurrency());
+        authTransaction.setPaymentExternalKey(PaymentExternalKey);
+        authTransaction.setTransactionExternalKey(authTransactionExternalKey);
+        authTransaction.setTransactionType("AUTHORIZE");
+        final Payment authPayment = killBillClient.createPayment(account.getAccountId(), paymentMethodId, authTransaction, createdBy, reason, comment);
+        verifyPayment(account, paymentMethodId, authPayment, PaymentExternalKey, authTransactionExternalKey,
+                            BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, 1, PaymentNb);
 
-        // Issue a refund for the full amount
-        final BigDecimal refundAmount = paymentJson.getAmount();
-        final BigDecimal expectedInvoiceBalance = refundAmount;
+        // Capture 1
+        final String capture1TransactionExternalKey = UUID.randomUUID().toString();
+        final Transaction captureTransaction = new Transaction();
+        captureTransaction.setPaymentId(authPayment.getPaymentId());
+        captureTransaction.setAmount(BigDecimal.ONE);
+        captureTransaction.setCurrency(account.getCurrency());
+        captureTransaction.setPaymentExternalKey(PaymentExternalKey);
+        captureTransaction.setTransactionExternalKey(capture1TransactionExternalKey);
+        final Payment capturedPayment1 = killBillClient.captureAuthorization(captureTransaction, createdBy, reason, comment);
+        verifyPayment(account, paymentMethodId, capturedPayment1, PaymentExternalKey, authTransactionExternalKey,
+                            BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ZERO, 2, PaymentNb);
+        verifyPaymentTransaction(authPayment.getPaymentId(), capturedPayment1.getTransactions().get(1),
+                                       PaymentExternalKey, capture1TransactionExternalKey,
+                                       account, captureTransaction.getAmount(), "CAPTURE");
 
-        // Post and verify the refund
-        final Refund refund = new Refund();
-        refund.setPaymentId(paymentJson.getPaymentId());
-        refund.setAmount(refundAmount);
-        final Refund refundJsonCheck = killBillClient.createRefund(refund, createdBy, reason, comment);
-        verifyRefund(paymentJson, refundJsonCheck, refundAmount);
+        // Capture 2
+        final String capture2TransactionExternalKey = UUID.randomUUID().toString();
+        captureTransaction.setTransactionExternalKey(capture2TransactionExternalKey);
+        final Payment capturedPayment2 = killBillClient.captureAuthorization(captureTransaction, createdBy, reason, comment);
+        verifyPayment(account, paymentMethodId, capturedPayment2, PaymentExternalKey, authTransactionExternalKey,
+                            BigDecimal.TEN, new BigDecimal("2"), BigDecimal.ZERO, 3, PaymentNb);
+        verifyPaymentTransaction(authPayment.getPaymentId(), capturedPayment2.getTransactions().get(2),
+                                       PaymentExternalKey, capture2TransactionExternalKey,
+                                       account, captureTransaction.getAmount(), "CAPTURE");
 
-        // Verify the invoice balance
-        verifyInvoice(paymentJson, expectedInvoiceBalance);
+        // Refund
+        final String refundTransactionExternalKey = UUID.randomUUID().toString();
+        final Transaction refundTransaction = new Transaction();
+        refundTransaction.setPaymentId(authPayment.getPaymentId());
+        refundTransaction.setAmount(new BigDecimal("2"));
+        refundTransaction.setCurrency(account.getCurrency());
+        refundTransaction.setPaymentExternalKey(PaymentExternalKey);
+        refundTransaction.setTransactionExternalKey(refundTransactionExternalKey);
+        final Payment refundPayment = killBillClient.refundPayment(refundTransaction, createdBy, reason, comment);
+        verifyPayment(account, paymentMethodId, refundPayment, PaymentExternalKey, authTransactionExternalKey,
+                            BigDecimal.TEN, new BigDecimal("2"), new BigDecimal("2"), 4, PaymentNb);
+        verifyPaymentTransaction(authPayment.getPaymentId(), refundPayment.getTransactions().get(3),
+                                       PaymentExternalKey, refundTransactionExternalKey,
+                                       account, refundTransaction.getAmount(), "REFUND");
     }
 
-    @Test(groups = "slow", description = "Can create a partial refund with no adjustment")
-    public void testPartialRefundWithNoAdjustment() throws Exception {
-        final Payment paymentJson = setupScenarioWithPayment();
+    private void verifyPayment(final Account account, @Nullable final UUID paymentMethodId, final Payment Payment,
+                                     final String PaymentExternalKey, final String authTransactionExternalKey,
+                                     final BigDecimal authAmount, final BigDecimal capturedAmount,
+                                     final BigDecimal refundedAmount, final int nbTransactions, final int PaymentNb) throws KillBillClientException {
+        Assert.assertEquals(Payment.getAccountId(), account.getAccountId());
+        Assert.assertEquals(Payment.getPaymentMethodId(), Objects.firstNonNull(paymentMethodId, account.getPaymentMethodId()));
+        Assert.assertNotNull(Payment.getPaymentId());
+        Assert.assertNotNull(Payment.getPaymentNumber());
+        Assert.assertEquals(Payment.getPaymentExternalKey(), PaymentExternalKey);
+        Assert.assertEquals(Payment.getAuthAmount().compareTo(authAmount), 0);
+        Assert.assertEquals(Payment.getCapturedAmount().compareTo(capturedAmount), 0);
+        Assert.assertEquals(Payment.getRefundedAmount().compareTo(refundedAmount), 0);
+        Assert.assertEquals(Payment.getCurrency(), account.getCurrency());
+        Assert.assertEquals(Payment.getTransactions().size(), nbTransactions);
 
-        // Issue a refund for a fraction of the amount
-        final BigDecimal refundAmount = getFractionOfAmount(paymentJson.getAmount());
-        final BigDecimal expectedInvoiceBalance = refundAmount;
+        verifyPaymentTransaction(Payment.getPaymentId(), Payment.getTransactions().get(0),
+                                       PaymentExternalKey, authTransactionExternalKey, account, authAmount, "AUTHORIZE");
 
-        // Post and verify the refund
-        final Refund refund = new Refund();
-        refund.setPaymentId(paymentJson.getPaymentId());
-        refund.setAmount(refundAmount);
-        final Refund refundJsonCheck = killBillClient.createRefund(refund, createdBy, reason, comment);
-        verifyRefund(paymentJson, refundJsonCheck, refundAmount);
+        final Payments Payments = killBillClient.getPayments();
+        Assert.assertEquals(Payments.size(), PaymentNb);
+        Assert.assertEquals(Payments.get(PaymentNb - 1), Payment);
 
-        // Verify the invoice balance
-        verifyInvoice(paymentJson, expectedInvoiceBalance);
+        final Payment retrievedPayment = killBillClient.getPayment(Payment.getPaymentId());
+        Assert.assertEquals(retrievedPayment, Payment);
+
+        final InvoicePayments PaymentsForAccount = killBillClient.getPaymentsForAccount(account.getAccountId());
+        Assert.assertEquals(PaymentsForAccount.size(), PaymentNb);
+        Assert.assertEquals(PaymentsForAccount.get(PaymentNb - 1), Payment);
     }
 
-    @Test(groups = "slow", description = "Can create a full refund with invoice adjustment")
-    public void testFullRefundWithInvoiceAdjustment() throws Exception {
-        final Payment paymentJson = setupScenarioWithPayment();
-
-        // Issue a refund for the full amount
-        final BigDecimal refundAmount = paymentJson.getAmount();
-        final BigDecimal expectedInvoiceBalance = BigDecimal.ZERO;
-
-        // Post and verify the refund
-        final Refund refund = new Refund();
-        refund.setPaymentId(paymentJson.getPaymentId());
-        refund.setAmount(refundAmount);
-        refund.setAdjusted(true);
-        final Refund refundJsonCheck = killBillClient.createRefund(refund, createdBy, reason, comment);
-        verifyRefund(paymentJson, refundJsonCheck, refundAmount);
-
-        // Verify the invoice balance
-        verifyInvoice(paymentJson, expectedInvoiceBalance);
-    }
-
-    @Test(groups = "slow", description = "Can create a partial refund with invoice adjustment")
-    public void testPartialRefundWithInvoiceAdjustment() throws Exception {
-        final Payment paymentJson = setupScenarioWithPayment();
-
-        // Issue a refund for a fraction of the amount
-        final BigDecimal refundAmount = getFractionOfAmount(paymentJson.getAmount());
-        final BigDecimal expectedInvoiceBalance = BigDecimal.ZERO;
-
-        // Post and verify the refund
-        final Refund refund = new Refund();
-        refund.setPaymentId(paymentJson.getPaymentId());
-        refund.setAmount(refundAmount);
-        refund.setAdjusted(true);
-        final Refund refundJsonCheck = killBillClient.createRefund(refund, createdBy, reason, comment);
-        verifyRefund(paymentJson, refundJsonCheck, refundAmount);
-
-        // Verify the invoice balance
-        verifyInvoice(paymentJson, expectedInvoiceBalance);
-    }
-
-    @Test(groups = "slow", description = "Can create a full refund with invoice item adjustment")
-    public void testRefundWithFullInvoiceItemAdjustment() throws Exception {
-        final Payment paymentJson = setupScenarioWithPayment();
-
-        // Get the individual items for the invoice
-        final Invoice invoice = killBillClient.getInvoice(paymentJson.getInvoiceId(), true);
-        final InvoiceItem itemToAdjust = invoice.getItems().get(0);
-
-        // Issue a refund for the full amount
-        final BigDecimal refundAmount = itemToAdjust.getAmount();
-        final BigDecimal expectedInvoiceBalance = BigDecimal.ZERO;
-
-        // Post and verify the refund
-        final Refund refund = new Refund();
-        refund.setPaymentId(paymentJson.getPaymentId());
-        refund.setAmount(refundAmount);
-        refund.setAdjusted(true);
-        final InvoiceItem adjustment = new InvoiceItem();
-        adjustment.setInvoiceItemId(itemToAdjust.getInvoiceItemId());
-        /* null amount means full adjustment for that item */
-        refund.setAdjustments(ImmutableList.<InvoiceItem>of(adjustment));
-        final Refund refundJsonCheck = killBillClient.createRefund(refund, createdBy, reason, comment);
-        verifyRefund(paymentJson, refundJsonCheck, refundAmount);
-
-        // Verify the invoice balance
-        verifyInvoice(paymentJson, expectedInvoiceBalance);
-    }
-
-    @Test(groups = "slow", description = "Can create a partial refund with invoice item adjustment")
-    public void testPartialRefundWithInvoiceItemAdjustment() throws Exception {
-        final Payment paymentJson = setupScenarioWithPayment();
-
-        // Get the individual items for the invoice
-        final Invoice invoice = killBillClient.getInvoice(paymentJson.getInvoiceId(), true);
-        final InvoiceItem itemToAdjust = invoice.getItems().get(0);
-
-        // Issue a refund for a fraction of the amount
-        final BigDecimal refundAmount = getFractionOfAmount(itemToAdjust.getAmount());
-        final BigDecimal expectedInvoiceBalance = BigDecimal.ZERO;
-
-        // Post and verify the refund
-        final Refund refund = new Refund();
-        refund.setPaymentId(paymentJson.getPaymentId());
-        refund.setAdjusted(true);
-        final InvoiceItem adjustment = new InvoiceItem();
-        adjustment.setInvoiceItemId(itemToAdjust.getInvoiceItemId());
-        adjustment.setAmount(refundAmount);
-        refund.setAdjustments(ImmutableList.<InvoiceItem>of(adjustment));
-        final Refund refundJsonCheck = killBillClient.createRefund(refund, createdBy, reason, comment);
-        verifyRefund(paymentJson, refundJsonCheck, refundAmount);
-
-        // Verify the invoice balance
-        verifyInvoice(paymentJson, expectedInvoiceBalance);
-    }
-
-    @Test(groups = "slow", description = "Can paginate through all payments and refunds")
-    public void testPaymentsAndRefundsPagination() throws Exception {
-        Payment lastPayment = setupScenarioWithPayment();
-
-        for (int i = 0; i < 5; i++) {
-            final Refund refund = new Refund();
-            refund.setPaymentId(lastPayment.getPaymentId());
-            refund.setAmount(lastPayment.getAmount());
-            killBillClient.createRefund(refund, createdBy, reason, comment);
-
-            final Payment payment = new Payment();
-            payment.setAccountId(lastPayment.getAccountId());
-            payment.setInvoiceId(lastPayment.getInvoiceId());
-            payment.setAmount(lastPayment.getAmount());
-            final List<Payment> payments = killBillClient.createPayment(payment, false, createdBy, reason, comment);
-
-            lastPayment = payments.get(payments.size() - 1);
+    private void verifyPaymentTransaction(final UUID PaymentId, final Transaction Transaction,
+                                                final String PaymentExternalKey, final String TransactionExternalKey,
+                                                final Account account, @Nullable final BigDecimal amount, final String transactionType) {
+        Assert.assertEquals(Transaction.getPaymentId(), PaymentId);
+        Assert.assertNotNull(Transaction.getTransactionId());
+        Assert.assertEquals(Transaction.getTransactionType(), transactionType);
+        Assert.assertEquals(Transaction.getStatus(), "SUCCESS");
+        if (amount == null) {
+            Assert.assertNull(Transaction.getAmount());
+            Assert.assertNull(Transaction.getCurrency());
+        } else {
+            Assert.assertEquals(Transaction.getAmount().compareTo(amount), 0);
+            Assert.assertEquals(Transaction.getCurrency(), account.getCurrency());
         }
-
-        final Payments allPayments = killBillClient.getPayments();
-        Assert.assertEquals(allPayments.size(), 6);
-
-        final Refunds allRefunds = killBillClient.getRefunds();
-        Assert.assertEquals(allRefunds.size(), 5);
-
-        Payments paymentsPage = killBillClient.getPayments(0L, 1L);
-        for (int i = 0; i < 6; i++) {
-            Assert.assertNotNull(paymentsPage);
-            Assert.assertEquals(paymentsPage.size(), 1);
-            Assert.assertEquals(paymentsPage.get(0), allPayments.get(i));
-            paymentsPage = paymentsPage.getNext();
-        }
-        Assert.assertNull(paymentsPage);
-
-        Refunds refundsPage = killBillClient.getRefunds(0L, 1L);
-        for (int i = 0; i < 5; i++) {
-            Assert.assertNotNull(refundsPage);
-            Assert.assertEquals(refundsPage.size(), 1);
-            Assert.assertEquals(refundsPage.get(0), allRefunds.get(i));
-            refundsPage = refundsPage.getNext();
-        }
-        Assert.assertNull(refundsPage);
-    }
-
-    private BigDecimal getFractionOfAmount(final BigDecimal amount) {
-        return amount.divide(BigDecimal.TEN).setScale(2, BigDecimal.ROUND_HALF_UP);
-    }
-
-    private Payment setupScenarioWithPayment() throws Exception {
-        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
-
-        final List<Payment> firstPaymentForAccount = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
-        Assert.assertEquals(firstPaymentForAccount.size(), 1);
-
-        final Payment paymentJson = firstPaymentForAccount.get(0);
-
-        // Check the PaymentMethod from paymentMethodId returned in the Payment object
-        final UUID paymentMethodId = paymentJson.getPaymentMethodId();
-        final PaymentMethod paymentMethodJson = killBillClient.getPaymentMethod(paymentMethodId, true);
-        Assert.assertEquals(paymentMethodJson.getPaymentMethodId(), paymentMethodId);
-        Assert.assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());
-
-        // Verify the refunds
-        final List<Refund> objRefundFromJson = killBillClient.getRefundsForPayment(paymentJson.getPaymentId());
-        Assert.assertEquals(objRefundFromJson.size(), 0);
-        return paymentJson;
-    }
-
-    private void verifyRefund(final Payment paymentJson, final Refund refundJsonCheck, final BigDecimal refundAmount) throws KillBillClientException {
-        Assert.assertEquals(refundJsonCheck.getPaymentId(), paymentJson.getPaymentId());
-        Assert.assertEquals(refundJsonCheck.getAmount().setScale(2, RoundingMode.HALF_UP), refundAmount.setScale(2, RoundingMode.HALF_UP));
-        Assert.assertEquals(refundJsonCheck.getCurrency(), DEFAULT_CURRENCY);
-        Assert.assertEquals(refundJsonCheck.getStatus(), RefundStatus.COMPLETED.toString());
-        Assert.assertEquals(refundJsonCheck.getEffectiveDate().getYear(), clock.getUTCNow().getYear());
-        Assert.assertEquals(refundJsonCheck.getEffectiveDate().getMonthOfYear(), clock.getUTCNow().getMonthOfYear());
-        Assert.assertEquals(refundJsonCheck.getEffectiveDate().getDayOfMonth(), clock.getUTCNow().getDayOfMonth());
-        Assert.assertEquals(refundJsonCheck.getRequestedDate().getYear(), clock.getUTCNow().getYear());
-        Assert.assertEquals(refundJsonCheck.getRequestedDate().getMonthOfYear(), clock.getUTCNow().getMonthOfYear());
-        Assert.assertEquals(refundJsonCheck.getRequestedDate().getDayOfMonth(), clock.getUTCNow().getDayOfMonth());
-
-        // Verify the refunds
-        final List<Refund> retrievedRefunds = killBillClient.getRefundsForPayment(paymentJson.getPaymentId());
-        Assert.assertEquals(retrievedRefunds.size(), 1);
-
-        // Verify the refund via the payment API
-        final Payment retrievedPaymentJson = killBillClient.getPayment(paymentJson.getPaymentId(), true);
-        Assert.assertEquals(retrievedPaymentJson.getPaymentId(), paymentJson.getPaymentId());
-        Assert.assertEquals(retrievedPaymentJson.getPaidAmount().setScale(2, RoundingMode.HALF_UP), paymentJson.getPaidAmount().add(refundAmount.negate()).setScale(2, RoundingMode.HALF_UP));
-        Assert.assertEquals(retrievedPaymentJson.getAmount().setScale(2, RoundingMode.HALF_UP), paymentJson.getAmount().setScale(2, RoundingMode.HALF_UP));
-        Assert.assertEquals(retrievedPaymentJson.getAccountId(), paymentJson.getAccountId());
-        Assert.assertEquals(retrievedPaymentJson.getInvoiceId(), paymentJson.getInvoiceId());
-        Assert.assertEquals(retrievedPaymentJson.getRequestedDate(), paymentJson.getRequestedDate());
-        Assert.assertEquals(retrievedPaymentJson.getEffectiveDate(), paymentJson.getEffectiveDate());
-        Assert.assertEquals(retrievedPaymentJson.getRetryCount(), paymentJson.getRetryCount());
-        Assert.assertEquals(retrievedPaymentJson.getCurrency(), paymentJson.getCurrency());
-        Assert.assertEquals(retrievedPaymentJson.getStatus(), paymentJson.getStatus());
-        Assert.assertEquals(retrievedPaymentJson.getGatewayErrorCode(), paymentJson.getGatewayErrorCode());
-        Assert.assertEquals(retrievedPaymentJson.getGatewayErrorMsg(), paymentJson.getGatewayErrorMsg());
-        Assert.assertEquals(retrievedPaymentJson.getPaymentMethodId(), paymentJson.getPaymentMethodId());
-        Assert.assertEquals(retrievedPaymentJson.getChargebacks().size(), 0);
-        Assert.assertEquals(retrievedPaymentJson.getRefunds().size(), 1);
-        Assert.assertEquals(retrievedPaymentJson.getRefunds().get(0), refundJsonCheck);
-    }
-
-    private void verifyInvoice(final Payment paymentJson, final BigDecimal expectedInvoiceBalance) throws KillBillClientException {
-        final Invoice invoiceJson = killBillClient.getInvoice(paymentJson.getInvoiceId());
-        Assert.assertEquals(invoiceJson.getBalance().setScale(2, BigDecimal.ROUND_HALF_UP),
-                            expectedInvoiceBalance.setScale(2, BigDecimal.ROUND_HALF_UP));
+        Assert.assertEquals(Transaction.getTransactionExternalKey(), TransactionExternalKey);
+        Assert.assertEquals(Transaction.getPaymentExternalKey(), PaymentExternalKey);
     }
 }

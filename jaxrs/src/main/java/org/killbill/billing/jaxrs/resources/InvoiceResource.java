@@ -62,7 +62,7 @@ import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.InvoiceJson;
-import org.killbill.billing.jaxrs.json.PaymentJson;
+import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.DirectPayment;
@@ -76,7 +76,6 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
-import org.killbill.billing.util.audit.AccountAuditLogsForObjectType;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
@@ -386,20 +385,13 @@ public class InvoiceResource extends JaxRsResourceBase {
             final DirectPayment payment = paymentApi.getPayment(cur.getId(), withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
             payments.add(payment);
         }
-        final List<PaymentJson> result = new ArrayList<PaymentJson>(payments.size());
+        final List<InvoicePaymentJson> result = new ArrayList<InvoicePaymentJson>(payments.size());
         if (payments.isEmpty()) {
             return Response.status(Status.OK).entity(result).build();
         }
-
-        final AccountAuditLogsForObjectType auditLogsForPayments = auditUserApi.getAccountAuditLogs(payments.get(0).getAccountId(),
-                                                                                                    ObjectType.PAYMENT,
-                                                                                                    auditMode.getLevel(),
-                                                                                                    tenantContext);
-
         for (final DirectPayment cur : payments) {
-            result.add(new PaymentJson(cur, auditLogsForPayments.getAuditLogs(cur.getId())));
+            result.add(new InvoicePaymentJson(cur, invoice.getId(), null));
         }
-
         return Response.status(Status.OK).entity(result).build();
     }
 
@@ -407,7 +399,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
-    public Response createInstantPayment(final PaymentJson payment,
+    public Response createInstantPayment(final InvoicePaymentJson payment,
                                          @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -419,9 +411,10 @@ public class InvoiceResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(payment.getAccountId()), callContext);
-        final UUID invoiceId = UUID.fromString(payment.getInvoiceId());
-        createPurchaseForInvoice(account, invoiceId, payment.getPurchaseAmount(), externalPayment, callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getPayments", payment.getInvoiceId());
+        final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
+        final DirectPayment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), externalPayment, callContext);
+        // STEPH should that live in InvoicePayment instead?
+        return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", result.getId());
     }
 
     @POST

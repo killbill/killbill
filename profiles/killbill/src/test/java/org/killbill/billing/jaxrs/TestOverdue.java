@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Invoice;
+import org.killbill.billing.client.model.InvoicePayment;
 import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.Payment;
 import org.testng.Assert;
@@ -72,11 +73,12 @@ public class TestOverdue extends TestJaxrsBase {
         }).reverse().sortedCopy(invoicesForAccount);
         for (final Invoice invoice : mostRecentInvoiceFirst) {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
-                final Payment payment = new Payment();
-                payment.setAccountId(accountJson.getAccountId());
-                payment.setInvoiceId(invoice.getInvoiceId());
-                payment.setAmount(invoice.getBalance());
-                killBillClient.createPayment(payment, true, createdBy, reason, comment);
+
+                final InvoicePayment invoicePayment = new InvoicePayment();
+                invoicePayment.setPurchasedAmount(invoice.getAmount());
+                invoicePayment.setAccountId(accountJson.getAccountId());
+                invoicePayment.setTargetInvoiceId(invoice.getInvoiceId());
+                killBillClient.createInvoicePayment(invoicePayment, true, createdBy, reason, comment);
             }
         }
 

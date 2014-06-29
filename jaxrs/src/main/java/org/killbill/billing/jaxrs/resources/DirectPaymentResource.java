@@ -67,7 +67,7 @@ import com.google.common.collect.ImmutableMap;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-@Path(JaxrsResource.DIRECT_PAYMENTS_PATH)
+@Path(JaxrsResource.PAYMENTS_PATH)
 public class DirectPaymentResource extends JaxRsResourceBase {
 
     @Inject
@@ -204,7 +204,7 @@ public class DirectPaymentResource extends JaxRsResourceBase {
         final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
 
         final DirectPayment payment = paymentApi.createCapture(account, directPaymentId, json.getAmount(), currency,
-                                                                     json.getDirectTransactionExternalKey(), pluginProperties, callContext);
+                                                                     json.getTransactionExternalKey(), pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
     }
 
@@ -229,7 +229,7 @@ public class DirectPaymentResource extends JaxRsResourceBase {
         final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
 
         final DirectPayment payment = paymentApi.createRefund(account, directPaymentId, json.getAmount(), currency,
-                                                              json.getDirectTransactionExternalKey(), pluginProperties, callContext);
+                                                              json.getTransactionExternalKey(), pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
     }
 
@@ -252,7 +252,7 @@ public class DirectPaymentResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
 
-        final DirectPayment payment = paymentApi.createVoid(account, directPaymentId, json.getDirectTransactionExternalKey(), pluginProperties, callContext);
+        final DirectPayment payment = paymentApi.createVoid(account, directPaymentId, json.getTransactionExternalKey(), pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
     }
 

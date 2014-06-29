@@ -21,6 +21,7 @@ package org.killbill.billing.jaxrs;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.killbill.billing.client.model.InvoicePayment;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -38,7 +39,7 @@ public class TestExceptions extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testExceptionMapping() throws Exception {
         final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
-        final List<Payment> payments = killBillClient.getPaymentsForAccount(account.getAccountId());
+        final List<InvoicePayment> payments = killBillClient.getPaymentsForAccount(account.getAccountId());
         final Chargeback input = new Chargeback();
         input.setAmount(BigDecimal.TEN.negate());
         input.setPaymentId(payments.get(0).getPaymentId());

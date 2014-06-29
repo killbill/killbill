@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs;
 
 import java.util.EventListener;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -33,7 +34,10 @@ import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.client.KillBillClient;
 import org.killbill.billing.client.KillBillHttpClient;
+import org.killbill.billing.client.model.InvoicePayment;
+import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.Tenant;
+import org.killbill.billing.client.model.Transaction;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
@@ -58,8 +62,11 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
@@ -249,4 +256,19 @@ public class TestJaxrsBase extends KillbillClient {
         } catch (final Exception ignored) {
         }
     }
+
+    protected static <T extends Payment>  List<Transaction> getDirectPaymentTransactions(final List<T> payments, final String transactionType) {
+        return ImmutableList.copyOf(Iterables.concat(Iterables.transform(payments, new Function<T, Iterable<Transaction>>() {
+            @Override
+            public Iterable<Transaction> apply(final T input) {
+                return Iterables.filter(input.getTransactions(), new Predicate<Transaction>() {
+                    @Override
+                    public boolean apply(final Transaction input) {
+                        return input.getTransactionType().equals(transactionType);
+                    }
+                });
+            }
+        })));
+    }
+
 }

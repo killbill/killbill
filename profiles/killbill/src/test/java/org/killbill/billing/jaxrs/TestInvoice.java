@@ -29,6 +29,8 @@ import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.AuditLog;
 import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.InvoiceItem;
+import org.killbill.billing.client.model.InvoicePayment;
+import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentMethod;
@@ -51,7 +53,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final List<Invoice> invoices = null; // STEPH killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, AuditLevel.FULL);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 2);
         for (final Invoice invoiceJson : invoices) {
             Assert.assertEquals(invoiceJson.getAuditLogs().size(), 1);
@@ -102,13 +104,12 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoices.size(), 2);
 
         for (final Invoice cur : invoices) {
-            final List<Payment> objFromJson = killBillClient.getPaymentsForInvoice(cur.getInvoiceId());
-
+            final InvoicePayments objFromJson = killBillClient.getInvoicePayment(cur.getInvoiceId());
             if (cur.getAmount().compareTo(BigDecimal.ZERO) == 0) {
                 assertEquals(objFromJson.size(), 0);
             } else {
                 assertEquals(objFromJson.size(), 1);
-                assertEquals(cur.getAmount().compareTo(objFromJson.get(0).getAmount()), 0);
+                assertEquals(cur.getAmount().compareTo(objFromJson.get(0).getPurchasedAmount()), 0);
             }
         }
     }
@@ -153,14 +154,14 @@ public class TestInvoice extends TestJaxrsBase {
                 continue;
             }
 
-            // CREATE INSTA PAYMENT
-            final Payment payment = new Payment();
-            payment.setAccountId(accountJson.getAccountId());
-            payment.setInvoiceId(cur.getInvoiceId());
-            payment.setAmount(cur.getBalance());
-            final List<Payment> objFromJson = killBillClient.createPayment(payment, false, createdBy, reason, comment);
+            // CREATE PAYMENT
+            final InvoicePayment invoicePayment = new InvoicePayment();
+            invoicePayment.setPurchasedAmount(cur.getBalance());
+            invoicePayment.setAccountId(accountJson.getAccountId());
+            invoicePayment.setTargetInvoiceId(cur.getInvoiceId());
+            final InvoicePayments objFromJson = null; // STEPH killBillClient.createInvoicePayment(invoicePayment, true, createdBy, reason, comment);
             assertEquals(objFromJson.size(), 1);
-            assertEquals(cur.getBalance().compareTo(objFromJson.get(0).getAmount()), 0);
+            assertEquals(cur.getBalance().compareTo(objFromJson.get(0).getPurchasedAmount()), 0);
         }
     }
 
@@ -168,8 +169,8 @@ public class TestInvoice extends TestJaxrsBase {
     public void testExternalPayment() throws Exception {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        // Verify we didn't get any payment
-        final List<Payment> noPaymentsFromJson = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
+        // Verify we didn't get any invoicePayment
+        final List<InvoicePayment> noPaymentsFromJson = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
         assertEquals(noPaymentsFromJson.size(), 1);
         final UUID initialPaymentId = noPaymentsFromJson.get(0).getPaymentId();
 
@@ -179,16 +180,15 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoices.size(), 2);
         final UUID invoiceId = invoices.get(1).getInvoiceId();
 
-        // Post an external payment
-        final BigDecimal paidAmount = BigDecimal.TEN;
-        final Payment payment = new Payment();
-        payment.setAmount(BigDecimal.TEN);
-        payment.setAccountId(accountJson.getAccountId());
-        payment.setInvoiceId(invoiceId);
-        killBillClient.createPayment(payment, true, createdBy, reason, comment);
+        // Post an external invoicePayment
+        final InvoicePayment invoicePayment = new InvoicePayment();
+        invoicePayment.setPurchasedAmount(BigDecimal.TEN);
+        invoicePayment.setAccountId(accountJson.getAccountId());
+        invoicePayment.setTargetInvoiceId(invoiceId);
+        killBillClient.createInvoicePayment(invoicePayment, true, createdBy, reason, comment);
 
-        // Verify we indeed got the payment
-        final List<Payment> paymentsFromJson = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
+        // Verify we indeed got the invoicePayment
+        final List<InvoicePayment> paymentsFromJson = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
         assertEquals(paymentsFromJson.size(), 2);
         Payment secondPayment = null;
         for (final Payment cur : paymentsFromJson) {
@@ -199,7 +199,6 @@ public class TestInvoice extends TestJaxrsBase {
         }
         assertNotNull(secondPayment);
 
-        assertEquals(secondPayment.getPaidAmount().compareTo(paidAmount), 0);
 
         // Check the PaymentMethod from paymentMethodId returned in the Payment object
         final UUID paymentMethodId = secondPayment.getPaymentMethodId();

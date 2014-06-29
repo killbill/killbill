@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -32,38 +31,38 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Multimap;
 
 public class AccountTimelineJson {
 
     private final AccountJson account;
     private final List<BundleJson> bundles;
     private final List<InvoiceJson> invoices;
-    private final List<PaymentJson> payments;
+    private final List<InvoicePaymentJson> payments;
 
     @JsonCreator
     public AccountTimelineJson(@JsonProperty("account") final AccountJson account,
                                @JsonProperty("bundles") final List<BundleJson> bundles,
                                @JsonProperty("invoices") final List<InvoiceJson> invoices,
-                               @JsonProperty("payments") final List<PaymentJson> payments) {
+                               @JsonProperty("payments") final List<InvoicePaymentJson> payments) {
         this.account = account;
         this.bundles = bundles;
         this.invoices = invoices;
         this.payments = payments;
     }
 
-
-    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<DirectPayment> payments,
-                               final Map<UUID, UUID> invoiceIdByPayment, final List<SubscriptionBundle> bundles,
-                                final Multimap<UUID, DirectPaymentTransaction> refundsByPayment,
-                               final Multimap<UUID, DirectPaymentTransaction> chargebacksByPayment, final AccountAuditLogs accountAuditLogs) {
+    public AccountTimelineJson(final Account account,
+                               final List<Invoice> invoices,
+                               final List<DirectPayment> payments,
+                               final List<InvoicePayment> invoicePayments,
+                               final List<SubscriptionBundle> bundles,
+                               final AccountAuditLogs accountAuditLogs) {
         this.account = new AccountJson(account, null, null, accountAuditLogs);
         this.bundles = new LinkedList<BundleJson>();
         for (final SubscriptionBundle bundle : bundles) {
@@ -91,28 +90,10 @@ public class AccountTimelineJson {
                                               auditLogs));
         }
 
-        this.payments = new LinkedList<PaymentJson>();
+        this.payments = new LinkedList<InvoicePaymentJson>();
         for (final DirectPayment payment : payments) {
-            final List<RefundJson> refunds = new ArrayList<RefundJson>();
-            for (final DirectPaymentTransaction refund : refundsByPayment.get(payment.getId())) {
-                // STEPH add adjusted invoice items? and also audit_logs
-                final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForPaymentTransaction(refund.getId());
-                refunds.add(new RefundJson(refund, null, auditLogs));
-            }
-
-            final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();
-            for (final DirectPaymentTransaction chargeback : chargebacksByPayment.get(payment.getId())) {
-                final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForPaymentTransaction(chargeback.getId());
-                chargebacks.add(new ChargebackJson(payment.getAccountId(), chargeback, auditLogs));
-            }
-
-            final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForPayment(payment.getId());
-            final UUID invoiceId = invoiceIdByPayment.get(payment.getId());
-            this.payments.add(new PaymentJson(payment,
-                                              getBundleExternalKey(invoiceId, invoices, bundles),
-                                              refunds,
-                                              chargebacks,
-                                              auditLogs));
+            final UUID invoiceId = JaxRsResourceBase.getInvoiceId(invoicePayments, payment);
+            this.payments.add(new InvoicePaymentJson(payment, invoiceId, accountAuditLogs));
         }
     }
 
@@ -128,7 +109,7 @@ public class AccountTimelineJson {
         return invoices;
     }
 
-    public List<PaymentJson> getPayments() {
+    public List<InvoicePaymentJson> getPayments() {
         return payments;
     }
 

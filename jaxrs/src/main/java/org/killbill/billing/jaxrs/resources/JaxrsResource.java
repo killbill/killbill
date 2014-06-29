@@ -93,6 +93,8 @@ public interface JaxrsResource {
     public static final String QUERY_WITH_PLUGIN_INFO = "withPluginInfo";
     public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "isDefault";
 
+    public static final String QUERY_PAYMENT_METHOD_PLUGIN_INFO = "pluginInfo"; // STEPH check on that one, why was that missing?
+
     public static final String QUERY_PAY_ALL_UNPAID_INVOICES = "payAllUnpaidInvoices";
     public static final String QUERY_PAY_INVOICE = "payInvoice";
 
@@ -139,17 +141,13 @@ public interface JaxrsResource {
     public static final String CHARGES = "charges";
     public static final String CHARGES_PATH = PREFIX + "/" + INVOICES + "/" + CHARGES;
 
-    public static final String PAYMENTS = "invoicePayments";
+    public static final String PAYMENTS = "payments";
     public static final String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;
-
-    public static final String DIRECT_PAYMENTS = "directPayments";
-    public static final String DIRECT_PAYMENTS_PATH = PREFIX + "/" + DIRECT_PAYMENTS;
 
     public static final String PAYMENT_GATEWAYS = "paymentGateways";
     public static final String PAYMENT_GATEWAYS_PATH = PREFIX + "/" + PAYMENT_GATEWAYS;
 
     public static final String REFUNDS = "refunds";
-    public static final String REFUNDS_PATH = PREFIX + "/" + "refunds";
 
     public static final String PAYMENT_METHODS = "paymentMethods";
     public static final String PAYMENT_METHODS_PATH = PREFIX + "/" + PAYMENT_METHODS;
@@ -157,6 +155,9 @@ public interface JaxrsResource {
 
     public static final String CREDITS = "credits";
     public static final String CREDITS_PATH = PREFIX + "/" + CREDITS;
+
+    public static final String INVOICE_PAYMENTS = "invoicePayments";
+    public static final String INVOICE_PAYMENTS_PATH = PREFIX + "/" + INVOICE_PAYMENTS;
 
     public static final String CHARGEBACKS = "chargebacks";
     public static final String CHARGEBACKS_PATH = PREFIX + "/" + CHARGEBACKS;

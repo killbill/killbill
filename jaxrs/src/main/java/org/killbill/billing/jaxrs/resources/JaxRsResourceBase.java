@@ -50,6 +50,8 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.JsonBase;
 import org.killbill.billing.jaxrs.json.TagJson;
@@ -344,7 +346,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return properties;
     }
 
-    protected void createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final Boolean externalPayment, final CallContext callContext) throws PaymentApiException {
+    protected DirectPayment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final Boolean externalPayment, final CallContext callContext) throws PaymentApiException {
 
         final List<PluginProperty> properties = new ArrayList<PluginProperty>();
         final String paymentExternalKey = UUID.randomUUID().toString();
@@ -353,7 +355,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                                                   invoiceId.toString(), false);
         properties.add(invoiceProperty);
 
-        paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
+        return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
                                                     properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
     }
 
@@ -372,7 +374,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         };
     }
 
-    protected Iterable<DirectPaymentTransaction> getDirectPaymentTransactions(final List<DirectPayment> payments, final TransactionType transactionType) {
+    public static Iterable<DirectPaymentTransaction> getDirectPaymentTransactions(final List<DirectPayment> payments, final TransactionType transactionType) {
         return Iterables.concat(Iterables.transform(payments, new Function<DirectPayment, Iterable<DirectPaymentTransaction>>() {
             @Override
             public Iterable<DirectPaymentTransaction> apply(final DirectPayment input) {
@@ -385,4 +387,15 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             }
         }));
     }
+
+    public static UUID getInvoiceId(final List<InvoicePayment> invoicePayments, final DirectPayment payment) {
+        final InvoicePayment invoicePayment = Iterables.tryFind(invoicePayments, new Predicate<InvoicePayment>() {
+            @Override
+            public boolean apply(final InvoicePayment input) {
+                return input.getPaymentId().equals(payment.getId()) && input.getType() == InvoicePaymentType.ATTEMPT;
+            }
+        }).orNull();
+        return invoicePayment != null ? invoicePayment.getInvoiceId() : null;
+    }
+
 }

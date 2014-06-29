@@ -33,12 +33,23 @@ import org.killbill.billing.client.model.Chargeback;
 import org.killbill.billing.client.model.Credit;
 import org.killbill.billing.client.model.EventSubscription;
 import org.killbill.billing.client.model.Invoice;
+import org.killbill.billing.client.model.InvoicePayment;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.Refund;
+import org.killbill.billing.client.model.Transaction;
+import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
+import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class TestAccountTimeline extends TestJaxrsBase {
 
@@ -87,7 +98,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         final Refund refund = new Refund();
         refund.setPaymentId(postedPayment.getPaymentId());
         refund.setAmount(refundAmount);
-        killBillClient.createRefund(refund, createdBy, reason, comment);
+        killBillClient.createInvoicePaymentRefund(refund, createdBy, reason, comment);
 
         // Add chargeback
         final BigDecimal chargebackAmount = BigDecimal.ONE;
@@ -114,26 +125,33 @@ public class TestAccountTimeline extends TestJaxrsBase {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
             final AccountTimeline timeline = killBillClient.getAccountTimeline(accountId, auditLevel);
 
-            // Verify payments
             Assert.assertEquals(timeline.getPayments().size(), 1);
-            final Payment paymentJson = timeline.getPayments().get(0);
+            final InvoicePayment payment =  timeline.getPayments().get(0);
+
+            // Verify payments
+            final List<Transaction> purchaseTransactions  = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.PURCHASE.toString());
+            Assert.assertEquals(purchaseTransactions.size(), 1);
+            final Transaction purchaseTransaction = purchaseTransactions.get(0);
 
             // Verify refunds
-            Assert.assertEquals(paymentJson.getRefunds().size(), 1);
-            final Refund refundJson = paymentJson.getRefunds().get(0);
-            Assert.assertEquals(refundJson.getPaymentId(), paymentJson.getPaymentId());
-            Assert.assertEquals(refundJson.getAmount().compareTo(refundAmount), 0);
+            final List<Transaction> refundTransactions  = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.REFUND.toString());
+            Assert.assertEquals(refundTransactions.size(), 1);
+            final Transaction refundTransaction = refundTransactions.get(0);
+            Assert.assertEquals(refundTransaction.getPaymentId(), payment.getPaymentId());
+            Assert.assertEquals(refundTransaction.getAmount().compareTo(refundAmount), 0);
 
             // Verify chargebacks
-            Assert.assertEquals(paymentJson.getChargebacks().size(), 1);
-            final Chargeback chargebackJson = paymentJson.getChargebacks().get(0);
-            Assert.assertEquals(chargebackJson.getPaymentId(), paymentJson.getPaymentId());
-            Assert.assertEquals(chargebackJson.getAmount().compareTo(chargebackAmount), 0);
+            final List<Transaction> chargebackTransactions  = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.CHARGEBACK.toString());
+            Assert.assertEquals(chargebackTransactions.size(), 1);
+            final Transaction chargebackTransaction = chargebackTransactions.get(0);
+            Assert.assertEquals(chargebackTransaction.getPaymentId(), payment.getPaymentId());
+            Assert.assertEquals(chargebackTransaction.getAmount().compareTo(chargebackAmount), 0);
 
             // Verify audits
-            final List<AuditLog> paymentAuditLogs = paymentJson.getAuditLogs();
-            final List<AuditLog> refundAuditLogs = refundJson.getAuditLogs();
-            final List<AuditLog> chargebackAuditLogs = chargebackJson.getAuditLogs();
+            final List<AuditLog> paymentAuditLogs = purchaseTransaction.getAuditLogs();
+            final List<AuditLog> refundAuditLogs = refundTransaction.getAuditLogs();
+            final List<AuditLog> chargebackAuditLogs = chargebackTransaction.getAuditLogs();
+
             if (AuditLevel.NONE.equals(auditLevel)) {
                 // Audits for payments
                 Assert.assertEquals(paymentAuditLogs.size(), 0);

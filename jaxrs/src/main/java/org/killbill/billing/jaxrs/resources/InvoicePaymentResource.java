@@ -19,7 +19,6 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,56 +31,45 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.invoice.api.InvoiceApiException;
-import org.killbill.billing.invoice.api.InvoicePayment;
-import org.killbill.billing.invoice.api.InvoicePaymentApi;
-import org.killbill.billing.jaxrs.json.ChargebackJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
+import org.killbill.billing.jaxrs.json.DirectPaymentJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
-import org.killbill.billing.jaxrs.json.PaymentJson;
+import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
 import org.killbill.billing.jaxrs.json.RefundJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentApi;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-@Path(JaxrsResource.PAYMENTS_PATH)
+@Path(JaxrsResource.INVOICE_PAYMENTS_PATH)
 public class InvoicePaymentResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "paymentId";
@@ -97,6 +85,26 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                   final Clock clock,
                                   final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+    }
+
+
+    @GET
+    @Path("/{paymentId:" + UUID_PATTERN + "}/")
+    @Produces(APPLICATION_JSON)
+    public Response getInvoicePayment(@PathParam("paymentId") final String directPaymentIdStr,
+                                     @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                     @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final UUID directPaymentIdId = UUID.fromString(directPaymentIdStr);
+        final TenantContext tenantContext = context.createContext(request);
+        final DirectPayment directPayment = paymentApi.getPayment(directPaymentIdId, withPluginInfo, pluginProperties, tenantContext);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(directPayment.getAccountId(), auditMode.getLevel(), tenantContext);
+        final DirectPaymentJson paymentJson = new DirectPaymentJson(directPayment, accountAuditLogs);
+        // STEPH (API is broken need to also have the invoiceId)
+        //final InvoicePaymentJson result = new InvoicePaymentJson(directPayment, accountAuditLogs)
+        return Response.status(Response.Status.OK).entity(paymentJson).build();
     }
 
 
@@ -128,17 +136,21 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                     adjustments.put(UUID.fromString(item.getInvoiceItemId()), item.getAmount());
                 }
                 pluginProperties = extractPluginProperties(pluginPropertiesString,
-                                                           new PluginProperty("IPCD_REF_IDS_AMOUNTS", true, false),
-                                                           new PluginProperty("IPCD_REFUND_WITH_ADJUSTMENTS", adjustments, false));
+                                                           new PluginProperty("IPCD_REFUND_WITH_ADJUSTMENTS", "true", false),
+                                                           new PluginProperty("IPCD_REFUND_IDS_AMOUNTS", adjustments, false));
             } else {
                 pluginProperties = extractPluginProperties(pluginPropertiesString,
-                                                           new PluginProperty("IPCD_REF_IDS_AMOUNTS", true, false));
+                                                           new PluginProperty("IPCD_REFUND_WITH_ADJUSTMENTS", "true", false));
             }
         } else {
             pluginProperties = extractPluginProperties(pluginPropertiesString);
         }
-        final DirectPayment result = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, account.getCurrency(), transactionExternalKey,
+
+
+        final DirectPayment result = paymentApi.createRefundWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(), transactionExternalKey,
                                                                                pluginProperties, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
+
+        // STEPH should be changed to return InvoicePayment instead
         return uriBuilder.buildResponse(DirectPaymentResource.class, "getDirectPayment", result.getId(), uriInfo.getBaseUri().toString());
     }
 

@@ -28,7 +28,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableList;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 
 public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
@@ -39,12 +38,12 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
         final BundleJson bundleJson = createBundleWithSubscriptions();
         final InvoiceJson invoiceJson = createInvoice();
-        final PaymentJson paymentJson = createPayment(UUID.fromString(invoiceJson.getAccountId()),
+        final InvoicePaymentJson paymentJson = createPayment(UUID.fromString(invoiceJson.getAccountId()),
                                                                   UUID.fromString(invoiceJson.getInvoiceId()));
 
         final BundleTimelineJson bundleTimelineJson = new BundleTimelineJson(viewId,
                                                                              bundleJson,
-                                                                             ImmutableList.<PaymentJson>of(paymentJson),
+                                                                             ImmutableList.<InvoicePaymentJson>of(paymentJson),
                                                                              ImmutableList.<InvoiceJson>of(invoiceJson),
                                                                              reason);
 
@@ -82,24 +81,20 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
                                      targetDate, invoiceNumber, balance, accountId.toString(), null, null, null, null);
     }
 
-    private PaymentJson createPayment(final UUID accountId, final UUID invoiceId) {
+    private InvoicePaymentJson createPayment(final UUID accountId, final UUID invoiceId) {
         final UUID paymentId = UUID.randomUUID();
         final Integer paymentNumber = 17;
-        final UUID paymentMethodId = UUID.randomUUID();
+        final String paymentExternalKey = UUID.randomUUID().toString();
         final BigDecimal authAmount = BigDecimal.TEN;
         final BigDecimal captureAmount = BigDecimal.ZERO;
         final BigDecimal purchasedAMount = BigDecimal.ZERO;
         final BigDecimal creditAmount = BigDecimal.ZERO;
         final BigDecimal refundAmount = BigDecimal.ZERO;
-        final DateTime paymentRequestedDate = clock.getUTCNow();
-        final DateTime paymentEffectiveDate = clock.getUTCNow();
-        final Integer retryCount = Integer.MAX_VALUE;
         final String currency = "USD";
-        final String status = UUID.randomUUID().toString();
-        final String gatewayErrorCode = "OK";
-        final String gatewayErrorMsg = "Excellent...";
-        return new PaymentJson(authAmount, captureAmount, purchasedAMount, creditAmount, refundAmount, Boolean.FALSE, accountId.toString(), invoiceId.toString(), paymentId.toString(), paymentNumber.toString(),
-                                     paymentMethodId.toString(), paymentRequestedDate, paymentEffectiveDate, retryCount, currency, status,
-                                     gatewayErrorCode, gatewayErrorMsg, null, null, null, null);
+
+        return new InvoicePaymentJson(invoiceId.toString(), accountId.toString(), paymentId.toString(), paymentNumber.toString(),
+                                      paymentExternalKey, authAmount, captureAmount, purchasedAMount, refundAmount, creditAmount, currency,
+                                      UUID.randomUUID().toString(),
+                                      null, null);
     }
 }

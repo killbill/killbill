@@ -30,10 +30,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DirectTransactionJson extends JsonBase {
 
-    private final String directTransactionId;
-    private final String directTransactionExternalKey;
-    private final String directPaymentId;
-    private final String directPaymentExternalKey;
+    private final String transactionId;
+    private final String transactionExternalKey;
+    private final String paymentId;
     private final String transactionType;
     private final DateTime effectiveDate;
     private final String status;
@@ -47,10 +46,9 @@ public class DirectTransactionJson extends JsonBase {
     private final List<PluginPropertyJson> properties;
 
     @JsonCreator
-    public DirectTransactionJson(@JsonProperty("directTransactionId") final String directTransactionId,
-                                 @JsonProperty("directTransactionExternalKey") final String directTransactionExternalKey,
-                                 @JsonProperty("directPaymentId") final String directPaymentId,
-                                 @JsonProperty("directPaymentExternalKey") final String directPaymentExternalKey,
+    public DirectTransactionJson(@JsonProperty("transactionId") final String transactionId,
+                                 @JsonProperty("transactionExternalKey") final String transactionExternalKey,
+                                 @JsonProperty("paymentId") final String directPaymentId,
                                  @JsonProperty("transactionType") final String transactionType,
                                  @JsonProperty("amount") final BigDecimal amount,
                                  @JsonProperty("currency") final String currency,
@@ -63,10 +61,9 @@ public class DirectTransactionJson extends JsonBase {
                                  @JsonProperty("properties") final List<PluginPropertyJson> properties,
                                  @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
-        this.directTransactionId = directTransactionId;
-        this.directTransactionExternalKey = directTransactionExternalKey;
-        this.directPaymentId = directPaymentId;
-        this.directPaymentExternalKey = directPaymentExternalKey;
+        this.transactionId = transactionId;
+        this.transactionExternalKey = transactionExternalKey;
+        this.paymentId = directPaymentId;
         this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;
         this.status = status;
@@ -79,11 +76,10 @@ public class DirectTransactionJson extends JsonBase {
         this.properties = properties;
     }
 
-    public DirectTransactionJson(final DirectPaymentTransaction dpt, final String directPaymentExternalKey, @Nullable final List<AuditLog> directTransactionLogs) {
+    public DirectTransactionJson(final DirectPaymentTransaction dpt, @Nullable final List<AuditLog> directTransactionLogs) {
         this(dpt.getId().toString(),
              dpt.getExternalKey(),
              dpt.getDirectPaymentId().toString(),
-             directPaymentExternalKey,
              dpt.getTransactionType().toString(),
              dpt.getAmount(),
              dpt.getCurrency() != null ? dpt.getCurrency().toString() : null,
@@ -97,20 +93,16 @@ public class DirectTransactionJson extends JsonBase {
              toAuditLogJson(directTransactionLogs));
     }
 
-    public String getDirectTransactionId() {
-        return directTransactionId;
+    public String getTransactionId() {
+        return transactionId;
     }
 
-    public String getDirectTransactionExternalKey() {
-        return directTransactionExternalKey;
+    public String getPaymentId() {
+        return paymentId;
     }
 
-    public String getDirectPaymentId() {
-        return directPaymentId;
-    }
-
-    public String getDirectPaymentExternalKey() {
-        return directPaymentExternalKey;
+    public String getTransactionExternalKey() {
+        return transactionExternalKey;
     }
 
     public String getTransactionType() {
@@ -156,10 +148,9 @@ public class DirectTransactionJson extends JsonBase {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("DirectTransactionJson{");
-        sb.append("directTransactionId='").append(directTransactionId).append('\'');
-        sb.append(", directTransactionExternalKey='").append(directTransactionExternalKey).append('\'');
-        sb.append(", directPaymentId='").append(directPaymentId).append('\'');
-        sb.append(", directPaymentExternalKey='").append(directPaymentExternalKey).append('\'');
+        sb.append("transactionId='").append(transactionId).append('\'');
+        sb.append(", paymentId='").append(paymentId).append('\'');
+        sb.append(", transactionExternalKey='").append(transactionExternalKey).append('\'');
         sb.append(", transactionType='").append(transactionType).append('\'');
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append(", status='").append(status).append('\'');
@@ -191,16 +182,13 @@ public class DirectTransactionJson extends JsonBase {
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
-        if (directPaymentExternalKey != null ? !directPaymentExternalKey.equals(that.directPaymentExternalKey) : that.directPaymentExternalKey != null) {
+        if (transactionExternalKey != null ? !transactionExternalKey.equals(that.transactionExternalKey) : that.transactionExternalKey != null) {
             return false;
         }
-        if (directPaymentId != null ? !directPaymentId.equals(that.directPaymentId) : that.directPaymentId != null) {
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
-        if (directTransactionExternalKey != null ? !directTransactionExternalKey.equals(that.directTransactionExternalKey) : that.directTransactionExternalKey != null) {
-            return false;
-        }
-        if (directTransactionId != null ? !directTransactionId.equals(that.directTransactionId) : that.directTransactionId != null) {
+        if (transactionId != null ? !transactionId.equals(that.transactionId) : that.transactionId != null) {
             return false;
         }
         if (effectiveDate != null ? effectiveDate.compareTo(that.effectiveDate) != 0 : that.effectiveDate != null) {
@@ -233,10 +221,9 @@ public class DirectTransactionJson extends JsonBase {
 
     @Override
     public int hashCode() {
-        int result = directTransactionId != null ? directTransactionId.hashCode() : 0;
-        result = 31 * result + (directTransactionExternalKey != null ? directTransactionExternalKey.hashCode() : 0);
-        result = 31 * result + (directPaymentId != null ? directPaymentId.hashCode() : 0);
-        result = 31 * result + (directPaymentExternalKey != null ? directPaymentExternalKey.hashCode() : 0);
+        int result = transactionId != null ? transactionId.hashCode() : 0;
+        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (transactionExternalKey != null ? transactionExternalKey.hashCode() : 0);
         result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
