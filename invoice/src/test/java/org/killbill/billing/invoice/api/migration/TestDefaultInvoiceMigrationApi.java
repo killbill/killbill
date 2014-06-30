@@ -101,14 +101,6 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
         Assert.assertEquals(unpaid.size(), 2);
     }
 
-    // Check migration invoice IS returned for payment api calls
-    @Test(groups = "slow")
-    public void testPaymentApi() {
-        final List<Invoice> allByAccount = invoicePaymentApi.getAllInvoicesByAccount(accountId, callContext);
-        Assert.assertEquals(allByAccount.size(), 2);
-        Assert.assertTrue(checkContains(allByAccount, regularInvoiceId));
-        Assert.assertTrue(checkContains(allByAccount, migrationInvoiceId));
-    }
 
     // ACCOUNT balance should reflect total of migration and non-migration invoices
     @Test(groups = "slow")

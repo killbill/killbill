@@ -414,7 +414,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
         final DirectPayment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), externalPayment, callContext);
         // STEPH should that live in InvoicePayment instead?
-        return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", result.getId());
+        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
     }
 
     @POST

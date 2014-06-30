@@ -33,6 +33,7 @@ public class DirectTransactionJson extends JsonBase {
     private final String transactionId;
     private final String transactionExternalKey;
     private final String paymentId;
+    private final String paymentExternalKey;
     private final String transactionType;
     private final DateTime effectiveDate;
     private final String status;
@@ -49,6 +50,7 @@ public class DirectTransactionJson extends JsonBase {
     public DirectTransactionJson(@JsonProperty("transactionId") final String transactionId,
                                  @JsonProperty("transactionExternalKey") final String transactionExternalKey,
                                  @JsonProperty("paymentId") final String directPaymentId,
+                                 @JsonProperty("paymentExternalKey") final String paymentExternalKey,
                                  @JsonProperty("transactionType") final String transactionType,
                                  @JsonProperty("amount") final BigDecimal amount,
                                  @JsonProperty("currency") final String currency,
@@ -64,6 +66,7 @@ public class DirectTransactionJson extends JsonBase {
         this.transactionId = transactionId;
         this.transactionExternalKey = transactionExternalKey;
         this.paymentId = directPaymentId;
+        this.paymentExternalKey = paymentExternalKey;
         this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;
         this.status = status;
@@ -76,10 +79,11 @@ public class DirectTransactionJson extends JsonBase {
         this.properties = properties;
     }
 
-    public DirectTransactionJson(final DirectPaymentTransaction dpt, @Nullable final List<AuditLog> directTransactionLogs) {
+    public DirectTransactionJson(final DirectPaymentTransaction dpt, final String paymentExternalKey, @Nullable final List<AuditLog> directTransactionLogs) {
         this(dpt.getId().toString(),
              dpt.getExternalKey(),
              dpt.getDirectPaymentId().toString(),
+             paymentExternalKey,
              dpt.getTransactionType().toString(),
              dpt.getAmount(),
              dpt.getCurrency() != null ? dpt.getCurrency().toString() : null,
@@ -143,6 +147,10 @@ public class DirectTransactionJson extends JsonBase {
 
     public List<PluginPropertyJson> getProperties() {
         return properties;
+    }
+
+    public String getPaymentExternalKey() {
+        return paymentExternalKey;
     }
 
     @Override

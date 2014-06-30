@@ -123,7 +123,7 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
         checkNullParameter(properties, "plugin properties");
         checkPositiveAmount(amount);
 
-        if (paymentMethodId == null && paymentOptions.isExternalPayment()) {
+        if (paymentMethodId == null && !paymentOptions.isExternalPayment()) {
             throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, "paymentMethodId", "should not be null");
         }
 

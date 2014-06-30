@@ -34,10 +34,9 @@ import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.client.KillBillClient;
 import org.killbill.billing.client.KillBillHttpClient;
-import org.killbill.billing.client.model.InvoicePayment;
 import org.killbill.billing.client.model.Payment;
+import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Tenant;
-import org.killbill.billing.client.model.Transaction;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
@@ -257,13 +256,13 @@ public class TestJaxrsBase extends KillbillClient {
         }
     }
 
-    protected static <T extends Payment>  List<Transaction> getDirectPaymentTransactions(final List<T> payments, final String transactionType) {
-        return ImmutableList.copyOf(Iterables.concat(Iterables.transform(payments, new Function<T, Iterable<Transaction>>() {
+    protected static <T extends Payment> List<PaymentTransaction> getDirectPaymentTransactions(final List<T> payments, final String transactionType) {
+        return ImmutableList.copyOf(Iterables.concat(Iterables.transform(payments, new Function<T, Iterable<PaymentTransaction>>() {
             @Override
-            public Iterable<Transaction> apply(final T input) {
-                return Iterables.filter(input.getTransactions(), new Predicate<Transaction>() {
+            public Iterable<PaymentTransaction> apply(final T input) {
+                return Iterables.filter(input.getPaymentTransactions(), new Predicate<PaymentTransaction>() {
                     @Override
-                    public boolean apply(final Transaction input) {
+                    public boolean apply(final PaymentTransaction input) {
                         return input.getTransactionType().equals(transactionType);
                     }
                 });

@@ -45,7 +45,7 @@ public class DirectPaymentJson extends JsonBase {
     private final BigDecimal creditedAmount;
     private final String currency;
     private final String paymentMethodId;
-    private final List<DirectTransactionJson> transactions;
+    private final List<? extends DirectTransactionJson> transactions;
 
     @JsonCreator
     public DirectPaymentJson(@JsonProperty("accountId") final String accountId,
@@ -59,7 +59,7 @@ public class DirectPaymentJson extends JsonBase {
                              @JsonProperty("creditedAmount") final BigDecimal creditedAmount,
                              @JsonProperty("currency") final String currency,
                              @JsonProperty("paymentMethodId") final String paymentMethodId,
-                             @JsonProperty("transactions") final List<DirectTransactionJson> transactions,
+                             @JsonProperty("transactions") final List<? extends DirectTransactionJson> transactions,
                              @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.accountId = accountId;
@@ -98,7 +98,7 @@ public class DirectPaymentJson extends JsonBase {
                                                             @Override
                                                             public DirectTransactionJson apply(final DirectPaymentTransaction directPaymentTransaction) {
                                                                 final List<AuditLog> auditLogsForDirectPaymentTransaction = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentTransaction(directPaymentTransaction.getId());
-                                                                return new DirectTransactionJson(directPaymentTransaction, auditLogsForDirectPaymentTransaction);
+                                                                return new DirectTransactionJson(directPaymentTransaction, directPaymentExternalKey, auditLogsForDirectPaymentTransaction);
                                                             }
                                                         }
                                                        ));
@@ -148,7 +148,7 @@ public class DirectPaymentJson extends JsonBase {
         return paymentMethodId;
     }
 
-    public List<DirectTransactionJson> getTransactions() {
+    public List<? extends DirectTransactionJson> getTransactions() {
         return transactions;
     }
 

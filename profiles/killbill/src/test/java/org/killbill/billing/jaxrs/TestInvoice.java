@@ -159,9 +159,8 @@ public class TestInvoice extends TestJaxrsBase {
             invoicePayment.setPurchasedAmount(cur.getBalance());
             invoicePayment.setAccountId(accountJson.getAccountId());
             invoicePayment.setTargetInvoiceId(cur.getInvoiceId());
-            final InvoicePayments objFromJson = null; // STEPH killBillClient.createInvoicePayment(invoicePayment, true, createdBy, reason, comment);
-            assertEquals(objFromJson.size(), 1);
-            assertEquals(cur.getBalance().compareTo(objFromJson.get(0).getPurchasedAmount()), 0);
+            final InvoicePayment objFromJson = killBillClient.createInvoicePayment(invoicePayment, true, createdBy, reason, comment);
+            assertEquals(cur.getBalance().compareTo(objFromJson.getPurchasedAmount()), 0);
         }
     }
 
@@ -171,8 +170,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Verify we didn't get any invoicePayment
         final List<InvoicePayment> noPaymentsFromJson = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
-        assertEquals(noPaymentsFromJson.size(), 1);
-        final UUID initialPaymentId = noPaymentsFromJson.get(0).getPaymentId();
+        assertEquals(noPaymentsFromJson.size(), 0);
 
         // Get the invoices
         final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
@@ -189,19 +187,12 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Verify we indeed got the invoicePayment
         final List<InvoicePayment> paymentsFromJson = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
-        assertEquals(paymentsFromJson.size(), 2);
-        Payment secondPayment = null;
-        for (final Payment cur : paymentsFromJson) {
-            if (!cur.getPaymentId().equals(initialPaymentId)) {
-                secondPayment = cur;
-                break;
-            }
-        }
-        assertNotNull(secondPayment);
-
+        assertEquals(paymentsFromJson.size(), 1);
+        assertEquals(paymentsFromJson.get(0).getPurchasedAmount().compareTo(BigDecimal.TEN), 0);
+        assertEquals(paymentsFromJson.get(0).getTargetInvoiceId(), invoiceId);
 
         // Check the PaymentMethod from paymentMethodId returned in the Payment object
-        final UUID paymentMethodId = secondPayment.getPaymentMethodId();
+        final UUID paymentMethodId = paymentsFromJson.get(0).getPaymentMethodId();
         final PaymentMethod paymentMethodJson = killBillClient.getPaymentMethod(paymentMethodId);
         assertEquals(paymentMethodJson.getPaymentMethodId(), paymentMethodId);
         assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());

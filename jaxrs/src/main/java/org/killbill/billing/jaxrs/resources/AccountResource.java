@@ -73,7 +73,6 @@ import org.killbill.billing.jaxrs.json.InvoiceJson;
 import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
 import org.killbill.billing.jaxrs.json.OverdueStateJson;
 import org.killbill.billing.jaxrs.json.PaymentMethodJson;
-import org.killbill.billing.jaxrs.json.RefundJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.overdue.OverdueApiException;
@@ -652,17 +651,17 @@ public class AccountResource extends JaxRsResourceBase {
         switch (transactionType) {
             case AUTHORIZE:
                 result = paymentApi.createAuthorization(account, paymentMethodId, directPaymentId, json.getAmount(), currency,
-                                                        json.getTransactionExternalKey(), json.getTransactionExternalKey(),
+                                                        json.getPaymentExternalKey(), json.getTransactionExternalKey(),
                                                         pluginProperties, callContext);
                 break;
             case PURCHASE:
                 result = paymentApi.createPurchase(account, paymentMethodId, directPaymentId, json.getAmount(), currency,
-                                                   json.getTransactionExternalKey(), json.getTransactionExternalKey(),
+                                                   json.getPaymentExternalKey(), json.getTransactionExternalKey(),
                                                    pluginProperties, callContext);
                 break;
             case CREDIT:
                 result = paymentApi.createCredit(account, paymentMethodId, directPaymentId, json.getAmount(), currency,
-                                                 json.getTransactionExternalKey(), json.getTransactionExternalKey(),
+                                                 json.getPaymentExternalKey(), json.getTransactionExternalKey(),
                                                  pluginProperties, callContext);
                 break;
             default:
@@ -690,31 +689,6 @@ public class AccountResource extends JaxRsResourceBase {
             chargebacksJson.add(new ChargebackJson(accountId, chargeback));
         }
         return Response.status(Response.Status.OK).entity(chargebacksJson).build();
-    }
-
-    /*
-     * ************************** REFUNDS ********************************
-     */
-    @GET
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + REFUNDS)
-    @Produces(APPLICATION_JSON)
-    public Response getRefunds(@PathParam("accountId") final String accountId,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
-        final TenantContext tenantContext = context.createContext(request);
-
-        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
-
-        final List<DirectPayment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), tenantContext);
-        final Iterable<DirectPaymentTransaction> transactions = getDirectPaymentTransactions(payments, TransactionType.REFUND);
-
-        final Iterable<RefundJson> result = Iterables.transform(transactions, new Function<DirectPaymentTransaction, RefundJson>() {
-            @Override
-            public RefundJson apply(final DirectPaymentTransaction input) {
-                return new RefundJson(input, null, null);
-            }
-        });
-        final List<RefundJson> realResult = ImmutableList.copyOf(result);
-        return Response.status(Status.OK).entity(realResult).build();
     }
 
     /*

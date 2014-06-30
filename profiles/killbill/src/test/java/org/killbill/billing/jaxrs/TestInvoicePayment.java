@@ -28,12 +28,13 @@ import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.InvoiceItem;
 import org.killbill.billing.client.model.InvoicePayment;
+import org.killbill.billing.client.model.InvoicePaymentTransaction;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.Payments;
-import org.killbill.billing.client.model.Refund;
-import org.killbill.billing.client.model.Transaction;
+import org.killbill.billing.client.model.InvoicePaymentTransaction;
+import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.payment.api.TransactionType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -58,7 +59,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final BigDecimal expectedInvoiceBalance = refundAmount;
 
         // Post and verify the refund
-        final Refund refund = new Refund();
+        final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(invoicePaymentJson.getPaymentId());
         refund.setAmount(refundAmount);
         final Payment paymentAfterRefundJson = killBillClient.createInvoicePaymentRefund(refund, createdBy, reason, comment);
@@ -77,7 +78,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final BigDecimal expectedInvoiceBalance = refundAmount;
 
         // Post and verify the refund
-        final Refund refund = new Refund();
+        final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(paymentJson.getPaymentId());
         refund.setAmount(refundAmount);
         final Payment paymentAfterRefundJson = killBillClient.createInvoicePaymentRefund(refund, createdBy, reason, comment);
@@ -96,10 +97,10 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final BigDecimal expectedInvoiceBalance = BigDecimal.ZERO;
 
         // Post and verify the refund
-        final Refund refund = new Refund();
+        final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(paymentJson.getPaymentId());
         refund.setAmount(refundAmount);
-        refund.setAdjusted(true);
+        refund.setIsAdjusted(true);
         final Payment paymentAfterRefundJson = killBillClient.createInvoicePaymentRefund(refund, createdBy, reason, comment);
         verifyRefund(paymentJson, paymentAfterRefundJson, refundAmount);
 
@@ -116,10 +117,10 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final BigDecimal expectedInvoiceBalance = BigDecimal.ZERO;
 
         // Post and verify the refund
-        final Refund refund = new Refund();
+        final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(paymentJson.getPaymentId());
         refund.setAmount(refundAmount);
-        refund.setAdjusted(true);
+        refund.setIsAdjusted(true);
         final Payment paymentAfterRefundJson = killBillClient.createInvoicePaymentRefund(refund, createdBy, reason, comment);
         verifyRefund(paymentJson, paymentAfterRefundJson, refundAmount);
 
@@ -140,10 +141,10 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final BigDecimal expectedInvoiceBalance = BigDecimal.ZERO;
 
         // Post and verify the refund
-        final Refund refund = new Refund();
+        final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(paymentJson.getPaymentId());
         refund.setAmount(refundAmount);
-        refund.setAdjusted(true);
+        refund.setIsAdjusted(true);
         final InvoiceItem adjustment = new InvoiceItem();
         adjustment.setInvoiceItemId(itemToAdjust.getInvoiceItemId());
         /* null amount means full adjustment for that item */
@@ -168,9 +169,9 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final BigDecimal expectedInvoiceBalance = BigDecimal.ZERO;
 
         // Post and verify the refund
-        final Refund refund = new Refund();
+        final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(paymentJson.getPaymentId());
-        refund.setAdjusted(true);
+        refund.setIsAdjusted(true);
         final InvoiceItem adjustment = new InvoiceItem();
         adjustment.setInvoiceItemId(itemToAdjust.getInvoiceItemId());
         adjustment.setAmount(refundAmount);
@@ -187,7 +188,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         InvoicePayment lastPayment = setupScenarioWithPayment();
 
         for (int i = 0; i < 5; i++) {
-            final Refund refund = new Refund();
+            final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
             refund.setPaymentId(lastPayment.getPaymentId());
             refund.setAmount(lastPayment.getPurchasedAmount());
             killBillClient.createInvoicePaymentRefund(refund, createdBy, reason, comment);
@@ -203,7 +204,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayments allPayments = killBillClient.getInvoicePaymentsForAccount(lastPayment.getAccountId());
         Assert.assertEquals(allPayments.size(), 6);
 
-        final List<Transaction> objRefundFromJson = getDirectPaymentTransactions(allPayments, TransactionType.REFUND.toString());
+        final List<PaymentTransaction> objRefundFromJson = getDirectPaymentTransactions(allPayments, TransactionType.REFUND.toString());
         Assert.assertEquals(objRefundFromJson.size(), 5);
 
         Payments paymentsPage = killBillClient.getPayments(0L, 1L);
@@ -235,17 +236,17 @@ public class TestInvoicePayment extends TestJaxrsBase {
         Assert.assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());
 
         // Verify the refunds
-        final List<Transaction> objRefundFromJson = getDirectPaymentTransactions(paymentsForAccount, TransactionType.REFUND.toString());
+        final List<PaymentTransaction> objRefundFromJson = getDirectPaymentTransactions(paymentsForAccount, TransactionType.REFUND.toString());
         Assert.assertEquals(objRefundFromJson.size(), 0);
         return paymentJson;
     }
 
     private void verifyRefund(final InvoicePayment paymentJson, final Payment paymentAfterRefund, final BigDecimal refundAmount) throws KillBillClientException {
 
-        final List<Transaction> transactions = getDirectPaymentTransactions(ImmutableList.of(paymentAfterRefund), TransactionType.REFUND.toString());
+        final List<PaymentTransaction> transactions = getDirectPaymentTransactions(ImmutableList.of(paymentAfterRefund), TransactionType.REFUND.toString());
         Assert.assertEquals(transactions.size(), 1);
 
-        final Transaction refund = transactions.get(0);
+        final PaymentTransaction refund = transactions.get(0);
         Assert.assertEquals(refund.getPaymentId(), paymentJson.getPaymentId());
         Assert.assertEquals(refund.getAmount().setScale(2, RoundingMode.HALF_UP), refundAmount.setScale(2, RoundingMode.HALF_UP));
         Assert.assertEquals(refund.getCurrency(), DEFAULT_CURRENCY);

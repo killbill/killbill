@@ -34,6 +34,7 @@ public class InvoicePaymentJson extends DirectPaymentJson {
 
     private final String targetInvoiceId;
 
+
     @JsonCreator
     public InvoicePaymentJson(@JsonProperty("targetInvoiceId") final String targetInvoiceId,
                               @JsonProperty("accountId") final String accountId,
@@ -47,7 +48,7 @@ public class InvoicePaymentJson extends DirectPaymentJson {
                               @JsonProperty("creditedAmount") final BigDecimal creditedAmount,
                               @JsonProperty("currency") final String currency,
                               @JsonProperty("paymentMethodId") final String paymentMethodId,
-                              @JsonProperty("transactions") final List<DirectTransactionJson> transactions,
+                              @JsonProperty("transactions") final List<? extends DirectTransactionJson> transactions,
                               @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(accountId, paymentId, paymentNumber, paymentExternalKey, authAmount, capturedAmount, purchasedAmount, refundedAmount, creditedAmount, currency, paymentMethodId, transactions, auditLogs);
         this.targetInvoiceId = targetInvoiceId;
@@ -55,6 +56,7 @@ public class InvoicePaymentJson extends DirectPaymentJson {
 
     public InvoicePaymentJson(final DirectPayment dp, @Nullable final UUID invoiceId, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(dp, accountAuditLogs);
+        // STEPH we should build InvoicePaymentTransactionJson instead of DirectTransactionJson here.
         this.targetInvoiceId = invoiceId != null ? invoiceId.toString() : null;
     }
 

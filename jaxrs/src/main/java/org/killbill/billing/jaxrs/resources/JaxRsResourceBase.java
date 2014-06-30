@@ -355,7 +355,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                                                   invoiceId.toString(), false);
         properties.add(invoiceProperty);
 
-        return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
+        final UUID paymentMethodId = externalPayment ? null : account.getPaymentMethodId();
+        return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
                                                     properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
     }
 

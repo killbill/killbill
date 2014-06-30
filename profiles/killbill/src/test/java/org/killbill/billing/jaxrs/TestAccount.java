@@ -33,14 +33,9 @@ import org.killbill.billing.client.model.Accounts;
 import org.killbill.billing.client.model.AuditLog;
 import org.killbill.billing.client.model.CustomField;
 import org.killbill.billing.client.model.InvoicePayments;
-import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethodPluginDetail;
-import org.killbill.billing.client.model.Payments;
-import org.killbill.billing.client.model.Refund;
-import org.killbill.billing.client.model.Refunds;
 import org.killbill.billing.client.model.Tag;
-import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -186,10 +181,6 @@ public class TestAccount extends TestJaxrsBase {
         // Verify payments
         final InvoicePayments objFromJson = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
         Assert.assertEquals(objFromJson.size(), 1);
-
-        // Verify refunds
-        final Refunds objRefundFromJson = killBillClient.getRefundsForAccount(accountJson.getAccountId());
-        Assert.assertEquals(objRefundFromJson.size(), 0);
     }
 
     @Test(groups = "slow", description = "Add tags to account")

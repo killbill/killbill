@@ -141,6 +141,12 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
+    public InvoicePayment createChargeback(final UUID paymentId, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
+        // STEPH not implemented yet
+        return null;
+    }
+
+    @Override
     public void consumeExistingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) throws InvoiceApiException {
         dao.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, context);
     }

@@ -17,13 +17,9 @@
 package org.killbill.billing.invoice.api.invoice;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
@@ -31,6 +27,8 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -112,7 +110,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         final InvoicePayment payment = createAndPersistPayment(invoiceInternalApi, clock, invoice.getId(), invoiceAmount, CURRENCY, internalCallContext);
 
         // Verify the initial invoice balance
-        final BigDecimal initialInvoiceBalance = invoicePaymentApi.getInvoice(invoice.getId(), callContext).getBalance();
+        final BigDecimal initialInvoiceBalance = invoiceInternalApi.getInvoiceById(invoice.getId(), internalCallContext).getBalance();
         Assert.assertEquals(initialInvoiceBalance.compareTo(BigDecimal.ZERO), 0);
 
         // Create a full refund with no adjustment
@@ -125,7 +123,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         Assert.assertEquals(refund.getType(), InvoicePaymentType.REFUND);
 
         // Verify the current invoice balance
-        final BigDecimal newInvoiceBalance = invoicePaymentApi.getInvoice(invoice.getId(), callContext).getBalance();
+        final BigDecimal newInvoiceBalance = invoiceInternalApi.getInvoiceById(invoice.getId(), internalCallContext).getBalance();
         Assert.assertEquals(newInvoiceBalance.compareTo(finalInvoiceAmount), 0);
     }
 }

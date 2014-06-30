@@ -42,11 +42,13 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentApi;
+import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
-import org.killbill.billing.jaxrs.json.DirectPaymentJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
-import org.killbill.billing.jaxrs.json.RefundJson;
+import org.killbill.billing.jaxrs.json.InvoicePaymentTransactionJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.DirectPayment;
@@ -64,7 +66,9 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -74,6 +78,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "paymentId";
 
+    private final InvoicePaymentApi invoicePaymentApi;
 
     @Inject
     public InvoicePaymentResource(final AccountUserApi accountUserApi,
@@ -82,50 +87,58 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                   final TagUserApi tagUserApi,
                                   final CustomFieldUserApi customFieldUserApi,
                                   final AuditUserApi auditUserApi,
+                                  final InvoicePaymentApi invoicePaymentApi,
                                   final Clock clock,
                                   final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        this.invoicePaymentApi = invoicePaymentApi;
     }
-
 
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
     public Response getInvoicePayment(@PathParam("paymentId") final String directPaymentIdStr,
-                                     @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
-                                     @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
-                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+                                      @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID directPaymentIdId = UUID.fromString(directPaymentIdStr);
         final TenantContext tenantContext = context.createContext(request);
         final DirectPayment directPayment = paymentApi.getPayment(directPaymentIdId, withPluginInfo, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(directPayment.getAccountId(), auditMode.getLevel(), tenantContext);
-        final DirectPaymentJson paymentJson = new DirectPaymentJson(directPayment, accountAuditLogs);
-        // STEPH (API is broken need to also have the invoiceId)
-        //final InvoicePaymentJson result = new InvoicePaymentJson(directPayment, accountAuditLogs)
-        return Response.status(Response.Status.OK).entity(paymentJson).build();
-    }
 
+        final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePayments(directPaymentIdId, tenantContext);
+        final InvoicePayment invoicePayment = Iterables.tryFind(invoicePayments, new Predicate<InvoicePayment>() {
+            @Override
+            public boolean apply(final InvoicePayment input) {
+                return input.getType() == InvoicePaymentType.ATTEMPT;
+            }
+        }).orNull();
+        final UUID invoiceId = invoicePayment != null ? invoicePayment.getInvoiceId() : null;
+
+        final InvoicePaymentJson result = new InvoicePaymentJson(directPayment, invoiceId, accountAuditLogs);
+        return Response.status(Response.Status.OK).entity(result).build();
+    }
 
     @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response createRefundWithAdjustments(final RefundJson json,
-                                 @PathParam("paymentId") final String paymentId,
-                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
-                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                 @HeaderParam(HDR_REASON) final String reason,
-                                 @HeaderParam(HDR_COMMENT) final String comment,
-                                 @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-
+    public Response createRefundWithAdjustments(final InvoicePaymentTransactionJson json,
+                                                @PathParam("paymentId") final String paymentId,
+                                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                @HeaderParam(HDR_REASON) final String reason,
+                                                @HeaderParam(HDR_COMMENT) final String comment,
+                                                @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID paymentUuid = UUID.fromString(paymentId);
         final DirectPayment payment = paymentApi.getPayment(paymentUuid, false, ImmutableList.<PluginProperty>of(), callContext);
-        final Account account= accountUserApi.getAccountById(payment.getAccountId(), callContext);
+        final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
         final Iterable<PluginProperty> pluginProperties;
         final String transactionExternalKey = UUID.randomUUID().toString();
@@ -146,12 +159,9 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
             pluginProperties = extractPluginProperties(pluginPropertiesString);
         }
 
-
         final DirectPayment result = paymentApi.createRefundWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(), transactionExternalKey,
                                                                                pluginProperties, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
-
-        // STEPH should be changed to return InvoicePayment instead
-        return uriBuilder.buildResponse(DirectPaymentResource.class, "getDirectPayment", result.getId(), uriInfo.getBaseUri().toString());
+        return uriBuilder.buildResponse(InvoicePaymentResource.class, "getInvoicePayment", result.getId(), uriInfo.getBaseUri().toString());
     }
 
     @GET

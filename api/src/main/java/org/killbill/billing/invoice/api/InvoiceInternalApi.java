@@ -63,6 +63,9 @@ public interface InvoiceInternalApi {
     public InvoicePayment createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
                                        String transactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
+
+    public InvoicePayment createChargeback(UUID paymentId, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+
     /**
      * Rebalance CBA for account which have credit and unpaid invoices
      *

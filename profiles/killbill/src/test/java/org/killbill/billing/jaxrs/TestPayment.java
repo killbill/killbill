@@ -29,7 +29,7 @@ import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.Payments;
-import org.killbill.billing.client.model.Transaction;
+import org.killbill.billing.client.model.PaymentTransaction;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -51,7 +51,7 @@ public class TestPayment extends TestJaxrsBase {
                                           final String PaymentExternalKey, final int PaymentNb) throws Exception {
         // Authorization
         final String authTransactionExternalKey = UUID.randomUUID().toString();
-        final Transaction authTransaction = new Transaction();
+        final PaymentTransaction authTransaction = new PaymentTransaction();
         authTransaction.setAmount(BigDecimal.TEN);
         authTransaction.setCurrency(account.getCurrency());
         authTransaction.setPaymentExternalKey(PaymentExternalKey);
@@ -63,7 +63,7 @@ public class TestPayment extends TestJaxrsBase {
 
         // Capture 1
         final String capture1TransactionExternalKey = UUID.randomUUID().toString();
-        final Transaction captureTransaction = new Transaction();
+        final PaymentTransaction captureTransaction = new PaymentTransaction();
         captureTransaction.setPaymentId(authPayment.getPaymentId());
         captureTransaction.setAmount(BigDecimal.ONE);
         captureTransaction.setCurrency(account.getCurrency());
@@ -88,7 +88,7 @@ public class TestPayment extends TestJaxrsBase {
 
         // Refund
         final String refundTransactionExternalKey = UUID.randomUUID().toString();
-        final Transaction refundTransaction = new Transaction();
+        final PaymentTransaction refundTransaction = new PaymentTransaction();
         refundTransaction.setPaymentId(authPayment.getPaymentId());
         refundTransaction.setAmount(new BigDecimal("2"));
         refundTransaction.setCurrency(account.getCurrency());
@@ -132,21 +132,21 @@ public class TestPayment extends TestJaxrsBase {
         Assert.assertEquals(PaymentsForAccount.get(PaymentNb - 1), Payment);
     }
 
-    private void verifyPaymentTransaction(final UUID PaymentId, final Transaction Transaction,
+    private void verifyPaymentTransaction(final UUID PaymentId, final PaymentTransaction PaymentTransaction,
                                                 final String PaymentExternalKey, final String TransactionExternalKey,
                                                 final Account account, @Nullable final BigDecimal amount, final String transactionType) {
-        Assert.assertEquals(Transaction.getPaymentId(), PaymentId);
-        Assert.assertNotNull(Transaction.getTransactionId());
-        Assert.assertEquals(Transaction.getTransactionType(), transactionType);
-        Assert.assertEquals(Transaction.getStatus(), "SUCCESS");
+        Assert.assertEquals(PaymentTransaction.getPaymentId(), PaymentId);
+        Assert.assertNotNull(PaymentTransaction.getTransactionId());
+        Assert.assertEquals(PaymentTransaction.getTransactionType(), transactionType);
+        Assert.assertEquals(PaymentTransaction.getStatus(), "SUCCESS");
         if (amount == null) {
-            Assert.assertNull(Transaction.getAmount());
-            Assert.assertNull(Transaction.getCurrency());
+            Assert.assertNull(PaymentTransaction.getAmount());
+            Assert.assertNull(PaymentTransaction.getCurrency());
         } else {
-            Assert.assertEquals(Transaction.getAmount().compareTo(amount), 0);
-            Assert.assertEquals(Transaction.getCurrency(), account.getCurrency());
+            Assert.assertEquals(PaymentTransaction.getAmount().compareTo(amount), 0);
+            Assert.assertEquals(PaymentTransaction.getCurrency(), account.getCurrency());
         }
-        Assert.assertEquals(Transaction.getTransactionExternalKey(), TransactionExternalKey);
-        Assert.assertEquals(Transaction.getPaymentExternalKey(), PaymentExternalKey);
+        Assert.assertEquals(PaymentTransaction.getTransactionExternalKey(), TransactionExternalKey);
+        Assert.assertEquals(PaymentTransaction.getPaymentExternalKey(), PaymentExternalKey);
     }
 }

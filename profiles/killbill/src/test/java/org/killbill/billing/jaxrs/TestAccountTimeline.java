@@ -34,22 +34,14 @@ import org.killbill.billing.client.model.Credit;
 import org.killbill.billing.client.model.EventSubscription;
 import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.InvoicePayment;
+import org.killbill.billing.client.model.InvoicePaymentTransaction;
 import org.killbill.billing.client.model.Payment;
-import org.killbill.billing.client.model.Refund;
-import org.killbill.billing.client.model.Transaction;
-import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class TestAccountTimeline extends TestJaxrsBase {
 
@@ -95,7 +87,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         // Add refund
         final Payment postedPayment = killBillClient.getPaymentsForAccount(accountJson.getAccountId()).get(0);
         final BigDecimal refundAmount = BigDecimal.ONE;
-        final Refund refund = new Refund();
+        final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(postedPayment.getPaymentId());
         refund.setAmount(refundAmount);
         killBillClient.createInvoicePaymentRefund(refund, createdBy, reason, comment);
@@ -126,24 +118,24 @@ public class TestAccountTimeline extends TestJaxrsBase {
             final AccountTimeline timeline = killBillClient.getAccountTimeline(accountId, auditLevel);
 
             Assert.assertEquals(timeline.getPayments().size(), 1);
-            final InvoicePayment payment =  timeline.getPayments().get(0);
+            final InvoicePayment payment = timeline.getPayments().get(0);
 
             // Verify payments
-            final List<Transaction> purchaseTransactions  = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.PURCHASE.toString());
+            final List<PaymentTransaction> purchaseTransactions = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.PURCHASE.toString());
             Assert.assertEquals(purchaseTransactions.size(), 1);
-            final Transaction purchaseTransaction = purchaseTransactions.get(0);
+            final PaymentTransaction purchaseTransaction = purchaseTransactions.get(0);
 
             // Verify refunds
-            final List<Transaction> refundTransactions  = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.REFUND.toString());
+            final List<PaymentTransaction> refundTransactions = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.REFUND.toString());
             Assert.assertEquals(refundTransactions.size(), 1);
-            final Transaction refundTransaction = refundTransactions.get(0);
+            final PaymentTransaction refundTransaction = refundTransactions.get(0);
             Assert.assertEquals(refundTransaction.getPaymentId(), payment.getPaymentId());
             Assert.assertEquals(refundTransaction.getAmount().compareTo(refundAmount), 0);
 
             // Verify chargebacks
-            final List<Transaction> chargebackTransactions  = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.CHARGEBACK.toString());
+            final List<PaymentTransaction> chargebackTransactions = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.CHARGEBACK.toString());
             Assert.assertEquals(chargebackTransactions.size(), 1);
-            final Transaction chargebackTransaction = chargebackTransactions.get(0);
+            final PaymentTransaction chargebackTransaction = chargebackTransactions.get(0);
             Assert.assertEquals(chargebackTransaction.getPaymentId(), payment.getPaymentId());
             Assert.assertEquals(chargebackTransaction.getAmount().compareTo(chargebackAmount), 0);
 
