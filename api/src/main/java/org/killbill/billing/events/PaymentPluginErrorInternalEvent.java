@@ -17,6 +17,7 @@ package org.killbill.billing.events;
 
 import java.util.UUID;
 
+import org.killbill.billing.payment.api.TransactionType;
 
 public interface PaymentPluginErrorInternalEvent extends BusInternalEvent {
 
@@ -27,4 +28,6 @@ public interface PaymentPluginErrorInternalEvent extends BusInternalEvent {
     public UUID getAccountId();
 
     public UUID getPaymentId();
+
+    public TransactionType getTransactionType();
 }

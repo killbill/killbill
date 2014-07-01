@@ -51,9 +51,9 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.DirectPaymentAutomatonRunner;
+import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
@@ -112,133 +112,37 @@ public class DirectPaymentProcessor extends ProcessorBase {
     public DirectPayment createAuthorization(final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID directPaymentId, final BigDecimal amount, final Currency currency,
                                              final String directPaymentExternalKey, final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                              final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-
-        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
-
-        final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.AUTHORIZE,
-                                                                             account,
-                                                                             paymentMethodId,
-                                                                             directPaymentId,
-                                                                             directPaymentExternalKey,
-                                                                             directPaymentTransactionExternalKey,
-                                                                             amount,
-                                                                             currency,
-                                                                             shouldLockAccountAndDispatch,
-                                                                             properties,
-                                                                             callContext,
-                                                                             internalCallContext);
-        // TODO STEPH We should try to post the event from within transaction
-        final DirectPayment directPayment = getPayment(nonNullDirectPaymentId, true, properties, callContext, internalCallContext);
-        postPaymentEvent(account, directPayment, directPaymentTransactionExternalKey, internalCallContext);
-        return directPayment;
+        return performOperation(TransactionType.AUTHORIZE, account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public DirectPayment createCapture(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency,
                                        final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                        final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
 
-        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
-
-        final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.CAPTURE,
-                                                                             account,
-                                                                             directPaymentId,
-                                                                             directPaymentTransactionExternalKey,
-                                                                             amount,
-                                                                             currency,
-                                                                             shouldLockAccountAndDispatch,
-                                                                             properties,
-                                                                             callContext,
-                                                                             internalCallContext);
-
-        final DirectPayment directPayment = getPayment(nonNullDirectPaymentId, true, properties, callContext, internalCallContext);
-        postPaymentEvent(account, directPayment, directPaymentTransactionExternalKey, internalCallContext);
-        return directPayment;
+        return performOperation(TransactionType.CAPTURE, account, null, directPaymentId, amount, currency, null, directPaymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public DirectPayment createPurchase(final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID directPaymentId, final BigDecimal amount, final Currency currency,
                                         final String directPaymentExternalKey, final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                         final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-
-        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
-
-        final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.PURCHASE,
-                                                                             account,
-                                                                             paymentMethodId,
-                                                                             directPaymentId,
-                                                                             directPaymentExternalKey,
-                                                                             directPaymentTransactionExternalKey,
-                                                                             amount,
-                                                                             currency,
-                                                                             shouldLockAccountAndDispatch,
-                                                                             properties,
-                                                                             callContext,
-                                                                             internalCallContext);
-
-        final DirectPayment directPayment = getPayment(nonNullDirectPaymentId, true, properties, callContext, internalCallContext);
-        postPaymentEvent(account, directPayment, directPaymentTransactionExternalKey, internalCallContext);
-        return directPayment;
+        return performOperation(TransactionType.PURCHASE, account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public DirectPayment createVoid(final Account account, final UUID directPaymentId, final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                     final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-
-        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
-
-        final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.VOID,
-                                                                             account,
-                                                                             directPaymentId,
-                                                                             directPaymentTransactionExternalKey,
-                                                                             shouldLockAccountAndDispatch,
-                                                                             properties,
-                                                                             callContext,
-                                                                             internalCallContext);
-        final DirectPayment directPayment = getPayment(nonNullDirectPaymentId, true, properties, callContext, internalCallContext);
-        postPaymentEvent(account, directPayment, directPaymentTransactionExternalKey, internalCallContext);
-        return directPayment;
+        return performOperation(TransactionType.VOID, account, null, directPaymentId, null, null, null, directPaymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public DirectPayment createRefund(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency,
                                       final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                       final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-
-        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
-
-        final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.REFUND,
-                                                                             account,
-                                                                             directPaymentId,
-                                                                             directPaymentTransactionExternalKey,
-                                                                             amount,
-                                                                             currency,
-                                                                             shouldLockAccountAndDispatch,
-                                                                             properties,
-                                                                             callContext,
-                                                                             internalCallContext);
-        final DirectPayment directPayment = getPayment(nonNullDirectPaymentId, true, properties, callContext, internalCallContext);
-        postPaymentEvent(account, directPayment, directPaymentTransactionExternalKey, internalCallContext);
-        return directPayment;
+        return performOperation(TransactionType.REFUND, account, null, directPaymentId, amount, currency, null, directPaymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public DirectPayment createCredit(final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID directPaymentId, final BigDecimal amount, final Currency currency,
                                       final String directPaymentExternalKey, final String directPaymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                       final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-
-        validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
-
-        final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(TransactionType.CREDIT,
-                                                                             account,
-                                                                             paymentMethodId,
-                                                                             directPaymentId,
-                                                                             directPaymentExternalKey,
-                                                                             directPaymentTransactionExternalKey,
-                                                                             amount,
-                                                                             currency,
-                                                                             shouldLockAccountAndDispatch,
-                                                                             properties,
-                                                                             callContext,
-                                                                             internalCallContext);
-        final DirectPayment directPayment = getPayment(nonNullDirectPaymentId, true, properties, callContext, internalCallContext);
-        postPaymentEvent(account, directPayment, directPaymentTransactionExternalKey, internalCallContext);
-        return directPayment;
+        return performOperation(TransactionType.CREDIT, account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public List<DirectPayment> getAccountPayments(final UUID accountId, final InternalTenantContext tenantContext) throws PaymentApiException {
@@ -246,13 +150,13 @@ public class DirectPaymentProcessor extends ProcessorBase {
         final List<PaymentTransactionModelDao> transactionsModelDao = paymentDao.getDirectTransactionsForAccount(accountId, tenantContext);
 
         return Lists.<PaymentModelDao, DirectPayment>transform(paymentsModelDao,
-                                                                     new Function<PaymentModelDao, DirectPayment>() {
-                                                                         @Override
-                                                                         public DirectPayment apply(final PaymentModelDao curPaymentModelDao) {
-                                                                             return toDirectPayment(curPaymentModelDao, transactionsModelDao, null);
-                                                                         }
-                                                                     }
-                                                                    );
+                                                               new Function<PaymentModelDao, DirectPayment>() {
+                                                                   @Override
+                                                                   public DirectPayment apply(final PaymentModelDao curPaymentModelDao) {
+                                                                       return toDirectPayment(curPaymentModelDao, transactionsModelDao, null);
+                                                                   }
+                                                               }
+                                                              );
     }
 
     public void notifyPendingPaymentOfStateChanged(final Account account, UUID transactionId, final boolean isSuccess, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
@@ -284,7 +188,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
         final DateTime utcNow = clock.getUTCNow();
         final PaymentTransactionModelDao chargebackTransaction = new PaymentTransactionModelDao(utcNow, utcNow, chargebackTransactionExternalKey, transactionModelDao.getPaymentId(),
 
-                                                                                                            TransactionType.CHARGEBACK, utcNow, TransactionStatus.SUCCESS, amount, currency, null, null);
+                                                                                                TransactionType.CHARGEBACK, utcNow, TransactionStatus.SUCCESS, amount, currency, null, null);
         final State currentPaymentState = directPaymentAutomatonRunner.fetchNextState("CHARGEBACK_INIT", true);
 
         // TODO STEPH we could create a DAO operation to do both steps at once
@@ -321,7 +225,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                               new EntityPaginationBuilder<DirectPayment, PaymentApiException>() {
                                                   @Override
                                                   public Pagination<DirectPayment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                      final Pagination<DirectPayment>  result = getPayments(offset, limit, pluginName, properties, tenantContext, internalTenantContext);
+                                                      final Pagination<DirectPayment> result = getPayments(offset, limit, pluginName, properties, tenantContext, internalTenantContext);
                                                       return result;
                                                   }
                                               }
@@ -336,7 +240,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                        @Override
                                        public Pagination<PaymentModelDao> build() {
                                            // Find all payments for all accounts
-                                           final Pagination<PaymentModelDao> result  = paymentDao.getDirectPayments(pluginName, offset, limit, internalTenantContext);
+                                           final Pagination<PaymentModelDao> result = paymentDao.getDirectPayments(pluginName, offset, limit, internalTenantContext);
                                            return result;
                                        }
                                    },
@@ -426,6 +330,35 @@ public class DirectPaymentProcessor extends ProcessorBase {
         return toDirectPayment(paymentModelDao, transactionsForAccount, pluginTransactions);
     }
 
+    private DirectPayment performOperation(final TransactionType transactionType, final Account account, final UUID paymentMethodId, final UUID directPaymentId, final BigDecimal amount, final Currency currency,
+                                           final String directPaymentExternalKey, final String directPaymentTransactionExternalKey,
+                                           final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties, final CallContext callContext,
+                                           final InternalCallContext internalCallContext) throws PaymentApiException {
+
+        DirectPayment directPayment = null;
+        try {
+            validateUniqueTransactionExternalKey(directPaymentTransactionExternalKey, internalCallContext);
+
+            final UUID nonNullDirectPaymentId = directPaymentAutomatonRunner.run(transactionType,
+                                                                                 account,
+                                                                                 paymentMethodId,
+                                                                                 directPaymentId,
+                                                                                 directPaymentExternalKey,
+                                                                                 directPaymentTransactionExternalKey,
+                                                                                 amount,
+                                                                                 currency,
+                                                                                 shouldLockAccountAndDispatch,
+                                                                                 properties,
+                                                                                 callContext,
+                                                                                 internalCallContext);
+            directPayment = getPayment(nonNullDirectPaymentId, true, properties, callContext, internalCallContext);
+            return directPayment;
+        } finally {
+            postPaymentEvent(account, transactionType, directPayment, directPaymentTransactionExternalKey, internalCallContext);
+
+        }
+    }
+
     private void validateUniqueTransactionExternalKey(final String transactionExternalKey, final InternalTenantContext tenantContext) throws PaymentApiException {
         final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectPaymentTransactionsByExternalKey(transactionExternalKey, tenantContext);
         final PaymentTransactionModelDao transactionAlreadyExists = Iterables.tryFind(transactions, new Predicate<PaymentTransactionModelDao>() {
@@ -499,30 +432,31 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                         curPaymentModelDao.getPaymentMethodId(), curPaymentModelDao.getPaymentNumber(), curPaymentModelDao.getExternalKey(), sortedTransactions);
     }
 
-    private void postPaymentEvent(final Account account, final DirectPayment directPayment, final String transactionExternalKey, final InternalCallContext context) {
-        final BusInternalEvent event = buildPaymentEvent(account, directPayment, transactionExternalKey, context);
+    private void postPaymentEvent(final Account account, final TransactionType transactionType, @Nullable final DirectPayment directPayment, final String transactionExternalKey, final InternalCallContext context) {
+        final BusInternalEvent event = buildPaymentEvent(account, transactionType, directPayment, transactionExternalKey, context);
         postPaymentEvent(event, account.getId(), context);
     }
 
-    private BusInternalEvent buildPaymentEvent(final Account account, final DirectPayment directPayment, final String transactionExternalKey, final InternalCallContext context) {
+    private BusInternalEvent buildPaymentEvent(final Account account, final TransactionType transactionType, @Nullable final DirectPayment directPayment, final String transactionExternalKey, final InternalCallContext context) {
 
+        if (directPayment == null) {
+            return new DefaultPaymentErrorEvent(account.getId(),
+                                                null,
+                                                null,
+                                                transactionType,
+                                                "No payment method",
+                                                context.getAccountRecordId(),
+                                                context.getTenantRecordId(),
+                                                context.getUserToken());
+
+        }
 
         final DirectPaymentTransaction directPaymentTransaction = directPayment.getTransactions().get(directPayment.getTransactions().size() - 1);
+        // If the payment/transaction was created then it should match the transactionExternalKey
+        Preconditions.checkState(directPaymentTransaction.getExternalKey().equals(transactionExternalKey));
+        Preconditions.checkState(directPaymentTransaction.getTransactionType().equals(transactionType));
 
-        /* STEPH
-        1. Should really use the last transaction for 'that' transactionExternalKey -> meaning if there is none then we did not create a transaction => threw some exception earlier.
-        2. What if there is no such transaction/payment, which event do we post since we don't have any ID ?
-
-        Iterables.<DirectPaymentTransaction>tryFind(directPayment.getTransactions(),
-                                                                                                              new Predicate<DirectPaymentTransaction>() {
-                                                                                                                  @Override
-                                                                                                                  public boolean apply(final DirectPaymentTransaction input) {
-                                                                                                                      return input.getExternalKey().equals(transactionExternalKey);
-                                                                                                                  }
-                                                                                                              }
-                                                                                                             ).get()
-                                                                                                             */
-
+        final TransactionStatus transactionStatus = directPaymentTransaction.getTransactionStatus();
         switch (directPaymentTransaction.getTransactionStatus()) {
             case SUCCESS:
             case PENDING:
@@ -531,7 +465,8 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                                    directPayment.getId(),
                                                    directPaymentTransaction.getAmount(),
                                                    directPayment.getPaymentNumber(),
-                                                   directPaymentTransaction.getTransactionStatus(),
+                                                   transactionStatus,
+                                                   transactionType,
                                                    directPaymentTransaction.getEffectiveDate(),
                                                    context.getAccountRecordId(),
                                                    context.getTenantRecordId(),
@@ -540,6 +475,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
                 return new DefaultPaymentErrorEvent(account.getId(),
                                                     null,
                                                     directPayment.getId(),
+                                                    transactionType,
                                                     directPaymentTransaction.getPaymentInfoPlugin() == null ? null : directPaymentTransaction.getPaymentInfoPlugin().getGatewayError(),
                                                     context.getAccountRecordId(),
                                                     context.getTenantRecordId(),
@@ -549,6 +485,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
                 return new DefaultPaymentPluginErrorEvent(account.getId(),
                                                           null,
                                                           directPayment.getId(),
+                                                          transactionType,
                                                           directPaymentTransaction.getPaymentInfoPlugin() == null ? null : directPaymentTransaction.getPaymentInfoPlugin().getGatewayError(),
                                                           context.getAccountRecordId(),
                                                           context.getTenantRecordId(),

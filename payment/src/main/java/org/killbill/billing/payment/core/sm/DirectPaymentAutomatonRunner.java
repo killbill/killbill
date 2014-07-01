@@ -88,24 +88,8 @@ public class DirectPaymentAutomatonRunner {
         this.clock = clock;
 
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
-        // STEPH HACKED timeout!!!
-        this.paymentPluginDispatcher = new PluginDispatcher<OperationResult>(paymentPluginTimeoutSec * 1000, executor);
+        this.paymentPluginDispatcher = new PluginDispatcher<OperationResult>(paymentPluginTimeoutSec, executor);
 
-    }
-
-    public UUID run(final TransactionType transactionType, final Account account,
-                    @Nullable final UUID directPaymentId, final String directPaymentTransactionExternalKey,
-                    final boolean shouldLockAccount, final Iterable<PluginProperty> properties,
-                    final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        return run(transactionType, account, null, directPaymentId, null, directPaymentTransactionExternalKey, null, null, shouldLockAccount, properties, callContext, internalCallContext);
-    }
-
-    public UUID run(final TransactionType transactionType, final Account account,
-                    @Nullable final UUID directPaymentId, final String directPaymentTransactionExternalKey,
-                    final BigDecimal amount, final Currency currency,
-                    final boolean shouldLockAccount, final Iterable<PluginProperty> properties,
-                    final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        return run(transactionType, account, null, directPaymentId, null, directPaymentTransactionExternalKey, amount, currency, shouldLockAccount, properties, callContext, internalCallContext);
     }
 
     public UUID run(final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
@@ -120,22 +104,22 @@ public class DirectPaymentAutomatonRunner {
                                                                                                   account, paymentMethodId, amount, currency, shouldLockAccount, properties, internalCallContext, callContext);
         final DirectPaymentAutomatonDAOHelper daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, utcNow, paymentDao, pluginRegistry, internalCallContext);
 
-        final UUID nonNullPaymentMethodId;
+        final UUID effectivePaymentMethodId;
         final String currentStateMachineName;
         final String currentStateName;
         if (directPaymentId != null) {
             final PaymentModelDao paymentModelDao = daoHelper.getDirectPayment();
-            nonNullPaymentMethodId = paymentModelDao.getPaymentMethodId();
+            effectivePaymentMethodId = paymentModelDao.getPaymentMethodId();
             currentStateName = paymentModelDao.getStateName();
             currentStateMachineName = getStateMachineName(currentStateName);
 
             // Check for illegal states (should never happen)
             Preconditions.checkState(currentStateMachineName != null, "State machine name cannot be null for direct payment " + directPaymentId);
             Preconditions.checkState(currentStateName != null, "State name cannot be null for direct payment " + directPaymentId);
-            Preconditions.checkState(paymentMethodId == null || nonNullPaymentMethodId.equals(paymentMethodId), "Specified payment method id " + paymentMethodId + " doesn't match the one on the payment " + nonNullPaymentMethodId);
+            Preconditions.checkState(paymentMethodId == null || effectivePaymentMethodId.equals(paymentMethodId), "Specified payment method id " + paymentMethodId + " doesn't match the one on the payment " + effectivePaymentMethodId);
         } else {
             // If the payment method is not specified, retrieve the default one on the account
-            nonNullPaymentMethodId = paymentMethodId != null ? paymentMethodId : daoHelper.getDefaultPaymentMethodId();
+            effectivePaymentMethodId = paymentMethodId != null ? paymentMethodId : daoHelper.getDefaultPaymentMethodId();
 
             switch (transactionType) {
                 case AUTHORIZE:
@@ -155,7 +139,7 @@ public class DirectPaymentAutomatonRunner {
             }
         }
 
-        directPaymentStateContext.setPaymentMethodId(nonNullPaymentMethodId);
+        directPaymentStateContext.setPaymentMethodId(effectivePaymentMethodId);
 
         final String operationStateMachineName;
         final String operationName;

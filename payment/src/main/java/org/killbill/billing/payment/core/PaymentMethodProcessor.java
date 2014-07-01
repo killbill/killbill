@@ -267,7 +267,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 return paymentMethod;
             }
         }
-
         return null;
     }
 

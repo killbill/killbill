@@ -35,6 +35,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
     private final BigDecimal amount;
     private final Integer paymentNumber;
     private final TransactionStatus status;
+    private final TransactionType transactionType;
     private final DateTime effectiveDate;
 
     @JsonCreator
@@ -44,6 +45,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
                                    @JsonProperty("amount") final BigDecimal amount,
                                    @JsonProperty("paymentNumber") final Integer paymentNumber,
                                    @JsonProperty("status") final TransactionStatus status,
+                                   @JsonProperty("transactionType")  final TransactionType transactionType,
                                    @JsonProperty("extFirstPaymentRefId") final String extFirstPaymentRefId /* TODO for backward compatibility only */,
                                    @JsonProperty("extSecondPaymentRefId") final String extSecondPaymentRefId /* TODO for backward compatibility only */,
                                    @JsonProperty("effectiveDate") final DateTime effectiveDate,
@@ -57,17 +59,19 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         this.amount = amount;
         this.paymentNumber = paymentNumber;
         this.status = status;
+        this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;
     }
 
     public DefaultPaymentInfoEvent(final UUID accountId, final UUID invoiceId,
                                    final UUID paymentId, final BigDecimal amount, final Integer paymentNumber,
                                    final TransactionStatus status,
+                                   final TransactionType transactionType,
                                    final DateTime effectiveDate,
                                    final Long searchKey1,
                                    final Long searchKey2,
                                    final UUID userToken) {
-        this(accountId, invoiceId, paymentId, amount, paymentNumber, status, null, null,
+        this(accountId, invoiceId, paymentId, amount, paymentNumber, status, transactionType, null, null,
              effectiveDate, searchKey1, searchKey2, userToken);
     }
 
@@ -102,9 +106,13 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         return paymentId;
     }
 
-    @Override
     public Integer getPaymentNumber() {
         return paymentNumber;
+    }
+
+    @Override
+    public TransactionType getTransactionType() {
+        return transactionType;
     }
 
     @Override
@@ -122,6 +130,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         sb.append(", amount=").append(amount);
         sb.append(", paymentNumber=").append(paymentNumber);
         sb.append(", status=").append(status);
+        sb.append(", transactionType=").append(transactionType);
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append('}');
         return sb.toString();
@@ -163,6 +172,13 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
                 return false;
             }
         } else if (!accountId.equals(other.accountId)) {
+            return false;
+        }
+        if (transactionType == null) {
+            if (other.transactionType != null) {
+                return false;
+            }
+        } else if (!transactionType.equals(other.transactionType)) {
             return false;
         }
         if (amount == null) {

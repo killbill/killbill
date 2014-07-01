@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 
 public interface PaymentInfoInternalEvent extends BusInternalEvent {
 
@@ -37,4 +38,6 @@ public interface PaymentInfoInternalEvent extends BusInternalEvent {
     public Integer getPaymentNumber();
 
     public TransactionStatus getStatus();
+
+    public TransactionType getTransactionType();
 }
