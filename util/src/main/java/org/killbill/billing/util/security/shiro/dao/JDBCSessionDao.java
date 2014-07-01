@@ -79,7 +79,7 @@ public class JDBCSessionDao extends CachingSessionDAO {
 
         try {
             return sessionModelDao.toSimpleSession();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             log.warn("Corrupted cookie", e);
             return null;
         }
