@@ -104,7 +104,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                         pluginApi = getPaymentPluginApi(paymentPluginServiceName);
                         pm = new DefaultPaymentMethod(paymentMethodExternalKey, account.getId(), paymentPluginServiceName, paymentMethodProps);
                         pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, properties, callContext);
-                        final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
+                        final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getExternalKey(), pm.getCreatedDate(), pm.getUpdatedDate(),
                                                                                         pm.getAccountId(), pm.getPluginName(), pm.isActive());
                         paymentDao.insertPaymentMethod(pmModel, context);
 
@@ -434,7 +434,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                         // If the kbPaymentId is NULL, the plugin does not know about it, so we create a new UUID
                         final UUID paymentMethodId = cur.getPaymentMethodId() != null ? cur.getPaymentMethodId() : UUID.randomUUID();
                         final PaymentMethod input = new DefaultPaymentMethod(paymentMethodId, paymentMethodId.toString(), account.getId(), pluginName);
-                        final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getCreatedDate(), input.getUpdatedDate(),
+                        final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(),  input.getExternalKey(), input.getCreatedDate(), input.getUpdatedDate(),
                                                                                         input.getAccountId(), input.getPluginName(), input.isActive());
                         finalPaymentMethods.add(pmModel);
 

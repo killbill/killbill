@@ -88,16 +88,20 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return properties;
     }
 
-    protected Account createAccountWithDefaultPaymentMethod() throws Exception {
-       return  createAccountWithDefaultPaymentMethod(null);
+    protected Account createAccountWithDefaultPaymentMethod(final String externalkey) throws Exception {
+        return  createAccountWithDefaultPaymentMethod(externalkey, null);
     }
 
-    protected Account createAccountWithDefaultPaymentMethod(@Nullable final List<PluginProperty> pmProperties) throws Exception {
+    protected Account createAccountWithDefaultPaymentMethod() throws Exception {
+        return  createAccountWithDefaultPaymentMethod(UUID.randomUUID().toString(), null);
+    }
+
+    protected Account createAccountWithDefaultPaymentMethod(final String externalkey, @Nullable final List<PluginProperty> pmProperties) throws Exception {
         final Account input = createAccount();
 
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         info.setProperties(pmProperties);
-        final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), input.getAccountId(), true, PLUGIN_NAME, info);
+        final PaymentMethod paymentMethodJson = new PaymentMethod(null, externalkey, input.getAccountId(), true, PLUGIN_NAME, info);
         killBillClient.createPaymentMethod(paymentMethodJson, createdBy, reason, comment);
         return killBillClient.getAccount(input.getExternalKey());
     }

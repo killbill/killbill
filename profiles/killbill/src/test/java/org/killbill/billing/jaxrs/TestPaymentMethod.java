@@ -31,6 +31,20 @@ import org.testng.annotations.Test;
 
 public class TestPaymentMethod extends TestJaxrsBase {
 
+    @Test(groups = "slow", description = "Create/retrieve by externalKey")
+    public void testGePaymentMethodsByKey() throws Exception {
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod("foo");
+
+        final PaymentMethod paymentMethodJson1 = killBillClient.getPaymentMethodByKey("foo", true);
+
+        final PaymentMethod paymentMethodJson2 = killBillClient.getPaymentMethod(accountJson.getPaymentMethodId(), true);
+        Assert.assertEquals(paymentMethodJson1, paymentMethodJson2);
+
+        final PaymentMethod paymentMethodJson3 = killBillClient.getPaymentMethodByKey("doesnotexist", true);
+        Assert.assertNull(paymentMethodJson3);
+    }
+
     @Test(groups = "slow", description = "Can search payment methods")
     public void testSearchPaymentMethods() throws Exception {
         // Search random key
@@ -45,12 +59,8 @@ public class TestPaymentMethod extends TestJaxrsBase {
         pmProperties.add(new PluginProperty("CC_STATE", "CA", false));
         pmProperties.add(new PluginProperty("CC_COUNTRY", "Zimbawe", false));
 
-        final Account accountJson = createAccountWithDefaultPaymentMethod(pmProperties);
+        final Account accountJson = createAccountWithDefaultPaymentMethod(UUID.randomUUID().toString(), pmProperties);
         final PaymentMethod paymentMethodJson = killBillClient.getPaymentMethod(accountJson.getPaymentMethodId(), true);
-
-
-        final PaymentMethod paymentMethodJson2 =  killBillClient.getPaymentMethodByKey(paymentMethodJson.getExternalKey(), true);
-        Assert.assertEquals(paymentMethodJson, paymentMethodJson2);
 
         // Search random key again
         Assert.assertEquals(killBillClient.searchPaymentMethodsByKey(UUID.randomUUID().toString()).size(), 0);
