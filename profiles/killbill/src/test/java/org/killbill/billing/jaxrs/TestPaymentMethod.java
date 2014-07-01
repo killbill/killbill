@@ -18,36 +18,40 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethods;
+import org.killbill.billing.client.model.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestPaymentMethod extends TestJaxrsBase {
 
-    // STEPH disable test since it is not valid (CC, name, type no longer exist part of the PaymentMethodPlugin interface). Need to understand how search
-    // for those fieds would work.
-    @Test(groups = "slow", description = "Can search payment methods", enabled=false)
+    @Test(groups = "slow", description = "Can search payment methods")
     public void testSearchPaymentMethods() throws Exception {
         // Search random key
         Assert.assertEquals(killBillClient.searchPaymentMethodsByKey(UUID.randomUUID().toString()).size(), 0);
         Assert.assertEquals(killBillClient.searchPaymentMethodsByKeyAndPlugin(UUID.randomUUID().toString(), PLUGIN_NAME).size(), 0);
 
         // Create a payment method
-        final Account accountJson = createAccountWithDefaultPaymentMethod();
+        final List<PluginProperty> pmProperties = new ArrayList<PluginProperty>();
+        pmProperties.add(new PluginProperty("CC_NAME", "Bozo", false));
+        pmProperties.add(new PluginProperty("CC_CITY", "SF", false));
+        pmProperties.add(new PluginProperty("CC_LAST_4", "4365", false));
+        pmProperties.add(new PluginProperty("CC_STATE", "CA", false));
+        pmProperties.add(new PluginProperty("CC_COUNTRY", "Zimbawe", false));
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod(pmProperties);
         final PaymentMethod paymentMethodJson = killBillClient.getPaymentMethod(accountJson.getPaymentMethodId(), true);
 
         // Search random key again
         Assert.assertEquals(killBillClient.searchPaymentMethodsByKey(UUID.randomUUID().toString()).size(), 0);
         Assert.assertEquals(killBillClient.searchPaymentMethodsByKeyAndPlugin(UUID.randomUUID().toString(), PLUGIN_NAME).size(), 0);
 
-        // Make sure we can search the test plugin
-        // Values are hardcoded in TestPaymentMethodPluginBase and the search logic is in MockPaymentProviderPlugin
-        doSearch("Foo", paymentMethodJson);
         // Last 4
         doSearch("4365", paymentMethodJson);
         // Name

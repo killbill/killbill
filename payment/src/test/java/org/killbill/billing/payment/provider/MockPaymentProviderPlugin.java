@@ -33,10 +33,10 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 import org.killbill.billing.payment.plugin.api.NoOpPaymentPluginApi;
-import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.DefaultPagination;
@@ -294,6 +294,13 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         final ImmutableList<PaymentMethodPlugin> results = ImmutableList.<PaymentMethodPlugin>copyOf(Iterables.<PaymentMethodPlugin>filter(paymentMethods.values(), new Predicate<PaymentMethodPlugin>() {
             @Override
             public boolean apply(final PaymentMethodPlugin input) {
+                if (input.getProperties() !=  null) {
+                    for (PluginProperty cur : input.getProperties()) {
+                        if (cur.getValue().equals(searchKey)) {
+                            return true;
+                        }
+                    }
+                }
                 return (input.getKbPaymentMethodId().toString().equals(searchKey));
             }
         }));
@@ -335,14 +342,12 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         return getPaymentTransactionInfoPluginResult(kbPaymentId, kbTransactionId, TransactionType.REFUND, refundAmount, currency);
     }
 
-
     private PaymentTransactionInfoPlugin getPaymentTransactionInfoPluginResult(final UUID kbPaymentId, final UUID kbTransactionId, final TransactionType type, final BigDecimal amount, final Currency currency) throws PaymentPluginApiException {
 
         if (makeNextInvoiceFailWithException.getAndSet(false)) {
             System.out.println("################## (STEPH) MockPaymentProviderPlugin getPaymentTransactionInfoPluginResult makeNextInvoiceFailWithException  => THROW");
             throw new PaymentPluginApiException("", "test error");
         }
-
 
         final PaymentPluginStatus status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
 

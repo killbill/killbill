@@ -93,8 +93,6 @@ public interface JaxrsResource {
     public static final String QUERY_WITH_PLUGIN_INFO = "withPluginInfo";
     public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "isDefault";
 
-    public static final String QUERY_PAYMENT_METHOD_PLUGIN_INFO = "pluginInfo"; // STEPH check on that one, why was that missing?
-
     public static final String QUERY_PAY_ALL_UNPAID_INVOICES = "payAllUnpaidInvoices";
     public static final String QUERY_PAY_INVOICE = "payInvoice";
 

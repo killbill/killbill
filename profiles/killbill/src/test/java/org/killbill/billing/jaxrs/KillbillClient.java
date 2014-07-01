@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -87,12 +89,16 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected Account createAccountWithDefaultPaymentMethod() throws Exception {
+       return  createAccountWithDefaultPaymentMethod(null);
+    }
+
+    protected Account createAccountWithDefaultPaymentMethod(@Nullable final List<PluginProperty> pmProperties) throws Exception {
         final Account input = createAccount();
 
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
+        info.setProperties(pmProperties);
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, input.getAccountId(), true, PLUGIN_NAME, info);
         killBillClient.createPaymentMethod(paymentMethodJson, createdBy, reason, comment);
-
         return killBillClient.getAccount(input.getExternalKey());
     }
 
