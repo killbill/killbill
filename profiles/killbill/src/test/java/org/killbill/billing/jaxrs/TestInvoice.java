@@ -23,6 +23,8 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.client.model.Account;
@@ -38,6 +40,9 @@ import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -103,15 +108,17 @@ public class TestInvoice extends TestJaxrsBase {
         final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
         assertEquals(invoices.size(), 2);
 
-        for (final Invoice cur : invoices) {
-            final InvoicePayments objFromJson = killBillClient.getInvoicePayment(cur.getInvoiceId());
-            if (cur.getAmount().compareTo(BigDecimal.ZERO) == 0) {
-                assertEquals(objFromJson.size(), 0);
-            } else {
-                assertEquals(objFromJson.size(), 1);
-                assertEquals(cur.getAmount().compareTo(objFromJson.get(0).getPurchasedAmount()), 0);
+        final Invoice invoiceWithPositiveAmount = Iterables.tryFind(invoices, new Predicate<Invoice>() {
+            @Override
+            public boolean apply(final Invoice input) {
+                return input.getAmount().compareTo(BigDecimal.ZERO) > 0;
             }
-        }
+        }).orNull();
+        Assert.assertNotNull(invoiceWithPositiveAmount);
+
+        final InvoicePayments objFromJson = killBillClient.getInvoicePayment(invoiceWithPositiveAmount.getInvoiceId());
+        assertEquals(objFromJson.size(), 1);
+        assertEquals(invoiceWithPositiveAmount.getAmount().compareTo(objFromJson.get(0).getPurchasedAmount()), 0);
     }
 
     @Test(groups = "slow", description = "Can pay invoices")
@@ -122,7 +129,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Check there was no payment made
-        assertEquals(killBillClient.getPaymentsForAccount(accountJson.getAccountId()).size(), 1);
+        assertEquals(killBillClient.getPaymentsForAccount(accountJson.getAccountId()).size(), 0);
 
         // Get the invoices
         final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
@@ -135,7 +142,7 @@ public class TestInvoice extends TestJaxrsBase {
         for (final Invoice invoice : killBillClient.getInvoicesForAccount(accountJson.getAccountId())) {
             assertEquals(invoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         }
-        assertEquals(killBillClient.getPaymentsForAccount(accountJson.getAccountId()).size(), 2);
+        assertEquals(killBillClient.getPaymentsForAccount(accountJson.getAccountId()).size(), 1);
     }
 
     @Test(groups = "slow", description = "Can create an insta-payment")
@@ -169,7 +176,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Verify we didn't get any invoicePayment
-        final List<InvoicePayment> noPaymentsFromJson = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
+        final List<InvoicePayment> noPaymentsFromJson = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId());
         assertEquals(noPaymentsFromJson.size(), 0);
 
         // Get the invoices
@@ -186,7 +193,7 @@ public class TestInvoice extends TestJaxrsBase {
         killBillClient.createInvoicePayment(invoicePayment, true, createdBy, reason, comment);
 
         // Verify we indeed got the invoicePayment
-        final List<InvoicePayment> paymentsFromJson = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
+        final List<InvoicePayment> paymentsFromJson = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId());
         assertEquals(paymentsFromJson.size(), 1);
         assertEquals(paymentsFromJson.get(0).getPurchasedAmount().compareTo(BigDecimal.TEN), 0);
         assertEquals(paymentsFromJson.get(0).getTargetInvoiceId(), invoiceId);

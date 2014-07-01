@@ -67,7 +67,7 @@ public class TestEntitlement extends TestJaxrsBase {
         newInput.setProductName(newProductName);
         newInput.setBillingPeriod(entitlementJson.getBillingPeriod());
         newInput.setPriceList(entitlementJson.getPriceList());
-        objFromJson = null; // STEPH  killBillClient.updateSubscription(newInput, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+        objFromJson = killBillClient.updateSubscription(newInput, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
         Assert.assertNotNull(objFromJson);
 
         // MOVE AFTER TRIAL
@@ -132,7 +132,7 @@ public class TestEntitlement extends TestJaxrsBase {
         subscription.setBillingPeriod(BillingPeriod.ANNUAL);
         subscription.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        Assert.assertNull(killBillClient.updateSubscription(subscription, createdBy, reason, comment));
+        Assert.assertNull(killBillClient.updateSubscription(subscription, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment));
 
         // No-op (404, doesn't throw an exception)
         killBillClient.cancelSubscription(subscriptionId, createdBy, reason, comment);

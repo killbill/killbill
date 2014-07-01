@@ -450,20 +450,23 @@ public class AccountResource extends JaxRsResourceBase {
      * ************************** PAYMENTS ********************************
      */
 
+    // STEPH should refactor code since very similar to @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICE_PAYMENTS)
     @Produces(APPLICATION_JSON)
     public Response getInvoicePayments(@PathParam("accountId") final String accountIdStr,
+                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
         final UUID accountId = UUID.fromString(accountIdStr);
         final List<DirectPayment> payments = paymentApi.getAccountPayments(accountId, withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
         final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePaymentsByAccount(accountId, tenantContext);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
         final List<InvoicePaymentJson> result = new ArrayList<InvoicePaymentJson>(payments.size());
         for (final DirectPayment payment : payments) {
             final UUID invoiceId = getInvoiceId(invoicePayments, payment);
-            result.add(new InvoicePaymentJson(payment, invoiceId, null));
+            result.add(new InvoicePaymentJson(payment, invoiceId, accountAuditLogs));
         }
         return Response.status(Status.OK).entity(result).build();
     }

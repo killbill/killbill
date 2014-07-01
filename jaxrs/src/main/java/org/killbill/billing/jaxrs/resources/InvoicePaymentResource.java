@@ -142,7 +142,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
 
         final Iterable<PluginProperty> pluginProperties;
         final String transactionExternalKey = UUID.randomUUID().toString();
-        if (json.isAdjusted()) {
+        if (json.isAdjusted() != null && json.isAdjusted()) {
             if (json.getAdjustments() != null && json.getAdjustments().size() > 0) {
                 final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
                 for (final InvoiceItemJson item : json.getAdjustments()) {

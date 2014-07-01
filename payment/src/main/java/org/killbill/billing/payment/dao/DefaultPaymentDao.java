@@ -169,7 +169,8 @@ public class DefaultPaymentDao implements PaymentDao {
 
                                                   @Override
                                                   public Iterator<PaymentModelDao> build(final PaymentSqlDao directPaymentSqlDao, final Long limit, final InternalTenantContext context) {
-                                                      return directPaymentSqlDao.getByPluginName(pluginName, offset, limit, context);
+                                                      final Iterator<PaymentModelDao> result = directPaymentSqlDao.getByPluginName(pluginName, offset, limit, context);
+                                                      return result;
                                                   }
                                               },
                                               offset,

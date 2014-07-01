@@ -197,7 +197,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
             invoicePayment.setPurchasedAmount(lastPayment.getPurchasedAmount());
             invoicePayment.setAccountId(lastPayment.getAccountId());
             invoicePayment.setTargetInvoiceId(lastPayment.getTargetInvoiceId());
-            final InvoicePayment payment = killBillClient.createInvoicePayment(invoicePayment, true, createdBy, reason, comment);
+            final InvoicePayment payment = killBillClient.createInvoicePayment(invoicePayment, false, createdBy, reason, comment);
             lastPayment = payment;
         }
 
@@ -211,7 +211,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         for (int i = 0; i < 6; i++) {
             Assert.assertNotNull(paymentsPage);
             Assert.assertEquals(paymentsPage.size(), 1);
-            Assert.assertEquals(paymentsPage.get(0), allPayments.get(i));
+            Assert.assertTrue(paymentsPage.get(0).equals((Payment) allPayments.get(i)));
             paymentsPage = paymentsPage.getNext();
         }
         Assert.assertNull(paymentsPage);
@@ -224,7 +224,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
     private InvoicePayment setupScenarioWithPayment() throws Exception {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final List<InvoicePayment> paymentsForAccount = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
+        final List<InvoicePayment> paymentsForAccount = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId());
         Assert.assertEquals(paymentsForAccount.size(), 1);
 
         final InvoicePayment paymentJson = paymentsForAccount.get(0);

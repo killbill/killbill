@@ -321,7 +321,8 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                               new EntityPaginationBuilder<DirectPayment, PaymentApiException>() {
                                                   @Override
                                                   public Pagination<DirectPayment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                      return getPayments(offset, limit, pluginName, properties, tenantContext, internalTenantContext);
+                                                      final Pagination<DirectPayment>  result = getPayments(offset, limit, pluginName, properties, tenantContext, internalTenantContext);
+                                                      return result;
                                                   }
                                               }
                                              );
@@ -335,7 +336,8 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                        @Override
                                        public Pagination<PaymentModelDao> build() {
                                            // Find all payments for all accounts
-                                           return paymentDao.getDirectPayments(pluginName, offset, limit, internalTenantContext);
+                                           final Pagination<PaymentModelDao> result  = paymentDao.getDirectPayments(pluginName, offset, limit, internalTenantContext);
+                                           return result;
                                        }
                                    },
                                    new Function<PaymentModelDao, DirectPayment>() {
@@ -508,6 +510,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
         final DirectPaymentTransaction directPaymentTransaction = directPayment.getTransactions().get(directPayment.getTransactions().size() - 1);
 
         /* STEPH
+        1. Should really use the last transaction for 'that' transactionExternalKey -> meaning if there is none then we did not create a transaction => threw some exception earlier.
+        2. What if there is no such transaction/payment, which event do we post since we don't have any ID ?
+
         Iterables.<DirectPaymentTransaction>tryFind(directPayment.getTransactions(),
                                                                                                               new Predicate<DirectPaymentTransaction>() {
                                                                                                                   @Override

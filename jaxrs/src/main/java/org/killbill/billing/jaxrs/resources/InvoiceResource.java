@@ -382,7 +382,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId), tenantContext);
         final List<DirectPayment> payments = new ArrayList<DirectPayment>();
         for (InvoicePayment cur : invoice.getPayments()) {
-            final DirectPayment payment = paymentApi.getPayment(cur.getId(), withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
+            final DirectPayment payment = paymentApi.getPayment(cur.getPaymentId(), withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
             payments.add(payment);
         }
         final List<InvoicePaymentJson> result = new ArrayList<InvoicePaymentJson>(payments.size());

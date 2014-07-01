@@ -260,7 +260,7 @@ public class TestJaxrsBase extends KillbillClient {
         return ImmutableList.copyOf(Iterables.concat(Iterables.transform(payments, new Function<T, Iterable<PaymentTransaction>>() {
             @Override
             public Iterable<PaymentTransaction> apply(final T input) {
-                return Iterables.filter(input.getPaymentTransactions(), new Predicate<PaymentTransaction>() {
+                return Iterables.filter(input.getTransactions(), new Predicate<PaymentTransaction>() {
                     @Override
                     public boolean apply(final PaymentTransaction input) {
                         return input.getTransactionType().equals(transactionType);

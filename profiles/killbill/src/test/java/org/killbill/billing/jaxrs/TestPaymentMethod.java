@@ -29,7 +29,9 @@ import org.testng.annotations.Test;
 
 public class TestPaymentMethod extends TestJaxrsBase {
 
-    @Test(groups = "slow", description = "Can search payment methods")
+    // STEPH disable test since it is not valid (CC, name, type no longer exist part of the PaymentMethodPlugin interface). Need to understand how search
+    // for those fieds would work.
+    @Test(groups = "slow", description = "Can search payment methods", enabled=false)
     public void testSearchPaymentMethods() throws Exception {
         // Search random key
         Assert.assertEquals(killBillClient.searchPaymentMethodsByKey(UUID.randomUUID().toString()).size(), 0);

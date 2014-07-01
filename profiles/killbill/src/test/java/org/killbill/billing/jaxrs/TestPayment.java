@@ -127,9 +127,9 @@ public class TestPayment extends TestJaxrsBase {
         final Payment retrievedPayment = killBillClient.getPayment(Payment.getPaymentId());
         Assert.assertEquals(retrievedPayment, Payment);
 
-        final InvoicePayments PaymentsForAccount = killBillClient.getPaymentsForAccount(account.getAccountId());
-        Assert.assertEquals(PaymentsForAccount.size(), PaymentNb);
-        Assert.assertEquals(PaymentsForAccount.get(PaymentNb - 1), Payment);
+        final Payments paymentsForAccount = killBillClient.getPaymentsForAccount(account.getAccountId());
+        Assert.assertEquals(paymentsForAccount.size(), PaymentNb);
+        Assert.assertEquals(paymentsForAccount.get(PaymentNb - 1), Payment);
     }
 
     private void verifyPaymentTransaction(final UUID PaymentId, final PaymentTransaction PaymentTransaction,

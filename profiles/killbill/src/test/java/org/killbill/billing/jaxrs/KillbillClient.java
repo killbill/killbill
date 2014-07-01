@@ -38,6 +38,10 @@ import static org.testng.Assert.assertNotNull;
 
 public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
+    //private final int DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC = 5;
+    // STEPH fix timeout value after debug
+    private final int DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC = 5000;
+
     protected static final String PLUGIN_NAME = "noop";
 
     protected static final String DEFAULT_CURRENCY = "USD";
@@ -107,7 +111,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         input.setBillingPeriod(billingPeriod);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        return killBillClient.createSubscription(input, waitCompletion ? 5 : -1, createdBy, reason, comment);
+        return killBillClient.createSubscription(input, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1, createdBy, reason, comment);
     }
 
     protected Account createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {

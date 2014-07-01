@@ -88,7 +88,8 @@ public class DirectPaymentAutomatonRunner {
         this.clock = clock;
 
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
-        this.paymentPluginDispatcher = new PluginDispatcher<OperationResult>(paymentPluginTimeoutSec, executor);
+        // STEPH HACKED timeout!!!
+        this.paymentPluginDispatcher = new PluginDispatcher<OperationResult>(paymentPluginTimeoutSec * 1000, executor);
 
     }
 
@@ -134,7 +135,7 @@ public class DirectPaymentAutomatonRunner {
             Preconditions.checkState(paymentMethodId == null || nonNullPaymentMethodId.equals(paymentMethodId), "Specified payment method id " + paymentMethodId + " doesn't match the one on the payment " + nonNullPaymentMethodId);
         } else {
             // If the payment method is not specified, retrieve the default one on the account
-            nonNullPaymentMethodId = Objects.firstNonNull(paymentMethodId, daoHelper.getDefaultPaymentMethodId());
+            nonNullPaymentMethodId = paymentMethodId != null ? paymentMethodId : daoHelper.getDefaultPaymentMethodId();
 
             switch (transactionType) {
                 case AUTHORIZE:

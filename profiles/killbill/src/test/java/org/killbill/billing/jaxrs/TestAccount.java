@@ -179,7 +179,7 @@ public class TestAccount extends TestJaxrsBase {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Verify payments
-        final InvoicePayments objFromJson = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
+        final InvoicePayments objFromJson = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId());
         Assert.assertEquals(objFromJson.size(), 1);
     }
 

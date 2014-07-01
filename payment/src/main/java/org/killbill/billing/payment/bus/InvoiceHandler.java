@@ -18,6 +18,7 @@
 
 package org.killbill.billing.payment.bus;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -83,7 +84,9 @@ public class InvoiceHandler {
             properties.add(prop1);
 
             final CallContext callContext = internalContext.toCallContext(nonEntityDao.retrieveIdFromObject(internalContext.getTenantRecordId(), ObjectType.TENANT));
-            pluginControlledPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, null, account.getCurrency(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+
+            final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
+            pluginControlledPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                             properties, InvoicePaymentControlPluginApi.PLUGIN_NAME, callContext, internalContext);
         } catch (final AccountApiException e) {
             log.error("Failed to process invoice payment", e);
