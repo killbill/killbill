@@ -42,7 +42,7 @@ public class TestPayment extends TestJaxrsBase {
         final Account account = createAccountWithDefaultPaymentMethod();
         testCreateRetrievePayment(account, null, UUID.randomUUID().toString(), 1);
 
-        final PaymentMethod paymentMethodJson = new PaymentMethod(null, account.getAccountId(), false, PLUGIN_NAME, new PaymentMethodPluginDetail());
+        final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), account.getAccountId(), false, PLUGIN_NAME, new PaymentMethodPluginDetail());
         final PaymentMethod nonDefaultPaymentMethod = killBillClient.createPaymentMethod(paymentMethodJson, createdBy, reason, comment);
         testCreateRetrievePayment(account, nonDefaultPaymentMethod.getPaymentMethodId(), UUID.randomUUID().toString(), 2);
     }

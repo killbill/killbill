@@ -36,11 +36,11 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
 
     public PaymentMethodModelDao() { /* For the DAO mapper */ }
 
-    public PaymentMethodModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+    public PaymentMethodModelDao(final UUID id, final String externalKey, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                  final UUID accountId, final String pluginName,
                                  final Boolean isActive) {
         super(id, createdDate, updatedDate);
-        this.externalKey = id.toString();
+        this.externalKey = externalKey;
         this.accountId = accountId;
         this.pluginName = pluginName;
         this.isActive = isActive;

@@ -51,6 +51,23 @@ where  id = :id
 ;
 >>
 
+getByExternalKey() ::= <<
+select <allTableFields()>
+from <tableName()>
+where external_key = :externalKey
+and is_active = 1
+<AND_CHECK_TENANT()>
+;
+>>
+
+getPaymentMethodByExternalKeyIncludedDeleted() ::= <<
+select <allTableFields()>
+from <tableName()>
+where external_key = :externalKey
+<AND_CHECK_TENANT()>
+;
+>>
+
 getPaymentMethodIncludedDelete(accountId) ::= <<
 select <allTableFields()>
 from <tableName()>

@@ -104,7 +104,7 @@ public class PaymentMethodJson extends JsonBase {
 
             @Override
             public String getExternalKey() {
-                return null;
+                return externalKey;
             }
 
             @Override
@@ -175,6 +175,10 @@ public class PaymentMethodJson extends JsonBase {
 
     public PaymentMethodPluginDetailJson getPluginInfo() {
         return pluginInfo;
+    }
+
+    public String getExternalKey() {
+        return externalKey;
     }
 
     @Override

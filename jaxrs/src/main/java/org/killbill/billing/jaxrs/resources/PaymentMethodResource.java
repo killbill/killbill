@@ -101,6 +101,23 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     }
 
     @GET
+    @Produces(APPLICATION_JSON)
+    public Response getPaymentMethodByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
+                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                          @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                          @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final TenantContext tenantContext = context.createContext(request);
+
+        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodByExternalKey(externalKey, false, withPluginInfo, pluginProperties, tenantContext);
+        final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(paymentMethod.getAccountId(), auditMode.getLevel(), tenantContext);
+        final PaymentMethodJson json = PaymentMethodJson.toPaymentMethodJson(account, paymentMethod, accountAuditLogs);
+        return Response.status(Status.OK).entity(json).build();
+    }
+
+    @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
     public Response getPaymentMethods(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,

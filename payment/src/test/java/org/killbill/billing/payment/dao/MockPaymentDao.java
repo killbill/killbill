@@ -264,6 +264,18 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
+    public PaymentMethodModelDao getPaymentMethodByExternalKey(final String paymentMethodExternalKey, final InternalTenantContext context) {
+        synchronized (this) {
+            for (final PaymentMethodModelDao cur : paymentMethods) {
+                if (cur.getExternalKey().equals(paymentMethodExternalKey)) {
+                    return cur;
+                }
+            }
+            return null;
+        }
+    }
+
+    @Override
     public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId, final InternalTenantContext context) {
         synchronized (this) {
             final List<PaymentMethodModelDao> result = new ArrayList<PaymentMethodModelDao>();
@@ -303,5 +315,10 @@ public class MockPaymentDao implements PaymentDao {
     @Override
     public PaymentMethodModelDao getPaymentMethodIncludedDeleted(final UUID paymentMethodId, final InternalTenantContext context) {
         return getPaymentMethod(paymentMethodId, context);
+    }
+
+    @Override
+    public PaymentMethodModelDao getPaymentMethodByExternalKeyIncludedDeleted(final String paymentMethodExternalKey, final InternalTenantContext context) {
+        return getPaymentMethodByExternalKey(paymentMethodExternalKey, context);
     }
 }
