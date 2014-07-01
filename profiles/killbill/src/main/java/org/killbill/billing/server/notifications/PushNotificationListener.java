@@ -49,7 +49,7 @@ public class PushNotificationListener {
 
     private static final Logger log = LoggerFactory.getLogger(PushNotificationListener.class);
 
-    private static final int TIMEOUT_NOTIFCATION = 15; // 15 seconds
+    private static final int TIMEOUT_NOTIFICATION = 15; // 15 seconds
 
     private final TenantUserApi tenantApi;
     private final CallContextFactory contextFactory;
@@ -58,7 +58,7 @@ public class PushNotificationListener {
 
     @Inject
     public PushNotificationListener(final ObjectMapper mapper, final TenantUserApi tenantApi, final CallContextFactory contextFactory) {
-        this.httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(TIMEOUT_NOTIFCATION * 1000).build());
+        this.httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(TIMEOUT_NOTIFICATION * 1000).build());
         this.tenantApi = tenantApi;
         this.contextFactory = contextFactory;
         this.mapper = mapper;
@@ -78,11 +78,11 @@ public class PushNotificationListener {
         }
     }
 
-    private void dispatchCallback(final UUID tenantId, final ExtBusEvent event, final List<String> callbacks) throws IOException {
+    private void dispatchCallback(final UUID tenantId, final ExtBusEvent event, final Iterable<String> callbacks) throws IOException {
         final NotificationJson notification = new NotificationJson(event);
         final String body = mapper.writeValueAsString(notification);
         for (final String cur : callbacks) {
-            doPost(tenantId, cur, body, TIMEOUT_NOTIFCATION);
+            doPost(tenantId, cur, body, TIMEOUT_NOTIFICATION);
         }
     }
 
@@ -102,7 +102,7 @@ public class PushNotificationListener {
                     });
             response = futureStatus.get(timeoutSec, TimeUnit.SECONDS);
         } catch (final Exception e) {
-            log.warn(String.format("Fail to psh notification {} for the tenant {} ", url, tenantId), e);
+            log.warn(String.format("Failed to push notification %s for the tenant %s", url, tenantId), e);
             return false;
         }
         return response.getStatusCode() >= 200 && response.getStatusCode() < 300;
