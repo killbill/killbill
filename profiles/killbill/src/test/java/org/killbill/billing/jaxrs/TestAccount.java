@@ -100,7 +100,7 @@ public class TestAccount extends TestJaxrsBase {
 
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         info.setProperties(getPaymentMethodCCProperties());
-        PaymentMethod paymentMethodJson = new PaymentMethod(null, accountJson.getAccountId(), true, PLUGIN_NAME, info);
+        PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), true, PLUGIN_NAME, info);
         final PaymentMethod paymentMethodCC = killBillClient.createPaymentMethod(paymentMethodJson, createdBy, reason, comment);
         assertTrue(paymentMethodCC.getIsDefault());
 
@@ -109,7 +109,7 @@ public class TestAccount extends TestJaxrsBase {
         //
         final PaymentMethodPluginDetail info2 = new PaymentMethodPluginDetail();
         info2.setProperties(getPaymentMethodPaypalProperties());
-        paymentMethodJson = new PaymentMethod(null, accountJson.getAccountId(), false, PLUGIN_NAME, info2);
+        paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), false, PLUGIN_NAME, info2);
         final PaymentMethod paymentMethodPP = killBillClient.createPaymentMethod(paymentMethodJson, createdBy, reason, comment);
         assertFalse(paymentMethodPP.getIsDefault());
 

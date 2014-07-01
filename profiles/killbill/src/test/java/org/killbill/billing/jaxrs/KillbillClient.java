@@ -97,7 +97,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         info.setProperties(pmProperties);
-        final PaymentMethod paymentMethodJson = new PaymentMethod(null, input.getAccountId(), true, PLUGIN_NAME, info);
+        final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), input.getAccountId(), true, PLUGIN_NAME, info);
         killBillClient.createPaymentMethod(paymentMethodJson, createdBy, reason, comment);
         return killBillClient.getAccount(input.getExternalKey());
     }

@@ -177,6 +177,10 @@ public class PaymentMethodJson extends JsonBase {
         return pluginInfo;
     }
 
+    public String getExternalKey() {
+        return externalKey;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("PaymentMethodJson{");

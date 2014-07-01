@@ -71,7 +71,11 @@ public interface PaymentDao {
 
     public PaymentMethodModelDao getPaymentMethod(UUID paymentMethodId, InternalTenantContext context);
 
+    public PaymentMethodModelDao getPaymentMethodByExternalKey(String paymentMethodExternalKey, InternalTenantContext context);
+
     public PaymentMethodModelDao getPaymentMethodIncludedDeleted(UUID paymentMethodId, InternalTenantContext context);
+
+    public PaymentMethodModelDao getPaymentMethodByExternalKeyIncludedDeleted(String paymentMethodExternalKey, InternalTenantContext context);
 
     public List<PaymentMethodModelDao> getPaymentMethods(UUID accountId, InternalTenantContext context);
 

@@ -47,6 +47,12 @@ public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao,
                                       @BindBean final InternalCallContext context);
 
     @SqlQuery
+    PaymentMethodModelDao getByExternalKey(@Bind("externalKey") String paymentMethodExternalKey, @BindBean InternalTenantContext context);
+
+    @SqlQuery
+    PaymentMethodModelDao getPaymentMethodByExternalKeyIncludedDeleted(@Bind("externalKey") String paymentMethodExternalKey, @BindBean InternalTenantContext context);
+
+    @SqlQuery
     PaymentMethodModelDao getPaymentMethodIncludedDelete(@Bind("id") final String paymentMethodId,
                                                          @BindBean final InternalTenantContext context);
 
@@ -66,4 +72,5 @@ public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao,
     @SqlQuery
     public Long getCountByPluginName(@Bind("pluginName") final String pluginName,
                                      @BindBean final InternalTenantContext context);
+
 }

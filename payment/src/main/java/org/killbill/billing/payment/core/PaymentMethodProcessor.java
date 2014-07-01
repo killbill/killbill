@@ -153,6 +153,16 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return buildDefaultPaymentMethod(paymentMethodModel, withPluginInfo, properties, tenantContext, context);
     }
 
+    public PaymentMethod getPaymentMethodByExternalKey(final String paymentMethodExternalKey, final boolean includedDeleted, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context)
+            throws PaymentApiException {
+        final PaymentMethodModelDao paymentMethodModel = includedDeleted ? paymentDao.getPaymentMethodByExternalKeyIncludedDeleted(paymentMethodExternalKey, context) : paymentDao.getPaymentMethodByExternalKey(paymentMethodExternalKey, context);
+        if (paymentMethodModel == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodExternalKey);
+        }
+        return buildDefaultPaymentMethod(paymentMethodModel, withPluginInfo, properties, tenantContext, context);
+    }
+
+
     private PaymentMethod buildDefaultPaymentMethod(final PaymentMethodModelDao paymentMethodModelDao, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context) throws PaymentApiException {
         final PaymentMethodPlugin paymentMethodPlugin;
         if (withPluginInfo) {

@@ -48,6 +48,10 @@ public class TestPaymentMethod extends TestJaxrsBase {
         final Account accountJson = createAccountWithDefaultPaymentMethod(pmProperties);
         final PaymentMethod paymentMethodJson = killBillClient.getPaymentMethod(accountJson.getPaymentMethodId(), true);
 
+
+        final PaymentMethod paymentMethodJson2 =  killBillClient.getPaymentMethodByKey(paymentMethodJson.getExternalKey(), true);
+        Assert.assertEquals(paymentMethodJson, paymentMethodJson2);
+
         // Search random key again
         Assert.assertEquals(killBillClient.searchPaymentMethodsByKey(UUID.randomUUID().toString()).size(), 0);
         Assert.assertEquals(killBillClient.searchPaymentMethodsByKeyAndPlugin(UUID.randomUUID().toString(), PLUGIN_NAME).size(), 0);
