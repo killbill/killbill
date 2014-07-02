@@ -333,7 +333,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
         final PaymentMethodPlugin info = createPaymentMethodPlugin();
 
-        paymentApi.addPaymentMethod(UUID.randomUUID().toString(), account, paymentPluginName, true, info, PLUGIN_PROPERTIES, callContext);
+        paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), paymentPluginName, true, info, PLUGIN_PROPERTIES, callContext);
         return accountUserApi.getAccountById(account.getId(), callContext);
     }
 

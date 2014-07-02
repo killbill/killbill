@@ -74,7 +74,7 @@ public class DirectPaymentAutomatonDAOHelper {
             if (existingTransactions.isEmpty()) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, directPaymentStateContext.getDirectPaymentId());
             }
-            if (existingTransactions.get(0).getCurrency() != directPaymentStateContext.getCurrency()) {
+            if (directPaymentStateContext.getCurrency() != null && existingTransactions.get(0).getCurrency() != directPaymentStateContext.getCurrency()) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, "currency", " should be " + existingTransactions.get(0).getCurrency() + " to match other existing transactions");
             }
 

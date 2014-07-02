@@ -170,7 +170,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
         assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
 
         final PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
-        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(UUID.randomUUID().toString(), account, MockPaymentProviderPlugin.PLUGIN_NAME, true, newPaymenrMethod, PLUGIN_PROPERTIES, callContext);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), MockPaymentProviderPlugin.PLUGIN_NAME, true, newPaymenrMethod, PLUGIN_PROPERTIES, callContext);
         Mockito.when(account.getPaymentMethodId()).thenReturn(newPaymentMethodId);
 
         methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);

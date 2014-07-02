@@ -545,7 +545,7 @@ public class AccountResource extends JaxRsResourceBase {
             return Response.status(Status.BAD_REQUEST).build();
         }
 
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(data.getExternalKey(), account, data.getPluginName(), isDefault, data.getPluginDetail(), pluginProperties, callContext);
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, data.getPluginName(), data.getExternalKey(),isDefault, data.getPluginDetail(), pluginProperties, callContext);
         if (payAllUnpaidInvoices && unpaidInvoices.size() > 0) {
             for (final Invoice invoice : unpaidInvoices) {
                 createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), false, callContext);

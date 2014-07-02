@@ -64,7 +64,7 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
         assertNotNull(account);
 
-        paymentApi.addPaymentMethod(UUID.randomUUID().toString(), account, BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, paymentMethodPlugin, PLUGIN_PROPERTIES, callContext);
+        paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, paymentMethodPlugin, PLUGIN_PROPERTIES, callContext);
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
         paymentPlugin.clear();

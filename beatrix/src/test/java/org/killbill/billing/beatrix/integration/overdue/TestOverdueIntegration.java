@@ -637,7 +637,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
 
         // Add a payment method and set it as default
-        paymentApi.addPaymentMethod(UUID.randomUUID().toString(), account, BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, paymentMethodPlugin, PLUGIN_PROPERTIES, callContext);
+        paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, paymentMethodPlugin, PLUGIN_PROPERTIES, callContext);
 
         allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(false);
 
