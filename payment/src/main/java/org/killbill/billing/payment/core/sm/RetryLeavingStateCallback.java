@@ -57,7 +57,7 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
 
         final DateTime utcNow = retryableDirectPaymentAutomatonRunner.clock.getUTCNow();
 
-        Preconditions.checkState(stateContext.getDirectPaymentExternalKey() != null || /* AUTH, PURCHASE, CREDIT calls will provide the payment  */
+        Preconditions.checkState(stateContext.getDirectPaymentExternalKey() != null || /* CAPTURE, PURCHASE, CREDIT calls will provide the paymentId */
                                  stateContext.getDirectPaymentId() != null);
         if (stateContext.getDirectPaymentExternalKey() == null) {
             final PaymentModelDao payment = paymentDao.getDirectPayment(stateContext.getDirectPaymentId(), stateContext.internalCallContext);

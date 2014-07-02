@@ -27,6 +27,8 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 
+import com.google.common.base.Objects;
+
 public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<PaymentMethod> {
 
     private String externalKey;
@@ -36,11 +38,11 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
 
     public PaymentMethodModelDao() { /* For the DAO mapper */ }
 
-    public PaymentMethodModelDao(final UUID id, final String externalKey, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+    public PaymentMethodModelDao(final UUID id,  @Nullable final String externalKey, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                  final UUID accountId, final String pluginName,
                                  final Boolean isActive) {
         super(id, createdDate, updatedDate);
-        this.externalKey = externalKey;
+        this.externalKey = Objects.firstNonNull(externalKey, id.toString());
         this.accountId = accountId;
         this.pluginName = pluginName;
         this.isActive = isActive;
