@@ -506,6 +506,27 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
     }
 
+    @Test(groups = "fast")
+    public void testSimpleAuthCaptureWithInvalidCurrency() throws Exception {
+        final BigDecimal requestedAmount = new BigDecimal("80.0091");
+
+        final DirectPayment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+                                                                            UUID.randomUUID().toString(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+
+
+        try {
+            paymentApi.createCapture(account, initialPayment.getId(), requestedAmount, Currency.AMD, UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail("Expected capture to fail...");
+        } catch (PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+
+            final DirectPayment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+            assertEquals(latestPayment, initialPayment);
+        }
+    }
+
+
+
     private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {
         final List<PluginProperty> result = new ArrayList<PluginProperty>();
         result.add(new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
