@@ -89,27 +89,10 @@ public class PluginControlledDirectPaymentAutomatonRunner extends DirectPaymentA
     public DirectPayment run(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
                              @Nullable final UUID directPaymentId, @Nullable final String directPaymentExternalKey, final String directPaymentTransactionExternalKey,
                              @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                             final Iterable<PluginProperty> properties,
-                             @Nullable final String pluginName, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                             final Iterable<PluginProperty> properties, @Nullable final String pluginName,
+                             final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return run(initialState, isApiPayment, transactionType, account, paymentMethodId, directPaymentId, directPaymentExternalKey, directPaymentTransactionExternalKey,
                    amount, currency, properties, pluginName, callContext, internalCallContext);
-    }
-
-    public DirectPayment run(final boolean isApiPayment, final TransactionType transactionType, final Account account,
-                             @Nullable final UUID directPaymentId, final String directPaymentTransactionExternalKey,
-                             @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                             final Iterable<PluginProperty> properties,
-                             @Nullable final String pluginName, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        return run(initialState, isApiPayment, transactionType, account, null, directPaymentId, null, directPaymentTransactionExternalKey,
-                   amount, currency, properties, pluginName, callContext, internalCallContext);
-    }
-
-    public DirectPayment run(final boolean isApiPayment, final TransactionType transactionType, final Account account,
-                             @Nullable final UUID directPaymentId, final String directPaymentTransactionExternalKey,
-                             final Iterable<PluginProperty> properties,
-                             @Nullable final String pluginName, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        return run(initialState, isApiPayment, transactionType, account, null, directPaymentId, null, directPaymentTransactionExternalKey,
-                   null, null, properties, pluginName, callContext, internalCallContext);
     }
 
     public DirectPayment run(final State state, final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
@@ -192,6 +175,9 @@ public class PluginControlledDirectPaymentAutomatonRunner extends DirectPaymentA
                 break;
             case REFUND:
                 callback = new RetryRefundOperationCallback(locker, paymentPluginDispatcher, directPaymentStateContext, directPaymentProcessor, paymentControlPluginRegistry);
+                break;
+            case CHARGEBACK:
+                callback = new RetryChargebackOperationCallback(locker, paymentPluginDispatcher, directPaymentStateContext, directPaymentProcessor, paymentControlPluginRegistry);
                 break;
             default:
                 throw new IllegalStateException("Unsupported transaction type " + transactionType);

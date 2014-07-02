@@ -43,7 +43,8 @@ public class RetryableDirectPaymentStateContext extends DirectPaymentStateContex
     private String pluginName;
     private DirectPayment result;
 
-    public RetryableDirectPaymentStateContext(@Nullable final String pluginName, final boolean isApiPayment, @Nullable final UUID directPaymentId, final String directPaymentExternalKey, @Nullable final String directPaymentTransactionExternalKey, final TransactionType transactionType,
+    public RetryableDirectPaymentStateContext(@Nullable final String pluginName, final boolean isApiPayment, @Nullable final UUID directPaymentId, final String directPaymentExternalKey,
+                                              @Nullable final String directPaymentTransactionExternalKey, final TransactionType transactionType,
                                               final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
                                               final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext, final CallContext callContext) {
         super(directPaymentId, directPaymentExternalKey, directPaymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, properties, internalCallContext, callContext);
@@ -97,14 +98,5 @@ public class RetryableDirectPaymentStateContext extends DirectPaymentStateContex
             return null;
         }
         return result.getTransactions().get(result.getTransactions().size() -1);
-/*
-STEPH
-        Iterables.filter(result.getTransactions(), new Predicate<DirectPaymentTransaction>() {
-            @Override
-            public boolean apply(final DirectPaymentTransaction input) {
-                return input.getExternalKey().equals(directPaymentTransactionExternalKey);
-            }
-        })
-        */
     }
 }

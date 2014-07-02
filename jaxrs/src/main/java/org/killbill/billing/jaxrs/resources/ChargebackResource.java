@@ -73,6 +73,7 @@ public class ChargebackResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
+    // STEPH  API needs to be discussed
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -86,8 +87,8 @@ public class ChargebackResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);
 
-        final DirectPayment payment = paymentApi.notifyChargeback(account, UUID.fromString(json.getChargedBackTransactionId()), json.getChargedBackTransactionId(), json.getAmount(),
-                                                                  Currency.valueOf(json.getCurrency()), callContext);
+        final DirectPayment payment = paymentApi.notifyChargebackWithPaymentControl(account, UUID.fromString(json.getChargedBackTransactionId()), json.getChargedBackTransactionId(), json.getAmount(),
+                                                                  Currency.valueOf(json.getCurrency()), createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
         return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
     }
 

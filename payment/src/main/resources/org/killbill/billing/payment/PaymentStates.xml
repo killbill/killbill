@@ -290,6 +290,12 @@
         </linkStateMachine>
         <linkStateMachine>
             <initialStateMachine>CAPTURE</initialStateMachine>
+            <initialState>CAPTURE_SUCCESS</initialState>
+            <finalStateMachine>CHARGEBACK</finalStateMachine>
+            <finalState>CHARGEBACK_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>CAPTURE</initialStateMachine>
             <initialState>CAPTURE_FAILED</initialState>
             <finalStateMachine>CAPTURE</finalStateMachine>
             <finalState>CAPTURE_INIT</finalState>
@@ -318,6 +324,11 @@
             <finalStateMachine>REFUND</finalStateMachine>
             <finalState>REFUND_INIT</finalState>
         </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>PURCHASE</initialStateMachine>
+            <initialState>PURCHASE_SUCCESS</initialState>
+            <finalStateMachine>CHARGEBACK</finalStateMachine>
+            <finalState>CHARGEBACK_INIT</finalState>
+        </linkStateMachine>
     </linkStateMachines>
-
 </stateMachineConfig>

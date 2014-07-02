@@ -28,7 +28,6 @@ import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import org.joda.time.DateTime;
 import org.killbill.automaton.State;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -145,6 +144,15 @@ public class DirectPaymentProcessor extends ProcessorBase {
         return performOperation(TransactionType.CREDIT, account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
+    public DirectPayment notifyChargeback(final Account account, @Nullable final UUID paymentId, @Nullable final UUID transactionId, final String directPaymentTransactionExternalKey, final BigDecimal amount, final Currency currency, final boolean shouldLockAccountAndDispatch,
+                                          final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+
+        // We need to have something...
+        Preconditions.checkState(paymentId != null || transactionId != null);
+        final UUID nonNullPaymentId = retrieveNonNullPaymentIdFromArguments(paymentId, transactionId, internalCallContext);
+        return performOperation(TransactionType.CHARGEBACK, account, null, nonNullPaymentId, amount, currency, null, directPaymentTransactionExternalKey, shouldLockAccountAndDispatch, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
+    }
+
     public List<DirectPayment> getAccountPayments(final UUID accountId, final InternalTenantContext tenantContext) throws PaymentApiException {
         final List<PaymentModelDao> paymentsModelDao = paymentDao.getDirectPaymentsForAccount(accountId, tenantContext);
         final List<PaymentTransactionModelDao> transactionsModelDao = paymentDao.getDirectTransactionsForAccount(accountId, tenantContext);
@@ -176,28 +184,6 @@ public class DirectPaymentProcessor extends ProcessorBase {
         paymentDao.updateDirectPaymentAndTransactionOnCompletion(transactionModelDao.getPaymentId(), currentPaymentState.getName(), transactionModelDao.getId(), newStatus,
                                                                  transactionModelDao.getProcessedAmount(), transactionModelDao.getProcessedCurrency(),
                                                                  transactionModelDao.getGatewayErrorCode(), transactionModelDao.getGatewayErrorMsg(), internalCallContext);
-    }
-
-    public DirectPayment notifyPaymentPaymentOfChargeback(final Account account, final UUID transactionId, final String chargebackTransactionExternalKey, final BigDecimal amount, final Currency currency, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-
-        validateUniqueTransactionExternalKey(chargebackTransactionExternalKey, internalCallContext);
-
-        final PaymentTransactionModelDao transactionModelDao = paymentDao.getDirectPaymentTransaction(transactionId, internalCallContext);
-        Preconditions.checkState(transactionModelDao != null);
-
-        final DateTime utcNow = clock.getUTCNow();
-        final PaymentTransactionModelDao chargebackTransaction = new PaymentTransactionModelDao(utcNow, utcNow, chargebackTransactionExternalKey, transactionModelDao.getPaymentId(),
-
-                                                                                                TransactionType.CHARGEBACK, utcNow, TransactionStatus.SUCCESS, amount, currency, null, null);
-        final State currentPaymentState = directPaymentAutomatonRunner.fetchNextState("CHARGEBACK_INIT", true);
-
-        // TODO STEPH we could create a DAO operation to do both steps at once
-        paymentDao.updateDirectPaymentWithNewTransaction(transactionModelDao.getPaymentId(), chargebackTransaction, internalCallContext);
-        paymentDao.updateDirectPaymentAndTransactionOnCompletion(transactionModelDao.getPaymentId(), currentPaymentState.getName(), chargebackTransaction.getId(), TransactionStatus.SUCCESS,
-                                                                 chargebackTransaction.getAmount(), chargebackTransaction.getCurrency(),
-                                                                 chargebackTransaction.getGatewayErrorCode(), chargebackTransaction.getGatewayErrorMsg(), internalCallContext);
-
-        return getPayment(transactionModelDao.getPaymentId(), false, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
     }
 
     public DirectPayment getPayment(final UUID directPaymentId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
@@ -356,19 +342,6 @@ public class DirectPaymentProcessor extends ProcessorBase {
         } finally {
             postPaymentEvent(account, transactionType, directPayment, directPaymentTransactionExternalKey, internalCallContext);
 
-        }
-    }
-
-    private void validateUniqueTransactionExternalKey(final String transactionExternalKey, final InternalTenantContext tenantContext) throws PaymentApiException {
-        final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectPaymentTransactionsByExternalKey(transactionExternalKey, tenantContext);
-        final PaymentTransactionModelDao transactionAlreadyExists = Iterables.tryFind(transactions, new Predicate<PaymentTransactionModelDao>() {
-            @Override
-            public boolean apply(final PaymentTransactionModelDao input) {
-                return input.getTransactionStatus() == TransactionStatus.SUCCESS;
-            }
-        }).orNull();
-        if (transactionAlreadyExists != null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, transactionExternalKey);
         }
     }
 

@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.killbill.automaton.State;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -36,6 +37,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PluginControlledDirectPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -52,6 +54,7 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.name.Named;
@@ -102,7 +105,9 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
         return pluginControlledDirectPaymentAutomatonRunner.run(isApiPayment,
                                                          TransactionType.CAPTURE,
                                                          account,
+                                                         null,
                                                          directPaymentId,
+                                                         null,
                                                          transactionExternalKey,
                                                          amount,
                                                          currency,
@@ -133,8 +138,12 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
         return pluginControlledDirectPaymentAutomatonRunner.run(isApiPayment,
                                                          TransactionType.VOID,
                                                          account,
+                                                         null,
                                                          directPaymentId,
+                                                         null,
                                                          transactionExternalKey,
+                                                         null,
+                                                         null,
                                                          properties,
                                                          null,
                                                          callContext, internalCallContext);
@@ -145,7 +154,9 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
         return pluginControlledDirectPaymentAutomatonRunner.run(isApiPayment,
                                                          TransactionType.REFUND,
                                                          account,
+                                                         null,
                                                          directPaymentId,
+                                                         null,
                                                          transactionExternalKey,
                                                          amount,
                                                          currency,
@@ -158,18 +169,37 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
                                       final String transactionExternalKey, final Iterable<PluginProperty> properties, final String paymentControlPluginName, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
 
         return pluginControlledDirectPaymentAutomatonRunner.run(isApiPayment,
-                                                         TransactionType.CREDIT,
-                                                         account,
-                                                         paymentMethodId,
-                                                         directPaymentId,
-                                                         paymentExternalKey,
-                                                         transactionExternalKey,
-                                                         amount,
-                                                         currency,
-                                                         properties,
-                                                         paymentControlPluginName,
-                                                         callContext, internalCallContext);
+                                                                TransactionType.CREDIT,
+                                                                account,
+                                                                paymentMethodId,
+                                                                directPaymentId,
+                                                                paymentExternalKey,
+                                                                transactionExternalKey,
+                                                                amount,
+                                                                currency,
+                                                                properties,
+                                                                paymentControlPluginName,
+                                                                callContext, internalCallContext);
     }
+
+    public DirectPayment notifyPaymentPaymentOfChargeback(final Account account, final UUID transactionId, final String transactionExternalKey, final BigDecimal amount, final Currency currency,
+                                                          final String paymentControlPluginName, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+        // We need to have something...
+        final UUID nonNullPaymentId = retrieveNonNullPaymentIdFromArguments(null, transactionId, internalCallContext);
+        return pluginControlledDirectPaymentAutomatonRunner.run(true,
+                                                                TransactionType.CHARGEBACK,
+                                                                account,
+                                                                null,
+                                                                nonNullPaymentId,
+                                                                null,
+                                                                transactionExternalKey,
+                                                                amount,
+                                                                currency,
+                                                                ImmutableList.<PluginProperty>of(),
+                                                                paymentControlPluginName,
+                                                                callContext, internalCallContext);
+    }
+
 
     public void retryPaymentTransaction(final UUID attemptId, final String pluginName, final InternalCallContext internalCallContext) {
         try {
