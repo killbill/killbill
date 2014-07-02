@@ -139,10 +139,10 @@ public class DirectPaymentAutomatonDAOHelper {
         final DateTime updatedDate = utcNow;
 
         return new PaymentModelDao(createdDate,
-                                         updatedDate,
-                                         directPaymentStateContext.getAccount().getId(),
-                                         directPaymentStateContext.getPaymentMethodId(),
-                                         directPaymentStateContext.getDirectPaymentExternalKey());
+                                   updatedDate,
+                                   directPaymentStateContext.getAccount().getId(),
+                                   directPaymentStateContext.getPaymentMethodId(),
+                                   directPaymentStateContext.getDirectPaymentExternalKey());
     }
 
     private PaymentTransactionModelDao buildNewDirectPaymentTransactionModelDao(final UUID directPaymentId) {
@@ -153,16 +153,16 @@ public class DirectPaymentAutomatonDAOHelper {
         final String gatewayErrorMsg = null;
 
         return new PaymentTransactionModelDao(createdDate,
-                                                    updatedDate,
-                                                    directPaymentStateContext.getDirectPaymentTransactionExternalKey(),
-                                                    directPaymentId,
-                                                    directPaymentStateContext.getTransactionType(),
-                                                    effectiveDate,
-                                                    TransactionStatus.UNKNOWN,
-                                                    directPaymentStateContext.getAmount(),
-                                                    directPaymentStateContext.getCurrency(),
-                                                    gatewayErrorCode,
-                                                    gatewayErrorMsg);
+                                              updatedDate,
+                                              directPaymentStateContext.getDirectPaymentTransactionExternalKey(),
+                                              directPaymentId,
+                                              directPaymentStateContext.getTransactionType(),
+                                              effectiveDate,
+                                              TransactionStatus.UNKNOWN,
+                                              directPaymentStateContext.getAmount(),
+                                              directPaymentStateContext.getCurrency(),
+                                              gatewayErrorCode,
+                                              gatewayErrorMsg);
     }
 
     private PaymentPluginApi getPaymentPluginApi(final String pluginName) throws PaymentApiException {

@@ -34,9 +34,15 @@ public class RetryChargebackOperationCallback extends RetryOperationCallback {
 
     @Override
     protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
-        return directPaymentProcessor.notifyChargeback(directPaymentStateContext.account, directPaymentStateContext.getDirectPaymentId(), null, directPaymentStateContext.directPaymentTransactionExternalKey, directPaymentStateContext.getAmount(),
-                                                       directPaymentStateContext.getCurrency(), false,
-                                                       directPaymentStateContext.callContext, directPaymentStateContext.internalCallContext);
-
+        return directPaymentProcessor.notifyChargeback(retryableDirectPaymentStateContext.isApiPayment(),
+                                                    retryableDirectPaymentStateContext.getAccount(),
+                                                    retryableDirectPaymentStateContext.getDirectPaymentId(),
+                                                    null,
+                                                    retryableDirectPaymentStateContext.getDirectPaymentTransactionExternalKey(),
+                                                    retryableDirectPaymentStateContext.getAmount(),
+                                                    retryableDirectPaymentStateContext.getCurrency(),
+                                                    false,
+                                                    retryableDirectPaymentStateContext.getCallContext(),
+                                                    retryableDirectPaymentStateContext.getInternalCallContext());
     }
 }

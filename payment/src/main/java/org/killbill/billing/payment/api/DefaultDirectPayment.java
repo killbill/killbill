@@ -136,7 +136,7 @@ public class DefaultDirectPayment extends EntityBase implements DirectPayment {
 
     @Override
     public boolean isAuthVoided() {
-        return false;
+        return isVoided;
     }
 
     @Override

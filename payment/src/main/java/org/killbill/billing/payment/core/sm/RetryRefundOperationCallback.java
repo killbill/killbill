@@ -33,6 +33,15 @@ public class RetryRefundOperationCallback extends RetryOperationCallback {
 
     @Override
     protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
-        return directPaymentProcessor.createRefund(directPaymentStateContext.account, directPaymentStateContext.directPaymentId, directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency(), directPaymentStateContext.directPaymentTransactionExternalKey, false, directPaymentStateContext.getProperties(), directPaymentStateContext.callContext, directPaymentStateContext.internalCallContext);
+        return directPaymentProcessor.createRefund(retryableDirectPaymentStateContext.isApiPayment(),
+                                                   retryableDirectPaymentStateContext.getAccount(),
+                                                   retryableDirectPaymentStateContext.getDirectPaymentId(),
+                                                   retryableDirectPaymentStateContext.getAmount(),
+                                                   retryableDirectPaymentStateContext.getCurrency(),
+                                                   retryableDirectPaymentStateContext.getDirectPaymentTransactionExternalKey(),
+                                                   false,
+                                                   retryableDirectPaymentStateContext.getProperties(),
+                                                   retryableDirectPaymentStateContext.getCallContext(),
+                                                   retryableDirectPaymentStateContext.getInternalCallContext());
     }
 }
