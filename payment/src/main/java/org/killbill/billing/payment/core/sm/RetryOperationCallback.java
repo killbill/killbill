@@ -53,8 +53,11 @@ import org.slf4j.LoggerFactory;
 
 public abstract class RetryOperationCallback extends OperationCallbackBase implements OperationCallback {
 
-    protected final DirectPaymentProcessor directPaymentProcessor;
     private final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry;
+
+    protected final DirectPaymentProcessor directPaymentProcessor;
+    protected final RetryableDirectPaymentStateContext retryableDirectPaymentStateContext;
+
 
     private final Logger logger = LoggerFactory.getLogger(RetryOperationCallback.class);
 
@@ -62,6 +65,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
         super(locker, paymentPluginDispatcher, directPaymentStateContext);
         this.directPaymentProcessor = directPaymentProcessor;
         this.paymentControlPluginRegistry = retryPluginRegistry;
+        this.retryableDirectPaymentStateContext = directPaymentStateContext;
     }
 
 
@@ -76,7 +80,6 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
             @Override
             public OperationResult doOperation() throws OperationException {
 
-                final RetryableDirectPaymentStateContext retryableDirectPaymentStateContext = (RetryableDirectPaymentStateContext) directPaymentStateContext;
                 final PaymentControlContext paymentControlContext = new DefaultPaymentControlContext(directPaymentStateContext.getAccount(),
                                                                                                      directPaymentStateContext.getPaymentMethodId(),
                                                                                                      retryableDirectPaymentStateContext.getAttemptId(),

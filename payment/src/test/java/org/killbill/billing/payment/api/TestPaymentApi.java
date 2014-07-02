@@ -507,6 +507,26 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "fast")
+    public void testSimpleAuthCaptureWithInvalidPaymentId() throws Exception {
+        final BigDecimal requestedAmount = new BigDecimal("80.0091");
+
+        final DirectPayment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+                                                                            UUID.randomUUID().toString(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+
+
+        try {
+            paymentApi.createCapture(account, UUID.randomUUID(), requestedAmount, account.getCurrency(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail("Expected capture to fail...");
+        } catch (PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_PAYMENT.getCode());
+
+            final DirectPayment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+            assertEquals(latestPayment, initialPayment);
+        }
+    }
+
+
+    @Test(groups = "fast")
     public void testSimpleAuthCaptureWithInvalidCurrency() throws Exception {
         final BigDecimal requestedAmount = new BigDecimal("80.0091");
 
