@@ -122,9 +122,12 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
         if (id != null ? !id.equals(that.id) : that.id != null) {
             return false;
         }
+        /*
+        TODO unclear
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
             return false;
         }
+        */
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
