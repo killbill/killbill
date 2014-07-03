@@ -40,7 +40,7 @@ public class DefaultDirectPayment extends EntityBase implements DirectPayment {
     private final BigDecimal purchasedAmount;
     private final BigDecimal creditAmount;
     private final BigDecimal refundAmount;
-    private final boolean isVoided;
+    private final Boolean isVoided;
 
     private final Currency currency;
     private final List<DirectPaymentTransaction> transactions;
@@ -135,7 +135,7 @@ public class DefaultDirectPayment extends EntityBase implements DirectPayment {
     }
 
     @Override
-    public boolean isAuthVoided() {
+    public Boolean isAuthVoided() {
         return isVoided;
     }
 
