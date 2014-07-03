@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -31,12 +32,15 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
 
+import com.google.common.collect.ImmutableList;
+
 public class DirectPaymentStateContext {
 
     // HACK
     protected UUID paymentMethodId;
 
     // Stateful objects created by the callbacks and passed to the other following callbacks in the automaton
+    protected List<PaymentTransactionModelDao> onLeavingStateExistingTransactions;
     protected PaymentTransactionModelDao directPaymentTransactionModelDao;
     protected PaymentTransactionInfoPlugin paymentInfoPlugin;
     protected BigDecimal amount;
@@ -81,6 +85,7 @@ public class DirectPaymentStateContext {
         this.properties = properties;
         this.internalCallContext = internalCallContext;
         this.callContext = callContext;
+        this.onLeavingStateExistingTransactions = ImmutableList.of();
     }
 
     public void setPaymentMethodId(final UUID paymentMethodId) {
@@ -93,6 +98,14 @@ public class DirectPaymentStateContext {
 
     public void setDirectPaymentTransactionModelDao(final PaymentTransactionModelDao directPaymentTransactionModelDao) {
         this.directPaymentTransactionModelDao = directPaymentTransactionModelDao;
+    }
+
+    public List<PaymentTransactionModelDao> getOnLeavingStateExistingTransactions() {
+        return onLeavingStateExistingTransactions;
+    }
+
+    public void setOnLeavingStateExistingTransactions(final List<PaymentTransactionModelDao> onLeavingStateExistingTransactions) {
+        this.onLeavingStateExistingTransactions = onLeavingStateExistingTransactions;
     }
 
     public PaymentTransactionInfoPlugin getPaymentInfoPlugin() {

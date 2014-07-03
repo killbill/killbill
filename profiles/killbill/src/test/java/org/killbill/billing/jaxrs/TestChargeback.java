@@ -26,12 +26,18 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.Chargeback;
 import org.killbill.billing.client.model.Invoice;
+import org.killbill.billing.client.model.InvoicePayment;
+import org.killbill.billing.client.model.InvoicePaymentTransaction;
+import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Payment;
+import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Subscription;
+import org.killbill.billing.payment.api.TransactionType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -41,48 +47,50 @@ import static org.testng.Assert.fail;
 
 public class TestChargeback extends TestJaxrsBase {
 
-    // STEPH disable all chargeback tests until chargeback gets correctly implemented in payment (part of TODO list)
-    @Test(groups = "slow", description = "Can create a chargeback", enabled=false)
+    @Test(groups = "slow", description = "Can create a chargeback")
     public void testAddChargeback() throws Exception {
         final Payment payment = createAccountWithInvoiceAndPayment();
         createAndVerifyChargeback(payment);
     }
 
-    @Test(groups = "slow", description = "Can create multiple chargebacks", enabled=false)
+    @Test(groups = "slow", description = "Can create multiple chargebacks")
     public void testMultipleChargeback() throws Exception {
         final Payment payment = createAccountWithInvoiceAndPayment();
 
         // We get a 249.95 payment so we do 4 chargeback and then the fifth should fail
-        final Chargeback input = new Chargeback();
-        input.setAmount(new BigDecimal("50.00"));
+        final InvoicePaymentTransaction input = new InvoicePaymentTransaction();
         input.setPaymentId(payment.getPaymentId());
-
+        input.setAmount(new BigDecimal("50.00"));
         int count = 4;
         while (count-- > 0) {
-            assertNotNull(killBillClient.createChargeBack(input, createdBy, reason, comment));
+            assertNotNull(killBillClient.createInvoicePaymentChargeback(input, createdBy, reason, comment));
         }
 
         // Last attempt should fail because this is more than the Payment
         try {
-            killBillClient.createChargeBack(input, createdBy, reason, comment);
+            killBillClient.createInvoicePaymentChargeback(input, createdBy, reason, comment);
             fail();
         } catch (final KillBillClientException e) {
         }
 
-        // Find the chargeback by account
-        List<Chargeback> chargebacks = killBillClient.getChargebacksForAccount(payment.getAccountId());
-        assertEquals(chargebacks.size(), 4);
-        for (final Chargeback chargeBack : chargebacks) {
-            assertTrue(chargeBack.getAmount().compareTo(input.getAmount()) == 0);
-            assertEquals(chargeBack.getPaymentId(), input.getPaymentId());
+        final List<InvoicePayment> payments = killBillClient.getInvoicePaymentsForAccount(payment.getAccountId());
+        final List<PaymentTransaction> transactions = getDirectPaymentTransactions(payments, TransactionType.CHARGEBACK.toString());
+        Assert.assertEquals(transactions.size(), 5);
+        int found = 0;
+        for (final PaymentTransaction transaction : transactions) {
+            if (transaction.getStatus().equals("SUCCESS")) {
+                assertTrue(transaction.getAmount().compareTo(input.getAmount()) == 0);
+                assertEquals(transaction.getPaymentId(), input.getPaymentId());
+                found++;
+            } else {
+                assertEquals(transaction.getStatus(), "PAYMENT_FAILURE");
+                found++;
+            }
         }
-
-        // Find the chargeback by payment
-        chargebacks = killBillClient.getChargebacksForPayment(payment.getPaymentId());
-        assertEquals(chargebacks.size(), 4);
+        assertEquals(found, 5);
     }
 
-    @Test(groups = "slow", description = "Can add a chargeback for deleted payment methods", enabled=false)
+    @Test(groups = "slow", description = "Can add a chargeback for deleted payment methods")
     public void testAddChargebackForDeletedPaymentMethod() throws Exception {
         final Payment payment = createAccountWithInvoiceAndPayment();
 
@@ -99,59 +107,62 @@ public class TestChargeback extends TestJaxrsBase {
         createAndVerifyChargeback(payment);
     }
 
-    @Test(groups = "slow", description = "Cannot add a chargeback for non existent payment", enabled=false)
-    public void testInvoicePaymentDoesNotExist() throws Exception {
-        final Chargeback input = new Chargeback();
+    @Test(groups = "slow", description = "Cannot add a chargeback for non existent payment")
+    public void testInvoicePaymentDoesNotExist() {
+
+        final InvoicePaymentTransaction input = new InvoicePaymentTransaction();
+        input.setPaymentId(input.getPaymentId());
         input.setAmount(BigDecimal.TEN);
-        input.setPaymentId(UUID.randomUUID());
-        assertNull(killBillClient.createChargeBack(input, createdBy, reason, comment));
+        try {
+            killBillClient.createInvoicePaymentChargeback(input, createdBy, reason, comment);
+            fail();
+        } catch (NullPointerException e) {
+        } catch (KillBillClientException e) {
+            fail();
+        }
     }
 
-    @Test(groups = "slow", description = "Cannot add a badly formatted chargeback", enabled=false)
+    @Test(groups = "slow", description = "Cannot add a badly formatted chargeback")
     public void testBadRequest() throws Exception {
         final Payment payment = createAccountWithInvoiceAndPayment();
 
-        final Chargeback input = new Chargeback();
-        input.setAmount(BigDecimal.TEN.negate());
+        final InvoicePaymentTransaction input = new InvoicePaymentTransaction();
         input.setPaymentId(payment.getPaymentId());
+        input.setAmount(BigDecimal.TEN.negate());
 
         try {
-            killBillClient.createChargeBack(input, createdBy, reason, comment);
+            killBillClient.createInvoicePaymentChargeback(input, createdBy, reason, comment);
             fail();
         } catch (final KillBillClientException e) {
         }
     }
 
-    @Test(groups = "slow", description = "Accounts can have zero chargeback", enabled=false)
+    @Test(groups = "slow", description = "Accounts can have zero chargeback")
     public void testNoChargebackForAccount() throws Exception {
-        Assert.assertEquals(killBillClient.getChargebacksForAccount(UUID.randomUUID()).size(), 0);
-    }
-
-    @Test(groups = "slow", description = "Payments can have zero chargeback", enabled=false)
-    public void testNoChargebackForPayment() throws Exception {
-        Assert.assertEquals(killBillClient.getChargebacksForPayment(UUID.randomUUID()).size(), 0);
+        final List<InvoicePayment> payments = killBillClient.getInvoicePaymentsForAccount(UUID.randomUUID());
+        final List<PaymentTransaction> transactions = getDirectPaymentTransactions(payments, TransactionType.CHARGEBACK.toString());
+        Assert.assertEquals(transactions.size(), 0);
     }
 
     private void createAndVerifyChargeback(final Payment payment) throws KillBillClientException {
         // Create the chargeback
-        final Chargeback chargeback = new Chargeback();
+        final InvoicePaymentTransaction chargeback = new InvoicePaymentTransaction();
         chargeback.setPaymentId(payment.getPaymentId());
         chargeback.setAmount(BigDecimal.TEN);
-        final Chargeback chargebackJson = killBillClient.createChargeBack(chargeback, createdBy, reason, comment);
-        assertEquals(chargebackJson.getAmount().compareTo(chargeback.getAmount()), 0);
-        assertEquals(chargebackJson.getPaymentId(), chargeback.getPaymentId());
+
+        final InvoicePayment chargebackJson = killBillClient.createInvoicePaymentChargeback(chargeback, createdBy, reason, comment);
+        final List<PaymentTransaction> chargebackTransactions = getDirectPaymentTransactions(ImmutableList.of(chargebackJson), TransactionType.CHARGEBACK.toString());
+        assertEquals(chargebackTransactions.size(), 1);
+
+        assertEquals(chargebackTransactions.get(0).getAmount().compareTo(chargeback.getAmount()), 0);
+        assertEquals(chargebackTransactions.get(0).getPaymentId(), chargeback.getPaymentId());
 
         // Find the chargeback by account
-        List<Chargeback> chargebacks = killBillClient.getChargebacksForAccount(payment.getAccountId());
-        assertEquals(chargebacks.size(), 1);
-        assertEquals(chargebacks.get(0).getAmount().compareTo(chargeback.getAmount()), 0);
-        assertEquals(chargebacks.get(0).getPaymentId(), chargeback.getPaymentId());
-
-        // Find the chargeback by payment
-        chargebacks = killBillClient.getChargebacksForPayment(payment.getPaymentId());
-        assertEquals(chargebacks.size(), 1);
-        assertEquals(chargebacks.get(0).getAmount().compareTo(chargeback.getAmount()), 0);
-        assertEquals(chargebacks.get(0).getPaymentId(), chargeback.getPaymentId());
+        final List<InvoicePayment> payments = killBillClient.getInvoicePaymentsForAccount(payment.getAccountId());
+        final List<PaymentTransaction> transactions = getDirectPaymentTransactions(payments, TransactionType.CHARGEBACK.toString());
+        Assert.assertEquals(transactions.size(), 1);
+        assertEquals(transactions.get(0).getAmount().compareTo(chargeback.getAmount()), 0);
+        assertEquals(transactions.get(0).getPaymentId(), chargeback.getPaymentId());
     }
 
     private Payment createAccountWithInvoiceAndPayment() throws Exception {
@@ -182,7 +193,7 @@ public class TestChargeback extends TestJaxrsBase {
     }
 
     private Payment getPayment(final Invoice invoice) throws KillBillClientException {
-        final List<Payment> payments = null; //killBillClient.getPaymentsForInvoice(invoice.getInvoiceId());
+        final InvoicePayments payments = killBillClient.getInvoicePayment(invoice.getInvoiceId());
         assertNotNull(payments);
         assertEquals(payments.size(), 1);
         return payments.get(0);

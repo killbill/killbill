@@ -182,15 +182,13 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
                                                                 callContext, internalCallContext);
     }
 
-    public DirectPayment notifyPaymentPaymentOfChargeback(final Account account, final UUID transactionId, final String transactionExternalKey, final BigDecimal amount, final Currency currency,
-                                                          final String paymentControlPluginName, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        // We need to have something...
-        final UUID nonNullPaymentId = retrieveNonNullPaymentIdFromArguments(null, transactionId, internalCallContext);
+    public DirectPayment createChargeback(final Account account, final UUID paymentId, final String transactionExternalKey, final BigDecimal amount, final Currency currency,
+                                          final String paymentControlPluginName, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return pluginControlledDirectPaymentAutomatonRunner.run(true,
                                                                 TransactionType.CHARGEBACK,
                                                                 account,
                                                                 null,
-                                                                nonNullPaymentId,
+                                                                paymentId,
                                                                 null,
                                                                 transactionExternalKey,
                                                                 amount,

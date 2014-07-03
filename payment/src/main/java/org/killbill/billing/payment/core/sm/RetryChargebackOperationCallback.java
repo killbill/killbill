@@ -34,15 +34,14 @@ public class RetryChargebackOperationCallback extends RetryOperationCallback {
 
     @Override
     protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
-        return directPaymentProcessor.notifyChargeback(retryableDirectPaymentStateContext.isApiPayment(),
-                                                    retryableDirectPaymentStateContext.getAccount(),
-                                                    retryableDirectPaymentStateContext.getDirectPaymentId(),
-                                                    null,
-                                                    retryableDirectPaymentStateContext.getDirectPaymentTransactionExternalKey(),
-                                                    retryableDirectPaymentStateContext.getAmount(),
-                                                    retryableDirectPaymentStateContext.getCurrency(),
-                                                    false,
-                                                    retryableDirectPaymentStateContext.getCallContext(),
-                                                    retryableDirectPaymentStateContext.getInternalCallContext());
+        return directPaymentProcessor.createChargeback(retryableDirectPaymentStateContext.isApiPayment(),
+                                                       retryableDirectPaymentStateContext.getAccount(),
+                                                       retryableDirectPaymentStateContext.getDirectPaymentId(),
+                                                       retryableDirectPaymentStateContext.getDirectPaymentTransactionExternalKey(),
+                                                       retryableDirectPaymentStateContext.getAmount(),
+                                                       retryableDirectPaymentStateContext.getCurrency(),
+                                                       false,
+                                                       retryableDirectPaymentStateContext.getCallContext(),
+                                                       retryableDirectPaymentStateContext.getInternalCallContext());
     }
 }

@@ -17,9 +17,14 @@
 
 package org.killbill.billing.payment.core.sm;
 
+import java.math.BigDecimal;
+
+import javax.annotation.Nullable;
+
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
@@ -28,6 +33,9 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class ChargebackOperation extends DirectPaymentOperation {
 
@@ -42,14 +50,36 @@ public class ChargebackOperation extends DirectPaymentOperation {
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting CHARGEBACK for payment {} ({} {})", directPaymentStateContext.getDirectPaymentId(), directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency());
-        return new DefaultNoOpPaymentInfoPlugin( directPaymentStateContext.getDirectPaymentId(),
+
+        final PaymentPluginStatus status;
+        if (!directPaymentStateContext.getOnLeavingStateExistingTransactions().isEmpty()) {
+            final Iterable<PaymentTransactionModelDao> purchaseTransactions = getOnLeavingStateExistingTransactionsForType(TransactionType.PURCHASE);
+            final Iterable<PaymentTransactionModelDao> captureTransactions = getOnLeavingStateExistingTransactionsForType(TransactionType.CAPTURE);
+            final Iterable<PaymentTransactionModelDao> refundTransactions = getOnLeavingStateExistingTransactionsForType(TransactionType.REFUND);
+            final Iterable<PaymentTransactionModelDao> chargebackTransactions = getOnLeavingStateExistingTransactionsForType(TransactionType.CHARGEBACK);
+
+            final BigDecimal purchasedAmount = getSumAmount(purchaseTransactions);
+            final BigDecimal capturedAmount = getSumAmount(captureTransactions);
+            final BigDecimal refundedAmount = getSumAmount(refundTransactions);
+            final BigDecimal chargebackAmount = getSumAmount(chargebackTransactions);
+            final BigDecimal chargebackAvailableAmount = purchasedAmount.add(capturedAmount).subtract(refundedAmount.add(chargebackAmount));
+
+            if (directPaymentStateContext.getAmount().compareTo(chargebackAvailableAmount) > 0) {
+                status = PaymentPluginStatus.ERROR;
+            } else {
+                status = PaymentPluginStatus.PROCESSED;
+            }
+        } else {
+            status = PaymentPluginStatus.PROCESSED;
+        }
+        return new DefaultNoOpPaymentInfoPlugin(directPaymentStateContext.getDirectPaymentId(),
                                                  directPaymentStateContext.getTransactionPaymentId(),
                                                  TransactionType.CHARGEBACK,
                                                  directPaymentStateContext.getAmount(),
                                                  directPaymentStateContext.getCurrency(),
                                                  null,
                                                  null,
-                                                 PaymentPluginStatus.PROCESSED,
+                                                 status,
                                                  null);
     }
 }

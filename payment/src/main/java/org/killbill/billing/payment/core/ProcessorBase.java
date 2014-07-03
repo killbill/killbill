@@ -171,20 +171,6 @@ public abstract class ProcessorBase {
         }
     }
 
-    protected UUID retrieveNonNullPaymentIdFromArguments(@Nullable final UUID paymentId, @Nullable final UUID transactionId, final InternalCallContext internalCallContext) throws PaymentApiException {
-        final UUID nonNullPaymentId;
-        if (paymentId == null) {
-            final PaymentTransactionModelDao transactionModelDao = paymentDao.getDirectPaymentTransaction(transactionId, internalCallContext);
-            if (transactionModelDao == null) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, transactionId, "need to specify a valid transactionId");
-            }
-            nonNullPaymentId = transactionModelDao.getPaymentId();
-        } else {
-            nonNullPaymentId = paymentId;
-        }
-        return nonNullPaymentId;
-    }
-
     protected TenantContext buildTenantContext(final InternalTenantContext context) {
         return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
     }

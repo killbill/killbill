@@ -517,18 +517,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected void createChargeBackAndCheckForCompletion(final InvoicePayment payment, final NextEvent... events) {
+    protected void createChargeBackAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
             @Override
             public Void apply(@Nullable final Void input) {
-                /*
                 try {
-                    // STEPH to be fixed with chargeback code
-                    //invoicePaymentApi.createChargeback(payment.getId(), payment.getAmount(), callContext);
-                } catch (final InvoiceApiException e) {
+                    paymentApi.createChargebackWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
+                                                                  PAYMENT_OPTIONS, callContext);
+                } catch (PaymentApiException e) {
                     fail(e.toString());
+                    return null;
                 }
-                */
                 return null;
             }
         }, events);

@@ -63,6 +63,7 @@ import org.killbill.clock.Clock;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -83,9 +84,9 @@ public class DirectPaymentResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path("/{directPaymentId:" + UUID_PATTERN + "}/")
+    @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
-    public Response getDirectPayment(@PathParam("directPaymentId") final String directPaymentIdStr,
+    public Response getDirectPayment(@PathParam("paymentId") final String directPaymentIdStr,
                                      @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -184,11 +185,11 @@ public class DirectPaymentResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/{directPaymentId:" + UUID_PATTERN + "}/")
+    @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response captureAuthorization(final DirectTransactionJson json,
-                                         @PathParam("directPaymentId") final String directPaymentIdStr,
+                                         @PathParam("paymentId") final String directPaymentIdStr,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                          @HeaderParam(HDR_REASON) final String reason,
@@ -209,11 +210,11 @@ public class DirectPaymentResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/{directPaymentId:" + UUID_PATTERN + "}/" + REFUNDS)
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response refundPayment(final DirectTransactionJson json,
-                                  @PathParam("directPaymentId") final String directPaymentIdStr,
+                                  @PathParam("paymentId") final String directPaymentIdStr,
                                   @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
@@ -234,11 +235,11 @@ public class DirectPaymentResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path("/{directPaymentId:" + UUID_PATTERN + "}/")
+    @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response voidPayment(final DirectTransactionJson json,
-                                @PathParam("directPaymentId") final String directPaymentIdStr,
+                                @PathParam("paymentId") final String directPaymentIdStr,
                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,
@@ -255,6 +256,30 @@ public class DirectPaymentResource extends JaxRsResourceBase {
         final DirectPayment payment = paymentApi.createVoid(account, directPaymentId, json.getTransactionExternalKey(), pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
     }
+
+    @POST
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response chargebackPayment(final DirectTransactionJson json,
+                                  @PathParam("paymentId") final String directPaymentIdStr,
+                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID directPaymentId = UUID.fromString(directPaymentIdStr);
+        final DirectPayment initialPayment = paymentApi.getPayment(directPaymentId, false, ImmutableList.<PluginProperty>of(), callContext);
+
+        final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+
+        final DirectPayment payment = paymentApi.createChargeback(account, directPaymentId, json.getAmount(), currency,
+                                                                  json.getTransactionExternalKey(), callContext);
+        return uriBuilder.buildResponse(uriInfo, DirectPaymentResource.class, "getDirectPayment", payment.getId());
+    }
+
 
     @Override
     protected ObjectType getObjectType() {

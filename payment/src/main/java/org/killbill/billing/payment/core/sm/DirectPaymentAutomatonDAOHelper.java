@@ -37,6 +37,8 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 
+import com.google.common.collect.ImmutableList;
+
 public class DirectPaymentAutomatonDAOHelper {
 
     protected final DirectPaymentStateContext directPaymentStateContext;
@@ -61,16 +63,18 @@ public class DirectPaymentAutomatonDAOHelper {
 
     public void createNewDirectPaymentTransaction() throws PaymentApiException {
 
-
         final PaymentTransactionModelDao paymentTransactionModelDao;
+        final List<PaymentTransactionModelDao> existingTransactions;
         if (directPaymentStateContext.getDirectPaymentId() == null) {
             final PaymentModelDao newPaymentModelDao = buildNewDirectPaymentModelDao();
             final PaymentTransactionModelDao newPaymentTransactionModelDao = buildNewDirectPaymentTransactionModelDao(newPaymentModelDao.getId());
 
+            existingTransactions = ImmutableList.of();
             final PaymentModelDao paymentModelDao = paymentDao.insertDirectPaymentWithFirstTransaction(newPaymentModelDao, newPaymentTransactionModelDao, internalCallContext);
             paymentTransactionModelDao = paymentDao.getDirectTransactionsForDirectPayment(paymentModelDao.getId(), internalCallContext).get(0);
+
         } else {
-            final List<PaymentTransactionModelDao> existingTransactions = paymentDao.getDirectTransactionsForDirectPayment(directPaymentStateContext.getDirectPaymentId(), internalCallContext);
+            existingTransactions = paymentDao.getDirectTransactionsForDirectPayment(directPaymentStateContext.getDirectPaymentId(), internalCallContext);
             if (existingTransactions.isEmpty()) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, directPaymentStateContext.getDirectPaymentId());
             }
@@ -83,7 +87,7 @@ public class DirectPaymentAutomatonDAOHelper {
         }
         // Update the context
         directPaymentStateContext.setDirectPaymentTransactionModelDao(paymentTransactionModelDao);
-
+        directPaymentStateContext.setOnLeavingStateExistingTransactions(existingTransactions);
     }
 
     public void processPaymentInfoPlugin(final TransactionStatus paymentStatus, @Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin,

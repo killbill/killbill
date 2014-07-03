@@ -47,6 +47,7 @@ import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -790,8 +791,9 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now, create a chargeback for the second (first non-zero dollar) invoice
-        final InvoicePayment payment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
-        createChargeBackAndCheckForCompletion(payment, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
+        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
+        final DirectPayment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        createChargeBackAndCheckForCompletion(account, payment, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
         // We should now be in OD1
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);

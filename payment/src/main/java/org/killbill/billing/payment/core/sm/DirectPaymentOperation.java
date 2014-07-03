@@ -17,6 +17,8 @@
 
 package org.killbill.billing.payment.core.sm;
 
+import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -25,7 +27,10 @@ import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
@@ -36,16 +41,21 @@ import org.killbill.commons.locker.LockFailedException;
 import com.google.common.base.Objects;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 // Encapsulates the payment specific logic
 public abstract class DirectPaymentOperation extends OperationCallbackBase implements OperationCallback {
 
     protected final PaymentPluginApi plugin;
+    protected final DirectPaymentAutomatonDAOHelper daoHelper;
 
     protected DirectPaymentOperation(final DirectPaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker,
                                      final PluginDispatcher<OperationResult> paymentPluginDispatcher,
                                      final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
         super(locker, paymentPluginDispatcher, directPaymentStateContext);
+        this.daoHelper = daoHelper;
         this.plugin = daoHelper.getPaymentProviderPlugin();
     }
 
@@ -91,6 +101,27 @@ public abstract class DirectPaymentOperation extends OperationCallbackBase imple
 
     @Override
     protected abstract PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException;
+
+    protected Iterable<PaymentTransactionModelDao> getOnLeavingStateExistingTransactionsForType(final TransactionType transactionType) {
+        if (directPaymentStateContext.getOnLeavingStateExistingTransactions() == null || directPaymentStateContext.getOnLeavingStateExistingTransactions().isEmpty()) {
+            return ImmutableList.of();
+        }
+        return Iterables.filter(directPaymentStateContext.getOnLeavingStateExistingTransactions(), new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return input.getTransactionStatus() == TransactionStatus.SUCCESS && input.getTransactionType() == transactionType;
+            }
+        });
+    }
+
+    protected BigDecimal getSumAmount(final Iterable<PaymentTransactionModelDao> transactions) {
+        BigDecimal result = BigDecimal.ZERO;
+        Iterator<PaymentTransactionModelDao> iterator = transactions.iterator();
+        while (iterator.hasNext()) {
+            result = result.add(iterator.next().getAmount());
+        }
+        return result;
+    }
 
     private OperationResult doOperationCallbackWithDispatchAndAccountLock() throws OperationException {
         return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<OperationResult, OperationException>() {

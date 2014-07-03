@@ -208,37 +208,37 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     }
 
     @Override
-    public void notifyPendingTransactionOfStateChangedWithPaymentControl(Account account, UUID directPaymentTransactionId, boolean isSuccess, PaymentOptions paymentOptions, CallContext context) throws PaymentApiException {
+    public void notifyPendingTransactionOfStateChangedWithPaymentControl(final Account account, final UUID directPaymentTransactionId, final boolean isSuccess, final PaymentOptions paymentOptions, final CallContext context) throws PaymentApiException {
 
     }
 
 
     @Override
-    public DirectPayment notifyChargeback(final Account account, final UUID directPaymentTransactionId, @Nullable final String chargebackTransactionExternalKey, final BigDecimal amount, final Currency currency,
-                                          final CallContext callContext) throws PaymentApiException {
-
+    public DirectPayment createChargeback(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency, final String directPaymentTransactionExternalKey, final CallContext callContext) throws PaymentApiException {
         checkNotNullParameter(account, "account");
         checkNotNullParameter(amount, "amount");
         checkNotNullParameter(currency, "currency");
-        checkNotNullParameter(directPaymentTransactionId, "paymentTransactionId");
+        checkNotNullParameter(directPaymentId, "paymentId");
         checkPositiveAmount(amount);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return directPaymentProcessor.notifyChargeback(IS_API_PAYMENT, account, null, directPaymentTransactionId, chargebackTransactionExternalKey, amount, currency, true,
+        return directPaymentProcessor.createChargeback(IS_API_PAYMENT, account, directPaymentId, directPaymentTransactionExternalKey, amount, currency, true,
                                                        callContext, internalCallContext);
+
     }
 
+
     @Override
-    public DirectPayment notifyChargebackWithPaymentControl(Account account, UUID directPaymentTransactionId,@Nullable String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, final PaymentOptions paymentOptions, CallContext callContext) throws PaymentApiException {
+    public DirectPayment createChargebackWithPaymentControl(final Account account, final UUID directPaymentId, final BigDecimal amount, final Currency currency, final String directPaymentTransactionExternalKey, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
         checkNotNullParameter(account, "account");
         checkNotNullParameter(amount, "amount");
         checkNotNullParameter(currency, "currency");
-        checkNotNullParameter(directPaymentTransactionId, "paymentTransactionId");
+        checkNotNullParameter(directPaymentId, "paymentId");
         checkPositiveAmount(amount);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return pluginControlledPaymentProcessor.notifyPaymentPaymentOfChargeback(account, directPaymentTransactionId, chargebackTransactionExternalKey, amount, currency,
-                                                                                 paymentOptions.getPaymentControlPluginName(), callContext, internalCallContext);
+        return pluginControlledPaymentProcessor.createChargeback(account, directPaymentId, directPaymentTransactionExternalKey, amount, currency,
+                                                                 paymentOptions.getPaymentControlPluginName(), callContext, internalCallContext);
     }
 
     @Override
@@ -308,7 +308,7 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
     }
 
     @Override
-    public PaymentMethod getPaymentMethodByExternalKey(String paymentMethodExternalKey, boolean includedInactive, boolean withPluginInfo, Iterable<PluginProperty> properties, TenantContext context)
+    public PaymentMethod getPaymentMethodByExternalKey(final String paymentMethodExternalKey, final boolean includedInactive, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context)
             throws PaymentApiException {
         return paymentMethodProcessor.getPaymentMethodByExternalKey(paymentMethodExternalKey, includedInactive, withPluginInfo, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }

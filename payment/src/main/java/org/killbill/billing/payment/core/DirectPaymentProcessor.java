@@ -144,13 +144,9 @@ public class DirectPaymentProcessor extends ProcessorBase {
         return performOperation(isApiPayment, TransactionType.CREDIT, account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
-    public DirectPayment notifyChargeback(final boolean isApiPayment, final Account account, @Nullable final UUID paymentId, @Nullable final UUID transactionId, final String directPaymentTransactionExternalKey, final BigDecimal amount, final Currency currency, final boolean shouldLockAccountAndDispatch,
+    public DirectPayment createChargeback(final boolean isApiPayment, final Account account, final UUID paymentId, final String directPaymentTransactionExternalKey, final BigDecimal amount, final Currency currency, final boolean shouldLockAccountAndDispatch,
                                           final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-
-        // We need to have something...
-        Preconditions.checkState(paymentId != null || transactionId != null);
-        final UUID nonNullPaymentId = retrieveNonNullPaymentIdFromArguments(paymentId, transactionId, internalCallContext);
-        return performOperation(isApiPayment, TransactionType.CHARGEBACK, account, null, nonNullPaymentId, amount, currency, null, directPaymentTransactionExternalKey, shouldLockAccountAndDispatch, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
+        return performOperation(isApiPayment, TransactionType.CHARGEBACK, account, null, paymentId, amount, currency, null, directPaymentTransactionExternalKey, shouldLockAccountAndDispatch, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
     }
 
     public List<DirectPayment> getAccountPayments(final UUID accountId, final InternalTenantContext tenantContext) throws PaymentApiException {
