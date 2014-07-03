@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.killbill.automaton.Operation.OperationCallback;
+import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
@@ -113,14 +114,6 @@ public class TestDirectPaymentEnteringStateCallback extends PaymentTestSuiteWith
         callback.enteringState(state, operationCallback, operationResult, leavingStateCallback);
 
         Assert.assertEquals(paymentDao.getDirectPaymentTransaction(directPaymentStateContext.getDirectPaymentTransactionModelDao().getId(), internalCallContext).getTransactionStatus(), TransactionStatus.PLUGIN_FAILURE);
-    }
-
-    @Test(groups = "slow", expectedExceptions = IllegalStateException.class)
-    public void testEnterStateWithNoDirectPaymentTransactionId() throws Exception {
-        directPaymentStateContext.setDirectPaymentTransactionModelDao(null);
-        directPaymentStateContext.setPaymentInfoPlugin(Mockito.mock(PaymentTransactionInfoPlugin.class));
-
-        callback.enteringState(state, operationCallback, operationResult, leavingStateCallback);
     }
 
     private static final class DirectPaymentEnteringStateTestCallback extends DirectPaymentEnteringStateCallback {

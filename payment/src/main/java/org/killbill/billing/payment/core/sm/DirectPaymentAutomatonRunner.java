@@ -189,6 +189,13 @@ public class DirectPaymentAutomatonRunner {
                 leavingStateCallback = new CreditInitiated(daoHelper, directPaymentStateContext);
                 enteringStateCallback = new CreditCompleted(daoHelper, directPaymentStateContext);
                 break;
+            case CHARGEBACK:
+                operationStateMachineName = "CHARGEBACK";
+                operationName = "OP_CHARGEBACK";
+                operationCallback = new ChargebackOperation(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
+                leavingStateCallback = new ChargebackInitiated(daoHelper, directPaymentStateContext);
+                enteringStateCallback = new ChargebackCompleted(daoHelper, directPaymentStateContext);
+                break;
             default:
                 throw new IllegalStateException("Unsupported transaction type " + transactionType);
         }

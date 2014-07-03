@@ -33,8 +33,17 @@ public class RetryPurchaseOperationCallback extends RetryOperationCallback {
 
     @Override
     protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
-        return directPaymentProcessor.createPurchase(directPaymentStateContext.account, directPaymentStateContext.paymentMethodId, directPaymentStateContext.directPaymentId, directPaymentStateContext.getAmount(),
-                                                     directPaymentStateContext.getCurrency(), directPaymentStateContext.directPaymentExternalKey, directPaymentStateContext.directPaymentTransactionExternalKey, false,
-                                                     directPaymentStateContext.getProperties(), directPaymentStateContext.callContext, directPaymentStateContext.internalCallContext);
+        return directPaymentProcessor.createPurchase(retryableDirectPaymentStateContext.isApiPayment(),
+                                                     retryableDirectPaymentStateContext.getAccount(),
+                                                     retryableDirectPaymentStateContext.getPaymentMethodId(),
+                                                     retryableDirectPaymentStateContext.getDirectPaymentId(),
+                                                     retryableDirectPaymentStateContext.getAmount(),
+                                                     retryableDirectPaymentStateContext.getCurrency(),
+                                                     retryableDirectPaymentStateContext.getDirectPaymentExternalKey(),
+                                                     retryableDirectPaymentStateContext.getDirectPaymentTransactionExternalKey(),
+                                                     false,
+                                                     retryableDirectPaymentStateContext.getProperties(),
+                                                     retryableDirectPaymentStateContext.getCallContext(),
+                                                     retryableDirectPaymentStateContext.getInternalCallContext());
     }
 }

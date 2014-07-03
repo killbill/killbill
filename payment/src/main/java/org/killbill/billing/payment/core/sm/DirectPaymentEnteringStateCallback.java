@@ -48,13 +48,12 @@ public abstract class DirectPaymentEnteringStateCallback implements EnteringStat
     public void enteringState(final State newState, final Operation.OperationCallback operationCallback, final OperationResult operationResult, final LeavingStateCallback leavingStateCallback) {
         logger.debug("Entering state {} with result {}", newState.getName(), operationResult);
 
-        // Check for illegal state (should never happen)
-        Preconditions.checkState(directPaymentStateContext.getDirectPaymentTransactionModelDao() != null && directPaymentStateContext.getDirectPaymentTransactionModelDao().getId() != null);
-
-        final PaymentTransactionInfoPlugin paymentInfoPlugin = directPaymentStateContext.getPaymentInfoPlugin();
-        final TransactionStatus paymentStatus = paymentPluginStatusToPaymentStatus(paymentInfoPlugin, operationResult);
-
-        daoHelper.processPaymentInfoPlugin(paymentStatus, paymentInfoPlugin, newState.getName());
+        // If the transaction was not created -- for instance we had an exception in leavingState callback then we bail; if not, then update state:
+        if (directPaymentStateContext.getDirectPaymentTransactionModelDao() != null && directPaymentStateContext.getDirectPaymentTransactionModelDao().getId() != null) {
+            final PaymentTransactionInfoPlugin paymentInfoPlugin = directPaymentStateContext.getPaymentInfoPlugin();
+            final TransactionStatus paymentStatus = paymentPluginStatusToPaymentStatus(paymentInfoPlugin, operationResult);
+            daoHelper.processPaymentInfoPlugin(paymentStatus, paymentInfoPlugin, newState.getName());
+        }
     }
 
     private TransactionStatus paymentPluginStatusToPaymentStatus(@Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin, final OperationResult operationResult) {

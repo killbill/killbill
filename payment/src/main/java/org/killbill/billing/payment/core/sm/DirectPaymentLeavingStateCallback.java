@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.sm;
 
+import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -34,10 +35,14 @@ public abstract class DirectPaymentLeavingStateCallback implements LeavingStateC
     }
 
     @Override
-    public void leavingState(final State oldState) {
+    public void leavingState(final State oldState) throws OperationException {
         logger.debug("Leaving state {}", oldState.getName());
 
         // Create or update the direct payment and transaction
-        daoHelper.createNewDirectPaymentTransaction();
+        try {
+            daoHelper.createNewDirectPaymentTransaction();
+        } catch (PaymentApiException e) {
+            throw new OperationException(e);
+        }
     }
 }

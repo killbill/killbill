@@ -440,7 +440,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final DirectPayment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
                                                                 ImmutableList.<PluginProperty>of(), callContext);
 
-        paymentApi.notifyChargeback(account, payment.getTransactions().get(0).getId(), transactionExternalKey2, requestedAmount, Currency.AED, callContext);
+        paymentApi.createChargeback(account, payment.getId(), requestedAmount, Currency.AED, transactionExternalKey2,  callContext);
         final DirectPayment payment2 = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
 
         assertEquals(payment2.getExternalKey(), paymentExternalKey);
@@ -505,6 +505,47 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.getCode());
         }
     }
+
+    @Test(groups = "fast")
+    public void testSimpleAuthCaptureWithInvalidPaymentId() throws Exception {
+        final BigDecimal requestedAmount = new BigDecimal("80.0091");
+
+        final DirectPayment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+                                                                            UUID.randomUUID().toString(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+
+
+        try {
+            paymentApi.createCapture(account, UUID.randomUUID(), requestedAmount, account.getCurrency(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail("Expected capture to fail...");
+        } catch (PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_PAYMENT.getCode());
+
+            final DirectPayment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+            assertEquals(latestPayment, initialPayment);
+        }
+    }
+
+
+    @Test(groups = "fast")
+    public void testSimpleAuthCaptureWithInvalidCurrency() throws Exception {
+        final BigDecimal requestedAmount = new BigDecimal("80.0091");
+
+        final DirectPayment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+                                                                            UUID.randomUUID().toString(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+
+
+        try {
+            paymentApi.createCapture(account, initialPayment.getId(), requestedAmount, Currency.AMD, UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail("Expected capture to fail...");
+        } catch (PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+
+            final DirectPayment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+            assertEquals(latestPayment, initialPayment);
+        }
+    }
+
+
 
     private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {
         final List<PluginProperty> result = new ArrayList<PluginProperty>();

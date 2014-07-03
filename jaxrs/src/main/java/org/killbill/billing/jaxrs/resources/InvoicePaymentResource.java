@@ -141,7 +141,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
         final Iterable<PluginProperty> pluginProperties;
-        final String transactionExternalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey = json.getTransactionExternalKey() != null ? json.getTransactionExternalKey() : UUID.randomUUID().toString();
         if (json.isAdjusted() != null && json.isAdjusted()) {
             if (json.getAdjustments() != null && json.getAdjustments().size() > 0) {
                 final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
@@ -162,6 +162,29 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         final DirectPayment result = paymentApi.createRefundWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(), transactionExternalKey,
                                                                                pluginProperties, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
         return uriBuilder.buildResponse(InvoicePaymentResource.class, "getInvoicePayment", result.getId(), uriInfo.getBaseUri().toString());
+    }
+
+    @POST
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response createChargeback(final InvoicePaymentTransactionJson json,
+                                     @PathParam("paymentId") final String paymentId,
+                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                     @HeaderParam(HDR_REASON) final String reason,
+                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                     @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID paymentUuid = UUID.fromString(paymentId);
+        final DirectPayment payment = paymentApi.getPayment(paymentUuid, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
+        final String transactionExternalKey = json.getTransactionExternalKey() != null ? json.getTransactionExternalKey() : UUID.randomUUID().toString();
+
+        final DirectPayment result = paymentApi.createChargebackWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(),
+                                                                                   transactionExternalKey, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
+        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
     }
 
     @GET

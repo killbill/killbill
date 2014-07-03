@@ -39,8 +39,10 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
@@ -60,7 +62,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 
 public abstract class ProcessorBase {
 
@@ -170,6 +174,20 @@ public abstract class ProcessorBase {
     protected TenantContext buildTenantContext(final InternalTenantContext context) {
         return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
     }
+
+    protected void validateUniqueTransactionExternalKey(final String transactionExternalKey, final InternalTenantContext tenantContext) throws PaymentApiException {
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectPaymentTransactionsByExternalKey(transactionExternalKey, tenantContext);
+        final PaymentTransactionModelDao transactionAlreadyExists = Iterables.tryFind(transactions, new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return input.getTransactionStatus() == TransactionStatus.SUCCESS;
+            }
+        }).orNull();
+        if (transactionAlreadyExists != null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, transactionExternalKey);
+        }
+    }
+
 
     // TODO Rename - there is no lock!
     public interface WithAccountLockCallback<ReturnType, ExceptionType extends Exception> {

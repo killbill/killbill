@@ -29,7 +29,6 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.AccountTimeline;
 import org.killbill.billing.client.model.AuditLog;
-import org.killbill.billing.client.model.Chargeback;
 import org.killbill.billing.client.model.Credit;
 import org.killbill.billing.client.model.EventSubscription;
 import org.killbill.billing.client.model.Invoice;
@@ -42,6 +41,10 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
+
+import static org.testng.Assert.assertEquals;
 
 public class TestAccountTimeline extends TestJaxrsBase {
 
@@ -93,15 +96,11 @@ public class TestAccountTimeline extends TestJaxrsBase {
         killBillClient.createInvoicePaymentRefund(refund, createdBy, reason, comment);
 
         // Add chargeback
-        /*
-        // STEPH disable until chargeback has been fixed
         final BigDecimal chargebackAmount = BigDecimal.ONE;
-        final Chargeback chargeback = new Chargeback();
+        final InvoicePaymentTransaction chargeback = new InvoicePaymentTransaction();
         chargeback.setPaymentId(postedPayment.getPaymentId());
         chargeback.setAmount(chargebackAmount);
-        killBillClient.createChargeBack(chargeback, createdBy, reason, comment);
-        */
-        final BigDecimal chargebackAmount = BigDecimal.ZERO;
+        killBillClient.createInvoicePaymentChargeback(chargeback, createdBy, reason, comment);
 
         // Verify payments
         verifyPayments(accountJson.getAccountId(), startTime, endTime, refundAmount, chargebackAmount);
@@ -136,19 +135,16 @@ public class TestAccountTimeline extends TestJaxrsBase {
             Assert.assertEquals(refundTransaction.getPaymentId(), payment.getPaymentId());
             Assert.assertEquals(refundTransaction.getAmount().compareTo(refundAmount), 0);
 
-            // Verify chargebacks
-            /*
-STEPH
             final List<PaymentTransaction> chargebackTransactions = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.CHARGEBACK.toString());
             Assert.assertEquals(chargebackTransactions.size(), 1);
             final PaymentTransaction chargebackTransaction = chargebackTransactions.get(0);
             Assert.assertEquals(chargebackTransaction.getPaymentId(), payment.getPaymentId());
             Assert.assertEquals(chargebackTransaction.getAmount().compareTo(chargebackAmount), 0);
-*/
+
             // Verify audits
             final List<AuditLog> paymentAuditLogs = purchaseTransaction.getAuditLogs();
             final List<AuditLog> refundAuditLogs = refundTransaction.getAuditLogs();
-            //final List<AuditLog> chargebackAuditLogs = chargebackTransaction.getAuditLogs(); STEPH
+            final List<AuditLog> chargebackAuditLogs = chargebackTransaction.getAuditLogs();
 
             if (AuditLevel.NONE.equals(auditLevel)) {
                 // Audits for payments
@@ -158,7 +154,7 @@ STEPH
                 Assert.assertEquals(refundAuditLogs.size(), 0);
 
                 // Audits for chargebacks
-                //Assert.assertEquals(chargebackAuditLogs.size(), 0); STEPH
+                Assert.assertEquals(chargebackAuditLogs.size(), 0);
             } else if (AuditLevel.MINIMAL.equals(auditLevel)) {
                 // Audits for payments
                 Assert.assertEquals(paymentAuditLogs.size(), 1);
@@ -169,8 +165,8 @@ STEPH
                 verifyAuditLog(refundAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
 
                 // Audits for chargebacks
-                //Assert.assertEquals(chargebackAuditLogs.size(), 1); STEPH
-                //verifyAuditLog(chargebackAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime); STEPH
+                Assert.assertEquals(chargebackAuditLogs.size(), 1);
+                verifyAuditLog(chargebackAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
             } else {
                 // Audits for payments
                 Assert.assertEquals(paymentAuditLogs.size(), 2);
@@ -183,8 +179,9 @@ STEPH
                 verifyAuditLog(refundAuditLogs.get(1), ChangeType.UPDATE, reason, comment, createdBy, startTime, endTime);
 
                 // Audits for chargebacks
-                //Assert.assertEquals(chargebackAuditLogs.size(), 1); STEPH
-                // verifyAuditLog(chargebackAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime); STEPH
+                Assert.assertEquals(chargebackAuditLogs.size(), 2);
+                verifyAuditLog(chargebackAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
+                verifyAuditLog(chargebackAuditLogs.get(1), ChangeType.UPDATE, reason, comment, createdBy, startTime, endTime);
             }
         }
     }
