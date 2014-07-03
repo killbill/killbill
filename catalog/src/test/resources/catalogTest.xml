@@ -48,11 +48,15 @@
         <product name="Pistol">
             <category>BASE</category>
             <available>
+                <addonProduct>Cleaning</addonProduct>
                 <addonProduct>Bullets</addonProduct>
             </available>
         </product>
         <product name="Shotgun">
             <category>BASE</category>
+            <included>
+                <addonProduct>Cleaning</addonProduct>
+            </included>
             <available>
                 <addonProduct>Telescopic-Scope</addonProduct>
                 <addonProduct>Laser-Scope</addonProduct>
@@ -64,11 +68,15 @@
             <category>BASE</category>
             <included>
                 <addonProduct>Telescopic-Scope</addonProduct>
+                <addonProduct>Cleaning</addonProduct>
             </included>
             <available>
                 <addonProduct>Laser-Scope</addonProduct>
                 <addonProduct>Bullets</addonProduct>
             </available>
+        </product>
+        <product name="Cleaning">
+            <category>ADD_ON</category>
         </product>
         <product name="Telescopic-Scope">
             <category>ADD_ON</category>
@@ -732,6 +740,31 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="cleaning-monthly">
+            <product>Cleaning</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>2.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>1.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>0.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
         <plan name="telescopic-scope-monthly">
             <product>Telescopic-Scope</product>
             <initialPhases>
@@ -1052,6 +1085,7 @@
                 <plan>assault-rifle-annual</plan>
                 <plan>laser-scope-monthly</plan>
                 <plan>telescopic-scope-monthly</plan>
+                <plan>cleaning-monthly</plan>
                 <plan>extra-ammo-monthly</plan>
                 <plan>holster-monthly-regular</plan>
                 <plan>refurbish-maintenance</plan>
