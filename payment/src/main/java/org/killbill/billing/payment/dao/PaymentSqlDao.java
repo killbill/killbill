@@ -46,6 +46,13 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, DirectPayme
                                 @BindBean final InternalCallContext context);
 
 
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
+    void updateLastSuccessPaymentStateName(@Bind("id") final String directPaymentId,
+                                @Bind("stateName") final String stateName,
+                                @Bind("lastSuccessStateName") final String lastSuccessStateName,
+                                @BindBean final InternalCallContext context);
+
     @SqlQuery
     public PaymentModelDao getPaymentByExternalKey(@Bind("externalKey") final String externalKey,
                                                    @BindBean final InternalTenantContext context);

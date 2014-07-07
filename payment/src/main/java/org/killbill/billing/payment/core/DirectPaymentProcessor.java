@@ -177,7 +177,11 @@ public class DirectPaymentProcessor extends ProcessorBase {
         // STEPH This works if the pending transaction we are trying to update matches is the one that gave the state to the payment. Also can we have multiple PENDING for a given payment?
         final State currentPaymentState = directPaymentAutomatonRunner.fetchNextState(paymentModelDao.getStateName(), isSuccess);
         // STEPH : should we insert a new transaction row to keep the PENDING one?
-        paymentDao.updateDirectPaymentAndTransactionOnCompletion(transactionModelDao.getPaymentId(), currentPaymentState.getName(), transactionModelDao.getId(), newStatus,
+
+        // STEPH hack; need proper automaton API to understand what is a successful terminal state.
+        final String lastSuccessPaymentStateStrOrNull = currentPaymentState.getName().endsWith("SUCCESS") ? currentPaymentState.getName() : null;
+
+        paymentDao.updateDirectPaymentAndTransactionOnCompletion(transactionModelDao.getPaymentId(), currentPaymentState.getName(), lastSuccessPaymentStateStrOrNull, transactionModelDao.getId(), newStatus,
                                                                  transactionModelDao.getProcessedAmount(), transactionModelDao.getProcessedCurrency(),
                                                                  transactionModelDao.getGatewayErrorCode(), transactionModelDao.getGatewayErrorMsg(), internalCallContext);
     }

@@ -97,8 +97,11 @@ public class DirectPaymentAutomatonDAOHelper {
         final String gatewayErrorCode = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayErrorCode();
         final String gatewayErrorMsg = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayError();
 
+        final String lastSuccessPaymentState = currentPaymentStateName.endsWith("SUCCESS") ? currentPaymentStateName : null;
+
         paymentDao.updateDirectPaymentAndTransactionOnCompletion(directPaymentStateContext.getDirectPaymentId(),
                                                                  currentPaymentStateName,
+                                                                 lastSuccessPaymentState,
                                                                  directPaymentStateContext.getDirectPaymentTransactionModelDao().getId(),
                                                                  paymentStatus,
                                                                  processedAmount,

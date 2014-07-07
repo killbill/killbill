@@ -212,6 +212,7 @@ public class DefaultPaymentDao implements PaymentDao {
 
     @Override
     public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final String currentPaymentStateName,
+                                                              @Nullable final String lastPaymentSuccessStateName,
                                                               final UUID directTransactionId, final TransactionStatus paymentStatus,
                                                               final BigDecimal processedAmount, final Currency processedCurrency,
                                                               final String gatewayErrorCode, final String gatewayErrorMsg,
@@ -224,7 +225,11 @@ public class DefaultPaymentDao implements PaymentDao {
                                                                                                          processedAmount, processedCurrency == null ? null : processedCurrency.toString(),
                                                                                                          paymentStatus == null ? null : paymentStatus.toString(),
                                                                                                          gatewayErrorCode, gatewayErrorMsg, context);
-                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStateName(directPaymentId.toString(), currentPaymentStateName, context);
+                if (lastPaymentSuccessStateName != null) {
+                    entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updateLastSuccessPaymentStateName(directPaymentId.toString(), currentPaymentStateName, lastPaymentSuccessStateName, context);
+                } else {
+                    entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStateName(directPaymentId.toString(), currentPaymentStateName, context);
+                }
                 return null;
             }
         });

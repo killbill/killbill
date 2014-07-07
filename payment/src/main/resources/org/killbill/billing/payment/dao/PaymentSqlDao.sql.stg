@@ -17,6 +17,7 @@ tableFields(prefix) ::= <<
 , <prefix>payment_method_id
 , <prefix>external_key
 , <prefix>state_name
+, <prefix>last_success_state_name
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -28,6 +29,7 @@ tableValues() ::= <<
 , :paymentMethodId
 , :externalKey
 , :stateName
+, :lastSuccessStateName
 , :createdBy
 , :createdDate
 , :updatedBy
@@ -46,6 +48,17 @@ where id = :id
 updatePaymentStateName() ::= <<
 update <tableName()>
 set state_name = :stateName
+, updated_by = :updatedBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
+updateLastSuccessPaymentStateName() ::= <<
+update <tableName()>
+set state_name = :stateName
+, last_success_state_name = :lastSuccessStateName
 , updated_by = :updatedBy
 , updated_date = :createdDate
 where id = :id

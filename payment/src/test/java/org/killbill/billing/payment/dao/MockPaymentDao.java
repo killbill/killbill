@@ -157,7 +157,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final String currentPaymentStateName, final UUID directTransactionId, final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final String currentPaymentStateName,  final String lastSuccessPaymentStateName, final UUID directTransactionId, final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
         synchronized (this) {
             final PaymentModelDao payment = payments.get(directPaymentId);
             if (payment != null) {

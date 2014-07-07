@@ -37,6 +37,7 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Direct
     private UUID paymentMethodId;
     private String externalKey;
     private String stateName;
+    private String lastSuccessStateName;
 
 
     public PaymentModelDao() { /* For the DAO mapper */ }
@@ -93,6 +94,14 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Direct
         this.stateName = stateName;
     }
 
+    public String getLastSuccessStateName() {
+        return lastSuccessStateName;
+    }
+
+    public void setLastSuccessStateName(final String lastSuccessStateName) {
+        this.lastSuccessStateName = lastSuccessStateName;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -111,6 +120,9 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Direct
             return false;
         }
         if (stateName != null ? !stateName.equals(that.stateName) : that.stateName != null) {
+            return false;
+        }
+        if (lastSuccessStateName != null ? !lastSuccessStateName.equals(that.lastSuccessStateName) : that.lastSuccessStateName != null) {
             return false;
         }
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
@@ -133,6 +145,7 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Direct
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (stateName != null ? stateName.hashCode() : 0);
+        result = 31 * result + (lastSuccessStateName != null ? lastSuccessStateName.hashCode() : 0);
         return result;
     }
 

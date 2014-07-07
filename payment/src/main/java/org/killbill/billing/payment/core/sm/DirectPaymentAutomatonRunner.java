@@ -110,7 +110,7 @@ public class DirectPaymentAutomatonRunner {
         if (directPaymentId != null) {
             final PaymentModelDao paymentModelDao = daoHelper.getDirectPayment();
             effectivePaymentMethodId = paymentModelDao.getPaymentMethodId();
-            currentStateName = paymentModelDao.getStateName();
+            currentStateName = paymentModelDao.getLastSuccessStateName() != null ? paymentModelDao.getLastSuccessStateName() : getInitState(transactionType);
             currentStateMachineName = getStateMachineName(currentStateName);
 
             // Check for illegal states (should never happen)
@@ -120,23 +120,8 @@ public class DirectPaymentAutomatonRunner {
         } else {
             // If the payment method is not specified, retrieve the default one on the account
             effectivePaymentMethodId = paymentMethodId != null ? paymentMethodId : daoHelper.getDefaultPaymentMethodId();
-
-            switch (transactionType) {
-                case AUTHORIZE:
-                    currentStateMachineName = "AUTHORIZE";
-                    currentStateName = "AUTH_INIT";
-                    break;
-                case CREDIT:
-                    currentStateMachineName = "CREDIT";
-                    currentStateName = "CREDIT_INIT";
-                    break;
-                case PURCHASE:
-                    currentStateMachineName = "PURCHASE";
-                    currentStateName = "PURCHASE_INIT";
-                    break;
-                default:
-                    throw new IllegalStateException("Unsupported transaction type " + transactionType + " for null direct payment id");
-            }
+            currentStateName = getInitState(transactionType);
+            currentStateMachineName = getStateMachineName(currentStateName);
         }
 
         directPaymentStateContext.setPaymentMethodId(effectivePaymentMethodId);
@@ -225,6 +210,19 @@ public class DirectPaymentAutomatonRunner {
             return null;
         }
         return stateMachine.getName();
+    }
+
+    private String getInitState(final TransactionType transactionType) {
+        switch (transactionType) {
+            case AUTHORIZE:
+                return "AUTH_INIT";
+            case CREDIT:
+                return "CREDIT_INIT";
+            case PURCHASE:
+                return "PURCHASE_INIT";
+            default:
+                throw new IllegalStateException("Unsupported transaction type " + transactionType + " for null direct payment id");
+        }
     }
 
     private StateMachine getStateMachine(final String currentStateName) {

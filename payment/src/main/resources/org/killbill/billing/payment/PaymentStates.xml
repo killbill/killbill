@@ -306,18 +306,6 @@
             <finalState>CHARGEBACK_INIT</finalState>
         </linkStateMachine>
         <linkStateMachine>
-            <initialStateMachine>CAPTURE</initialStateMachine>
-            <initialState>CAPTURE_FAILED</initialState>
-            <finalStateMachine>CAPTURE</finalStateMachine>
-            <finalState>CAPTURE_INIT</finalState>
-        </linkStateMachine>
-        <linkStateMachine>
-            <initialStateMachine>PURCHASE</initialStateMachine>
-            <initialState>PURCHASE_FAILED</initialState>
-            <finalStateMachine>PURCHASE</finalStateMachine>
-            <finalState>PURCHASE_INIT</finalState>
-        </linkStateMachine>
-        <linkStateMachine>
             <initialStateMachine>REFUND</initialStateMachine>
             <initialState>REFUND_SUCCESS</initialState>
             <finalStateMachine>REFUND</finalStateMachine>
@@ -325,19 +313,7 @@
         </linkStateMachine>
         <linkStateMachine>
             <initialStateMachine>REFUND</initialStateMachine>
-            <initialState>REFUND_FAILED</initialState>
-            <finalStateMachine>REFUND</finalStateMachine>
-            <finalState>REFUND_INIT</finalState>
-        </linkStateMachine>
-        <linkStateMachine>
-            <initialStateMachine>REFUND</initialStateMachine>
             <initialState>REFUND_SUCCESS</initialState>
-            <finalStateMachine>CHARGEBACK</finalStateMachine>
-            <finalState>CHARGEBACK_INIT</finalState>
-        </linkStateMachine>
-        <linkStateMachine>
-            <initialStateMachine>REFUND</initialStateMachine>
-            <initialState>REFUND_FAILED</initialState>
             <finalStateMachine>CHARGEBACK</finalStateMachine>
             <finalState>CHARGEBACK_INIT</finalState>
         </linkStateMachine>
@@ -356,18 +332,6 @@
         <linkStateMachine>
             <initialStateMachine>CHARGEBACK</initialStateMachine>
             <initialState>CHARGEBACK_SUCCESS</initialState>
-            <finalStateMachine>CHARGEBACK</finalStateMachine>
-            <finalState>CHARGEBACK_INIT</finalState>
-        </linkStateMachine>
-        <linkStateMachine>
-            <initialStateMachine>CHARGEBACK</initialStateMachine>
-            <initialState>CHARGEBACK_FAILED</initialState>
-            <finalStateMachine>CHARGEBACK</finalStateMachine>
-            <finalState>CHARGEBACK_INIT</finalState>
-        </linkStateMachine>
-        <linkStateMachine>
-            <initialStateMachine>CHARGEBACK</initialStateMachine>
-            <initialState>CHARGEBACK_ERRORED</initialState>
             <finalStateMachine>CHARGEBACK</finalStateMachine>
             <finalState>CHARGEBACK_INIT</finalState>
         </linkStateMachine>
