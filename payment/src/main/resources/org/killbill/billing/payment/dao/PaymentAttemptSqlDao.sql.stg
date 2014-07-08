@@ -17,6 +17,7 @@ tableFields(prefix) ::= <<
 , <prefix>amount
 , <prefix>currency
 , <prefix>plugin_name
+, <prefix>plugin_properties
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -34,6 +35,7 @@ tableValues() ::= <<
 , :amount
 , :currency
 , :pluginName
+, :pluginProperties
 , :createdBy
 , :createdDate
 , :updatedBy

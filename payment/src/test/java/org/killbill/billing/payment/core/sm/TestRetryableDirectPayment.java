@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
-import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
@@ -46,7 +45,7 @@ import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.payment.dao.PluginPropertyModelDao;
+import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
@@ -114,6 +113,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
     private final ImmutableList<PluginProperty> emptyProperties = ImmutableList.of();
     private final MockPaymentControlProviderPlugin mockRetryProviderPlugin = new MockPaymentControlProviderPlugin();
 
+    private byte [] EMPTY_PROPERTIES;
     private MockRetryableDirectPaymentAutomatonRunner runner;
     private RetryableDirectPaymentStateContext directPaymentStateContext;
     private MockRetryAuthorizeOperationCallback mockRetryAuthorizeOperationCallback;
@@ -136,6 +136,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                 return MockPaymentControlProviderPlugin.PLUGIN_NAME;
             }
         }, mockRetryProviderPlugin);
+        EMPTY_PROPERTIES = PluginPropertySerializer.serialize(ImmutableList.<PluginProperty>of());
     }
 
     @BeforeMethod(groups = "fast")
@@ -464,8 +465,8 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         final UUID directTransactionId = UUID.randomUUID();
         paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
                                                                                  directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
-                                                                                 TransactionType.AUTHORIZE, state.getName(), amount, currency, null),
-                                                      ImmutableList.<PluginPropertyModelDao>of(), internalCallContext
+                                                                                 TransactionType.AUTHORIZE, state.getName(), amount, currency, null, EMPTY_PROPERTIES),
+                                                      internalCallContext
                                                      );
         runner.run(state,
                    false,
@@ -512,8 +513,8 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         final UUID directTransactionId = UUID.randomUUID();
         paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
                                                                                  directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
-                                                                                 TransactionType.AUTHORIZE, state.getName(), amount, currency, null),
-                                                      ImmutableList.<PluginPropertyModelDao>of(), internalCallContext
+                                                                                 TransactionType.AUTHORIZE, state.getName(), amount, currency, null, EMPTY_PROPERTIES),
+                                                      internalCallContext
                                                      );
 
         try {
@@ -559,8 +560,8 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         final UUID directTransactionId = UUID.randomUUID();
         paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
                                                                                  directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
-                                                                                 TransactionType.AUTHORIZE, state.getName(), amount, currency, null),
-                                                      ImmutableList.<PluginPropertyModelDao>of(), internalCallContext
+                                                                                 TransactionType.AUTHORIZE, state.getName(), amount, currency, null, EMPTY_PROPERTIES),
+                                                      internalCallContext
                                                      );
 
         try {
@@ -615,9 +616,9 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         final UUID directPaymentId = UUID.randomUUID();
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
                                                                     directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
-                                                                    TransactionType.AUTHORIZE, state.getName(), amount, currency, null);
+                                                                    TransactionType.AUTHORIZE, state.getName(), amount, currency, null, EMPTY_PROPERTIES);
         paymentDao.insertPaymentAttemptWithProperties(attempt,
-                                                      ImmutableList.<PluginPropertyModelDao>of(), internalCallContext
+                                                      internalCallContext
                                                      );
         paymentDao.insertDirectPaymentWithFirstTransaction(new PaymentModelDao(directPaymentId, utcNow, utcNow, account.getId(), paymentMethodId, -1, directPaymentExternalKey),
                                                            new PaymentTransactionModelDao(directTransactionId, directPaymentTransactionExternalKey, utcNow, utcNow, directPaymentId, TransactionType.AUTHORIZE, utcNow, TransactionStatus.PAYMENT_FAILURE, amount, currency, "bla", "foo"),
@@ -657,9 +658,9 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         final UUID directPaymentId = UUID.randomUUID();
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
                                                                     directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
-                                                                    TransactionType.AUTHORIZE, state.getName(), amount, currency, null);
+                                                                    TransactionType.AUTHORIZE, state.getName(), amount, currency, null, EMPTY_PROPERTIES);
         paymentDao.insertPaymentAttemptWithProperties(attempt,
-                                                      ImmutableList.<PluginPropertyModelDao>of(), internalCallContext
+                                                      internalCallContext
                                                      );
         paymentDao.insertDirectPaymentWithFirstTransaction(new PaymentModelDao(directPaymentId, utcNow, utcNow, account.getId(), paymentMethodId, -1, directPaymentExternalKey),
                                                            new PaymentTransactionModelDao(directTransactionId, directPaymentTransactionExternalKey, utcNow, utcNow, directPaymentId, TransactionType.AUTHORIZE, utcNow,
@@ -705,9 +706,9 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
             final UUID directPaymentId = UUID.randomUUID();
             final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
                                                                         directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
-                                                                        TransactionType.AUTHORIZE, state.getName(), amount, currency, null);
+                                                                        TransactionType.AUTHORIZE, state.getName(), amount, currency, null, EMPTY_PROPERTIES);
             paymentDao.insertPaymentAttemptWithProperties(attempt,
-                                                          ImmutableList.<PluginPropertyModelDao>of(), internalCallContext
+                                                          internalCallContext
                                                          );
             paymentDao.insertDirectPaymentWithFirstTransaction(new PaymentModelDao(directPaymentId, utcNow, utcNow, account.getId(), paymentMethodId, -1, directPaymentExternalKey),
                                                                new PaymentTransactionModelDao(directTransactionId, directPaymentTransactionExternalKey, utcNow, utcNow, directPaymentId, TransactionType.AUTHORIZE, utcNow,

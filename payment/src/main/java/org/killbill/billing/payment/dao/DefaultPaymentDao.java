@@ -72,18 +72,7 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PluginPropertyModelDao> getProperties(final UUID attemptId, final InternalCallContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PluginPropertyModelDao>>() {
-            @Override
-            public List<PluginPropertyModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final PaymentAttemptSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class);
-                return transactional.become(PluginPropertySqlDao.class).getPluginProperties(attemptId.toString());
-            }
-        });
-    }
-
-    @Override
-    public PaymentAttemptModelDao insertPaymentAttemptWithProperties(final PaymentAttemptModelDao attempt, final List<PluginPropertyModelDao> properties, final InternalCallContext context) {
+    public PaymentAttemptModelDao insertPaymentAttemptWithProperties(final PaymentAttemptModelDao attempt, final InternalCallContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<PaymentAttemptModelDao>() {
 
             @Override
@@ -91,10 +80,6 @@ public class DefaultPaymentDao implements PaymentDao {
                 final PaymentAttemptSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class);
                 transactional.create(attempt, context);
                 final PaymentAttemptModelDao result = transactional.getById(attempt.getId().toString(), context);
-
-                // Those calls are not part of history and audit on purpose, this is just to implement a temporary property cache cache
-                transactional.become(PluginPropertySqlDao.class).batchCreateFromTransaction(properties);
-
                 return result;
             }
         });

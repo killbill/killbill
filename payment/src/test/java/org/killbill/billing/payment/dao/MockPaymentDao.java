@@ -40,27 +40,19 @@ public class MockPaymentDao implements PaymentDao {
     private final Map<UUID, PaymentModelDao> payments = new HashMap<UUID, PaymentModelDao>();
     private final Map<UUID, PaymentTransactionModelDao> transactions = new HashMap<UUID, PaymentTransactionModelDao>();
     private final Map<UUID, PaymentAttemptModelDao> attempts = new HashMap<UUID, PaymentAttemptModelDao>();
-    private final List<PluginPropertyModelDao> properties = new ArrayList<PluginPropertyModelDao>();
 
     public void reset() {
         synchronized (this) {
             payments.clear();
             transactions.clear();
             attempts.clear();
-            properties.clear();
         }
     }
 
     @Override
-    public List<PluginPropertyModelDao> getProperties(final UUID attemptId, final InternalCallContext context) {
-        return properties;
-    }
-
-    @Override
-    public PaymentAttemptModelDao insertPaymentAttemptWithProperties(final PaymentAttemptModelDao attempt, final List<PluginPropertyModelDao> properties, final InternalCallContext context) {
+    public PaymentAttemptModelDao insertPaymentAttemptWithProperties(final PaymentAttemptModelDao attempt, final InternalCallContext context) {
         synchronized (this) {
             attempts.put(attempt.getId(), attempt);
-            this.properties.addAll(properties);
             return attempt;
         }
     }
@@ -157,7 +149,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final String currentPaymentStateName,  final String lastSuccessPaymentStateName, final UUID directTransactionId, final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+    public void updateDirectPaymentAndTransactionOnCompletion(final UUID directPaymentId, final String currentPaymentStateName, final String lastSuccessPaymentStateName, final UUID directTransactionId, final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
         synchronized (this) {
             final PaymentModelDao payment = payments.get(directPaymentId);
             if (payment != null) {

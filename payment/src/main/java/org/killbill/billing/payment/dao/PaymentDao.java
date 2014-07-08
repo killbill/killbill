@@ -28,10 +28,7 @@ import org.killbill.billing.util.entity.Pagination;
 
 public interface PaymentDao {
 
-
-    public List<PluginPropertyModelDao> getProperties(UUID attenptId, InternalCallContext context);
-
-    public PaymentAttemptModelDao insertPaymentAttemptWithProperties(PaymentAttemptModelDao attempt, List<PluginPropertyModelDao> properties, InternalCallContext context);
+    public PaymentAttemptModelDao insertPaymentAttemptWithProperties(PaymentAttemptModelDao attempt, InternalCallContext context);
 
     public void updatePaymentAttempt(UUID paymentAttemptId, UUID transactionId, String state, InternalCallContext context);
 

@@ -24,8 +24,11 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -36,7 +39,7 @@ import static org.testng.Assert.assertNull;
 public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
-    public void testPaymentAttempt() {
+    public void testPaymentAttempt() throws PluginPropertySerializerException {
         final UUID directTransactionId = UUID.randomUUID();
         final String paymentExternalKey = "vraiment?";
         final String transactionExternalKey = "tduteuqweq";
@@ -46,43 +49,29 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
         final UUID accountId = UUID.randomUUID();
 
+
+
+        final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+        properties.add(new PluginProperty("key1", "value1", false));
+        properties.add(new PluginProperty("key2", "value2", false));
+
+        final byte [] serialized = PluginPropertySerializer.serialize(properties);
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(UUID.randomUUID(), UUID.randomUUID(), clock.getUTCNow(), clock.getUTCNow(),
                                                                           paymentExternalKey, directTransactionId, transactionExternalKey, transactionType, stateName,
-                                                                          BigDecimal.ZERO, Currency.ALL, pluginName);
+                                                                          BigDecimal.ZERO, Currency.ALL, pluginName, serialized);
 
 
-        final PluginPropertyModelDao prop1 = new PluginPropertyModelDao(attempt.getId(), "foo", transactionExternalKey, accountId, "PLUGIN", "key1", "value1", "yo", clock.getUTCNow());
-        final PluginPropertyModelDao prop2 = new PluginPropertyModelDao(attempt.getId(), "foo2", transactionExternalKey, accountId, "PLUGIN", "key2", "value2", "yo", clock.getUTCNow());
-        final PluginPropertyModelDao prop3 = new PluginPropertyModelDao(UUID.randomUUID()   , "foo3", "other", UUID.randomUUID(), "PLUGIN", "key2", "value2", "yo", clock.getUTCNow());
-        final List<PluginPropertyModelDao> props = new ArrayList<PluginPropertyModelDao>();
-        props.add(prop1);
-        props.add(prop2);
-        props.add(prop3);
-
-
-        PaymentAttemptModelDao savedAttempt = paymentDao.insertPaymentAttemptWithProperties(attempt, props, internalCallContext);
+        PaymentAttemptModelDao savedAttempt = paymentDao.insertPaymentAttemptWithProperties(attempt, internalCallContext);
         assertEquals(savedAttempt.getTransactionExternalKey(), transactionExternalKey);
         assertEquals(savedAttempt.getTransactionType(), transactionType);
         assertEquals(savedAttempt.getStateName(), stateName);
         assertEquals(savedAttempt.getPluginName(), pluginName);
 
-        final List<PluginPropertyModelDao> retrievedProperties = paymentDao.getProperties(attempt.getId(), internalCallContext);
-        assertEquals(retrievedProperties.size(), 2);
-        assertEquals(retrievedProperties.get(0).getAccountId(), accountId);
-        assertEquals(retrievedProperties.get(0).getTransactionExternalKey(), transactionExternalKey);
-        assertEquals(retrievedProperties.get(0).getPluginName(), "PLUGIN");
-        assertEquals(retrievedProperties.get(0).getPaymentExternalKey(), "foo");
-        assertEquals(retrievedProperties.get(0).getPropKey(), "key1");
-        assertEquals(retrievedProperties.get(0).getPropValue(), "value1");
-        assertEquals(retrievedProperties.get(0).getCreatedBy(), "yo");
-
-        assertEquals(retrievedProperties.get(1).getAccountId(), accountId);
-        assertEquals(retrievedProperties.get(1).getTransactionExternalKey(), transactionExternalKey);
-        assertEquals(retrievedProperties.get(1).getPluginName(), "PLUGIN");
-        assertEquals(retrievedProperties.get(1).getPaymentExternalKey(), "foo2");
-        assertEquals(retrievedProperties.get(1).getPropKey(), "key2");
-        assertEquals(retrievedProperties.get(1).getPropValue(), "value2");
-        assertEquals(retrievedProperties.get(1).getCreatedBy(), "yo");
+        final Iterable<PluginProperty> deserialized = PluginPropertySerializer.deserialize(savedAttempt.getPluginProperties());
+        int i = 0;
+        for (PluginProperty cur : deserialized) {
+            Assert.assertEquals(cur, properties.get(i++));
+        }
 
         final PaymentAttemptModelDao retrievedAttempt1 = paymentDao.getPaymentAttempt(attempt.getId(), internalCallContext);
         assertEquals(retrievedAttempt1.getTransactionExternalKey(), transactionExternalKey);

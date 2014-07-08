@@ -80,7 +80,7 @@ public abstract class ProcessorBase {
     protected final TagInternalApi tagInternalApi;
     protected final Clock clock;
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
+    protected static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
     protected final InvoiceInternalApi invoiceApi;
 
     public ProcessorBase(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,

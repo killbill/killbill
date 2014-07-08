@@ -16,22 +16,18 @@
 
 package org.killbill.billing.payment.core.sm;
 
-import java.util.List;
-
 import org.joda.time.DateTime;
+import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
-import org.killbill.billing.payment.dao.PluginPropertyModelDao;
+import org.killbill.billing.payment.dao.PluginPropertySerializer;
+import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class RetryLeavingStateCallback implements LeavingStateCallback {
 
@@ -53,7 +49,7 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
     }
 
     @Override
-    public void leavingState(final State state) {
+    public void leavingState(final State state) throws OperationException {
 
         final DateTime utcNow = retryableDirectPaymentAutomatonRunner.clock.getUTCNow();
 
@@ -69,23 +65,24 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
         if (state.getName().equals(initialState.getName()) ||
             state.getName().equals(retriedState.getName())) {
 
-            final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
-                                                                              utcNow, utcNow, stateContext.getDirectPaymentExternalKey(), null,
-                                                                              stateContext.directPaymentTransactionExternalKey, transactionType, initialState.getName(),
-                                                                              stateContext.getAmount(), stateContext.getCurrency(),
-                                                                              stateContext.getPluginName());
+            try {
+                final byte [] serializedProperties = PluginPropertySerializer.serialize(stateContext.getProperties());
 
-            final List<PluginPropertyModelDao> properties = ImmutableList.copyOf(Iterables.transform(stateContext.getProperties(), new Function<PluginProperty, PluginPropertyModelDao>() {
-                @Override
-                public PluginPropertyModelDao apply(final PluginProperty input) {
-                    // STEPH how to serialize more complex values such as item adjustments. json ?
-                    final String value = (input.getValue() instanceof String) ? (String) input.getValue() : "TODO: could not serialize";
-                    return new PluginPropertyModelDao(attempt.getId(), stateContext.getDirectPaymentExternalKey(), stateContext.directPaymentTransactionExternalKey, stateContext.getAccount().getId(),
-                                                      stateContext.getPluginName(), input.getKey(), value, stateContext.getCallContext().getUserName(), stateContext.getCallContext().getCreatedDate());
-                }
-            }));
-            retryableDirectPaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(attempt, properties, stateContext.internalCallContext);
-            stateContext.setAttemptId(attempt.getId());
+
+                final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
+                                                                                  utcNow, utcNow, stateContext.getDirectPaymentExternalKey(), null,
+                                                                                  stateContext.directPaymentTransactionExternalKey, transactionType, initialState.getName(),
+                                                                                  stateContext.getAmount(), stateContext.getCurrency(),
+                                                                                  stateContext.getPluginName(), serializedProperties);
+
+                retryableDirectPaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(attempt, stateContext.internalCallContext);
+                stateContext.setAttemptId(attempt.getId());
+
+            } catch (PluginPropertySerializerException e) {
+                // STEPH
+                throw new OperationException(e);
+            }
+
         }
     }
 }

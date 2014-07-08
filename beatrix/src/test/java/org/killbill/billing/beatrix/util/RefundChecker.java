@@ -37,7 +37,6 @@ import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.dao.PluginPropertyModelDao;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +66,6 @@ public class RefundChecker {
     }
 
     public DirectPaymentTransaction checkRefund(final UUID paymentId, final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
-
 
         final DirectPayment payment = paymentApi.getPayment(paymentId, false, ImmutableList.<PluginProperty>of(), context);
         final DirectPaymentTransaction refund = Iterables.tryFind(payment.getTransactions(), new Predicate<DirectPaymentTransaction>() {
