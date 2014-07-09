@@ -65,6 +65,16 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Number of threads for plugin executor dispatcher")
     public int getPaymentPluginThreadNb();
 
+    @Config("org.killbill.payment.janitor.pending")
+    @Default("12h")
+    @Description("Delay after which pending transactions should be marked as failed")
+    public TimeSpan getJanitorPendingCleanupTime();
+
+    @Config("org.killbill.payment.janitor.rate")
+    @Default("1h")
+    @Description("Rate at which janitor tasks are scheduled")
+    public TimeSpan getJanitorRunningRate();
+
     @Config("org.killbill.payment.off")
     @Default("false")
     @Description("Whether the payment subsystem is off")

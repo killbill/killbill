@@ -22,6 +22,7 @@ import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.api.PaymentService;
 import org.killbill.billing.payment.bus.InvoiceHandler;
 import org.killbill.billing.payment.control.PaymentTagHandler;
+import org.killbill.billing.payment.core.Janitor;
 import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
@@ -44,18 +45,21 @@ public class DefaultPaymentService implements PaymentService {
     private final PersistentBus eventBus;
     private final DirectPaymentApi api;
     private final DefaultRetryService retryService;
+    private final Janitor janitor;
 
     @Inject
     public DefaultPaymentService(final InvoiceHandler invoiceHandler,
                                  final PaymentTagHandler tagHandler,
                                  final DirectPaymentApi api,
                                  final DefaultRetryService retryService,
-                                 final PersistentBus eventBus) {
+                                 final PersistentBus eventBus,
+                                 final Janitor janitor) {
         this.invoiceHandler = invoiceHandler;
         this.tagHandler = tagHandler;
         this.eventBus = eventBus;
         this.api = api;
         this.retryService = retryService;
+        this.janitor = janitor;
     }
 
     @Override
@@ -77,6 +81,7 @@ public class DefaultPaymentService implements PaymentService {
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
         retryService.start();
+        janitor.start();
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
@@ -88,6 +93,7 @@ public class DefaultPaymentService implements PaymentService {
             throw new RuntimeException("Unable to unregister to the EventBus!", e);
         }
         retryService.stop();
+        janitor.stop();
     }
 
     @Override

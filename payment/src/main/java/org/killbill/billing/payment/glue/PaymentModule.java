@@ -20,6 +20,7 @@ package org.killbill.billing.payment.glue;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 
 import javax.inject.Provider;
@@ -36,6 +37,7 @@ import org.killbill.billing.payment.bus.InvoiceHandler;
 import org.killbill.billing.payment.control.PaymentTagHandler;
 import org.killbill.billing.payment.control.dao.InvoicePaymentControlDao;
 import org.killbill.billing.payment.core.DirectPaymentProcessor;
+import org.killbill.billing.payment.core.Janitor;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PluginControlledPaymentProcessor;
@@ -63,6 +65,7 @@ public class PaymentModule extends KillBillModule {
 
     private static final String PLUGIN_THREAD_PREFIX = "Plugin-th-";
 
+    public static final String JANITOR_EXECUTOR_NAMED = "JanitorExecutor";
     public static final String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
     public static final String RETRYABLE_NAMED = "Retryable";
 
@@ -82,6 +85,12 @@ public class PaymentModule extends KillBillModule {
     protected void installPaymentProviderPlugins(final PaymentConfig config) {
     }
 
+    protected void installJanitor() {
+        final ScheduledExecutorService janitorExecutor = org.killbill.commons.concurrent.Executors.newSingleThreadScheduledExecutor("PaymentJanitor");
+        bind(ScheduledExecutorService.class).annotatedWith(Names.named(JANITOR_EXECUTOR_NAMED)).toInstance(janitorExecutor);
+
+        bind(Janitor.class).asEagerSingleton();
+    }
     protected void installRetryEngines() {
         bind(DefaultRetryService.class).asEagerSingleton();
         bind(RetryService.class).annotatedWith(Names.named(RETRYABLE_NAMED)).to(DefaultRetryService.class);
@@ -158,5 +167,6 @@ public class PaymentModule extends KillBillModule {
         installStateMachines();
         installAutomatonRunner();
         installRetryEngines();
+        installJanitor();
     }
 }

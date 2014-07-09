@@ -77,3 +77,24 @@ where payment_id = :paymentId
 <defaultOrderBy()>
 ;
 >>
+
+/* Does not include AND_CHECK_TENANT() since this is a global operation */
+getByTransactionStatusPriorDate() ::= <<
+select <allTableFields()>
+from <tableName()>
+where transaction_status = :transactionStatus
+and created_date \< :beforeCreatedDate
+<defaultOrderBy()>
+;
+>>
+
+
+failOldPendingTransactions(ids) ::= <<
+update <tableName()>
+set transaction_status = :newTransactionStatus
+, updated_by = :updatedBy
+, updated_date = :createdDate
+where <idField("")> in (<ids: {id | :id_<i0>}; separator="," >)
+<defaultOrderBy()>
+;
+>>

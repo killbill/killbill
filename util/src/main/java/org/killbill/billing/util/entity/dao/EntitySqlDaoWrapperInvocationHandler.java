@@ -23,12 +23,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
 import org.skife.jdbi.v2.Binding;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.exceptions.DBIException;
@@ -330,19 +332,14 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                 }
             }
 
-            // Otherwise, use the first String argument, annotated with @Bind("id")
-            // This is true for e.g. update calls
-            if (!(arg instanceof String)) {
-                continue;
-            }
-
             for (final Annotation annotation : parameterAnnotations[i]) {
-                if (Bind.class.equals(annotation.annotationType()) && ("id").equals(((Bind) annotation).value())) {
+                if (arg instanceof String && Bind.class.equals(annotation.annotationType()) && ("id").equals(((Bind) annotation).value())) {
                     return ImmutableList.<String>of((String) arg);
+                } else if (arg instanceof Collection && UUIDCollectionBinder.class.equals(annotation.annotationType())) {
+                    return ImmutableList.<String>copyOf((Collection) arg);
                 }
             }
         }
-
         return null;
     }
 

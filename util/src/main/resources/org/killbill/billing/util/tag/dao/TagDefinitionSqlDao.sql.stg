@@ -58,12 +58,12 @@ and t.is_active
 ;
 >>
 
-getByIds(tag_definition_ids) ::= <<
+getByIds(ids) ::= <<
 select
   <allTableFields("t.")>
 from <tableName()> t
 where t.is_active
-and <idField("t.")> in (<tag_definition_ids: {id | :id_<i0>}; separator="," >)
+and <idField("t.")> in (<ids: {id | :id_<i0>}; separator="," >)
 <AND_CHECK_TENANT("t.")>
 ;
 >>

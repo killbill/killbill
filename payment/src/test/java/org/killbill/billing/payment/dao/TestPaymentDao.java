@@ -21,15 +21,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
+import org.killbill.billing.GuicyKillbillTestSuite;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
+import org.killbill.billing.util.callcontext.CallOrigin;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.UserType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -49,17 +60,14 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
         final UUID accountId = UUID.randomUUID();
 
-
-
         final List<PluginProperty> properties = new ArrayList<PluginProperty>();
         properties.add(new PluginProperty("key1", "value1", false));
         properties.add(new PluginProperty("key2", "value2", false));
 
-        final byte [] serialized = PluginPropertySerializer.serialize(properties);
+        final byte[] serialized = PluginPropertySerializer.serialize(properties);
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(UUID.randomUUID(), UUID.randomUUID(), clock.getUTCNow(), clock.getUTCNow(),
                                                                           paymentExternalKey, directTransactionId, transactionExternalKey, transactionType, stateName,
                                                                           BigDecimal.ZERO, Currency.ALL, pluginName, serialized);
-
 
         PaymentAttemptModelDao savedAttempt = paymentDao.insertPaymentAttemptWithProperties(attempt, internalCallContext);
         assertEquals(savedAttempt.getTransactionExternalKey(), transactionExternalKey);
@@ -185,7 +193,6 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         paymentDao.updateDirectPaymentAndTransactionOnCompletion(savedPayment.getId(), "AUTH_ABORTED", null, transactionModelDao2.getId(), TransactionStatus.SUCCESS,
                                                                  BigDecimal.ONE, Currency.USD, null, "nothing", internalCallContext);
 
-
         final PaymentModelDao savedPayment4Again = paymentDao.getDirectPayment(savedPayment.getId(), internalCallContext);
         assertEquals(savedPayment4Again.getId(), paymentModelDao.getId());
         assertEquals(savedPayment4Again.getStateName(), "AUTH_ABORTED");
@@ -214,7 +221,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final String pluginName = "nobody";
         final Boolean isActive = Boolean.TRUE;
 
-        final PaymentMethodModelDao method = new PaymentMethodModelDao(paymentMethodId,UUID.randomUUID().toString(), null, null,
+        final PaymentMethodModelDao method = new PaymentMethodModelDao(paymentMethodId, UUID.randomUUID().toString(), null, null,
                                                                        accountId, pluginName, isActive);
 
         PaymentMethodModelDao savedMethod = paymentDao.insertPaymentMethod(method, internalCallContext);
@@ -243,4 +250,84 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(deletedPaymentMethod.getId(), paymentMethodId);
         assertEquals(deletedPaymentMethod.getPluginName(), pluginName);
     }
+
+    @Test(groups = "slow")
+    public void testPendingTransactions() {
+
+        final UUID paymentMethodId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
+        final String externalKey = "hhhhooo";
+        final String transactionExternalKey1 = "transaction1";
+        final String transactionExternalKey2 = "transaction2";
+        final String transactionExternalKey3 = "transaction3";
+        final String transactionExternalKey4 = "transaction4";
+
+        final DateTime initialTime = clock.getUTCNow();
+
+        final PaymentModelDao paymentModelDao = new PaymentModelDao(initialTime, initialTime, accountId, paymentMethodId, externalKey);
+        final PaymentTransactionModelDao transaction1 = new PaymentTransactionModelDao(initialTime, initialTime, transactionExternalKey1,
+                                                                                       paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,
+                                                                                       TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
+                                                                                       "pending", "");
+
+        paymentDao.insertDirectPaymentWithFirstTransaction(paymentModelDao, transaction1, internalCallContext);
+
+        final PaymentTransactionModelDao transaction2 = new PaymentTransactionModelDao(initialTime, initialTime, transactionExternalKey2,
+                                                                                       paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,
+                                                                                       TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
+                                                                                       "pending", "");
+        paymentDao.updateDirectPaymentWithNewTransaction(paymentModelDao.getId(), transaction2, internalCallContext);
+
+        final PaymentTransactionModelDao transaction3 = new PaymentTransactionModelDao(initialTime, initialTime, transactionExternalKey3,
+                                                                                       paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,
+                                                                                       TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.AED,
+                                                                                       "success", "");
+
+        paymentDao.updateDirectPaymentWithNewTransaction(paymentModelDao.getId(), transaction3, internalCallContext);
+
+        clock.addDays(1);
+        final DateTime newTime = clock.getUTCNow();
+
+
+        final InternalCallContext internalCallContextWithNewTime = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, 1687L, UUID.randomUUID(),
+                                                                                        UUID.randomUUID().toString(), CallOrigin.TEST,
+                                                                                        UserType.TEST, "Testing", "This is a test",
+                                                                                        newTime, newTime);
+
+        final PaymentTransactionModelDao transaction4 = new PaymentTransactionModelDao(initialTime, initialTime, transactionExternalKey4,
+                                                                                       paymentModelDao.getId(), TransactionType.AUTHORIZE, newTime,
+                                                                                       TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
+                                                                                       "pending", "");
+        paymentDao.updateDirectPaymentWithNewTransaction(paymentModelDao.getId(), transaction4, internalCallContextWithNewTime);
+
+
+        final List<PaymentTransactionModelDao> result = getPendingTransactions(paymentModelDao.getId());
+        Assert.assertEquals(result.size(), 3);
+
+
+        paymentDao.failOldPendingTransactions(TransactionStatus.PAYMENT_FAILURE, newTime, internalCallContext);
+
+        final List<PaymentTransactionModelDao> result2 = getPendingTransactions(paymentModelDao.getId());
+        Assert.assertEquals(result2.size(), 1);
+
+        // Just to guarantee that next clock.getUTCNow() > newTime
+        try { Thread.sleep(1000); } catch (InterruptedException e) {};
+
+        paymentDao.failOldPendingTransactions(TransactionStatus.PAYMENT_FAILURE, clock.getUTCNow(), internalCallContextWithNewTime);
+
+        final List<PaymentTransactionModelDao> result3 = getPendingTransactions(paymentModelDao.getId());
+        Assert.assertEquals(result3.size(), 0);
+
+    }
+
+    private List<PaymentTransactionModelDao> getPendingTransactions(final UUID paymentId) {
+        final List<PaymentTransactionModelDao> total =  paymentDao.getDirectTransactionsForDirectPayment(paymentId, internalCallContext);
+        return ImmutableList.copyOf(Iterables.filter(total, new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return input.getTransactionStatus() == TransactionStatus.PENDING;
+            }
+        }));
+    }
 }
+

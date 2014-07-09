@@ -27,6 +27,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -34,6 +35,7 @@ import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
@@ -46,6 +48,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -122,6 +125,28 @@ public class DefaultPaymentDao implements PaymentDao {
             }
         });
     }
+
+    @Override
+    public void failOldPendingTransactions(final TransactionStatus newTransactionStatus, final DateTime createdBeforeDate, final InternalTenantContext context) {
+         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final TransactionSqlDao transactional = entitySqlDaoWrapperFactory.become(TransactionSqlDao.class);
+                final List<PaymentTransactionModelDao> oldPendingTransactions = transactional.getByTransactionStatusPriorDate(TransactionStatus.PENDING.toString(), createdBeforeDate.toDate(), context);
+                if (oldPendingTransactions.size() > 0) {
+                    final Collection<String> oldPendingTransactionIds = Collections2.transform(oldPendingTransactions, new Function<PaymentTransactionModelDao, String>() {
+                        @Override
+                        public String apply(final PaymentTransactionModelDao input) {
+                            return input.getId().toString();
+                        }
+                    });
+                    transactional.failOldPendingTransactions(oldPendingTransactionIds, TransactionStatus.PAYMENT_FAILURE.toString(), context);
+                }
+                return null;
+            }
+        });
+    }
+
 
     @Override
     public List<PaymentTransactionModelDao> getDirectPaymentTransactionsByExternalKey(final String transactionExternalKey, final InternalTenantContext context) {

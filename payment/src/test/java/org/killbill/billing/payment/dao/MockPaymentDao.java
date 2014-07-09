@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -46,6 +47,15 @@ public class MockPaymentDao implements PaymentDao {
             payments.clear();
             transactions.clear();
             attempts.clear();
+        }
+    }
+
+    @Override
+    public void failOldPendingTransactions(final TransactionStatus newTransactionStatus, final DateTime createdBeforeDate, final InternalTenantContext context) {
+        synchronized (transactions) {
+            for (PaymentTransactionModelDao cur : transactions.values()) {
+                cur.setTransactionStatus(newTransactionStatus);
+            }
         }
     }
 

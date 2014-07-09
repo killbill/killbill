@@ -17,6 +17,8 @@
 package org.killbill.billing.payment.dao;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +29,7 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -50,8 +53,19 @@ public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelD
                                                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
+    List<PaymentTransactionModelDao> getByTransactionStatusPriorDate(@Bind("transactionStatus") final String transactionStatus,
+                                                                     @Bind("beforeCreatedDate") final Date beforeCreatedDate,
+                                                                     @BindBean final InternalTenantContext context);
+
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
+    void failOldPendingTransactions(@UUIDCollectionBinder final Collection<String> pendingTransactionIds,
+                                    @Bind("newTransactionStatus") final String newTransactionStatus,
+                                    @BindBean final InternalTenantContext context);
+
+    @SqlQuery
     public List<PaymentTransactionModelDao> getByPaymentId(@Bind("paymentId") final UUID paymentId,
-                                                                 @BindBean final InternalTenantContext context);
+                                                           @BindBean final InternalTenantContext context);
 }
 
 
