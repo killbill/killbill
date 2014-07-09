@@ -258,7 +258,10 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
                 generator.writeStartArray();
                 for (final E entity : entities) {
-                    generator.writeObject(toJson.apply(entity));
+                    final J asJson = toJson.apply(entity);
+                    if (asJson != null) {
+                        generator.writeObject(asJson);
+                    }
                 }
                 generator.writeEndArray();
                 generator.close();
