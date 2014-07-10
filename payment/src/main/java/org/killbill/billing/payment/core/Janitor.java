@@ -19,6 +19,7 @@ package org.killbill.billing.payment.core;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -73,6 +74,7 @@ public class Janitor {
     private final PluginControlledDirectPaymentAutomatonRunner pluginControlledDirectPaymentAutomatonRunner;
 
     private volatile boolean isStopped;
+    private CountDownLatch shutdownLatch;
 
     @Inject
     public Janitor(final AccountInternalApi accountInternalApi,
@@ -100,16 +102,24 @@ public class Janitor {
         final long pendingPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
         janitorExecutor.scheduleAtFixedRate(new PendingTransactionTask(), pendingPeriod, pendingPeriod, pendingRateUnit);
 
-
         // Start task for completing incomplete payment attempts
         final TimeUnit attemptCompletionRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
         final long attemptCompletionPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
         janitorExecutor.scheduleAtFixedRate(new AttemptCompletionTask(), attemptCompletionPeriod, attemptCompletionPeriod, attemptCompletionRateUnit);
+        this.shutdownLatch = new CountDownLatch(2);
     }
 
     public void stop() {
         isStopped = true;
-        //janitorExecutor.shutdownNow();
+        try {
+            boolean res = shutdownLatch.await(5, TimeUnit.SECONDS);
+            if (!res) {
+                log.warn("Janitor stop sequence timed out : did not complete in 5 sec");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Janitor stop sequence got interrupted");
+        }
     }
 
     /**
@@ -125,7 +135,9 @@ public class Janitor {
 
         @Override
         public void run() {
+
             if (isStopped) {
+                shutdownLatch.countDown();
                 return;
             }
             log.info("PendingTransactionTask start run ");
@@ -160,6 +172,7 @@ public class Janitor {
         public void run() {
 
             if (isStopped) {
+                shutdownLatch.countDown();
                 return;
             }
 
@@ -168,6 +181,10 @@ public class Janitor {
             log.info("AttemptCompletionTask start run : found " + incompleteAttempts.size() + " incomplete attempts");
 
             for (PaymentAttemptModelDao cur : incompleteAttempts) {
+                if (isStopped) {
+                    shutdownLatch.countDown();
+                    return;
+                }
                 complete(cur);
             }
         }
@@ -207,18 +224,18 @@ public class Janitor {
                 final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
                 final boolean isApiPayment = true; // unclear
                 final RetryableDirectPaymentStateContext paymentStateContext = new RetryableDirectPaymentStateContext(attempt.getPluginName(),
-                                                                                                                isApiPayment,
-                                                                                                                transaction.getPaymentId(),
-                                                                                                                attempt.getPaymentExternalKey(),
-                                                                                                                transaction.getTransactionExternalKey(),
-                                                                                                                transaction.getTransactionType(),
-                                                                                                                account,
-                                                                                                                attempt.getPaymentMethodId(),
-                                                                                                                transaction.getAmount(),
-                                                                                                                transaction.getCurrency(),
-                                                                                                                PluginPropertySerializer.deserialize(attempt.getPluginProperties()),
-                                                                                                                internalCallContext,
-                                                                                                                callContext);
+                                                                                                                      isApiPayment,
+                                                                                                                      transaction.getPaymentId(),
+                                                                                                                      attempt.getPaymentExternalKey(),
+                                                                                                                      transaction.getTransactionExternalKey(),
+                                                                                                                      transaction.getTransactionType(),
+                                                                                                                      account,
+                                                                                                                      attempt.getPaymentMethodId(),
+                                                                                                                      transaction.getAmount(),
+                                                                                                                      transaction.getCurrency(),
+                                                                                                                      PluginPropertySerializer.deserialize(attempt.getPluginProperties()),
+                                                                                                                      internalCallContext,
+                                                                                                                      callContext);
 
                 paymentStateContext.setAttemptId(attempt.getId()); // Normally set by leavingState Callback
                 paymentStateContext.setDirectPaymentTransactionModelDao(transaction); // Normally set by raw state machine
