@@ -96,6 +96,7 @@ public class TestDirectPaymentLeavingStateCallback extends PaymentTestSuiteWithE
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         directPaymentStateContext = new DirectPaymentStateContext(directPaymentId,
+                                                                  null,
                                                                   UUID.randomUUID().toString(),
                                                                   UUID.randomUUID().toString(),
                                                                   TransactionType.CAPTURE,
@@ -120,6 +121,7 @@ public class TestDirectPaymentLeavingStateCallback extends PaymentTestSuiteWithE
             );
             final PaymentTransactionModelDao newPaymentTransactionModelDao = new PaymentTransactionModelDao(clock.getUTCNow(),
                                                                                                             clock.getUTCNow(),
+                                                                                                            null,
                                                                                                             directPaymentStateContext.getDirectPaymentTransactionExternalKey(),
                                                                                                             directPaymentId,
                                                                                                             directPaymentStateContext.getTransactionType(),

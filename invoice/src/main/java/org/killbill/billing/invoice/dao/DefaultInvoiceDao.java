@@ -566,7 +566,17 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class).create(invoicePayment, context);
+                final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
+                final List<InvoicePaymentModelDao> invoicePayments = transactional.getInvoicePayments(invoicePayment.getPaymentId().toString(), context);
+                final InvoicePaymentModelDao existingAttempt = Iterables.tryFind(invoicePayments, new Predicate<InvoicePaymentModelDao>() {
+                    @Override
+                    public boolean apply(final InvoicePaymentModelDao input) {
+                        return input.getType() == InvoicePaymentType.ATTEMPT;
+                    }
+                }).orNull();
+                if (existingAttempt == null) {
+                    transactional.create(invoicePayment, context);
+                }
                 return null;
             }
         });

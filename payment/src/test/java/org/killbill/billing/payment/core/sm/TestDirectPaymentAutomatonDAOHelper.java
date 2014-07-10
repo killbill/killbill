@@ -126,6 +126,7 @@ public class TestDirectPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmb
         // No default payment method
 
         directPaymentStateContext = new DirectPaymentStateContext(directPaymentId,
+                                                                  null,
                                                                   directPaymentExternalKey,
                                                                   directPaymentTransactionExternalKey,
                                                                   TransactionType.CAPTURE,

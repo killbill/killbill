@@ -16,6 +16,7 @@
 
 package org.killbill.billing.payment.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -42,10 +43,15 @@ public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDa
 
     @SqlQuery
     List<PaymentAttemptModelDao> getByTransactionExternalKey(@Bind("transactionExternalKey") final String transactionExternalKey,
-                                                       @BindBean final InternalTenantContext context);
+                                                             @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<PaymentAttemptModelDao> getByPaymentExternalKey(@Bind("paymentExternalKey") final String paymentExternalKey,
+                                                         @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    List<PaymentAttemptModelDao> getByStateName(@Bind("stateName") final String stateName,
+                                                @Bind("createdBeforeDate") final Date createdBeforeDate,
                                                 @BindBean final InternalTenantContext context);
 
 }

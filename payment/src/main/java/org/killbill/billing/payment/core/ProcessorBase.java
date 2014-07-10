@@ -180,7 +180,8 @@ public abstract class ProcessorBase {
         final PaymentTransactionModelDao transactionAlreadyExists = Iterables.tryFind(transactions, new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao input) {
-                return input.getTransactionStatus() == TransactionStatus.SUCCESS;
+                return input.getTransactionStatus() == TransactionStatus.SUCCESS ||
+                       input.getTransactionStatus() == TransactionStatus.UNKNOWN;
             }
         }).orNull();
         if (transactionAlreadyExists != null) {

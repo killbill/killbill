@@ -36,6 +36,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
@@ -139,27 +140,43 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         try {
+            final InvoicePayment existingInvoicePayment;
             switch (transactionType) {
                 case PURCHASE:
                     final UUID invoiceId = getInvoiceId(paymentControlContext);
-                    invoiceApi.notifyOfPayment(invoiceId,
-                                               paymentControlContext.getAmount(),
-                                               paymentControlContext.getCurrency(),
-                                               paymentControlContext.getProcessedCurrency(),
-                                               paymentControlContext.getPaymentId(),
-                                               paymentControlContext.getCreatedDate(),
-                                               internalContext);
+                    existingInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentControlContext.getPaymentId(), internalContext);
+                    if (existingInvoicePayment != null) {
+                        logger.info("onSuccessCall was already completed for payment purchase :" + paymentControlContext.getPaymentId());
+                    } else {
+                        invoiceApi.notifyOfPayment(invoiceId,
+                                                   paymentControlContext.getAmount(),
+                                                   paymentControlContext.getCurrency(),
+                                                   paymentControlContext.getProcessedCurrency(),
+                                                   paymentControlContext.getPaymentId(),
+                                                   paymentControlContext.getCreatedDate(),
+                                                   internalContext);
+                    }
                     break;
 
                 case REFUND:
-                    final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentControlContext.getPluginProperties());
-                    final PluginProperty prop = getPluginProperty(paymentControlContext.getPluginProperties(), PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
-                    final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
-                    invoiceApi.createRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
+                    existingInvoicePayment = invoiceApi.getInvoicePaymentForRefund(paymentControlContext.getPaymentId(), internalContext);
+                    if (existingInvoicePayment != null) {
+                        logger.info("onSuccessCall was already completed for payment refund :" + paymentControlContext.getPaymentId());
+                    } else {
+                        final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentControlContext.getPluginProperties());
+                        final PluginProperty prop = getPluginProperty(paymentControlContext.getPluginProperties(), PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
+                        final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
+                        invoiceApi.createRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
+                    }
                     break;
 
                 case CHARGEBACK:
-                    invoiceApi.createChargeback(paymentControlContext.getPaymentId(), paymentControlContext.getProcessedAmount(), paymentControlContext.getProcessedCurrency(), internalContext);
+                    existingInvoicePayment = invoiceApi.getInvoicePaymentForChargeback(paymentControlContext.getPaymentId(), internalContext);
+                    if (existingInvoicePayment != null) {
+                        logger.info("onSuccessCall was already completed for payment chargeback :" + paymentControlContext.getPaymentId());
+                    } else {
+                        invoiceApi.createChargeback(paymentControlContext.getPaymentId(), paymentControlContext.getProcessedAmount(), paymentControlContext.getProcessedCurrency(), internalContext);
+                    }
                     break;
 
                 default:

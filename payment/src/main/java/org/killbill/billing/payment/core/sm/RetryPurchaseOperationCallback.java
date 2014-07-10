@@ -34,6 +34,7 @@ public class RetryPurchaseOperationCallback extends RetryOperationCallback {
     @Override
     protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
         return directPaymentProcessor.createPurchase(retryableDirectPaymentStateContext.isApiPayment(),
+                                                     retryableDirectPaymentStateContext.getAttemptId(),
                                                      retryableDirectPaymentStateContext.getAccount(),
                                                      retryableDirectPaymentStateContext.getPaymentMethodId(),
                                                      retryableDirectPaymentStateContext.getDirectPaymentId(),

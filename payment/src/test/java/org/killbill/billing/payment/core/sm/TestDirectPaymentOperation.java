@@ -104,6 +104,7 @@ public class TestDirectPaymentOperation extends PaymentTestSuiteNoDB {
         final GlobalLocker locker = new MemoryGlobalLocker();
         final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(1, Executors.newCachedThreadPool());
         directPaymentStateContext = new DirectPaymentStateContext(UUID.randomUUID(),
+                                                                  null,
                                                                   UUID.randomUUID().toString(),
                                                                   UUID.randomUUID().toString(),
                                                                   TransactionType.CAPTURE,

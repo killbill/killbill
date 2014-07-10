@@ -86,6 +86,7 @@ public class PluginControlledDirectPaymentAutomatonRunner extends DirectPaymentA
         this.retryOperation = fetchRetryOperation();
     }
 
+
     public DirectPayment run(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
                              @Nullable final UUID directPaymentId, @Nullable final String directPaymentExternalKey, final String directPaymentTransactionExternalKey,
                              @Nullable final BigDecimal amount, @Nullable final Currency currency,
@@ -127,6 +128,31 @@ public class PluginControlledDirectPaymentAutomatonRunner extends DirectPaymentA
         }
         return directPaymentStateContext.getResult();
     }
+
+    public DirectPayment completeRun(final RetryableDirectPaymentStateContext paymentStateContext) throws PaymentApiException {
+
+        try {
+
+            final OperationCallback callback = new RetryCompletionOperationCallback(locker, paymentPluginDispatcher, paymentStateContext, directPaymentProcessor, paymentControlPluginRegistry);
+            final LeavingStateCallback leavingStateCallback = new RetryNoopLeavingStateCallback();
+            final EnteringStateCallback enteringStateCallback = new RetryEnteringStateCallback(this, paymentStateContext, retryServiceScheduler);
+
+            initialState.runOperation(retryOperation, callback, enteringStateCallback, leavingStateCallback);
+
+        } catch (MissingEntryException e) {
+            throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+        } catch (OperationException e) {
+            if (e.getCause() == null) {
+                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            } else if (e.getCause() instanceof PaymentApiException) {
+                throw (PaymentApiException) e.getCause();
+            } else {
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            }
+        }
+        return paymentStateContext.getResult();
+    }
+
 
     // STEPH to be moved
     public final State fetchState(final String stateName) {

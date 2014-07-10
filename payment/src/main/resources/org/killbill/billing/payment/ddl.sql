@@ -27,6 +27,7 @@ CREATE TABLE payment_attempts (
 CREATE UNIQUE INDEX payment_attempts_id ON payment_attempts(id);
 CREATE INDEX payment_attempts_payment ON payment_attempts(transaction_id);
 CREATE INDEX payment_attempts_payment_key ON payment_attempts(payment_external_key);
+CREATE INDEX payment_attempts_payment_state ON payment_attempts(state_name);
 CREATE INDEX payment_attempts_payment_transaction_key ON payment_attempts(transaction_external_key);
 CREATE INDEX payment_attempts_tenant_account_record_id ON payment_attempts(tenant_record_id, account_record_id);
 
@@ -151,6 +152,7 @@ DROP TABLE IF EXISTS transactions;
 CREATE TABLE transactions (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    attempt_id char(36) DEFAULT NULL,
     transaction_external_key varchar(255) NOT NULL,
     transaction_type varchar(32) NOT NULL,
     effective_date datetime NOT NULL,
@@ -173,12 +175,14 @@ CREATE TABLE transactions (
 CREATE UNIQUE INDEX transactions_id ON transactions(id);
 CREATE INDEX transactions_payment_id ON transactions(payment_id);
 CREATE INDEX transactions_key ON transactions(transaction_external_key);
+CREATE INDEX transactions_status ON transactions(transaction_status);
 CREATE INDEX transactions_tenant_account_record_id ON transactions(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS transaction_history;
 CREATE TABLE transaction_history (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    attempt_id char(36) DEFAULT NULL,
     transaction_external_key varchar(255) NOT NULL,
     target_record_id int(11) unsigned NOT NULL,
     transaction_type varchar(32) NOT NULL,

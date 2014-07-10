@@ -56,6 +56,7 @@ import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 
 public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
@@ -109,21 +110,17 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public InvoicePayment getInvoicePaymentForAttempt(final UUID paymentId, final InternalTenantContext context) throws InvoiceApiException {
-        final Collection<InvoicePayment> invoicePayments = Collections2.transform(dao.getInvoicePayments(paymentId, context), new Function<InvoicePaymentModelDao, InvoicePayment>() {
-            @Override
-            public InvoicePayment apply(final InvoicePaymentModelDao input) {
-                return new DefaultInvoicePayment(input);
-            }
-        });
-        if (invoicePayments.size() == 0) {
-            return null;
-        }
-        return Collections2.filter(invoicePayments, new Predicate<InvoicePayment>() {
-            @Override
-            public boolean apply(final InvoicePayment input) {
-                return input.getType() == InvoicePaymentType.ATTEMPT;
-            }
-        }).iterator().next();
+        return getInvoicePayment(paymentId, InvoicePaymentType.ATTEMPT, context);
+    }
+
+    @Override
+    public InvoicePayment getInvoicePaymentForRefund(final UUID paymentId, final InternalTenantContext context) throws InvoiceApiException {
+        return getInvoicePayment(paymentId, InvoicePaymentType.REFUND, context);
+    }
+
+    @Override
+    public InvoicePayment getInvoicePaymentForChargeback(final UUID paymentId, final InternalTenantContext context) throws InvoiceApiException {
+        return getInvoicePayment(paymentId, InvoicePaymentType.CHARGED_BACK, context);
     }
 
     @Override
@@ -151,4 +148,21 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
         dao.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, context);
     }
 
+    private InvoicePayment getInvoicePayment(final UUID paymentId, final InvoicePaymentType type, final InternalTenantContext context) throws InvoiceApiException {
+        final Collection<InvoicePayment> invoicePayments = Collections2.transform(dao.getInvoicePayments(paymentId, context), new Function<InvoicePaymentModelDao, InvoicePayment>() {
+            @Override
+            public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                return new DefaultInvoicePayment(input);
+            }
+        });
+        if (invoicePayments.size() == 0) {
+            return null;
+        }
+        return Iterables.tryFind(invoicePayments, new Predicate<InvoicePayment>() {
+            @Override
+            public boolean apply(final InvoicePayment input) {
+                return input.getType() == type;
+            }
+        }).orNull();
+    }
 }

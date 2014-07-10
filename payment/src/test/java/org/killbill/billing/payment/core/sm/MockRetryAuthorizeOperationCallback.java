@@ -66,6 +66,7 @@ public class MockRetryAuthorizeOperationCallback extends RetryAuthorizeOperation
 
         final PaymentTransactionModelDao transaction = new PaymentTransactionModelDao(clock.getUTCNow(),
                                                                                       clock.getUTCNow(),
+                                                                                      directPaymentStateContext.getAttemptId(),
                                                                                       directPaymentStateContext.directPaymentTransactionExternalKey,
                                                                                       directPaymentStateContext.directPaymentId,
                                                                                       directPaymentStateContext.transactionType,
@@ -77,6 +78,7 @@ public class MockRetryAuthorizeOperationCallback extends RetryAuthorizeOperation
                                                                                       "");
         final PaymentModelDao paymentModelDao = paymentDao.insertDirectPaymentWithFirstTransaction(payment, transaction, directPaymentStateContext.internalCallContext);
         final DirectPaymentTransaction convertedTransaction = new DefaultDirectPaymentTransaction(transaction.getId(),
+                                                                                                  directPaymentStateContext.getAttemptId(),
                                                                                                   transaction.getTransactionExternalKey(),
                                                                                                   transaction.getCreatedDate(),
                                                                                                   transaction.getUpdatedDate(),

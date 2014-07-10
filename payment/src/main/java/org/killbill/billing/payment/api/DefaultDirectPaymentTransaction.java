@@ -38,11 +38,13 @@ public class DefaultDirectPaymentTransaction extends EntityBase implements Direc
     private final String gatewayErrorCode;
     private final String gatewayErrorMsg;
     private final PaymentTransactionInfoPlugin infoPlugin;
+    private final UUID attemptId;
 
-    public DefaultDirectPaymentTransaction(final UUID id, final String externalKey, final DateTime createdDate, final DateTime updatedDate, final UUID directPaymentId, final TransactionType transactionType,
+    public DefaultDirectPaymentTransaction(final UUID id, final UUID attemptId, final String externalKey, final DateTime createdDate, final DateTime updatedDate, final UUID directPaymentId, final TransactionType transactionType,
                                            final DateTime effectiveDate, final TransactionStatus status, final BigDecimal amount, final Currency currency, final BigDecimal processedAmount, final Currency processedCurrency,
                                            final String gatewayErrorCode, final String gatewayErrorMsg, final PaymentTransactionInfoPlugin infoPlugin) {
         super(id, createdDate, updatedDate);
+        this.attemptId = attemptId;
         this.externalKey = externalKey;
         this.directPaymentId = directPaymentId;
         this.transactionType = transactionType;
@@ -115,6 +117,10 @@ public class DefaultDirectPaymentTransaction extends EntityBase implements Direc
     @Override
     public PaymentTransactionInfoPlugin getPaymentInfoPlugin() {
         return infoPlugin;
+    }
+
+    public UUID getAttemptId() {
+        return attemptId;
     }
 
     @Override

@@ -46,6 +46,10 @@ public interface InvoiceInternalApi {
 
     public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
 
+    public InvoicePayment getInvoicePaymentForRefund(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
+
+    public InvoicePayment getInvoicePaymentForChargeback(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
+
     public Invoice getInvoiceForPaymentId(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
 
     /**

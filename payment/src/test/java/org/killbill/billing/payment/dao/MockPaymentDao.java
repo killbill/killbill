@@ -51,13 +51,17 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void failOldPendingTransactions(final TransactionStatus newTransactionStatus, final DateTime createdBeforeDate, final InternalTenantContext context) {
+    public int failOldPendingTransactions(final TransactionStatus newTransactionStatus, final DateTime createdBeforeDate, final InternalCallContext context) {
+        int result = 0;
         synchronized (transactions) {
             for (PaymentTransactionModelDao cur : transactions.values()) {
                 cur.setTransactionStatus(newTransactionStatus);
+                result++;
             }
         }
+        return result;
     }
+
 
     @Override
     public PaymentAttemptModelDao insertPaymentAttemptWithProperties(final PaymentAttemptModelDao attempt, final InternalCallContext context) {
@@ -83,6 +87,11 @@ public class MockPaymentDao implements PaymentDao {
         if (!success) {
             throw new RuntimeException("Could not find attempt " + paymentAttemptId);
         }
+    }
+
+    @Override
+    public List<PaymentAttemptModelDao> getPaymentAttemptsByState(final String stateName, final DateTime createdBeforeDate, final InternalTenantContext context) {
+        return null;
     }
 
     @Override

@@ -103,6 +103,17 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
+    public List<PaymentAttemptModelDao> getPaymentAttemptsByState(final String stateName, final DateTime createdBeforeDate, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentAttemptModelDao>>() {
+            @Override
+            public List<PaymentAttemptModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final PaymentAttemptSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class);
+                return transactional.getByStateName(stateName, createdBeforeDate.toDate(), context);
+            }
+        });
+    }
+
+    @Override
     public List<PaymentAttemptModelDao> getPaymentAttempts(final String paymentExternalKey, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentAttemptModelDao>>() {
 
@@ -127,10 +138,10 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void failOldPendingTransactions(final TransactionStatus newTransactionStatus, final DateTime createdBeforeDate, final InternalTenantContext context) {
-         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+    public int failOldPendingTransactions(final TransactionStatus newTransactionStatus, final DateTime createdBeforeDate, final InternalCallContext context) {
+         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Integer>() {
             @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Integer inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final TransactionSqlDao transactional = entitySqlDaoWrapperFactory.become(TransactionSqlDao.class);
                 final List<PaymentTransactionModelDao> oldPendingTransactions = transactional.getByTransactionStatusPriorDate(TransactionStatus.PENDING.toString(), createdBeforeDate.toDate(), context);
                 if (oldPendingTransactions.size() > 0) {
@@ -140,9 +151,9 @@ public class DefaultPaymentDao implements PaymentDao {
                             return input.getId().toString();
                         }
                     });
-                    transactional.failOldPendingTransactions(oldPendingTransactionIds, TransactionStatus.PAYMENT_FAILURE.toString(), context);
+                    return transactional.failOldPendingTransactions(oldPendingTransactionIds, TransactionStatus.PAYMENT_FAILURE.toString(), context);
                 }
-                return null;
+                return 0;
             }
         });
     }

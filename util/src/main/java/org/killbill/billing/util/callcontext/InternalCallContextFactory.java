@@ -22,14 +22,13 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.ObjectType;
-import org.killbill.clock.Clock;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.clock.Clock;
 
 import com.google.common.base.Objects;
 
@@ -84,6 +83,12 @@ public class InternalCallContextFactory {
 
     public InternalTenantContext createInternalTenantContext(final UUID accountId, final InternalTenantContext context) {
         final Long tenantRecordId = context.getTenantRecordId();
+        final Long accountRecordId = getAccountRecordId(accountId, ObjectType.ACCOUNT);
+        return new InternalTenantContext(tenantRecordId, accountRecordId);
+    }
+
+    public InternalTenantContext createInternalTenantContext(final UUID accountId, final UUID objectId, final ObjectType objectType) {
+        final Long tenantRecordId = getTenantRecordId(objectId, objectType);
         final Long accountRecordId = getAccountRecordId(accountId, ObjectType.ACCOUNT);
         return new InternalTenantContext(tenantRecordId, accountRecordId);
     }
@@ -248,6 +253,10 @@ public class InternalCallContextFactory {
 
     private Long getAccountRecordId(final UUID objectId, final ObjectType objectType) {
         return nonEntityDao.retrieveAccountRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
+    }
+
+    private Long getTenantRecordId(final UUID objectId, final ObjectType objectType) {
+        return nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID));
     }
 
     private Long getTenantRecordId(final TenantContext context) {

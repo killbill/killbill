@@ -92,7 +92,7 @@ public class DirectPaymentAutomatonRunner {
 
     }
 
-    public UUID run(final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
+    public UUID run(final TransactionType transactionType, final Account account, @Nullable final UUID attemptId, @Nullable final UUID paymentMethodId,
                     @Nullable final UUID directPaymentId, @Nullable final String directPaymentExternalKey, final String directPaymentTransactionExternalKey,
                     @Nullable final BigDecimal amount, @Nullable final Currency currency,
                     final boolean shouldLockAccount, final Iterable<PluginProperty> properties,
@@ -100,7 +100,7 @@ public class DirectPaymentAutomatonRunner {
 
         final DateTime utcNow = clock.getUTCNow();
 
-        final DirectPaymentStateContext directPaymentStateContext = new DirectPaymentStateContext(directPaymentId, directPaymentExternalKey, directPaymentTransactionExternalKey, transactionType,
+        final DirectPaymentStateContext directPaymentStateContext = new DirectPaymentStateContext(directPaymentId, attemptId, directPaymentExternalKey, directPaymentTransactionExternalKey, transactionType,
                                                                                                   account, paymentMethodId, amount, currency, shouldLockAccount, properties, internalCallContext, callContext);
         final DirectPaymentAutomatonDAOHelper daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, utcNow, paymentDao, pluginRegistry, internalCallContext);
 

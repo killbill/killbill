@@ -34,6 +34,7 @@ import com.google.common.base.Objects;
 
 public class PaymentTransactionModelDao extends EntityBase implements EntityModelDao<DirectPaymentTransaction> {
 
+    private UUID attemptId;
     private UUID paymentId;
     private String transactionExternalKey;
     private TransactionType transactionType;
@@ -49,10 +50,11 @@ public class PaymentTransactionModelDao extends EntityBase implements EntityMode
 
     public PaymentTransactionModelDao() { /* For the DAO mapper */ }
 
-    public PaymentTransactionModelDao(final UUID id, @Nullable final String transactionExternalKey, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+    public PaymentTransactionModelDao(final UUID id, @Nullable final UUID attemptId, @Nullable final String transactionExternalKey, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                       final UUID paymentId, final TransactionType transactionType, final DateTime effectiveDate,
                                       final TransactionStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
         super(id, createdDate, updatedDate);
+        this.attemptId = attemptId;
         this.transactionExternalKey = Objects.firstNonNull(transactionExternalKey, id.toString());
         this.paymentId = paymentId;
         this.transactionType = transactionType;
@@ -66,14 +68,22 @@ public class PaymentTransactionModelDao extends EntityBase implements EntityMode
         this.gatewayErrorMsg = gatewayErrorMsg;
     }
 
-    public PaymentTransactionModelDao(@Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+    public PaymentTransactionModelDao(@Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, @Nullable final UUID attemptId,
                                       @Nullable final String transactionExternalKey, final UUID paymentId, final TransactionType transactionType, final DateTime effectiveDate,
                                       final TransactionStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
-        this(UUID.randomUUID(), transactionExternalKey, createdDate, updatedDate, paymentId, transactionType, effectiveDate, paymentStatus, amount, currency, gatewayErrorCode, gatewayErrorMsg);
+        this(UUID.randomUUID(), attemptId, transactionExternalKey, createdDate, updatedDate, paymentId, transactionType, effectiveDate, paymentStatus, amount, currency, gatewayErrorCode, gatewayErrorMsg);
     }
 
     public UUID getPaymentId() {
         return paymentId;
+    }
+
+    public UUID getAttemptId() {
+        return attemptId;
+    }
+
+    public void setAttemptId(final UUID attemptId) {
+        this.attemptId = attemptId;
     }
 
     public String getTransactionExternalKey() {
@@ -180,6 +190,9 @@ public class PaymentTransactionModelDao extends EntityBase implements EntityMode
         if (currency != that.currency) {
             return false;
         }
+        if (attemptId != null ? !attemptId.equals(that.attemptId) : that.attemptId != null) {
+            return false;
+        }
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
@@ -214,6 +227,7 @@ public class PaymentTransactionModelDao extends EntityBase implements EntityMode
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (attemptId != null ? attemptId.hashCode() : 0);
         result = 31 * result + (transactionExternalKey != null ? transactionExternalKey.hashCode() : 0);
         result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);

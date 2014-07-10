@@ -183,6 +183,15 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
         return new OperationException(e, getOperationResultOnException(directPaymentStateContext));
     }
 
+    protected void onCompletion(final String pluginName, final PaymentControlContext paymentControlContext) {
+        final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
+        try {
+            plugin.onSuccessCall(paymentControlContext);
+        } catch (PaymentControlApiException e) {
+            logger.warn("Plugin " + pluginName + " failed to complete onCompletion call for " + paymentControlContext.getPaymentExternalKey(), e);
+        }
+    }
+
     private OperationResult getOperationResultOnException(final DirectPaymentStateContext directPaymentStateContext) {
         final RetryableDirectPaymentStateContext retryableDirectPaymentStateContext = (RetryableDirectPaymentStateContext) directPaymentStateContext;
         final OperationResult operationResult = retryableDirectPaymentStateContext.getRetryDate() != null ? OperationResult.FAILURE : OperationResult.EXCEPTION;
@@ -217,16 +226,8 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
         }
     }
 
-    private void onCompletion(final String pluginName, final PaymentControlContext paymentControlContext) {
-        final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
-        try {
-            plugin.onSuccessCall(paymentControlContext);
-        } catch (PaymentControlApiException e) {
-            logger.warn("Plugin " + pluginName + " failed to complete onCompletion call for " + paymentControlContext.getPaymentExternalKey(), e);
-        }
-    }
 
-    public class DefaultPaymentControlContext extends DefaultCallContext implements PaymentControlContext {
+    public static class DefaultPaymentControlContext extends DefaultCallContext implements PaymentControlContext {
 
         private final Account account;
         private final UUID paymentMethodId;

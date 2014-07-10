@@ -70,6 +70,11 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Delay after which pending transactions should be marked as failed")
     public TimeSpan getJanitorPendingCleanupTime();
 
+    @Config("org.killbill.payment.janitor.attempts")
+    @Default("15m")
+    @Description("Delay after which incomplete  attempts should be completed")
+    public TimeSpan getJanitorAttemptCompletionTime();
+
     @Config("org.killbill.payment.janitor.rate")
     @Default("1h")
     @Description("Rate at which janitor tasks are scheduled")

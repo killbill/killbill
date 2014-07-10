@@ -34,12 +34,13 @@ public class RetryVoidOperationCallback extends RetryOperationCallback {
     @Override
     protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
         return directPaymentProcessor.createVoid(retryableDirectPaymentStateContext.isApiPayment(),
-                                                   retryableDirectPaymentStateContext.getAccount(),
-                                                   retryableDirectPaymentStateContext.getDirectPaymentId(),
-                                                   retryableDirectPaymentStateContext.getDirectPaymentTransactionExternalKey(),
-                                                   false,
-                                                   retryableDirectPaymentStateContext.getProperties(),
-                                                   retryableDirectPaymentStateContext.getCallContext(),
-                                                   retryableDirectPaymentStateContext.getInternalCallContext());
+                                                 retryableDirectPaymentStateContext.getAttemptId(),
+                                                 retryableDirectPaymentStateContext.getAccount(),
+                                                 retryableDirectPaymentStateContext.getDirectPaymentId(),
+                                                 retryableDirectPaymentStateContext.getDirectPaymentTransactionExternalKey(),
+                                                 false,
+                                                 retryableDirectPaymentStateContext.getProperties(),
+                                                 retryableDirectPaymentStateContext.getCallContext(),
+                                                 retryableDirectPaymentStateContext.getInternalCallContext());
     }
 }

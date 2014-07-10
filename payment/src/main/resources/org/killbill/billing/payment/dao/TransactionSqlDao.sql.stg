@@ -9,7 +9,8 @@ order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
 >>
 
 tableFields(prefix) ::= <<
-  <prefix>transaction_external_key
+  <prefix>attempt_id
+, <prefix>transaction_external_key
 , <prefix>transaction_type
 , <prefix>effective_date
 , <prefix>transaction_status
@@ -27,7 +28,8 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
-  :transactionExternalKey
+  :attemptId
+, :transactionExternalKey
 , :transactionType
 , :effectiveDate
 , :transactionStatus
@@ -77,6 +79,7 @@ where payment_id = :paymentId
 <defaultOrderBy()>
 ;
 >>
+
 
 /* Does not include AND_CHECK_TENANT() since this is a global operation */
 getByTransactionStatusPriorDate() ::= <<

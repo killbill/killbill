@@ -202,6 +202,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(timeoutSeconds, Executors.newCachedThreadPool());
 
         final DirectPaymentStateContext directPaymentStateContext = new DirectPaymentStateContext(UUID.randomUUID(),
+                                                                                                  null,
                                                                                                   UUID.randomUUID().toString(),
                                                                                                   UUID.randomUUID().toString(),
                                                                                                   TransactionType.CAPTURE,

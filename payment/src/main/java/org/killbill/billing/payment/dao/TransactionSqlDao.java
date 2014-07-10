@@ -59,9 +59,9 @@ public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelD
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void failOldPendingTransactions(@UUIDCollectionBinder final Collection<String> pendingTransactionIds,
+    int failOldPendingTransactions(@UUIDCollectionBinder final Collection<String> pendingTransactionIds,
                                     @Bind("newTransactionStatus") final String newTransactionStatus,
-                                    @BindBean final InternalTenantContext context);
+                                    @BindBean final InternalCallContext context);
 
     @SqlQuery
     public List<PaymentTransactionModelDao> getByPaymentId(@Bind("paymentId") final UUID paymentId,

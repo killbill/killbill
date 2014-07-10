@@ -67,7 +67,7 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
         checkPositiveAmount(amount);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return directPaymentProcessor.createAuthorization(IS_API_PAYMENT, account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey,
+        return directPaymentProcessor.createAuthorization(IS_API_PAYMENT, null, account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey,
                                                           SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
     }
 
@@ -82,7 +82,7 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
         checkPositiveAmount(amount);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return directPaymentProcessor.createCapture(IS_API_PAYMENT, account, directPaymentId, amount, currency, directPaymentTransactionExternalKey,
+        return directPaymentProcessor.createCapture(IS_API_PAYMENT, null, account, directPaymentId, amount, currency, directPaymentTransactionExternalKey,
                                                     SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
     }
 
@@ -98,7 +98,7 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
         checkPositiveAmount(amount);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return directPaymentProcessor.createPurchase(IS_API_PAYMENT, account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey,
+        return directPaymentProcessor.createPurchase(IS_API_PAYMENT, null, account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey,
                                                      SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
     }
 
@@ -138,7 +138,7 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
         checkNotNullParameter(properties, "plugin properties");
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return directPaymentProcessor.createVoid(IS_API_PAYMENT, account, directPaymentId, directPaymentTransactionExternalKey,
+        return directPaymentProcessor.createVoid(IS_API_PAYMENT, null, account, directPaymentId, directPaymentTransactionExternalKey,
                                                  SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
     }
@@ -155,7 +155,7 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
         checkPositiveAmount(amount);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return directPaymentProcessor.createRefund(IS_API_PAYMENT, account, directPaymentId, amount, currency, directPaymentTransactionExternalKey,
+        return directPaymentProcessor.createRefund(IS_API_PAYMENT, null, account, directPaymentId, amount, currency, directPaymentTransactionExternalKey,
                                                    SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
     }
 
@@ -192,7 +192,7 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
         checkPositiveAmount(amount);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return directPaymentProcessor.createCredit(IS_API_PAYMENT, account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey,
+        return directPaymentProcessor.createCredit(IS_API_PAYMENT, null, account, paymentMethodId, directPaymentId, amount, currency, directPaymentExternalKey, directPaymentTransactionExternalKey,
                                                    SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
     }
@@ -222,7 +222,7 @@ public class DefaultDirectPaymentApi implements DirectPaymentApi {
         checkPositiveAmount(amount);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return directPaymentProcessor.createChargeback(IS_API_PAYMENT, account, directPaymentId, directPaymentTransactionExternalKey, amount, currency, true,
+        return directPaymentProcessor.createChargeback(IS_API_PAYMENT, null, account, directPaymentId, directPaymentTransactionExternalKey, amount, currency, true,
                                                        callContext, internalCallContext);
 
     }

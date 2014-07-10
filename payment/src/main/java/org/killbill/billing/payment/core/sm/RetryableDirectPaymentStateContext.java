@@ -25,6 +25,8 @@ import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.payment.api.DefaultDirectPayment;
+import org.killbill.billing.payment.api.DefaultDirectPaymentTransaction;
 import org.killbill.billing.payment.api.DirectPayment;
 import org.killbill.billing.payment.api.DirectPaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -33,11 +35,9 @@ import org.killbill.billing.util.callcontext.CallContext;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 
 public class RetryableDirectPaymentStateContext extends DirectPaymentStateContext {
 
-    private UUID attemptId;
     private boolean isApiPayment;
     private DateTime retryDate;
     private String pluginName;
@@ -47,8 +47,7 @@ public class RetryableDirectPaymentStateContext extends DirectPaymentStateContex
                                               @Nullable final String directPaymentTransactionExternalKey, final TransactionType transactionType,
                                               final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
                                               final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext, final CallContext callContext) {
-        super(directPaymentId, directPaymentExternalKey, directPaymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, properties, internalCallContext, callContext);
-        this.attemptId = attemptId;
+        super(directPaymentId, null, directPaymentExternalKey, directPaymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, properties, internalCallContext, callContext);
         this.pluginName = pluginName;
         this.isApiPayment = isApiPayment;
     }
@@ -85,18 +84,15 @@ public class RetryableDirectPaymentStateContext extends DirectPaymentStateContex
         this.amount = adjustedAmount;
     }
 
-    public UUID getAttemptId() {
-        return attemptId;
-    }
-
-    public void setAttemptId(final UUID attemptId) {
-        this.attemptId = attemptId;
-    }
-
     public DirectPaymentTransaction getCurrentTransaction() {
-        if (result == null || result.getTransactions() == null || result.getTransactions().size() == 0) {
+        if (result == null || result.getTransactions() == null) {
             return null;
         }
-        return result.getTransactions().get(result.getTransactions().size() -1);
+        return Iterables.tryFind(result.getTransactions(), new Predicate<DirectPaymentTransaction>() {
+            @Override
+            public boolean apply(final DirectPaymentTransaction input) {
+                return ((DefaultDirectPaymentTransaction) input).getAttemptId().equals(attemptId);
+            }
+        }).orNull();
     }
 }

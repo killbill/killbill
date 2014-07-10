@@ -621,7 +621,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                                                       internalCallContext
                                                      );
         paymentDao.insertDirectPaymentWithFirstTransaction(new PaymentModelDao(directPaymentId, utcNow, utcNow, account.getId(), paymentMethodId, -1, directPaymentExternalKey),
-                                                           new PaymentTransactionModelDao(directTransactionId, directPaymentTransactionExternalKey, utcNow, utcNow, directPaymentId, TransactionType.AUTHORIZE, utcNow, TransactionStatus.PAYMENT_FAILURE, amount, currency, "bla", "foo"),
+                                                           new PaymentTransactionModelDao(directTransactionId, attempt.getId(), directPaymentTransactionExternalKey, utcNow, utcNow, directPaymentId, TransactionType.AUTHORIZE, utcNow, TransactionStatus.PAYMENT_FAILURE, amount, currency, "bla", "foo"),
                                                            internalCallContext);
 
         processor.retryPaymentTransaction(attempt.getId(), MockPaymentControlProviderPlugin.PLUGIN_NAME, internalCallContext);
@@ -663,7 +663,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                                                       internalCallContext
                                                      );
         paymentDao.insertDirectPaymentWithFirstTransaction(new PaymentModelDao(directPaymentId, utcNow, utcNow, account.getId(), paymentMethodId, -1, directPaymentExternalKey),
-                                                           new PaymentTransactionModelDao(directTransactionId, directPaymentTransactionExternalKey, utcNow, utcNow, directPaymentId, TransactionType.AUTHORIZE, utcNow,
+                                                           new PaymentTransactionModelDao(directTransactionId, attempt.getId(), directPaymentTransactionExternalKey, utcNow, utcNow, directPaymentId, TransactionType.AUTHORIZE, utcNow,
                                                                                           TransactionStatus.PAYMENT_FAILURE, amount, currency, "bla", "foo"),
                                                            internalCallContext
                                                           );
@@ -711,7 +711,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                                                           internalCallContext
                                                          );
             paymentDao.insertDirectPaymentWithFirstTransaction(new PaymentModelDao(directPaymentId, utcNow, utcNow, account.getId(), paymentMethodId, -1, directPaymentExternalKey),
-                                                               new PaymentTransactionModelDao(directTransactionId, directPaymentTransactionExternalKey, utcNow, utcNow, directPaymentId, TransactionType.AUTHORIZE, utcNow,
+                                                               new PaymentTransactionModelDao(directTransactionId, attempt.getId(), directPaymentTransactionExternalKey, utcNow, utcNow, directPaymentId, TransactionType.AUTHORIZE, utcNow,
                                                                                               TransactionStatus.PAYMENT_FAILURE, amount, currency, "bla", "foo"),
                                                                internalCallContext
                                                               );

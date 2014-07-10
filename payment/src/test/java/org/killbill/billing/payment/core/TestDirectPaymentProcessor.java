@@ -75,7 +75,7 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         // AUTH pre-3DS
         final String authorizationKey = UUID.randomUUID().toString();
-        final DirectPayment authorization = directPaymentProcessor.createAuthorization(true, account, null, null, TEN, CURRENCY, directPaymentExternalKey, authorizationKey,
+        final DirectPayment authorization = directPaymentProcessor.createAuthorization(true, null, account, null, null, TEN, CURRENCY, directPaymentExternalKey, authorizationKey,
                                                                                        SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
         verifyDirectPayment(authorization, directPaymentExternalKey, TEN, ZERO, ZERO, 1);
         final UUID directPaymentId = authorization.getId();
@@ -84,7 +84,7 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         // AUTH post-3DS
         final String authorizationPost3DSKey = UUID.randomUUID().toString();
-        final DirectPayment authorizationPost3DS = directPaymentProcessor.createAuthorization(true, account, null, directPaymentId, TEN, CURRENCY, directPaymentExternalKey, authorizationPost3DSKey,
+        final DirectPayment authorizationPost3DS = directPaymentProcessor.createAuthorization(true, null, account, null, directPaymentId, TEN, CURRENCY, directPaymentExternalKey, authorizationPost3DSKey,
                                                                                               SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
         verifyDirectPayment(authorizationPost3DS, directPaymentExternalKey, TEN, ZERO, ZERO, 2);
         verifyDirectPaymentTransaction(authorizationPost3DS.getTransactions().get(1), authorizationPost3DSKey, TransactionType.AUTHORIZE, TEN, directPaymentId);
@@ -92,7 +92,7 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         // CAPTURE
         final String capture1Key = UUID.randomUUID().toString();
-        final DirectPayment partialCapture1 = directPaymentProcessor.createCapture(true, account, directPaymentId, FIVE, CURRENCY, capture1Key,
+        final DirectPayment partialCapture1 = directPaymentProcessor.createCapture(true, null, account, directPaymentId, FIVE, CURRENCY, capture1Key,
                                                                                    SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
         verifyDirectPayment(partialCapture1, directPaymentExternalKey, TEN, FIVE, ZERO, 3);
         verifyDirectPaymentTransaction(partialCapture1.getTransactions().get(2), capture1Key, TransactionType.CAPTURE, FIVE, directPaymentId);
@@ -100,7 +100,7 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         // CAPTURE
         final String capture2Key = UUID.randomUUID().toString();
-        final DirectPayment partialCapture2 = directPaymentProcessor.createCapture(true, account, directPaymentId, FIVE, CURRENCY, capture2Key,
+        final DirectPayment partialCapture2 = directPaymentProcessor.createCapture(true, null, account, directPaymentId, FIVE, CURRENCY, capture2Key,
                                                                                    SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
         verifyDirectPayment(partialCapture2, directPaymentExternalKey, TEN, TEN, ZERO, 4);
         verifyDirectPaymentTransaction(partialCapture2.getTransactions().get(3), capture2Key, TransactionType.CAPTURE, FIVE, directPaymentId);
@@ -108,7 +108,7 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         // REFUND
         final String refund1Key = UUID.randomUUID().toString();
-        final DirectPayment partialRefund1 = directPaymentProcessor.createRefund(true, account, directPaymentId, FIVE, CURRENCY, refund1Key,
+        final DirectPayment partialRefund1 = directPaymentProcessor.createRefund(true, null, account, directPaymentId, FIVE, CURRENCY, refund1Key,
                                                                                  SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
         verifyDirectPayment(partialRefund1, directPaymentExternalKey, TEN, TEN, FIVE, 5);
         verifyDirectPaymentTransaction(partialRefund1.getTransactions().get(4), refund1Key, TransactionType.REFUND, FIVE, directPaymentId);
@@ -116,7 +116,7 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         // REFUND
         final String refund2Key = UUID.randomUUID().toString();
-        final DirectPayment partialRefund2 = directPaymentProcessor.createRefund(true, account, directPaymentId, FIVE, CURRENCY, refund2Key,
+        final DirectPayment partialRefund2 = directPaymentProcessor.createRefund(true, null, account, directPaymentId, FIVE, CURRENCY, refund2Key,
                                                                                  SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
         verifyDirectPayment(partialRefund2, directPaymentExternalKey, TEN, TEN, TEN, 6);
         verifyDirectPaymentTransaction(partialRefund2.getTransactions().get(5), refund2Key, TransactionType.REFUND, FIVE, directPaymentId);
@@ -129,7 +129,7 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         // AUTH
         final String authorizationKey = UUID.randomUUID().toString();
-        final DirectPayment authorization = directPaymentProcessor.createAuthorization(true, account, null, null, TEN, CURRENCY, directPaymentExternalKey, authorizationKey,
+        final DirectPayment authorization = directPaymentProcessor.createAuthorization(true, null, account, null, null, TEN, CURRENCY, directPaymentExternalKey, authorizationKey,
                                                                                        SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
         verifyDirectPayment(authorization, directPaymentExternalKey, TEN, ZERO, ZERO, 1);
         final UUID directPaymentId = authorization.getId();
@@ -138,7 +138,7 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         // VOID
         final String voidKey = UUID.randomUUID().toString();
-        final DirectPayment voidTransaction = directPaymentProcessor.createVoid(true, account, directPaymentId, voidKey,
+        final DirectPayment voidTransaction = directPaymentProcessor.createVoid(true, null, account, directPaymentId, voidKey,
                                                                                 SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
         verifyDirectPayment(voidTransaction, directPaymentExternalKey, TEN, ZERO, ZERO, 2);
         verifyDirectPaymentTransaction(voidTransaction.getTransactions().get(1), voidKey, TransactionType.VOID, null, directPaymentId);
@@ -151,7 +151,7 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         // PURCHASE
         final String purchaseKey = UUID.randomUUID().toString();
-        final DirectPayment purchase = directPaymentProcessor.createPurchase(true, account, null, null, TEN, CURRENCY, directPaymentExternalKey, purchaseKey,
+        final DirectPayment purchase = directPaymentProcessor.createPurchase(true, null, account, null, null, TEN, CURRENCY, directPaymentExternalKey, purchaseKey,
                                                                              SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
         verifyDirectPayment(purchase, directPaymentExternalKey, ZERO, ZERO, ZERO, 1);
         final UUID directPaymentId = purchase.getId();
@@ -165,7 +165,7 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         // CREDIT
         final String creditKey = UUID.randomUUID().toString();
-        final DirectPayment purchase = directPaymentProcessor.createCredit(true, account, null, null, TEN, CURRENCY, directPaymentExternalKey, creditKey,
+        final DirectPayment purchase = directPaymentProcessor.createCredit(true, null, account, null, null, TEN, CURRENCY, directPaymentExternalKey, creditKey,
                                                                            SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
         verifyDirectPayment(purchase, directPaymentExternalKey, ZERO, ZERO, ZERO, 1);
         final UUID directPaymentId = purchase.getId();

@@ -38,6 +38,7 @@ public class DirectPaymentStateContext {
 
     // HACK
     protected UUID paymentMethodId;
+    protected UUID attemptId;
 
     // Stateful objects created by the callbacks and passed to the other following callbacks in the automaton
     protected List<PaymentTransactionModelDao> onLeavingStateExistingTransactions;
@@ -63,17 +64,18 @@ public class DirectPaymentStateContext {
                                      final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
                                      final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
                                      final InternalCallContext internalCallContext, final CallContext callContext) {
-        this(directPaymentId, null, directPaymentTransactionExternalKey, transactionType, account, paymentMethodId,
+        this(directPaymentId, null, null, directPaymentTransactionExternalKey, transactionType, account, paymentMethodId,
              amount, currency, shouldLockAccountAndDispatch, properties, internalCallContext, callContext);
     }
 
     // Used to create new payment and transactions
-    public DirectPaymentStateContext(@Nullable final UUID directPaymentId, @Nullable final String directPaymentExternalKey,
+    public DirectPaymentStateContext(@Nullable final UUID directPaymentId, @Nullable final UUID attemptId, @Nullable final String directPaymentExternalKey,
                                      @Nullable final String directPaymentTransactionExternalKey, final TransactionType transactionType,
                                      final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
                                      final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
                                      final InternalCallContext internalCallContext, final CallContext callContext) {
         this.directPaymentId = directPaymentId;
+        this.attemptId= attemptId;
         this.directPaymentExternalKey = directPaymentExternalKey;
         this.directPaymentTransactionExternalKey = directPaymentTransactionExternalKey;
         this.transactionType = transactionType;
@@ -142,6 +144,14 @@ public class DirectPaymentStateContext {
 
     public UUID getPaymentMethodId() {
         return paymentMethodId;
+    }
+
+    public UUID getAttemptId() {
+        return attemptId;
+    }
+
+    public void setAttemptId(final UUID attemptId) {
+        this.attemptId = attemptId;
     }
 
     public BigDecimal getAmount() {

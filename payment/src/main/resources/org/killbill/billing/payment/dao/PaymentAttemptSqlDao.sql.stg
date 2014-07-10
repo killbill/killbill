@@ -64,6 +64,18 @@ where payment_external_key = :paymentExternalKey
 ;
 >>
 
+/* Does not include tenant info, global */
+getByStateName() ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where state_name = :stateName
+and created_date \< :createdBeforeDate
+<andCheckSoftDeletionWithComma("")>
+<defaultOrderBy()>
+;
+>>
+
 
 updateAttempt() ::= <<
 update <tableName()>

@@ -120,6 +120,7 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
     private PaymentTransactionModelDao generateDirectPaymentTransactionModelDao(final UUID directPaymentId) {
         return new PaymentTransactionModelDao(UUID.randomUUID(),
+                                              null,
                                               UUID.randomUUID().toString(),
                                               clock.getUTCNow(),
                                               clock.getUTCNow(),

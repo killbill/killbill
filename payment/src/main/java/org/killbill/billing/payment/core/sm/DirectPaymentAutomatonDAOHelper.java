@@ -162,6 +162,7 @@ public class DirectPaymentAutomatonDAOHelper {
 
         return new PaymentTransactionModelDao(createdDate,
                                               updatedDate,
+                                              directPaymentStateContext.getAttemptId(),
                                               directPaymentStateContext.getDirectPaymentTransactionExternalKey(),
                                               directPaymentId,
                                               directPaymentStateContext.getTransactionType(),

@@ -107,7 +107,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final DateTime utcNow = clock.getUTCNow();
 
         final PaymentModelDao paymentModelDao = new PaymentModelDao(utcNow, utcNow, accountId, paymentMethodId, externalKey);
-        final PaymentTransactionModelDao transactionModelDao = new PaymentTransactionModelDao(utcNow, utcNow, transactionExternalKey,
+        final PaymentTransactionModelDao transactionModelDao = new PaymentTransactionModelDao(utcNow, utcNow, null, transactionExternalKey,
                                                                                               paymentModelDao.getId(), TransactionType.AUTHORIZE, utcNow,
                                                                                               TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.AED,
                                                                                               "success", "");
@@ -151,7 +151,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedTransaction2.getAmount().compareTo(BigDecimal.TEN), 0);
         assertEquals(savedTransaction2.getCurrency(), Currency.AED);
 
-        final PaymentTransactionModelDao transactionModelDao2 = new PaymentTransactionModelDao(utcNow, utcNow, transactionExternalKey2,
+        final PaymentTransactionModelDao transactionModelDao2 = new PaymentTransactionModelDao(utcNow, utcNow, null, transactionExternalKey2,
                                                                                                paymentModelDao.getId(), TransactionType.AUTHORIZE, utcNow,
                                                                                                TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                                "success", "");
@@ -265,20 +265,20 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final DateTime initialTime = clock.getUTCNow();
 
         final PaymentModelDao paymentModelDao = new PaymentModelDao(initialTime, initialTime, accountId, paymentMethodId, externalKey);
-        final PaymentTransactionModelDao transaction1 = new PaymentTransactionModelDao(initialTime, initialTime, transactionExternalKey1,
+        final PaymentTransactionModelDao transaction1 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey1,
                                                                                        paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,
                                                                                        TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
                                                                                        "pending", "");
 
         paymentDao.insertDirectPaymentWithFirstTransaction(paymentModelDao, transaction1, internalCallContext);
 
-        final PaymentTransactionModelDao transaction2 = new PaymentTransactionModelDao(initialTime, initialTime, transactionExternalKey2,
+        final PaymentTransactionModelDao transaction2 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey2,
                                                                                        paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,
                                                                                        TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
                                                                                        "pending", "");
         paymentDao.updateDirectPaymentWithNewTransaction(paymentModelDao.getId(), transaction2, internalCallContext);
 
-        final PaymentTransactionModelDao transaction3 = new PaymentTransactionModelDao(initialTime, initialTime, transactionExternalKey3,
+        final PaymentTransactionModelDao transaction3 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey3,
                                                                                        paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,
                                                                                        TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.AED,
                                                                                        "success", "");
@@ -294,7 +294,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                         UserType.TEST, "Testing", "This is a test",
                                                                                         newTime, newTime);
 
-        final PaymentTransactionModelDao transaction4 = new PaymentTransactionModelDao(initialTime, initialTime, transactionExternalKey4,
+        final PaymentTransactionModelDao transaction4 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey4,
                                                                                        paymentModelDao.getId(), TransactionType.AUTHORIZE, newTime,
                                                                                        TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
                                                                                        "pending", "");
