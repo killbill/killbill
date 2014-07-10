@@ -45,8 +45,8 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -66,7 +66,7 @@ import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NA
 
 public class DirectPaymentAutomatonRunner {
 
-    protected final StateMachineConfig stateMachineConfig;
+    protected final PaymentStateMachineHelper paymentSMHelper;
     protected final PaymentDao paymentDao;
     protected final GlobalLocker locker;
     protected final PluginDispatcher<OperationResult> paymentPluginDispatcher;
@@ -80,8 +80,9 @@ public class DirectPaymentAutomatonRunner {
                                         final GlobalLocker locker,
                                         final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                         final Clock clock,
-                                        @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        this.stateMachineConfig = stateMachineConfig;
+                                        @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
+                                        final PaymentStateMachineHelper paymentSMHelper) {
+        this.paymentSMHelper = paymentSMHelper;
         this.paymentDao = paymentDao;
         this.locker = locker;
         this.pluginRegistry = pluginRegistry;
@@ -102,7 +103,7 @@ public class DirectPaymentAutomatonRunner {
 
         final DirectPaymentStateContext directPaymentStateContext = new DirectPaymentStateContext(directPaymentId, attemptId, directPaymentExternalKey, directPaymentTransactionExternalKey, transactionType,
                                                                                                   account, paymentMethodId, amount, currency, shouldLockAccount, properties, internalCallContext, callContext);
-        final DirectPaymentAutomatonDAOHelper daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, utcNow, paymentDao, pluginRegistry, internalCallContext);
+        final DirectPaymentAutomatonDAOHelper daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, utcNow, paymentDao, pluginRegistry, internalCallContext, paymentSMHelper);
 
         final UUID effectivePaymentMethodId;
         final String currentStateMachineName;
@@ -110,18 +111,15 @@ public class DirectPaymentAutomatonRunner {
         if (directPaymentId != null) {
             final PaymentModelDao paymentModelDao = daoHelper.getDirectPayment();
             effectivePaymentMethodId = paymentModelDao.getPaymentMethodId();
-            currentStateName = paymentModelDao.getLastSuccessStateName() != null ? paymentModelDao.getLastSuccessStateName() : getInitState(transactionType);
-            currentStateMachineName = getStateMachineName(currentStateName);
+            currentStateName = paymentModelDao.getLastSuccessStateName() != null ? paymentModelDao.getLastSuccessStateName() : paymentSMHelper.getInitStateNameForTransaction(transactionType);
 
             // Check for illegal states (should never happen)
-            Preconditions.checkState(currentStateMachineName != null, "State machine name cannot be null for direct payment " + directPaymentId);
             Preconditions.checkState(currentStateName != null, "State name cannot be null for direct payment " + directPaymentId);
             Preconditions.checkState(paymentMethodId == null || effectivePaymentMethodId.equals(paymentMethodId), "Specified payment method id " + paymentMethodId + " doesn't match the one on the payment " + effectivePaymentMethodId);
         } else {
             // If the payment method is not specified, retrieve the default one on the account
             effectivePaymentMethodId = paymentMethodId != null ? paymentMethodId : daoHelper.getDefaultPaymentMethodId();
-            currentStateName = getInitState(transactionType);
-            currentStateMachineName = getStateMachineName(currentStateName);
+            currentStateName = paymentSMHelper.getInitStateNameForTransaction(transactionType);
         }
 
         directPaymentStateContext.setPaymentMethodId(effectivePaymentMethodId);
@@ -133,50 +131,36 @@ public class DirectPaymentAutomatonRunner {
         final EnteringStateCallback enteringStateCallback;
         switch (transactionType) {
             case PURCHASE:
-                operationStateMachineName = "PURCHASE";
-                operationName = "OP_PURCHASE";
                 operationCallback = new PurchaseOperation(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
                 leavingStateCallback = new PurchaseInitiated(daoHelper, directPaymentStateContext);
                 enteringStateCallback = new PurchaseCompleted(daoHelper, directPaymentStateContext);
                 break;
             case AUTHORIZE:
-                operationStateMachineName = "AUTHORIZE";
-                operationName = "OP_AUTHORIZE";
                 operationCallback = new AuthorizeOperation(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
                 leavingStateCallback = new AuthorizeInitiated(daoHelper, directPaymentStateContext);
                 enteringStateCallback = new AuthorizeCompleted(daoHelper, directPaymentStateContext);
                 break;
             case CAPTURE:
-                operationStateMachineName = "CAPTURE";
-                operationName = "OP_CAPTURE";
                 operationCallback = new CaptureOperation(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
                 leavingStateCallback = new CaptureInitiated(daoHelper, directPaymentStateContext);
                 enteringStateCallback = new CaptureCompleted(daoHelper, directPaymentStateContext);
                 break;
             case VOID:
-                operationStateMachineName = "VOID";
-                operationName = "OP_VOID";
                 operationCallback = new VoidOperation(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
                 leavingStateCallback = new VoidInitiated(daoHelper, directPaymentStateContext);
                 enteringStateCallback = new VoidCompleted(daoHelper, directPaymentStateContext);
                 break;
             case REFUND:
-                operationStateMachineName = "REFUND";
-                operationName = "OP_REFUND";
                 operationCallback = new RefundOperation(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
                 leavingStateCallback = new RefundInitiated(daoHelper, directPaymentStateContext);
                 enteringStateCallback = new RefundCompleted(daoHelper, directPaymentStateContext);
                 break;
             case CREDIT:
-                operationStateMachineName = "CREDIT";
-                operationName = "OP_CREDIT";
                 operationCallback = new CreditOperation(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
                 leavingStateCallback = new CreditInitiated(daoHelper, directPaymentStateContext);
                 enteringStateCallback = new CreditCompleted(daoHelper, directPaymentStateContext);
                 break;
             case CHARGEBACK:
-                operationStateMachineName = "CHARGEBACK";
-                operationName = "OP_CHARGEBACK";
                 operationCallback = new ChargebackOperation(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
                 leavingStateCallback = new ChargebackInitiated(daoHelper, directPaymentStateContext);
                 enteringStateCallback = new ChargebackCompleted(daoHelper, directPaymentStateContext);
@@ -185,13 +169,13 @@ public class DirectPaymentAutomatonRunner {
                 throw new IllegalStateException("Unsupported transaction type " + transactionType);
         }
 
-        runStateMachineOperation(currentStateMachineName, currentStateName, operationStateMachineName, operationName, leavingStateCallback, operationCallback, enteringStateCallback);
+        runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback);
 
         return directPaymentStateContext.getDirectPaymentId();
     }
 
-    public final State fetchNextState(final String prevStateName, final boolean isSuccess) {
-        final StateMachine stateMachine = getStateMachine(prevStateName);
+    public final State fetchNextState(final String prevStateName, final boolean isSuccess) throws MissingEntryException {
+        final StateMachine stateMachine = paymentSMHelper.getStateMachineForStateName(prevStateName);
         final Transition transition = Iterables.tryFind(ImmutableList.copyOf(stateMachine.getTransitions()), new Predicate<Transition>() {
             @Override
             public boolean apply(final Transition input) {
@@ -203,48 +187,12 @@ public class DirectPaymentAutomatonRunner {
         return transition != null ? transition.getFinalState() : null;
     }
 
-    // Hack for now
-    protected String getStateMachineName(final String currentStateName) {
-        final StateMachine stateMachine = getStateMachine(currentStateName);
-        if (stateMachine == null) {
-            return null;
-        }
-        return stateMachine.getName();
-    }
-
-    private String getInitState(final TransactionType transactionType) {
-        switch (transactionType) {
-            case AUTHORIZE:
-                return "AUTH_INIT";
-            case CREDIT:
-                return "CREDIT_INIT";
-            case PURCHASE:
-                return "PURCHASE_INIT";
-            default:
-                throw new IllegalStateException("Unsupported transaction type " + transactionType + " for null direct payment id");
-        }
-    }
-
-    private StateMachine getStateMachine(final String currentStateName) {
-        for (final StateMachine stateMachine : stateMachineConfig.getStateMachines()) {
-            for (final State state : stateMachine.getStates()) {
-                if (state.getName().equals(currentStateName)) {
-                    return stateMachine;
-                }
-            }
-        }
-        return null;
-    }
-
-    protected void runStateMachineOperation(final String initialStateMachineName, final String initialStateName,
-                                            final String operationStateMachineName, final String operationName,
+    protected void runStateMachineOperation(final String initialStateName, final TransactionType transactionType,
                                             final LeavingStateCallback leavingStateCallback, final OperationCallback operationCallback, final EnteringStateCallback enteringStateCallback) throws PaymentApiException {
         try {
-            final StateMachine initialStateMachine = stateMachineConfig.getStateMachine(initialStateMachineName);
+            final StateMachine initialStateMachine = paymentSMHelper.getStateMachineForStateName(initialStateName);
             final State initialState = initialStateMachine.getState(initialStateName);
-
-            final StateMachine operationStateMachine = stateMachineConfig.getStateMachine(operationStateMachineName);
-            final Operation operation = operationStateMachine.getOperation(operationName);
+            final Operation operation = paymentSMHelper.getOperationForTransaction(transactionType);
 
             initialState.runOperation(operation, operationCallback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {

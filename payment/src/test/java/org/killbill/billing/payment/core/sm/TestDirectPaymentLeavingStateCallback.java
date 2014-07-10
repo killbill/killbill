@@ -134,7 +134,7 @@ public class TestDirectPaymentLeavingStateCallback extends PaymentTestSuiteWithE
             paymentDao.insertDirectPaymentWithFirstTransaction(newPaymentModelDao, newPaymentTransactionModelDao, internalCallContext);
         }
 
-        final DirectPaymentAutomatonDAOHelper daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext);
+        final DirectPaymentAutomatonDAOHelper daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
         callback = new DirectPaymentLeavingStateTestCallback(daoHelper);
 
         Mockito.when(state.getName()).thenReturn("NEW_STATE");

@@ -122,7 +122,7 @@ public class TestDirectPaymentOperation extends PaymentTestSuiteNoDB {
         final PaymentDao paymentDao = Mockito.mock(PaymentDao.class);
         Mockito.when(paymentDao.getPaymentMethodIncludedDeleted(directPaymentStateContext.getPaymentMethodId(), internalCallContext)).thenReturn(paymentMethodModelDao);
 
-        final DirectPaymentAutomatonDAOHelper daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext);
+        final DirectPaymentAutomatonDAOHelper daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
         directPaymentOperation = new DirectPaymentOperationTest(paymentPluginStatus, daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
     }
 

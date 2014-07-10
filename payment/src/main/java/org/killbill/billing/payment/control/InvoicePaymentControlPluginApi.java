@@ -183,9 +183,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     throw new IllegalStateException("Unexpected transactionType " + transactionType);
             }
         } catch (InvoiceApiException e) {
-            // STEPH need to add some state machine logic in the plugin itself to handle those cases
-            logger.error("Failed to complete call: ", e);
-            //throw new PaymentControlApiException(e);
+            logger.error("InvoicePaymentControlPluginApi onSuccessCall failed for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType , e);
         }
     }
 

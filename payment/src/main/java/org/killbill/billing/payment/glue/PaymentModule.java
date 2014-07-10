@@ -41,7 +41,9 @@ import org.killbill.billing.payment.core.Janitor;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PluginControlledPaymentProcessor;
+import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlledDirectPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.DefaultPaymentDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -91,6 +93,7 @@ public class PaymentModule extends KillBillModule {
 
         bind(Janitor.class).asEagerSingleton();
     }
+
     protected void installRetryEngines() {
         bind(DefaultRetryService.class).asEagerSingleton();
         bind(RetryService.class).annotatedWith(Names.named(RETRYABLE_NAMED)).to(DefaultRetryService.class);
@@ -103,9 +106,11 @@ public class PaymentModule extends KillBillModule {
 
         bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_RETRY)).toInstance(new StateMachineProvider("org/killbill/billing/payment/retry/RetryStates.xml"));
         bind(StateMachineConfig.class).annotatedWith(Names.named(STATE_MACHINE_RETRY)).toProvider(Key.get(StateMachineProvider.class, Names.named(STATE_MACHINE_RETRY)));
+        bind(RetryStateMachineHelper.class).asEagerSingleton();
 
         bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_PAYMENT)).toInstance(new StateMachineProvider("org/killbill/billing/payment/PaymentStates.xml"));
         bind(StateMachineConfig.class).annotatedWith(Names.named(STATE_MACHINE_PAYMENT)).toProvider(Key.get(StateMachineProvider.class, Names.named(STATE_MACHINE_PAYMENT)));
+        bind(PaymentStateMachineHelper.class).asEagerSingleton();
     }
 
     public static final class StateMachineProvider implements Provider<StateMachineConfig> {

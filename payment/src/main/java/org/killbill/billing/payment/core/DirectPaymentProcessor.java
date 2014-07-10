@@ -50,6 +50,7 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.DirectPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -87,6 +88,7 @@ public class DirectPaymentProcessor extends ProcessorBase {
 
     private final DirectPaymentAutomatonRunner directPaymentAutomatonRunner;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final PaymentStateMachineHelper paymentSMHelper;
 
     private static final Logger log = LoggerFactory.getLogger(DirectPaymentProcessor.class);
 
@@ -102,8 +104,10 @@ public class DirectPaymentProcessor extends ProcessorBase {
                                   final GlobalLocker locker,
                                   @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                                   final DirectPaymentAutomatonRunner directPaymentAutomatonRunner,
+                                  final PaymentStateMachineHelper paymentSMHelper,
                                   final Clock clock) {
         super(pluginRegistry, accountUserApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
+        this.paymentSMHelper = paymentSMHelper;
         this.internalCallContextFactory = internalCallContextFactory;
         this.directPaymentAutomatonRunner = directPaymentAutomatonRunner;
     }
@@ -175,13 +179,10 @@ public class DirectPaymentProcessor extends ProcessorBase {
 
         final TransactionStatus newStatus = isSuccess ? TransactionStatus.SUCCESS : TransactionStatus.PAYMENT_FAILURE;
         // STEPH This works if the pending transaction we are trying to update matches is the one that gave the state to the payment. Also can we have multiple PENDING for a given payment?
-        final State currentPaymentState = directPaymentAutomatonRunner.fetchNextState(paymentModelDao.getStateName(), isSuccess);
-        // STEPH : should we insert a new transaction row to keep the PENDING one?
-
-        // STEPH hack; need proper automaton API to understand what is a successful terminal state.
-        final String lastSuccessPaymentStateStrOrNull = currentPaymentState.getName().endsWith("SUCCESS") ? currentPaymentState.getName() : null;
-
-        paymentDao.updateDirectPaymentAndTransactionOnCompletion(transactionModelDao.getPaymentId(), currentPaymentState.getName(), lastSuccessPaymentStateStrOrNull, transactionModelDao.getId(), newStatus,
+        final State currentPaymentState;
+        final String stateName = paymentModelDao.getStateName();
+        final String lastSuccessPaymentStateStrOrNull = paymentSMHelper.isSuccessState(stateName) ? stateName : null;
+        paymentDao.updateDirectPaymentAndTransactionOnCompletion(transactionModelDao.getPaymentId(), stateName, lastSuccessPaymentStateStrOrNull, transactionModelDao.getId(), newStatus,
                                                                  transactionModelDao.getProcessedAmount(), transactionModelDao.getProcessedCurrency(),
                                                                  transactionModelDao.getGatewayErrorCode(), transactionModelDao.getGatewayErrorMsg(), internalCallContext);
     }

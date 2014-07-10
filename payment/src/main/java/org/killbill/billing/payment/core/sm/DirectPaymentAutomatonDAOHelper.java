@@ -44,6 +44,7 @@ public class DirectPaymentAutomatonDAOHelper {
     protected final DirectPaymentStateContext directPaymentStateContext;
     protected final DateTime utcNow;
     protected final InternalCallContext internalCallContext;
+    protected final PaymentStateMachineHelper paymentSMHelper;
 
     protected final PaymentDao paymentDao;
 
@@ -53,12 +54,14 @@ public class DirectPaymentAutomatonDAOHelper {
     public DirectPaymentAutomatonDAOHelper(final DirectPaymentStateContext directPaymentStateContext,
                                            final DateTime utcNow, final PaymentDao paymentDao,
                                            final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
-                                           final InternalCallContext internalCallContext) throws PaymentApiException {
+                                           final InternalCallContext internalCallContext,
+                                           final PaymentStateMachineHelper paymentSMHelper) throws PaymentApiException {
         this.directPaymentStateContext = directPaymentStateContext;
         this.utcNow = utcNow;
         this.paymentDao = paymentDao;
         this.pluginRegistry = pluginRegistry;
         this.internalCallContext = internalCallContext;
+        this.paymentSMHelper = paymentSMHelper;
     }
 
     public void createNewDirectPaymentTransaction() throws PaymentApiException {
@@ -97,9 +100,7 @@ public class DirectPaymentAutomatonDAOHelper {
         final String gatewayErrorCode = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayErrorCode();
         final String gatewayErrorMsg = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayError();
 
-        // STEPH hack
-        final String lastSuccessPaymentState = currentPaymentStateName.endsWith("SUCCESS") ? currentPaymentStateName : null;
-
+        final String lastSuccessPaymentState = paymentSMHelper.isSuccessState(currentPaymentStateName) ? currentPaymentStateName : null;
         paymentDao.updateDirectPaymentAndTransactionOnCompletion(directPaymentStateContext.getDirectPaymentId(),
                                                                  currentPaymentStateName,
                                                                  lastSuccessPaymentState,

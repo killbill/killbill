@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.killbill.automaton.MissingEntryException;
 import org.killbill.automaton.State;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -37,6 +38,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PluginControlledDirectPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -58,6 +60,7 @@ import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NA
 public class PluginControlledPaymentProcessor extends ProcessorBase {
 
     private final PluginControlledDirectPaymentAutomatonRunner pluginControlledDirectPaymentAutomatonRunner;
+    private final RetryStateMachineHelper retrySMHelper;
 
     @Inject
     public PluginControlledPaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
@@ -70,9 +73,10 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
                                             final GlobalLocker locker,
                                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                                             final PluginControlledDirectPaymentAutomatonRunner pluginControlledDirectPaymentAutomatonRunner,
+                                            final RetryStateMachineHelper retrySMHelper,
                                             final Clock clock) {
         super(pluginRegistry, accountInternalApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
-
+        this.retrySMHelper = retrySMHelper;
         this.pluginControlledDirectPaymentAutomatonRunner = pluginControlledDirectPaymentAutomatonRunner;
     }
 
@@ -204,7 +208,7 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
             final UUID tenantId = nonEntityDao.retrieveIdFromObject(internalCallContext.getTenantRecordId(), ObjectType.TENANT);
             final CallContext callContext = internalCallContext.toCallContext(tenantId);
 
-            final State state = pluginControlledDirectPaymentAutomatonRunner.fetchState(attempt.getStateName());
+            final State state = retrySMHelper.getState(attempt.getStateName());
             pluginControlledDirectPaymentAutomatonRunner.run(state,
                                                              false,
                                                              attempt.getTransactionType(),
@@ -225,6 +229,8 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
         } catch (PaymentApiException e) {
             log.warn("Failed to retry attempt " + attemptId + " for plugin " + pluginName, e);
         } catch (PluginPropertySerializerException e) {
+            log.warn("Failed to retry attempt " + attemptId + " for plugin " + pluginName, e);
+        } catch (MissingEntryException e) {
             log.warn("Failed to retry attempt " + attemptId + " for plugin " + pluginName, e);
         }
     }

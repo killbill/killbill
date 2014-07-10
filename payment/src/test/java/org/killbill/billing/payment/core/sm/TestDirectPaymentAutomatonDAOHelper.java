@@ -139,6 +139,6 @@ public class TestDirectPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmb
                                                                   internalCallContext,
                                                                   callContext);
 
-        return new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext);
+        return new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
     }
 }

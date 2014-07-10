@@ -101,6 +101,10 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
     @Inject
     @Named(PLUGIN_EXECUTOR_NAMED)
     private ExecutorService executor;
+    @Inject
+    private PaymentStateMachineHelper paymentSMHelper;
+    @Inject
+    private RetryStateMachineHelper retrySMHelper;
 
     private Account account;
     private DateTime utcNow;
@@ -157,7 +161,9 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                 directPaymentProcessor,
                 retryServiceScheduler,
                 paymentConfig,
-                executor);
+                executor,
+                paymentSMHelper,
+                retrySMHelper);
 
         directPaymentStateContext =
                 new RetryableDirectPaymentStateContext(MockPaymentControlProviderPlugin.PLUGIN_NAME,
@@ -193,6 +199,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
                                                          locker,
                                                          executor,
                                                          runner,
+                                                         retrySMHelper,
                                                          clock);
 
     }
@@ -461,7 +468,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         runner.setOperationCallback(mockRetryAuthorizeOperationCallback)
               .setContext(directPaymentStateContext);
 
-        final State state = runner.fetchState("RETRIED");
+        final State state = retrySMHelper.getRetriedState();
         final UUID directTransactionId = UUID.randomUUID();
         paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
                                                                                  directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
@@ -509,7 +516,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         runner.setOperationCallback(mockRetryAuthorizeOperationCallback)
               .setContext(directPaymentStateContext);
 
-        final State state = runner.fetchState("RETRIED");
+        final State state = retrySMHelper.getRetriedState();
         final UUID directTransactionId = UUID.randomUUID();
         paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
                                                                                  directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
@@ -556,7 +563,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         runner.setOperationCallback(mockRetryAuthorizeOperationCallback)
               .setContext(directPaymentStateContext);
 
-        final State state = runner.fetchState("RETRIED");
+        final State state = retrySMHelper.getRetriedState();
         final UUID directTransactionId = UUID.randomUUID();
         paymentDao.insertPaymentAttemptWithProperties(new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
                                                                                  directPaymentExternalKey, directTransactionId, directPaymentTransactionExternalKey,
@@ -611,7 +618,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         runner.setOperationCallback(mockRetryAuthorizeOperationCallback)
               .setContext(directPaymentStateContext);
 
-        final State state = runner.fetchState("RETRIED");
+        final State state = retrySMHelper.getRetriedState();
         final UUID directTransactionId = UUID.randomUUID();
         final UUID directPaymentId = UUID.randomUUID();
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
@@ -653,7 +660,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
         runner.setOperationCallback(mockRetryAuthorizeOperationCallback)
               .setContext(directPaymentStateContext);
 
-        final State state = runner.fetchState("RETRIED");
+        final State state = retrySMHelper.getRetriedState();
         final UUID directTransactionId = UUID.randomUUID();
         final UUID directPaymentId = UUID.randomUUID();
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,
@@ -701,7 +708,7 @@ public class TestRetryableDirectPayment extends PaymentTestSuiteNoDB {
             runner.setOperationCallback(mockRetryAuthorizeOperationCallback)
                   .setContext(directPaymentStateContext);
 
-            final State state = runner.fetchState("RETRIED");
+            final State state = retrySMHelper.getRetriedState();
             final UUID directTransactionId = UUID.randomUUID();
             final UUID directPaymentId = UUID.randomUUID();
             final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), paymentMethodId, utcNow, utcNow,

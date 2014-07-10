@@ -26,6 +26,7 @@ import org.killbill.billing.payment.api.DirectPaymentApi;
 import org.killbill.billing.payment.core.DirectPaymentProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PluginControlledPaymentProcessor;
+import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlledDirectPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.TestPaymentModuleNoDB;
@@ -64,6 +65,8 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected TestPaymentHelper testHelper;
     @Inject
     protected PaymentDao paymentDao;
+    @Inject
+    protected PaymentStateMachineHelper paymentSMHelper;
     @Inject
     protected DirectPaymentProcessor paymentProcessor;
     @Inject

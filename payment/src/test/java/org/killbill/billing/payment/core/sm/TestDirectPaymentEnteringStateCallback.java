@@ -68,7 +68,7 @@ public class TestDirectPaymentEnteringStateCallback extends PaymentTestSuiteWith
                                                                   ImmutableList.<PluginProperty>of(),
                                                                   internalCallContext,
                                                                   callContext);
-        daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext);
+        daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
         callback = new DirectPaymentEnteringStateTestCallback(daoHelper, directPaymentStateContext);
 
         Mockito.when(state.getName()).thenReturn("NEW_STATE");

@@ -56,8 +56,10 @@ public class MockRetryableDirectPaymentAutomatonRunner extends PluginControlledD
     private RetryableDirectPaymentStateContext context;
 
     @Inject
-    public MockRetryableDirectPaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, @Named(PaymentModule.STATE_MACHINE_RETRY) final StateMachineConfig retryStateMachine, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final Clock clock, final TagInternalApi tagApi, final DirectPaymentProcessor directPaymentProcessor, @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler, final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(stateMachineConfig, retryStateMachine, paymentDao, locker, pluginRegistry, retryPluginRegistry, clock, tagApi, directPaymentProcessor, retryServiceScheduler, paymentConfig, executor);
+    public MockRetryableDirectPaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, @Named(PaymentModule.STATE_MACHINE_RETRY) final StateMachineConfig retryStateMachine, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final Clock clock, final TagInternalApi tagApi, final DirectPaymentProcessor directPaymentProcessor,
+                                                     @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler, final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
+                                                     final PaymentStateMachineHelper paymentSMHelper, final RetryStateMachineHelper retrySMHelper) {
+        super(stateMachineConfig, paymentDao, locker, pluginRegistry, retryPluginRegistry, clock, directPaymentProcessor, retryServiceScheduler, paymentConfig, executor, paymentSMHelper, retrySMHelper);
     }
 
     @Override

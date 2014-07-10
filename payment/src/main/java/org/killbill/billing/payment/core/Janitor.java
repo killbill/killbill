@@ -37,6 +37,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.sm.PluginControlledDirectPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.core.sm.RetryableDirectPaymentStateContext;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -72,6 +73,7 @@ public class Janitor {
     private final InternalCallContextFactory internalCallContextFactory;
     private final NonEntityDao nonEntityDao;
     private final PluginControlledDirectPaymentAutomatonRunner pluginControlledDirectPaymentAutomatonRunner;
+    private final RetryStateMachineHelper retrySMHelper;
 
     private volatile boolean isStopped;
     private CountDownLatch shutdownLatch;
@@ -84,7 +86,8 @@ public class Janitor {
                    final NonEntityDao nonEntityDao,
                    final InternalCallContextFactory internalCallContextFactory,
                    final PluginControlledDirectPaymentAutomatonRunner pluginControlledDirectPaymentAutomatonRunner,
-                   @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor) {
+                   @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
+                   final RetryStateMachineHelper retrySMHelper) {
         this.accountInternalApi = accountInternalApi;
         this.paymentDao = paymentDao;
         this.clock = clock;
@@ -93,6 +96,7 @@ public class Janitor {
         this.nonEntityDao = nonEntityDao;
         this.internalCallContextFactory = internalCallContextFactory;
         this.pluginControlledDirectPaymentAutomatonRunner = pluginControlledDirectPaymentAutomatonRunner;
+        this.retrySMHelper = retrySMHelper;
     }
 
     public void start() {
@@ -176,8 +180,7 @@ public class Janitor {
                 return;
             }
 
-            // STEPH state string hack
-            final List<PaymentAttemptModelDao> incompleteAttempts = paymentDao.getPaymentAttemptsByState("INIT", getCreatedDateBefore(), fakeCallContext);
+            final List<PaymentAttemptModelDao> incompleteAttempts = paymentDao.getPaymentAttemptsByState(retrySMHelper.getInitialState().getName(), getCreatedDateBefore(), fakeCallContext);
             log.info("AttemptCompletionTask start run : found " + incompleteAttempts.size() + " incomplete attempts");
 
             for (PaymentAttemptModelDao cur : incompleteAttempts) {
