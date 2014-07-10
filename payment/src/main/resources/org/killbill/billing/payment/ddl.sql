@@ -148,8 +148,8 @@ CREATE INDEX payment_history_target_record_id ON payment_history(target_record_i
 CREATE INDEX payment_history_tenant_account_record_id ON payment_history(tenant_record_id, account_record_id);
 
 
-DROP TABLE IF EXISTS transactions;
-CREATE TABLE transactions (
+DROP TABLE IF EXISTS payment_transactions;
+CREATE TABLE payment_transactions (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
     attempt_id char(36) DEFAULT NULL,
@@ -172,14 +172,14 @@ CREATE TABLE transactions (
     tenant_record_id int(11) unsigned DEFAULT NULL,
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
-CREATE UNIQUE INDEX transactions_id ON transactions(id);
-CREATE INDEX transactions_payment_id ON transactions(payment_id);
-CREATE INDEX transactions_key ON transactions(transaction_external_key);
-CREATE INDEX transactions_status ON transactions(transaction_status);
-CREATE INDEX transactions_tenant_account_record_id ON transactions(tenant_record_id, account_record_id);
+CREATE UNIQUE INDEX transactions_id ON payment_transactions(id);
+CREATE INDEX transactions_payment_id ON payment_transactions(payment_id);
+CREATE INDEX transactions_key ON payment_transactions(transaction_external_key);
+CREATE INDEX transactions_status ON payment_transactions(transaction_status);
+CREATE INDEX transactions_tenant_account_record_id ON payment_transactions(tenant_record_id, account_record_id);
 
-DROP TABLE IF EXISTS transaction_history;
-CREATE TABLE transaction_history (
+DROP TABLE IF EXISTS payment_transaction_history;
+CREATE TABLE payment_transaction_history (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
     attempt_id char(36) DEFAULT NULL,
@@ -204,8 +204,8 @@ CREATE TABLE transaction_history (
     tenant_record_id int(11) unsigned DEFAULT NULL,
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
-CREATE INDEX transaction_history_target_record_id ON transaction_history(target_record_id);
-CREATE INDEX transaction_history_tenant_account_record_id ON transaction_history(tenant_record_id, account_record_id);
+CREATE INDEX transaction_history_target_record_id ON payment_transaction_history(target_record_id);
+CREATE INDEX transaction_history_tenant_account_record_id ON payment_transaction_history(tenant_record_id, account_record_id);
 
 
 /*  PaymentControlPlugin lives  here until this becomes a first class citizen plugin */

@@ -1,8 +1,8 @@
 group TransactionSqlDao: EntitySqlDao;
 
-tableName() ::= "transactions"
+tableName() ::= "payment_transactions"
 
-historyTableName() ::= "transaction_history"
+historyTableName() ::= "payment_transaction_history"
 
 defaultOrderBy(prefix) ::= <<
 order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
