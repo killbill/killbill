@@ -39,13 +39,13 @@ import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.DefaultPayment;
-import org.killbill.billing.payment.api.DefaultPaymentTransaction;
 import org.killbill.billing.payment.api.DefaultPaymentErrorEvent;
 import org.killbill.billing.payment.api.DefaultPaymentInfoEvent;
 import org.killbill.billing.payment.api.DefaultPaymentPluginErrorEvent;
+import org.killbill.billing.payment.api.DefaultPaymentTransaction;
 import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
@@ -113,43 +113,43 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     public Payment createAuthorization(final boolean isApiPayment, @Nullable final UUID attemptId, final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency,
-                                             final String paymentExternalKey, final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
-                                             final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                                       final String paymentExternalKey, final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
+                                       final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return performOperation(isApiPayment, attemptId, TransactionType.AUTHORIZE, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public Payment createCapture(final boolean isApiPayment, @Nullable final UUID attemptId, final Account account, final UUID paymentId, final BigDecimal amount, final Currency currency,
-                                       final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
-                                       final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                                 final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
+                                 final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
 
         return performOperation(isApiPayment, attemptId, TransactionType.CAPTURE, account, null, paymentId, amount, currency, null, paymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public Payment createPurchase(final boolean isApiPayment, @Nullable final UUID attemptId, final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency,
-                                        final String paymentExternalKey, final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
-                                        final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                                  final String paymentExternalKey, final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
+                                  final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return performOperation(isApiPayment, attemptId, TransactionType.PURCHASE, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public Payment createVoid(final boolean isApiPayment, @Nullable final UUID attemptId, final Account account, final UUID paymentId, final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
-                                    final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                              final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return performOperation(isApiPayment, attemptId, TransactionType.VOID, account, null, paymentId, null, null, null, paymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public Payment createRefund(final boolean isApiPayment, @Nullable final UUID attemptId, final Account account, final UUID paymentId, final BigDecimal amount, final Currency currency,
-                                      final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
-                                      final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                                final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
+                                final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return performOperation(isApiPayment, attemptId, TransactionType.REFUND, account, null, paymentId, amount, currency, null, paymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public Payment createCredit(final boolean isApiPayment, @Nullable final UUID attemptId, final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency,
-                                      final String paymentExternalKey, final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
-                                      final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                                final String paymentExternalKey, final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
+                                final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return performOperation(isApiPayment, attemptId, TransactionType.CREDIT, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey, shouldLockAccountAndDispatch, properties, callContext, internalCallContext);
     }
 
     public Payment createChargeback(final boolean isApiPayment, @Nullable final UUID attemptId, final Account account, final UUID paymentId, final String paymentTransactionExternalKey, final BigDecimal amount, final Currency currency, final boolean shouldLockAccountAndDispatch,
-                                          final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                                    final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return performOperation(isApiPayment, attemptId, TransactionType.CHARGEBACK, account, null, paymentId, amount, currency, null, paymentTransactionExternalKey, shouldLockAccountAndDispatch, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
     }
 
@@ -158,13 +158,13 @@ public class PaymentProcessor extends ProcessorBase {
         final List<PaymentTransactionModelDao> transactionsModelDao = paymentDao.getTransactionsForAccount(accountId, tenantContext);
 
         return Lists.<PaymentModelDao, Payment>transform(paymentsModelDao,
-                                                               new Function<PaymentModelDao, Payment>() {
-                                                                   @Override
-                                                                   public Payment apply(final PaymentModelDao curPaymentModelDao) {
-                                                                       return toPayment(curPaymentModelDao, transactionsModelDao, null);
-                                                                   }
-                                                               }
-                                                              );
+                                                         new Function<PaymentModelDao, Payment>() {
+                                                             @Override
+                                                             public Payment apply(final PaymentModelDao curPaymentModelDao) {
+                                                                 return toPayment(curPaymentModelDao, transactionsModelDao, null);
+                                                             }
+                                                         }
+                                                        );
     }
 
     public void notifyPendingPaymentOfStateChanged(final Account account, UUID transactionId, final boolean isSuccess, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
@@ -183,8 +183,8 @@ public class PaymentProcessor extends ProcessorBase {
         final String stateName = paymentModelDao.getStateName();
         final String lastSuccessPaymentStateStrOrNull = paymentSMHelper.isSuccessState(stateName) ? stateName : null;
         paymentDao.updatePaymentAndTransactionOnCompletion(transactionModelDao.getPaymentId(), stateName, lastSuccessPaymentStateStrOrNull, transactionModelDao.getId(), newStatus,
-                                                                 transactionModelDao.getProcessedAmount(), transactionModelDao.getProcessedCurrency(),
-                                                                 transactionModelDao.getGatewayErrorCode(), transactionModelDao.getGatewayErrorMsg(), internalCallContext);
+                                                           transactionModelDao.getProcessedAmount(), transactionModelDao.getProcessedCurrency(),
+                                                           transactionModelDao.getGatewayErrorCode(), transactionModelDao.getGatewayErrorMsg(), internalCallContext);
     }
 
     public Payment getPayment(final UUID paymentId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
@@ -205,7 +205,7 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     public Pagination<Payment> getPayments(final Long offset, final Long limit, final Iterable<PluginProperty> properties,
-                                                 final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
+                                           final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
         return getEntityPaginationFromPlugins(getAvailablePlugins(),
                                               offset,
                                               limit,
@@ -318,27 +318,27 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     private Payment performOperation(final boolean isApiPayment, @Nullable final UUID attemptId, final TransactionType transactionType, final Account account, final UUID paymentMethodId, final UUID paymentId, final BigDecimal amount, final Currency currency,
-                                           final String paymentExternalKey, final String paymentTransactionExternalKey,
-                                           final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties, final CallContext callContext,
-                                           final InternalCallContext internalCallContext) throws PaymentApiException {
+                                     final String paymentExternalKey, final String paymentTransactionExternalKey,
+                                     final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties, final CallContext callContext,
+                                     final InternalCallContext internalCallContext) throws PaymentApiException {
 
         Payment payment = null;
         try {
             validateUniqueTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
 
             final UUID nonNullPaymentId = paymentAutomatonRunner.run(transactionType,
-                                                                                 account,
-                                                                                 attemptId,
-                                                                                 paymentMethodId,
-                                                                                 paymentId,
-                                                                                 paymentExternalKey,
-                                                                                 paymentTransactionExternalKey,
-                                                                                 amount,
-                                                                                 currency,
-                                                                                 shouldLockAccountAndDispatch,
-                                                                                 properties,
-                                                                                 callContext,
-                                                                                 internalCallContext);
+                                                                     account,
+                                                                     attemptId,
+                                                                     paymentMethodId,
+                                                                     paymentId,
+                                                                     paymentExternalKey,
+                                                                     paymentTransactionExternalKey,
+                                                                     amount,
+                                                                     currency,
+                                                                     shouldLockAccountAndDispatch,
+                                                                     properties,
+                                                                     callContext,
+                                                                     internalCallContext);
             payment = getPayment(nonNullPaymentId, true, properties, callContext, internalCallContext);
             return payment;
         } finally {
@@ -396,15 +396,15 @@ public class PaymentProcessor extends ProcessorBase {
                                                           }).orNull() : null;
 
                 return new DefaultPaymentTransaction(input.getId(), input.getAttemptId(), input.getTransactionExternalKey(), input.getCreatedDate(), input.getUpdatedDate(), input.getPaymentId(),
-                                                           input.getTransactionType(), input.getEffectiveDate(), input.getTransactionStatus(), input.getAmount(), input.getCurrency(),
-                                                           input.getProcessedAmount(), input.getProcessedCurrency(),
-                                                           input.getGatewayErrorCode(), input.getGatewayErrorMsg(), info);
+                                                     input.getTransactionType(), input.getEffectiveDate(), input.getTransactionStatus(), input.getAmount(), input.getCurrency(),
+                                                     input.getProcessedAmount(), input.getProcessedCurrency(),
+                                                     input.getGatewayErrorCode(), input.getGatewayErrorMsg(), info);
             }
         });
 
         final List<PaymentTransaction> sortedTransactions = perPaymentTransactionOrdering.immutableSortedCopy(transactions);
         return new DefaultPayment(curPaymentModelDao.getId(), curPaymentModelDao.getCreatedDate(), curPaymentModelDao.getUpdatedDate(), curPaymentModelDao.getAccountId(),
-                                        curPaymentModelDao.getPaymentMethodId(), curPaymentModelDao.getPaymentNumber(), curPaymentModelDao.getExternalKey(), sortedTransactions);
+                                  curPaymentModelDao.getPaymentMethodId(), curPaymentModelDao.getPaymentNumber(), curPaymentModelDao.getExternalKey(), sortedTransactions);
     }
 
     private void postPaymentEvent(final boolean isApiPayment, final Account account, final TransactionType transactionType, @Nullable final Payment payment, final String transactionExternalKey, final InternalCallContext context) {

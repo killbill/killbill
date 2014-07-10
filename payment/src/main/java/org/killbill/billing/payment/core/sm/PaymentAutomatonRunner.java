@@ -124,8 +124,6 @@ public class PaymentAutomatonRunner {
 
         paymentStateContext.setPaymentMethodId(effectivePaymentMethodId);
 
-        final String operationStateMachineName;
-        final String operationName;
         final OperationCallback operationCallback;
         final LeavingStateCallback leavingStateCallback;
         final EnteringStateCallback enteringStateCallback;
@@ -172,19 +170,6 @@ public class PaymentAutomatonRunner {
         runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback);
 
         return paymentStateContext.getPaymentId();
-    }
-
-    public final State fetchNextState(final String prevStateName, final boolean isSuccess) throws MissingEntryException {
-        final StateMachine stateMachine = paymentSMHelper.getStateMachineForStateName(prevStateName);
-        final Transition transition = Iterables.tryFind(ImmutableList.copyOf(stateMachine.getTransitions()), new Predicate<Transition>() {
-            @Override
-            public boolean apply(final Transition input) {
-                // STEPH this only works if there is only one operation defined for a given state machine, which is our model for PaymentStates.xml
-                return input.getInitialState().getName().equals(prevStateName) &&
-                       input.getOperationResult().equals(isSuccess ? OperationResult.SUCCESS : OperationResult.FAILURE);
-            }
-        }).orNull();
-        return transition != null ? transition.getFinalState() : null;
     }
 
     protected void runStateMachineOperation(final String initialStateName, final TransactionType transactionType,
