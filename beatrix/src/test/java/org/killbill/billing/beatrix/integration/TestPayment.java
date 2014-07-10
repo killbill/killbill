@@ -28,7 +28,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
-import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.Payment;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -54,7 +54,7 @@ public class TestPayment extends TestIntegrationBase {
         assertListenerStatus();
 
         final Invoice invoice = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
-        final DirectPayment payment1 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("4.00"), account.getCurrency(),  NextEvent.PAYMENT);
+        final Payment payment1 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("4.00"), account.getCurrency(),  NextEvent.PAYMENT);
 
         Invoice invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(new BigDecimal("6.00")) == 0);
@@ -64,7 +64,7 @@ public class TestPayment extends TestIntegrationBase {
         BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance.compareTo(new BigDecimal("6.00")) == 0);
 
-        final DirectPayment payment2 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("6.00"), account.getCurrency(),  NextEvent.PAYMENT);
+        final Payment payment2 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("6.00"), account.getCurrency(),  NextEvent.PAYMENT);
 
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(BigDecimal.ZERO) == 0);

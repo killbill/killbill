@@ -77,7 +77,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     @Test(groups = "fast")
     public void testOperationTimeout() throws Exception {
         final CallbackTest callback = new CallbackTest(Integer.MAX_VALUE);
-        final DirectPaymentOperation pluginOperation = getPluginOperation(false, 1);
+        final PaymentOperation pluginOperation = getPluginOperation(false, 1);
 
         try {
             pluginOperation.dispatchWithAccountLockAndTimeout(callback);
@@ -91,7 +91,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     @Test(groups = "fast")
     public void testOperationThrowsPaymentApiException() throws Exception {
         final CallbackTest callback = new CallbackTest(new PaymentApiException(ErrorCode.__UNKNOWN_ERROR_CODE));
-        final DirectPaymentOperation pluginOperation = getPluginOperation();
+        final PaymentOperation pluginOperation = getPluginOperation();
 
         try {
             pluginOperation.dispatchWithAccountLockAndTimeout(callback);
@@ -105,7 +105,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     @Test(groups = "fast")
     public void testOperationThrowsRuntimeException() throws Exception {
         final CallbackTest callback = new CallbackTest(new NullPointerException("Expected for the test"));
-        final DirectPaymentOperation pluginOperation = getPluginOperation();
+        final PaymentOperation pluginOperation = getPluginOperation();
 
         try {
             pluginOperation.dispatchWithAccountLockAndTimeout(callback);
@@ -119,7 +119,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     private void testLocking(final boolean withAccountLock) throws Exception {
         final Semaphore available = new Semaphore(1, true);
         final CallbackTest callback = new CallbackTest(available);
-        final DirectPaymentOperation pluginOperation = getPluginOperation(withAccountLock);
+        final PaymentOperation pluginOperation = getPluginOperation(withAccountLock);
 
         // Take the only permit
         available.acquire();
@@ -158,7 +158,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         Assert.assertEquals(callback.getRunCount(), withAccountLock ? 1 : 2);
     }
 
-    private void runPluginOperationInBackground(final DirectPaymentOperation pluginOperation, final CallbackTest callback, final boolean shouldFailBecauseOfLockFailure) throws Exception {
+    private void runPluginOperationInBackground(final PaymentOperation pluginOperation, final CallbackTest callback, final boolean shouldFailBecauseOfLockFailure) throws Exception {
         final AtomicBoolean threadStarted = new AtomicBoolean(false);
         final Thread t1 = new Thread(new Runnable() {
             @Override
@@ -190,18 +190,18 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         Awaitility.await().untilTrue(threadStarted);
     }
 
-    private DirectPaymentOperation getPluginOperation() throws PaymentApiException {
+    private PaymentOperation getPluginOperation() throws PaymentApiException {
         return getPluginOperation(false);
     }
 
-    private DirectPaymentOperation getPluginOperation(final boolean shouldLockAccount) throws PaymentApiException {
+    private PaymentOperation getPluginOperation(final boolean shouldLockAccount) throws PaymentApiException {
         return getPluginOperation(shouldLockAccount, Integer.MAX_VALUE);
     }
 
-    private DirectPaymentOperation getPluginOperation(final boolean shouldLockAccount, final int timeoutSeconds) throws PaymentApiException {
+    private PaymentOperation getPluginOperation(final boolean shouldLockAccount, final int timeoutSeconds) throws PaymentApiException {
         final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(timeoutSeconds, Executors.newCachedThreadPool());
 
-        final DirectPaymentStateContext directPaymentStateContext = new DirectPaymentStateContext(UUID.randomUUID(),
+        final PaymentStateContext paymentStateContext = new PaymentStateContext(UUID.randomUUID(),
                                                                                                   null,
                                                                                                   UUID.randomUUID().toString(),
                                                                                                   UUID.randomUUID().toString(),
@@ -215,9 +215,9 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
                                                                                                   internalCallContext,
                                                                                                   callContext);
 
-        final DirectPaymentAutomatonDAOHelper daoHelper = Mockito.mock(DirectPaymentAutomatonDAOHelper.class);
+        final PaymentAutomatonDAOHelper daoHelper = Mockito.mock(PaymentAutomatonDAOHelper.class);
         Mockito.when(daoHelper.getPaymentProviderPlugin()).thenReturn(null);
-        return new PluginOperationTest(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
+        return new PluginOperationTest(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
     }
 
     private static final class CallbackTest implements WithAccountLockCallback<OperationResult, PaymentApiException> {
@@ -288,10 +288,10 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         }
     }
 
-    private static final class PluginOperationTest extends DirectPaymentOperation {
+    private static final class PluginOperationTest extends PaymentOperation {
 
-        protected PluginOperationTest(final DirectPaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
-            super(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
+        protected PluginOperationTest(final PaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateContext paymentStateContext) throws PaymentApiException {
+            super(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
         }
 
         @Override

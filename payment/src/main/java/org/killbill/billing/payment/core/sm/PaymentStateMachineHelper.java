@@ -80,7 +80,7 @@ public class PaymentStateMachineHelper {
             case CHARGEBACK:
                 return CHARGEBACK_INIT_STATE_NAME;
             default:
-                throw new IllegalStateException("Unsupported transaction type " + transactionType + " for null direct payment id");
+                throw new IllegalStateException("Unsupported transaction type " + transactionType + " for null payment id");
         }
     }
 
@@ -111,7 +111,7 @@ public class PaymentStateMachineHelper {
             case CHARGEBACK:
                 return stateMachineConfig.getStateMachine(CHARGEBACK_STATE_MACHINE_NAME);
             default:
-                throw new IllegalStateException("Unsupported transaction type " + transactionType + " for null direct payment id");
+                throw new IllegalStateException("Unsupported transaction type " + transactionType + " for null payment id");
         }
     }
 

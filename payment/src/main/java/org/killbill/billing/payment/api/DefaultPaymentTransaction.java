@@ -24,9 +24,9 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 
-public class DefaultDirectPaymentTransaction extends EntityBase implements DirectPaymentTransaction {
+public class DefaultPaymentTransaction extends EntityBase implements PaymentTransaction {
 
-    private final UUID directPaymentId;
+    private final UUID paymentId;
     private final String externalKey;
     private final TransactionType transactionType;
     private final DateTime effectiveDate;
@@ -40,13 +40,13 @@ public class DefaultDirectPaymentTransaction extends EntityBase implements Direc
     private final PaymentTransactionInfoPlugin infoPlugin;
     private final UUID attemptId;
 
-    public DefaultDirectPaymentTransaction(final UUID id, final UUID attemptId, final String externalKey, final DateTime createdDate, final DateTime updatedDate, final UUID directPaymentId, final TransactionType transactionType,
-                                           final DateTime effectiveDate, final TransactionStatus status, final BigDecimal amount, final Currency currency, final BigDecimal processedAmount, final Currency processedCurrency,
-                                           final String gatewayErrorCode, final String gatewayErrorMsg, final PaymentTransactionInfoPlugin infoPlugin) {
+    public DefaultPaymentTransaction(final UUID id, final UUID attemptId, final String externalKey, final DateTime createdDate, final DateTime updatedDate, final UUID paymentId, final TransactionType transactionType,
+                                     final DateTime effectiveDate, final TransactionStatus status, final BigDecimal amount, final Currency currency, final BigDecimal processedAmount, final Currency processedCurrency,
+                                     final String gatewayErrorCode, final String gatewayErrorMsg, final PaymentTransactionInfoPlugin infoPlugin) {
         super(id, createdDate, updatedDate);
         this.attemptId = attemptId;
         this.externalKey = externalKey;
-        this.directPaymentId = directPaymentId;
+        this.paymentId = paymentId;
         this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;
         this.status = status;
@@ -60,8 +60,8 @@ public class DefaultDirectPaymentTransaction extends EntityBase implements Direc
     }
 
     @Override
-    public UUID getDirectPaymentId() {
-        return directPaymentId;
+    public UUID getPaymentId() {
+        return paymentId;
     }
 
     @Override
@@ -125,8 +125,8 @@ public class DefaultDirectPaymentTransaction extends EntityBase implements Direc
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("DefaultDirectPaymentTransaction{");
-        sb.append("directPaymentId=").append(directPaymentId);
+        final StringBuilder sb = new StringBuilder("DefaultPaymentTransaction{");
+        sb.append("paymentId=").append(paymentId);
         sb.append(", externalKey='").append(externalKey).append('\'');
         sb.append(", transactionType=").append(transactionType);
         sb.append(", effectiveDate=").append(effectiveDate);
@@ -152,7 +152,7 @@ public class DefaultDirectPaymentTransaction extends EntityBase implements Direc
             return false;
         }
 
-        final DefaultDirectPaymentTransaction that = (DefaultDirectPaymentTransaction) o;
+        final DefaultPaymentTransaction that = (DefaultPaymentTransaction) o;
 
         if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
             return false;
@@ -160,7 +160,7 @@ public class DefaultDirectPaymentTransaction extends EntityBase implements Direc
         if (currency != that.currency) {
             return false;
         }
-        if (directPaymentId != null ? !directPaymentId.equals(that.directPaymentId) : that.directPaymentId != null) {
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
         if (effectiveDate != null ? effectiveDate.compareTo(that.effectiveDate) != 0 : that.effectiveDate != null) {
@@ -191,7 +191,7 @@ public class DefaultDirectPaymentTransaction extends EntityBase implements Direc
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (directPaymentId != null ? directPaymentId.hashCode() : 0);
+        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
         result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);

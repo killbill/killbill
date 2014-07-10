@@ -65,8 +65,8 @@ import org.killbill.billing.jaxrs.json.InvoiceJson;
 import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -105,7 +105,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Inject
     public InvoiceResource(final AccountUserApi accountUserApi,
                            final InvoiceUserApi invoiceApi,
-                           final DirectPaymentApi paymentApi,
+                           final PaymentApi paymentApi,
                            final InvoiceNotifier invoiceNotifier,
                            final Clock clock,
                            final JaxrsUriBuilder uriBuilder,
@@ -380,16 +380,16 @@ public class InvoiceResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId), tenantContext);
-        final List<DirectPayment> payments = new ArrayList<DirectPayment>();
+        final List<Payment> payments = new ArrayList<Payment>();
         for (InvoicePayment cur : invoice.getPayments()) {
-            final DirectPayment payment = paymentApi.getPayment(cur.getPaymentId(), withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
+            final Payment payment = paymentApi.getPayment(cur.getPaymentId(), withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
             payments.add(payment);
         }
         final List<InvoicePaymentJson> result = new ArrayList<InvoicePaymentJson>(payments.size());
         if (payments.isEmpty()) {
             return Response.status(Status.OK).entity(result).build();
         }
-        for (final DirectPayment cur : payments) {
+        for (final Payment cur : payments) {
             result.add(new InvoicePaymentJson(cur, invoice.getId(), null));
         }
         return Response.status(Status.OK).entity(result).build();
@@ -412,7 +412,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(payment.getAccountId()), callContext);
         final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
-        final DirectPayment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), externalPayment, callContext);
+        final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), externalPayment, callContext);
         // STEPH should that live in InvoicePayment instead?
         return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
     }

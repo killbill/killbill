@@ -256,7 +256,7 @@ public class TestJaxrsBase extends KillbillClient {
         }
     }
 
-    protected static <T extends Payment> List<PaymentTransaction> getDirectPaymentTransactions(final List<T> payments, final String transactionType) {
+    protected static <T extends Payment> List<PaymentTransaction> getPaymentTransactions(final List<T> payments, final String transactionType) {
         return ImmutableList.copyOf(Iterables.concat(Iterables.transform(payments, new Function<T, Iterable<PaymentTransaction>>() {
             @Override
             public Iterable<PaymentTransaction> apply(final T input) {

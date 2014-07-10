@@ -29,29 +29,29 @@ import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler
 
 public class RetryEnteringStateCallback implements EnteringStateCallback {
 
-    private PluginControlledDirectPaymentAutomatonRunner retryableDirectPaymentAutomatonRunner;
-    private final RetryableDirectPaymentStateContext directPaymentStateContext;
+    private PluginControlledPaymentAutomatonRunner retryablePaymentAutomatonRunner;
+    private final RetryablePaymentStateContext paymentStateContext;
     private final RetryServiceScheduler retryServiceScheduler;
 
-    public RetryEnteringStateCallback(final PluginControlledDirectPaymentAutomatonRunner retryableDirectPaymentAutomatonRunner, final RetryableDirectPaymentStateContext directPaymentStateContext,
+    public RetryEnteringStateCallback(final PluginControlledPaymentAutomatonRunner retryablePaymentAutomatonRunner, final RetryablePaymentStateContext paymentStateContext,
                                       final RetryServiceScheduler retryServiceScheduler) {
-        this.retryableDirectPaymentAutomatonRunner = retryableDirectPaymentAutomatonRunner;
-        this.directPaymentStateContext = directPaymentStateContext;
+        this.retryablePaymentAutomatonRunner = retryablePaymentAutomatonRunner;
+        this.paymentStateContext = paymentStateContext;
         this.retryServiceScheduler = retryServiceScheduler;
     }
 
     @Override
     public void enteringState(final State state, final OperationCallback operationCallback, final OperationResult operationResult, final LeavingStateCallback leavingStateCallback) {
 
-        final PaymentAttemptModelDao attempt = retryableDirectPaymentAutomatonRunner.paymentDao.getPaymentAttempt(directPaymentStateContext.getAttemptId(), directPaymentStateContext.internalCallContext);
-        final UUID transactionId = directPaymentStateContext.getCurrentTransaction() != null ?
-                                   directPaymentStateContext.getCurrentTransaction().getId() :
+        final PaymentAttemptModelDao attempt = retryablePaymentAutomatonRunner.paymentDao.getPaymentAttempt(paymentStateContext.getAttemptId(), paymentStateContext.internalCallContext);
+        final UUID transactionId = paymentStateContext.getCurrentTransaction() != null ?
+                                   paymentStateContext.getCurrentTransaction().getId() :
                                    null;
-        retryableDirectPaymentAutomatonRunner.paymentDao.updatePaymentAttempt(attempt.getId(), transactionId, state.getName(), directPaymentStateContext.internalCallContext);
+        retryablePaymentAutomatonRunner.paymentDao.updatePaymentAttempt(attempt.getId(), transactionId, state.getName(), paymentStateContext.internalCallContext);
 
         if ("RETRIED".equals(state.getName())) {
             retryServiceScheduler.scheduleRetry(ObjectType.PAYMENT_ATTEMPT, attempt.getId(), attempt.getId(),
-                                                directPaymentStateContext.getPluginName(), directPaymentStateContext.getRetryDate());
+                                                paymentStateContext.getPluginName(), paymentStateContext.getRetryDate());
         }
     }
 }

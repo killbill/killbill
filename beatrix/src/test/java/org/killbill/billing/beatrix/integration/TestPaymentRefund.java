@@ -41,7 +41,7 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -57,7 +57,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
     // Setup for all tests below
     private Account account;
     private Invoice invoice;
-    private DirectPayment payment;
+    private Payment payment;
     private Set<UUID> invoiceItems;
     private DateTime initialCreationDate;
     private int invoiceItemCount;

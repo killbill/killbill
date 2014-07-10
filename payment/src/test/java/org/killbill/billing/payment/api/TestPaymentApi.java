@@ -77,7 +77,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String paymentExternalKey = "bwwrr";
         final String transactionExternalKey = "krapaut";
 
-        final DirectPayment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
                                                                 ImmutableList.<PluginProperty>of(), callContext);
 
         assertEquals(payment.getExternalKey(), paymentExternalKey);
@@ -91,7 +91,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         assertEquals(payment.getTransactions().size(), 1);
         assertEquals(payment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
-        assertEquals(payment.getTransactions().get(0).getDirectPaymentId(), payment.getId());
+        assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
         assertEquals(payment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
         assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.AED);
         assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
@@ -113,7 +113,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey = "kaput";
         final String transactionExternalKey2 = "kapu2t";
 
-        final DirectPayment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, authAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, authAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
                                                                      ImmutableList.<PluginProperty>of(), callContext);
 
         assertEquals(payment.getExternalKey(), paymentExternalKey);
@@ -127,7 +127,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         assertEquals(payment.getTransactions().size(), 1);
         assertEquals(payment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
-        assertEquals(payment.getTransactions().get(0).getDirectPaymentId(), payment.getId());
+        assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
         assertEquals(payment.getTransactions().get(0).getAmount().compareTo(authAmount), 0);
         assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.AED);
         assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(authAmount), 0);
@@ -138,7 +138,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertNull(payment.getTransactions().get(0).getGatewayErrorMsg());
         assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
 
-        final DirectPayment payment2 = paymentApi.createCapture(account, payment.getId(), captureAmount, Currency.AED, transactionExternalKey2,
+        final Payment payment2 = paymentApi.createCapture(account, payment.getId(), captureAmount, Currency.AED, transactionExternalKey2,
                                                                 ImmutableList.<PluginProperty>of(), callContext);
 
         assertEquals(payment2.getExternalKey(), paymentExternalKey);
@@ -152,7 +152,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         assertEquals(payment2.getTransactions().size(), 2);
         assertEquals(payment2.getTransactions().get(1).getExternalKey(), transactionExternalKey2);
-        assertEquals(payment2.getTransactions().get(1).getDirectPaymentId(), payment.getId());
+        assertEquals(payment2.getTransactions().get(1).getPaymentId(), payment.getId());
         assertEquals(payment2.getTransactions().get(1).getAmount().compareTo(captureAmount), 0);
         assertEquals(payment2.getTransactions().get(1).getCurrency(), Currency.AED);
         assertEquals(payment2.getTransactions().get(1).getProcessedAmount().compareTo(captureAmount), 0);
@@ -176,13 +176,13 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey3 = "sioux3";
         final String transactionExternalKey4 = "sioux4";
 
-        final DirectPayment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, authAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, authAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                                      ImmutableList.<PluginProperty>of(), callContext);
 
         paymentApi.createCapture(account, payment.getId(), captureAmount, Currency.USD, transactionExternalKey2,
                                  ImmutableList.<PluginProperty>of(), callContext);
 
-        final DirectPayment payment3 = paymentApi.createCapture(account, payment.getId(), captureAmount, Currency.USD, transactionExternalKey3,
+        final Payment payment3 = paymentApi.createCapture(account, payment.getId(), captureAmount, Currency.USD, transactionExternalKey3,
                                                                 ImmutableList.<PluginProperty>of(), callContext);
 
         assertEquals(payment3.getExternalKey(), paymentExternalKey);
@@ -195,7 +195,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment3.getCurrency(), Currency.USD);
         assertEquals(payment3.getTransactions().size(), 3);
 
-        final DirectPayment payment4 = paymentApi.createRefund(account, payment3.getId(), payment3.getCapturedAmount(), Currency.USD, transactionExternalKey4, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment payment4 = paymentApi.createRefund(account, payment3.getId(), payment3.getCapturedAmount(), Currency.USD, transactionExternalKey4, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(payment4.getAuthAmount().compareTo(authAmount), 0);
         assertEquals(payment4.getCapturedAmount().compareTo(captureAmount.add(captureAmount)), 0);
         assertEquals(payment4.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
@@ -203,7 +203,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment4.getTransactions().size(), 4);
 
         assertEquals(payment4.getTransactions().get(3).getExternalKey(), transactionExternalKey4);
-        assertEquals(payment4.getTransactions().get(3).getDirectPaymentId(), payment.getId());
+        assertEquals(payment4.getTransactions().get(3).getPaymentId(), payment.getId());
         assertEquals(payment4.getTransactions().get(3).getAmount().compareTo(payment3.getCapturedAmount()), 0);
         assertEquals(payment4.getTransactions().get(3).getCurrency(), Currency.USD);
         assertEquals(payment4.getTransactions().get(3).getProcessedAmount().compareTo(payment3.getCapturedAmount()), 0);
@@ -238,7 +238,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                             new BigDecimal("1.0"),
                                                             Currency.USD));
 
-        final DirectPayment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                                                   createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
 
         assertEquals(payment.getExternalKey(), paymentExternalKey);
@@ -252,7 +252,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         assertEquals(payment.getTransactions().size(), 1);
         assertEquals(payment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
-        assertEquals(payment.getTransactions().get(0).getDirectPaymentId(), payment.getId());
+        assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
         assertEquals(payment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
         assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.USD);
         assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
@@ -325,11 +325,11 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                      Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
 
-        final DirectPayment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                                                   createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
 
         final List<PluginProperty> refundProperties = ImmutableList.<PluginProperty>of();
-        final DirectPayment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), requestedAmount, Currency.USD, transactionExternalKey2,
+        final Payment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), requestedAmount, Currency.USD, transactionExternalKey2,
                                                                                  refundProperties, INVOICE_PAYMENT, callContext);
 
         assertEquals(payment2.getTransactions().size(), 2);
@@ -368,7 +368,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                      Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
 
-        final DirectPayment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                                                   createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
 
         final List<PluginProperty> refundProperties = ImmutableList.<PluginProperty>of();
@@ -406,7 +406,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                      Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
 
-        final DirectPayment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                                                   createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
 
         final List<PluginProperty> refundProperties = new ArrayList<PluginProperty>();
@@ -415,7 +415,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final PluginProperty refundIdsProp = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, uuidBigDecimalHashMap, false);
         refundProperties.add(refundIdsProp);
 
-        final DirectPayment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, transactionExternalKey2,
+        final Payment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, transactionExternalKey2,
                                                                                  refundProperties, INVOICE_PAYMENT, callContext);
 
         assertEquals(payment2.getTransactions().size(), 2);
@@ -437,11 +437,11 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey = "couac";
         final String transactionExternalKey2 = "couyc";
 
-        final DirectPayment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
                                                                 ImmutableList.<PluginProperty>of(), callContext);
 
         paymentApi.createChargeback(account, payment.getId(), requestedAmount, Currency.AED, transactionExternalKey2,  callContext);
-        final DirectPayment payment2 = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment payment2 = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
 
         assertEquals(payment2.getExternalKey(), paymentExternalKey);
         assertEquals(payment2.getPaymentMethodId(), account.getPaymentMethodId());
@@ -454,7 +454,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         assertEquals(payment2.getTransactions().size(), 2);
         assertEquals(payment2.getTransactions().get(1).getExternalKey(), transactionExternalKey2);
-        assertEquals(payment2.getTransactions().get(1).getDirectPaymentId(), payment.getId());
+        assertEquals(payment2.getTransactions().get(1).getPaymentId(), payment.getId());
         assertEquals(payment2.getTransactions().get(1).getAmount().compareTo(requestedAmount), 0);
         assertEquals(payment2.getTransactions().get(1).getCurrency(), Currency.AED);
 
@@ -510,7 +510,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     public void testSimpleAuthCaptureWithInvalidPaymentId() throws Exception {
         final BigDecimal requestedAmount = new BigDecimal("80.0091");
 
-        final DirectPayment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+        final Payment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
 
 
@@ -520,7 +520,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         } catch (PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_PAYMENT.getCode());
 
-            final DirectPayment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
             assertEquals(latestPayment, initialPayment);
         }
     }
@@ -530,7 +530,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     public void testSimpleAuthCaptureWithInvalidCurrency() throws Exception {
         final BigDecimal requestedAmount = new BigDecimal("80.0091");
 
-        final DirectPayment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+        final Payment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
 
 
@@ -540,7 +540,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         } catch (PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
 
-            final DirectPayment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
             assertEquals(latestPayment, initialPayment);
         }
     }

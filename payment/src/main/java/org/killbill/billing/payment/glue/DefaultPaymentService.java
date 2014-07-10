@@ -18,7 +18,7 @@
 
 package org.killbill.billing.payment.glue;
 
-import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentService;
 import org.killbill.billing.payment.bus.InvoiceHandler;
 import org.killbill.billing.payment.control.PaymentTagHandler;
@@ -43,14 +43,14 @@ public class DefaultPaymentService implements PaymentService {
     private final InvoiceHandler invoiceHandler;
     private final PaymentTagHandler tagHandler;
     private final PersistentBus eventBus;
-    private final DirectPaymentApi api;
+    private final PaymentApi api;
     private final DefaultRetryService retryService;
     private final Janitor janitor;
 
     @Inject
     public DefaultPaymentService(final InvoiceHandler invoiceHandler,
                                  final PaymentTagHandler tagHandler,
-                                 final DirectPaymentApi api,
+                                 final PaymentApi api,
                                  final DefaultRetryService retryService,
                                  final PersistentBus eventBus,
                                  final Janitor janitor) {
@@ -97,7 +97,7 @@ public class DefaultPaymentService implements PaymentService {
     }
 
     @Override
-    public DirectPaymentApi getPaymentApi() {
+    public PaymentApi getPaymentApi() {
         return api;
     }
 }

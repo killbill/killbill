@@ -32,39 +32,39 @@ import org.testng.annotations.Test;
 public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
-    public void testDirectPaymentCRUD() throws Exception {
+    public void testPaymentCRUD() throws Exception {
         for (int i = 0; i < 3; i++) {
-            testDirectPaymentCRUDForAccount(UUID.randomUUID(), i + 1);
+            testPaymentCRUDForAccount(UUID.randomUUID(), i + 1);
         }
     }
 
-    public void testDirectPaymentCRUDForAccount(final UUID accountId, final int accountNb) {
+    public void testPaymentCRUDForAccount(final UUID accountId, final int accountNb) {
         // We need to create specific call contexts to make the account_record_id magic work
         final InternalCallContext accountCallContext = new InternalCallContext(internalCallContext, (long) accountNb);
 
-        final PaymentModelDao specifiedFirstPaymentModelDao = generateDirectPaymentModelDao(accountId);
-        final PaymentTransactionModelDao specifiedFirstDirectPaymentTransactionModelDao = generateDirectPaymentTransactionModelDao(specifiedFirstPaymentModelDao.getId());
+        final PaymentModelDao specifiedFirstPaymentModelDao = generatePaymentModelDao(accountId);
+        final PaymentTransactionModelDao specifiedFirstPaymentTransactionModelDao = generatePaymentTransactionModelDao(specifiedFirstPaymentModelDao.getId());
 
         // Create and verify the payment and transaction
-        final PaymentModelDao firstPaymentModelDao = paymentDao.insertDirectPaymentWithFirstTransaction(specifiedFirstPaymentModelDao, specifiedFirstDirectPaymentTransactionModelDao, accountCallContext);
-        verifyDirectPayment(firstPaymentModelDao, specifiedFirstPaymentModelDao);
-        verifyDirectPaymentAndTransactions(accountCallContext, specifiedFirstPaymentModelDao, specifiedFirstDirectPaymentTransactionModelDao);
+        final PaymentModelDao firstPaymentModelDao = paymentDao.insertPaymentWithFirstTransaction(specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao, accountCallContext);
+        verifyPayment(firstPaymentModelDao, specifiedFirstPaymentModelDao);
+        verifyPaymentAndTransactions(accountCallContext, specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao);
 
         // Create a second transaction for the same payment
-        final PaymentTransactionModelDao specifiedSecondDirectPaymentTransactionModelDao = generateDirectPaymentTransactionModelDao(specifiedFirstPaymentModelDao.getId());
-        final PaymentTransactionModelDao secondDirectTransactionModelDao = paymentDao.updateDirectPaymentWithNewTransaction(specifiedFirstDirectPaymentTransactionModelDao.getPaymentId(), specifiedSecondDirectPaymentTransactionModelDao, accountCallContext);
-        verifyDirectPaymentTransaction(secondDirectTransactionModelDao, specifiedSecondDirectPaymentTransactionModelDao);
-        verifyDirectPaymentAndTransactions(accountCallContext, specifiedFirstPaymentModelDao, specifiedFirstDirectPaymentTransactionModelDao, specifiedSecondDirectPaymentTransactionModelDao);
+        final PaymentTransactionModelDao specifiedSecondPaymentTransactionModelDao = generatePaymentTransactionModelDao(specifiedFirstPaymentModelDao.getId());
+        final PaymentTransactionModelDao secondTransactionModelDao = paymentDao.updatePaymentWithNewTransaction(specifiedFirstPaymentTransactionModelDao.getPaymentId(), specifiedSecondPaymentTransactionModelDao, accountCallContext);
+        verifyPaymentTransaction(secondTransactionModelDao, specifiedSecondPaymentTransactionModelDao);
+        verifyPaymentAndTransactions(accountCallContext, specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao, specifiedSecondPaymentTransactionModelDao);
 
         // Update the latest transaction
         final BigDecimal processedAmount = new BigDecimal("902341.23232");
         final Currency processedCurrency = Currency.USD;
         final String gatewayErrorCode = UUID.randomUUID().toString().substring(0, 5);
         final String gatewayErrorMsg = UUID.randomUUID().toString();
-        paymentDao.updateDirectPaymentAndTransactionOnCompletion(specifiedSecondDirectPaymentTransactionModelDao.getPaymentId(),
+        paymentDao.updatePaymentAndTransactionOnCompletion(specifiedSecondPaymentTransactionModelDao.getPaymentId(),
                                                                  "SOME_ERRORED_STATE",
                                                                  "SOME_ERRORED_STATE",
-                                                                 specifiedSecondDirectPaymentTransactionModelDao.getId(),
+                                                                 specifiedSecondPaymentTransactionModelDao.getId(),
                                                                  TransactionStatus.PAYMENT_FAILURE,
                                                                  processedAmount,
                                                                  processedCurrency,
@@ -72,59 +72,59 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                  gatewayErrorMsg,
                                                                  accountCallContext);
 
-        final PaymentTransactionModelDao updatedSecondDirectPaymentTransactionModelDao = paymentDao.getDirectPaymentTransaction(specifiedSecondDirectPaymentTransactionModelDao.getId(), accountCallContext);
-        Assert.assertEquals(updatedSecondDirectPaymentTransactionModelDao.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
-        Assert.assertEquals(updatedSecondDirectPaymentTransactionModelDao.getGatewayErrorMsg(), gatewayErrorMsg);
-        Assert.assertEquals(updatedSecondDirectPaymentTransactionModelDao.getGatewayErrorMsg(), gatewayErrorMsg);
+        final PaymentTransactionModelDao updatedSecondPaymentTransactionModelDao = paymentDao.getPaymentTransaction(specifiedSecondPaymentTransactionModelDao.getId(), accountCallContext);
+        Assert.assertEquals(updatedSecondPaymentTransactionModelDao.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertEquals(updatedSecondPaymentTransactionModelDao.getGatewayErrorMsg(), gatewayErrorMsg);
+        Assert.assertEquals(updatedSecondPaymentTransactionModelDao.getGatewayErrorMsg(), gatewayErrorMsg);
 
         // Create multiple payments for that account
         for (int i = 0; i < 3; i++) {
-            final PaymentModelDao paymentModelDao = generateDirectPaymentModelDao(accountId);
-            final PaymentTransactionModelDao directPaymentTransactionModelDao = generateDirectPaymentTransactionModelDao(paymentModelDao.getId());
+            final PaymentModelDao paymentModelDao = generatePaymentModelDao(accountId);
+            final PaymentTransactionModelDao paymentTransactionModelDao = generatePaymentTransactionModelDao(paymentModelDao.getId());
 
-            final PaymentModelDao insertedPaymentModelDao = paymentDao.insertDirectPaymentWithFirstTransaction(paymentModelDao, directPaymentTransactionModelDao, accountCallContext);
-            verifyDirectPayment(insertedPaymentModelDao, paymentModelDao);
+            final PaymentModelDao insertedPaymentModelDao = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, paymentTransactionModelDao, accountCallContext);
+            verifyPayment(insertedPaymentModelDao, paymentModelDao);
         }
-        Assert.assertEquals(paymentDao.getDirectPaymentsForAccount(specifiedFirstPaymentModelDao.getAccountId(), accountCallContext).size(), 4);
+        Assert.assertEquals(paymentDao.getPaymentsForAccount(specifiedFirstPaymentModelDao.getAccountId(), accountCallContext).size(), 4);
     }
 
-    private void verifyDirectPaymentAndTransactions(final InternalCallContext accountCallContext, final PaymentModelDao specifiedFirstPaymentModelDao, final PaymentTransactionModelDao... specifiedFirstDirectPaymentTransactionModelDaos) {
-        for (final PaymentTransactionModelDao specifiedFirstDirectPaymentTransactionModelDao : specifiedFirstDirectPaymentTransactionModelDaos) {
-            final PaymentTransactionModelDao firstDirectTransactionModelDao = paymentDao.getDirectPaymentTransaction(specifiedFirstDirectPaymentTransactionModelDao.getId(), accountCallContext);
-            verifyDirectPaymentTransaction(firstDirectTransactionModelDao, specifiedFirstDirectPaymentTransactionModelDao);
+    private void verifyPaymentAndTransactions(final InternalCallContext accountCallContext, final PaymentModelDao specifiedFirstPaymentModelDao, final PaymentTransactionModelDao... specifiedFirstPaymentTransactionModelDaos) {
+        for (final PaymentTransactionModelDao specifiedFirstPaymentTransactionModelDao : specifiedFirstPaymentTransactionModelDaos) {
+            final PaymentTransactionModelDao firstTransactionModelDao = paymentDao.getPaymentTransaction(specifiedFirstPaymentTransactionModelDao.getId(), accountCallContext);
+            verifyPaymentTransaction(firstTransactionModelDao, specifiedFirstPaymentTransactionModelDao);
         }
 
         // Retrieve the payment directly
-        final PaymentModelDao secondPaymentModelDao = paymentDao.getDirectPayment(specifiedFirstPaymentModelDao.getId(), accountCallContext);
-        verifyDirectPayment(secondPaymentModelDao, specifiedFirstPaymentModelDao);
+        final PaymentModelDao secondPaymentModelDao = paymentDao.getPayment(specifiedFirstPaymentModelDao.getId(), accountCallContext);
+        verifyPayment(secondPaymentModelDao, specifiedFirstPaymentModelDao);
 
         // Retrieve the payments for the account
-        final List<PaymentModelDao> paymentsForAccount = paymentDao.getDirectPaymentsForAccount(specifiedFirstPaymentModelDao.getAccountId(), accountCallContext);
+        final List<PaymentModelDao> paymentsForAccount = paymentDao.getPaymentsForAccount(specifiedFirstPaymentModelDao.getAccountId(), accountCallContext);
         Assert.assertEquals(paymentsForAccount.size(), 1);
-        verifyDirectPayment(paymentsForAccount.get(0), specifiedFirstPaymentModelDao);
+        verifyPayment(paymentsForAccount.get(0), specifiedFirstPaymentModelDao);
 
         // Retrieve the transactions for the account
-        final List<PaymentTransactionModelDao> transactionsForAccount = paymentDao.getDirectTransactionsForAccount(specifiedFirstPaymentModelDao.getAccountId(), accountCallContext);
-        Assert.assertEquals(transactionsForAccount.size(), specifiedFirstDirectPaymentTransactionModelDaos.length);
-        for (int i = 0; i < specifiedFirstDirectPaymentTransactionModelDaos.length; i++) {
-            verifyDirectPaymentTransaction(transactionsForAccount.get(i), specifiedFirstDirectPaymentTransactionModelDaos[i]);
+        final List<PaymentTransactionModelDao> transactionsForAccount = paymentDao.getTransactionsForAccount(specifiedFirstPaymentModelDao.getAccountId(), accountCallContext);
+        Assert.assertEquals(transactionsForAccount.size(), specifiedFirstPaymentTransactionModelDaos.length);
+        for (int i = 0; i < specifiedFirstPaymentTransactionModelDaos.length; i++) {
+            verifyPaymentTransaction(transactionsForAccount.get(i), specifiedFirstPaymentTransactionModelDaos[i]);
         }
 
         // Retrieve the transactions for the payment
-        final List<PaymentTransactionModelDao> transactionsForPayment = paymentDao.getDirectTransactionsForDirectPayment(specifiedFirstPaymentModelDao.getId(), accountCallContext);
-        Assert.assertEquals(transactionsForPayment.size(), specifiedFirstDirectPaymentTransactionModelDaos.length);
-        for (int i = 0; i < specifiedFirstDirectPaymentTransactionModelDaos.length; i++) {
-            verifyDirectPaymentTransaction(transactionsForPayment.get(i), specifiedFirstDirectPaymentTransactionModelDaos[i]);
+        final List<PaymentTransactionModelDao> transactionsForPayment = paymentDao.getTransactionsForPayment(specifiedFirstPaymentModelDao.getId(), accountCallContext);
+        Assert.assertEquals(transactionsForPayment.size(), specifiedFirstPaymentTransactionModelDaos.length);
+        for (int i = 0; i < specifiedFirstPaymentTransactionModelDaos.length; i++) {
+            verifyPaymentTransaction(transactionsForPayment.get(i), specifiedFirstPaymentTransactionModelDaos[i]);
         }
     }
 
-    private PaymentTransactionModelDao generateDirectPaymentTransactionModelDao(final UUID directPaymentId) {
+    private PaymentTransactionModelDao generatePaymentTransactionModelDao(final UUID paymentId) {
         return new PaymentTransactionModelDao(UUID.randomUUID(),
                                               null,
                                               UUID.randomUUID().toString(),
                                               clock.getUTCNow(),
                                               clock.getUTCNow(),
-                                              directPaymentId,
+                                              paymentId,
                                               TransactionType.CAPTURE,
                                               clock.getUTCNow(),
                                               TransactionStatus.SUCCESS,
@@ -135,7 +135,7 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         );
     }
 
-    private PaymentModelDao generateDirectPaymentModelDao(final UUID accountId) {
+    private PaymentModelDao generatePaymentModelDao(final UUID accountId) {
         return new PaymentModelDao(UUID.randomUUID(),
                                    clock.getUTCNow(),
                                    clock.getUTCNow(),
@@ -146,22 +146,22 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         );
     }
 
-    private void verifyDirectPayment(final PaymentModelDao loadedPaymentModelDao, final PaymentModelDao specifiedPaymentModelDao) {
+    private void verifyPayment(final PaymentModelDao loadedPaymentModelDao, final PaymentModelDao specifiedPaymentModelDao) {
         Assert.assertEquals(loadedPaymentModelDao.getAccountId(), specifiedPaymentModelDao.getAccountId());
         Assert.assertTrue(loadedPaymentModelDao.getPaymentNumber() > 0);
         Assert.assertEquals(loadedPaymentModelDao.getPaymentMethodId(), specifiedPaymentModelDao.getPaymentMethodId());
         Assert.assertEquals(loadedPaymentModelDao.getExternalKey(), specifiedPaymentModelDao.getExternalKey());
     }
 
-    private void verifyDirectPaymentTransaction(final PaymentTransactionModelDao loadedDirectPaymentTransactionModelDao, final PaymentTransactionModelDao specifiedDirectPaymentTransactionModelDao) {
-        Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getPaymentId(), specifiedDirectPaymentTransactionModelDao.getPaymentId());
-        Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getTransactionExternalKey(), specifiedDirectPaymentTransactionModelDao.getTransactionExternalKey());
-        Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getTransactionType(), specifiedDirectPaymentTransactionModelDao.getTransactionType());
-        Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getEffectiveDate().compareTo(specifiedDirectPaymentTransactionModelDao.getEffectiveDate()), 0);
-        Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getTransactionStatus(), specifiedDirectPaymentTransactionModelDao.getTransactionStatus());
-        Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getAmount().compareTo(specifiedDirectPaymentTransactionModelDao.getAmount()), 0);
-        Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getCurrency(), specifiedDirectPaymentTransactionModelDao.getCurrency());
-        Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getGatewayErrorCode(), specifiedDirectPaymentTransactionModelDao.getGatewayErrorCode());
-        Assert.assertEquals(loadedDirectPaymentTransactionModelDao.getGatewayErrorMsg(), specifiedDirectPaymentTransactionModelDao.getGatewayErrorMsg());
+    private void verifyPaymentTransaction(final PaymentTransactionModelDao loadedPaymentTransactionModelDao, final PaymentTransactionModelDao specifiedPaymentTransactionModelDao) {
+        Assert.assertEquals(loadedPaymentTransactionModelDao.getPaymentId(), specifiedPaymentTransactionModelDao.getPaymentId());
+        Assert.assertEquals(loadedPaymentTransactionModelDao.getTransactionExternalKey(), specifiedPaymentTransactionModelDao.getTransactionExternalKey());
+        Assert.assertEquals(loadedPaymentTransactionModelDao.getTransactionType(), specifiedPaymentTransactionModelDao.getTransactionType());
+        Assert.assertEquals(loadedPaymentTransactionModelDao.getEffectiveDate().compareTo(specifiedPaymentTransactionModelDao.getEffectiveDate()), 0);
+        Assert.assertEquals(loadedPaymentTransactionModelDao.getTransactionStatus(), specifiedPaymentTransactionModelDao.getTransactionStatus());
+        Assert.assertEquals(loadedPaymentTransactionModelDao.getAmount().compareTo(specifiedPaymentTransactionModelDao.getAmount()), 0);
+        Assert.assertEquals(loadedPaymentTransactionModelDao.getCurrency(), specifiedPaymentTransactionModelDao.getCurrency());
+        Assert.assertEquals(loadedPaymentTransactionModelDao.getGatewayErrorCode(), specifiedPaymentTransactionModelDao.getGatewayErrorCode());
+        Assert.assertEquals(loadedPaymentTransactionModelDao.getGatewayErrorMsg(), specifiedPaymentTransactionModelDao.getGatewayErrorMsg());
     }
 }

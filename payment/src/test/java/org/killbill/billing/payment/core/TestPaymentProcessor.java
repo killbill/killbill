@@ -34,8 +34,8 @@ import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
@@ -49,7 +49,7 @@ import com.jayway.awaitility.Awaitility;
 
 import static java.math.BigDecimal.ZERO;
 
-public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
+public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
     private static final boolean SHOULD_LOCK_ACCOUNT = true;
     private static final ImmutableList<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
@@ -71,132 +71,132 @@ public class TestDirectPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testClassicFlow() throws Exception {
-        final String directPaymentExternalKey = UUID.randomUUID().toString();
+        final String paymentExternalKey = UUID.randomUUID().toString();
 
         // AUTH pre-3DS
         final String authorizationKey = UUID.randomUUID().toString();
-        final DirectPayment authorization = directPaymentProcessor.createAuthorization(true, null, account, null, null, TEN, CURRENCY, directPaymentExternalKey, authorizationKey,
+        final Payment authorization = paymentProcessor.createAuthorization(true, null, account, null, null, TEN, CURRENCY, paymentExternalKey, authorizationKey,
                                                                                        SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
-        verifyDirectPayment(authorization, directPaymentExternalKey, TEN, ZERO, ZERO, 1);
-        final UUID directPaymentId = authorization.getId();
-        verifyDirectPaymentTransaction(authorization.getTransactions().get(0), authorizationKey, TransactionType.AUTHORIZE, TEN, directPaymentId);
-        paymentBusListener.verify(1, account.getId(), directPaymentId, TEN);
+        verifyPayment(authorization, paymentExternalKey, TEN, ZERO, ZERO, 1);
+        final UUID paymentId = authorization.getId();
+        verifyPaymentTransaction(authorization.getTransactions().get(0), authorizationKey, TransactionType.AUTHORIZE, TEN, paymentId);
+        paymentBusListener.verify(1, account.getId(), paymentId, TEN);
 
         // AUTH post-3DS
         final String authorizationPost3DSKey = UUID.randomUUID().toString();
-        final DirectPayment authorizationPost3DS = directPaymentProcessor.createAuthorization(true, null, account, null, directPaymentId, TEN, CURRENCY, directPaymentExternalKey, authorizationPost3DSKey,
+        final Payment authorizationPost3DS = paymentProcessor.createAuthorization(true, null, account, null, paymentId, TEN, CURRENCY, paymentExternalKey, authorizationPost3DSKey,
                                                                                               SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
-        verifyDirectPayment(authorizationPost3DS, directPaymentExternalKey, TEN, ZERO, ZERO, 2);
-        verifyDirectPaymentTransaction(authorizationPost3DS.getTransactions().get(1), authorizationPost3DSKey, TransactionType.AUTHORIZE, TEN, directPaymentId);
-        paymentBusListener.verify(2, account.getId(), directPaymentId, TEN);
+        verifyPayment(authorizationPost3DS, paymentExternalKey, TEN, ZERO, ZERO, 2);
+        verifyPaymentTransaction(authorizationPost3DS.getTransactions().get(1), authorizationPost3DSKey, TransactionType.AUTHORIZE, TEN, paymentId);
+        paymentBusListener.verify(2, account.getId(), paymentId, TEN);
 
         // CAPTURE
         final String capture1Key = UUID.randomUUID().toString();
-        final DirectPayment partialCapture1 = directPaymentProcessor.createCapture(true, null, account, directPaymentId, FIVE, CURRENCY, capture1Key,
+        final Payment partialCapture1 = paymentProcessor.createCapture(true, null, account, paymentId, FIVE, CURRENCY, capture1Key,
                                                                                    SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
-        verifyDirectPayment(partialCapture1, directPaymentExternalKey, TEN, FIVE, ZERO, 3);
-        verifyDirectPaymentTransaction(partialCapture1.getTransactions().get(2), capture1Key, TransactionType.CAPTURE, FIVE, directPaymentId);
-        paymentBusListener.verify(3, account.getId(), directPaymentId, FIVE);
+        verifyPayment(partialCapture1, paymentExternalKey, TEN, FIVE, ZERO, 3);
+        verifyPaymentTransaction(partialCapture1.getTransactions().get(2), capture1Key, TransactionType.CAPTURE, FIVE, paymentId);
+        paymentBusListener.verify(3, account.getId(), paymentId, FIVE);
 
         // CAPTURE
         final String capture2Key = UUID.randomUUID().toString();
-        final DirectPayment partialCapture2 = directPaymentProcessor.createCapture(true, null, account, directPaymentId, FIVE, CURRENCY, capture2Key,
+        final Payment partialCapture2 = paymentProcessor.createCapture(true, null, account, paymentId, FIVE, CURRENCY, capture2Key,
                                                                                    SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
-        verifyDirectPayment(partialCapture2, directPaymentExternalKey, TEN, TEN, ZERO, 4);
-        verifyDirectPaymentTransaction(partialCapture2.getTransactions().get(3), capture2Key, TransactionType.CAPTURE, FIVE, directPaymentId);
-        paymentBusListener.verify(4, account.getId(), directPaymentId, FIVE);
+        verifyPayment(partialCapture2, paymentExternalKey, TEN, TEN, ZERO, 4);
+        verifyPaymentTransaction(partialCapture2.getTransactions().get(3), capture2Key, TransactionType.CAPTURE, FIVE, paymentId);
+        paymentBusListener.verify(4, account.getId(), paymentId, FIVE);
 
         // REFUND
         final String refund1Key = UUID.randomUUID().toString();
-        final DirectPayment partialRefund1 = directPaymentProcessor.createRefund(true, null, account, directPaymentId, FIVE, CURRENCY, refund1Key,
+        final Payment partialRefund1 = paymentProcessor.createRefund(true, null, account, paymentId, FIVE, CURRENCY, refund1Key,
                                                                                  SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
-        verifyDirectPayment(partialRefund1, directPaymentExternalKey, TEN, TEN, FIVE, 5);
-        verifyDirectPaymentTransaction(partialRefund1.getTransactions().get(4), refund1Key, TransactionType.REFUND, FIVE, directPaymentId);
-        paymentBusListener.verify(5, account.getId(), directPaymentId, FIVE);
+        verifyPayment(partialRefund1, paymentExternalKey, TEN, TEN, FIVE, 5);
+        verifyPaymentTransaction(partialRefund1.getTransactions().get(4), refund1Key, TransactionType.REFUND, FIVE, paymentId);
+        paymentBusListener.verify(5, account.getId(), paymentId, FIVE);
 
         // REFUND
         final String refund2Key = UUID.randomUUID().toString();
-        final DirectPayment partialRefund2 = directPaymentProcessor.createRefund(true, null, account, directPaymentId, FIVE, CURRENCY, refund2Key,
+        final Payment partialRefund2 = paymentProcessor.createRefund(true, null, account, paymentId, FIVE, CURRENCY, refund2Key,
                                                                                  SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
-        verifyDirectPayment(partialRefund2, directPaymentExternalKey, TEN, TEN, TEN, 6);
-        verifyDirectPaymentTransaction(partialRefund2.getTransactions().get(5), refund2Key, TransactionType.REFUND, FIVE, directPaymentId);
-        paymentBusListener.verify(6, account.getId(), directPaymentId, FIVE);
+        verifyPayment(partialRefund2, paymentExternalKey, TEN, TEN, TEN, 6);
+        verifyPaymentTransaction(partialRefund2.getTransactions().get(5), refund2Key, TransactionType.REFUND, FIVE, paymentId);
+        paymentBusListener.verify(6, account.getId(), paymentId, FIVE);
     }
 
     @Test(groups = "slow")
     public void testVoid() throws Exception {
-        final String directPaymentExternalKey = UUID.randomUUID().toString();
+        final String paymentExternalKey = UUID.randomUUID().toString();
 
         // AUTH
         final String authorizationKey = UUID.randomUUID().toString();
-        final DirectPayment authorization = directPaymentProcessor.createAuthorization(true, null, account, null, null, TEN, CURRENCY, directPaymentExternalKey, authorizationKey,
+        final Payment authorization = paymentProcessor.createAuthorization(true, null, account, null, null, TEN, CURRENCY, paymentExternalKey, authorizationKey,
                                                                                        SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
-        verifyDirectPayment(authorization, directPaymentExternalKey, TEN, ZERO, ZERO, 1);
-        final UUID directPaymentId = authorization.getId();
-        verifyDirectPaymentTransaction(authorization.getTransactions().get(0), authorizationKey, TransactionType.AUTHORIZE, TEN, directPaymentId);
-        paymentBusListener.verify(1, account.getId(), directPaymentId, TEN);
+        verifyPayment(authorization, paymentExternalKey, TEN, ZERO, ZERO, 1);
+        final UUID paymentId = authorization.getId();
+        verifyPaymentTransaction(authorization.getTransactions().get(0), authorizationKey, TransactionType.AUTHORIZE, TEN, paymentId);
+        paymentBusListener.verify(1, account.getId(), paymentId, TEN);
 
         // VOID
         final String voidKey = UUID.randomUUID().toString();
-        final DirectPayment voidTransaction = directPaymentProcessor.createVoid(true, null, account, directPaymentId, voidKey,
+        final Payment voidTransaction = paymentProcessor.createVoid(true, null, account, paymentId, voidKey,
                                                                                 SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
-        verifyDirectPayment(voidTransaction, directPaymentExternalKey, TEN, ZERO, ZERO, 2);
-        verifyDirectPaymentTransaction(voidTransaction.getTransactions().get(1), voidKey, TransactionType.VOID, null, directPaymentId);
-        paymentBusListener.verify(2, account.getId(), directPaymentId, null);
+        verifyPayment(voidTransaction, paymentExternalKey, TEN, ZERO, ZERO, 2);
+        verifyPaymentTransaction(voidTransaction.getTransactions().get(1), voidKey, TransactionType.VOID, null, paymentId);
+        paymentBusListener.verify(2, account.getId(), paymentId, null);
     }
 
     @Test(groups = "slow")
     public void testPurchase() throws Exception {
-        final String directPaymentExternalKey = UUID.randomUUID().toString();
+        final String paymentExternalKey = UUID.randomUUID().toString();
 
         // PURCHASE
         final String purchaseKey = UUID.randomUUID().toString();
-        final DirectPayment purchase = directPaymentProcessor.createPurchase(true, null, account, null, null, TEN, CURRENCY, directPaymentExternalKey, purchaseKey,
+        final Payment purchase = paymentProcessor.createPurchase(true, null, account, null, null, TEN, CURRENCY, paymentExternalKey, purchaseKey,
                                                                              SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
-        verifyDirectPayment(purchase, directPaymentExternalKey, ZERO, ZERO, ZERO, 1);
-        final UUID directPaymentId = purchase.getId();
-        verifyDirectPaymentTransaction(purchase.getTransactions().get(0), purchaseKey, TransactionType.PURCHASE, TEN, directPaymentId);
-        paymentBusListener.verify(1, account.getId(), directPaymentId, TEN);
+        verifyPayment(purchase, paymentExternalKey, ZERO, ZERO, ZERO, 1);
+        final UUID paymentId = purchase.getId();
+        verifyPaymentTransaction(purchase.getTransactions().get(0), purchaseKey, TransactionType.PURCHASE, TEN, paymentId);
+        paymentBusListener.verify(1, account.getId(), paymentId, TEN);
     }
 
     @Test(groups = "slow")
     public void testCredit() throws Exception {
-        final String directPaymentExternalKey = UUID.randomUUID().toString();
+        final String paymentExternalKey = UUID.randomUUID().toString();
 
         // CREDIT
         final String creditKey = UUID.randomUUID().toString();
-        final DirectPayment purchase = directPaymentProcessor.createCredit(true, null, account, null, null, TEN, CURRENCY, directPaymentExternalKey, creditKey,
+        final Payment purchase = paymentProcessor.createCredit(true, null, account, null, null, TEN, CURRENCY, paymentExternalKey, creditKey,
                                                                            SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
-        verifyDirectPayment(purchase, directPaymentExternalKey, ZERO, ZERO, ZERO, 1);
-        final UUID directPaymentId = purchase.getId();
-        verifyDirectPaymentTransaction(purchase.getTransactions().get(0), creditKey, TransactionType.CREDIT, TEN, directPaymentId);
-        paymentBusListener.verify(1, account.getId(), directPaymentId, TEN);
+        verifyPayment(purchase, paymentExternalKey, ZERO, ZERO, ZERO, 1);
+        final UUID paymentId = purchase.getId();
+        verifyPaymentTransaction(purchase.getTransactions().get(0), creditKey, TransactionType.CREDIT, TEN, paymentId);
+        paymentBusListener.verify(1, account.getId(), paymentId, TEN);
     }
 
-    private void verifyDirectPayment(final DirectPayment directPayment, final String directPaymentExternalKey,
+    private void verifyPayment(final Payment payment, final String paymentExternalKey,
                                      final BigDecimal authAmount, final BigDecimal capturedAmount, final BigDecimal refundedAmount,
                                      final int transactionsSize) {
-        Assert.assertEquals(directPayment.getAccountId(), account.getId());
-        Assert.assertEquals(directPayment.getPaymentNumber(), new Integer(1));
-        Assert.assertEquals(directPayment.getExternalKey(), directPaymentExternalKey);
-        Assert.assertEquals(directPayment.getAuthAmount().compareTo(authAmount), 0);
-        Assert.assertEquals(directPayment.getCapturedAmount().compareTo(capturedAmount), 0);
-        Assert.assertEquals(directPayment.getRefundedAmount().compareTo(refundedAmount), 0);
-        Assert.assertEquals(directPayment.getCurrency(), CURRENCY);
-        Assert.assertEquals(directPayment.getTransactions().size(), transactionsSize);
+        Assert.assertEquals(payment.getAccountId(), account.getId());
+        Assert.assertEquals(payment.getPaymentNumber(), new Integer(1));
+        Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(authAmount), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(capturedAmount), 0);
+        Assert.assertEquals(payment.getRefundedAmount().compareTo(refundedAmount), 0);
+        Assert.assertEquals(payment.getCurrency(), CURRENCY);
+        Assert.assertEquals(payment.getTransactions().size(), transactionsSize);
     }
 
-    private void verifyDirectPaymentTransaction(final DirectPaymentTransaction directPaymentTransaction, final String directPaymentTransactionExternalKey,
-                                                final TransactionType transactionType, @Nullable final BigDecimal amount, final UUID directPaymentId) {
-        Assert.assertEquals(directPaymentTransaction.getDirectPaymentId(), directPaymentId);
-        Assert.assertEquals(directPaymentTransaction.getExternalKey(), directPaymentTransactionExternalKey);
-        Assert.assertEquals(directPaymentTransaction.getTransactionType(), transactionType);
+    private void verifyPaymentTransaction(final PaymentTransaction paymentTransaction, final String paymentTransactionExternalKey,
+                                                final TransactionType transactionType, @Nullable final BigDecimal amount, final UUID paymentId) {
+        Assert.assertEquals(paymentTransaction.getPaymentId(), paymentId);
+        Assert.assertEquals(paymentTransaction.getExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(paymentTransaction.getTransactionType(), transactionType);
         if (amount == null) {
-            Assert.assertNull(directPaymentTransaction.getAmount());
-            Assert.assertNull(directPaymentTransaction.getCurrency());
+            Assert.assertNull(paymentTransaction.getAmount());
+            Assert.assertNull(paymentTransaction.getCurrency());
         } else {
-            Assert.assertEquals(directPaymentTransaction.getAmount().compareTo(amount), 0);
-            Assert.assertEquals(directPaymentTransaction.getCurrency(), CURRENCY);
+            Assert.assertEquals(paymentTransaction.getAmount().compareTo(amount), 0);
+            Assert.assertEquals(paymentTransaction.getCurrency(), CURRENCY);
         }
     }
 

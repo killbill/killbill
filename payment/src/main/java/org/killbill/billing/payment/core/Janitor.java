@@ -36,9 +36,9 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
-import org.killbill.billing.payment.core.sm.PluginControlledDirectPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PluginControlledPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
-import org.killbill.billing.payment.core.sm.RetryableDirectPaymentStateContext;
+import org.killbill.billing.payment.core.sm.RetryablePaymentStateContext;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -72,7 +72,7 @@ public class Janitor {
     private final PaymentConfig paymentConfig;
     private final InternalCallContextFactory internalCallContextFactory;
     private final NonEntityDao nonEntityDao;
-    private final PluginControlledDirectPaymentAutomatonRunner pluginControlledDirectPaymentAutomatonRunner;
+    private final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
     private final RetryStateMachineHelper retrySMHelper;
 
     private volatile boolean isStopped;
@@ -85,7 +85,7 @@ public class Janitor {
                    final Clock clock,
                    final NonEntityDao nonEntityDao,
                    final InternalCallContextFactory internalCallContextFactory,
-                   final PluginControlledDirectPaymentAutomatonRunner pluginControlledDirectPaymentAutomatonRunner,
+                   final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                    @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
                    final RetryStateMachineHelper retrySMHelper) {
         this.accountInternalApi = accountInternalApi;
@@ -95,7 +95,7 @@ public class Janitor {
         this.janitorExecutor = janitorExecutor;
         this.nonEntityDao = nonEntityDao;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.pluginControlledDirectPaymentAutomatonRunner = pluginControlledDirectPaymentAutomatonRunner;
+        this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
         this.retrySMHelper = retrySMHelper;
     }
 
@@ -205,7 +205,7 @@ public class Janitor {
             final CallContext callContext = new DefaultCallContext(tenantId, "AttemptCompletionJanitorTask", CallOrigin.INTERNAL, UserType.SYSTEM, UUID.randomUUID(), clock);
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(attempt.getAccountId(), callContext);
 
-            final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectPaymentTransactionsByExternalKey(attempt.getTransactionExternalKey(), tenantContext);
+            final List<PaymentTransactionModelDao> transactions = paymentDao.getPaymentTransactionsByExternalKey(attempt.getTransactionExternalKey(), tenantContext);
             final PaymentTransactionModelDao transaction = Iterables.tryFind(transactions, new Predicate<PaymentTransactionModelDao>() {
                 @Override
                 public boolean apply(final PaymentTransactionModelDao input) {
@@ -226,7 +226,7 @@ public class Janitor {
 
                 final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
                 final boolean isApiPayment = true; // unclear
-                final RetryableDirectPaymentStateContext paymentStateContext = new RetryableDirectPaymentStateContext(attempt.getPluginName(),
+                final RetryablePaymentStateContext paymentStateContext = new RetryablePaymentStateContext(attempt.getPluginName(),
                                                                                                                       isApiPayment,
                                                                                                                       transaction.getPaymentId(),
                                                                                                                       attempt.getPaymentExternalKey(),
@@ -241,12 +241,12 @@ public class Janitor {
                                                                                                                       callContext);
 
                 paymentStateContext.setAttemptId(attempt.getId()); // Normally set by leavingState Callback
-                paymentStateContext.setDirectPaymentTransactionModelDao(transaction); // Normally set by raw state machine
+                paymentStateContext.setPaymentTransactionModelDao(transaction); // Normally set by raw state machine
                 //
                 // Will rerun the state machine with special callbacks to only make the onCompletion call
                 // to the PaymentControlPluginApi plugin and transition the state.
                 //
-                pluginControlledDirectPaymentAutomatonRunner.completeRun(paymentStateContext);
+                pluginControlledPaymentAutomatonRunner.completeRun(paymentStateContext);
 
             } catch (AccountApiException e) {
                 log.warn("Failed to complete payment attempt " + attempt.getId(), e);

@@ -20,9 +20,9 @@ package org.killbill.billing.payment.core.sm;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.core.DirectPaymentProcessor;
+import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
@@ -32,8 +32,8 @@ import org.killbill.commons.locker.GlobalLocker;
 
 public class RetryCompletionOperationCallback extends RetryOperationCallback {
 
-    public RetryCompletionOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryableDirectPaymentStateContext directPaymentStateContext, final DirectPaymentProcessor directPaymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry) {
-        super(locker, paymentPluginDispatcher, directPaymentStateContext, directPaymentProcessor, retryPluginRegistry);
+    public RetryCompletionOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryablePaymentStateContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry) {
+        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, retryPluginRegistry);
     }
 
     @Override
@@ -42,31 +42,31 @@ public class RetryCompletionOperationCallback extends RetryOperationCallback {
         return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<OperationResult, OperationException>() {
             @Override
             public OperationResult doOperation() throws OperationException {
-                final PaymentTransactionModelDao transaction = directPaymentStateContext.getDirectPaymentTransactionModelDao();
-                final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(directPaymentStateContext.getAccount(),
-                                                                                                            directPaymentStateContext.getPaymentMethodId(),
-                                                                                                            retryableDirectPaymentStateContext.getAttemptId(),
+                final PaymentTransactionModelDao transaction = paymentStateContext.getPaymentTransactionModelDao();
+                final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+                                                                                                            paymentStateContext.getPaymentMethodId(),
+                                                                                                            retryablePaymentStateContext.getAttemptId(),
                                                                                                             transaction.getPaymentId(),
-                                                                                                            directPaymentStateContext.getDirectPaymentExternalKey(),
+                                                                                                            paymentStateContext.getPaymentExternalKey(),
                                                                                                             transaction.getId(),
-                                                                                                            directPaymentStateContext.getDirectPaymentTransactionExternalKey(),
-                                                                                                            directPaymentStateContext.getTransactionType(),
+                                                                                                            paymentStateContext.getPaymentTransactionExternalKey(),
+                                                                                                            paymentStateContext.getTransactionType(),
                                                                                                             transaction.getAmount(),
                                                                                                             transaction.getCurrency(),
                                                                                                             transaction.getProcessedAmount(),
                                                                                                             transaction.getProcessedCurrency(),
-                                                                                                            directPaymentStateContext.getProperties(),
-                                                                                                            retryableDirectPaymentStateContext.isApiPayment(),
-                                                                                                            directPaymentStateContext.callContext);
+                                                                                                            paymentStateContext.getProperties(),
+                                                                                                            retryablePaymentStateContext.isApiPayment(),
+                                                                                                            paymentStateContext.callContext);
 
-                onCompletion(retryableDirectPaymentStateContext.getPluginName(), updatedPaymentControlContext);
+                onCompletion(retryablePaymentStateContext.getPluginName(), updatedPaymentControlContext);
                 return OperationResult.SUCCESS;
             }
         });
     }
 
     @Override
-    protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
+    protected Payment doCallSpecificOperationCallback() throws PaymentApiException {
         return null;
     }
 }

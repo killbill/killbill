@@ -39,21 +39,21 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class TestDirectPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedDB {
+public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedDB {
 
-    private final String directPaymentExternalKey = UUID.randomUUID().toString();
-    private final String directPaymentTransactionExternalKey = UUID.randomUUID().toString();
+    private final String paymentExternalKey = UUID.randomUUID().toString();
+    private final String paymentTransactionExternalKey = UUID.randomUUID().toString();
     private final BigDecimal amount = new BigDecimal("9320.19200001");
     private final Currency currency = Currency.CAD;
 
-    private DirectPaymentStateContext directPaymentStateContext;
+    private PaymentStateContext paymentStateContext;
 
     @Test(groups = "slow")
-    public void testFailToRetrieveDirectPayment() throws Exception {
+    public void testFailToRetrievePayment() throws Exception {
         // Verify a dummy payment doesn't exist
-        final DirectPaymentAutomatonDAOHelper daoHelper = createDAOHelper(UUID.randomUUID(), directPaymentExternalKey, directPaymentTransactionExternalKey, amount, currency);
+        final PaymentAutomatonDAOHelper daoHelper = createDAOHelper(UUID.randomUUID(), paymentExternalKey, paymentTransactionExternalKey, amount, currency);
         try {
-            daoHelper.getDirectPayment();
+            daoHelper.getPayment();
             Assert.fail();
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_PAYMENT.getCode());
@@ -61,17 +61,17 @@ public class TestDirectPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmb
     }
 
     @Test(groups = "slow")
-    public void testCreateNewDirectPaymentTransaction() throws Exception {
+    public void testCreateNewPaymentTransaction() throws Exception {
         // Create a payment and transaction based on the context
-        final DirectPaymentAutomatonDAOHelper daoHelper = createDAOHelper(null, directPaymentExternalKey, directPaymentTransactionExternalKey, amount, currency);
-        daoHelper.createNewDirectPaymentTransaction();
+        final PaymentAutomatonDAOHelper daoHelper = createDAOHelper(null, paymentExternalKey, paymentTransactionExternalKey, amount, currency);
+        daoHelper.createNewPaymentTransaction();
 
-        final PaymentModelDao directPayment1 = daoHelper.getDirectPayment();
-        Assert.assertEquals(directPayment1.getExternalKey(), directPaymentExternalKey);
-        Assert.assertNull(directPayment1.getStateName());
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getTransactionExternalKey(), directPaymentTransactionExternalKey);
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getAmount().compareTo(amount), 0);
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getCurrency(), currency);
+        final PaymentModelDao payment1 = daoHelper.getPayment();
+        Assert.assertEquals(payment1.getExternalKey(), paymentExternalKey);
+        Assert.assertNull(payment1.getStateName());
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getAmount().compareTo(amount), 0);
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getCurrency(), currency);
 
         // Verify we can update them
         final PaymentTransactionInfoPlugin paymentInfoPlugin = Mockito.mock(PaymentTransactionInfoPlugin.class);
@@ -82,23 +82,23 @@ public class TestDirectPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmb
         Mockito.when(paymentInfoPlugin.getGatewayError()).thenReturn(UUID.randomUUID().toString());
         daoHelper.processPaymentInfoPlugin(TransactionStatus.SUCCESS, paymentInfoPlugin, "SOME_STATE");
 
-        final PaymentModelDao directPayment2 = daoHelper.getDirectPayment();
-        Assert.assertEquals(directPayment2.getExternalKey(), directPaymentExternalKey);
-        Assert.assertEquals(directPayment2.getStateName(), "SOME_STATE");
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getPaymentId(), directPayment2.getId());
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getTransactionExternalKey(), directPaymentTransactionExternalKey);
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getTransactionStatus(), TransactionStatus.SUCCESS);
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getAmount().compareTo(amount), 0);
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getCurrency(), currency);
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getProcessedAmount().compareTo(paymentInfoPlugin.getAmount()), 0);
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getProcessedCurrency(), paymentInfoPlugin.getCurrency());
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getGatewayErrorCode(), paymentInfoPlugin.getGatewayErrorCode());
-        Assert.assertEquals(directPaymentStateContext.getDirectPaymentTransactionModelDao().getGatewayErrorMsg(), paymentInfoPlugin.getGatewayError());
+        final PaymentModelDao payment2 = daoHelper.getPayment();
+        Assert.assertEquals(payment2.getExternalKey(), paymentExternalKey);
+        Assert.assertEquals(payment2.getStateName(), "SOME_STATE");
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getPaymentId(), payment2.getId());
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getAmount().compareTo(amount), 0);
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getCurrency(), currency);
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getProcessedAmount().compareTo(paymentInfoPlugin.getAmount()), 0);
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getProcessedCurrency(), paymentInfoPlugin.getCurrency());
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getGatewayErrorCode(), paymentInfoPlugin.getGatewayErrorCode());
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getGatewayErrorMsg(), paymentInfoPlugin.getGatewayError());
     }
 
     @Test(groups = "slow")
     public void testNoDefaultPaymentMethod() throws Exception {
-        final DirectPaymentAutomatonDAOHelper daoHelper = createDAOHelper(UUID.randomUUID(), directPaymentExternalKey, directPaymentTransactionExternalKey, amount, currency);
+        final PaymentAutomatonDAOHelper daoHelper = createDAOHelper(UUID.randomUUID(), paymentExternalKey, paymentTransactionExternalKey, amount, currency);
         try {
             daoHelper.getDefaultPaymentMethodId();
             Assert.fail();
@@ -109,7 +109,7 @@ public class TestDirectPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmb
 
     @Test(groups = "slow")
     public void testNoPaymentMethod() throws Exception {
-        final DirectPaymentAutomatonDAOHelper daoHelper = createDAOHelper(UUID.randomUUID(), directPaymentExternalKey, directPaymentTransactionExternalKey, amount, currency);
+        final PaymentAutomatonDAOHelper daoHelper = createDAOHelper(UUID.randomUUID(), paymentExternalKey, paymentTransactionExternalKey, amount, currency);
         try {
             daoHelper.getPaymentProviderPlugin();
             Assert.fail();
@@ -118,17 +118,17 @@ public class TestDirectPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmb
         }
     }
 
-    private DirectPaymentAutomatonDAOHelper createDAOHelper(@Nullable final UUID directPaymentId, final String directPaymentExternalKey,
-                                                            final String directPaymentTransactionExternalKey,
+    private PaymentAutomatonDAOHelper createDAOHelper(@Nullable final UUID paymentId, final String paymentExternalKey,
+                                                            final String paymentTransactionExternalKey,
                                                             final BigDecimal amount, final Currency currency) throws Exception {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         // No default payment method
 
-        directPaymentStateContext = new DirectPaymentStateContext(directPaymentId,
+        paymentStateContext = new PaymentStateContext(paymentId,
                                                                   null,
-                                                                  directPaymentExternalKey,
-                                                                  directPaymentTransactionExternalKey,
+                                                                  paymentExternalKey,
+                                                                  paymentTransactionExternalKey,
                                                                   TransactionType.CAPTURE,
                                                                   account,
                                                                   UUID.randomUUID(),
@@ -139,6 +139,6 @@ public class TestDirectPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmb
                                                                   internalCallContext,
                                                                   callContext);
 
-        return new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
+        return new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
     }
 }

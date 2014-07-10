@@ -30,18 +30,16 @@ import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+public abstract class PaymentEnteringStateCallback implements EnteringStateCallback {
 
-public abstract class DirectPaymentEnteringStateCallback implements EnteringStateCallback {
+    private final Logger logger = LoggerFactory.getLogger(PaymentEnteringStateCallback.class);
 
-    private final Logger logger = LoggerFactory.getLogger(DirectPaymentEnteringStateCallback.class);
+    protected final PaymentAutomatonDAOHelper daoHelper;
+    protected final PaymentStateContext paymentStateContext;
 
-    protected final DirectPaymentAutomatonDAOHelper daoHelper;
-    protected final DirectPaymentStateContext directPaymentStateContext;
-
-    protected DirectPaymentEnteringStateCallback(final DirectPaymentAutomatonDAOHelper daoHelper, final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
+    protected PaymentEnteringStateCallback(final PaymentAutomatonDAOHelper daoHelper, final PaymentStateContext paymentStateContext) throws PaymentApiException {
         this.daoHelper = daoHelper;
-        this.directPaymentStateContext = directPaymentStateContext;
+        this.paymentStateContext = paymentStateContext;
     }
 
     @Override
@@ -49,8 +47,8 @@ public abstract class DirectPaymentEnteringStateCallback implements EnteringStat
         logger.debug("Entering state {} with result {}", newState.getName(), operationResult);
 
         // If the transaction was not created -- for instance we had an exception in leavingState callback then we bail; if not, then update state:
-        if (directPaymentStateContext.getDirectPaymentTransactionModelDao() != null && directPaymentStateContext.getDirectPaymentTransactionModelDao().getId() != null) {
-            final PaymentTransactionInfoPlugin paymentInfoPlugin = directPaymentStateContext.getPaymentInfoPlugin();
+        if (paymentStateContext.getPaymentTransactionModelDao() != null && paymentStateContext.getPaymentTransactionModelDao().getId() != null) {
+            final PaymentTransactionInfoPlugin paymentInfoPlugin = paymentStateContext.getPaymentInfoPlugin();
             final TransactionStatus paymentStatus = paymentPluginStatusToPaymentStatus(paymentInfoPlugin, operationResult);
             daoHelper.processPaymentInfoPlugin(paymentStatus, paymentInfoPlugin, newState.getName());
         }

@@ -124,18 +124,18 @@ public class TestAccountTimeline extends TestJaxrsBase {
             final InvoicePayment payment = timeline.getPayments().get(0);
 
             // Verify payments
-            final List<PaymentTransaction> purchaseTransactions = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.PURCHASE.toString());
+            final List<PaymentTransaction> purchaseTransactions = getPaymentTransactions(timeline.getPayments(), TransactionType.PURCHASE.toString());
             Assert.assertEquals(purchaseTransactions.size(), 1);
             final PaymentTransaction purchaseTransaction = purchaseTransactions.get(0);
 
             // Verify refunds
-            final List<PaymentTransaction> refundTransactions = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.REFUND.toString());
+            final List<PaymentTransaction> refundTransactions = getPaymentTransactions(timeline.getPayments(), TransactionType.REFUND.toString());
             Assert.assertEquals(refundTransactions.size(), 1);
             final PaymentTransaction refundTransaction = refundTransactions.get(0);
             Assert.assertEquals(refundTransaction.getPaymentId(), payment.getPaymentId());
             Assert.assertEquals(refundTransaction.getAmount().compareTo(refundAmount), 0);
 
-            final List<PaymentTransaction> chargebackTransactions = getDirectPaymentTransactions(timeline.getPayments(), TransactionType.CHARGEBACK.toString());
+            final List<PaymentTransaction> chargebackTransactions = getPaymentTransactions(timeline.getPayments(), TransactionType.CHARGEBACK.toString());
             Assert.assertEquals(chargebackTransactions.size(), 1);
             final PaymentTransaction chargebackTransaction = chargebackTransactions.get(0);
             Assert.assertEquals(chargebackTransaction.getPaymentId(), payment.getPaymentId());

@@ -33,8 +33,8 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.dao.InvoiceItemSqlDao;
 import org.killbill.billing.invoice.dao.InvoiceSqlDao;
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.dao.PaymentSqlDao;
 import org.killbill.billing.payment.dao.TransactionSqlDao;
 import org.killbill.billing.subscription.engine.dao.BundleSqlDao;
@@ -166,13 +166,13 @@ public class AuditChecker {
      * ********************************************  PAYMENT *******************************************************
      */
 
-    public void checkPaymentCreated(final DirectPayment payment, final CallContext context) {
+    public void checkPaymentCreated(final Payment payment, final CallContext context) {
         final List<AuditLog> paymentLogs = getAuditLogForPayment(payment, context);
         Assert.assertEquals(paymentLogs.size(), 2);
         checkAuditLog(ChangeType.INSERT, context, paymentLogs.get(0), payment.getId(), PaymentSqlDao.class, true, false);
         checkAuditLog(ChangeType.UPDATE, context, paymentLogs.get(1), payment.getId(), PaymentSqlDao.class, true, false);
 
-        for (DirectPaymentTransaction cur : payment.getTransactions()) {
+        for (PaymentTransaction cur : payment.getTransactions()) {
             final List<AuditLog> auditLogs = getAuditLogForPaymentTransaction(payment, cur, context);
             Assert.assertEquals(auditLogs.size(), 2);
             checkAuditLog(ChangeType.INSERT, context, auditLogs.get(0), cur.getId(), TransactionSqlDao.class, true, false);
@@ -218,11 +218,11 @@ public class AuditChecker {
         return auditUserApi.getAccountAuditLogs(invoiceItem.getAccountId(), AuditLevel.FULL, context).getAuditLogsForInvoiceItem(invoiceItem.getId());
     }
 
-    private List<AuditLog> getAuditLogForPayment(final DirectPayment payment, final TenantContext context) {
+    private List<AuditLog> getAuditLogForPayment(final Payment payment, final TenantContext context) {
         return auditUserApi.getAccountAuditLogs(payment.getAccountId(), AuditLevel.FULL, context).getAuditLogsForPayment(payment.getId());
     }
 
-    private List<AuditLog> getAuditLogForPaymentTransaction(final DirectPayment payment, final DirectPaymentTransaction paymentTransaction, final TenantContext context) {
+    private List<AuditLog> getAuditLogForPaymentTransaction(final Payment payment, final PaymentTransaction paymentTransaction, final TenantContext context) {
         return auditUserApi.getAccountAuditLogs(payment.getAccountId(), AuditLevel.FULL, context).getAuditLogsForPaymentTransaction(paymentTransaction.getId());
     }
 

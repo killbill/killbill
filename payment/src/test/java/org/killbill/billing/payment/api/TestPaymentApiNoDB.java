@@ -136,7 +136,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
             final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
             properties.add(prop1);
 
-            final DirectPayment paymentInfo = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+            final Payment paymentInfo = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
                                                                                           invoice.getId().toString(), UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
             if (expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
@@ -148,7 +148,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
             assertEquals(paymentInfo.getCurrency(), Currency.USD);
             assertTrue(paymentInfo.getTransactions().get(0).getAmount().compareTo(expectedAmount) == 0);
             assertEquals(paymentInfo.getTransactions().get(0).getCurrency(), Currency.USD);
-            assertEquals(paymentInfo.getTransactions().get(0).getDirectPaymentId(), paymentInfo.getId());
+            assertEquals(paymentInfo.getTransactions().get(0).getPaymentId(), paymentInfo.getId());
             assertEquals(paymentInfo.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
             assertEquals(paymentInfo.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
 

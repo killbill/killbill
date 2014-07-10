@@ -19,9 +19,9 @@ package org.killbill.billing.payment.core.sm;
 
 import org.killbill.billing.payment.api.PaymentApiException;
 
-public class VoidInitiated extends DirectPaymentLeavingStateCallback {
+public class VoidInitiated extends PaymentLeavingStateCallback {
 
-    public VoidInitiated(final DirectPaymentAutomatonDAOHelper daoHelper, final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
+    public VoidInitiated(final PaymentAutomatonDAOHelper daoHelper, final PaymentStateContext paymentStateContext) throws PaymentApiException {
         super(daoHelper);
     }
 }

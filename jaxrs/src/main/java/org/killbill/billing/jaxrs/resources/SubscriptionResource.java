@@ -38,7 +38,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
-import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,7 +101,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                 final EntitlementApi entitlementApi,
                                 final SubscriptionApi subscriptionApi,
                                 final AccountUserApi accountUserApi,
-                                final DirectPaymentApi paymentApi,
+                                final PaymentApi paymentApi,
                                 final Clock clock,
                                 final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);

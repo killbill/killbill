@@ -24,13 +24,13 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class DirectPaymentLeavingStateCallback implements LeavingStateCallback {
+public abstract class PaymentLeavingStateCallback implements LeavingStateCallback {
 
-    private final Logger logger = LoggerFactory.getLogger(DirectPaymentLeavingStateCallback.class);
+    private final Logger logger = LoggerFactory.getLogger(PaymentLeavingStateCallback.class);
 
-    protected final DirectPaymentAutomatonDAOHelper daoHelper;
+    protected final PaymentAutomatonDAOHelper daoHelper;
 
-    protected DirectPaymentLeavingStateCallback(final DirectPaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
+    protected PaymentLeavingStateCallback(final PaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
         this.daoHelper = daoHelper;
     }
 
@@ -38,9 +38,9 @@ public abstract class DirectPaymentLeavingStateCallback implements LeavingStateC
     public void leavingState(final State oldState) throws OperationException {
         logger.debug("Leaving state {}", oldState.getName());
 
-        // Create or update the direct payment and transaction
+        // Create or update the payment and transaction
         try {
-            daoHelper.createNewDirectPaymentTransaction();
+            daoHelper.createNewPaymentTransaction();
         } catch (PaymentApiException e) {
             throw new OperationException(e);
         }

@@ -74,7 +74,7 @@ public class TestChargeback extends TestJaxrsBase {
         }
 
         final List<InvoicePayment> payments = killBillClient.getInvoicePaymentsForAccount(payment.getAccountId());
-        final List<PaymentTransaction> transactions = getDirectPaymentTransactions(payments, TransactionType.CHARGEBACK.toString());
+        final List<PaymentTransaction> transactions = getPaymentTransactions(payments, TransactionType.CHARGEBACK.toString());
         Assert.assertEquals(transactions.size(), 5);
         int found = 0;
         for (final PaymentTransaction transaction : transactions) {
@@ -140,7 +140,7 @@ public class TestChargeback extends TestJaxrsBase {
     @Test(groups = "slow", description = "Accounts can have zero chargeback")
     public void testNoChargebackForAccount() throws Exception {
         final List<InvoicePayment> payments = killBillClient.getInvoicePaymentsForAccount(UUID.randomUUID());
-        final List<PaymentTransaction> transactions = getDirectPaymentTransactions(payments, TransactionType.CHARGEBACK.toString());
+        final List<PaymentTransaction> transactions = getPaymentTransactions(payments, TransactionType.CHARGEBACK.toString());
         Assert.assertEquals(transactions.size(), 0);
     }
 
@@ -151,7 +151,7 @@ public class TestChargeback extends TestJaxrsBase {
         chargeback.setAmount(BigDecimal.TEN);
 
         final InvoicePayment chargebackJson = killBillClient.createInvoicePaymentChargeback(chargeback, createdBy, reason, comment);
-        final List<PaymentTransaction> chargebackTransactions = getDirectPaymentTransactions(ImmutableList.of(chargebackJson), TransactionType.CHARGEBACK.toString());
+        final List<PaymentTransaction> chargebackTransactions = getPaymentTransactions(ImmutableList.of(chargebackJson), TransactionType.CHARGEBACK.toString());
         assertEquals(chargebackTransactions.size(), 1);
 
         assertEquals(chargebackTransactions.get(0).getAmount().compareTo(chargeback.getAmount()), 0);
@@ -159,7 +159,7 @@ public class TestChargeback extends TestJaxrsBase {
 
         // Find the chargeback by account
         final List<InvoicePayment> payments = killBillClient.getInvoicePaymentsForAccount(payment.getAccountId());
-        final List<PaymentTransaction> transactions = getDirectPaymentTransactions(payments, TransactionType.CHARGEBACK.toString());
+        final List<PaymentTransaction> transactions = getPaymentTransactions(payments, TransactionType.CHARGEBACK.toString());
         Assert.assertEquals(transactions.size(), 1);
         assertEquals(transactions.get(0).getAmount().compareTo(chargeback.getAmount()), 0);
         assertEquals(transactions.get(0).getPaymentId(), chargeback.getPaymentId());

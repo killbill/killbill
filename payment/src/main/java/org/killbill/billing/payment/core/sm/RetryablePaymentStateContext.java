@@ -25,10 +25,9 @@ import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.payment.api.DefaultDirectPayment;
-import org.killbill.billing.payment.api.DefaultDirectPaymentTransaction;
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.DefaultPaymentTransaction;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -36,18 +35,18 @@ import org.killbill.billing.util.callcontext.CallContext;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-public class RetryableDirectPaymentStateContext extends DirectPaymentStateContext {
+public class RetryablePaymentStateContext extends PaymentStateContext {
 
     private boolean isApiPayment;
     private DateTime retryDate;
     private String pluginName;
-    private DirectPayment result;
+    private Payment result;
 
-    public RetryableDirectPaymentStateContext(@Nullable final String pluginName, final boolean isApiPayment, @Nullable final UUID directPaymentId, final String directPaymentExternalKey,
-                                              @Nullable final String directPaymentTransactionExternalKey, final TransactionType transactionType,
-                                              final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
-                                              final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext, final CallContext callContext) {
-        super(directPaymentId, null, directPaymentExternalKey, directPaymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, properties, internalCallContext, callContext);
+    public RetryablePaymentStateContext(@Nullable final String pluginName, final boolean isApiPayment, @Nullable final UUID paymentId, final String paymentExternalKey,
+                                        @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
+                                        final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
+                                        final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext, final CallContext callContext) {
+        super(paymentId, null, paymentExternalKey, paymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, properties, internalCallContext, callContext);
         this.pluginName = pluginName;
         this.isApiPayment = isApiPayment;
     }
@@ -68,11 +67,11 @@ public class RetryableDirectPaymentStateContext extends DirectPaymentStateContex
         this.pluginName = pluginName;
     }
 
-    public DirectPayment getResult() {
+    public Payment getResult() {
         return result;
     }
 
-    public void setResult(final DirectPayment result) {
+    public void setResult(final Payment result) {
         this.result = result;
     }
 
@@ -84,14 +83,14 @@ public class RetryableDirectPaymentStateContext extends DirectPaymentStateContex
         this.amount = adjustedAmount;
     }
 
-    public DirectPaymentTransaction getCurrentTransaction() {
+    public PaymentTransaction getCurrentTransaction() {
         if (result == null || result.getTransactions() == null) {
             return null;
         }
-        return Iterables.tryFind(result.getTransactions(), new Predicate<DirectPaymentTransaction>() {
+        return Iterables.tryFind(result.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
-            public boolean apply(final DirectPaymentTransaction input) {
-                return ((DefaultDirectPaymentTransaction) input).getAttemptId().equals(attemptId);
+            public boolean apply(final PaymentTransaction input) {
+                return ((DefaultPaymentTransaction) input).getAttemptId().equals(attemptId);
             }
         }).orNull();
     }

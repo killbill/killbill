@@ -57,9 +57,9 @@ import org.killbill.billing.jaxrs.json.JsonBase;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentApi;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -104,7 +104,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final CustomFieldUserApi customFieldUserApi;
     protected final AuditUserApi auditUserApi;
     protected final AccountUserApi accountUserApi;
-    protected final DirectPaymentApi paymentApi;
+    protected final PaymentApi paymentApi;
     protected final Context context;
     protected final Clock clock;
 
@@ -116,7 +116,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                              final CustomFieldUserApi customFieldUserApi,
                              final AuditUserApi auditUserApi,
                              final AccountUserApi accountUserApi,
-                             final DirectPaymentApi paymentApi,
+                             final PaymentApi paymentApi,
                              final Clock clock,
                              final Context context) {
         this.uriBuilder = uriBuilder;
@@ -349,7 +349,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return properties;
     }
 
-    protected DirectPayment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final Boolean externalPayment, final CallContext callContext) throws PaymentApiException {
+    protected Payment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final Boolean externalPayment, final CallContext callContext) throws PaymentApiException {
 
         final List<PluginProperty> properties = new ArrayList<PluginProperty>();
         final String paymentExternalKey = UUID.randomUUID().toString();
@@ -378,13 +378,13 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         };
     }
 
-    public static Iterable<DirectPaymentTransaction> getDirectPaymentTransactions(final List<DirectPayment> payments, final TransactionType transactionType) {
-        return Iterables.concat(Iterables.transform(payments, new Function<DirectPayment, Iterable<DirectPaymentTransaction>>() {
+    public static Iterable<PaymentTransaction> getPaymentTransactions(final List<Payment> payments, final TransactionType transactionType) {
+        return Iterables.concat(Iterables.transform(payments, new Function<Payment, Iterable<PaymentTransaction>>() {
             @Override
-            public Iterable<DirectPaymentTransaction> apply(final DirectPayment input) {
-                return Iterables.filter(input.getTransactions(), new Predicate<DirectPaymentTransaction>() {
+            public Iterable<PaymentTransaction> apply(final Payment input) {
+                return Iterables.filter(input.getTransactions(), new Predicate<PaymentTransaction>() {
                     @Override
-                    public boolean apply(final DirectPaymentTransaction input) {
+                    public boolean apply(final PaymentTransaction input) {
                         return input.getTransactionType() == transactionType;
                     }
                 });
@@ -392,7 +392,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }));
     }
 
-    public static UUID getInvoiceId(final List<InvoicePayment> invoicePayments, final DirectPayment payment) {
+    public static UUID getInvoiceId(final List<InvoicePayment> invoicePayments, final Payment payment) {
         final InvoicePayment invoicePayment = Iterables.tryFind(invoicePayments, new Predicate<InvoicePayment>() {
             @Override
             public boolean apply(final InvoicePayment input) {

@@ -46,15 +46,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 // Encapsulates the payment specific logic
-public abstract class DirectPaymentOperation extends OperationCallbackBase implements OperationCallback {
+public abstract class PaymentOperation extends OperationCallbackBase implements OperationCallback {
 
     protected final PaymentPluginApi plugin;
-    protected final DirectPaymentAutomatonDAOHelper daoHelper;
+    protected final PaymentAutomatonDAOHelper daoHelper;
 
-    protected DirectPaymentOperation(final DirectPaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker,
-                                     final PluginDispatcher<OperationResult> paymentPluginDispatcher,
-                                     final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
-        super(locker, paymentPluginDispatcher, directPaymentStateContext);
+    protected PaymentOperation(final PaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker,
+                               final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                               final PaymentStateContext paymentStateContext) throws PaymentApiException {
+        super(locker, paymentPluginDispatcher, paymentStateContext);
         this.daoHelper = daoHelper;
         this.plugin = daoHelper.getPaymentProviderPlugin();
     }
@@ -62,7 +62,7 @@ public abstract class DirectPaymentOperation extends OperationCallbackBase imple
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
-        if (directPaymentStateContext.shouldLockAccountAndDispatch()) {
+        if (paymentStateContext.shouldLockAccountAndDispatch()) {
             return doOperationCallbackWithDispatchAndAccountLock();
         } else {
             return doSimpleOperationCallback();
@@ -70,32 +70,32 @@ public abstract class DirectPaymentOperation extends OperationCallbackBase imple
     }
 
     @Override
-    protected OperationException rewrapExecutionException(final DirectPaymentStateContext directPaymentStateContext, final ExecutionException e) {
+    protected OperationException rewrapExecutionException(final PaymentStateContext paymentStateContext, final ExecutionException e) {
         final Throwable realException = Objects.firstNonNull(e.getCause(), e);
         if (e.getCause() instanceof PaymentApiException) {
-            logger.warn("Unsuccessful plugin call for account {}", directPaymentStateContext.getAccount().getExternalKey(), realException);
+            logger.warn("Unsuccessful plugin call for account {}", paymentStateContext.getAccount().getExternalKey(), realException);
             return new OperationException(realException, OperationResult.FAILURE);
         } else if (e.getCause() instanceof LockFailedException) {
-            final String format = String.format("Failed to lock account %s", directPaymentStateContext.getAccount().getExternalKey());
+            final String format = String.format("Failed to lock account %s", paymentStateContext.getAccount().getExternalKey());
             logger.error(String.format(format), e);
             return new OperationException(realException, OperationResult.FAILURE);
         } else /* if (e instanceof RuntimeException) */ {
 
      // STEPH: should we ever return an OperationResult.EXCEPTION at this layer -- since there is transtion back to init and there cannot be retried?
-            logger.warn("Plugin call threw an exception for account {}", directPaymentStateContext.getAccount().getExternalKey(), e);
+            logger.warn("Plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), e);
             return new OperationException(realException, OperationResult.EXCEPTION);
         }
     }
 
     @Override
-    protected OperationException wrapTimeoutException(final DirectPaymentStateContext directPaymentStateContext, final TimeoutException e) {
-        logger.error("Plugin call TIMEOUT for account {}: {}", directPaymentStateContext.getAccount().getExternalKey(), e.getMessage());
+    protected OperationException wrapTimeoutException(final PaymentStateContext paymentStateContext, final TimeoutException e) {
+        logger.error("Plugin call TIMEOUT for account {}: {}", paymentStateContext.getAccount().getExternalKey(), e.getMessage());
         return new OperationException(e, OperationResult.EXCEPTION);
     }
 
     @Override
-    protected OperationException wrapInterruptedException(final DirectPaymentStateContext directPaymentStateContext, final InterruptedException e) {
-        logger.error("Plugin call was interrupted for account {}: {}", directPaymentStateContext.getAccount().getExternalKey(), e.getMessage());
+    protected OperationException wrapInterruptedException(final PaymentStateContext paymentStateContext, final InterruptedException e) {
+        logger.error("Plugin call was interrupted for account {}: {}", paymentStateContext.getAccount().getExternalKey(), e.getMessage());
         return new OperationException(e, OperationResult.EXCEPTION);
     }
 
@@ -103,10 +103,10 @@ public abstract class DirectPaymentOperation extends OperationCallbackBase imple
     protected abstract PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException;
 
     protected Iterable<PaymentTransactionModelDao> getOnLeavingStateExistingTransactionsForType(final TransactionType transactionType) {
-        if (directPaymentStateContext.getOnLeavingStateExistingTransactions() == null || directPaymentStateContext.getOnLeavingStateExistingTransactions().isEmpty()) {
+        if (paymentStateContext.getOnLeavingStateExistingTransactions() == null || paymentStateContext.getOnLeavingStateExistingTransactions().isEmpty()) {
             return ImmutableList.of();
         }
-        return Iterables.filter(directPaymentStateContext.getOnLeavingStateExistingTransactions(), new Predicate<PaymentTransactionModelDao>() {
+        return Iterables.filter(paymentStateContext.getOnLeavingStateExistingTransactions(), new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao input) {
                 return input.getTransactionStatus() == TransactionStatus.SUCCESS && input.getTransactionType() == transactionType;
@@ -146,7 +146,7 @@ public abstract class DirectPaymentOperation extends OperationCallbackBase imple
         try {
             final PaymentTransactionInfoPlugin paymentInfoPlugin = doCallSpecificOperationCallback();
 
-            directPaymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
+            paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
 
             return processPaymentInfoPlugin();
         } catch (final PaymentPluginApiException e) {
@@ -155,11 +155,11 @@ public abstract class DirectPaymentOperation extends OperationCallbackBase imple
     }
 
     private OperationResult processPaymentInfoPlugin() {
-        if (directPaymentStateContext.getPaymentInfoPlugin() == null) {
+        if (paymentStateContext.getPaymentInfoPlugin() == null) {
             return OperationResult.FAILURE;
         }
 
-        switch (directPaymentStateContext.getPaymentInfoPlugin().getStatus()) {
+        switch (paymentStateContext.getPaymentInfoPlugin().getStatus()) {
             case PROCESSED:
                 return OperationResult.SUCCESS;
             case PENDING:

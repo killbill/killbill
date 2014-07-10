@@ -24,7 +24,7 @@ import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
@@ -36,7 +36,7 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 @EntitySqlDaoStringTemplate
-public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelDao, DirectPaymentTransaction> {
+public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelDao, PaymentTransaction> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)

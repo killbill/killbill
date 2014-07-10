@@ -31,34 +31,34 @@ import com.google.common.base.Preconditions;
 
 public class RetryLeavingStateCallback implements LeavingStateCallback {
 
-    private PluginControlledDirectPaymentAutomatonRunner retryableDirectPaymentAutomatonRunner;
-    private final RetryableDirectPaymentStateContext stateContext;
+    private PluginControlledPaymentAutomatonRunner retryablePaymentAutomatonRunner;
+    private final RetryablePaymentStateContext stateContext;
     private final State initialState;
     private final State retriedState;
     private final TransactionType transactionType;
     private final PaymentDao paymentDao;
 
-    public RetryLeavingStateCallback(final PluginControlledDirectPaymentAutomatonRunner retryableDirectPaymentAutomatonRunner, final DirectPaymentStateContext stateContext, final PaymentDao paymentDao,
+    public RetryLeavingStateCallback(final PluginControlledPaymentAutomatonRunner retryablePaymentAutomatonRunner, final PaymentStateContext stateContext, final PaymentDao paymentDao,
                                      final State initialState, final State retriedState, final TransactionType transactionType) {
-        this.retryableDirectPaymentAutomatonRunner = retryableDirectPaymentAutomatonRunner;
+        this.retryablePaymentAutomatonRunner = retryablePaymentAutomatonRunner;
         this.paymentDao = paymentDao;
         this.initialState = initialState;
         this.retriedState = retriedState;
-        this.stateContext = (RetryableDirectPaymentStateContext) stateContext;
+        this.stateContext = (RetryablePaymentStateContext) stateContext;
         this.transactionType = transactionType;
     }
 
     @Override
     public void leavingState(final State state) throws OperationException {
 
-        final DateTime utcNow = retryableDirectPaymentAutomatonRunner.clock.getUTCNow();
+        final DateTime utcNow = retryablePaymentAutomatonRunner.clock.getUTCNow();
 
-        Preconditions.checkState(stateContext.getDirectPaymentExternalKey() != null || /* CAPTURE, PURCHASE, CREDIT calls will provide the paymentId */
-                                 stateContext.getDirectPaymentId() != null);
-        if (stateContext.getDirectPaymentExternalKey() == null) {
-            final PaymentModelDao payment = paymentDao.getDirectPayment(stateContext.getDirectPaymentId(), stateContext.internalCallContext);
+        Preconditions.checkState(stateContext.getPaymentExternalKey() != null || /* CAPTURE, PURCHASE, CREDIT calls will provide the paymentId */
+                                 stateContext.getPaymentId() != null);
+        if (stateContext.getPaymentExternalKey() == null) {
+            final PaymentModelDao payment = paymentDao.getPayment(stateContext.getPaymentId(), stateContext.internalCallContext);
             Preconditions.checkState(payment != null);
-            stateContext.setDirectPaymentExternalKey(payment.getExternalKey());
+            stateContext.setPaymentExternalKey(payment.getExternalKey());
         }
 
 
@@ -70,12 +70,12 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
 
 
                 final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
-                                                                                  utcNow, utcNow, stateContext.getDirectPaymentExternalKey(), null,
-                                                                                  stateContext.directPaymentTransactionExternalKey, transactionType, initialState.getName(),
+                                                                                  utcNow, utcNow, stateContext.getPaymentExternalKey(), null,
+                                                                                  stateContext.paymentTransactionExternalKey, transactionType, initialState.getName(),
                                                                                   stateContext.getAmount(), stateContext.getCurrency(),
                                                                                   stateContext.getPluginName(), serializedProperties);
 
-                retryableDirectPaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(attempt, stateContext.internalCallContext);
+                retryablePaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(attempt, stateContext.internalCallContext);
                 stateContext.setAttemptId(attempt.getId());
 
             } catch (PluginPropertySerializerException e) {

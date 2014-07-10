@@ -27,7 +27,7 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class InvoicePaymentTransactionJson extends DirectTransactionJson {
+public class InvoicePaymentTransactionJson extends PaymentTransactionJson {
 
     private final Boolean isAdjusted;
     private final List<InvoiceItemJson> adjustments;
@@ -35,7 +35,7 @@ public class InvoicePaymentTransactionJson extends DirectTransactionJson {
     @JsonCreator
     public InvoicePaymentTransactionJson(@JsonProperty("transactionId") final String transactionId,
                                          @JsonProperty("transactionExternalKey") final String transactionExternalKey,
-                                         @JsonProperty("paymentId") final String directPaymentId,
+                                         @JsonProperty("paymentId") final String paymentId,
                                          @JsonProperty("paymentExternalKey") final String paymentExternalKey,
                                          @JsonProperty("transactionType") final String transactionType,
                                          @JsonProperty("amount") final BigDecimal amount,
@@ -50,7 +50,7 @@ public class InvoicePaymentTransactionJson extends DirectTransactionJson {
                                          @JsonProperty("isAdjusted") final Boolean isAdjusted,
                                          @JsonProperty("adjustments") final List<InvoiceItemJson> adjustments,
                                          @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(transactionId, transactionExternalKey, directPaymentId, paymentExternalKey, transactionType, amount, currency, effectiveDate, status,
+        super(transactionId, transactionExternalKey, paymentId, paymentExternalKey, transactionType, amount, currency, effectiveDate, status,
               gatewayErrorCode, gatewayErrorMsg, firstPaymentReferenceId, secondPaymentReferenceId, properties, auditLogs);
         this.isAdjusted = isAdjusted;
         this.adjustments = adjustments;

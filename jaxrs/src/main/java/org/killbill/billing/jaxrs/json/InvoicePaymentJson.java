@@ -24,13 +24,13 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class InvoicePaymentJson extends DirectPaymentJson {
+public class InvoicePaymentJson extends PaymentJson {
 
     private final String targetInvoiceId;
 
@@ -48,15 +48,15 @@ public class InvoicePaymentJson extends DirectPaymentJson {
                               @JsonProperty("creditedAmount") final BigDecimal creditedAmount,
                               @JsonProperty("currency") final String currency,
                               @JsonProperty("paymentMethodId") final String paymentMethodId,
-                              @JsonProperty("transactions") final List<? extends DirectTransactionJson> transactions,
+                              @JsonProperty("transactions") final List<? extends PaymentTransactionJson> transactions,
                               @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(accountId, paymentId, paymentNumber, paymentExternalKey, authAmount, capturedAmount, purchasedAmount, refundedAmount, creditedAmount, currency, paymentMethodId, transactions, auditLogs);
         this.targetInvoiceId = targetInvoiceId;
     }
 
-    public InvoicePaymentJson(final DirectPayment dp, @Nullable final UUID invoiceId, @Nullable final AccountAuditLogs accountAuditLogs) {
+    public InvoicePaymentJson(final Payment dp, @Nullable final UUID invoiceId, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(dp, accountAuditLogs);
-        // STEPH we should build InvoicePaymentTransactionJson instead of DirectTransactionJson here.
+        // STEPH we should build InvoicePaymentTransactionJson instead of PaymentTransactionJson here.
         this.targetInvoiceId = invoiceId != null ? invoiceId.toString() : null;
     }
 

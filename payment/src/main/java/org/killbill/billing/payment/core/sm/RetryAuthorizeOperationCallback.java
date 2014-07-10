@@ -18,33 +18,33 @@ package org.killbill.billing.payment.core.sm;
 
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.core.DirectPaymentProcessor;
+import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
 import org.killbill.commons.locker.GlobalLocker;
 
 public class RetryAuthorizeOperationCallback extends RetryOperationCallback {
 
-    public RetryAuthorizeOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryableDirectPaymentStateContext directPaymentStateContext, final DirectPaymentProcessor directPaymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry) {
-        super(locker, paymentPluginDispatcher, directPaymentStateContext, directPaymentProcessor, paymentControlPluginRegistry);
+    public RetryAuthorizeOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryablePaymentStateContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry) {
+        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
     }
 
     @Override
-    protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
-        return directPaymentProcessor.createAuthorization(retryableDirectPaymentStateContext.isApiPayment(),
-                                                          retryableDirectPaymentStateContext.getAttemptId(),
-                                                          retryableDirectPaymentStateContext.getAccount(),
-                                                          retryableDirectPaymentStateContext.getPaymentMethodId(),
-                                                          retryableDirectPaymentStateContext.getDirectPaymentId(),
-                                                          retryableDirectPaymentStateContext.getAmount(),
-                                                          retryableDirectPaymentStateContext.getCurrency(),
-                                                          retryableDirectPaymentStateContext.getDirectPaymentExternalKey(),
-                                                          retryableDirectPaymentStateContext.getDirectPaymentTransactionExternalKey(),
+    protected Payment doCallSpecificOperationCallback() throws PaymentApiException {
+        return paymentProcessor.createAuthorization(retryablePaymentStateContext.isApiPayment(),
+                                                          retryablePaymentStateContext.getAttemptId(),
+                                                          retryablePaymentStateContext.getAccount(),
+                                                          retryablePaymentStateContext.getPaymentMethodId(),
+                                                          retryablePaymentStateContext.getPaymentId(),
+                                                          retryablePaymentStateContext.getAmount(),
+                                                          retryablePaymentStateContext.getCurrency(),
+                                                          retryablePaymentStateContext.getPaymentExternalKey(),
+                                                          retryablePaymentStateContext.getPaymentTransactionExternalKey(),
                                                           false,
-                                                          retryableDirectPaymentStateContext.getProperties(),
-                                                          retryableDirectPaymentStateContext.getCallContext(),
-                                                          retryableDirectPaymentStateContext.getInternalCallContext());
+                                                          retryablePaymentStateContext.getProperties(),
+                                                          retryablePaymentStateContext.getCallContext(),
+                                                          retryablePaymentStateContext.getInternalCallContext());
     }
 }

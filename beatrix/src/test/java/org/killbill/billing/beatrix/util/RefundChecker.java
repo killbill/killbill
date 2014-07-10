@@ -31,9 +31,9 @@ import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentApi;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
@@ -52,25 +52,25 @@ public class RefundChecker {
 
     private static final Logger log = LoggerFactory.getLogger(RefundChecker.class);
 
-    private final DirectPaymentApi paymentApi;
+    private final PaymentApi paymentApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final AuditChecker auditChecker;
     private final InvoiceUserApi invoiceUserApi;
 
     @Inject
-    public RefundChecker(final DirectPaymentApi paymentApi, final InvoicePaymentApi invoicePaymentApi, final InvoiceUserApi invoiceApi, final AuditChecker auditChecker) {
+    public RefundChecker(final PaymentApi paymentApi, final InvoicePaymentApi invoicePaymentApi, final InvoiceUserApi invoiceApi, final AuditChecker auditChecker) {
         this.paymentApi = paymentApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.auditChecker = auditChecker;
         this.invoiceUserApi = invoiceApi;
     }
 
-    public DirectPaymentTransaction checkRefund(final UUID paymentId, final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
+    public PaymentTransaction checkRefund(final UUID paymentId, final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
 
-        final DirectPayment payment = paymentApi.getPayment(paymentId, false, ImmutableList.<PluginProperty>of(), context);
-        final DirectPaymentTransaction refund = Iterables.tryFind(payment.getTransactions(), new Predicate<DirectPaymentTransaction>() {
+        final Payment payment = paymentApi.getPayment(paymentId, false, ImmutableList.<PluginProperty>of(), context);
+        final PaymentTransaction refund = Iterables.tryFind(payment.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
-            public boolean apply(final DirectPaymentTransaction input) {
+            public boolean apply(final PaymentTransaction input) {
                 return input.getTransactionType() == TransactionType.REFUND;
             }
         }).orNull();
@@ -80,7 +80,7 @@ public class RefundChecker {
         final InvoicePayment refundInvoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.REFUND, context);
         final InvoicePayment invoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.ATTEMPT, context);
 
-        Assert.assertEquals(refund.getDirectPaymentId(), expected.getPaymentId());
+        Assert.assertEquals(refund.getPaymentId(), expected.getPaymentId());
         Assert.assertEquals(refund.getCurrency(), expected.getCurrency());
         Assert.assertEquals(refund.getAmount().compareTo(expected.getRefundAmount()), 0);
 
@@ -94,10 +94,10 @@ public class RefundChecker {
         return refund;
     }
 
-    private DirectPaymentTransaction getRefundTransaction(final DirectPayment payment) {
-        return Iterables.tryFind(payment.getTransactions(), new Predicate<DirectPaymentTransaction>() {
+    private PaymentTransaction getRefundTransaction(final Payment payment) {
+        return Iterables.tryFind(payment.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
-            public boolean apply(final DirectPaymentTransaction input) {
+            public boolean apply(final PaymentTransaction input) {
                 return input.getTransactionType() == TransactionType.REFUND;
             }
         }).get();

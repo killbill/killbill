@@ -176,7 +176,7 @@ public abstract class ProcessorBase {
     }
 
     protected void validateUniqueTransactionExternalKey(final String transactionExternalKey, final InternalTenantContext tenantContext) throws PaymentApiException {
-        final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectPaymentTransactionsByExternalKey(transactionExternalKey, tenantContext);
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getPaymentTransactionsByExternalKey(transactionExternalKey, tenantContext);
         final PaymentTransactionModelDao transactionAlreadyExists = Iterables.tryFind(transactions, new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao input) {

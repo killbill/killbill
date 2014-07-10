@@ -26,26 +26,26 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreditOperation extends DirectPaymentOperation {
+public class CreditOperation extends PaymentOperation {
 
     private final Logger logger = LoggerFactory.getLogger(CreditOperation.class);
 
-    public CreditOperation(final DirectPaymentAutomatonDAOHelper daoHelper,
+    public CreditOperation(final PaymentAutomatonDAOHelper daoHelper,
                            final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher,
-                           final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
-        super(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
+                           final PaymentStateContext paymentStateContext) throws PaymentApiException {
+        super(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
     }
 
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
-        logger.debug("Starting CREDIT for payment {} ({} {})", directPaymentStateContext.getDirectPaymentId(), directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency());
-        return plugin.creditPayment(directPaymentStateContext.getAccount().getId(),
-                                    directPaymentStateContext.getDirectPaymentId(),
-                                    directPaymentStateContext.getTransactionPaymentId(),
-                                    directPaymentStateContext.getPaymentMethodId(),
-                                    directPaymentStateContext.getAmount(),
-                                    directPaymentStateContext.getCurrency(),
-                                    directPaymentStateContext.getProperties(),
-                                    directPaymentStateContext.getCallContext());
+        logger.debug("Starting CREDIT for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
+        return plugin.creditPayment(paymentStateContext.getAccount().getId(),
+                                    paymentStateContext.getPaymentId(),
+                                    paymentStateContext.getTransactionPaymentId(),
+                                    paymentStateContext.getPaymentMethodId(),
+                                    paymentStateContext.getAmount(),
+                                    paymentStateContext.getCurrency(),
+                                    paymentStateContext.getProperties(),
+                                    paymentStateContext.getCallContext());
     }
 }

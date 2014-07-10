@@ -22,13 +22,13 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.entity.EntityBase;
-import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 
 import com.google.common.base.Objects;
 
-public class PaymentModelDao extends EntityBase implements EntityModelDao<DirectPayment> {
+public class PaymentModelDao extends EntityBase implements EntityModelDao<Payment> {
 
     public static final Integer INVALID_PAYMENT_NUMBER = new Integer(-17);
 

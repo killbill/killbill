@@ -20,13 +20,13 @@ import java.util.Collections;
 
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.api.DefaultDirectPayment;
-import org.killbill.billing.payment.api.DefaultDirectPaymentTransaction;
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.DefaultPayment;
+import org.killbill.billing.payment.api.DefaultPaymentTransaction;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
-import org.killbill.billing.payment.core.DirectPaymentProcessor;
+import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -43,14 +43,14 @@ public class MockRetryAuthorizeOperationCallback extends RetryAuthorizeOperation
     private Exception exception;
     private OperationResult result;
 
-    public MockRetryAuthorizeOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryableDirectPaymentStateContext directPaymentStateContext, final DirectPaymentProcessor directPaymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final PaymentDao paymentDao, final Clock clock) {
-        super(locker, paymentPluginDispatcher, directPaymentStateContext, directPaymentProcessor, retryPluginRegistry);
+    public MockRetryAuthorizeOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryablePaymentStateContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final PaymentDao paymentDao, final Clock clock) {
+        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, retryPluginRegistry);
         this.paymentDao = paymentDao;
         this.clock = clock;
     }
 
     @Override
-    protected DirectPayment doCallSpecificOperationCallback() throws PaymentApiException {
+    protected Payment doCallSpecificOperationCallback() throws PaymentApiException {
         if (exception != null) {
             if (exception instanceof PaymentApiException) {
                 throw (PaymentApiException) exception;
@@ -60,25 +60,25 @@ public class MockRetryAuthorizeOperationCallback extends RetryAuthorizeOperation
         }
         final PaymentModelDao payment = new PaymentModelDao(clock.getUTCNow(),
                                                             clock.getUTCNow(),
-                                                            directPaymentStateContext.account.getId(),
-                                                            directPaymentStateContext.paymentMethodId,
-                                                            directPaymentStateContext.directPaymentExternalKey);
+                                                            paymentStateContext.account.getId(),
+                                                            paymentStateContext.paymentMethodId,
+                                                            paymentStateContext.paymentExternalKey);
 
         final PaymentTransactionModelDao transaction = new PaymentTransactionModelDao(clock.getUTCNow(),
                                                                                       clock.getUTCNow(),
-                                                                                      directPaymentStateContext.getAttemptId(),
-                                                                                      directPaymentStateContext.directPaymentTransactionExternalKey,
-                                                                                      directPaymentStateContext.directPaymentId,
-                                                                                      directPaymentStateContext.transactionType,
+                                                                                      paymentStateContext.getAttemptId(),
+                                                                                      paymentStateContext.paymentTransactionExternalKey,
+                                                                                      paymentStateContext.paymentId,
+                                                                                      paymentStateContext.transactionType,
                                                                                       clock.getUTCNow(),
                                                                                       TransactionStatus.SUCCESS,
-                                                                                      directPaymentStateContext.amount,
-                                                                                      directPaymentStateContext.currency,
+                                                                                      paymentStateContext.amount,
+                                                                                      paymentStateContext.currency,
                                                                                       "",
                                                                                       "");
-        final PaymentModelDao paymentModelDao = paymentDao.insertDirectPaymentWithFirstTransaction(payment, transaction, directPaymentStateContext.internalCallContext);
-        final DirectPaymentTransaction convertedTransaction = new DefaultDirectPaymentTransaction(transaction.getId(),
-                                                                                                  directPaymentStateContext.getAttemptId(),
+        final PaymentModelDao paymentModelDao = paymentDao.insertPaymentWithFirstTransaction(payment, transaction, paymentStateContext.internalCallContext);
+        final PaymentTransaction convertedTransaction = new DefaultPaymentTransaction(transaction.getId(),
+                                                                                                  paymentStateContext.getAttemptId(),
                                                                                                   transaction.getTransactionExternalKey(),
                                                                                                   transaction.getCreatedDate(),
                                                                                                   transaction.getUpdatedDate(),
@@ -94,7 +94,7 @@ public class MockRetryAuthorizeOperationCallback extends RetryAuthorizeOperation
                                                                                                   transaction.getGatewayErrorMsg(),
                                                                                                   null);
 
-        return new DefaultDirectPayment(paymentModelDao.getId(), paymentModelDao.getCreatedDate(), paymentModelDao.getUpdatedDate(), paymentModelDao.getAccountId(),
+        return new DefaultPayment(paymentModelDao.getId(), paymentModelDao.getCreatedDate(), paymentModelDao.getUpdatedDate(), paymentModelDao.getAccountId(),
                                         paymentModelDao.getPaymentMethodId(), paymentModelDao.getPaymentNumber(), paymentModelDao.getExternalKey(), Collections.singletonList(convertedTransaction));
     }
 

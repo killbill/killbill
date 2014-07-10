@@ -42,22 +42,22 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class TestDirectPaymentEnteringStateCallback extends PaymentTestSuiteWithEmbeddedDB {
+public class TestPaymentEnteringStateCallback extends PaymentTestSuiteWithEmbeddedDB {
 
     private final State state = Mockito.mock(State.class);
     private final OperationCallback operationCallback = Mockito.mock(OperationCallback.class);
     private final LeavingStateCallback leavingStateCallback = Mockito.mock(LeavingStateCallback.class);
 
-    private DirectPaymentStateContext directPaymentStateContext;
-    private DirectPaymentAutomatonDAOHelper daoHelper;
-    private DirectPaymentEnteringStateTestCallback callback;
+    private PaymentStateContext paymentStateContext;
+    private PaymentAutomatonDAOHelper daoHelper;
+    private PaymentEnteringStateTestCallback callback;
     private OperationResult operationResult;
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
-        directPaymentStateContext = new DirectPaymentStateContext(null,
+        paymentStateContext = new PaymentStateContext(null,
                                                                   UUID.randomUUID().toString(),
                                                                   TransactionType.CAPTURE,
                                                                   account,
@@ -68,8 +68,8 @@ public class TestDirectPaymentEnteringStateCallback extends PaymentTestSuiteWith
                                                                   ImmutableList.<PluginProperty>of(),
                                                                   internalCallContext,
                                                                   callContext);
-        daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
-        callback = new DirectPaymentEnteringStateTestCallback(daoHelper, directPaymentStateContext);
+        daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
+        callback = new PaymentEnteringStateTestCallback(daoHelper, paymentStateContext);
 
         Mockito.when(state.getName()).thenReturn("NEW_STATE");
         operationResult = OperationResult.SUCCESS;
@@ -77,9 +77,9 @@ public class TestDirectPaymentEnteringStateCallback extends PaymentTestSuiteWith
 
     @Test(groups = "slow")
     public void testEnterStateAndProcessPaymentTransactionInfoPlugin() throws Exception {
-        // Create the payment and first transaction (would be done by DirectPaymentLeavingStateCallback)
-        daoHelper.createNewDirectPaymentTransaction();
-        Assert.assertEquals(paymentDao.getDirectPaymentTransaction(directPaymentStateContext.getDirectPaymentTransactionModelDao().getId(), internalCallContext).getTransactionStatus(), TransactionStatus.UNKNOWN);
+        // Create the payment and first transaction (would be done by PaymentLeavingStateCallback)
+        daoHelper.createNewPaymentTransaction();
+        Assert.assertEquals(paymentDao.getPaymentTransaction(paymentStateContext.getPaymentTransactionModelDao().getId(), internalCallContext).getTransactionStatus(), TransactionStatus.UNKNOWN);
 
         // Mock the plugin result
         final PaymentTransactionInfoPlugin paymentInfoPlugin = Mockito.mock(PaymentTransactionInfoPlugin.class);
@@ -88,38 +88,38 @@ public class TestDirectPaymentEnteringStateCallback extends PaymentTestSuiteWith
         Mockito.when(paymentInfoPlugin.getStatus()).thenReturn(PaymentPluginStatus.PENDING);
         Mockito.when(paymentInfoPlugin.getGatewayErrorCode()).thenReturn(UUID.randomUUID().toString().substring(0, 5));
         Mockito.when(paymentInfoPlugin.getGatewayError()).thenReturn(UUID.randomUUID().toString());
-        directPaymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
+        paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
 
         // Process the plugin result
         callback.enteringState(state, operationCallback, operationResult, leavingStateCallback);
 
         // Verify the updated transaction
-        final PaymentTransactionModelDao directPaymentTransaction = paymentDao.getDirectPaymentTransaction(directPaymentStateContext.getDirectPaymentTransactionModelDao().getId(), internalCallContext);
-        Assert.assertEquals(directPaymentTransaction.getAmount().compareTo(directPaymentStateContext.getAmount()), 0);
-        Assert.assertEquals(directPaymentTransaction.getCurrency(), directPaymentStateContext.getCurrency());
-        Assert.assertEquals(directPaymentTransaction.getProcessedAmount().compareTo(paymentInfoPlugin.getAmount()), 0);
-        Assert.assertEquals(directPaymentTransaction.getProcessedCurrency(), paymentInfoPlugin.getCurrency());
-        Assert.assertEquals(directPaymentTransaction.getTransactionStatus(), TransactionStatus.PENDING);
-        Assert.assertEquals(directPaymentTransaction.getGatewayErrorCode(), paymentInfoPlugin.getGatewayErrorCode());
-        Assert.assertEquals(directPaymentTransaction.getGatewayErrorMsg(), paymentInfoPlugin.getGatewayError());
+        final PaymentTransactionModelDao paymentTransaction = paymentDao.getPaymentTransaction(paymentStateContext.getPaymentTransactionModelDao().getId(), internalCallContext);
+        Assert.assertEquals(paymentTransaction.getAmount().compareTo(paymentStateContext.getAmount()), 0);
+        Assert.assertEquals(paymentTransaction.getCurrency(), paymentStateContext.getCurrency());
+        Assert.assertEquals(paymentTransaction.getProcessedAmount().compareTo(paymentInfoPlugin.getAmount()), 0);
+        Assert.assertEquals(paymentTransaction.getProcessedCurrency(), paymentInfoPlugin.getCurrency());
+        Assert.assertEquals(paymentTransaction.getTransactionStatus(), TransactionStatus.PENDING);
+        Assert.assertEquals(paymentTransaction.getGatewayErrorCode(), paymentInfoPlugin.getGatewayErrorCode());
+        Assert.assertEquals(paymentTransaction.getGatewayErrorMsg(), paymentInfoPlugin.getGatewayError());
     }
 
     @Test(groups = "slow")
     public void testEnterStateWithOperationException() throws Exception {
-        daoHelper.createNewDirectPaymentTransaction();
+        daoHelper.createNewPaymentTransaction();
         // Simulate a bug in the plugin - i.e. nothing was returned
-        directPaymentStateContext.setPaymentInfoPlugin(null);
+        paymentStateContext.setPaymentInfoPlugin(null);
         operationResult = OperationResult.EXCEPTION;
 
         callback.enteringState(state, operationCallback, operationResult, leavingStateCallback);
 
-        Assert.assertEquals(paymentDao.getDirectPaymentTransaction(directPaymentStateContext.getDirectPaymentTransactionModelDao().getId(), internalCallContext).getTransactionStatus(), TransactionStatus.PLUGIN_FAILURE);
+        Assert.assertEquals(paymentDao.getPaymentTransaction(paymentStateContext.getPaymentTransactionModelDao().getId(), internalCallContext).getTransactionStatus(), TransactionStatus.PLUGIN_FAILURE);
     }
 
-    private static final class DirectPaymentEnteringStateTestCallback extends DirectPaymentEnteringStateCallback {
+    private static final class PaymentEnteringStateTestCallback extends PaymentEnteringStateCallback {
 
-        private DirectPaymentEnteringStateTestCallback(final DirectPaymentAutomatonDAOHelper daoHelper, final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
-            super(daoHelper, directPaymentStateContext);
+        private PaymentEnteringStateTestCallback(final PaymentAutomatonDAOHelper daoHelper, final PaymentStateContext paymentStateContext) throws PaymentApiException {
+            super(daoHelper, paymentStateContext);
         }
     }
 }

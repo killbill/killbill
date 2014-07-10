@@ -28,21 +28,21 @@ import javax.inject.Provider;
 import org.killbill.automaton.DefaultStateMachineConfig;
 import org.killbill.automaton.StateMachineConfig;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.api.DefaultDirectPaymentApi;
+import org.killbill.billing.payment.api.DefaultPaymentApi;
 import org.killbill.billing.payment.api.DefaultPaymentGatewayApi;
-import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
 import org.killbill.billing.payment.api.PaymentService;
 import org.killbill.billing.payment.bus.InvoiceHandler;
 import org.killbill.billing.payment.control.PaymentTagHandler;
 import org.killbill.billing.payment.control.dao.InvoicePaymentControlDao;
-import org.killbill.billing.payment.core.DirectPaymentProcessor;
+import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.Janitor;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PluginControlledPaymentProcessor;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
-import org.killbill.billing.payment.core.sm.PluginControlledDirectPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PluginControlledPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.DefaultPaymentDao;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -132,7 +132,7 @@ public class PaymentModule extends KillBillModule {
     }
 
     protected void installAutomatonRunner() {
-        bind(PluginControlledDirectPaymentAutomatonRunner.class).asEagerSingleton();
+        bind(PluginControlledPaymentAutomatonRunner.class).asEagerSingleton();
     }
 
     protected void installProcessors(final PaymentConfig paymentConfig) {
@@ -146,7 +146,7 @@ public class PaymentModule extends KillBillModule {
             }
         });
         bind(ExecutorService.class).annotatedWith(Names.named(PLUGIN_EXECUTOR_NAMED)).toInstance(pluginExecutorService);
-        bind(DirectPaymentProcessor.class).asEagerSingleton();
+        bind(PaymentProcessor.class).asEagerSingleton();
         bind(PluginControlledPaymentProcessor.class).asEagerSingleton();
         bind(PaymentGatewayProcessor.class).asEagerSingleton();
         bind(PaymentMethodProcessor.class).asEagerSingleton();
@@ -161,7 +161,7 @@ public class PaymentModule extends KillBillModule {
         bind(new TypeLiteral<OSGIServiceRegistration<PaymentPluginApi>>() {}).toProvider(DefaultPaymentProviderPluginRegistryProvider.class).asEagerSingleton();
         bind(new TypeLiteral<OSGIServiceRegistration<PaymentControlPluginApi>>() {}).toProvider(DefaultPaymentControlProviderPluginRegistryProvider.class).asEagerSingleton();
 
-        bind(DirectPaymentApi.class).to(DefaultDirectPaymentApi.class).asEagerSingleton();
+        bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(PaymentGatewayApi.class).to(DefaultPaymentGatewayApi.class).asEagerSingleton();
         bind(InvoiceHandler.class).asEagerSingleton();
         bind(PaymentTagHandler.class).asEagerSingleton();

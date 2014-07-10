@@ -34,7 +34,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 
 import com.google.common.collect.ImmutableList;
 
-public class DirectPaymentStateContext {
+public class PaymentStateContext {
 
     // HACK
     protected UUID paymentMethodId;
@@ -42,15 +42,15 @@ public class DirectPaymentStateContext {
 
     // Stateful objects created by the callbacks and passed to the other following callbacks in the automaton
     protected List<PaymentTransactionModelDao> onLeavingStateExistingTransactions;
-    protected PaymentTransactionModelDao directPaymentTransactionModelDao;
+    protected PaymentTransactionModelDao paymentTransactionModelDao;
     protected PaymentTransactionInfoPlugin paymentInfoPlugin;
     protected BigDecimal amount;
     protected UUID transactionPaymentId;
-    protected String directPaymentExternalKey;
+    protected String paymentExternalKey;
 
-    // Can be updated later via directPaymentTransactionModelDao (e.g. for auth or purchase)
-    protected final UUID directPaymentId;
-    protected final String directPaymentTransactionExternalKey;
+    // Can be updated later via paymentTransactionModelDao (e.g. for auth or purchase)
+    protected final UUID paymentId;
+    protected final String paymentTransactionExternalKey;
     protected final Account account;
     protected final Currency currency;
     protected final TransactionType transactionType;
@@ -60,24 +60,24 @@ public class DirectPaymentStateContext {
     protected final CallContext callContext;
 
     // Use to create new transactions only
-    public DirectPaymentStateContext(@Nullable final UUID directPaymentId, @Nullable final String directPaymentTransactionExternalKey, final TransactionType transactionType,
-                                     final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
-                                     final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
-                                     final InternalCallContext internalCallContext, final CallContext callContext) {
-        this(directPaymentId, null, null, directPaymentTransactionExternalKey, transactionType, account, paymentMethodId,
+    public PaymentStateContext(@Nullable final UUID paymentId, @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
+                               final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
+                               final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
+                               final InternalCallContext internalCallContext, final CallContext callContext) {
+        this(paymentId, null, null, paymentTransactionExternalKey, transactionType, account, paymentMethodId,
              amount, currency, shouldLockAccountAndDispatch, properties, internalCallContext, callContext);
     }
 
     // Used to create new payment and transactions
-    public DirectPaymentStateContext(@Nullable final UUID directPaymentId, @Nullable final UUID attemptId, @Nullable final String directPaymentExternalKey,
-                                     @Nullable final String directPaymentTransactionExternalKey, final TransactionType transactionType,
-                                     final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
-                                     final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
-                                     final InternalCallContext internalCallContext, final CallContext callContext) {
-        this.directPaymentId = directPaymentId;
+    public PaymentStateContext(@Nullable final UUID paymentId, @Nullable final UUID attemptId, @Nullable final String paymentExternalKey,
+                               @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
+                               final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
+                               final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
+                               final InternalCallContext internalCallContext, final CallContext callContext) {
+        this.paymentId = paymentId;
         this.attemptId= attemptId;
-        this.directPaymentExternalKey = directPaymentExternalKey;
-        this.directPaymentTransactionExternalKey = directPaymentTransactionExternalKey;
+        this.paymentExternalKey = paymentExternalKey;
+        this.paymentTransactionExternalKey = paymentTransactionExternalKey;
         this.transactionType = transactionType;
         this.account = account;
         this.paymentMethodId = paymentMethodId;
@@ -94,12 +94,12 @@ public class DirectPaymentStateContext {
         this.paymentMethodId = paymentMethodId;
     }
 
-    public PaymentTransactionModelDao getDirectPaymentTransactionModelDao() {
-        return directPaymentTransactionModelDao;
+    public PaymentTransactionModelDao getPaymentTransactionModelDao() {
+        return paymentTransactionModelDao;
     }
 
-    public void setDirectPaymentTransactionModelDao(final PaymentTransactionModelDao directPaymentTransactionModelDao) {
-        this.directPaymentTransactionModelDao = directPaymentTransactionModelDao;
+    public void setPaymentTransactionModelDao(final PaymentTransactionModelDao paymentTransactionModelDao) {
+        this.paymentTransactionModelDao = paymentTransactionModelDao;
     }
 
     public List<PaymentTransactionModelDao> getOnLeavingStateExistingTransactions() {
@@ -118,24 +118,24 @@ public class DirectPaymentStateContext {
         this.paymentInfoPlugin = paymentInfoPlugin;
     }
 
-    public UUID getDirectPaymentId() {
-        return directPaymentId != null ? directPaymentId : (directPaymentTransactionModelDao != null ? directPaymentTransactionModelDao.getPaymentId() : null);
+    public UUID getPaymentId() {
+        return paymentId != null ? paymentId : (paymentTransactionModelDao != null ? paymentTransactionModelDao.getPaymentId() : null);
     }
 
     public UUID getTransactionPaymentId() {
-        return transactionPaymentId != null ? transactionPaymentId : (directPaymentTransactionModelDao != null ? directPaymentTransactionModelDao.getId() : null);
+        return transactionPaymentId != null ? transactionPaymentId : (paymentTransactionModelDao != null ? paymentTransactionModelDao.getId() : null);
     }
 
-    public String getDirectPaymentExternalKey() {
-        return directPaymentExternalKey;
+    public String getPaymentExternalKey() {
+        return paymentExternalKey;
     }
 
-    public void setDirectPaymentExternalKey(final String directPaymentExternalKey) {
-        this.directPaymentExternalKey = directPaymentExternalKey;
+    public void setPaymentExternalKey(final String paymentExternalKey) {
+        this.paymentExternalKey = paymentExternalKey;
     }
 
-    public String getDirectPaymentTransactionExternalKey() {
-        return directPaymentTransactionExternalKey;
+    public String getPaymentTransactionExternalKey() {
+        return paymentTransactionExternalKey;
     }
 
     public Account getAccount() {

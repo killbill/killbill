@@ -71,8 +71,8 @@ import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.osgi.config.OSGIConfig;
 import org.killbill.billing.overdue.OverdueUserApi;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PaymentOptions;
@@ -180,7 +180,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     protected BlockingInternalApi blockingApi;
 
     @Inject
-    protected DirectPaymentApi paymentApi;
+    protected PaymentApi paymentApi;
 
     @Inject
     protected EntitlementApi entitlementApi;
@@ -403,10 +403,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected DirectPayment createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final BigDecimal amount, final Currency currency,  final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
+    protected Payment createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final BigDecimal amount, final Currency currency,  final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
-            public DirectPayment apply(@Nullable final Void input) {
+            public Payment apply(@Nullable final Void input) {
                 try {
 
                     final List<PluginProperty> properties = new ArrayList<PluginProperty>();
@@ -422,10 +422,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected DirectPayment createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
+    protected Payment createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
-            public DirectPayment apply(@Nullable final Void input) {
+            public Payment apply(@Nullable final Void input) {
                 try {
                     final List<PluginProperty> properties = new ArrayList<PluginProperty>();
                     final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
@@ -441,10 +441,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected DirectPayment createExternalPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
+    protected Payment createExternalPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
-            public DirectPayment apply(@Nullable final Void input) {
+            public Payment apply(@Nullable final Void input) {
                 try {
 
                     final List<PluginProperty> properties = new ArrayList<PluginProperty>();
@@ -461,10 +461,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected DirectPayment refundPaymentAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
+    protected Payment refundPaymentAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
-            public DirectPayment apply(@Nullable final Void input) {
+            public Payment apply(@Nullable final Void input) {
                 try {
                     return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
                                                                      PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
@@ -476,10 +476,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected DirectPayment refundPaymentWithAdjustmentAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
+    protected Payment refundPaymentWithAdjustmentAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
-            public DirectPayment apply(@Nullable final Void input) {
+            public Payment apply(@Nullable final Void input) {
 
                 final List<PluginProperty> properties = new ArrayList<PluginProperty>();
                 final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
@@ -495,10 +495,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected DirectPayment refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final DirectPayment payment, final Map<UUID, BigDecimal> iias, final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, DirectPayment>() {
+    protected Payment refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final Payment payment, final Map<UUID, BigDecimal> iias, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
-            public DirectPayment apply(@Nullable final Void input) {
+            public Payment apply(@Nullable final Void input) {
 
                 final List<PluginProperty> properties = new ArrayList<PluginProperty>();
                 final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
@@ -517,7 +517,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected void createChargeBackAndCheckForCompletion(final Account account, final DirectPayment payment, final NextEvent... events) {
+    protected void createChargeBackAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
             @Override
             public Void apply(@Nullable final Void input) {

@@ -26,24 +26,24 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VoidOperation extends DirectPaymentOperation {
+public class VoidOperation extends PaymentOperation {
 
     private final Logger logger = LoggerFactory.getLogger(VoidOperation.class);
 
-    public VoidOperation(final DirectPaymentAutomatonDAOHelper daoHelper,
+    public VoidOperation(final PaymentAutomatonDAOHelper daoHelper,
                          final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher,
-                         final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
-        super(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
+                         final PaymentStateContext paymentStateContext) throws PaymentApiException {
+        super(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
     }
 
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
-        logger.debug("Starting VOID for payment {} ({} {})", directPaymentStateContext.getDirectPaymentId(), directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency());
-        return plugin.voidPayment(directPaymentStateContext.getAccount().getId(),
-                                  directPaymentStateContext.getDirectPaymentId(),
-                                  directPaymentStateContext.getTransactionPaymentId(),
-                                  directPaymentStateContext.getPaymentMethodId(),
-                                  directPaymentStateContext.getProperties(),
-                                  directPaymentStateContext.getCallContext());
+        logger.debug("Starting VOID for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
+        return plugin.voidPayment(paymentStateContext.getAccount().getId(),
+                                  paymentStateContext.getPaymentId(),
+                                  paymentStateContext.getTransactionPaymentId(),
+                                  paymentStateContext.getPaymentMethodId(),
+                                  paymentStateContext.getProperties(),
+                                  paymentStateContext.getCallContext());
     }
 }

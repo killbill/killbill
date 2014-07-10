@@ -22,12 +22,12 @@ import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.api.DirectPaymentApi;
-import org.killbill.billing.payment.core.DirectPaymentProcessor;
+import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PluginControlledPaymentProcessor;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
-import org.killbill.billing.payment.core.sm.PluginControlledDirectPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PluginControlledPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.TestPaymentModuleNoDB;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -58,7 +58,7 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected PersistentBus eventBus;
     @Inject
-    protected DirectPaymentApi paymentApi;
+    protected PaymentApi paymentApi;
     @Inject
     protected AccountInternalApi accountInternalApi;
     @Inject
@@ -68,11 +68,11 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected PaymentStateMachineHelper paymentSMHelper;
     @Inject
-    protected DirectPaymentProcessor paymentProcessor;
+    protected PaymentProcessor paymentProcessor;
     @Inject
     protected PluginControlledPaymentProcessor pluginControlledPaymentProcessor;
     @Inject
-    protected PluginControlledDirectPaymentAutomatonRunner retryableDirectPaymentAutomatonRunner;
+    protected PluginControlledPaymentAutomatonRunner retryablePaymentAutomatonRunner;
     @Inject
     protected DefaultRetryService retryService;
 

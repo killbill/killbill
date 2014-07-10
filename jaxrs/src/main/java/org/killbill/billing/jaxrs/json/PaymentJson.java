@@ -21,8 +21,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
@@ -32,7 +32,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class DirectPaymentJson extends JsonBase {
+public class PaymentJson extends JsonBase {
 
     private final String accountId;
     private final String paymentId;
@@ -45,22 +45,22 @@ public class DirectPaymentJson extends JsonBase {
     private final BigDecimal creditedAmount;
     private final String currency;
     private final String paymentMethodId;
-    private final List<? extends DirectTransactionJson> transactions;
+    private final List<? extends PaymentTransactionJson> transactions;
 
     @JsonCreator
-    public DirectPaymentJson(@JsonProperty("accountId") final String accountId,
-                             @JsonProperty("paymentId") final String paymentId,
-                             @JsonProperty("paymentNumber") final String paymentNumber,
-                             @JsonProperty("paymentExternalKey") final String paymentExternalKey,
-                             @JsonProperty("authAmount") final BigDecimal authAmount,
-                             @JsonProperty("capturedAmount") final BigDecimal capturedAmount,
-                             @JsonProperty("purchasedAmount") final BigDecimal purchasedAmount,
-                             @JsonProperty("refundedAmount") final BigDecimal refundedAmount,
-                             @JsonProperty("creditedAmount") final BigDecimal creditedAmount,
-                             @JsonProperty("currency") final String currency,
-                             @JsonProperty("paymentMethodId") final String paymentMethodId,
-                             @JsonProperty("transactions") final List<? extends DirectTransactionJson> transactions,
-                             @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+    public PaymentJson(@JsonProperty("accountId") final String accountId,
+                       @JsonProperty("paymentId") final String paymentId,
+                       @JsonProperty("paymentNumber") final String paymentNumber,
+                       @JsonProperty("paymentExternalKey") final String paymentExternalKey,
+                       @JsonProperty("authAmount") final BigDecimal authAmount,
+                       @JsonProperty("capturedAmount") final BigDecimal capturedAmount,
+                       @JsonProperty("purchasedAmount") final BigDecimal purchasedAmount,
+                       @JsonProperty("refundedAmount") final BigDecimal refundedAmount,
+                       @JsonProperty("creditedAmount") final BigDecimal creditedAmount,
+                       @JsonProperty("currency") final String currency,
+                       @JsonProperty("paymentMethodId") final String paymentMethodId,
+                       @JsonProperty("transactions") final List<? extends PaymentTransactionJson> transactions,
+                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.accountId = accountId;
         this.paymentId = paymentId;
@@ -76,7 +76,7 @@ public class DirectPaymentJson extends JsonBase {
         this.transactions = transactions;
     }
 
-    public DirectPaymentJson(final DirectPayment dp, @Nullable final AccountAuditLogs accountAuditLogs) {
+    public PaymentJson(final Payment dp, @Nullable final AccountAuditLogs accountAuditLogs) {
         this(dp.getAccountId().toString(),
              dp.getId().toString(),
              dp.getPaymentNumber().toString(),
@@ -92,13 +92,13 @@ public class DirectPaymentJson extends JsonBase {
              toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPayment(dp.getId())));
     }
 
-    private static List<DirectTransactionJson> getTransactions(final Iterable<DirectPaymentTransaction> transactions, final String directPaymentExternalKey, @Nullable final AccountAuditLogs accountAuditLogs) {
+    private static List<PaymentTransactionJson> getTransactions(final Iterable<PaymentTransaction> transactions, final String paymentExternalKey, @Nullable final AccountAuditLogs accountAuditLogs) {
         return ImmutableList.copyOf(Iterables.transform(transactions,
-                                                        new Function<DirectPaymentTransaction, DirectTransactionJson>() {
+                                                        new Function<PaymentTransaction, PaymentTransactionJson>() {
                                                             @Override
-                                                            public DirectTransactionJson apply(final DirectPaymentTransaction directPaymentTransaction) {
-                                                                final List<AuditLog> auditLogsForDirectPaymentTransaction = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentTransaction(directPaymentTransaction.getId());
-                                                                return new DirectTransactionJson(directPaymentTransaction, directPaymentExternalKey, auditLogsForDirectPaymentTransaction);
+                                                            public PaymentTransactionJson apply(final PaymentTransaction paymentTransaction) {
+                                                                final List<AuditLog> auditLogsForPaymentTransaction = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentTransaction(paymentTransaction.getId());
+                                                                return new PaymentTransactionJson(paymentTransaction, paymentExternalKey, auditLogsForPaymentTransaction);
                                                             }
                                                         }
                                                        ));
@@ -148,13 +148,13 @@ public class DirectPaymentJson extends JsonBase {
         return paymentMethodId;
     }
 
-    public List<? extends DirectTransactionJson> getTransactions() {
+    public List<? extends PaymentTransactionJson> getTransactions() {
         return transactions;
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("DirectPaymentJson{");
+        final StringBuilder sb = new StringBuilder("PaymentJson{");
         sb.append("accountId='").append(accountId).append('\'');
         sb.append(", paymentId='").append(paymentId).append('\'');
         sb.append(", paymentNumber='").append(paymentNumber).append('\'');
@@ -180,7 +180,7 @@ public class DirectPaymentJson extends JsonBase {
             return false;
         }
 
-        final DirectPaymentJson that = (DirectPaymentJson) o;
+        final PaymentJson that = (PaymentJson) o;
 
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;

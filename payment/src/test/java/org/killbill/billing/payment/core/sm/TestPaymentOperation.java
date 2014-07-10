@@ -46,64 +46,64 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class TestDirectPaymentOperation extends PaymentTestSuiteNoDB {
+public class TestPaymentOperation extends PaymentTestSuiteNoDB {
 
-    private DirectPaymentStateContext directPaymentStateContext;
-    private DirectPaymentOperationTest directPaymentOperation;
+    private PaymentStateContext paymentStateContext;
+    private PaymentOperationTest paymentOperation;
 
     @Test(groups = "fast")
     public void testPaymentFailure() throws Exception {
         setUp(PaymentPluginStatus.ERROR);
 
-        Assert.assertNull(directPaymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNull(paymentStateContext.getPaymentInfoPlugin());
 
-        Assert.assertEquals(directPaymentOperation.doOperationCallback(), OperationResult.FAILURE);
+        Assert.assertEquals(paymentOperation.doOperationCallback(), OperationResult.FAILURE);
 
-        Assert.assertNotNull(directPaymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNotNull(paymentStateContext.getPaymentInfoPlugin());
     }
 
     @Test(groups = "fast")
     public void testPluginFailure() throws Exception {
         setUp(null);
 
-        Assert.assertNull(directPaymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNull(paymentStateContext.getPaymentInfoPlugin());
 
         try {
-            directPaymentOperation.doOperationCallback();
+            paymentOperation.doOperationCallback();
             Assert.fail();
         } catch (final OperationException e) {
             Assert.assertEquals(e.getOperationResult(), OperationResult.EXCEPTION);
         }
 
-        Assert.assertNull(directPaymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNull(paymentStateContext.getPaymentInfoPlugin());
     }
 
     @Test(groups = "fast")
     public void testPaymentPending() throws Exception {
         setUp(PaymentPluginStatus.PENDING);
 
-        Assert.assertNull(directPaymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNull(paymentStateContext.getPaymentInfoPlugin());
 
-        Assert.assertEquals(directPaymentOperation.doOperationCallback(), OperationResult.PENDING);
+        Assert.assertEquals(paymentOperation.doOperationCallback(), OperationResult.PENDING);
 
-        Assert.assertNotNull(directPaymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNotNull(paymentStateContext.getPaymentInfoPlugin());
     }
 
     @Test(groups = "fast")
     public void testPaymentSuccess() throws Exception {
         setUp(PaymentPluginStatus.PROCESSED);
 
-        Assert.assertNull(directPaymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNull(paymentStateContext.getPaymentInfoPlugin());
 
-        Assert.assertEquals(directPaymentOperation.doOperationCallback(), OperationResult.SUCCESS);
+        Assert.assertEquals(paymentOperation.doOperationCallback(), OperationResult.SUCCESS);
 
-        Assert.assertNotNull(directPaymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNotNull(paymentStateContext.getPaymentInfoPlugin());
     }
 
     private void setUp(final PaymentPluginStatus paymentPluginStatus) throws Exception {
         final GlobalLocker locker = new MemoryGlobalLocker();
         final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(1, Executors.newCachedThreadPool());
-        directPaymentStateContext = new DirectPaymentStateContext(UUID.randomUUID(),
+        paymentStateContext = new PaymentStateContext(UUID.randomUUID(),
                                                                   null,
                                                                   UUID.randomUUID().toString(),
                                                                   UUID.randomUUID().toString(),
@@ -117,23 +117,23 @@ public class TestDirectPaymentOperation extends PaymentTestSuiteNoDB {
                                                                   internalCallContext,
                                                                   callContext);
 
-        final PaymentMethodModelDao paymentMethodModelDao = new PaymentMethodModelDao(directPaymentStateContext.getPaymentMethodId(), UUID.randomUUID().toString(), clock.getUTCNow(), clock.getUTCNow(),
-                                                                                      directPaymentStateContext.getAccount().getId(), MockPaymentProviderPlugin.PLUGIN_NAME, true);
+        final PaymentMethodModelDao paymentMethodModelDao = new PaymentMethodModelDao(paymentStateContext.getPaymentMethodId(), UUID.randomUUID().toString(), clock.getUTCNow(), clock.getUTCNow(),
+                                                                                      paymentStateContext.getAccount().getId(), MockPaymentProviderPlugin.PLUGIN_NAME, true);
         final PaymentDao paymentDao = Mockito.mock(PaymentDao.class);
-        Mockito.when(paymentDao.getPaymentMethodIncludedDeleted(directPaymentStateContext.getPaymentMethodId(), internalCallContext)).thenReturn(paymentMethodModelDao);
+        Mockito.when(paymentDao.getPaymentMethodIncludedDeleted(paymentStateContext.getPaymentMethodId(), internalCallContext)).thenReturn(paymentMethodModelDao);
 
-        final DirectPaymentAutomatonDAOHelper daoHelper = new DirectPaymentAutomatonDAOHelper(directPaymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
-        directPaymentOperation = new DirectPaymentOperationTest(paymentPluginStatus, daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
+        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
+        paymentOperation = new PaymentOperationTest(paymentPluginStatus, daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
     }
 
-    private static final class DirectPaymentOperationTest extends DirectPaymentOperation {
+    private static final class PaymentOperationTest extends PaymentOperation {
 
         private final PaymentTransactionInfoPlugin paymentInfoPlugin;
 
-        public DirectPaymentOperationTest(@Nullable final PaymentPluginStatus paymentPluginStatus,
-                                          final DirectPaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker,
-                                          final PluginDispatcher<OperationResult> paymentPluginDispatcher, final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
-            super(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
+        public PaymentOperationTest(@Nullable final PaymentPluginStatus paymentPluginStatus,
+                                          final PaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker,
+                                          final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateContext paymentStateContext) throws PaymentApiException {
+            super(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
             this.paymentInfoPlugin = (paymentPluginStatus == null ? null : getPaymentInfoPlugin(paymentPluginStatus));
         }
 

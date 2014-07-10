@@ -22,13 +22,13 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DirectTransactionJson extends JsonBase {
+public class PaymentTransactionJson extends JsonBase {
 
     private final String transactionId;
     private final String transactionExternalKey;
@@ -47,25 +47,25 @@ public class DirectTransactionJson extends JsonBase {
     private final List<PluginPropertyJson> properties;
 
     @JsonCreator
-    public DirectTransactionJson(@JsonProperty("transactionId") final String transactionId,
-                                 @JsonProperty("transactionExternalKey") final String transactionExternalKey,
-                                 @JsonProperty("paymentId") final String directPaymentId,
-                                 @JsonProperty("paymentExternalKey") final String paymentExternalKey,
-                                 @JsonProperty("transactionType") final String transactionType,
-                                 @JsonProperty("amount") final BigDecimal amount,
-                                 @JsonProperty("currency") final String currency,
-                                 @JsonProperty("effectiveDate") final DateTime effectiveDate,
-                                 @JsonProperty("status") final String status,
-                                 @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
-                                 @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,
-                                 @JsonProperty("firstPaymentReferenceId") final String firstPaymentReferenceId,
-                                 @JsonProperty("secondPaymentReferenceId") final String secondPaymentReferenceId,
-                                 @JsonProperty("properties") final List<PluginPropertyJson> properties,
-                                 @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+    public PaymentTransactionJson(@JsonProperty("transactionId") final String transactionId,
+                                  @JsonProperty("transactionExternalKey") final String transactionExternalKey,
+                                  @JsonProperty("paymentId") final String paymentId,
+                                  @JsonProperty("paymentExternalKey") final String paymentExternalKey,
+                                  @JsonProperty("transactionType") final String transactionType,
+                                  @JsonProperty("amount") final BigDecimal amount,
+                                  @JsonProperty("currency") final String currency,
+                                  @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                  @JsonProperty("status") final String status,
+                                  @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
+                                  @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,
+                                  @JsonProperty("firstPaymentReferenceId") final String firstPaymentReferenceId,
+                                  @JsonProperty("secondPaymentReferenceId") final String secondPaymentReferenceId,
+                                  @JsonProperty("properties") final List<PluginPropertyJson> properties,
+                                  @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.transactionId = transactionId;
         this.transactionExternalKey = transactionExternalKey;
-        this.paymentId = directPaymentId;
+        this.paymentId = paymentId;
         this.paymentExternalKey = paymentExternalKey;
         this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;
@@ -79,10 +79,10 @@ public class DirectTransactionJson extends JsonBase {
         this.properties = properties;
     }
 
-    public DirectTransactionJson(final DirectPaymentTransaction dpt, final String paymentExternalKey, @Nullable final List<AuditLog> directTransactionLogs) {
+    public PaymentTransactionJson(final PaymentTransaction dpt, final String paymentExternalKey, @Nullable final List<AuditLog> transactionLogs) {
         this(dpt.getId().toString(),
              dpt.getExternalKey(),
-             dpt.getDirectPaymentId().toString(),
+             dpt.getPaymentId().toString(),
              paymentExternalKey,
              dpt.getTransactionType().toString(),
              dpt.getAmount(),
@@ -94,7 +94,7 @@ public class DirectTransactionJson extends JsonBase {
              dpt.getPaymentInfoPlugin() == null ? null : dpt.getPaymentInfoPlugin().getFirstPaymentReferenceId(),
              dpt.getPaymentInfoPlugin() == null ? null : dpt.getPaymentInfoPlugin().getSecondPaymentReferenceId(),
              dpt.getPaymentInfoPlugin() == null ? null : toPluginPropertyJson(dpt.getPaymentInfoPlugin().getProperties()),
-             toAuditLogJson(directTransactionLogs));
+             toAuditLogJson(transactionLogs));
     }
 
     public String getTransactionId() {
@@ -155,7 +155,7 @@ public class DirectTransactionJson extends JsonBase {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("DirectTransactionJson{");
+        final StringBuilder sb = new StringBuilder("PaymentTransactionJson{");
         sb.append("transactionId='").append(transactionId).append('\'');
         sb.append(", paymentId='").append(paymentId).append('\'');
         sb.append(", transactionExternalKey='").append(transactionExternalKey).append('\'');
@@ -182,7 +182,7 @@ public class DirectTransactionJson extends JsonBase {
             return false;
         }
 
-        final DirectTransactionJson that = (DirectTransactionJson) o;
+        final PaymentTransactionJson that = (PaymentTransactionJson) o;
 
         if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
             return false;

@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.dao.TableName;
@@ -32,7 +32,7 @@ import org.killbill.billing.util.entity.dao.EntityModelDao;
 
 import com.google.common.base.Objects;
 
-public class PaymentTransactionModelDao extends EntityBase implements EntityModelDao<DirectPaymentTransaction> {
+public class PaymentTransactionModelDao extends EntityBase implements EntityModelDao<PaymentTransaction> {
 
     private UUID attemptId;
     private UUID paymentId;

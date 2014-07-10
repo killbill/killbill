@@ -32,7 +32,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
-import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
@@ -59,7 +59,7 @@ public class AccountTimelineJson {
 
     public AccountTimelineJson(final Account account,
                                final List<Invoice> invoices,
-                               final List<DirectPayment> payments,
+                               final List<Payment> payments,
                                final List<InvoicePayment> invoicePayments,
                                final List<SubscriptionBundle> bundles,
                                final AccountAuditLogs accountAuditLogs) {
@@ -91,7 +91,7 @@ public class AccountTimelineJson {
         }
 
         this.payments = new LinkedList<InvoicePaymentJson>();
-        for (final DirectPayment payment : payments) {
+        for (final Payment payment : payments) {
             final UUID invoiceId = JaxRsResourceBase.getInvoiceId(invoicePayments, payment);
             this.payments.add(new InvoicePaymentJson(payment, invoiceId, accountAuditLogs));
         }

@@ -24,9 +24,9 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentApi;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -45,20 +45,20 @@ public class PaymentChecker {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentChecker.class);
 
-    private final DirectPaymentApi paymentApi;
+    private final PaymentApi paymentApi;
     private final AuditChecker auditChecker;
 
     @Inject
-    public PaymentChecker(final DirectPaymentApi paymentApi, final AuditChecker auditChecker) {
+    public PaymentChecker(final PaymentApi paymentApi, final AuditChecker auditChecker) {
         this.paymentApi = paymentApi;
         this.auditChecker = auditChecker;
     }
 
-    public DirectPayment checkPayment(final UUID accountId, final int paymentOrderingNumber, final CallContext context, ExpectedPaymentCheck expected) throws PaymentApiException {
-        final List<DirectPayment> payments = paymentApi.getAccountPayments(accountId, false, ImmutableList.<PluginProperty>of(), context);
+    public Payment checkPayment(final UUID accountId, final int paymentOrderingNumber, final CallContext context, ExpectedPaymentCheck expected) throws PaymentApiException {
+        final List<Payment> payments = paymentApi.getAccountPayments(accountId, false, ImmutableList.<PluginProperty>of(), context);
         Assert.assertEquals(payments.size(), paymentOrderingNumber);
-        final DirectPayment payment = payments.get(paymentOrderingNumber - 1);
-        final DirectPaymentTransaction transaction = getPurchaseTransaction(payment);
+        final Payment payment = payments.get(paymentOrderingNumber - 1);
+        final PaymentTransaction transaction = getPurchaseTransaction(payment);
         if (transaction.getTransactionStatus() == TransactionStatus.UNKNOWN) {
             checkPaymentNoAuditForRuntimeException(accountId, payment, expected);
         } else {
@@ -67,27 +67,27 @@ public class PaymentChecker {
         return payment;
     }
 
-    private DirectPaymentTransaction getPurchaseTransaction(final DirectPayment payment) {
-        return Iterables.tryFind(payment.getTransactions(), new Predicate<DirectPaymentTransaction>() {
+    private PaymentTransaction getPurchaseTransaction(final Payment payment) {
+        return Iterables.tryFind(payment.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
-            public boolean apply(final DirectPaymentTransaction input) {
+            public boolean apply(final PaymentTransaction input) {
                 return input.getTransactionType() == TransactionType.PURCHASE;
             }
         }).get();
     }
 
-    private void checkPayment(final UUID accountId, final DirectPayment payment, final CallContext context, final ExpectedPaymentCheck expected) {
+    private void checkPayment(final UUID accountId, final Payment payment, final CallContext context, final ExpectedPaymentCheck expected) {
         Assert.assertEquals(payment.getAccountId(), accountId);
-        final DirectPaymentTransaction transaction = getPurchaseTransaction(payment);
+        final PaymentTransaction transaction = getPurchaseTransaction(payment);
         Assert.assertTrue(transaction.getAmount().compareTo(expected.getAmount()) == 0);
         Assert.assertEquals(transaction.getTransactionStatus(), expected.getStatus());
         Assert.assertEquals(payment.getCurrency(), expected.getCurrency());
         auditChecker.checkPaymentCreated(payment, context);
     }
 
-    private void checkPaymentNoAuditForRuntimeException(final UUID accountId, final DirectPayment payment, final ExpectedPaymentCheck expected) {
+    private void checkPaymentNoAuditForRuntimeException(final UUID accountId, final Payment payment, final ExpectedPaymentCheck expected) {
         Assert.assertEquals(payment.getAccountId(), accountId);
-        final DirectPaymentTransaction transaction = getPurchaseTransaction(payment);
+        final PaymentTransaction transaction = getPurchaseTransaction(payment);
         Assert.assertTrue(transaction.getAmount().compareTo(expected.getAmount()) == 0);
         Assert.assertEquals(transaction.getTransactionStatus(), expected.getStatus());
         Assert.assertEquals(payment.getCurrency(), expected.getCurrency());

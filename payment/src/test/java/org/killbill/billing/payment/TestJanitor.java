@@ -29,8 +29,8 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.payment.api.DirectPayment;
-import org.killbill.billing.payment.api.DirectPaymentTransaction;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -117,7 +117,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                             new BigDecimal("1.0"),
                                                             Currency.USD));
 
-        final DirectPayment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                                                   createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
         assertEquals(payment.getTransactions().size(), 1);
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
@@ -166,7 +166,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                                      Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
 
-        final DirectPayment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                                                   createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
 
         final List<PluginProperty> refundProperties = new ArrayList<PluginProperty>();
@@ -175,11 +175,11 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final PluginProperty refundIdsProp = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, uuidBigDecimalHashMap, false);
         refundProperties.add(refundIdsProp);
 
-        final DirectPayment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, transactionExternalKey2,
+        final Payment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, transactionExternalKey2,
                                                                                  refundProperties, INVOICE_PAYMENT, callContext);
 
         assertEquals(payment2.getTransactions().size(), 2);
-        DirectPaymentTransaction refundTransaction = payment2.getTransactions().get(1);
+        PaymentTransaction refundTransaction = payment2.getTransactions().get(1);
         assertEquals(refundTransaction.getTransactionType(), TransactionType.REFUND);
 
         final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);

@@ -45,7 +45,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -89,7 +89,7 @@ public class BundleResource extends JaxRsResourceBase {
                           final AccountUserApi accountUserApi,
                           final SubscriptionApi subscriptionApi,
                           final EntitlementApi entitlementApi,
-                          final DirectPaymentApi paymentApi,
+                          final PaymentApi paymentApi,
                           final Clock clock,
                           final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);

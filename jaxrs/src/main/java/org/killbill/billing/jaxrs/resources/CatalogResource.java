@@ -32,7 +32,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.CatalogJsonSimple;
 import org.killbill.billing.jaxrs.json.PlanDetailJson;
@@ -62,7 +62,7 @@ public class CatalogResource extends JaxRsResourceBase {
                            final CustomFieldUserApi customFieldUserApi,
                            final AuditUserApi auditUserApi,
                            final AccountUserApi accountUserApi,
-                           final DirectPaymentApi paymentApi,
+                           final PaymentApi paymentApi,
                            final Clock clock,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);

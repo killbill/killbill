@@ -41,32 +41,32 @@ public interface PaymentDao {
 
     public List<PaymentAttemptModelDao> getPaymentAttemptByTransactionExternalKey(String externalKey, InternalTenantContext context);
 
-    public List<PaymentTransactionModelDao> getDirectPaymentTransactionsByExternalKey(String transactionExternalKey, InternalTenantContext context);
+    public List<PaymentTransactionModelDao> getPaymentTransactionsByExternalKey(String transactionExternalKey, InternalTenantContext context);
 
-    public PaymentModelDao getDirectPaymentByExternalKey(String externalKey, InternalTenantContext context);
+    public PaymentModelDao getPaymentByExternalKey(String externalKey, InternalTenantContext context);
 
-    public Pagination<PaymentModelDao> getDirectPayments(String pluginName, Long offset, Long limit, InternalTenantContext context);
+    public Pagination<PaymentModelDao> getPayments(String pluginName, Long offset, Long limit, InternalTenantContext context);
 
-    public PaymentModelDao insertDirectPaymentWithFirstTransaction(PaymentModelDao directPayment, PaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
+    public PaymentModelDao insertPaymentWithFirstTransaction(PaymentModelDao payment, PaymentTransactionModelDao paymentTransaction, InternalCallContext context);
 
-    public PaymentTransactionModelDao updateDirectPaymentWithNewTransaction(UUID directPaymentId, PaymentTransactionModelDao directPaymentTransaction, InternalCallContext context);
+    public PaymentTransactionModelDao updatePaymentWithNewTransaction(UUID paymentId, PaymentTransactionModelDao paymentTransaction, InternalCallContext context);
 
-    public void updateDirectPaymentAndTransactionOnCompletion(UUID directPaymentId, String currentPaymentStateName,
+    public void updatePaymentAndTransactionOnCompletion(UUID paymentId, String currentPaymentStateName,
                                                               String lastPaymentSuccessStateName,
-                                                              UUID directTransactionId, TransactionStatus paymentStatus,
+                                                              UUID transactionId, TransactionStatus paymentStatus,
                                                               BigDecimal processedAmount, Currency processedCurrency,
                                                               String gatewayErrorCode, String gatewayErrorMsg,
                                                               InternalCallContext context);
 
-    public PaymentModelDao getDirectPayment(UUID directPaymentId, InternalTenantContext context);
+    public PaymentModelDao getPayment(UUID paymentId, InternalTenantContext context);
 
-    public PaymentTransactionModelDao getDirectPaymentTransaction(UUID directTransactionId, InternalTenantContext context);
+    public PaymentTransactionModelDao getPaymentTransaction(UUID transactionId, InternalTenantContext context);
 
-    public List<PaymentModelDao> getDirectPaymentsForAccount(UUID accountId, InternalTenantContext context);
+    public List<PaymentModelDao> getPaymentsForAccount(UUID accountId, InternalTenantContext context);
 
-    public List<PaymentTransactionModelDao> getDirectTransactionsForAccount(UUID accountId, InternalTenantContext context);
+    public List<PaymentTransactionModelDao> getTransactionsForAccount(UUID accountId, InternalTenantContext context);
 
-    public List<PaymentTransactionModelDao> getDirectTransactionsForDirectPayment(UUID directPaymentId, InternalTenantContext context);
+    public List<PaymentTransactionModelDao> getTransactionsForPayment(UUID paymentId, InternalTenantContext context);
 
     public PaymentAttemptModelDao getPaymentAttempt(UUID attemptId, InternalTenantContext context);
 

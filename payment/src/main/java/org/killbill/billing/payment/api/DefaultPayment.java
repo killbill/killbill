@@ -29,7 +29,7 @@ import org.killbill.billing.entity.EntityBase;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-public class DefaultDirectPayment extends EntityBase implements DirectPayment {
+public class DefaultPayment extends EntityBase implements Payment {
 
     private final UUID accountId;
     private final UUID paymentMethodId;
@@ -43,13 +43,13 @@ public class DefaultDirectPayment extends EntityBase implements DirectPayment {
     private final Boolean isVoided;
 
     private final Currency currency;
-    private final List<DirectPaymentTransaction> transactions;
+    private final List<PaymentTransaction> transactions;
 
-    public DefaultDirectPayment(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
-                                final UUID paymentMethodId,
-                                final Integer paymentNumber,
-                                final String externalKey,
-                                final List<DirectPaymentTransaction> transactions) {
+    public DefaultPayment(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
+                          final UUID paymentMethodId,
+                          final Integer paymentNumber,
+                          final String externalKey,
+                          final List<PaymentTransaction> transactions) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.paymentMethodId = paymentMethodId;
@@ -61,20 +61,20 @@ public class DefaultDirectPayment extends EntityBase implements DirectPayment {
         this.purchasedAmount = getAmountForType(transactions, TransactionType.PURCHASE);
         this.creditAmount = getAmountForType(transactions, TransactionType.CREDIT);
         this.refundAmount = getAmountForType(transactions, TransactionType.REFUND);
-        this.isVoided = Iterables.filter(transactions, new Predicate<DirectPaymentTransaction>() {
+        this.isVoided = Iterables.filter(transactions, new Predicate<PaymentTransaction>() {
             @Override
-            public boolean apply(final DirectPaymentTransaction input) {
+            public boolean apply(final PaymentTransaction input) {
                 return input.getTransactionType() == TransactionType.VOID && TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
             }
         }).iterator().hasNext();
         this.currency = (transactions != null && !transactions.isEmpty()) ? transactions.get(0).getCurrency() : null;
     }
 
-    private static BigDecimal getAmountForType(final Iterable<DirectPaymentTransaction> transactions, final TransactionType transactiontype) {
+    private static BigDecimal getAmountForType(final Iterable<PaymentTransaction> transactions, final TransactionType transactiontype) {
         BigDecimal result = BigDecimal.ZERO;
-        final Iterable<DirectPaymentTransaction> filtered = Iterables.filter(transactions, new Predicate<DirectPaymentTransaction>() {
+        final Iterable<PaymentTransaction> filtered = Iterables.filter(transactions, new Predicate<PaymentTransaction>() {
             @Override
-            public boolean apply(final DirectPaymentTransaction input) {
+            public boolean apply(final PaymentTransaction input) {
                 return input.getTransactionType() == transactiontype && TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
             }
         });
@@ -82,7 +82,7 @@ public class DefaultDirectPayment extends EntityBase implements DirectPayment {
             // HACK - For multi-step AUTH, don't sum the individual transactions
             result = filtered.iterator().next().getAmount();
         } else {
-            for (final DirectPaymentTransaction dpt : filtered) {
+            for (final PaymentTransaction dpt : filtered) {
                 result = result.add(dpt.getAmount());
             }
         }
@@ -145,13 +145,13 @@ public class DefaultDirectPayment extends EntityBase implements DirectPayment {
     }
 
     @Override
-    public List<DirectPaymentTransaction> getTransactions() {
+    public List<PaymentTransaction> getTransactions() {
         return transactions;
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("DefaultDirectPayment{");
+        final StringBuilder sb = new StringBuilder("DefaultPayment{");
         sb.append("accountId=").append(accountId);
         sb.append(", paymentMethodId=").append(paymentMethodId);
         sb.append(", paymentNumber=").append(paymentNumber);
@@ -178,7 +178,7 @@ public class DefaultDirectPayment extends EntityBase implements DirectPayment {
             return false;
         }
 
-        final DefaultDirectPayment that = (DefaultDirectPayment) o;
+        final DefaultPayment that = (DefaultPayment) o;
 
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;

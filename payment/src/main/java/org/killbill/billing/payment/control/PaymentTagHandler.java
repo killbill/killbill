@@ -26,7 +26,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.core.DirectPaymentProcessor;
+import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -45,7 +45,7 @@ public class PaymentTagHandler {
 
     private final Clock clock;
     private final AccountInternalApi accountApi;
-    private final DirectPaymentProcessor paymentProcessor;
+    private final PaymentProcessor paymentProcessor;
     private final InternalCallContextFactory internalCallContextFactory;
     private final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry;
     private final PaymentControlPluginApi invoicePaymentControlPlugin;
@@ -53,7 +53,7 @@ public class PaymentTagHandler {
     @Inject
     public PaymentTagHandler(final Clock clock,
                              final AccountInternalApi accountApi,
-                             final DirectPaymentProcessor paymentProcessor,
+                             final PaymentProcessor paymentProcessor,
                              final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;

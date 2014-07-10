@@ -20,7 +20,7 @@ import java.util.Iterator;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
@@ -32,23 +32,23 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 @EntitySqlDaoStringTemplate
-public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, DirectPayment> {
+public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void updatePaymentForNewTransaction(@Bind("id") final String directPaymentId,
+    void updatePaymentForNewTransaction(@Bind("id") final String paymentId,
                                         @BindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void updatePaymentStateName(@Bind("id") final String directPaymentId,
+    void updatePaymentStateName(@Bind("id") final String paymentId,
                                 @Bind("stateName") final String stateName,
                                 @BindBean final InternalCallContext context);
 
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void updateLastSuccessPaymentStateName(@Bind("id") final String directPaymentId,
+    void updateLastSuccessPaymentStateName(@Bind("id") final String paymentId,
                                 @Bind("stateName") final String stateName,
                                 @Bind("lastSuccessStateName") final String lastSuccessStateName,
                                 @BindBean final InternalCallContext context);

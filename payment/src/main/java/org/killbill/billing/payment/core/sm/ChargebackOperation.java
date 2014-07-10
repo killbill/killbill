@@ -37,22 +37,22 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-public class ChargebackOperation extends DirectPaymentOperation {
+public class ChargebackOperation extends PaymentOperation {
 
     private final Logger logger = LoggerFactory.getLogger(ChargebackOperation.class);
 
-    public ChargebackOperation(final DirectPaymentAutomatonDAOHelper daoHelper,
+    public ChargebackOperation(final PaymentAutomatonDAOHelper daoHelper,
                                final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher,
-                               final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
-        super(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
+                               final PaymentStateContext paymentStateContext) throws PaymentApiException {
+        super(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
     }
 
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
-        logger.debug("Starting CHARGEBACK for payment {} ({} {})", directPaymentStateContext.getDirectPaymentId(), directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency());
+        logger.debug("Starting CHARGEBACK for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
 
         final PaymentPluginStatus status;
-        if (!directPaymentStateContext.getOnLeavingStateExistingTransactions().isEmpty()) {
+        if (!paymentStateContext.getOnLeavingStateExistingTransactions().isEmpty()) {
             final Iterable<PaymentTransactionModelDao> purchaseTransactions = getOnLeavingStateExistingTransactionsForType(TransactionType.PURCHASE);
             final Iterable<PaymentTransactionModelDao> captureTransactions = getOnLeavingStateExistingTransactionsForType(TransactionType.CAPTURE);
             final Iterable<PaymentTransactionModelDao> refundTransactions = getOnLeavingStateExistingTransactionsForType(TransactionType.REFUND);
@@ -64,7 +64,7 @@ public class ChargebackOperation extends DirectPaymentOperation {
             final BigDecimal chargebackAmount = getSumAmount(chargebackTransactions);
             final BigDecimal chargebackAvailableAmount = purchasedAmount.add(capturedAmount).subtract(refundedAmount.add(chargebackAmount));
 
-            if (directPaymentStateContext.getAmount().compareTo(chargebackAvailableAmount) > 0) {
+            if (paymentStateContext.getAmount().compareTo(chargebackAvailableAmount) > 0) {
                 status = PaymentPluginStatus.ERROR;
             } else {
                 status = PaymentPluginStatus.PROCESSED;
@@ -72,11 +72,11 @@ public class ChargebackOperation extends DirectPaymentOperation {
         } else {
             status = PaymentPluginStatus.PROCESSED;
         }
-        return new DefaultNoOpPaymentInfoPlugin(directPaymentStateContext.getDirectPaymentId(),
-                                                 directPaymentStateContext.getTransactionPaymentId(),
+        return new DefaultNoOpPaymentInfoPlugin(paymentStateContext.getPaymentId(),
+                                                 paymentStateContext.getTransactionPaymentId(),
                                                  TransactionType.CHARGEBACK,
-                                                 directPaymentStateContext.getAmount(),
-                                                 directPaymentStateContext.getCurrency(),
+                                                 paymentStateContext.getAmount(),
+                                                 paymentStateContext.getCurrency(),
                                                  null,
                                                  null,
                                                  status,

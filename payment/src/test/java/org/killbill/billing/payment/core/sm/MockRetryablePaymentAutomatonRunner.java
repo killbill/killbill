@@ -34,7 +34,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.core.DirectPaymentProcessor;
+import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.glue.PaymentModule;
@@ -50,47 +50,47 @@ import org.killbill.commons.locker.GlobalLocker;
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 
-public class MockRetryableDirectPaymentAutomatonRunner extends PluginControlledDirectPaymentAutomatonRunner {
+public class MockRetryablePaymentAutomatonRunner extends PluginControlledPaymentAutomatonRunner {
 
     private OperationCallback operationCallback;
-    private RetryableDirectPaymentStateContext context;
+    private RetryablePaymentStateContext context;
 
     @Inject
-    public MockRetryableDirectPaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, @Named(PaymentModule.STATE_MACHINE_RETRY) final StateMachineConfig retryStateMachine, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final Clock clock, final TagInternalApi tagApi, final DirectPaymentProcessor directPaymentProcessor,
-                                                     @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler, final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
-                                                     final PaymentStateMachineHelper paymentSMHelper, final RetryStateMachineHelper retrySMHelper) {
-        super(stateMachineConfig, paymentDao, locker, pluginRegistry, retryPluginRegistry, clock, directPaymentProcessor, retryServiceScheduler, paymentConfig, executor, paymentSMHelper, retrySMHelper);
+    public MockRetryablePaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, @Named(PaymentModule.STATE_MACHINE_RETRY) final StateMachineConfig retryStateMachine, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final Clock clock, final TagInternalApi tagApi, final PaymentProcessor paymentProcessor,
+                                               @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler, final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
+                                               final PaymentStateMachineHelper paymentSMHelper, final RetryStateMachineHelper retrySMHelper) {
+        super(stateMachineConfig, paymentDao, locker, pluginRegistry, retryPluginRegistry, clock, paymentProcessor, retryServiceScheduler, paymentConfig, executor, paymentSMHelper, retrySMHelper);
     }
 
     @Override
-    OperationCallback createOperationCallback(final TransactionType transactionType, final RetryableDirectPaymentStateContext directPaymentStateContext) {
+    OperationCallback createOperationCallback(final TransactionType transactionType, final RetryablePaymentStateContext paymentStateContext) {
         if (operationCallback == null) {
-            return super.createOperationCallback(transactionType, directPaymentStateContext);
+            return super.createOperationCallback(transactionType, paymentStateContext);
         } else {
             return operationCallback;
         }
     }
 
     @Override
-    RetryableDirectPaymentStateContext createContext(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
-                                                     @Nullable final UUID directPaymentId, @Nullable final String directPaymentExternalKey, final String directPaymentTransactionExternalKey,
+    RetryablePaymentStateContext createContext(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
+                                                     @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
                                                      @Nullable final BigDecimal amount, @Nullable final Currency currency,
                                                      final Iterable<PluginProperty> properties,
                                                      final String pluginName, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         if (context == null) {
-            return super.createContext(isApiPayment, transactionType, account, paymentMethodId, directPaymentId, directPaymentExternalKey, directPaymentTransactionExternalKey,
+            return super.createContext(isApiPayment, transactionType, account, paymentMethodId, paymentId, paymentExternalKey, paymentTransactionExternalKey,
                                        amount, currency, properties, pluginName, callContext, internalCallContext);
         } else {
             return context;
         }
     }
 
-    public MockRetryableDirectPaymentAutomatonRunner setOperationCallback(final OperationCallback operationCallback) {
+    public MockRetryablePaymentAutomatonRunner setOperationCallback(final OperationCallback operationCallback) {
         this.operationCallback = operationCallback;
         return this;
     }
 
-    public MockRetryableDirectPaymentAutomatonRunner setContext(final RetryableDirectPaymentStateContext context) {
+    public MockRetryablePaymentAutomatonRunner setContext(final RetryablePaymentStateContext context) {
         this.context = context;
         return this;
     }

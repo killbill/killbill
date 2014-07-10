@@ -26,26 +26,26 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RefundOperation extends DirectPaymentOperation {
+public class RefundOperation extends PaymentOperation {
 
     private final Logger logger = LoggerFactory.getLogger(RefundOperation.class);
 
-    public RefundOperation(final DirectPaymentAutomatonDAOHelper daoHelper,
+    public RefundOperation(final PaymentAutomatonDAOHelper daoHelper,
                            final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher,
-                           final DirectPaymentStateContext directPaymentStateContext) throws PaymentApiException {
-        super(daoHelper, locker, paymentPluginDispatcher, directPaymentStateContext);
+                           final PaymentStateContext paymentStateContext) throws PaymentApiException {
+        super(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
     }
 
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
-        logger.debug("Starting REFUND for payment {} ({} {})", directPaymentStateContext.getDirectPaymentId(), directPaymentStateContext.getAmount(), directPaymentStateContext.getCurrency());
-        return plugin.refundPayment(directPaymentStateContext.getAccount().getId(),
-                                    directPaymentStateContext.getDirectPaymentId(),
-                                    directPaymentStateContext.getTransactionPaymentId(),
-                                    directPaymentStateContext.getPaymentMethodId(),
-                                    directPaymentStateContext.getAmount(),
-                                    directPaymentStateContext.getCurrency(),
-                                    directPaymentStateContext.getProperties(),
-                                    directPaymentStateContext.getCallContext());
+        logger.debug("Starting REFUND for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
+        return plugin.refundPayment(paymentStateContext.getAccount().getId(),
+                                    paymentStateContext.getPaymentId(),
+                                    paymentStateContext.getTransactionPaymentId(),
+                                    paymentStateContext.getPaymentMethodId(),
+                                    paymentStateContext.getAmount(),
+                                    paymentStateContext.getCurrency(),
+                                    paymentStateContext.getProperties(),
+                                    paymentStateContext.getCallContext());
     }
 }

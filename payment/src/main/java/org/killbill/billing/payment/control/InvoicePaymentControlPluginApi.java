@@ -258,16 +258,16 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                  " aborted: requested refund amount is = " + paymentControlPluginContext.getAmount());
         }
 
-        final PaymentModelDao directPayment = paymentDao.getDirectPayment(paymentControlPluginContext.getPaymentId(), internalContext);
-        if (directPayment == null) {
+        final PaymentModelDao payment = paymentDao.getPayment(paymentControlPluginContext.getPaymentId(), internalContext);
+        if (payment == null) {
             throw new PaymentControlApiException();
         }
         // STEPH this check for invoice item but we also need to check that refundAmount is less or equal to paymentAmount - all refund.
-        final BigDecimal amountToBeRefunded = computeRefundAmount(directPayment.getId(), paymentControlPluginContext.getAmount(), idWithAmount, internalContext);
+        final BigDecimal amountToBeRefunded = computeRefundAmount(payment.getId(), paymentControlPluginContext.getAmount(), idWithAmount, internalContext);
         final boolean isAborted = amountToBeRefunded.compareTo(BigDecimal.ZERO) == 0;
 
         if (paymentControlPluginContext.isApiPayment() && isAborted) {
-            throw new PaymentControlApiException("Refund for payment " + directPayment.getId() +
+            throw new PaymentControlApiException("Refund for payment " + payment.getId() +
                                                  " aborted : invoice item sum amount is " + amountToBeRefunded +
                                                  ", requested refund amount is = " + paymentControlPluginContext.getAmount());
         } else {
@@ -412,11 +412,11 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     private List<PaymentTransactionModelDao> getPurchasedTransactions(final String paymentExternalKey, final InternalCallContext internalContext) {
-        final PaymentModelDao payment = paymentDao.getDirectPaymentByExternalKey(paymentExternalKey, internalContext);
+        final PaymentModelDao payment = paymentDao.getPaymentByExternalKey(paymentExternalKey, internalContext);
         if (payment == null) {
             return Collections.emptyList();
         }
-        final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectTransactionsForDirectPayment(payment.getId(), internalContext);
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(payment.getId(), internalContext);
         if (transactions == null || transactions.size() == 0) {
             return Collections.emptyList();
         }

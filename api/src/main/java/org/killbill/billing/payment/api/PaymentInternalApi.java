@@ -30,16 +30,16 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 
 public interface PaymentInternalApi {
 
-    public DirectPayment createPayment(final Account account, final UUID invoiceId,
+    public Payment createPayment(final Account account, final UUID invoiceId,
                                        @Nullable final BigDecimal amount, final Iterable<PluginProperty> properties, final InternalCallContext internalContext) throws PaymentApiException;
 
-    public DirectPayment getPayment(UUID paymentId, Iterable<PluginProperty> properties, InternalTenantContext context)
+    public Payment getPayment(UUID paymentId, Iterable<PluginProperty> properties, InternalTenantContext context)
             throws PaymentApiException;
 
     public PaymentMethod getPaymentMethodById(UUID paymentMethodId, boolean includedInactive, Iterable<PluginProperty> properties, InternalTenantContext context)
             throws PaymentApiException;
 
-    public List<DirectPayment> getAccountPayments(UUID accountId, InternalTenantContext context)
+    public List<Payment> getAccountPayments(UUID accountId, InternalTenantContext context)
             throws PaymentApiException;
 
     public List<PaymentMethod> getPaymentMethods(Account account, Iterable<PluginProperty> properties, InternalTenantContext context)

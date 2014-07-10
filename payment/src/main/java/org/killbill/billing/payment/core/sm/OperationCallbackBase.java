@@ -38,14 +38,14 @@ public abstract class OperationCallbackBase {
     private final GlobalLocker locker;
     private final PluginDispatcher<OperationResult> paymentPluginDispatcher;
 
-    protected final DirectPaymentStateContext directPaymentStateContext;
+    protected final PaymentStateContext paymentStateContext;
 
     protected OperationCallbackBase(final GlobalLocker locker,
                                     final PluginDispatcher<OperationResult> paymentPluginDispatcher,
-                                    final DirectPaymentStateContext directPaymentStateContext) {
+                                    final PaymentStateContext paymentStateContext) {
         this.locker = locker;
         this.paymentPluginDispatcher = paymentPluginDispatcher;
-        this.directPaymentStateContext = directPaymentStateContext;
+        this.paymentStateContext = paymentStateContext;
     }
 
     //
@@ -54,7 +54,7 @@ public abstract class OperationCallbackBase {
     // callback to eventually throw a OperationException, that will be used to drive the state machine in the right direction.
     //
     protected <ExceptionType extends Exception> OperationResult dispatchWithAccountLockAndTimeout(final WithAccountLockCallback<OperationResult, ExceptionType> callback) throws OperationException {
-        final Account account = directPaymentStateContext.getAccount();
+        final Account account = paymentStateContext.getAccount();
         logger.debug("Dispatching plugin call for account {}", account.getExternalKey());
 
         try {
@@ -65,12 +65,12 @@ public abstract class OperationCallbackBase {
             logger.debug("Successful plugin call for account {} with result {}", account.getExternalKey(), operationResult);
             return operationResult;
         } catch (final ExecutionException e) {
-            throw rewrapExecutionException(directPaymentStateContext, e);
+            throw rewrapExecutionException(paymentStateContext, e);
         } catch (final TimeoutException e) {
-            throw wrapTimeoutException(directPaymentStateContext, e);
+            throw wrapTimeoutException(paymentStateContext, e);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw wrapInterruptedException(directPaymentStateContext, e);
+            throw wrapInterruptedException(paymentStateContext, e);
         }
     }
 
@@ -86,10 +86,10 @@ public abstract class OperationCallbackBase {
     //
     // The methods below allow to convert the exceptions thrown back by the Executor into an appropriate  OperationException
     //
-    protected abstract OperationException rewrapExecutionException(final DirectPaymentStateContext directPaymentStateContext, final ExecutionException e);
+    protected abstract OperationException rewrapExecutionException(final PaymentStateContext paymentStateContext, final ExecutionException e);
 
-    protected abstract OperationException wrapTimeoutException(final DirectPaymentStateContext directPaymentStateContext, final TimeoutException e);
+    protected abstract OperationException wrapTimeoutException(final PaymentStateContext paymentStateContext, final TimeoutException e);
 
-    protected abstract OperationException wrapInterruptedException(final DirectPaymentStateContext directPaymentStateContext, final InterruptedException e);
+    protected abstract OperationException wrapInterruptedException(final PaymentStateContext paymentStateContext, final InterruptedException e);
 
 }

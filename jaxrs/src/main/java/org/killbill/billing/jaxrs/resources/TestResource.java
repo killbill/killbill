@@ -38,7 +38,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
@@ -79,7 +79,7 @@ public class TestResource extends JaxRsResourceBase {
     @Inject
     public TestResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi,
                         final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final RecordIdApi recordIdApi,
-                        final NotificationQueueService notificationQueueService, final DirectPaymentApi paymentApi,
+                        final NotificationQueueService notificationQueueService, final PaymentApi paymentApi,
                         final Clock clock, final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.notificationQueueService = notificationQueueService;

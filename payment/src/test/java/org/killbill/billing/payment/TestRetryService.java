@@ -25,13 +25,11 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
-import org.killbill.billing.payment.api.DirectPayment;
+import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
@@ -84,8 +82,8 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         retryService.stop();
     }
 
-    private DirectPayment getPaymentForExternalKey(final String externalKey) throws PaymentApiException {
-        final DirectPayment payment = paymentProcessor.getPaymentByExternalKey(externalKey, false, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
+    private Payment getPaymentForExternalKey(final String externalKey) throws PaymentApiException {
+        final Payment payment = paymentProcessor.getPaymentByExternalKey(externalKey, false, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
         return payment;
     }
 
@@ -152,11 +150,11 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         }
         assertTrue(failed);
 
-        DirectPayment payment = getPaymentForExternalKey(paymentExternalKey);
+        Payment payment = getPaymentForExternalKey(paymentExternalKey);
         List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
         assertEquals(attempts.size(), 1);
 
-        final List<PaymentTransactionModelDao> transactions = paymentDao.getDirectTransactionsForDirectPayment(payment.getId(), internalCallContext);
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(payment.getId(), internalCallContext);
         assertEquals(transactions.size(), 1);
 
 

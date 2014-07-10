@@ -204,7 +204,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayments allPayments = killBillClient.getInvoicePaymentsForAccount(lastPayment.getAccountId());
         Assert.assertEquals(allPayments.size(), 6);
 
-        final List<PaymentTransaction> objRefundFromJson = getDirectPaymentTransactions(allPayments, TransactionType.REFUND.toString());
+        final List<PaymentTransaction> objRefundFromJson = getPaymentTransactions(allPayments, TransactionType.REFUND.toString());
         Assert.assertEquals(objRefundFromJson.size(), 5);
 
         Payments paymentsPage = killBillClient.getPayments(0L, 1L);
@@ -236,14 +236,14 @@ public class TestInvoicePayment extends TestJaxrsBase {
         Assert.assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());
 
         // Verify the refunds
-        final List<PaymentTransaction> objRefundFromJson = getDirectPaymentTransactions(paymentsForAccount, TransactionType.REFUND.toString());
+        final List<PaymentTransaction> objRefundFromJson = getPaymentTransactions(paymentsForAccount, TransactionType.REFUND.toString());
         Assert.assertEquals(objRefundFromJson.size(), 0);
         return paymentJson;
     }
 
     private void verifyRefund(final InvoicePayment paymentJson, final Payment paymentAfterRefund, final BigDecimal refundAmount) throws KillBillClientException {
 
-        final List<PaymentTransaction> transactions = getDirectPaymentTransactions(ImmutableList.of(paymentAfterRefund), TransactionType.REFUND.toString());
+        final List<PaymentTransaction> transactions = getPaymentTransactions(ImmutableList.of(paymentAfterRefund), TransactionType.REFUND.toString());
         Assert.assertEquals(transactions.size(), 1);
 
         final PaymentTransaction refund = transactions.get(0);

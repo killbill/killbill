@@ -30,7 +30,7 @@ import javax.ws.rs.core.Response;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.payment.api.DirectPaymentApi;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -61,7 +61,7 @@ public class CustomFieldResource extends JaxRsResourceBase {
                                final CustomFieldUserApi customFieldUserApi,
                                final AuditUserApi auditUserApi,
                                final AccountUserApi accountUserApi,
-                               final DirectPaymentApi paymentApi,
+                               final PaymentApi paymentApi,
                                final Clock clock,
                                final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
