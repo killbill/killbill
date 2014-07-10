@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -449,12 +450,27 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public InvoicePaymentModelDao postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final InternalCallContext context) throws InvoiceApiException {
+    public InvoicePaymentModelDao postChargeback(final UUID paymentId, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
         return transactionalSqlDao.execute(InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<InvoicePaymentModelDao>() {
             @Override
             public InvoicePaymentModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
 
+                final List<InvoicePaymentModelDao> invoicePayments = transactional.getByPaymentId(paymentId.toString(), context);
+                final InvoicePaymentModelDao invoicePayment = Iterables.tryFind(invoicePayments, new Predicate<InvoicePaymentModelDao>() {
+                    @Override
+                    public boolean apply(final InvoicePaymentModelDao input) {
+                        return input.getType() == InvoicePaymentType.ATTEMPT;
+                    }
+                }).orNull();
+                if (invoicePayment == null) {
+                    throw new InvoiceApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentId);
+                }
+                // We expect the code to correctly pass the account currency -- the payment code, more generic accept chargeBack in different currencies,
+                // but this is only for direct payment (no invoice)
+                Preconditions.checkArgument(invoicePayment.getCurrency() == currency);
+
+                final UUID invoicePaymentId = invoicePayment.getId();
                 final BigDecimal maxChargedBackAmount = invoiceDaoHelper.getRemainingAmountPaidFromTransaction(invoicePaymentId, entitySqlDaoWrapperFactory, context);
                 final BigDecimal requestedChargedBackAmount = (amount == null) ? maxChargedBackAmount : amount;
                 if (requestedChargedBackAmount.compareTo(BigDecimal.ZERO) <= 0) {

@@ -270,7 +270,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public InvoicePaymentModelDao postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final InternalCallContext context) throws InvoiceApiException {
+    public InvoicePaymentModelDao postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 

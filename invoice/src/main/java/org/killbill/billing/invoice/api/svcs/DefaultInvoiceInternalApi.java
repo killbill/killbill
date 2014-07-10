@@ -132,15 +132,14 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final String transactionExternalKey, final InternalCallContext context) throws InvoiceApiException {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
+            throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL, paymentId, amount);
         }
         return new DefaultInvoicePayment(dao.createRefund(paymentId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, transactionExternalKey, context));
     }
 
     @Override
     public InvoicePayment createChargeback(final UUID paymentId, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
-        // STEPH not implemented yet
-        return null;
+        return new DefaultInvoicePayment(dao.postChargeback(paymentId, amount, currency, context));
     }
 
     @Override
