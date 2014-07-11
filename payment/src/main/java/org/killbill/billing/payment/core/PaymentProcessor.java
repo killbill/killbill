@@ -177,7 +177,7 @@ public class PaymentProcessor extends ProcessorBase {
         final State currentPaymentState;
         final String stateName = paymentModelDao.getStateName();
         final String lastSuccessPaymentStateStrOrNull = paymentSMHelper.isSuccessState(stateName) ? stateName : null;
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), transactionModelDao.getPaymentId(), TransactionType.NOTIFY_STATE_CHANGE,
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), transactionModelDao.getPaymentId(), transactionModelDao.getTransactionType(),
                                                            stateName, lastSuccessPaymentStateStrOrNull, transactionModelDao.getId(), newStatus,
                                                            transactionModelDao.getProcessedAmount(), transactionModelDao.getProcessedCurrency(),
                                                            transactionModelDao.getGatewayErrorCode(), transactionModelDao.getGatewayErrorMsg(), internalCallContext);
