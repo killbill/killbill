@@ -63,7 +63,7 @@ public class InvoicePaymentControlDao {
         return dbi.withHandle(new HandleCallback<List<PluginAutoPayOffModelDao>>() {
             @Override
             public List<PluginAutoPayOffModelDao> withHandle(final Handle handle) throws Exception {
-                final List<Map<String, Object>> queryResult = handle.select("select * from _invoice_payment_control_plugin_auto_pay_off where account_id = ?", accountId.toString());
+                final List<Map<String, Object>> queryResult = handle.select("select * from _invoice_payment_control_plugin_auto_pay_off where account_id = ? and is_active", accountId.toString());
                 final List<PluginAutoPayOffModelDao> result = new ArrayList<PluginAutoPayOffModelDao>(queryResult.size());
                 for (final Map<String, Object> row : queryResult) {
 
@@ -87,12 +87,11 @@ public class InvoicePaymentControlDao {
         });
     }
 
-    // STEPH soft delete?
     public void removeAutoPayOffEntry(final UUID accountId) {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("delete from _invoice_payment_control_plugin_auto_pay_off where account_id = ?", accountId.toString());
+                handle.execute("update _invoice_payment_control_plugin_auto_pay_off set is_active = 0 where account_id = ?", accountId.toString());
                 return null;
             }
         });

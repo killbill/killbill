@@ -221,6 +221,7 @@ CREATE TABLE _invoice_payment_control_plugin_auto_pay_off (
     payment_method_id char(36) NOT NULL,
     amount numeric(15,9),
     currency char(3),
+    is_active bool DEFAULT true,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     PRIMARY KEY (record_id)

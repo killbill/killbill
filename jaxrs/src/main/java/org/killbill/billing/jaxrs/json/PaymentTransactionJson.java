@@ -79,21 +79,21 @@ public class PaymentTransactionJson extends JsonBase {
         this.properties = properties;
     }
 
-    public PaymentTransactionJson(final PaymentTransaction dpt, final String paymentExternalKey, @Nullable final List<AuditLog> transactionLogs) {
-        this(dpt.getId().toString(),
-             dpt.getExternalKey(),
-             dpt.getPaymentId().toString(),
+    public PaymentTransactionJson(final PaymentTransaction transaction, final String paymentExternalKey, @Nullable final List<AuditLog> transactionLogs) {
+        this(transaction.getId().toString(),
+             transaction.getExternalKey(),
+             transaction.getPaymentId().toString(),
              paymentExternalKey,
-             dpt.getTransactionType().toString(),
-             dpt.getAmount(),
-             dpt.getCurrency() != null ? dpt.getCurrency().toString() : null,
-             dpt.getEffectiveDate(),
-             dpt.getTransactionStatus() != null ? dpt.getTransactionStatus().toString() : null,
-             dpt.getGatewayErrorCode(),
-             dpt.getGatewayErrorMsg(),
-             dpt.getPaymentInfoPlugin() == null ? null : dpt.getPaymentInfoPlugin().getFirstPaymentReferenceId(),
-             dpt.getPaymentInfoPlugin() == null ? null : dpt.getPaymentInfoPlugin().getSecondPaymentReferenceId(),
-             dpt.getPaymentInfoPlugin() == null ? null : toPluginPropertyJson(dpt.getPaymentInfoPlugin().getProperties()),
+             transaction.getTransactionType().toString(),
+             transaction.getAmount(),
+             transaction.getCurrency() != null ? transaction.getCurrency().toString() : null,
+             transaction.getEffectiveDate(),
+             transaction.getTransactionStatus() != null ? transaction.getTransactionStatus().toString() : null,
+             transaction.getGatewayErrorCode(),
+             transaction.getGatewayErrorMsg(),
+             transaction.getPaymentInfoPlugin() == null ? null : transaction.getPaymentInfoPlugin().getFirstPaymentReferenceId(),
+             transaction.getPaymentInfoPlugin() == null ? null : transaction.getPaymentInfoPlugin().getSecondPaymentReferenceId(),
+             transaction.getPaymentInfoPlugin() == null ? null : toPluginPropertyJson(transaction.getPaymentInfoPlugin().getProperties()),
              toAuditLogJson(transactionLogs));
     }
 

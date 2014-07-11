@@ -134,7 +134,6 @@ public class DefaultPaymentApi implements PaymentApi {
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
 
-        // STEPH should throw PaymentApiException -- at least when coming from API; also add description.
         final UUID nonNulPaymentMethodId = (paymentMethodId != null) ?
                                            paymentMethodId :
                                            paymentMethodProcessor.createOrGetExternalPaymentMethod(UUID.randomUUID().toString(), account, properties, callContext, internalCallContext);
@@ -300,7 +299,7 @@ public class DefaultPaymentApi implements PaymentApi {
         return payment;
     }
 
-    // STEPH TODO withPluginInfo needs to be honored...
+    // TODO withPluginInfo needs to be honored...
     @Override
     public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context) {
         return paymentProcessor.searchPayments(searchKey, offset, limit, properties, context, internalCallContextFactory.createInternalTenantContext(context));
