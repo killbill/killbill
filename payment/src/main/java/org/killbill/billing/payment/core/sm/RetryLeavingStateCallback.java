@@ -77,9 +77,7 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
 
                 retryablePaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(attempt, stateContext.internalCallContext);
                 stateContext.setAttemptId(attempt.getId());
-
             } catch (PluginPropertySerializerException e) {
-                // STEPH
                 throw new OperationException(e);
             }
 

@@ -89,8 +89,6 @@ public abstract class PaymentOperation extends OperationCallbackBase implements 
             logger.error(String.format(format), e);
             return new OperationException(realException, OperationResult.FAILURE);
         } else /* if (e instanceof RuntimeException) */ {
-
-     // STEPH: should we ever return an OperationResult.EXCEPTION at this layer -- since there is transtion back to init and there cannot be retried?
             logger.warn("Plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), e);
             return new OperationException(realException, OperationResult.EXCEPTION);
         }

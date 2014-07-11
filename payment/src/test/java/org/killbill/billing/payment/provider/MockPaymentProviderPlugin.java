@@ -244,18 +244,6 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
     @Override
     public Pagination<PaymentTransactionInfoPlugin> searchPayments(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentPluginApiException {
-/*
-        final ImmutableList<PaymentTransactionInfoPlugin> results = ImmutableList.<PaymentTransactionInfoPlugin>copyOf(Iterables.<PaymentTransactionInfoPlugin>filter(payments.values(), new Predicate<PaymentTransactionInfoPlugin>() {
-            @Override
-            public boolean apply(final PaymentTransactionInfoPlugin input) {
-                return (input.getKbPaymentId() != null && input.getKbPaymentId().toString().equals(searchKey)) ||
-                       (input.getFirstPaymentReferenceId() != null && input.getFirstPaymentReferenceId().contains(searchKey)) ||
-                       (input.getSecondPaymentReferenceId() != null && input.getSecondPaymentReferenceId().contains(searchKey));
-            }
-        }));
-        return DefaultPagination.<PaymentTransactionInfoPlugin>build(offset, limit, results);
-        */
-        // STEPH
         throw new IllegalStateException("Not implemented");
     }
 

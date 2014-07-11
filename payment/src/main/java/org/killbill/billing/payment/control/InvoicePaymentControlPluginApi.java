@@ -262,7 +262,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         if (payment == null) {
             throw new PaymentControlApiException();
         }
-        // STEPH this check for invoice item but we also need to check that refundAmount is less or equal to paymentAmount - all refund.
+        // This will calculate the upper bound on the refund amount based on the invoice items associated with that payment.
+        // Note that we are not checking that other (partial) refund occurred, but if the refund ends up being greater than waht is allowed
+        // the call to the gateway would fail; it would need noce to validate on our side though...
         final BigDecimal amountToBeRefunded = computeRefundAmount(payment.getId(), paymentControlPluginContext.getAmount(), idWithAmount, internalContext);
         final boolean isAborted = amountToBeRefunded.compareTo(BigDecimal.ZERO) == 0;
 
@@ -303,7 +305,6 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             return specifiedRefundAmount;
         }
 
-        // If we have
         final List<InvoiceItem> items;
         try {
             items = invoiceApi.getInvoiceForPaymentId(paymentId, context).getInvoiceItems();

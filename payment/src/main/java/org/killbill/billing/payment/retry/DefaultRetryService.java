@@ -43,10 +43,6 @@ public class DefaultRetryService extends BaseRetryService implements RetryServic
         return QUEUE_NAME;
     }
 
-    @Override
-    public void retry(final UUID paymentId, final Iterable<PluginProperty> properties, final InternalCallContext context) {
-
-    }
 
     @Override
     public void retryPaymentTransaction(final UUID attemptId, final String pluginName, final InternalCallContext context) {

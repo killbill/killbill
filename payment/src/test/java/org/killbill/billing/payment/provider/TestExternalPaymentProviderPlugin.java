@@ -64,7 +64,7 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
         Assert.assertEquals(paymentInfoPlugin.getStatus(), PaymentPluginStatus.PROCESSED);
 
         final List<PaymentTransactionInfoPlugin> retrievedPaymentTransactionInfoPlugin = plugin.getPaymentInfo(accountId, paymentId, properties, callContext);
-        // STEPH getPaymentInfo mock is not implemented (yet)
+        // getPaymentInfo mock is not implemented (yet)
         //Assert.assertEquals(retrievedPaymentTransactionInfoPlugin.get(0).getStatus(), PaymentPluginStatus.PROCESSED);
     }
 }

@@ -110,6 +110,7 @@ public class PluginControlledPaymentAutomatonRunner extends PaymentAutomatonRunn
             throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
         } catch (OperationException e) {
             if (e.getCause() == null) {
+                // Unclear if we should check whether there is a result that was set and return that result.
                 throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
             } else if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();

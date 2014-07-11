@@ -112,7 +112,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
                         }
                     } catch (final PaymentPluginApiException e) {
                         log.warn("Error adding payment method " + pm.getId() + " for plugin " + paymentPluginServiceName, e);
-                        // STEPH all errors should also take a pluginName
                         throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
                     } catch (final AccountApiException e) {
                         throw new PaymentApiException(e);

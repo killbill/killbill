@@ -66,27 +66,6 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         testLocking(true);
     }
 
-    // STEPH the test now fails because the logic has been changed; we don't check in the dispatchWithAccountLockAndTimeout
-    // method to see whether account should be locked or not. Instead we either (dispatch AND lock) OR
-    // ! (dispatch AND lock)
-    @Test(groups = "fast", enabled = false)
-    public void testWithoutAccountLock() throws Exception {
-        testLocking(false);
-    }
-
-    @Test(groups = "fast")
-    public void testOperationTimeout() throws Exception {
-        final CallbackTest callback = new CallbackTest(Integer.MAX_VALUE);
-        final PaymentOperation pluginOperation = getPluginOperation(false, 1);
-
-        try {
-            pluginOperation.dispatchWithAccountLockAndTimeout(callback);
-            Assert.fail();
-        } catch (final OperationException e) {
-            Assert.assertEquals(e.getOperationResult(), OperationResult.EXCEPTION);
-            Assert.assertTrue(e.getCause() instanceof TimeoutException);
-        }
-    }
 
     @Test(groups = "fast")
     public void testOperationThrowsPaymentApiException() throws Exception {
