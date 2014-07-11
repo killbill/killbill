@@ -163,7 +163,8 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                 paymentConfig,
                 executor,
                 paymentSMHelper,
-                retrySMHelper);
+                retrySMHelper,
+                eventBus);
 
         paymentStateContext =
                 new RetryablePaymentStateContext(MockPaymentControlProviderPlugin.PLUGIN_NAME,
@@ -195,7 +196,6 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                          tagApi,
                                                          paymentDao,
                                                          nonEntityDao,
-                                                         eventBus,
                                                          locker,
                                                          executor,
                                                          runner,

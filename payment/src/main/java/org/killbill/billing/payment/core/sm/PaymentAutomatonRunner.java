@@ -52,6 +52,7 @@ import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
@@ -72,6 +73,7 @@ public class PaymentAutomatonRunner {
     protected final PluginDispatcher<OperationResult> paymentPluginDispatcher;
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final Clock clock;
+    private final PersistentBus eventBus;
 
     @Inject
     public PaymentAutomatonRunner(@javax.inject.Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig,
@@ -81,19 +83,21 @@ public class PaymentAutomatonRunner {
                                   final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                   final Clock clock,
                                   @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
+                                  final PersistentBus eventBus,
                                   final PaymentStateMachineHelper paymentSMHelper) {
         this.paymentSMHelper = paymentSMHelper;
         this.paymentDao = paymentDao;
         this.locker = locker;
         this.pluginRegistry = pluginRegistry;
         this.clock = clock;
+        this.eventBus = eventBus;
 
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.paymentPluginDispatcher = new PluginDispatcher<OperationResult>(paymentPluginTimeoutSec, executor);
 
     }
 
-    public UUID run(final TransactionType transactionType, final Account account, @Nullable final UUID attemptId, @Nullable final UUID paymentMethodId,
+    public UUID run(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID attemptId, @Nullable final UUID paymentMethodId,
                     @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
                     @Nullable final BigDecimal amount, @Nullable final Currency currency,
                     final boolean shouldLockAccount, final Iterable<PluginProperty> properties,
@@ -101,12 +105,11 @@ public class PaymentAutomatonRunner {
 
         final DateTime utcNow = clock.getUTCNow();
 
-        final PaymentStateContext paymentStateContext = new PaymentStateContext(paymentId, attemptId, paymentExternalKey, paymentTransactionExternalKey, transactionType,
+        final PaymentStateContext paymentStateContext = new PaymentStateContext(isApiPayment, paymentId, attemptId, paymentExternalKey, paymentTransactionExternalKey, transactionType,
                                                                                                   account, paymentMethodId, amount, currency, shouldLockAccount, properties, internalCallContext, callContext);
-        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, utcNow, paymentDao, pluginRegistry, internalCallContext, paymentSMHelper);
+        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, utcNow, paymentDao, pluginRegistry, internalCallContext, eventBus, paymentSMHelper);
 
         final UUID effectivePaymentMethodId;
-        final String currentStateMachineName;
         final String currentStateName;
         if (paymentId != null) {
             final PaymentModelDao paymentModelDao = daoHelper.getPayment();

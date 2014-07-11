@@ -71,12 +71,11 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                    final TagInternalApi tagUserApi,
                                    final PaymentDao paymentDao,
                                    final NonEntityDao nonEntityDao,
-                                   final PersistentBus eventBus,
                                    final GlobalLocker locker,
                                    final PaymentConfig paymentConfig,
                                    @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
-                                  final Clock clock) {
-        super(pluginRegistry, accountUserApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
+                                   final Clock clock) {
+        super(pluginRegistry, accountUserApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.paymentPluginFormDispatcher = new PluginDispatcher<HostedPaymentPageFormDescriptor>(paymentPluginTimeoutSec, executor);
         this.paymentPluginNotificationDispatcher = new PluginDispatcher<GatewayNotification>(paymentPluginTimeoutSec, executor);

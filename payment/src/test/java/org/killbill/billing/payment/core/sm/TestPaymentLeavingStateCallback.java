@@ -95,19 +95,20 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
     private void setUp(@Nullable final UUID paymentId) throws Exception {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
-        paymentStateContext = new PaymentStateContext(paymentId,
-                                                                  null,
-                                                                  UUID.randomUUID().toString(),
-                                                                  UUID.randomUUID().toString(),
-                                                                  TransactionType.CAPTURE,
-                                                                  account,
-                                                                  UUID.randomUUID(),
-                                                                  new BigDecimal("192.3920111"),
-                                                                  Currency.BRL,
-                                                                  false,
-                                                                  ImmutableList.<PluginProperty>of(),
-                                                                  internalCallContext,
-                                                                  callContext);
+        paymentStateContext = new PaymentStateContext(true,
+                                                      paymentId,
+                                                      null,
+                                                      UUID.randomUUID().toString(),
+                                                      UUID.randomUUID().toString(),
+                                                      TransactionType.CAPTURE,
+                                                      account,
+                                                      UUID.randomUUID(),
+                                                      new BigDecimal("192.3920111"),
+                                                      Currency.BRL,
+                                                      false,
+                                                      ImmutableList.<PluginProperty>of(),
+                                                      internalCallContext,
+                                                      callContext);
 
         if (paymentId != null) {
             // Create the first payment manually
@@ -134,7 +135,7 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
             paymentDao.insertPaymentWithFirstTransaction(newPaymentModelDao, newPaymentTransactionModelDao, internalCallContext);
         }
 
-        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
+        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, eventBus, paymentSMHelper);
         callback = new PaymentLeavingStateTestCallback(daoHelper);
 
         Mockito.when(state.getName()).thenReturn("NEW_STATE");

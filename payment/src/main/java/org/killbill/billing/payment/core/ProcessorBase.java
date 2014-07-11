@@ -72,7 +72,6 @@ public abstract class ProcessorBase {
 
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final AccountInternalApi accountInternalApi;
-    protected final PersistentBus eventBus;
     protected final GlobalLocker locker;
     protected final ExecutorService executor;
     protected final PaymentDao paymentDao;
@@ -85,7 +84,6 @@ public abstract class ProcessorBase {
 
     public ProcessorBase(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                          final AccountInternalApi accountInternalApi,
-                         final PersistentBus eventBus,
                          final PaymentDao paymentDao,
                          final NonEntityDao nonEntityDao,
                          final TagInternalApi tagInternalApi,
@@ -95,7 +93,6 @@ public abstract class ProcessorBase {
                          final Clock clock) {
         this.pluginRegistry = pluginRegistry;
         this.accountInternalApi = accountInternalApi;
-        this.eventBus = eventBus;
         this.paymentDao = paymentDao;
         this.nonEntityDao = nonEntityDao;
         this.locker = locker;
@@ -160,16 +157,6 @@ public abstract class ProcessorBase {
         return paymentMethodId;
     }
 
-    protected void postPaymentEvent(final BusInternalEvent ev, final UUID accountId, final InternalCallContext context) {
-        if (ev == null) {
-            return;
-        }
-        try {
-            eventBus.post(ev);
-        } catch (EventBusException e) {
-            log.error("Failed to post Payment event event for account {} ", accountId, e);
-        }
-    }
 
     protected TenantContext buildTenantContext(final InternalTenantContext context) {
         return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));

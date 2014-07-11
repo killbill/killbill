@@ -69,7 +69,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     // STEPH the test now fails because the logic has been changed; we don't check in the dispatchWithAccountLockAndTimeout
     // method to see whether account should be locked or not. Instead we either (dispatch AND lock) OR
     // ! (dispatch AND lock)
-    @Test(groups = "fast", enabled=false)
+    @Test(groups = "fast", enabled = false)
     public void testWithoutAccountLock() throws Exception {
         testLocking(false);
     }
@@ -201,19 +201,19 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     private PaymentOperation getPluginOperation(final boolean shouldLockAccount, final int timeoutSeconds) throws PaymentApiException {
         final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(timeoutSeconds, Executors.newCachedThreadPool());
 
-        final PaymentStateContext paymentStateContext = new PaymentStateContext(UUID.randomUUID(),
-                                                                                                  null,
-                                                                                                  UUID.randomUUID().toString(),
-                                                                                                  UUID.randomUUID().toString(),
-                                                                                                  TransactionType.CAPTURE,
-                                                                                                  account,
-                                                                                                  UUID.randomUUID(),
-                                                                                                  new BigDecimal("192.3920111"),
-                                                                                                  Currency.BRL,
-                                                                                                  shouldLockAccount,
-                                                                                                  ImmutableList.<PluginProperty>of(),
-                                                                                                  internalCallContext,
-                                                                                                  callContext);
+        final PaymentStateContext paymentStateContext = new PaymentStateContext(true, UUID.randomUUID(),
+                                                                                null,
+                                                                                UUID.randomUUID().toString(),
+                                                                                UUID.randomUUID().toString(),
+                                                                                TransactionType.CAPTURE,
+                                                                                account,
+                                                                                UUID.randomUUID(),
+                                                                                new BigDecimal("192.3920111"),
+                                                                                Currency.BRL,
+                                                                                shouldLockAccount,
+                                                                                ImmutableList.<PluginProperty>of(),
+                                                                                internalCallContext,
+                                                                                callContext);
 
         final PaymentAutomatonDAOHelper daoHelper = Mockito.mock(PaymentAutomatonDAOHelper.class);
         Mockito.when(daoHelper.getPaymentProviderPlugin()).thenReturn(null);

@@ -21,7 +21,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.killbill.automaton.Operation.OperationCallback;
-import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
@@ -57,18 +56,19 @@ public class TestPaymentEnteringStateCallback extends PaymentTestSuiteWithEmbedd
     public void setUp() throws Exception {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
-        paymentStateContext = new PaymentStateContext(null,
-                                                                  UUID.randomUUID().toString(),
-                                                                  TransactionType.CAPTURE,
-                                                                  account,
-                                                                  UUID.randomUUID(),
-                                                                  new BigDecimal("192.3920111"),
-                                                                  Currency.BRL,
-                                                                  false,
-                                                                  ImmutableList.<PluginProperty>of(),
-                                                                  internalCallContext,
-                                                                  callContext);
-        daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
+        paymentStateContext = new PaymentStateContext(true,
+                                                      null,
+                                                      UUID.randomUUID().toString(),
+                                                      TransactionType.CAPTURE,
+                                                      account,
+                                                      UUID.randomUUID(),
+                                                      new BigDecimal("192.3920111"),
+                                                      Currency.BRL,
+                                                      false,
+                                                      ImmutableList.<PluginProperty>of(),
+                                                      internalCallContext,
+                                                      callContext);
+        daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, eventBus, paymentSMHelper);
         callback = new PaymentEnteringStateTestCallback(daoHelper, paymentStateContext);
 
         Mockito.when(state.getName()).thenReturn("NEW_STATE");

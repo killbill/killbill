@@ -31,8 +31,8 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentModelDao;
-import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -119,26 +119,26 @@ public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedD
     }
 
     private PaymentAutomatonDAOHelper createDAOHelper(@Nullable final UUID paymentId, final String paymentExternalKey,
-                                                            final String paymentTransactionExternalKey,
-                                                            final BigDecimal amount, final Currency currency) throws Exception {
+                                                      final String paymentTransactionExternalKey,
+                                                      final BigDecimal amount, final Currency currency) throws Exception {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         // No default payment method
 
-        paymentStateContext = new PaymentStateContext(paymentId,
-                                                                  null,
-                                                                  paymentExternalKey,
-                                                                  paymentTransactionExternalKey,
-                                                                  TransactionType.CAPTURE,
-                                                                  account,
-                                                                  UUID.randomUUID(),
-                                                                  amount,
-                                                                  currency,
-                                                                  false,
-                                                                  ImmutableList.<PluginProperty>of(),
-                                                                  internalCallContext,
-                                                                  callContext);
+        paymentStateContext = new PaymentStateContext(true, paymentId,
+                                                      null,
+                                                      paymentExternalKey,
+                                                      paymentTransactionExternalKey,
+                                                      TransactionType.CAPTURE,
+                                                      account,
+                                                      UUID.randomUUID(),
+                                                      amount,
+                                                      currency,
+                                                      false,
+                                                      ImmutableList.<PluginProperty>of(),
+                                                      internalCallContext,
+                                                      callContext);
 
-        return new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
+        return new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, eventBus, paymentSMHelper);
     }
 }

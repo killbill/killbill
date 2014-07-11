@@ -30,6 +30,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.entity.Pagination;
 
 import com.google.common.base.Predicate;
@@ -168,7 +169,10 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updatePaymentAndTransactionOnCompletion(final UUID paymentId, final String currentPaymentStateName, final String lastSuccessPaymentStateName, final UUID transactionId, final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency, final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+    public void updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID paymentId, final TransactionType transactionType,
+                                                        final String currentPaymentStateName, final String lastSuccessPaymentStateName, final UUID transactionId,
+                                                        final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency,
+                                                        final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
         synchronized (this) {
             final PaymentModelDao payment = payments.get(paymentId);
             if (payment != null) {

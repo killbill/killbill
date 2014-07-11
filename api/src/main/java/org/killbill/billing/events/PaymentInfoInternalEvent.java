@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 
@@ -29,13 +30,11 @@ public interface PaymentInfoInternalEvent extends BusInternalEvent {
 
     public UUID getAccountId();
 
-    public UUID getInvoiceId();
-
     public BigDecimal getAmount();
 
-    public DateTime getEffectiveDate();
+    public Currency getCurrency();
 
-    public Integer getPaymentNumber();
+    public DateTime getEffectiveDate();
 
     public TransactionStatus getStatus();
 

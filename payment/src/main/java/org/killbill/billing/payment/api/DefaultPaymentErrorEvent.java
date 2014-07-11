@@ -29,13 +29,11 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
 
     private final String message;
     private final UUID accountId;
-    private final UUID invoiceId;
     private final UUID paymentId;
     private final TransactionType transactionType;
 
     @JsonCreator
     public DefaultPaymentErrorEvent(@JsonProperty("accountId") final UUID accountId,
-                                    @JsonProperty("invoiceId") final UUID invoiceId,
                                     @JsonProperty("paymentId") final UUID paymentId,
                                     @JsonProperty("transactionType")  final TransactionType transactionType,
                                     @JsonProperty("message") final String message,
@@ -45,7 +43,6 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
         super(searchKey1, searchKey2, userToken);
         this.message = message;
         this.accountId = accountId;
-        this.invoiceId = invoiceId;
         this.paymentId = paymentId;
         this.transactionType = transactionType;
     }
@@ -58,11 +55,6 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
     @Override
     public UUID getAccountId() {
         return accountId;
-    }
-
-    @Override
-    public UUID getInvoiceId() {
-        return invoiceId;
     }
 
     @Override
@@ -98,9 +90,6 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
         if (transactionType != null ? !transactionType.equals(that.transactionType) : that.transactionType != null) {
             return false;
         }
-        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
-            return false;
-        }
         if (message != null ? !message.equals(that.message) : that.message != null) {
             return false;
         }
@@ -116,7 +105,6 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
         int result = message != null ? message.hashCode() : 0;
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
-        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
         return result;
     }

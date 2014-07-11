@@ -25,6 +25,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.entity.Pagination;
 
 public interface PaymentDao {
@@ -51,12 +52,10 @@ public interface PaymentDao {
 
     public PaymentTransactionModelDao updatePaymentWithNewTransaction(UUID paymentId, PaymentTransactionModelDao paymentTransaction, InternalCallContext context);
 
-    public void updatePaymentAndTransactionOnCompletion(UUID paymentId, String currentPaymentStateName,
-                                                              String lastPaymentSuccessStateName,
-                                                              UUID transactionId, TransactionStatus paymentStatus,
-                                                              BigDecimal processedAmount, Currency processedCurrency,
-                                                              String gatewayErrorCode, String gatewayErrorMsg,
-                                                              InternalCallContext context);
+    public void updatePaymentAndTransactionOnCompletion(UUID accountId, UUID paymentId, final TransactionType transactionType, String currentPaymentStateName, String lastPaymentSuccessStateName, UUID transactionId,
+                                                              TransactionStatus paymentStatus, BigDecimal processedAmount, Currency processedCurrency,
+                                                              String gatewayErrorCode, String gatewayErrorMsg, InternalCallContext context);
+
 
     public PaymentModelDao getPayment(UUID paymentId, InternalTenantContext context);
 

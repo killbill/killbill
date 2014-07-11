@@ -34,9 +34,9 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
-import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.memory.MemoryGlobalLocker;
@@ -103,26 +103,27 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
     private void setUp(final PaymentPluginStatus paymentPluginStatus) throws Exception {
         final GlobalLocker locker = new MemoryGlobalLocker();
         final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(1, Executors.newCachedThreadPool());
-        paymentStateContext = new PaymentStateContext(UUID.randomUUID(),
-                                                                  null,
-                                                                  UUID.randomUUID().toString(),
-                                                                  UUID.randomUUID().toString(),
-                                                                  TransactionType.CAPTURE,
-                                                                  Mockito.mock(Account.class),
-                                                                  UUID.randomUUID(),
-                                                                  new BigDecimal("192.3920111"),
-                                                                  Currency.BRL,
-                                                                  false,
-                                                                  ImmutableList.<PluginProperty>of(),
-                                                                  internalCallContext,
-                                                                  callContext);
+        paymentStateContext = new PaymentStateContext(true,
+                                                      UUID.randomUUID(),
+                                                      null,
+                                                      UUID.randomUUID().toString(),
+                                                      UUID.randomUUID().toString(),
+                                                      TransactionType.CAPTURE,
+                                                      Mockito.mock(Account.class),
+                                                      UUID.randomUUID(),
+                                                      new BigDecimal("192.3920111"),
+                                                      Currency.BRL,
+                                                      false,
+                                                      ImmutableList.<PluginProperty>of(),
+                                                      internalCallContext,
+                                                      callContext);
 
         final PaymentMethodModelDao paymentMethodModelDao = new PaymentMethodModelDao(paymentStateContext.getPaymentMethodId(), UUID.randomUUID().toString(), clock.getUTCNow(), clock.getUTCNow(),
                                                                                       paymentStateContext.getAccount().getId(), MockPaymentProviderPlugin.PLUGIN_NAME, true);
         final PaymentDao paymentDao = Mockito.mock(PaymentDao.class);
         Mockito.when(paymentDao.getPaymentMethodIncludedDeleted(paymentStateContext.getPaymentMethodId(), internalCallContext)).thenReturn(paymentMethodModelDao);
 
-        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, paymentSMHelper);
+        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, eventBus, paymentSMHelper);
         paymentOperation = new PaymentOperationTest(paymentPluginStatus, daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
     }
 
@@ -131,8 +132,8 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
         private final PaymentTransactionInfoPlugin paymentInfoPlugin;
 
         public PaymentOperationTest(@Nullable final PaymentPluginStatus paymentPluginStatus,
-                                          final PaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker,
-                                          final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateContext paymentStateContext) throws PaymentApiException {
+                                    final PaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker,
+                                    final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateContext paymentStateContext) throws PaymentApiException {
             super(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
             this.paymentInfoPlugin = (paymentPluginStatus == null ? null : getPaymentInfoPlugin(paymentPluginStatus));
         }

@@ -32,6 +32,10 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.events.BusInternalEvent;
+import org.killbill.billing.payment.api.DefaultPaymentErrorEvent;
+import org.killbill.billing.payment.api.DefaultPaymentInfoEvent;
+import org.killbill.billing.payment.api.DefaultPaymentPluginErrorEvent;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -45,8 +49,12 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -55,13 +63,19 @@ import com.google.common.collect.Collections2;
 
 public class DefaultPaymentDao implements PaymentDao {
 
+    private final static Logger log = LoggerFactory.getLogger(DefaultPaymentDao.class);
+
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final DefaultPaginationSqlDaoHelper paginationHelper;
+    private final PersistentBus eventBus;
+    private final Clock clock;
 
     @Inject
-    public DefaultPaymentDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
+    public DefaultPaymentDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final PersistentBus eventBus) {
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
         this.paginationHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao);
+        this.eventBus = eventBus;
+        this.clock = clock;
     }
 
     @Override
@@ -139,7 +153,7 @@ public class DefaultPaymentDao implements PaymentDao {
 
     @Override
     public int failOldPendingTransactions(final TransactionStatus newTransactionStatus, final DateTime createdBeforeDate, final InternalCallContext context) {
-         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Integer>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Integer>() {
             @Override
             public Integer inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final TransactionSqlDao transactional = entitySqlDaoWrapperFactory.become(TransactionSqlDao.class);
@@ -157,7 +171,6 @@ public class DefaultPaymentDao implements PaymentDao {
             }
         });
     }
-
 
     @Override
     public List<PaymentTransactionModelDao> getPaymentTransactionsByExternalKey(final String transactionExternalKey, final InternalTenantContext context) {
@@ -232,30 +245,32 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updatePaymentAndTransactionOnCompletion(final UUID paymentId, final String currentPaymentStateName,
-                                                              @Nullable final String lastPaymentSuccessStateName,
-                                                              final UUID transactionId, final TransactionStatus paymentStatus,
-                                                              final BigDecimal processedAmount, final Currency processedCurrency,
-                                                              final String gatewayErrorCode, final String gatewayErrorMsg,
-                                                              final InternalCallContext context) {
+    public void updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID paymentId, final TransactionType transactionType,
+                                                        final String currentPaymentStateName, @Nullable final String lastPaymentSuccessStateName,
+                                                        final UUID transactionId, final TransactionStatus transactionStatus,
+                                                        final BigDecimal processedAmount, final Currency processedCurrency,
+                                                        final String gatewayErrorCode, final String gatewayErrorMsg,
+                                                        final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
 
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 entitySqlDaoWrapperFactory.become(TransactionSqlDao.class).updateTransactionStatus(transactionId.toString(),
-                                                                                                         processedAmount, processedCurrency == null ? null : processedCurrency.toString(),
-                                                                                                         paymentStatus == null ? null : paymentStatus.toString(),
-                                                                                                         gatewayErrorCode, gatewayErrorMsg, context);
+                                                                                                   processedAmount, processedCurrency == null ? null : processedCurrency.toString(),
+                                                                                                   transactionStatus == null ? null : transactionStatus.toString(),
+                                                                                                   gatewayErrorCode, gatewayErrorMsg, context);
                 if (lastPaymentSuccessStateName != null) {
                     entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updateLastSuccessPaymentStateName(paymentId.toString(), currentPaymentStateName, lastPaymentSuccessStateName, context);
                 } else {
                     entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStateName(paymentId.toString(), currentPaymentStateName, context);
                 }
+                postPaymentEventFromTransaction(accountId, transactionStatus, transactionType, paymentId, processedAmount, processedCurrency, clock.getUTCNow(), gatewayErrorCode, entitySqlDaoWrapperFactory, context);
                 return null;
             }
         });
 
     }
+
 
     @Override
     public PaymentModelDao getPayment(final UUID paymentId, final InternalTenantContext context) {
@@ -475,5 +490,60 @@ public class DefaultPaymentDao implements PaymentDao {
                 return transactional.getByAccountId(accountId.toString(), context);
             }
         });
+    }
+
+    private void postPaymentEventFromTransaction(final UUID accountId,
+                                                 final TransactionStatus transactionStatus,
+                                                 final TransactionType transactionType,
+                                                 final UUID paymentId,
+                                                 final BigDecimal processedAmount,
+                                                 final Currency processedCurrency,
+                                                 final DateTime effectiveDate,
+                                                 final String gatewayErrorCode,
+                                                 final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
+                                                 final InternalCallContext context) {
+
+        final BusInternalEvent event;
+        switch (transactionStatus) {
+            case SUCCESS:
+            case PENDING:
+                event = new DefaultPaymentInfoEvent(accountId,
+                                                    paymentId,
+                                                    processedAmount,
+                                                    processedCurrency,
+                                                    transactionStatus,
+                                                    transactionType,
+                                                    effectiveDate,
+                                                    context.getAccountRecordId(),
+                                                    context.getTenantRecordId(),
+                                                    context.getUserToken());
+                break;
+
+            case PAYMENT_FAILURE:
+                event = new DefaultPaymentErrorEvent(accountId,
+                                                     paymentId,
+                                                     transactionType,
+                                                     gatewayErrorCode,
+                                                     context.getAccountRecordId(),
+                                                     context.getTenantRecordId(),
+                                                     context.getUserToken());
+                break;
+
+            case PLUGIN_FAILURE:
+            default:
+                event = new DefaultPaymentPluginErrorEvent(accountId,
+                                                           paymentId,
+                                                           transactionType,
+                                                           gatewayErrorCode,
+                                                           context.getAccountRecordId(),
+                                                           context.getTenantRecordId(),
+                                                           context.getUserToken());
+                break;
+        }
+        try {
+            eventBus.postFromTransaction(event, entitySqlDaoWrapperFactory.getSqlDao());
+        } catch (EventBusException e) {
+            log.error("Failed to post Payment event event for account {} ", accountId, e);
+        }
     }
 }

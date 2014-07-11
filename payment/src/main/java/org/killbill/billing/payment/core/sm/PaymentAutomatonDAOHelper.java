@@ -25,21 +25,34 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.DefaultPaymentErrorEvent;
+import org.killbill.billing.payment.api.DefaultPaymentInfoEvent;
+import org.killbill.billing.payment.api.DefaultPaymentPluginErrorEvent;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class PaymentAutomatonDAOHelper {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentAutomatonDAOHelper.class);
 
     protected final PaymentStateContext paymentStateContext;
     protected final DateTime utcNow;
@@ -49,18 +62,21 @@ public class PaymentAutomatonDAOHelper {
     protected final PaymentDao paymentDao;
 
     private final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
+    private final PersistentBus eventBus;
 
     // Used to build new payments and transactions
     public PaymentAutomatonDAOHelper(final PaymentStateContext paymentStateContext,
                                      final DateTime utcNow, final PaymentDao paymentDao,
                                      final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                      final InternalCallContext internalCallContext,
+                                     final PersistentBus eventBus,
                                      final PaymentStateMachineHelper paymentSMHelper) throws PaymentApiException {
         this.paymentStateContext = paymentStateContext;
         this.utcNow = utcNow;
         this.paymentDao = paymentDao;
         this.pluginRegistry = pluginRegistry;
         this.internalCallContext = internalCallContext;
+        this.eventBus = eventBus;
         this.paymentSMHelper = paymentSMHelper;
     }
 
@@ -101,16 +117,18 @@ public class PaymentAutomatonDAOHelper {
         final String gatewayErrorMsg = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayError();
 
         final String lastSuccessPaymentState = paymentSMHelper.isSuccessState(currentPaymentStateName) ? currentPaymentStateName : null;
-        paymentDao.updatePaymentAndTransactionOnCompletion(paymentStateContext.getPaymentId(),
-                                                                 currentPaymentStateName,
-                                                                 lastSuccessPaymentState,
-                                                                 paymentStateContext.getPaymentTransactionModelDao().getId(),
-                                                                 paymentStatus,
-                                                                 processedAmount,
-                                                                 processedCurrency,
-                                                                 gatewayErrorCode,
-                                                                 gatewayErrorMsg,
-                                                                 internalCallContext);
+        paymentDao.updatePaymentAndTransactionOnCompletion(paymentStateContext.getAccount().getId(),
+                                                           paymentStateContext.getPaymentId(),
+                                                           paymentStateContext.getTransactionType(),
+                                                           currentPaymentStateName,
+                                                           lastSuccessPaymentState,
+                                                           paymentStateContext.getPaymentTransactionModelDao().getId(),
+                                                           paymentStatus,
+                                                           processedAmount,
+                                                           processedCurrency,
+                                                           gatewayErrorCode,
+                                                           gatewayErrorMsg,
+                                                           internalCallContext);
 
         // Update the context
         paymentStateContext.setPaymentTransactionModelDao(paymentDao.getPaymentTransaction(paymentStateContext.getPaymentTransactionModelDao().getId(), internalCallContext));
@@ -141,6 +159,10 @@ public class PaymentAutomatonDAOHelper {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentStateContext.getPaymentId());
         }
         return paymentModelDao;
+    }
+
+    public PersistentBus getEventBus() {
+        return eventBus;
     }
 
     private PaymentModelDao buildNewPaymentModelDao() {

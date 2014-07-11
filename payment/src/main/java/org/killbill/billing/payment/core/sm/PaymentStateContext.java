@@ -58,22 +58,24 @@ public class PaymentStateContext {
     protected final Iterable<PluginProperty> properties;
     protected final InternalCallContext internalCallContext;
     protected final CallContext callContext;
+    protected final boolean isApiPayment;
 
     // Use to create new transactions only
-    public PaymentStateContext(@Nullable final UUID paymentId, @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
+    public PaymentStateContext(final boolean isApiPayment, @Nullable final UUID paymentId, @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
                                final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
                                final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
                                final InternalCallContext internalCallContext, final CallContext callContext) {
-        this(paymentId, null, null, paymentTransactionExternalKey, transactionType, account, paymentMethodId,
+        this(isApiPayment, paymentId, null, null, paymentTransactionExternalKey, transactionType, account, paymentMethodId,
              amount, currency, shouldLockAccountAndDispatch, properties, internalCallContext, callContext);
     }
 
     // Used to create new payment and transactions
-    public PaymentStateContext(@Nullable final UUID paymentId, @Nullable final UUID attemptId, @Nullable final String paymentExternalKey,
+    public PaymentStateContext(final boolean isApiPayment, @Nullable final UUID paymentId, @Nullable final UUID attemptId, @Nullable final String paymentExternalKey,
                                @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
                                final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
                                final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
                                final InternalCallContext internalCallContext, final CallContext callContext) {
+        this.isApiPayment = isApiPayment;
         this.paymentId = paymentId;
         this.attemptId= attemptId;
         this.paymentExternalKey = paymentExternalKey;
@@ -88,6 +90,10 @@ public class PaymentStateContext {
         this.internalCallContext = internalCallContext;
         this.callContext = callContext;
         this.onLeavingStateExistingTransactions = ImmutableList.of();
+    }
+
+    public boolean isApiPayment() {
+        return isApiPayment;
     }
 
     public void setPaymentMethodId(final UUID paymentMethodId) {

@@ -69,13 +69,12 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
                                             final TagInternalApi tagUserApi,
                                             final PaymentDao paymentDao,
                                             final NonEntityDao nonEntityDao,
-                                            final PersistentBus eventBus,
                                             final GlobalLocker locker,
                                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                                             final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                                             final RetryStateMachineHelper retrySMHelper,
                                             final Clock clock) {
-        super(pluginRegistry, accountInternalApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
+        super(pluginRegistry, accountInternalApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
         this.retrySMHelper = retrySMHelper;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
     }

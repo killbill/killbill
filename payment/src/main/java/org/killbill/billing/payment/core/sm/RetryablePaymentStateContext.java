@@ -37,7 +37,6 @@ import com.google.common.collect.Iterables;
 
 public class RetryablePaymentStateContext extends PaymentStateContext {
 
-    private boolean isApiPayment;
     private DateTime retryDate;
     private String pluginName;
     private Payment result;
@@ -46,9 +45,8 @@ public class RetryablePaymentStateContext extends PaymentStateContext {
                                         @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
                                         final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
                                         final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext, final CallContext callContext) {
-        super(paymentId, null, paymentExternalKey, paymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, properties, internalCallContext, callContext);
+        super(isApiPayment, paymentId, null, paymentExternalKey, paymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, properties, internalCallContext, callContext);
         this.pluginName = pluginName;
-        this.isApiPayment = isApiPayment;
     }
 
     public DateTime getRetryDate() {
@@ -73,10 +71,6 @@ public class RetryablePaymentStateContext extends PaymentStateContext {
 
     public void setResult(final Payment result) {
         this.result = result;
-    }
-
-    public boolean isApiPayment() {
-        return isApiPayment;
     }
 
     public void setAmount(final BigDecimal adjustedAmount) {

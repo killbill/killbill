@@ -24,9 +24,16 @@ import org.killbill.automaton.OperationResult;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.events.BusInternalEvent;
+import org.killbill.billing.payment.api.DefaultPaymentErrorEvent;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +58,23 @@ public abstract class PaymentEnteringStateCallback implements EnteringStateCallb
             final PaymentTransactionInfoPlugin paymentInfoPlugin = paymentStateContext.getPaymentInfoPlugin();
             final TransactionStatus paymentStatus = paymentPluginStatusToPaymentStatus(paymentInfoPlugin, operationResult);
             daoHelper.processPaymentInfoPlugin(paymentStatus, paymentInfoPlugin, newState.getName());
+        } else if (paymentStateContext.isApiPayment()) {
+            //
+            // If there is transaction to update (because payment transaction did not occur), we still want to send a bus event when the call originates from api
+            // to notify listeners that some transaction occurred for that specific account.
+            //
+            final BusInternalEvent event = new DefaultPaymentErrorEvent(paymentStateContext.getAccount().getId(),
+                                                                        null,
+                                                                        paymentStateContext.getTransactionType(),
+                                                                        "Early abortion of payment transaction",
+                                                                        paymentStateContext.getInternalCallContext().getAccountRecordId(),
+                                                                        paymentStateContext.getInternalCallContext().getTenantRecordId(),
+                                                                        paymentStateContext.getInternalCallContext().getUserToken());
+            try {
+                daoHelper.getEventBus().post(event);
+            } catch (EventBusException e) {
+                logger.error("Failed to post Payment event event for account {} ", paymentStateContext.getAccount().getId(), e);
+            }
         }
     }
 

@@ -35,13 +35,9 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.DefaultPayment;
-import org.killbill.billing.payment.api.DefaultPaymentErrorEvent;
-import org.killbill.billing.payment.api.DefaultPaymentInfoEvent;
-import org.killbill.billing.payment.api.DefaultPaymentPluginErrorEvent;
 import org.killbill.billing.payment.api.DefaultPaymentTransaction;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -99,14 +95,13 @@ public class PaymentProcessor extends ProcessorBase {
                             final TagInternalApi tagUserApi,
                             final PaymentDao paymentDao,
                             final NonEntityDao nonEntityDao,
-                            final PersistentBus eventBus,
                             final InternalCallContextFactory internalCallContextFactory,
                             final GlobalLocker locker,
                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                             final PaymentAutomatonRunner paymentAutomatonRunner,
                             final PaymentStateMachineHelper paymentSMHelper,
                             final Clock clock) {
-        super(pluginRegistry, accountUserApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
+        super(pluginRegistry, accountUserApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
         this.paymentSMHelper = paymentSMHelper;
         this.internalCallContextFactory = internalCallContextFactory;
         this.paymentAutomatonRunner = paymentAutomatonRunner;
@@ -182,7 +177,8 @@ public class PaymentProcessor extends ProcessorBase {
         final State currentPaymentState;
         final String stateName = paymentModelDao.getStateName();
         final String lastSuccessPaymentStateStrOrNull = paymentSMHelper.isSuccessState(stateName) ? stateName : null;
-        paymentDao.updatePaymentAndTransactionOnCompletion(transactionModelDao.getPaymentId(), stateName, lastSuccessPaymentStateStrOrNull, transactionModelDao.getId(), newStatus,
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), transactionModelDao.getPaymentId(), TransactionType.NOTIFY_STATE_CHANGE,
+                                                           stateName, lastSuccessPaymentStateStrOrNull, transactionModelDao.getId(), newStatus,
                                                            transactionModelDao.getProcessedAmount(), transactionModelDao.getProcessedCurrency(),
                                                            transactionModelDao.getGatewayErrorCode(), transactionModelDao.getGatewayErrorMsg(), internalCallContext);
     }
@@ -323,28 +319,24 @@ public class PaymentProcessor extends ProcessorBase {
                                      final InternalCallContext internalCallContext) throws PaymentApiException {
 
         Payment payment = null;
-        try {
-            validateUniqueTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
+        validateUniqueTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
 
-            final UUID nonNullPaymentId = paymentAutomatonRunner.run(transactionType,
-                                                                     account,
-                                                                     attemptId,
-                                                                     paymentMethodId,
-                                                                     paymentId,
-                                                                     paymentExternalKey,
-                                                                     paymentTransactionExternalKey,
-                                                                     amount,
-                                                                     currency,
-                                                                     shouldLockAccountAndDispatch,
-                                                                     properties,
-                                                                     callContext,
-                                                                     internalCallContext);
-            payment = getPayment(nonNullPaymentId, true, properties, callContext, internalCallContext);
-            return payment;
-        } finally {
-            postPaymentEvent(isApiPayment, account, transactionType, payment, paymentTransactionExternalKey, internalCallContext);
-
-        }
+        final UUID nonNullPaymentId = paymentAutomatonRunner.run(isApiPayment,
+                                                                 transactionType,
+                                                                 account,
+                                                                 attemptId,
+                                                                 paymentMethodId,
+                                                                 paymentId,
+                                                                 paymentExternalKey,
+                                                                 paymentTransactionExternalKey,
+                                                                 amount,
+                                                                 currency,
+                                                                 shouldLockAccountAndDispatch,
+                                                                 properties,
+                                                                 callContext,
+                                                                 internalCallContext);
+        payment = getPayment(nonNullPaymentId, true, properties, callContext, internalCallContext);
+        return payment;
     }
 
     private Payment getPayment(final PaymentModelDao paymentModelDao, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context, final InternalTenantContext tenantContext) throws PaymentApiException {
@@ -406,72 +398,4 @@ public class PaymentProcessor extends ProcessorBase {
         return new DefaultPayment(curPaymentModelDao.getId(), curPaymentModelDao.getCreatedDate(), curPaymentModelDao.getUpdatedDate(), curPaymentModelDao.getAccountId(),
                                   curPaymentModelDao.getPaymentMethodId(), curPaymentModelDao.getPaymentNumber(), curPaymentModelDao.getExternalKey(), sortedTransactions);
     }
-
-    private void postPaymentEvent(final boolean isApiPayment, final Account account, final TransactionType transactionType, @Nullable final Payment payment, final String transactionExternalKey, final InternalCallContext context) {
-        final BusInternalEvent event = buildPaymentEvent(isApiPayment, account, transactionType, payment, transactionExternalKey, context);
-        if (event != null) {
-            postPaymentEvent(event, account.getId(), context);
-        }
-    }
-
-    private BusInternalEvent buildPaymentEvent(final boolean isApiPayment, final Account account, final TransactionType transactionType, @Nullable final Payment payment, final String transactionExternalKey, final InternalCallContext context) {
-
-        // If an exception was thrown we don't have the payment detail but we still want to send a partially formed event for calls originating outside of API calls (e.g bus, ..)
-        if (payment == null) {
-            if (isApiPayment) {
-                return null;
-            } else {
-                return new DefaultPaymentErrorEvent(account.getId(),
-                                                    null,
-                                                    null,
-                                                    transactionType,
-                                                    "Early abortion of payment transaction",
-                                                    context.getAccountRecordId(),
-                                                    context.getTenantRecordId(),
-                                                    context.getUserToken());
-            }
-        }
-
-        final PaymentTransaction paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
-        // If the payment/transaction was created then it should match the transactionExternalKey
-        Preconditions.checkState(paymentTransaction.getExternalKey().equals(transactionExternalKey));
-        Preconditions.checkState(paymentTransaction.getTransactionType().equals(transactionType));
-
-        final TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
-        switch (paymentTransaction.getTransactionStatus()) {
-            case SUCCESS:
-            case PENDING:
-                return new DefaultPaymentInfoEvent(account.getId(),
-                                                   null,
-                                                   payment.getId(),
-                                                   paymentTransaction.getAmount(),
-                                                   payment.getPaymentNumber(),
-                                                   transactionStatus,
-                                                   transactionType,
-                                                   paymentTransaction.getEffectiveDate(),
-                                                   context.getAccountRecordId(),
-                                                   context.getTenantRecordId(),
-                                                   context.getUserToken());
-            case PAYMENT_FAILURE:
-                return new DefaultPaymentErrorEvent(account.getId(),
-                                                    null,
-                                                    payment.getId(),
-                                                    transactionType,
-                                                    paymentTransaction.getPaymentInfoPlugin() == null ? null : paymentTransaction.getPaymentInfoPlugin().getGatewayError(),
-                                                    context.getAccountRecordId(),
-                                                    context.getTenantRecordId(),
-                                                    context.getUserToken());
-            case PLUGIN_FAILURE:
-            default:
-                return new DefaultPaymentPluginErrorEvent(account.getId(),
-                                                          null,
-                                                          payment.getId(),
-                                                          transactionType,
-                                                          paymentTransaction.getPaymentInfoPlugin() == null ? null : paymentTransaction.getPaymentInfoPlugin().getGatewayError(),
-                                                          context.getAccountRecordId(),
-                                                          context.getTenantRecordId(),
-                                                          context.getUserToken());
-        }
-    }
-
 }

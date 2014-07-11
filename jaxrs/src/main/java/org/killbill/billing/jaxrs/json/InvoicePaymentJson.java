@@ -54,9 +54,9 @@ public class InvoicePaymentJson extends PaymentJson {
         this.targetInvoiceId = targetInvoiceId;
     }
 
-    public InvoicePaymentJson(final Payment dp, @Nullable final UUID invoiceId, @Nullable final AccountAuditLogs accountAuditLogs) {
-        super(dp, accountAuditLogs);
-        // STEPH we should build InvoicePaymentTransactionJson instead of PaymentTransactionJson here.
+    public InvoicePaymentJson(final Payment payment, @Nullable final UUID invoiceId, @Nullable final AccountAuditLogs accountAuditLogs) {
+        super(payment, accountAuditLogs);
+        //  TODO should build InvoicePaymentTransactionJson instead of PaymentTransactionJson here.
         this.targetInvoiceId = invoiceId != null ? invoiceId.toString() : null;
     }
 

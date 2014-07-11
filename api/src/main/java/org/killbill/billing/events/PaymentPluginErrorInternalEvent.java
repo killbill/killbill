@@ -23,8 +23,6 @@ public interface PaymentPluginErrorInternalEvent extends BusInternalEvent {
 
     public String getMessage();
 
-    public UUID getInvoiceId();
-
     public UUID getAccountId();
 
     public UUID getPaymentId();
