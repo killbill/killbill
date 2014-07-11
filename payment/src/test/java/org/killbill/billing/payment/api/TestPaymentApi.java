@@ -476,37 +476,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
     }
 
-    // STEPH fix precondition to actually throw a PaymentApiException
-    @Test(groups = "slow", enabled = false)
-    public void testCreatePaymentWithNoDefaultPaymentMethod() throws Exception {
-        final LocalDate now = clock.getUTCToday();
-        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
-
-        final UUID subscriptionId = UUID.randomUUID();
-        final UUID bundleId = UUID.randomUUID();
-        final BigDecimal requestedAmount = BigDecimal.TEN;
-
-        invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(), account.getId(),
-                                                            subscriptionId,
-                                                            bundleId,
-                                                            "test plan", "test phase", null,
-                                                            now,
-                                                            now.plusMonths(1),
-                                                            requestedAmount,
-                                                            new BigDecimal("1.0"),
-                                                            Currency.USD));
-
-        try {
-
-            final Account accountNoPaymentMethod = testHelper.createTestAccount("bobo@gmail.com", false);
-
-            paymentApi.createPurchase(accountNoPaymentMethod, accountNoPaymentMethod.getPaymentMethodId(), null, requestedAmount, Currency.AED, invoice.getId().toString(), "yo", ImmutableList.<PluginProperty>of(), callContext);
-        } catch (final PaymentApiException e) {
-            assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.getCode());
-        }
-    }
-
-    @Test(groups = "fast")
+    @Test(groups = "slow")
     public void testSimpleAuthCaptureWithInvalidPaymentId() throws Exception {
         final BigDecimal requestedAmount = new BigDecimal("80.0091");
 
@@ -526,7 +496,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
 
-    @Test(groups = "fast")
+    @Test(groups = "slow")
     public void testSimpleAuthCaptureWithInvalidCurrency() throws Exception {
         final BigDecimal requestedAmount = new BigDecimal("80.0091");
 
