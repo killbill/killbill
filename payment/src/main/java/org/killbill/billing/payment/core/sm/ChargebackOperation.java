@@ -19,8 +19,6 @@ package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
 
-import javax.annotation.Nullable;
-
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionType;
@@ -34,9 +32,6 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-
 public class ChargebackOperation extends PaymentOperation {
 
     private final Logger logger = LoggerFactory.getLogger(ChargebackOperation.class);
@@ -44,7 +39,7 @@ public class ChargebackOperation extends PaymentOperation {
     public ChargebackOperation(final PaymentAutomatonDAOHelper daoHelper,
                                final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher,
                                final PaymentStateContext paymentStateContext) throws PaymentApiException {
-        super(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+        super(locker, daoHelper, paymentPluginDispatcher, paymentStateContext);
     }
 
     @Override

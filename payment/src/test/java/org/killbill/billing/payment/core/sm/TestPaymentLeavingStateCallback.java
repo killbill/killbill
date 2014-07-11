@@ -136,15 +136,15 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         }
 
         final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, eventBus, paymentSMHelper);
-        callback = new PaymentLeavingStateTestCallback(daoHelper);
+        callback = new PaymentLeavingStateTestCallback(daoHelper, paymentStateContext);
 
         Mockito.when(state.getName()).thenReturn("NEW_STATE");
     }
 
     private static final class PaymentLeavingStateTestCallback extends PaymentLeavingStateCallback {
 
-        private PaymentLeavingStateTestCallback(final PaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
-            super(daoHelper);
+        private PaymentLeavingStateTestCallback(final PaymentAutomatonDAOHelper daoHelper, final PaymentStateContext paymentStateContext) throws PaymentApiException {
+            super(daoHelper, paymentStateContext);
         }
     }
 }

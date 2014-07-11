@@ -20,6 +20,7 @@ package org.killbill.billing.payment.core.sm;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +30,11 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
     private final Logger logger = LoggerFactory.getLogger(PaymentLeavingStateCallback.class);
 
     protected final PaymentAutomatonDAOHelper daoHelper;
+    protected final PaymentStateContext paymentStateContext;
 
-    protected PaymentLeavingStateCallback(final PaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
+    protected PaymentLeavingStateCallback(final PaymentAutomatonDAOHelper daoHelper, final PaymentStateContext paymentStateContext) throws PaymentApiException {
         this.daoHelper = daoHelper;
+        this.paymentStateContext = paymentStateContext;
     }
 
     @Override
@@ -40,6 +43,12 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
 
         // Create or update the payment and transaction
         try {
+            // No paymentMethodId was passed through API and account does not have a default paymentMethodId
+            if (paymentStateContext.getPaymentMethodId() == null) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, paymentStateContext.getAccount().getId());
+            }
+
+
             daoHelper.createNewPaymentTransaction();
         } catch (PaymentApiException e) {
             throw new OperationException(e);

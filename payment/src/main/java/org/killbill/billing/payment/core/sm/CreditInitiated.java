@@ -22,6 +22,6 @@ import org.killbill.billing.payment.api.PaymentApiException;
 public class CreditInitiated extends PaymentLeavingStateCallback {
 
     public CreditInitiated(final PaymentAutomatonDAOHelper daoHelper, final PaymentStateContext paymentStateContext) throws PaymentApiException {
-        super(daoHelper);
+        super(daoHelper, paymentStateContext);
     }
 }

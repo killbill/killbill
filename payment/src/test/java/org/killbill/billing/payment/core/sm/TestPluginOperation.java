@@ -291,7 +291,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     private static final class PluginOperationTest extends PaymentOperation {
 
         protected PluginOperationTest(final PaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateContext paymentStateContext) throws PaymentApiException {
-            super(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+            super(locker, daoHelper, paymentPluginDispatcher, paymentStateContext);
         }
 
         @Override

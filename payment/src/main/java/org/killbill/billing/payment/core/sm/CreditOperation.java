@@ -33,7 +33,7 @@ public class CreditOperation extends PaymentOperation {
     public CreditOperation(final PaymentAutomatonDAOHelper daoHelper,
                            final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher,
                            final PaymentStateContext paymentStateContext) throws PaymentApiException {
-        super(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+        super(locker, daoHelper, paymentPluginDispatcher, paymentStateContext);
     }
 
     @Override

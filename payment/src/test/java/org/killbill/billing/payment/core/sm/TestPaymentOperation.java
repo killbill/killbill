@@ -134,7 +134,7 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
         public PaymentOperationTest(@Nullable final PaymentPluginStatus paymentPluginStatus,
                                     final PaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker,
                                     final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateContext paymentStateContext) throws PaymentApiException {
-            super(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+            super(locker, daoHelper, paymentPluginDispatcher, paymentStateContext);
             this.paymentInfoPlugin = (paymentPluginStatus == null ? null : getPaymentInfoPlugin(paymentPluginStatus));
         }
 

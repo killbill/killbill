@@ -134,14 +134,6 @@ public class PaymentAutomatonDAOHelper {
         paymentStateContext.setPaymentTransactionModelDao(paymentDao.getPaymentTransaction(paymentStateContext.getPaymentTransactionModelDao().getId(), internalCallContext));
     }
 
-    public UUID getDefaultPaymentMethodId() throws PaymentApiException {
-        final UUID paymentMethodId = paymentStateContext.getAccount().getPaymentMethodId();
-        if (paymentMethodId == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, paymentStateContext.getAccount().getId());
-        }
-        return paymentMethodId;
-    }
-
     public PaymentPluginApi getPaymentProviderPlugin() throws PaymentApiException {
 
         final UUID paymentMethodId = paymentStateContext.getPaymentMethodId();

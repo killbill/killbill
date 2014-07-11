@@ -58,10 +58,10 @@ public abstract class PaymentEnteringStateCallback implements EnteringStateCallb
             final PaymentTransactionInfoPlugin paymentInfoPlugin = paymentStateContext.getPaymentInfoPlugin();
             final TransactionStatus paymentStatus = paymentPluginStatusToPaymentStatus(paymentInfoPlugin, operationResult);
             daoHelper.processPaymentInfoPlugin(paymentStatus, paymentInfoPlugin, newState.getName());
-        } else if (paymentStateContext.isApiPayment()) {
+        } else if (!paymentStateContext.isApiPayment()) {
             //
-            // If there is transaction to update (because payment transaction did not occur), we still want to send a bus event when the call originates from api
-            // to notify listeners that some transaction occurred for that specific account.
+            // If there is NO transaction to update (because payment transaction did not occur), then there is something wrong happening (maybe a missing defaultPaymentMethodId, ...)
+            // so, if the does NOT call originates from api then we still want to send a bus event so the system can react to it if needed.
             //
             final BusInternalEvent event = new DefaultPaymentErrorEvent(paymentStateContext.getAccount().getId(),
                                                                         null,

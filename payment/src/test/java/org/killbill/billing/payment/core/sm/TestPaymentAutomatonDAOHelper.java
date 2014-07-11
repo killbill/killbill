@@ -97,17 +97,6 @@ public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedD
     }
 
     @Test(groups = "slow")
-    public void testNoDefaultPaymentMethod() throws Exception {
-        final PaymentAutomatonDAOHelper daoHelper = createDAOHelper(UUID.randomUUID(), paymentExternalKey, paymentTransactionExternalKey, amount, currency);
-        try {
-            daoHelper.getDefaultPaymentMethodId();
-            Assert.fail();
-        } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.getCode());
-        }
-    }
-
-    @Test(groups = "slow")
     public void testNoPaymentMethod() throws Exception {
         final PaymentAutomatonDAOHelper daoHelper = createDAOHelper(UUID.randomUUID(), paymentExternalKey, paymentTransactionExternalKey, amount, currency);
         try {

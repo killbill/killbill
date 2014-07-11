@@ -26,6 +26,7 @@ import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
@@ -48,24 +49,32 @@ import com.google.common.collect.Iterables;
 // Encapsulates the payment specific logic
 public abstract class PaymentOperation extends OperationCallbackBase implements OperationCallback {
 
-    protected final PaymentPluginApi plugin;
     protected final PaymentAutomatonDAOHelper daoHelper;
+    protected PaymentPluginApi plugin;
 
-    protected PaymentOperation(final PaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker,
+    protected PaymentOperation(final GlobalLocker locker,
+                               final PaymentAutomatonDAOHelper daoHelper,
                                final PluginDispatcher<OperationResult> paymentPluginDispatcher,
-                               final PaymentStateContext paymentStateContext) throws PaymentApiException {
+                               final PaymentStateContext paymentStateContext) {
         super(locker, paymentPluginDispatcher, paymentStateContext);
         this.daoHelper = daoHelper;
-        this.plugin = daoHelper.getPaymentProviderPlugin();
     }
 
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
-        if (paymentStateContext.shouldLockAccountAndDispatch()) {
-            return doOperationCallbackWithDispatchAndAccountLock();
-        } else {
-            return doSimpleOperationCallback();
+
+        try {
+
+            this.plugin = daoHelper.getPaymentProviderPlugin();
+
+            if (paymentStateContext.shouldLockAccountAndDispatch()) {
+                return doOperationCallbackWithDispatchAndAccountLock();
+            } else {
+                return doSimpleOperationCallback();
+            }
+        } catch (PaymentApiException e) {
+            throw new OperationException(e, OperationResult.EXCEPTION);
         }
     }
 

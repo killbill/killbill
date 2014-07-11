@@ -120,8 +120,9 @@ public class PaymentAutomatonRunner {
             Preconditions.checkState(currentStateName != null, "State name cannot be null for payment " + paymentId);
             Preconditions.checkState(paymentMethodId == null || effectivePaymentMethodId.equals(paymentMethodId), "Specified payment method id " + paymentMethodId + " doesn't match the one on the payment " + effectivePaymentMethodId);
         } else {
-            // If the payment method is not specified, retrieve the default one on the account
-            effectivePaymentMethodId = paymentMethodId != null ? paymentMethodId : daoHelper.getDefaultPaymentMethodId();
+            // If the payment method is not specified, retrieve the default one on the account; it could still be null, in which case
+            //
+            effectivePaymentMethodId = paymentMethodId != null ? paymentMethodId : account.getPaymentMethodId();
             currentStateName = paymentSMHelper.getInitStateNameForTransaction(transactionType);
         }
 
