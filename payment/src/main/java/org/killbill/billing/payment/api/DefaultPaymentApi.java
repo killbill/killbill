@@ -199,7 +199,7 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Payment createCredit(final Account account, final UUID paymentMethodId, final UUID paymentId, final BigDecimal amount, final Currency currency,
+    public Payment createCredit(final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency,
                                       @Nullable final String paymentExternalKey, @Nullable  final String paymentTransactionExternalKey,
                                       final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
 
@@ -207,7 +207,6 @@ public class DefaultPaymentApi implements PaymentApi {
         checkNotNullParameter(paymentMethodId, "paymentMethodId");
         checkNotNullParameter(amount, "amount");
         checkNotNullParameter(currency, "currency");
-        checkNotNullParameter(paymentId, "paymentId");
         checkNotNullParameter(properties, "plugin properties");
         checkPositiveAmount(amount);
 
