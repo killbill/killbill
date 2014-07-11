@@ -253,7 +253,8 @@ public class PaymentResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
 
-        final Payment payment = paymentApi.createVoid(account, paymentId, json.getTransactionExternalKey(), pluginProperties, callContext);
+        final String transactionExternalKey = json != null ? json.getTransactionExternalKey() : null;
+        final Payment payment = paymentApi.createVoid(account, paymentId, transactionExternalKey, pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
     }
 
