@@ -357,7 +357,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         }
         info.addAmount(type, amount);
 
-        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, info.getAmount(type), currency, clock.getUTCNow(), clock.getUTCNow(), status, null);
+        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, null);
         return result;
     }
 }
