@@ -23,7 +23,7 @@
         <version>0.7.15</version>
     </parent>
     <artifactId>killbill</artifactId>
-    <version>0.11.6</version>
+    <version>0.11.7-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
