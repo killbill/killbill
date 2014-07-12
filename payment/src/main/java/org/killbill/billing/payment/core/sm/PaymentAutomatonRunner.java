@@ -36,7 +36,6 @@ import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.automaton.StateMachine;
 import org.killbill.automaton.StateMachineConfig;
-import org.killbill.automaton.Transition;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -47,6 +46,7 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -58,9 +58,6 @@ import org.killbill.commons.locker.GlobalLocker;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.inject.name.Named;
 
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
@@ -98,15 +95,16 @@ public class PaymentAutomatonRunner {
     }
 
     public UUID run(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID attemptId, @Nullable final UUID paymentMethodId,
-                    @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
+                    @Nullable final UUID paymentId,  @Nullable final UUID transactionId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
                     @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                    final boolean shouldLockAccount, final Iterable<PluginProperty> properties,
+                    final boolean shouldLockAccount, final OperationResult overridePluginOperationResult, final Iterable<PluginProperty> properties,
                     final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
 
         final DateTime utcNow = clock.getUTCNow();
 
-        final PaymentStateContext paymentStateContext = new PaymentStateContext(isApiPayment, paymentId, attemptId, paymentExternalKey, paymentTransactionExternalKey, transactionType,
-                                                                                                  account, paymentMethodId, amount, currency, shouldLockAccount, properties, internalCallContext, callContext);
+        final PaymentStateContext paymentStateContext = new PaymentStateContext(isApiPayment, paymentId, transactionId, attemptId,  paymentExternalKey, paymentTransactionExternalKey, transactionType,
+                                                                                                  account, paymentMethodId, amount, currency, shouldLockAccount, overridePluginOperationResult, properties, internalCallContext, callContext);
+
         final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, utcNow, paymentDao, pluginRegistry, internalCallContext, eventBus, paymentSMHelper);
 
         final UUID effectivePaymentMethodId;

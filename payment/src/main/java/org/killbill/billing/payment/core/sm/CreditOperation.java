@@ -41,7 +41,7 @@ public class CreditOperation extends PaymentOperation {
         logger.debug("Starting CREDIT for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
         return plugin.creditPayment(paymentStateContext.getAccount().getId(),
                                     paymentStateContext.getPaymentId(),
-                                    paymentStateContext.getTransactionPaymentId(),
+                                    paymentStateContext.getTransactionId(),
                                     paymentStateContext.getPaymentMethodId(),
                                     paymentStateContext.getAmount(),
                                     paymentStateContext.getCurrency(),

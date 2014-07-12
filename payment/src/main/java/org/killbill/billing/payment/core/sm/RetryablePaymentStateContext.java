@@ -45,7 +45,7 @@ public class RetryablePaymentStateContext extends PaymentStateContext {
                                         @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
                                         final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
                                         final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext, final CallContext callContext) {
-        super(isApiPayment, paymentId, null, paymentExternalKey, paymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, properties, internalCallContext, callContext);
+        super(isApiPayment, paymentId, null, null, paymentExternalKey, paymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, null, properties, internalCallContext, callContext);
         this.pluginName = pluginName;
     }
 

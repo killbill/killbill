@@ -41,7 +41,7 @@ public class CaptureOperation extends PaymentOperation {
         logger.debug("Starting CAPTURE for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
         return plugin.capturePayment(paymentStateContext.getAccount().getId(),
                                      paymentStateContext.getPaymentId(),
-                                     paymentStateContext.getTransactionPaymentId(),
+                                     paymentStateContext.getTransactionId(),
                                      paymentStateContext.getPaymentMethodId(),
                                      paymentStateContext.getAmount(),
                                      paymentStateContext.getCurrency(),

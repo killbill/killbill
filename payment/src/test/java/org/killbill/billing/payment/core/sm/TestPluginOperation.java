@@ -22,7 +22,6 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -181,7 +180,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(timeoutSeconds, Executors.newCachedThreadPool());
 
         final PaymentStateContext paymentStateContext = new PaymentStateContext(true, UUID.randomUUID(),
-                                                                                null,
+                                                                                null, null,
                                                                                 UUID.randomUUID().toString(),
                                                                                 UUID.randomUUID().toString(),
                                                                                 TransactionType.CAPTURE,
@@ -190,7 +189,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
                                                                                 new BigDecimal("192.3920111"),
                                                                                 Currency.BRL,
                                                                                 shouldLockAccount,
-                                                                                ImmutableList.<PluginProperty>of(),
+                                                                                null, ImmutableList.<PluginProperty>of(),
                                                                                 internalCallContext,
                                                                                 callContext);
 

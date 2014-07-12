@@ -22,6 +22,7 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +49,14 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
                 throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, paymentStateContext.getAccount().getId());
             }
 
-
-            daoHelper.createNewPaymentTransaction();
+            // If the transactionId has been specified, it means this is an operation in several stage (INIT -> PENDING -> XXX), so we don't need to create the row,
+            // but we do need to set the transactionModelDao in the context so enteringState logic can take place.
+            if (paymentStateContext.getTransactionId() == null) {
+                daoHelper.createNewPaymentTransaction();
+            } else {
+                final PaymentTransactionModelDao transactionModelDao =  daoHelper.paymentDao.getPaymentTransaction(paymentStateContext.getTransactionId(), paymentStateContext.getInternalCallContext());
+                paymentStateContext.setPaymentTransactionModelDao(transactionModelDao);
+            }
         } catch (PaymentApiException e) {
             throw new OperationException(e);
         }

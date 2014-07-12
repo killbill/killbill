@@ -41,7 +41,7 @@ public class AuthorizeOperation extends PaymentOperation {
         logger.debug("Starting AUTHORIZE for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
         return plugin.authorizePayment(paymentStateContext.getAccount().getId(),
                                        paymentStateContext.getPaymentId(),
-                                       paymentStateContext.getTransactionPaymentId(),
+                                       paymentStateContext.getTransactionId(),
                                        paymentStateContext.getPaymentMethodId(),
                                        paymentStateContext.getAmount(),
                                        paymentStateContext.getCurrency(),

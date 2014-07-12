@@ -41,7 +41,7 @@ public class RefundOperation extends PaymentOperation {
         logger.debug("Starting REFUND for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
         return plugin.refundPayment(paymentStateContext.getAccount().getId(),
                                     paymentStateContext.getPaymentId(),
-                                    paymentStateContext.getTransactionPaymentId(),
+                                    paymentStateContext.getTransactionId(),
                                     paymentStateContext.getPaymentMethodId(),
                                     paymentStateContext.getAmount(),
                                     paymentStateContext.getCurrency(),

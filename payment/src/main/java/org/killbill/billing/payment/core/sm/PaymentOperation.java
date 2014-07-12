@@ -35,7 +35,9 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
+import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 
@@ -151,11 +153,27 @@ public abstract class PaymentOperation extends OperationCallbackBase implements 
 
     private OperationResult doOperation() throws PaymentApiException {
         try {
-            final PaymentTransactionInfoPlugin paymentInfoPlugin = doCallSpecificOperationCallback();
-
-            paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
-
-            return processPaymentInfoPlugin();
+            //
+            // If the OperationResult was specified in the plugin, it means we want to bypass the plugin and just care
+            // about running through the state machine to bring the transaction/payment into a new state.
+            //
+            if (paymentStateContext.getOverridePluginOperationResult() == null) {
+                final PaymentTransactionInfoPlugin paymentInfoPlugin = doCallSpecificOperationCallback();
+                paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
+                return processPaymentInfoPlugin();
+            } else {
+                final PaymentTransactionInfoPlugin paymentInfoPlugin = new DefaultNoOpPaymentInfoPlugin(paymentStateContext.getPaymentId(),
+                                                                                                        paymentStateContext.getTransactionId(),
+                                                                                                        paymentStateContext.getTransactionType(),
+                                                                                                        paymentStateContext.getPaymentTransactionModelDao().getProcessedAmount(),
+                                                                                                        paymentStateContext.getPaymentTransactionModelDao().getProcessedCurrency(),
+                                                                                                        paymentStateContext.getPaymentTransactionModelDao().getEffectiveDate(),
+                                                                                                        paymentStateContext.getPaymentTransactionModelDao().getCreatedDate(),
+                                                                                                        PaymentPluginStatus.PROCESSED,
+                                                                                                        null);
+                paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
+                return paymentStateContext.getOverridePluginOperationResult();
+            }
         } catch (final PaymentPluginApiException e) {
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
         }

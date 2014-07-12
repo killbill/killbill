@@ -115,7 +115,7 @@ public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedD
         // No default payment method
 
         paymentStateContext = new PaymentStateContext(true, paymentId,
-                                                      null,
+                                                      null, null,
                                                       paymentExternalKey,
                                                       paymentTransactionExternalKey,
                                                       TransactionType.CAPTURE,
@@ -124,7 +124,7 @@ public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedD
                                                       amount,
                                                       currency,
                                                       false,
-                                                      ImmutableList.<PluginProperty>of(),
+                                                      null, ImmutableList.<PluginProperty>of(),
                                                       internalCallContext,
                                                       callContext);
 

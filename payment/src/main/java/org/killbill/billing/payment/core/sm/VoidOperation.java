@@ -41,7 +41,7 @@ public class VoidOperation extends PaymentOperation {
         logger.debug("Starting VOID for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
         return plugin.voidPayment(paymentStateContext.getAccount().getId(),
                                   paymentStateContext.getPaymentId(),
-                                  paymentStateContext.getTransactionPaymentId(),
+                                  paymentStateContext.getTransactionId(),
                                   paymentStateContext.getPaymentMethodId(),
                                   paymentStateContext.getProperties(),
                                   paymentStateContext.getCallContext());

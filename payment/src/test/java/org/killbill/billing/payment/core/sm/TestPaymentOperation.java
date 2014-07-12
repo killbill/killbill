@@ -105,7 +105,7 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
         final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(1, Executors.newCachedThreadPool());
         paymentStateContext = new PaymentStateContext(true,
                                                       UUID.randomUUID(),
-                                                      null,
+                                                      null, null,
                                                       UUID.randomUUID().toString(),
                                                       UUID.randomUUID().toString(),
                                                       TransactionType.CAPTURE,
@@ -114,7 +114,7 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
                                                       new BigDecimal("192.3920111"),
                                                       Currency.BRL,
                                                       false,
-                                                      ImmutableList.<PluginProperty>of(),
+                                                      null, ImmutableList.<PluginProperty>of(),
                                                       internalCallContext,
                                                       callContext);
 

@@ -114,7 +114,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey2 = "kapu2t";
 
         final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, authAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
-                                                                     ImmutableList.<PluginProperty>of(), callContext);
+                                                               ImmutableList.<PluginProperty>of(), callContext);
 
         assertEquals(payment.getExternalKey(), paymentExternalKey);
         assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
@@ -139,7 +139,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
 
         final Payment payment2 = paymentApi.createCapture(account, payment.getId(), captureAmount, Currency.AED, transactionExternalKey2,
-                                                                ImmutableList.<PluginProperty>of(), callContext);
+                                                          ImmutableList.<PluginProperty>of(), callContext);
 
         assertEquals(payment2.getExternalKey(), paymentExternalKey);
         assertEquals(payment2.getPaymentMethodId(), account.getPaymentMethodId());
@@ -430,7 +430,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testNotifyPaymentPaymentOfChargeback() throws PaymentApiException {
+    public void testCreateChargeback() throws PaymentApiException {
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
         final String paymentExternalKey = "couic";
@@ -475,6 +475,50 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             Assert.assertTrue(true);
         }
     }
+
+    @Test(groups = "slow")
+    public void testNotifyPendingTransactionOfStateChanged() throws PaymentApiException {
+
+        final BigDecimal authAmount = BigDecimal.TEN;
+
+        final String paymentExternalKey = "rouge";
+        final String transactionExternalKey = "vert";
+
+        final Payment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, authAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
+                                                               ImmutableList.<PluginProperty>of(), callContext);
+
+        // Update the payment/transaction by hand to simulate a PENDING state.
+        final PaymentTransaction paymentTransaction = initialPayment.getTransactions().get(0);
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), initialPayment.getId(), TransactionType.AUTHORIZE, "AUTH_PENDING", "AUTH_PENDING",
+                                                           paymentTransaction.getId(), TransactionStatus.PENDING, paymentTransaction.getProcessedAmount(), paymentTransaction.getProcessedCurrency(),
+                                                           null, null, internalCallContext);
+
+
+        final Payment payment = paymentApi.notifyPendingTransactionOfStateChanged(account, paymentTransaction.getId(), true, callContext);
+
+        assertEquals(payment.getExternalKey(), paymentExternalKey);
+        assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment.getAccountId(), account.getId());
+        assertEquals(payment.getAuthAmount().compareTo(authAmount), 0);
+        assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getCurrency(), Currency.AED);
+
+        assertEquals(payment.getTransactions().size(), 1);
+        assertEquals(payment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
+        assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
+        assertEquals(payment.getTransactions().get(0).getAmount().compareTo(authAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.AED);
+        assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(authAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.AED);
+
+        assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.AUTHORIZE);
+        assertNull(payment.getTransactions().get(0).getGatewayErrorMsg());
+        assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
+    }
+
 
     @Test(groups = "slow")
     public void testSimpleAuthCaptureWithInvalidPaymentId() throws Exception {

@@ -41,7 +41,7 @@ public class PurchaseOperation extends PaymentOperation {
         logger.debug("Starting PURCHASE for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
         return plugin.purchasePayment(paymentStateContext.getAccount().getId(),
                                      paymentStateContext.getPaymentId(),
-                                     paymentStateContext.getTransactionPaymentId(),
+                                     paymentStateContext.getTransactionId(),
                                      paymentStateContext.getPaymentMethodId(),
                                      paymentStateContext.getAmount(),
                                      paymentStateContext.getCurrency(),

@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.killbill.automaton.OperationResult;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -45,11 +46,11 @@ public class PaymentStateContext {
     protected PaymentTransactionModelDao paymentTransactionModelDao;
     protected PaymentTransactionInfoPlugin paymentInfoPlugin;
     protected BigDecimal amount;
-    protected UUID transactionPaymentId;
     protected String paymentExternalKey;
 
     // Can be updated later via paymentTransactionModelDao (e.g. for auth or purchase)
     protected final UUID paymentId;
+    protected final UUID transactionId;
     protected final String paymentTransactionExternalKey;
     protected final Account account;
     protected final Currency currency;
@@ -59,24 +60,26 @@ public class PaymentStateContext {
     protected final InternalCallContext internalCallContext;
     protected final CallContext callContext;
     protected final boolean isApiPayment;
+    protected final OperationResult overridePluginOperationResult;
 
     // Use to create new transactions only
     public PaymentStateContext(final boolean isApiPayment, @Nullable final UUID paymentId, @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
                                final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
                                final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
                                final InternalCallContext internalCallContext, final CallContext callContext) {
-        this(isApiPayment, paymentId, null, null, paymentTransactionExternalKey, transactionType, account, paymentMethodId,
-             amount, currency, shouldLockAccountAndDispatch, properties, internalCallContext, callContext);
+        this(isApiPayment, paymentId, null, null, null, paymentTransactionExternalKey, transactionType, account, paymentMethodId,
+             amount, currency, shouldLockAccountAndDispatch, null, properties, internalCallContext, callContext);
     }
 
     // Used to create new payment and transactions
-    public PaymentStateContext(final boolean isApiPayment, @Nullable final UUID paymentId, @Nullable final UUID attemptId, @Nullable final String paymentExternalKey,
+    public PaymentStateContext(final boolean isApiPayment, @Nullable final UUID paymentId, final UUID transactionId, @Nullable final UUID attemptId, @Nullable final String paymentExternalKey,
                                @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
                                final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
-                               final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
+                               final boolean shouldLockAccountAndDispatch, final OperationResult overridePluginOperationResult, final Iterable<PluginProperty> properties,
                                final InternalCallContext internalCallContext, final CallContext callContext) {
         this.isApiPayment = isApiPayment;
         this.paymentId = paymentId;
+        this.transactionId = transactionId;
         this.attemptId= attemptId;
         this.paymentExternalKey = paymentExternalKey;
         this.paymentTransactionExternalKey = paymentTransactionExternalKey;
@@ -86,6 +89,7 @@ public class PaymentStateContext {
         this.amount = amount;
         this.currency = currency;
         this.shouldLockAccountAndDispatch = shouldLockAccountAndDispatch;
+        this.overridePluginOperationResult = overridePluginOperationResult;
         this.properties = properties;
         this.internalCallContext = internalCallContext;
         this.callContext = callContext;
@@ -128,8 +132,8 @@ public class PaymentStateContext {
         return paymentId != null ? paymentId : (paymentTransactionModelDao != null ? paymentTransactionModelDao.getPaymentId() : null);
     }
 
-    public UUID getTransactionPaymentId() {
-        return transactionPaymentId != null ? transactionPaymentId : (paymentTransactionModelDao != null ? paymentTransactionModelDao.getId() : null);
+    public UUID getTransactionId() {
+        return transactionId != null ? transactionId : (paymentTransactionModelDao != null ? paymentTransactionModelDao.getId() : null);
     }
 
     public String getPaymentExternalKey() {
@@ -174,6 +178,10 @@ public class PaymentStateContext {
 
     public boolean shouldLockAccountAndDispatch() {
         return shouldLockAccountAndDispatch;
+    }
+
+    public OperationResult getOverridePluginOperationResult() {
+        return overridePluginOperationResult;
     }
 
     public Iterable<PluginProperty> getProperties() {

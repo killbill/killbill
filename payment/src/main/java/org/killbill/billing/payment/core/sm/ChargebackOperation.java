@@ -68,7 +68,7 @@ public class ChargebackOperation extends PaymentOperation {
             status = PaymentPluginStatus.PROCESSED;
         }
         return new DefaultNoOpPaymentInfoPlugin(paymentStateContext.getPaymentId(),
-                                                 paymentStateContext.getTransactionPaymentId(),
+                                                 paymentStateContext.getTransactionId(),
                                                  TransactionType.CHARGEBACK,
                                                  paymentStateContext.getAmount(),
                                                  paymentStateContext.getCurrency(),

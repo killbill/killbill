@@ -97,7 +97,7 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         paymentStateContext = new PaymentStateContext(true,
                                                       paymentId,
-                                                      null,
+                                                      null, null,
                                                       UUID.randomUUID().toString(),
                                                       UUID.randomUUID().toString(),
                                                       TransactionType.CAPTURE,
@@ -106,7 +106,7 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
                                                       new BigDecimal("192.3920111"),
                                                       Currency.BRL,
                                                       false,
-                                                      ImmutableList.<PluginProperty>of(),
+                                                      null, ImmutableList.<PluginProperty>of(),
                                                       internalCallContext,
                                                       callContext);
 
