@@ -22,13 +22,24 @@ import java.util.UUID;
 
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.SimpleSession;
-import org.skife.jdbi.v2.DBI;
+import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
-
 public class TestJDBCSessionDao extends UtilTestSuiteWithEmbeddedDB {
+
+    @Test(groups = "slow")
+    public void testH2AndInvalidSessionId() {
+        final JDBCSessionDao jdbcSessionDao = new JDBCSessionDao(dbi);
+
+        // We need to create some data to force H2 to build the query
+        // (otherwise, the read path is optimized and the bug is not triggered)
+        final SimpleSession session = createSession();
+        jdbcSessionDao.doCreate(session);
+
+        // Make sure this doesn't throw any exception on H2
+        Assert.assertNull(jdbcSessionDao.doReadSession(UUID.randomUUID()));
+    }
 
     @Test(groups = "slow")
     public void testCRUD() throws Exception {
