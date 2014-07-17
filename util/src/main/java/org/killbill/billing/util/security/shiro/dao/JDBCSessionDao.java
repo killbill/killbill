@@ -23,14 +23,13 @@ import javax.inject.Inject;
 
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
+import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 
 public class JDBCSessionDao extends CachingSessionDAO {
 
@@ -72,7 +71,20 @@ public class JDBCSessionDao extends CachingSessionDAO {
 
     @Override
     protected Session doReadSession(final Serializable sessionId) {
-        final SessionModelDao sessionModelDao = jdbcSessionSqlDao.read(sessionId);
+        // Shiro should not pass us a null sessionId, but be safe...
+        if (sessionId == null) {
+            return null;
+        }
+
+        // Ignore unsupported JSESSIONID cookies
+        final Long recordId;
+        try {
+            recordId = Long.parseLong(sessionId.toString().trim());
+        } catch (final NumberFormatException e) {
+            return null;
+        }
+
+        final SessionModelDao sessionModelDao = jdbcSessionSqlDao.read(recordId);
         if (sessionModelDao == null) {
             return null;
         }

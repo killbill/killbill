@@ -16,21 +16,18 @@
 
 package org.killbill.billing.util.security.shiro.dao;
 
-import java.io.Serializable;
-
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
-import org.killbill.commons.jdbi.binder.SmartBindBean;
-
 @UseStringTemplate3StatementLocator
 public interface JDBCSessionSqlDao extends Transactional<JDBCSessionSqlDao> {
 
     @SqlQuery
-    public SessionModelDao read(@Bind("recordId") final Serializable sessionId);
+    public SessionModelDao read(@Bind("recordId") final Long sessionId);
 
     @SqlUpdate
     public void create(@SmartBindBean final SessionModelDao sessionModelDao);
