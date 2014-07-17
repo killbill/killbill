@@ -159,9 +159,9 @@ public abstract class PaymentOperation extends OperationCallbackBase implements 
             //
             if (paymentStateContext.getOverridePluginOperationResult() == null) {
                 final PaymentTransactionInfoPlugin paymentInfoPlugin = doCallSpecificOperationCallback();
-                if (paymentInfoPlugin == null) {
-                    throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned a null result");
-                }
+                // Throws if plugin is  ot correctly implemented (e.g returns null result, values,..)
+                sanityOnPaymentInfoPlugin(paymentInfoPlugin);
+
                 paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
                 return processPaymentInfoPlugin();
             } else {
@@ -197,5 +197,23 @@ public abstract class PaymentOperation extends OperationCallbackBase implements 
             default:
                 return OperationResult.FAILURE;
         }
+    }
+
+    private void sanityOnPaymentInfoPlugin(final PaymentTransactionInfoPlugin paymentInfoPlugin) throws PaymentApiException {
+        if (paymentInfoPlugin == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned a null result");
+        }
+        /*
+        TODO this breaks our tests so test would have to be fixed
+        if (paymentInfoPlugin.getKbTransactionPaymentId() == null || !paymentInfoPlugin.getKbTransactionPaymentId().equals(paymentStateContext.getTransactionId())) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned invalid kbTransactionId");
+        }
+        if (paymentInfoPlugin.getKbPaymentId() == null || !paymentInfoPlugin.getKbPaymentId().equals(paymentStateContext.getPaymentId())) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned invalid kbPaymentId");
+        }
+        if (paymentInfoPlugin.getTransactionType() == null || !paymentInfoPlugin.getKbPaymentId().equals(paymentStateContext.getTransactionType())) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned invalid transaction type");
+        }
+        */
     }
 }
