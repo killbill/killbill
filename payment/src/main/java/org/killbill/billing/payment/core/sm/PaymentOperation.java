@@ -159,6 +159,9 @@ public abstract class PaymentOperation extends OperationCallbackBase implements 
             //
             if (paymentStateContext.getOverridePluginOperationResult() == null) {
                 final PaymentTransactionInfoPlugin paymentInfoPlugin = doCallSpecificOperationCallback();
+                if (paymentInfoPlugin == null) {
+                    throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned a null result");
+                }
                 paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
                 return processPaymentInfoPlugin();
             } else {
