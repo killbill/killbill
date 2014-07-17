@@ -596,11 +596,13 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getPayments(@PathParam("accountId") final String accountIdStr,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                 @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final UUID accountId = UUID.fromString(accountIdStr);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
-        final List<Payment> payments = paymentApi.getAccountPayments(accountId, withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
+        final List<Payment> payments = paymentApi.getAccountPayments(accountId, withPluginInfo, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
         final List<PaymentJson> result = ImmutableList.copyOf(Iterables.transform(payments, new Function<Payment, PaymentJson>() {
             @Override
