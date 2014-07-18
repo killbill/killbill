@@ -26,7 +26,10 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.platform.test.glue.TestPlatformModuleWithEmbeddedDB;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
+import org.killbill.queue.DefaultQueueLifecycle;
 import org.skife.jdbi.v2.IDBI;
+
+import com.google.inject.name.Names;
 
 public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModule {
 
@@ -62,6 +65,7 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
             try {
                 bind(DataSource.class).toInstance(instance.getDataSource());
                 bind(IDBI.class).toInstance(dbTestingHelper.getDBI());
+                bind(IDBI.class).annotatedWith(Names.named(DefaultQueueLifecycle.QUEUE_NAME)).toInstance(dbTestingHelper.getDBI());
             } catch (final IOException e) {
                 throw new RuntimeException(e);
             }

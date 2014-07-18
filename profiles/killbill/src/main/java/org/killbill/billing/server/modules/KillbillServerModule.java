@@ -96,6 +96,8 @@ public class KillbillServerModule extends KillbillPlatformModule {
 
         dbi.registerMapper(new AuditLogModelDaoMapper());
         dbi.registerMapper(new RecordIdIdMappingsMapper());
+        queueDbi.registerMapper(new AuditLogModelDaoMapper());
+        queueDbi.registerMapper(new RecordIdIdMappingsMapper());
     }
 
     @Override
