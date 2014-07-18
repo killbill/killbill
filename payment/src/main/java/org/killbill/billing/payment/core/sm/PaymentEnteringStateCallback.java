@@ -85,7 +85,7 @@ public abstract class PaymentEnteringStateCallback implements EnteringStateCallb
                 return TransactionStatus.PLUGIN_FAILURE;
             } else {
                 // The plugin completed the call but returned null?! Bad plugin...
-                return TransactionStatus.UNKNOWN;
+                return TransactionStatus.PLUGIN_FAILURE;
             }
         }
 
