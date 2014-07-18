@@ -32,91 +32,88 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class PlanDetailJson {
 
-    final String productName;
-    final String planName;
-    final BillingPeriod billingPeriod;
-    final String priceListName;
-    final List<PriceJson> finalPhasePrice;
+    final String product;
+    final String plan;
+    final BillingPeriod finalPhaseBillingPeriod;
+    final String priceList;
+    final List<PriceJson> finalPhaseRecurringPrice;
 
     @JsonCreator
-    public PlanDetailJson(@JsonProperty("product") final String productName,
-                          @JsonProperty("plan") final String planName,
-                          @JsonProperty("final_phase_billing_period") final BillingPeriod billingPeriod,
-                          @JsonProperty("priceList") final String priceListName,
-                          @JsonProperty("final_phase_recurring_price") final List<PriceJson> finalPhasePrice) {
-        this.productName = productName;
-        this.planName = planName;
-        this.billingPeriod = billingPeriod;
-        this.priceListName = priceListName;
-        this.finalPhasePrice = finalPhasePrice;
+    public PlanDetailJson(@JsonProperty("product") final String product,
+                          @JsonProperty("plan") final String plan,
+                          @JsonProperty("final_phase_billing_period") final BillingPeriod finalPhaseBillingPeriod,
+                          @JsonProperty("priceList") final String priceList,
+                          @JsonProperty("final_phase_recurring_price") final List<PriceJson> finalPhaseRecurringPrice) {
+        this.product = product;
+        this.plan = plan;
+        this.finalPhaseBillingPeriod = finalPhaseBillingPeriod;
+        this.priceList = priceList;
+        this.finalPhaseRecurringPrice = finalPhaseRecurringPrice;
     }
 
     public PlanDetailJson(final Listing listing) {
         final Plan plan = listing.getPlan();
         if (plan == null) {
-            this.productName = null;
-            this.planName = null;
-            this.billingPeriod = null;
-            this.finalPhasePrice = ImmutableList.<PriceJson>of();
+            this.product = null;
+            this.plan = null;
+            this.finalPhaseBillingPeriod = null;
+            this.finalPhaseRecurringPrice = ImmutableList.<PriceJson>of();
         } else {
-            this.productName = plan.getProduct() == null ? null : plan.getProduct().getName();
-            this.planName = plan.getName();
-            this.billingPeriod = plan.getRecurringBillingPeriod();
+            this.product = plan.getProduct() == null ? null : plan.getProduct().getName();
+            this.plan = plan.getName();
+            this.finalPhaseBillingPeriod = plan.getRecurringBillingPeriod();
             if (plan.getFinalPhase() == null ||
                 plan.getFinalPhase().getRecurring() == null ||
                 plan.getFinalPhase().getRecurring().getRecurringPrice() == null ||
                 plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices() == null) {
-                this.finalPhasePrice = ImmutableList.<PriceJson>of();
+                this.finalPhaseRecurringPrice = ImmutableList.<PriceJson>of();
             } else {
-                this.finalPhasePrice = Lists.transform(ImmutableList.<Price>copyOf(plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices()),
-                                                       new Function<Price, PriceJson>() {
-                                                           @Override
-                                                           public PriceJson apply(final Price price) {
-                                                               try {
-                                                                   return new PriceJson(price);
-                                                               } catch (final CurrencyValueNull e) {
-                                                                   return new PriceJson(price.getCurrency().toString(), BigDecimal.ZERO);
-                                                               }
-                                                           }
-                                                       });
+                this.finalPhaseRecurringPrice = Lists.transform(ImmutableList.<Price>copyOf(plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices()),
+                                                                new Function<Price, PriceJson>() {
+                                                                    @Override
+                                                                    public PriceJson apply(final Price price) {
+                                                                        try {
+                                                                            return new PriceJson(price);
+                                                                        } catch (final CurrencyValueNull e) {
+                                                                            return new PriceJson(price.getCurrency().toString(), BigDecimal.ZERO);
+                                                                        }
+                                                                    }
+                                                                });
             }
         }
-        this.priceListName = listing.getPriceList() == null ? null : listing.getPriceList().getName();
+        this.priceList = listing.getPriceList() == null ? null : listing.getPriceList().getName();
     }
 
-    public String getProductName() {
-        return productName;
+    public String getProduct() {
+        return product;
     }
 
-    public String getPlanName() {
-        return planName;
+    public String getPlan() {
+        return plan;
     }
 
-    public BillingPeriod getBillingPeriod() {
-        return billingPeriod;
+    public BillingPeriod getFinalPhaseBillingPeriod() {
+        return finalPhaseBillingPeriod;
     }
 
-    public String getPriceListName() {
-        return priceListName;
+    public String getPriceList() {
+        return priceList;
     }
 
-    public List<PriceJson> getFinalPhasePrice() {
-        return finalPhasePrice;
+    public List<PriceJson> getFinalPhaseRecurringPrice() {
+        return finalPhaseRecurringPrice;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("PlanDetailJson{");
-        sb.append("productName='").append(productName).append('\'');
-        sb.append(", planName='").append(planName).append('\'');
-        sb.append(", billingPeriod=").append(billingPeriod);
-        sb.append(", priceListName='").append(priceListName).append('\'');
-        sb.append(", finalPhasePrice=").append(finalPhasePrice);
+        sb.append("product='").append(product).append('\'');
+        sb.append(", plan='").append(plan).append('\'');
+        sb.append(", finalPhaseBillingPeriod=").append(finalPhaseBillingPeriod);
+        sb.append(", priceList='").append(priceList).append('\'');
+        sb.append(", finalPhaseRecurringPrice=").append(finalPhaseRecurringPrice);
         sb.append('}');
         return sb.toString();
     }
@@ -132,19 +129,19 @@ public class PlanDetailJson {
 
         final PlanDetailJson that = (PlanDetailJson) o;
 
-        if (billingPeriod != that.billingPeriod) {
+        if (finalPhaseBillingPeriod != that.finalPhaseBillingPeriod) {
             return false;
         }
-        if (finalPhasePrice != null ? !finalPhasePrice.equals(that.finalPhasePrice) : that.finalPhasePrice != null) {
+        if (finalPhaseRecurringPrice != null ? !finalPhaseRecurringPrice.equals(that.finalPhaseRecurringPrice) : that.finalPhaseRecurringPrice != null) {
             return false;
         }
-        if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
+        if (plan != null ? !plan.equals(that.plan) : that.plan != null) {
             return false;
         }
-        if (priceListName != null ? !priceListName.equals(that.priceListName) : that.priceListName != null) {
+        if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
             return false;
         }
-        if (productName != null ? !productName.equals(that.productName) : that.productName != null) {
+        if (product != null ? !product.equals(that.product) : that.product != null) {
             return false;
         }
 
@@ -153,11 +150,11 @@ public class PlanDetailJson {
 
     @Override
     public int hashCode() {
-        int result = productName != null ? productName.hashCode() : 0;
-        result = 31 * result + (planName != null ? planName.hashCode() : 0);
-        result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
-        result = 31 * result + (priceListName != null ? priceListName.hashCode() : 0);
-        result = 31 * result + (finalPhasePrice != null ? finalPhasePrice.hashCode() : 0);
+        int result = product != null ? product.hashCode() : 0;
+        result = 31 * result + (plan != null ? plan.hashCode() : 0);
+        result = 31 * result + (finalPhaseBillingPeriod != null ? finalPhaseBillingPeriod.hashCode() : 0);
+        result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
+        result = 31 * result + (finalPhaseRecurringPrice != null ? finalPhaseRecurringPrice.hashCode() : 0);
         return result;
     }
 }
