@@ -52,7 +52,7 @@ public class TestCatalog extends TestJaxrsBase {
             final List<PlanDetail> availableAddons = killBillClient.getAvailableAddons(productJson.getName());
             final Set<String> availableAddonsNames = new HashSet<String>();
             for (final PlanDetail planDetailJson : availableAddons) {
-                availableAddonsNames.add(planDetailJson.getProductName());
+                availableAddonsNames.add(planDetailJson.getProduct());
             }
             Assert.assertEquals(availableAddonsNames, new HashSet<String>(productJson.getAvailable()));
         }
@@ -61,7 +61,7 @@ public class TestCatalog extends TestJaxrsBase {
         final List<PlanDetail> basePlans = killBillClient.getBasePlans();
         final Set<String> foundBasePlans = new HashSet<String>();
         for (final PlanDetail planDetailJson : basePlans) {
-            foundBasePlans.add(planDetailJson.getPlanName());
+            foundBasePlans.add(planDetailJson.getPlan());
         }
         Assert.assertEquals(foundBasePlans, allBasePlans);
     }
