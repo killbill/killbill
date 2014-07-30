@@ -87,10 +87,6 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
-            <artifactId>killbill-platform-base</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-platform-test</artifactId>
             <scope>test</scope>
         </dependency>
@@ -120,6 +116,10 @@
             Until we move ClockMock outside of test package
             <scope>test</scope>
             -->
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-concurrent</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>

@@ -28,8 +28,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
-import org.killbill.billing.platform.profiling.Profiling;
-import org.killbill.billing.platform.profiling.ProfilingData.ProfilingDataOutput;
+import org.killbill.commons.profiling.Profiling;
+import org.killbill.commons.profiling.ProfilingData.ProfilingDataOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

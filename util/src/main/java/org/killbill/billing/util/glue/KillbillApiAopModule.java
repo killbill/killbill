@@ -20,8 +20,8 @@ package org.killbill.billing.util.glue;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.killbill.billing.KillbillApi;
-import org.killbill.billing.platform.profiling.Profiling;
-import org.killbill.billing.platform.profiling.Profiling.WithProfilingCallback;
+import org.killbill.commons.profiling.Profiling;
+import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;

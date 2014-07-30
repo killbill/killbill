@@ -30,9 +30,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.killbill.billing.platform.profiling.Profiling;
-import org.killbill.billing.platform.profiling.Profiling.WithProfilingCallback;
 import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
+import org.killbill.commons.profiling.Profiling;
+import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.skife.jdbi.v2.Binding;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.exceptions.DBIException;

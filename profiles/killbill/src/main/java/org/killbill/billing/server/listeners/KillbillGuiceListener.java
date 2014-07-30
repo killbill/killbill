@@ -49,12 +49,13 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         final BaseServerModuleBuilder builder = new BaseServerModuleBuilder().setJaxrsUriPattern("(" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*")
                                                                              .addJaxrsResource("org.killbill.billing.jaxrs.mappers")
                                                                              .addJaxrsResource("org.killbill.billing.jaxrs.resources");
+        // Add profiling filter first
+        builder.addFilter("/*", ProfilingFilter.class);
 
+        // Add TenantFilter right after is multi-tenancy has been configured.
         if (config.isMultiTenancyEnabled()) {
             builder.addFilter("/*", TenantFilter.class);
         }
-
-        builder.addFilter("/*", ProfilingFilter.class);
         return builder.build();
     }
 

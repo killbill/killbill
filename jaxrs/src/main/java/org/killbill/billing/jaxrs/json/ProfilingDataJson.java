@@ -17,36 +17,116 @@
 
 package org.killbill.billing.jaxrs.json;
 
-import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Stack;
 
-import org.killbill.billing.platform.profiling.ProfilingData;
+import org.killbill.commons.profiling.ProfilingData;
+import org.killbill.commons.profiling.ProfilingData.LogLineType;
+import org.killbill.commons.profiling.ProfilingData.ProfilingDataItem;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
 
 public class ProfilingDataJson {
 
-    private final Map<String, List<Long>> rawData;
-    private final String createdUri;
+    private final List<ProfilingDataJsonItem> rawData;
 
     @JsonCreator
-    public ProfilingDataJson(@JsonProperty("createdUri") final String createdUri,
-            @JsonProperty("rawData") final Map<String, List<Long>> rawData) {
-        this.createdUri = createdUri;
+    public ProfilingDataJson(@JsonProperty("rawData") final List<ProfilingDataJsonItem> rawData) {
         this.rawData = rawData;
     }
 
-    public ProfilingDataJson(final ProfilingData data, final URI uri) {
-        this(uri.getPath(), data.getRawData());
+    public ProfilingDataJson(final ProfilingData input) {
+        final List<ProfilingDataItem> items = input.getRawData();
+        if (items.isEmpty()) {
+            this.rawData = Collections.emptyList();
+            return;
+        }
+
+        final List<ProfilingDataJsonItem> root = new ArrayList<ProfilingDataJsonItem>();
+
+        final Stack<ProfilingDataJsonItem> stack = new Stack<ProfilingDataJsonItem>();
+        while (items.size() > 0) {
+
+            final ProfilingDataItem cur = items.remove(0);
+
+            if (cur.getLineType() == LogLineType.START) {
+
+                // Create new element
+                final ProfilingDataJsonItem jsonItem = new ProfilingDataJsonItem(cur.getKey(), nanoToMicro(cur.getTimestampNsec()), Long.MIN_VALUE, new ArrayList<ProfilingDataJsonItem>());
+                // If stack is empty this belong to top level list, if to the parent's list
+                if (stack.isEmpty()) {
+                    root.add(jsonItem);
+                } else {
+                    final ProfilingDataJsonItem parent = stack.peek();
+                    parent.addChild(jsonItem);
+                }
+                // Add current element to the stack
+                stack.push(jsonItem);
+            } else /* LogLineType.STOP */ {
+                // Fetch current element and update its duration time
+                final ProfilingDataJsonItem jsonItem = stack.pop();
+                jsonItem.setDurationUsec(nanoToMicro(cur.getTimestampNsec()) - jsonItem.getStartUsec());
+            }
+        }
+        Preconditions.checkState(stack.isEmpty());
+        this.rawData = root;
     }
 
-    public Map<String, List<Long>> getRawData() {
+    public List<ProfilingDataJsonItem> getRawData() {
         return rawData;
     }
 
-    public String getCreatedUri() {
-        return createdUri;
+    public class ProfilingDataJsonItem {
+
+        private final String name;
+        private final Long startUsec;
+        private final List<ProfilingDataJsonItem> calls;
+        // Not final so we can build the data structure in one pass
+        private Long durationUsec;
+
+        @JsonCreator
+        public ProfilingDataJsonItem(@JsonProperty("name") final String name,
+                                     @JsonProperty("startUsec") final Long startUsec,
+                                     @JsonProperty("durationUsec") final Long durationUsec,
+                                     @JsonProperty("calls") final List<ProfilingDataJsonItem> calls) {
+            this.name = name;
+            this.startUsec = startUsec;
+            this.durationUsec = durationUsec;
+            this.calls = calls;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        @JsonIgnore
+        public Long getStartUsec() {
+            return startUsec;
+        }
+
+        public Long getDurationUsec() {
+            return durationUsec;
+        }
+
+        public void addChild(final ProfilingDataJsonItem child) {
+            calls.add(child);
+        }
+
+        public List<ProfilingDataJsonItem> getCalls() {
+            return calls;
+        }
+
+        public void setDurationUsec(final Long durationUsec) {
+            this.durationUsec = durationUsec;
+        }
+    }
+
+    private static Long nanoToMicro(final Long nanoSec) {
+        return (nanoSec / 1000);
     }
 }

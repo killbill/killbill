@@ -19,11 +19,9 @@
 package org.killbill.billing.payment.glue;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Provider;
@@ -39,10 +37,10 @@ import org.killbill.billing.payment.api.PaymentService;
 import org.killbill.billing.payment.bus.InvoiceHandler;
 import org.killbill.billing.payment.control.PaymentTagHandler;
 import org.killbill.billing.payment.control.dao.InvoicePaymentControlDao;
-import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.Janitor;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
+import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginControlledPaymentProcessor;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlledPaymentAutomatonRunner;
@@ -55,10 +53,10 @@ import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.payment.retry.DefaultRetryService.DefaultRetryServiceScheduler;
 import org.killbill.billing.payment.retry.RetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.platform.profiling.WithProfilingThreadPoolExecutor;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.glue.KillBillModule;
+import org.killbill.commons.concurrent.WithProfilingThreadPoolExecutor;
 import org.killbill.xmlloader.XMLLoader;
 import org.skife.config.ConfigurationObjectFactory;
 
@@ -141,33 +139,18 @@ public class PaymentModule extends KillBillModule {
 
     protected void installProcessors(final PaymentConfig paymentConfig) {
 
-
         final ExecutorService pluginExecutorService = new WithProfilingThreadPoolExecutor(paymentConfig.getPaymentPluginThreadNb(), paymentConfig.getPaymentPluginThreadNb(),
-                                      0L, TimeUnit.MILLISECONDS,
-                                      new LinkedBlockingQueue<Runnable>(),
-                                      new ThreadFactory() {
+                                                                                          0L, TimeUnit.MILLISECONDS,
+                                                                                          new LinkedBlockingQueue<Runnable>(),
+                                                                                          new ThreadFactory() {
 
-                                          @Override
-                                          public Thread newThread(final Runnable r) {
-                                              final Thread th = new Thread(r);
-                                              th.setName(PLUGIN_THREAD_PREFIX + th.getId());
-                                              return th;
-                                          }
-                                      });
-
-        /*
-        final ExecutorService pluginExecutorService = Executors.newFixedThreadPool(paymentConfig.getPaymentPluginThreadNb(), new ThreadFactory() {
-
-            @Override
-            public Thread newThread(final Runnable r) {
-                final Thread th = new Thread(r);
-                th.setName(PLUGIN_THREAD_PREFIX + th.getId());
-                return th;
-            }
-        });
-        */
-
-
+                                                                                              @Override
+                                                                                              public Thread newThread(final Runnable r) {
+                                                                                                  final Thread th = new Thread(r);
+                                                                                                  th.setName(PLUGIN_THREAD_PREFIX + th.getId());
+                                                                                                  return th;
+                                                                                              }
+                                                                                          });
         bind(ExecutorService.class).annotatedWith(Names.named(PLUGIN_EXECUTOR_NAMED)).toInstance(pluginExecutorService);
         bind(PaymentProcessor.class).asEagerSingleton();
         bind(PluginControlledPaymentProcessor.class).asEagerSingleton();

@@ -26,8 +26,8 @@ import javax.ws.rs.core.UriInfo;
 import org.killbill.billing.jaxrs.json.ProfilingDataJson;
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
-import org.killbill.billing.platform.profiling.Profiling;
-import org.killbill.billing.platform.profiling.ProfilingData;
+import org.killbill.commons.profiling.Profiling;
+import org.killbill.commons.profiling.ProfilingData;
 
 public class JaxrsUriBuilder {
 
@@ -73,7 +73,7 @@ public class JaxrsUriBuilder {
             public URI getUri() {
                 return newUriFromResource;
             }
-        } : new ProfilingDataJson(profilingData, newUriFromResource);
+        } : new ProfilingDataJson(profilingData);
 
         return ri.entity(obj).build();
     }
