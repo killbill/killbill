@@ -26,6 +26,7 @@ import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
+import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.retry.plugin.api.PaymentControlContext;
 import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
 import org.killbill.commons.locker.GlobalLocker;
@@ -39,9 +40,9 @@ public class RetryCompletionOperationCallback extends RetryOperationCallback {
     @Override
     public OperationResult doOperationCallback() throws OperationException {
 
-        return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<OperationResult, OperationException>() {
+        return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
             @Override
-            public OperationResult doOperation() throws OperationException {
+            public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
                 final PaymentTransactionModelDao transaction = paymentStateContext.getPaymentTransactionModelDao();
                 final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                             paymentStateContext.getPaymentMethodId(),
@@ -60,7 +61,7 @@ public class RetryCompletionOperationCallback extends RetryOperationCallback {
                                                                                                             paymentStateContext.callContext);
 
                 onCompletion(retryablePaymentStateContext.getPluginName(), updatedPaymentControlContext);
-                return OperationResult.SUCCESS;
+                return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
             }
         });
     }

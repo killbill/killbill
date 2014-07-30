@@ -20,10 +20,8 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -49,7 +47,6 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
@@ -59,11 +56,13 @@ import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
-import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.platform.profiling.Profiling;
+import org.killbill.billing.platform.profiling.ProfilingData.ProfilingDataOutput;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -331,7 +330,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return null;
     }
 
-    protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<String> pluginProperties, PluginProperty...additionalProperties) {
+    protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<String> pluginProperties, PluginProperty... additionalProperties) {
         final Collection<PluginProperty> properties = new LinkedList<PluginProperty>();
         if (pluginProperties == null) {
             return properties;
@@ -343,7 +342,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             final String value = property.size() == 1 ? null : Joiner.on("=").join(property.subList(1, property.size()));
             properties.add(new PluginProperty(key, value, false));
         }
-        for (PluginProperty  cur : additionalProperties) {
+        for (PluginProperty cur : additionalProperties) {
             properties.add(cur);
         }
         return properties;
@@ -360,9 +359,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
         final UUID paymentMethodId = externalPayment ? null : account.getPaymentMethodId();
         return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
-                                                    properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
+                                                           properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
     }
-
 
     protected PaymentOptions createInvoicePaymentControlPluginApiPaymentOptions(final boolean isExternalPayment) {
         return new PaymentOptions() {
@@ -370,6 +368,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             public boolean isExternalPayment() {
                 return isExternalPayment;
             }
+
             @Override
             public String getPaymentControlPluginName() {
                 /* Contract with plugin */

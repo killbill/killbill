@@ -25,6 +25,7 @@ import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.config.DefaultKillbillConfigSource;
 import org.killbill.billing.server.modules.KillbillServerModule;
+import org.killbill.billing.server.profiling.ProfilingFilter;
 import org.killbill.billing.server.security.TenantFilter;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.skeleton.modules.BaseServerModuleBuilder;
@@ -53,8 +54,10 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
             builder.addFilter("/*", TenantFilter.class);
         }
 
+        builder.addFilter("/*", ProfilingFilter.class);
         return builder.build();
     }
+
 
     @Override
     protected Module getModule(final ServletContext servletContext) {

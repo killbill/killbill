@@ -27,6 +27,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.payment.core.ProcessorBase.CallableWithAccountLock;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
+import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,12 +54,12 @@ public abstract class OperationCallbackBase {
     // The dispatcher may throw a TimeoutException, ExecutionException, or InterruptedException; those will be handled in specific
     // callback to eventually throw a OperationException, that will be used to drive the state machine in the right direction.
     //
-    protected <ExceptionType extends Exception> OperationResult dispatchWithAccountLockAndTimeout(final WithAccountLockCallback<OperationResult, ExceptionType> callback) throws OperationException {
+    protected <ExceptionType extends Exception> OperationResult dispatchWithAccountLockAndTimeout(final WithAccountLockCallback<PluginDispatcherReturnType<OperationResult>, ExceptionType> callback) throws OperationException {
         final Account account = paymentStateContext.getAccount();
         logger.debug("Dispatching plugin call for account {}", account.getExternalKey());
 
         try {
-            final Callable<OperationResult> task = new CallableWithAccountLock<OperationResult, ExceptionType>(locker,
+            final Callable<PluginDispatcherReturnType<OperationResult>> task = new CallableWithAccountLock<OperationResult, ExceptionType>(locker,
                                                                                                                account.getExternalKey(),
                                                                                                                callback);
             final OperationResult operationResult = paymentPluginDispatcher.dispatchWithTimeout(task);

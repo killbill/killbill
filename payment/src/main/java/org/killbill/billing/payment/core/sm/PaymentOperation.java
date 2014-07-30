@@ -33,6 +33,7 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
+import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
@@ -133,10 +134,11 @@ public abstract class PaymentOperation extends OperationCallbackBase implements 
     }
 
     private OperationResult doOperationCallbackWithDispatchAndAccountLock() throws OperationException {
-        return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<OperationResult, OperationException>() {
+        return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
             @Override
-            public OperationResult doOperation() throws OperationException {
-                return doSimpleOperationCallback();
+            public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
+                final OperationResult result = doSimpleOperationCallback();
+                return PluginDispatcher.createPluginDispatcherReturnType(result);
             }
         });
     }

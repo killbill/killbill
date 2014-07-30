@@ -23,8 +23,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.killbill.billing.jaxrs.json.ProfilingDataJson;
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
+import org.killbill.billing.platform.profiling.Profiling;
+import org.killbill.billing.platform.profiling.ProfilingData;
 
 public class JaxrsUriBuilder {
 
@@ -36,7 +39,6 @@ public class JaxrsUriBuilder {
                                                 .port(uriInfo.getAbsolutePath().getPort());
 
         final URI location = objectId != null ? uriBuilder.build(objectId) : uriBuilder.build();
-
         return Response.created(location).build();
     }
 
@@ -64,12 +66,15 @@ public class JaxrsUriBuilder {
         tmp.append(UriBuilder.fromResource(theClass).path(theClass, getMethodName).build(objectId).toString());
         final URI newUriFromResource = UriBuilder.fromUri(tmp.toString()).build();
         final Response.ResponseBuilder ri = Response.created(newUriFromResource);
-        return ri.entity(new Object() {
+
+        final ProfilingData profilingData = Profiling.getPerThreadProfilingData();
+        final Object obj = profilingData == null ? new Object() {
             @SuppressWarnings(value = "all")
             public URI getUri() {
-
                 return newUriFromResource;
             }
-        }).build();
+        } : new ProfilingDataJson(profilingData, newUriFromResource);
+
+        return ri.entity(obj).build();
     }
 }

@@ -22,10 +22,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.killbill.automaton.OperationException;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -37,9 +37,9 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
     public void testDispatchWithTimeout() throws TimeoutException, PaymentApiException {
         boolean gotIt = false;
         try {
-            voidPluginDispatcher.dispatchWithTimeout(new Callable<Void>() {
+            voidPluginDispatcher.dispatchWithTimeout(new Callable<PluginDispatcherReturnType<Void>>() {
                 @Override
-                public Void call() throws Exception {
+                public PluginDispatcherReturnType<Void> call() throws Exception {
                     Thread.sleep(1000);
                     return null;
                 }
@@ -59,9 +59,9 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
     public void testDispatchWithPaymentApiException() throws TimeoutException, PaymentApiException {
         boolean gotIt = false;
         try {
-            voidPluginDispatcher.dispatchWithTimeout(new Callable<Void>() {
+            voidPluginDispatcher.dispatchWithTimeout(new Callable<PluginDispatcherReturnType<Void>>() {
                 @Override
-                public Void call() throws Exception {
+                public PluginDispatcherReturnType<Void> call() throws Exception {
                     throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, "foo", "foo");
                 }
             }, 100, TimeUnit.MILLISECONDS);
@@ -84,9 +84,9 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
     public void testDispatchWithRuntimeException() throws TimeoutException, PaymentApiException {
         boolean gotIt = false;
         try {
-            voidPluginDispatcher.dispatchWithTimeout(new Callable<Void>() {
+            voidPluginDispatcher.dispatchWithTimeout(new Callable<PluginDispatcherReturnType<Void>>() {
                 @Override
-                public Void call() throws Exception {
+                public PluginDispatcherReturnType<Void> call() throws Exception {
                     throw new RuntimeException("whatever");
                 }
             }, 100, TimeUnit.MILLISECONDS);

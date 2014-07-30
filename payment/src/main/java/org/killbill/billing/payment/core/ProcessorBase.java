@@ -39,6 +39,7 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
+import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
@@ -175,33 +176,34 @@ public abstract class ProcessorBase {
 
 
     // TODO Rename - there is no lock!
-    public interface WithAccountLockCallback<ReturnType, ExceptionType extends Exception> {
-        public ReturnType doOperation() throws ExceptionType;
+    public interface WithAccountLockCallback<PluginDispatcherReturnType, ExceptionType extends Exception> {
+        public PluginDispatcherReturnType doOperation() throws ExceptionType;
     }
 
-    public static class CallableWithAccountLock<ReturnType, ExceptionType extends Exception> implements Callable<ReturnType> {
+    public static class CallableWithAccountLock<ReturnType, ExceptionType extends Exception> implements Callable<PluginDispatcherReturnType<ReturnType>> {
 
         private final GlobalLocker locker;
         private final String accountExternalKey;
-        private final WithAccountLockCallback<ReturnType, ExceptionType> callback;
+        private final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback;
+
 
         public CallableWithAccountLock(final GlobalLocker locker,
                                        final String accountExternalKey,
-                                       final WithAccountLockCallback<ReturnType, ExceptionType> callback) {
+                                       final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback) {
             this.locker = locker;
             this.accountExternalKey = accountExternalKey;
             this.callback = callback;
         }
 
         @Override
-        public ReturnType call() throws ExceptionType, LockFailedException {
+        public PluginDispatcherReturnType<ReturnType> call() throws ExceptionType, LockFailedException {
             return new WithAccountLock<ReturnType, ExceptionType>().processAccountWithLock(locker, accountExternalKey, callback);
         }
     }
 
-    public static class WithAccountLock<T, ExceptionType extends Exception> {
+    public static class WithAccountLock<ReturnType, ExceptionType extends Exception> {
 
-        public T processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<T,ExceptionType > callback)
+        public PluginDispatcherReturnType<ReturnType> processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType > callback)
                 throws ExceptionType, LockFailedException {
             GlobalLock lock = null;
             try {

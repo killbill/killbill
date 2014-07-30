@@ -30,6 +30,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.killbill.billing.platform.profiling.Profiling;
+import org.killbill.billing.platform.profiling.Profiling.WithProfilingCallback;
 import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
 import org.skife.jdbi.v2.Binding;
 import org.skife.jdbi.v2.StatementContext;
@@ -83,6 +85,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private final CacheControllerDispatcher cacheControllerDispatcher;
     private final Clock clock;
     private final NonEntityDao nonEntityDao;
+    private final Profiling prof;
 
     public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass, final S sqlDao, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
         this.sqlDaoClass = sqlDaoClass;
@@ -90,12 +93,18 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.nonEntityDao = nonEntityDao;
+        this.prof = new Profiling<Object>();
     }
 
     @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
         try {
-            return invokeSafely(proxy, method, args);
+            return prof.executeWithProfiling("DAO:" + sqlDaoClass.getSimpleName() + ":" + method.getName(), new WithProfilingCallback() {
+                @Override
+                public Object execute() throws Throwable {
+                    return invokeSafely(proxy, method, args);
+                }
+            });
         } catch (Throwable t) {
             if (t.getCause() != null && t.getCause().getCause() != null && DBIException.class.isAssignableFrom(t.getCause().getClass())) {
                 // Likely a JDBC error, try to extract the SQL statement and JDBI bindings

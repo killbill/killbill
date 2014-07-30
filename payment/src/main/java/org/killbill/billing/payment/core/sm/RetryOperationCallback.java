@@ -40,6 +40,7 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
+import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.retry.plugin.api.FailureCallResult;
 import org.killbill.billing.retry.plugin.api.PaymentControlApiException;
 import org.killbill.billing.retry.plugin.api.PaymentControlContext;
@@ -75,10 +76,10 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
     @Override
     public OperationResult doOperationCallback() throws OperationException {
 
-        return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<OperationResult, OperationException>() {
+        return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
 
             @Override
-            public OperationResult doOperation() throws OperationException {
+            public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
 
                 final PaymentControlContext paymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                      paymentStateContext.getPaymentMethodId(),
@@ -98,7 +99,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
                     pluginResult = getPluginResult(retryablePaymentStateContext.getPluginName(), paymentControlContext);
                     if (pluginResult.isAborted()) {
                         // Transition to ABORTED
-                        return OperationResult.EXCEPTION;
+                        return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.EXCEPTION);
                     }
                 } catch (PaymentControlApiException e) {
                     // Transition to ABORTED and throw PaymentControlApiException to caller.
@@ -136,7 +137,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
                                                                                                                     paymentStateContext.callContext);
 
                         onCompletion(retryablePaymentStateContext.getPluginName(), updatedPaymentControlContext);
-                        return OperationResult.SUCCESS;
+                        return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
                     } else {
                         throw new OperationException(null, getOperationResultAndSetContext(retryablePaymentStateContext, paymentControlContext));
                     }

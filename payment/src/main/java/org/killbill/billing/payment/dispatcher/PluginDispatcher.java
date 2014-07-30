@@ -25,6 +25,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.killbill.billing.platform.profiling.Profiling;
+import org.killbill.billing.platform.profiling.ProfilingData;
+
+import com.google.common.base.Preconditions;
+
 public class PluginDispatcher<ReturnType> {
 
     private final TimeUnit DEEFAULT_PLUGIN_TIMEOUT_UNIT = TimeUnit.SECONDS;
@@ -38,13 +43,56 @@ public class PluginDispatcher<ReturnType> {
     }
 
     // TODO Once we switch fully to automata, should this throw PaymentPluginApiException instead?
-    public ReturnType dispatchWithTimeout(final Callable<ReturnType> task) throws TimeoutException, ExecutionException, InterruptedException {
+    public ReturnType dispatchWithTimeout(final Callable<PluginDispatcherReturnType<ReturnType>> task) throws TimeoutException, ExecutionException, InterruptedException {
         return dispatchWithTimeout(task, timeoutSeconds, DEEFAULT_PLUGIN_TIMEOUT_UNIT);
     }
 
-    public ReturnType dispatchWithTimeout(final Callable<ReturnType> task, final long timeout, final TimeUnit unit)
+    public ReturnType dispatchWithTimeout(final Callable<PluginDispatcherReturnType<ReturnType>> task, final long timeout, final TimeUnit unit)
             throws TimeoutException, ExecutionException, InterruptedException {
-        final Future<ReturnType> future = executor.submit(task);
-        return future.get(timeout, unit);
+
+        final Future<PluginDispatcherReturnType<ReturnType>> future = executor.submit(task);
+        final PluginDispatcherReturnType<ReturnType> pluginDispatcherResult = future.get(timeout, unit);
+
+        if (pluginDispatcherResult instanceof WithProfilingPluginDispatcherReturnType) {
+            // Transfer state from dispatch thread into current one.
+            final ProfilingData currentThreadProfilingData = Profiling.getPerThreadProfilingData();
+            if (currentThreadProfilingData != null) {
+                currentThreadProfilingData.merge(((WithProfilingPluginDispatcherReturnType)pluginDispatcherResult).getProfilingData());
+            }
+        }
+        return pluginDispatcherResult.getReturnType();
     }
+
+    public interface PluginDispatcherReturnType<ReturnType> {
+        public ReturnType getReturnType();
+    }
+
+    public interface WithProfilingPluginDispatcherReturnType<ReturnType> extends PluginDispatcherReturnType<ReturnType> {
+        public ProfilingData getProfilingData();
+    }
+
+    public static class DefaultWithProfilingPluginDispatcherReturnType<ReturnType> implements WithProfilingPluginDispatcherReturnType<ReturnType> {
+        private final ReturnType returnType;
+        private final ProfilingData profilingData;
+
+        public DefaultWithProfilingPluginDispatcherReturnType(final ReturnType returnType, final ProfilingData profilingData) {
+            this.returnType = returnType;
+            this.profilingData = profilingData;
+        }
+
+        @Override
+        public ReturnType getReturnType() {
+            return returnType;
+        }
+
+        @Override
+        public ProfilingData getProfilingData() {
+            return profilingData;
+        }
+    }
+
+    public static <ReturnType> PluginDispatcherReturnType<ReturnType> createPluginDispatcherReturnType(final ReturnType returnType) {
+        return new DefaultWithProfilingPluginDispatcherReturnType(returnType, Profiling.getPerThreadProfilingData());
+    }
+
 }

@@ -34,6 +34,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.platform.profiling.Profiling;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.testng.annotations.AfterMethod;
@@ -93,6 +94,7 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         eventBus.start();
+        Profiling.resetPerThreadProfilingData();
     }
 
     @AfterMethod(groups = "fast")

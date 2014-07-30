@@ -38,11 +38,16 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
+import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.billing.platform.profiling.Profiling;
+import org.killbill.billing.platform.profiling.ProfilingData.ProfilingDataOutput;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -55,8 +60,11 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     private final GlobalLocker locker = new MemoryGlobalLocker();
     private final Account account = Mockito.mock(Account.class);
 
+    private static final Logger logger = LoggerFactory.getLogger(TestPluginOperation.class);
+
     @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         Mockito.when(account.getExternalKey()).thenReturn(UUID.randomUUID().toString());
     }
 
@@ -198,7 +206,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         return new PluginOperationTest(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
     }
 
-    private static final class CallbackTest implements WithAccountLockCallback<OperationResult, PaymentApiException> {
+    private static final class CallbackTest implements WithAccountLockCallback<PluginDispatcherReturnType<OperationResult>, PaymentApiException> {
 
         private final AtomicInteger runCount = new AtomicInteger(0);
 
@@ -232,7 +240,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         }
 
         @Override
-        public OperationResult doOperation() throws PaymentApiException {
+        public PluginDispatcherReturnType<OperationResult> doOperation() throws PaymentApiException {
             try {
                 if (available != null) {
                     available.acquire();
@@ -257,8 +265,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
                     available.release();
                 }
             }
-
-            return null;
+            return PluginDispatcher.createPluginDispatcherReturnType(null);
         }
 
         public int getRunCount() {

@@ -66,6 +66,7 @@ import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.KillBillShiroAopModule;
+import org.killbill.billing.util.glue.KillbillApiAopModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
@@ -135,6 +136,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         install(new ExportModule(configSource));
         install(new GlobalLockerModule(embeddedDB.getDBEngine(), configSource));
         install(new KillBillShiroAopModule());
+        install(new KillbillApiAopModule());
         install(new KillBillShiroWebModule(servletContext, skifeConfigSource));
         install(new NonEntityDaoModule(configSource));
         install(new PaymentModule(configSource));

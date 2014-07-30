@@ -37,6 +37,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
+import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -81,18 +82,36 @@ public class PaymentGatewayProcessor extends ProcessorBase {
         this.paymentPluginNotificationDispatcher = new PluginDispatcher<GatewayNotification>(paymentPluginTimeoutSec, executor);
     }
 
+    public GatewayNotification processNotification(final String notification, final String pluginName, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        return dispatchWithExceptionHandling(null,
+                                             new Callable<PluginDispatcherReturnType<GatewayNotification>>() {
+                                                 @Override
+                                                 public PluginDispatcherReturnType<GatewayNotification> call() throws PaymentApiException {
+                                                     final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
+                                                     try {
+                                                         final GatewayNotification result = plugin.processNotification(notification, properties, callContext);
+                                                         return PluginDispatcher.createPluginDispatcherReturnType(result);
+                                                     } catch (PaymentPluginApiException e) {
+                                                         throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                                                     }
+                                                 }
+                                             }, paymentPluginNotificationDispatcher);
+    }
+
+
+
     public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return dispatchWithExceptionHandling(account,
                                              new CallableWithAccountLock<HostedPaymentPageFormDescriptor, PaymentApiException>(locker,
                                                                                                                                account.getExternalKey(),
-                                                                                                                               new WithAccountLockCallback<HostedPaymentPageFormDescriptor, PaymentApiException>() {
-
+                                                                                                                               new WithAccountLockCallback<PluginDispatcherReturnType<HostedPaymentPageFormDescriptor>, PaymentApiException>() {
                                                                                                                                    @Override
-                                                                                                                                   public HostedPaymentPageFormDescriptor doOperation() throws PaymentApiException {
+                                                                                                                                   public PluginDispatcherReturnType<HostedPaymentPageFormDescriptor> doOperation() throws PaymentApiException {
                                                                                                                                        final PaymentPluginApi plugin = getPaymentProviderPlugin(account, internalCallContext);
 
                                                                                                                                        try {
-                                                                                                                                           return plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
+                                                                                                                                           final HostedPaymentPageFormDescriptor result = plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
+                                                                                                                                           return PluginDispatcher.createPluginDispatcherReturnType(result);
                                                                                                                                        } catch (final RuntimeException e) {
                                                                                                                                            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
                                                                                                                                        } catch (final PaymentPluginApiException e) {
@@ -103,22 +122,7 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                              paymentPluginFormDispatcher);
     }
 
-    public GatewayNotification processNotification(final String notification, final String pluginName, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        return dispatchWithExceptionHandling(null,
-                                      new Callable<GatewayNotification>() {
-                                          @Override
-                                          public GatewayNotification call() throws PaymentApiException {
-                                              final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
-                                              try {
-                                                  return plugin.processNotification(notification, properties, callContext);
-                                              } catch (PaymentPluginApiException e) {
-                                                  throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
-                                              }
-                                          }
-                                      }, paymentPluginNotificationDispatcher);
-    }
-
-    private static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final Callable<ReturnType> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
+    private static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final Callable<PluginDispatcherReturnType<ReturnType>> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
         final UUID accountId = account != null ? account.getId() : null;
         final String accountExternalKey = account != null ? account.getExternalKey() : "";
         try {
