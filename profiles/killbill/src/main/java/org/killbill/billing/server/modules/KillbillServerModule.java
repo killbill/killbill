@@ -36,6 +36,7 @@ import org.killbill.billing.jaxrs.resources.InvoiceResource;
 import org.killbill.billing.jaxrs.resources.PaymentMethodResource;
 import org.killbill.billing.jaxrs.resources.PaymentResource;
 import org.killbill.billing.jaxrs.resources.PluginResource;
+import org.killbill.billing.server.filters.ProfilingContainerResponseFilter;
 import org.killbill.billing.jaxrs.resources.SubscriptionResource;
 import org.killbill.billing.jaxrs.resources.TagDefinitionResource;
 import org.killbill.billing.jaxrs.resources.TagResource;

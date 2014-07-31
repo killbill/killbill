@@ -21,11 +21,11 @@ package org.killbill.billing.server.listeners;
 import javax.servlet.ServletContext;
 
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
+import org.killbill.billing.server.filters.ProfilingContainerResponseFilter;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.config.DefaultKillbillConfigSource;
 import org.killbill.billing.server.modules.KillbillServerModule;
-import org.killbill.billing.server.profiling.ProfilingFilter;
 import org.killbill.billing.server.security.TenantFilter;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.skeleton.modules.BaseServerModuleBuilder;
@@ -49,8 +49,15 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         final BaseServerModuleBuilder builder = new BaseServerModuleBuilder().setJaxrsUriPattern("(" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*")
                                                                              .addJaxrsResource("org.killbill.billing.jaxrs.mappers")
                                                                              .addJaxrsResource("org.killbill.billing.jaxrs.resources");
-        // Add profiling filter first
-        builder.addFilter("/*", ProfilingFilter.class);
+
+        //
+        // Add jersey filters which are executed prior jersey write the output stream
+        //
+        builder.addJerseyFilter("com.sun.jersey.api.container.filter.LoggingFilter");
+
+        // The logging filter is still incompatible with the GZIP filter
+        //builder.addJerseyFilter(GZIPContentEncodingFilter.class.getName());
+        builder.addJerseyFilter(ProfilingContainerResponseFilter.class.getName());
 
         // Add TenantFilter right after is multi-tenancy has been configured.
         if (config.isMultiTenancyEnabled()) {

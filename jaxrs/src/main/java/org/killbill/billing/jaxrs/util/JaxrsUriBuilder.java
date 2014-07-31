@@ -66,15 +66,12 @@ public class JaxrsUriBuilder {
         tmp.append(UriBuilder.fromResource(theClass).path(theClass, getMethodName).build(objectId).toString());
         final URI newUriFromResource = UriBuilder.fromUri(tmp.toString()).build();
         final Response.ResponseBuilder ri = Response.created(newUriFromResource);
-
-        final ProfilingData profilingData = Profiling.getPerThreadProfilingData();
-        final Object obj = profilingData == null ? new Object() {
+        final Object obj = new Object() {
             @SuppressWarnings(value = "all")
             public URI getUri() {
                 return newUriFromResource;
             }
-        } : new ProfilingDataJson(profilingData);
-
+        };
         return ri.entity(obj).build();
     }
 }
