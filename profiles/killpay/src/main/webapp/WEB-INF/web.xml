@@ -52,6 +52,10 @@
         <!-- Context listener: called at startup time and creates the injector -->
         <listener-class>org.killbill.billing.server.listeners.KillpayGuiceListener</listener-class>
     </listener>
+    <listener>
+        <!-- Context listener: called at shutdown time and performs cleanup tasks -->
+        <listener-class>org.killbill.billing.server.listeners.CleanupListener</listener-class>
+    </listener>
 
     <!-- ServletHandler#handle requires a backend servlet. Besides, this will also be used to serve static resources,
          such as the favicon or the welcome page -->
