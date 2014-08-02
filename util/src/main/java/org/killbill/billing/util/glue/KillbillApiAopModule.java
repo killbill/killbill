@@ -22,6 +22,7 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.killbill.billing.KillbillApi;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
+import org.killbill.commons.profiling.ProfilingFeature.ProfilingFeatureType;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
@@ -42,7 +43,7 @@ public class KillbillApiAopModule extends AbstractModule {
 
         @Override
         public Object invoke(final MethodInvocation invocation) throws Throwable {
-            return prof.executeWithProfiling("API:" + invocation.getMethod().getName(), new WithProfilingCallback() {
+            return prof.executeWithProfiling(ProfilingFeatureType.API, invocation.getMethod().getName(), new WithProfilingCallback() {
                 @Override
                 public Object execute() throws Throwable {
                     return invocation.proceed();

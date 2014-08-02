@@ -23,7 +23,6 @@ import org.killbill.billing.jaxrs.json.ProfilingDataJson;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.ProfilingData;
-import org.killbill.commons.profiling.ProfilingData.ProfilingDataOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,8 +55,7 @@ public class ProfilingContainerResponseFilter implements ContainerRequestFilter,
         final String profilingHeaderRequest = profilingHeaderRequests.isEmpty() ? null : profilingHeaderRequests.get(0);
         if (profilingHeaderRequest != null) {
             try {
-                final ProfilingDataOutput profilingOutput = ProfilingDataOutput.valueOf(profilingHeaderRequest);
-                Profiling.setPerThreadProfilingData(profilingOutput);
+                Profiling.setPerThreadProfilingData(profilingHeaderRequest);
             } catch (IllegalArgumentException e) {
                 logger.info("Profiling data output " + profilingHeaderRequest + " is not supported, profiling NOT enabled");
             }
