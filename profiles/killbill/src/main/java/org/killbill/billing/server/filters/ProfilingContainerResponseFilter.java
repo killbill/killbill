@@ -52,7 +52,7 @@ public class ProfilingContainerResponseFilter implements ContainerRequestFilter,
     public ContainerRequest filter(final ContainerRequest request) {
 
         final List<String> profilingHeaderRequests = request.getRequestHeader(PROFILING_HEADER_REQ);
-        final String profilingHeaderRequest = profilingHeaderRequests.isEmpty() ? null : profilingHeaderRequests.get(0);
+        final String profilingHeaderRequest = (profilingHeaderRequests == null || profilingHeaderRequests.isEmpty()) ? null : profilingHeaderRequests.get(0);
         if (profilingHeaderRequest != null) {
             try {
                 Profiling.setPerThreadProfilingData(profilingHeaderRequest);
