@@ -1,3 +1,7 @@
+0.11.8
+    Add suppport for profiling data
+    Harden code to fix sporadic failure in intergation tests
+
 0.11.6
     Payment subsystem (complete merge payment and direct payment, and does renaming)
 
