@@ -56,7 +56,7 @@ public interface PaymentConfig extends KillbillConfig {
     public int getPluginFailureRetryMaxAttempts();
 
     @Config("org.killbill.payment.plugin.timeout")
-    @Default("90s")
+    @Default("5s")
     @Description("Timeout for each payment attempt")
     public TimeSpan getPaymentPluginTimeout();
 

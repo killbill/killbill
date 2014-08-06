@@ -144,6 +144,12 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         boolean updatedAccountBCD = false;
         for (final SubscriptionBase subscription : subscriptions) {
+
+            // The subscription did not even start, so there is nothing to do yet, we can skip and avoid some NPE down the line when calculating the BCD
+            if (subscription.getState() == null) {
+                continue;
+            }
+
             for (final EffectiveSubscriptionInternalEvent transition : subscriptionApi.getBillingTransitions(subscription, context)) {
                 try {
                     final int bcdLocal = bcdCalculator.calculateBcd(bundle, subscription, transition, account, context);
