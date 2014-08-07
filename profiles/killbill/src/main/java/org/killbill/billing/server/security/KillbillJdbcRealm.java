@@ -18,6 +18,8 @@
 
 package org.killbill.billing.server.security;
 
+import javax.sql.DataSource;
+
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -25,6 +27,7 @@ import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.codec.Base64;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.util.ByteSource;
+import org.killbill.billing.platform.jndi.ReferenceableDataSourceSpy;
 import org.killbill.billing.tenant.security.KillbillCredentialsMatcher;
 import org.killbill.commons.jdbi.guice.DaoConfig;
 import org.killbill.commons.jdbi.guice.DataSourceProvider;
@@ -69,7 +72,8 @@ public class KillbillJdbcRealm extends JdbcRealm {
     }
 
     private void configureDataSource() {
-        final DataSourceProvider dataSourceProvider = new DataSourceProvider(config);
-        setDataSource(dataSourceProvider.get());
+        final DataSource realDataSource = new DataSourceProvider(config).get();
+        final DataSource dataSource = new ReferenceableDataSourceSpy<DataSource>(realDataSource);
+        setDataSource(dataSource);
     }
 }

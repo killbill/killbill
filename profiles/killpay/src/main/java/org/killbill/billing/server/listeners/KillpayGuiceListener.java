@@ -17,6 +17,9 @@
 
 package org.killbill.billing.server.listeners;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+
 import javax.servlet.ServletContext;
 
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -34,7 +37,7 @@ public class KillpayGuiceListener extends KillbillGuiceListener {
     }
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
+    protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {
         final ImmutableMap<String, String> defaultProperties = ImmutableMap.<String, String>of("org.killbill.server.updateCheck.url",
                                                                                                "https://raw.github.com/killbill/killbill/master/profiles/killpay/src/main/resources/update-checker/killbill-server-update-list.properties");
         return new DefaultKillbillConfigSource(defaultProperties);

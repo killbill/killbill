@@ -69,8 +69,7 @@ public class GuicyKillbillTestSuite {
 
     protected KillbillConfigSource getConfigSource() {
         try {
-            return new TestKillbillConfigSource(DBTestingHelper.get().getInstance().getJdbcConnectionString(),
-                                                DBTestingHelper.get().getInstance().getUsername(), DBTestingHelper.get().getInstance().getPassword());
+            return new TestKillbillConfigSource(DBTestingHelper.class);
         } catch (final Exception e) {
             final AssertionError assertionError = new AssertionError("Initialization error");
             assertionError.initCause(e);
@@ -84,9 +83,7 @@ public class GuicyKillbillTestSuite {
 
     protected KillbillConfigSource getConfigSource(final String file, final ImmutableMap<String, String> extraProperties) {
         try {
-            return new TestKillbillConfigSource(file, DBTestingHelper.get().getInstance().getJdbcConnectionString(),
-                                                DBTestingHelper.get().getInstance().getUsername(), DBTestingHelper.get().getInstance().getPassword(),
-                                                extraProperties);
+            return new TestKillbillConfigSource(file, DBTestingHelper.class, extraProperties);
         } catch (final Exception e) {
             final AssertionError assertionError = new AssertionError("Initialization error");
             assertionError.initCause(e);
