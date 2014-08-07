@@ -23,6 +23,7 @@ import org.killbill.billing.jaxrs.json.ProfilingDataJson;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.ProfilingData;
+import org.killbill.commons.profiling.ProfilingFeature.ProfilingFeatureType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +57,11 @@ public class ProfilingContainerResponseFilter implements ContainerRequestFilter,
         if (profilingHeaderRequest != null) {
             try {
                 Profiling.setPerThreadProfilingData(profilingHeaderRequest);
+                // If we need to profile JAXRS let's do it...
+                final ProfilingData profilingData = Profiling.getPerThreadProfilingData();
+                if (profilingData.getProfileFeature().isProfilingJAXRS()) {
+                    profilingData.addStart(ProfilingFeatureType.JAXRS, request.getPath());
+                }
             } catch (IllegalArgumentException e) {
                 logger.info("Profiling data output " + profilingHeaderRequest + " is not supported, profiling NOT enabled");
             }
@@ -68,7 +74,11 @@ public class ProfilingContainerResponseFilter implements ContainerRequestFilter,
         try {
             final ProfilingData rawData = Profiling.getPerThreadProfilingData();
             if (rawData != null) {
+                if (rawData.getProfileFeature().isProfilingJAXRS()) {
+                    rawData.addEnd(ProfilingFeatureType.JAXRS, request.getPath());
+                }
                 final ProfilingDataJson profilingData = new ProfilingDataJson(rawData);
+
                 final String value;
                 try {
                     value = mapper.writeValueAsString(profilingData);
