@@ -24,6 +24,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.sql.Blob;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -56,7 +57,7 @@ public class LowerToCamelBeanMapper<T> implements ResultSetMapper<T> {
             for (final PropertyDescriptor descriptor : info.getPropertyDescriptors()) {
                 properties.put(CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptor.getName()).toLowerCase(), descriptor);
             }
-        } catch (IntrospectionException e) {
+        } catch (final IntrospectionException e) {
             throw new IllegalArgumentException(e);
         }
     }
@@ -65,7 +66,7 @@ public class LowerToCamelBeanMapper<T> implements ResultSetMapper<T> {
         final T bean;
         try {
             bean = type.newInstance();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new IllegalArgumentException(String.format("A bean, %s, was mapped " +
                                                              "which was not instantiable", type.getName()),
                                                e);
@@ -124,6 +125,12 @@ public class LowerToCamelBeanMapper<T> implements ResultSetMapper<T> {
                     value = rs.getObject(i);
                 }
 
+                // For h2, transform a JdbcBlob into a byte[]
+                if (value instanceof Blob) {
+                    final Blob blob = (Blob) value;
+                    value = blob.getBytes(0, (int) blob.length());
+                }
+
                 if (rs.wasNull() && !type.isPrimitive()) {
                     value = null;
                 }
@@ -138,16 +145,16 @@ public class LowerToCamelBeanMapper<T> implements ResultSetMapper<T> {
                         field.setAccessible(true); // Often private...
                         field.set(bean, value);
                     }
-                } catch (NoSuchFieldException e) {
+                } catch (final NoSuchFieldException e) {
                     throw new IllegalArgumentException(String.format("Unable to find field for " +
                                                                      "property, %s", name), e);
-                } catch (IllegalAccessException e) {
+                } catch (final IllegalAccessException e) {
                     throw new IllegalArgumentException(String.format("Unable to access setter for " +
                                                                      "property, %s", name), e);
-                } catch (InvocationTargetException e) {
+                } catch (final InvocationTargetException e) {
                     throw new IllegalArgumentException(String.format("Invocation target exception trying to " +
                                                                      "invoker setter for the %s property", name), e);
-                } catch (NullPointerException e) {
+                } catch (final NullPointerException e) {
                     throw new IllegalArgumentException(String.format("No appropriate method to " +
                                                                      "write value %s ", value.toString()), e);
                 }
@@ -160,7 +167,7 @@ public class LowerToCamelBeanMapper<T> implements ResultSetMapper<T> {
     private static Field getField(final Class clazz, final String fieldName) throws NoSuchFieldException {
         try {
             return clazz.getDeclaredField(fieldName);
-        } catch (NoSuchFieldException e) {
+        } catch (final NoSuchFieldException e) {
             // Go up in the hierarchy
             final Class superClass = clazz.getSuperclass();
             if (superClass == null) {
