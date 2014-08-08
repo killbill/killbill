@@ -22,6 +22,7 @@ import javax.inject.Provider;
 import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
 
 import net.sf.ehcache.CacheManager;
 
@@ -41,6 +42,11 @@ public class EhCacheManagerProvider implements Provider<EhCacheManager> {
         final EhCacheManager shiroEhCacheManager = new EhCacheManager();
         // Same EhCache manager instance as the rest of the system
         shiroEhCacheManager.setCacheManager(ehCacheCacheManager);
+
+        // It looks like Shiro's cache manager is not thread safe. Concurrent requests on startup
+        // can throw org.apache.shiro.cache.CacheException: net.sf.ehcache.ObjectExistsException: Cache shiro-activeSessionCache already exists
+        // As a workaround, create the cache manually here
+        shiroEhCacheManager.getCache(CachingSessionDAO.ACTIVE_SESSION_CACHE_NAME);
 
         if (securityManager instanceof DefaultSecurityManager) {
             ((DefaultSecurityManager) securityManager).setCacheManager(shiroEhCacheManager);
