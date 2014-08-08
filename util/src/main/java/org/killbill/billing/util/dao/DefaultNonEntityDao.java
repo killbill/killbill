@@ -21,6 +21,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.killbill.commons.profiling.Profiling;
+import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
+import org.killbill.commons.profiling.ProfilingFeature.ProfilingFeatureType;
 import org.skife.jdbi.v2.IDBI;
 
 import org.killbill.billing.ObjectType;
@@ -31,12 +34,13 @@ public class DefaultNonEntityDao implements NonEntityDao {
 
     private final NonEntitySqlDao nonEntitySqlDao;
     private final WithCaching containedCall;
-
+    private final Profiling<Long> prof;
 
     @Inject
     public DefaultNonEntityDao(final IDBI dbi) {
         this.nonEntitySqlDao = dbi.onDemand(NonEntitySqlDao.class);
         this.containedCall = new WithCaching();
+        this.prof = new Profiling<Long>();
     }
 
 
@@ -124,7 +128,19 @@ public class DefaultNonEntityDao implements NonEntityDao {
             if (cache != null) {
                 return (Long) cache.get(objectId.toString(), new CacheLoaderArgument(objectType));
             }
-            return op.doRetrieve(objectId, objectType);
+            final Long result;
+            try {
+                result = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS,  "NonEntityDao (type = " +  objectType + ") cache miss", new WithProfilingCallback() {
+                    @Override
+                    public Long execute() throws Throwable {
+                        return op.doRetrieve(objectId, objectType);
+                    }
+                });
+                return result;
+            } catch (Throwable throwable) {
+                // This is only because WithProfilingCallback throws a Throwable...
+                throw new RuntimeException(throwable);
+            }
         }
     }
 }
