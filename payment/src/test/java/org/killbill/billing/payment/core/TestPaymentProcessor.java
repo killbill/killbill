@@ -177,7 +177,11 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
                                      final BigDecimal authAmount, final BigDecimal capturedAmount, final BigDecimal refundedAmount,
                                      final int transactionsSize) {
         Assert.assertEquals(payment.getAccountId(), account.getId());
-        Assert.assertEquals(payment.getPaymentNumber(), new Integer(1));
+        // We cannot assume the number to be 1 here as the auto_increment implementation
+        // depends on the database. On h2, it is implemented as a sequence, and the payment number
+        // would be 33, 34, 35, etc. depending on the test
+        // See also http://h2database.com/html/grammar.html#create_sequence
+        Assert.assertTrue(payment.getPaymentNumber() > 0);
         Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
         Assert.assertEquals(payment.getAuthAmount().compareTo(authAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(capturedAmount), 0);
