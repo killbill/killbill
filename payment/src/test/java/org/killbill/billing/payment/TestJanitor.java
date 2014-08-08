@@ -39,15 +39,20 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.core.Janitor;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
+import org.killbill.billing.payment.glue.TestPaymentModuleWithEmbeddedDB;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Guice;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import static org.testng.Assert.assertEquals;
 
@@ -80,17 +85,27 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                               );
     }
 
+    @BeforeClass(groups = "slow")
+    protected void beforeClass() throws Exception {
+        super.beforeClass();
+        janitor.start();
+    }
+
+    @AfterClass(groups = "slow")
+    protected void afterClass() throws Exception {
+        janitor.stop();
+    }
+
+
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        janitor.start();
         account = testHelper.createTestAccount("bobo@gmail.com", true);
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
         super.afterMethod();
-        janitor.stop();
     }
 
     @Test(groups = "slow")
