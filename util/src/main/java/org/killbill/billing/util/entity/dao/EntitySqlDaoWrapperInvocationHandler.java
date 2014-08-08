@@ -196,38 +196,31 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         final CacheController<Object, Object> cache = cacheControllerDispatcher.getCacheController(cacheType);
         Object result = null;
         if (cache != null) {
-
-            result = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + "(caching) :" + method.getName(), new WithProfilingCallback() {
-                @Override
-                public Object execute() throws Throwable {
-
-                    // Find all arguments marked with @CachableKey
-                    final Map<Integer, Object> keyPieces = new LinkedHashMap<Integer, Object>();
-                    final Annotation[][] annotations = method.getParameterAnnotations();
-                    for (int i = 0; i < annotations.length; i++) {
-                        for (int j = 0; j < annotations[i].length; j++) {
-                            final Annotation annotation = annotations[i][j];
-                            if (CachableKey.class.equals(annotation.annotationType())) {
-                                // CachableKey position starts at 1
-                                keyPieces.put(((CachableKey) annotation).value() - 1, args[i]);
-                                break;
-                            }
-                        }
+            // Find all arguments marked with @CachableKey
+            final Map<Integer, Object> keyPieces = new LinkedHashMap<Integer, Object>();
+            final Annotation[][] annotations = method.getParameterAnnotations();
+            for (int i = 0; i < annotations.length; i++) {
+                for (int j = 0; j < annotations[i].length; j++) {
+                    final Annotation annotation = annotations[i][j];
+                    if (CachableKey.class.equals(annotation.annotationType())) {
+                        // CachableKey position starts at 1
+                        keyPieces.put(((CachableKey) annotation).value() - 1, args[i]);
+                        break;
                     }
-
-                    // Build the Cache key
-                    final String cacheKey = buildCacheKey(keyPieces);
-
-                    final InternalTenantContext internalTenantContext = (InternalTenantContext) Iterables.find(ImmutableList.copyOf(args), new Predicate<Object>() {
-                        @Override
-                        public boolean apply(final Object input) {
-                            return input instanceof InternalTenantContext;
-                        }
-                    }, null);
-                    final CacheLoaderArgument cacheLoaderArgument = new CacheLoaderArgument(objectType, args, internalTenantContext);
-                    return cache.get(cacheKey, cacheLoaderArgument);
                 }
-            });
+            }
+
+            // Build the Cache key
+            final String cacheKey = buildCacheKey(keyPieces);
+
+            final InternalTenantContext internalTenantContext = (InternalTenantContext) Iterables.find(ImmutableList.copyOf(args), new Predicate<Object>() {
+                @Override
+                public boolean apply(final Object input) {
+                    return input instanceof InternalTenantContext;
+                }
+            }, null);
+            final CacheLoaderArgument cacheLoaderArgument = new CacheLoaderArgument(objectType, args, internalTenantContext);
+            return cache.get(cacheKey, cacheLoaderArgument);
         }
         if (result == null) {
             result = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + "(raw) :" + method.getName(), new WithProfilingCallback() {
