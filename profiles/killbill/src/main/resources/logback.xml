@@ -31,7 +31,7 @@
                 <file>${LOGS_DIR:-./logs}/jdbc-sqlonly.${threadName}.out</file>
                 <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                     <!-- rollover daily -->
-                    <fileNamePattern>jdbc-sqlonly-%d{yyyy-MM-dd}.%i.${threadName}.out</fileNamePattern>
+                    <fileNamePattern>${LOGS_DIR:-./logs}/jdbc-sqlonly-%d{yyyy-MM-dd}.%i.${threadName}.out.gz</fileNamePattern>
                     <maxHistory>3</maxHistory>
                     <cleanHistoryOnStart>true</cleanHistoryOnStart>
                     <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -52,7 +52,7 @@
                 <file>${LOGS_DIR:-./logs}/jdbc-sqltiming.${threadName}.out</file>
                 <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                     <!-- rollover daily -->
-                    <fileNamePattern>jdbc-sqltiming-%d{yyyy-MM-dd}.%i.${threadName}.out</fileNamePattern>
+                    <fileNamePattern>${LOGS_DIR:-./logs}/jdbc-sqltiming-%d{yyyy-MM-dd}.%i.${threadName}.out.gz</fileNamePattern>
                     <maxHistory>3</maxHistory>
                     <cleanHistoryOnStart>true</cleanHistoryOnStart>
                     <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -73,7 +73,7 @@
                 <file>${LOGS_DIR:-./logs}/jdbc-audit.${threadName}.out</file>
                 <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                     <!-- rollover daily -->
-                    <fileNamePattern>jdbc-audit-%d{yyyy-MM-dd}.%i.${threadName}.out</fileNamePattern>
+                    <fileNamePattern>${LOGS_DIR:-./logs}/jdbc-audit-%d{yyyy-MM-dd}.%i.${threadName}.out.gz</fileNamePattern>
                     <maxHistory>3</maxHistory>
                     <cleanHistoryOnStart>true</cleanHistoryOnStart>
                     <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -94,7 +94,7 @@
                 <file>${LOGS_DIR:-./logs}/jdbc-resultset.${threadName}.out</file>
                 <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                     <!-- rollover daily -->
-                    <fileNamePattern>jdbc-resultset-%d{yyyy-MM-dd}.%i.${threadName}.out</fileNamePattern>
+                    <fileNamePattern>${LOGS_DIR:-./logs}/jdbc-resultset-%d{yyyy-MM-dd}.%i.${threadName}.out.gz</fileNamePattern>
                     <maxHistory>3</maxHistory>
                     <cleanHistoryOnStart>true</cleanHistoryOnStart>
                     <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -115,7 +115,7 @@
                 <file>${LOGS_DIR:-./logs}/jdbc-resultsettable.${threadName}.out</file>
                 <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                     <!-- rollover daily -->
-                    <fileNamePattern>jdbc-resultsettable-%d{yyyy-MM-dd}.%i.${threadName}.out</fileNamePattern>
+                    <fileNamePattern>${LOGS_DIR:-./logs}/jdbc-resultsettable-%d{yyyy-MM-dd}.%i.${threadName}.out.gz</fileNamePattern>
                     <maxHistory>3</maxHistory>
                     <cleanHistoryOnStart>true</cleanHistoryOnStart>
                     <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -136,7 +136,7 @@
                 <file>${LOGS_DIR:-./logs}/jdbc-connection.${threadName}.out</file>
                 <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                     <!-- rollover daily -->
-                    <fileNamePattern>jdbc-connection-%d{yyyy-MM-dd}.%i.${threadName}.out</fileNamePattern>
+                    <fileNamePattern>${LOGS_DIR:-./logs}/jdbc-connection-%d{yyyy-MM-dd}.%i.${threadName}.out.gz</fileNamePattern>
                     <maxHistory>3</maxHistory>
                     <cleanHistoryOnStart>true</cleanHistoryOnStart>
                     <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
