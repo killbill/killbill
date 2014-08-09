@@ -74,6 +74,17 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
     }
 
     @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultPaymentErrorEvent{");
+        sb.append("message='").append(message).append('\'');
+        sb.append(", accountId=").append(accountId);
+        sb.append(", paymentId=").append(paymentId);
+        sb.append(", transactionType=").append(transactionType);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;
