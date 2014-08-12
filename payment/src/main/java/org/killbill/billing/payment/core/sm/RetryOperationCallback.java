@@ -32,8 +32,8 @@ import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
@@ -52,13 +52,12 @@ import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class RetryOperationCallback extends OperationCallbackBase implements OperationCallback {
+public abstract class RetryOperationCallback extends OperationCallbackBase<Payment, PaymentApiException> implements OperationCallback {
 
     private final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry;
 
     protected final PaymentProcessor paymentProcessor;
     protected final RetryablePaymentStateContext retryablePaymentStateContext;
-
 
     private final Logger logger = LoggerFactory.getLogger(RetryOperationCallback.class);
 
@@ -68,7 +67,6 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
         this.paymentControlPluginRegistry = retryPluginRegistry;
         this.retryablePaymentStateContext = paymentStateContext;
     }
-
 
     @Override
     protected abstract Payment doCallSpecificOperationCallback() throws PaymentApiException;
@@ -101,12 +99,12 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
                         // Transition to ABORTED
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.EXCEPTION);
                     }
-                } catch (PaymentControlApiException e) {
+                } catch (final PaymentControlApiException e) {
                     // Transition to ABORTED and throw PaymentControlApiException to caller.
                     throw new OperationException(e, OperationResult.EXCEPTION);
                 }
 
-                boolean success;
+                final boolean success;
                 try {
                     // Adjust amount with value returned by plugin if necessary
                     if (paymentStateContext.getAmount() == null ||
@@ -141,10 +139,10 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
                     } else {
                         throw new OperationException(null, getOperationResultAndSetContext(retryablePaymentStateContext, paymentControlContext));
                     }
-                } catch (PaymentApiException e) {
+                } catch (final PaymentApiException e) {
                     // Wrap PaymentApiException, and throw a new OperationException with an ABORTED/FAILURE state based on the retry result.
                     throw new OperationException(e, getOperationResultAndSetContext(retryablePaymentStateContext, paymentControlContext));
-                } catch (RuntimeException e) {
+                } catch (final RuntimeException e) {
                     // Attempts to set the retry date in context if needed.
                     getOperationResultAndSetContext(retryablePaymentStateContext, paymentControlContext);
                     throw e;
@@ -183,7 +181,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
         final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
         try {
             plugin.onSuccessCall(paymentControlContext);
-        } catch (PaymentControlApiException e) {
+        } catch (final PaymentControlApiException e) {
             logger.warn("Plugin " + pluginName + " failed to complete onCompletion call for " + paymentControlContext.getPaymentExternalKey(), e);
         }
     }
@@ -195,7 +193,6 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
     }
 
     private PriorPaymentControlResult getPluginResult(final String pluginName, final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
-
         final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
         final PriorPaymentControlResult result = plugin.priorCall(paymentControlContext);
         return result;
@@ -216,12 +213,11 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             final FailureCallResult result = plugin.onFailureCall(paymentControlContext);
             return result.getNextRetryDate();
-        } catch (PaymentControlApiException e) {
+        } catch (final PaymentControlApiException e) {
             logger.warn("Plugin " + pluginName + " failed to return next retryDate for payment " + paymentControlContext.getPaymentExternalKey(), e);
             return null;
         }
     }
-
 
     public static class DefaultPaymentControlContext extends DefaultCallContext implements PaymentControlContext {
 
@@ -324,11 +320,9 @@ public abstract class RetryOperationCallback extends OperationCallbackBase imple
             return isApiPayment;
         }
 
-
         public UUID getTransactionId() {
             return transactionId;
         }
-
 
         @Override
         public Iterable<PluginProperty> getPluginProperties() {
