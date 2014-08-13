@@ -40,8 +40,15 @@ public class DefaultSecurityApi implements SecurityApi {
     private static final String[] allPermissions = new String[Permission.values().length];
 
     @Override
-    public void login(final Object principal, final Object credentials) {
+    public synchronized void login(final Object principal, final Object credentials) {
         final Subject currentUser = SecurityUtils.getSubject();
+
+        // Workaround for https://issues.apache.org/jira/browse/SHIRO-510
+        // TODO Not sure if it's a good fix?
+        if (principal.equals(currentUser.getPrincipal()) &&
+            currentUser.isAuthenticated()) {
+            return;
+        }
 
         // UsernamePasswordToken is hardcoded in AuthenticatingRealm
         if (principal instanceof String && credentials instanceof String) {
