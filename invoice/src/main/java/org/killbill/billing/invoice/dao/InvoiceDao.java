@@ -35,8 +35,9 @@ import org.killbill.billing.util.entity.dao.EntityDao;
 
 public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceApiException> {
 
-    void createInvoice(InvoiceModelDao invoice, List<InvoiceItemModelDao> invoiceItems,
-                       List<InvoicePaymentModelDao> invoicePayments, boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, InternalCallContext context);
+    void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
+                       final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions,
+                       final InternalCallContext context);
 
     InvoiceModelDao getByNumber(Integer number, InternalTenantContext context) throws InvoiceApiException;
 

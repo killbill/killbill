@@ -34,7 +34,6 @@ import org.killbill.billing.invoice.api.InvoiceMigrationApi;
 import org.killbill.billing.invoice.dao.DefaultInvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
-import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -77,7 +76,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
                                                                                  null, MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME, null,
                                                                                  targetDate, null, balance, null, currency, null);
         dao.createInvoice(migrationInvoice, ImmutableList.<InvoiceItemModelDao>of(migrationInvoiceItem),
-                          ImmutableList.<InvoicePaymentModelDao>of(), true, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContextFactory.createInternalCallContext(accountId, context));
+                          true, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContextFactory.createInternalCallContext(accountId, context));
 
         return migrationInvoice.getId();
     }

@@ -207,7 +207,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions,
+                              final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions,
                               final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
@@ -231,11 +231,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     cbaDao.doCBAComplexity(invoice.getAccountId(), entitySqlDaoWrapperFactory, context);
 
                     notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context.getUserToken());
-
-                    // Create associated payments
-                    final InvoicePaymentSqlDao invoicePaymentSqlDao = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
-                    invoicePaymentSqlDao.batchCreateFromTransaction(invoicePayments, context);
-
                 }
                 return null;
             }

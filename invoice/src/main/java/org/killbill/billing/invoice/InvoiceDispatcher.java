@@ -257,17 +257,9 @@ public class InvoiceDispatcher {
                                                                                                                                                     return new InvoiceItemModelDao(input);
                                                                                                                                                 }
                                                                                                                                             }));
-                    // Not really needed, there shouldn't be any payment at this stage
-                    final List<InvoicePaymentModelDao> invoicePaymentModelDaos = ImmutableList.<InvoicePaymentModelDao>copyOf(Collections2.transform(invoice.getPayments(),
-                                                                                                                                                     new Function<InvoicePayment, InvoicePaymentModelDao>() {
-                                                                                                                                                         @Override
-                                                                                                                                                         public InvoicePaymentModelDao apply(final InvoicePayment input) {
-                                                                                                                                                             return new InvoicePaymentModelDao(input);
-                                                                                                                                                         }
-                                                                                                                                                     }));
 
                     final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents.getUsages(), dateAndTimeZoneContext);
-                    invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, callbackDateTimePerSubscriptions, context);
+                    invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, callbackDateTimePerSubscriptions, context);
 
                     final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
