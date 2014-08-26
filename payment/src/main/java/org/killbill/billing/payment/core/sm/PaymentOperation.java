@@ -26,7 +26,6 @@ import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
@@ -43,14 +42,12 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 
 import com.google.common.base.Objects;
-
-import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 // Encapsulates the payment specific logic
-public abstract class PaymentOperation extends OperationCallbackBase implements OperationCallback {
+public abstract class PaymentOperation extends OperationCallbackBase<PaymentTransactionInfoPlugin, PaymentPluginApiException> implements OperationCallback {
 
     protected final PaymentAutomatonDAOHelper daoHelper;
     protected PaymentPluginApi plugin;
@@ -63,12 +60,9 @@ public abstract class PaymentOperation extends OperationCallbackBase implements 
         this.daoHelper = daoHelper;
     }
 
-
     @Override
     public OperationResult doOperationCallback() throws OperationException {
-
         try {
-
             this.plugin = daoHelper.getPaymentProviderPlugin();
 
             if (paymentStateContext.shouldLockAccountAndDispatch()) {
@@ -76,7 +70,7 @@ public abstract class PaymentOperation extends OperationCallbackBase implements 
             } else {
                 return doSimpleOperationCallback();
             }
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             throw new OperationException(e, OperationResult.EXCEPTION);
         }
     }
@@ -126,7 +120,7 @@ public abstract class PaymentOperation extends OperationCallbackBase implements 
 
     protected BigDecimal getSumAmount(final Iterable<PaymentTransactionModelDao> transactions) {
         BigDecimal result = BigDecimal.ZERO;
-        Iterator<PaymentTransactionModelDao> iterator = transactions.iterator();
+        final Iterator<PaymentTransactionModelDao> iterator = transactions.iterator();
         while (iterator.hasNext()) {
             result = result.add(iterator.next().getAmount());
         }
@@ -148,7 +142,7 @@ public abstract class PaymentOperation extends OperationCallbackBase implements 
             return doOperation();
         } catch (final PaymentApiException e) {
             throw new OperationException(e, OperationResult.FAILURE);
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
             throw new OperationException(e, OperationResult.EXCEPTION);
         }
     }

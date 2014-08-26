@@ -68,7 +68,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -314,7 +313,7 @@ public class PaymentProcessor extends ProcessorBase {
                                      @Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey,
                                      final boolean shouldLockAccountAndDispatch, @Nullable final OperationResult overridePluginOperationResult,
                                      final Iterable<PluginProperty> properties,
-                                     final CallContext callContext,final InternalCallContext internalCallContext) throws PaymentApiException {
+                                     final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
 
         validateUniqueTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
         final UUID nonNullPaymentId = paymentAutomatonRunner.run(isApiPayment,
@@ -357,7 +356,7 @@ public class PaymentProcessor extends ProcessorBase {
         return toPayment(paymentModelDao, transactionsForPayment, pluginInfo);
     }
 
-    private Payment toPayment(final PaymentModelDao curPaymentModelDao, final Iterable<PaymentTransactionModelDao> transactionsModelDao, @Nullable final List<PaymentTransactionInfoPlugin> pluginTransactions) {
+    private Payment toPayment(final PaymentModelDao curPaymentModelDao, final Iterable<PaymentTransactionModelDao> transactionsModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions) {
         final Ordering<PaymentTransaction> perPaymentTransactionOrdering = Ordering.<PaymentTransaction>from(new Comparator<PaymentTransaction>() {
             @Override
             public int compare(final PaymentTransaction o1, final PaymentTransaction o2) {
@@ -374,20 +373,19 @@ public class PaymentProcessor extends ProcessorBase {
 
         final Iterable<PaymentTransaction> transactions = Iterables.transform(filteredTransactions, new Function<PaymentTransactionModelDao, PaymentTransaction>() {
             @Override
-            public PaymentTransaction apply(final PaymentTransactionModelDao input) {
+            public PaymentTransaction apply(final PaymentTransactionModelDao paymentTransactionModelDao) {
+                final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin = pluginTransactions != null ?
+                                                                                  Iterables.tryFind(pluginTransactions, new Predicate<PaymentTransactionInfoPlugin>() {
+                                                                                      @Override
+                                                                                      public boolean apply(final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin) {
+                                                                                          return paymentTransactionModelDao.getId().equals(paymentTransactionInfoPlugin.getKbTransactionPaymentId());
+                                                                                      }
+                                                                                  }).orNull() : null;
 
-                final PaymentTransactionInfoPlugin info = pluginTransactions != null ?
-                                                          Iterables.tryFind(pluginTransactions, new Predicate<PaymentTransactionInfoPlugin>() {
-                                                              @Override
-                                                              public boolean apply(final PaymentTransactionInfoPlugin input) {
-                                                                  return input.getKbTransactionPaymentId().equals(input.getKbTransactionPaymentId());
-                                                              }
-                                                          }).orNull() : null;
-
-                return new DefaultPaymentTransaction(input.getId(), input.getAttemptId(), input.getTransactionExternalKey(), input.getCreatedDate(), input.getUpdatedDate(), input.getPaymentId(),
-                                                     input.getTransactionType(), input.getEffectiveDate(), input.getTransactionStatus(), input.getAmount(), input.getCurrency(),
-                                                     input.getProcessedAmount(), input.getProcessedCurrency(),
-                                                     input.getGatewayErrorCode(), input.getGatewayErrorMsg(), info);
+                return new DefaultPaymentTransaction(paymentTransactionModelDao.getId(), paymentTransactionModelDao.getAttemptId(), paymentTransactionModelDao.getTransactionExternalKey(), paymentTransactionModelDao.getCreatedDate(), paymentTransactionModelDao.getUpdatedDate(), paymentTransactionModelDao.getPaymentId(),
+                                                     paymentTransactionModelDao.getTransactionType(), paymentTransactionModelDao.getEffectiveDate(), paymentTransactionModelDao.getTransactionStatus(), paymentTransactionModelDao.getAmount(), paymentTransactionModelDao.getCurrency(),
+                                                     paymentTransactionModelDao.getProcessedAmount(), paymentTransactionModelDao.getProcessedCurrency(),
+                                                     paymentTransactionModelDao.getGatewayErrorCode(), paymentTransactionModelDao.getGatewayErrorMsg(), paymentTransactionInfoPlugin);
             }
         });
 

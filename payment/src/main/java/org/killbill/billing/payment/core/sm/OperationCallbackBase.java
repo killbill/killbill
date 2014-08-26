@@ -32,7 +32,7 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class OperationCallbackBase {
+public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOperationException extends Exception> {
 
     protected final Logger logger = LoggerFactory.getLogger(OperationCallbackBase.class);
 
@@ -60,8 +60,8 @@ public abstract class OperationCallbackBase {
 
         try {
             final Callable<PluginDispatcherReturnType<OperationResult>> task = new CallableWithAccountLock<OperationResult, ExceptionType>(locker,
-                                                                                                               account.getExternalKey(),
-                                                                                                               callback);
+                                                                                                                                           account.getExternalKey(),
+                                                                                                                                           callback);
             final OperationResult operationResult = paymentPluginDispatcher.dispatchWithTimeout(task);
             logger.debug("Successful plugin call for account {} with result {}", account.getExternalKey(), operationResult);
             return operationResult;
@@ -81,8 +81,7 @@ public abstract class OperationCallbackBase {
     // There is a base glue code that is common to all calls and shared in a base class and then a per call specific operation
     // using the doCallSpecificOperationCallback method below.
     //
-    protected abstract <CallbackOperationResult, CallbackOperationException extends Exception> CallbackOperationResult doCallSpecificOperationCallback()
-            throws CallbackOperationException;
+    protected abstract CallbackOperationResult doCallSpecificOperationCallback() throws CallbackOperationException;
 
     //
     // The methods below allow to convert the exceptions thrown back by the Executor into an appropriate  OperationException
@@ -92,5 +91,4 @@ public abstract class OperationCallbackBase {
     protected abstract OperationException wrapTimeoutException(final PaymentStateContext paymentStateContext, final TimeoutException e);
 
     protected abstract OperationException wrapInterruptedException(final PaymentStateContext paymentStateContext, final InterruptedException e);
-
 }

@@ -177,7 +177,7 @@
     </logger>
 
     <!-- Silence verbose loggers in DEBUG mode -->
-    <logger name="com.dmurph" level="INFO"/>
+    <logger name="com.dmurph" level="OFF"/>
     <logger name="org.killbill.billing.notificationq" level="INFO"/>
     <logger name="org.killbill.billing.queue" level="INFO"/>
     <logger name="org.killbill.billing.server.updatechecker" level="INFO"/>

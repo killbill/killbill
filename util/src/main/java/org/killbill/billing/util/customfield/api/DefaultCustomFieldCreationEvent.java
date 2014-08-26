@@ -67,6 +67,16 @@ public class DefaultCustomFieldCreationEvent extends BusEventBase implements Cus
     }
 
     @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultCustomFieldCreationEvent{");
+        sb.append("customFieldId=").append(customFieldId);
+        sb.append(", objectId=").append(objectId);
+        sb.append(", objectType=").append(objectType);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;
