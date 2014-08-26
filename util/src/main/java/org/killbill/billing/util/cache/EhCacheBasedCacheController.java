@@ -16,15 +16,24 @@
 
 package org.killbill.billing.util.cache;
 
+import org.killbill.billing.util.cache.Cachable.CacheType;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
 
 public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> {
 
     private final Cache cache;
+    private final CacheType cacheType;
 
-    public EhCacheBasedCacheController(final Cache cache) {
+    public EhCacheBasedCacheController(final Cache cache, final CacheType cacheType) {
         this.cache = cache;
+        this.cacheType = cacheType;
+    }
+
+    @Override
+    public void add(final K key, final V value) {
+        cache.putIfAbsent(new Element(key, value));
     }
 
     @Override
@@ -49,5 +58,10 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
     @Override
     public void removeAll() {
         cache.removeAll();
+    }
+
+    @Override
+    public CacheType getCacheType() {
+        return cacheType;
     }
 }

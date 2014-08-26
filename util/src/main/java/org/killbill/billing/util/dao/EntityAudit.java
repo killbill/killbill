@@ -22,8 +22,9 @@ import org.joda.time.DateTime;
 
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class EntityAudit extends EntityBase {
+public class EntityAudit extends EntityModelDaoBase {
     
     private final TableName tableName;
     private final Long targetRecordId;

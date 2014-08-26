@@ -27,8 +27,9 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<InvoiceItem> {
+public class InvoiceItemModelDao extends EntityModelDaoBase implements EntityModelDao<InvoiceItem> {
 
     private InvoiceItemType type;
     private UUID invoiceId;

@@ -41,8 +41,9 @@ import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class SubscriptionEventModelDao extends EntityBase implements EntityModelDao<SubscriptionBaseEvent> {
+public class SubscriptionEventModelDao extends EntityModelDaoBase implements EntityModelDao<SubscriptionBaseEvent> {
 
     private long totalOrdering;
     private EventType eventType;

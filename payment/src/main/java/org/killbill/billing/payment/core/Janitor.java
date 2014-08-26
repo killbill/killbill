@@ -17,7 +17,6 @@
 
 package org.killbill.billing.payment.core;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -46,6 +45,8 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.glue.PaymentModule;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -78,9 +79,9 @@ public class Janitor {
     private final NonEntityDao nonEntityDao;
     private final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
     private final RetryStateMachineHelper retrySMHelper;
+    private final CacheControllerDispatcher controllerDispatcher;
 
     private volatile boolean isStopped;
-    private CountDownLatch shutdownLatch;
 
     @Inject
     public Janitor(final AccountInternalApi accountInternalApi,
@@ -91,7 +92,8 @@ public class Janitor {
                    final InternalCallContextFactory internalCallContextFactory,
                    final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                    @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
-                   final RetryStateMachineHelper retrySMHelper) {
+                   final RetryStateMachineHelper retrySMHelper,
+                   final CacheControllerDispatcher controllerDispatcher) {
         this.accountInternalApi = accountInternalApi;
         this.paymentDao = paymentDao;
         this.clock = clock;
@@ -101,6 +103,7 @@ public class Janitor {
         this.internalCallContextFactory = internalCallContextFactory;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
         this.retrySMHelper = retrySMHelper;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     public void start() {
@@ -221,7 +224,7 @@ public class Janitor {
         public void doIteration(final PaymentAttemptModelDao attempt) {
             // STEPH seems a bit insane??
             final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(attempt.getAccountId(), attempt.getId(), ObjectType.PAYMENT_ATTEMPT);
-            final UUID tenantId = nonEntityDao.retrieveIdFromObject(tenantContext.getTenantRecordId(), ObjectType.TENANT);
+            final UUID tenantId = nonEntityDao.retrieveIdFromObject(tenantContext.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
             final CallContext callContext = new DefaultCallContext(tenantId, "AttemptCompletionJanitorTask", CallOrigin.INTERNAL, UserType.SYSTEM, UUID.randomUUID(), clock);
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(attempt.getAccountId(), callContext);
 

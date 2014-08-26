@@ -54,6 +54,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -99,8 +100,9 @@ public class PaymentProcessor extends ProcessorBase {
                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                             final PaymentAutomatonRunner paymentAutomatonRunner,
                             final PaymentStateMachineHelper paymentSMHelper,
-                            final Clock clock) {
-        super(pluginRegistry, accountUserApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
+                            final Clock clock,
+                            final CacheControllerDispatcher controllerDispatcher) {
+        super(pluginRegistry, accountUserApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock, controllerDispatcher);
         this.paymentSMHelper = paymentSMHelper;
         this.internalCallContextFactory = internalCallContextFactory;
         this.paymentAutomatonRunner = paymentAutomatonRunner;

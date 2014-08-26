@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,34 +17,33 @@
 
 package org.killbill.billing.util.cache;
 
-import java.util.UUID;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import org.skife.jdbi.v2.IDBI;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.skife.jdbi.v2.IDBI;
 
+import net.sf.ehcache.CacheException;
 import net.sf.ehcache.loader.CacheLoader;
 
 @Singleton
-public class TenantRecordIdCacheLoader extends BaseIdCacheLoader implements CacheLoader {
+public class ObjectIdCacheLoader extends BaseIdCacheLoader implements CacheLoader {
 
     @Inject
-    public TenantRecordIdCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
+    public ObjectIdCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
         super(dbi, nonEntityDao);
     }
 
     @Override
     public CacheType getCacheType() {
-        return CacheType.TENANT_RECORD_ID;
+        return CacheType.OBJECT_ID;
     }
 
     @Override
     protected Object doRetrieveOperation(final String rawKey, final ObjectType objectType) {
-        return nonEntityDao.retrieveTenantRecordIdFromObject(UUID.fromString(rawKey), objectType, null);
+        final Long recordId = Long.valueOf(rawKey);
+        return nonEntityDao.retrieveIdFromObject(recordId, objectType, null);
     }
 }

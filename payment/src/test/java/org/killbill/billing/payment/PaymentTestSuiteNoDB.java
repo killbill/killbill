@@ -34,6 +34,8 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.cache.CacheController;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.profiling.Profiling;
@@ -76,6 +78,8 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected PluginControlledPaymentAutomatonRunner retryablePaymentAutomatonRunner;
     @Inject
     protected DefaultRetryService retryService;
+    @Inject
+    protected CacheControllerDispatcher cacheControllerDispatcher;
 
     @Override
     protected KillbillConfigSource getConfigSource() {

@@ -16,7 +16,11 @@
 
 package org.killbill.billing.util.cache;
 
+import org.killbill.billing.util.cache.Cachable.CacheType;
+
 public interface CacheController<K, V> {
+
+    public void add(K key, V value);
 
     public V get(K key, CacheLoaderArgument objectType);
 
@@ -25,4 +29,6 @@ public interface CacheController<K, V> {
     public int size();
 
     void removeAll();
+
+    CacheType getCacheType();
 }

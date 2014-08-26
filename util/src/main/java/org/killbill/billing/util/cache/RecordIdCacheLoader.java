@@ -31,7 +31,7 @@ import net.sf.ehcache.CacheException;
 import net.sf.ehcache.loader.CacheLoader;
 
 @Singleton
-public class RecordIdCacheLoader extends BaseCacheLoader implements CacheLoader {
+public class RecordIdCacheLoader extends BaseIdCacheLoader implements CacheLoader {
 
     @Inject
     public RecordIdCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
@@ -44,19 +44,7 @@ public class RecordIdCacheLoader extends BaseCacheLoader implements CacheLoader 
     }
 
     @Override
-    public Object load(final Object key, final Object argument) throws CacheException {
-        checkCacheLoaderStatus();
-
-        if (!(key instanceof String)) {
-            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
-        }
-        if (!(argument instanceof CacheLoaderArgument)) {
-            throw new IllegalArgumentException("Unexpected key type of " + argument.getClass().getName());
-        }
-
-        final String objectId = (String) key;
-        final ObjectType objectType = ((CacheLoaderArgument) argument).getObjectType();
-
-        return nonEntityDao.retrieveRecordIdFromObject(UUID.fromString(objectId), objectType, null);
+    protected Object doRetrieveOperation(final String rawKey, final ObjectType objectType) {
+        return nonEntityDao.retrieveRecordIdFromObject(UUID.fromString(rawKey), objectType, null);
     }
 }

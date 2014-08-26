@@ -30,7 +30,7 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import net.sf.ehcache.loader.CacheLoader;
 
 @Singleton
-public class AccountRecordIdCacheLoader extends BaseCacheLoader implements CacheLoader {
+public class AccountRecordIdCacheLoader extends BaseIdCacheLoader implements CacheLoader {
 
     @Inject
     public AccountRecordIdCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
@@ -43,19 +43,7 @@ public class AccountRecordIdCacheLoader extends BaseCacheLoader implements Cache
     }
 
     @Override
-    public Object load(final Object key, final Object argument) {
-        checkCacheLoaderStatus();
-
-        if (!(key instanceof String)) {
-            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
-        }
-        if (!(argument instanceof CacheLoaderArgument)) {
-            throw new IllegalArgumentException("Unexpected key type of " + argument.getClass().getName());
-        }
-
-        final String objectId = (String) key;
-        final ObjectType objectType = ((CacheLoaderArgument) argument).getObjectType();
-
-        return nonEntityDao.retrieveAccountRecordIdFromObject(UUID.fromString(objectId), objectType, null);
+    protected Object doRetrieveOperation(final String rawKey, final ObjectType objectType) {
+        return  nonEntityDao.retrieveAccountRecordIdFromObject(UUID.fromString(rawKey), objectType, null);
     }
 }

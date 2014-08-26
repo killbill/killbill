@@ -28,6 +28,12 @@ import org.killbill.billing.util.entity.Entity;
 @SuppressWarnings("UnusedDeclaration")
 public interface EntityModelDao<E extends Entity> extends Entity {
 
+    public Long getRecordId();
+
+    public Long getAccountRecordId();
+
+    public Long getTenantRecordId();
+
     /**
      * Retrieve the TableName associated with this entity. This is used in
      * EntitySqlDaoWrapperInvocationHandler for history and auditing purposes.

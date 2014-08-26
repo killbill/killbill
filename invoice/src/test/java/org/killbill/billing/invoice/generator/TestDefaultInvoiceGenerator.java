@@ -107,7 +107,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
                 return false;
             }
         };
-        this.generator = new DefaultInvoiceGenerator(clock, null, invoiceConfig, null);
+        this.generator = new DefaultInvoiceGenerator(clock, null, invoiceConfig, null, controllerDispatcher);
     }
 
     @Test(groups = "fast")

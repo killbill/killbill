@@ -200,7 +200,8 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                          executor,
                                                          runner,
                                                          retrySMHelper,
-                                                         clock);
+                                                         clock,
+                                                         cacheControllerDispatcher);
 
     }
 

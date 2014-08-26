@@ -34,6 +34,8 @@ import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKey;
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -64,6 +66,7 @@ public class DefaultEntitlementService implements EntitlementService {
     private final PersistentBus eventBus;
     private final NotificationQueueService notificationQueueService;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final CacheControllerDispatcher controllerDispatcher;
 
     private NotificationQueue entitlementEventQueue;
 
@@ -73,13 +76,15 @@ public class DefaultEntitlementService implements EntitlementService {
                                      final NonEntityDao nonEntityDao,
                                      final PersistentBus eventBus,
                                      final NotificationQueueService notificationQueueService,
-                                     final InternalCallContextFactory internalCallContextFactory) {
+                                     final InternalCallContextFactory internalCallContextFactory,
+                                     final CacheControllerDispatcher controllerDispatcher) {
         this.entitlementApi = entitlementApi;
         this.blockingStateDao = blockingStateDao;
         this.nonEntityDao = nonEntityDao;
         this.eventBus = eventBus;
         this.notificationQueueService = notificationQueueService;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     @Override
@@ -96,7 +101,7 @@ public class DefaultEntitlementService implements EntitlementService {
                     final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "EntitlementQueue", CallOrigin.INTERNAL, UserType.SYSTEM, fromNotificationQueueUserToken);
 
                     if (inputKey instanceof EntitlementNotificationKey) {
-                        final UUID tenantId = nonEntityDao.retrieveIdFromObject(tenantRecordId, ObjectType.TENANT);
+                        final UUID tenantId = nonEntityDao.retrieveIdFromObject(tenantRecordId, ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
                         processEntitlementNotification((EntitlementNotificationKey) inputKey, tenantId, internalCallContext);
                     } else if (inputKey instanceof BlockingTransitionNotificationKey) {
                         processBlockingNotification((BlockingTransitionNotificationKey) inputKey, internalCallContext);

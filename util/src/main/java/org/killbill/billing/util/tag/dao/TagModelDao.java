@@ -24,9 +24,10 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 import org.killbill.billing.util.tag.Tag;
 
-public class TagModelDao extends EntityBase implements EntityModelDao<Tag> {
+public class TagModelDao extends EntityModelDaoBase implements EntityModelDao<Tag> {
 
     private UUID tagDefinitionId;
     private UUID objectId;

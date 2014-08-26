@@ -70,6 +70,8 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -107,6 +109,7 @@ public class InvoiceDispatcher {
     private final PersistentBus eventBus;
     private final Clock clock;
     private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
+    private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
     public InvoiceDispatcher(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry,
@@ -118,7 +121,7 @@ public class InvoiceDispatcher {
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
                              final PersistentBus eventBus,
-                             final Clock clock) {
+                             final Clock clock, final CacheControllerDispatcher controllerDispatcher) {
         this.pluginRegistry = pluginRegistry;
         this.generator = generator;
         this.billingApi = billingApi;
@@ -130,6 +133,7 @@ public class InvoiceDispatcher {
         this.locker = locker;
         this.eventBus = eventBus;
         this.clock = clock;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     public void processSubscription(final EffectiveSubscriptionInternalEvent transition,
@@ -301,11 +305,11 @@ public class InvoiceDispatcher {
     }
 
     private TenantContext buildTenantContext(final InternalTenantContext context) {
-        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
+        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
     }
 
     private CallContext buildCallContext(final InternalCallContext context) {
-        return context.toCallContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
+        return context.toCallContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
     }
 
     private List<InvoicePluginApi> getInvoicePlugins() {

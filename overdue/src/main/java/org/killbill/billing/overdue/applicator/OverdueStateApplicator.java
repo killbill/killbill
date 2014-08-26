@@ -27,20 +27,15 @@ import javax.inject.Named;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.BlockingApiException;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -62,6 +57,8 @@ import org.killbill.billing.overdue.notification.OverdueCheckNotifier;
 import org.killbill.billing.overdue.notification.OverduePoster;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.email.DefaultEmailSender;
 import org.killbill.billing.util.email.EmailApiException;
@@ -69,6 +66,10 @@ import org.killbill.billing.util.email.EmailConfig;
 import org.killbill.billing.util.email.EmailSender;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -90,6 +91,7 @@ public class OverdueStateApplicator {
     private final TagInternalApi tagApi;
     private final EmailSender emailSender;
     private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
     public OverdueStateApplicator(final BlockingInternalApi accessApi,
@@ -101,7 +103,8 @@ public class OverdueStateApplicator {
                                   final EmailConfig config,
                                   final PersistentBus bus,
                                   final NonEntityDao nonEntityDao,
-                                  final TagInternalApi tagApi) {
+                                  final TagInternalApi tagApi,
+                                  final CacheControllerDispatcher controllerDispatcher) {
 
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
@@ -113,6 +116,7 @@ public class OverdueStateApplicator {
         this.nonEntityDao = nonEntityDao;
         this.emailSender = new DefaultEmailSender(config);
         this.bus = bus;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     public void apply(final OverdueStateSet overdueStateSet, final BillingState billingState,
@@ -294,7 +298,7 @@ public class OverdueStateApplicator {
             final List<Entitlement> toBeCancelled = new LinkedList<Entitlement>();
             computeEntitlementsToCancel(account, toBeCancelled, context);
 
-            final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
+            final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
             for (final Entitlement cur : toBeCancelled) {
                 try {
                     cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, context.toCallContext(tenantId));
@@ -311,7 +315,7 @@ public class OverdueStateApplicator {
     }
 
     private void computeEntitlementsToCancel(final Account account, final List<Entitlement> result, final InternalTenantContext context) throws EntitlementApiException {
-        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
         final List<Entitlement> allEntitlementsForAccountId = entitlementApi.getAllEntitlementsForAccountId(account.getId(), context.toTenantContext(tenantId));
         // Entitlement is smart enough and will cancel the associated add-ons. See also discussion in https://github.com/killbill/killbill/issues/94
         final Collection<Entitlement> allEntitlementsButAddonsForAccountId = Collections2.<Entitlement>filter(allEntitlementsForAccountId,

@@ -22,8 +22,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.entitlement.EntitlementTransitionType;
@@ -48,6 +46,8 @@ import org.killbill.billing.events.UserTagDeletionInternalEvent;
 import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -71,6 +71,7 @@ public class BeatrixListener {
     private final InternalCallContextFactory internalCallContextFactory;
     private final AccountInternalApi accountApi;
     private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
 
     protected final ObjectMapper objectMapper;
 
@@ -78,11 +79,13 @@ public class BeatrixListener {
     public BeatrixListener(@Named(BusModule.EXTERNAL_BUS_NAMED) final PersistentBus externalBus,
                            final InternalCallContextFactory internalCallContextFactory,
                            final AccountInternalApi accountApi,
+                           final  CacheControllerDispatcher cacheControllerDispatcher,
                            final NonEntityDao nonEntityDao) {
         this.externalBus = externalBus;
         this.internalCallContextFactory = internalCallContextFactory;
         this.accountApi = accountApi;
         this.nonEntityDao = nonEntityDao;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JodaModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -238,25 +241,19 @@ public class BeatrixListener {
 
             default:
         }
-        final UUID accountId = getAccountIdFromRecordId(event.getBusEventType(), objectId, context.getAccountRecordId(), context);
-        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
+        final UUID accountId = getAccountIdFromRecordId(event.getBusEventType(), objectId, context.getAccountRecordId());
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
 
         return eventBusType != null ?
                new DefaultBusExternalEvent(objectId, objectType, eventBusType, accountId, tenantId, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
                null;
     }
 
-    private UUID getAccountIdFromRecordId(final BusInternalEventType eventType, final UUID objectId, final Long recordId, final InternalCallContext context) {
+    private UUID getAccountIdFromRecordId(final BusInternalEventType eventType, final UUID objectId, final Long recordId) {
         // accountRecord_id is not set for ACCOUNT_CREATE event as we are in the transaction and value is known yet
         if (eventType == BusInternalEventType.ACCOUNT_CREATE) {
             return objectId;
         }
-        try {
-            final Account account = accountApi.getAccountByRecordId(recordId, context);
-            return account.getId();
-        } catch (final AccountApiException e) {
-            log.warn("Failed to retrieve acount from recordId {}", recordId);
-            return null;
-        }
+        return nonEntityDao.retrieveIdFromObject(recordId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
     }
 }

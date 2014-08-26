@@ -29,8 +29,9 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao<Entity> {
+public class PaymentAttemptModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
 
     private UUID accountId;
     private UUID paymentMethodId;

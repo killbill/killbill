@@ -92,7 +92,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock);
+                                                                   clock, controllerDispatcher);
 
         Invoice invoice = dispatcher.processAccount(accountId, target, true, context);
         Assert.assertNotNull(invoice);
@@ -145,7 +145,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock);
+                                                                   clock, controllerDispatcher);
 
         final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), false, context);
         Assert.assertNotNull(invoice);
@@ -203,7 +203,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock);
+                                                                   clock, controllerDispatcher);
 
         final Map<UUID, List<DateTime>> result = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), null, dateAndTimeZoneContext);
 

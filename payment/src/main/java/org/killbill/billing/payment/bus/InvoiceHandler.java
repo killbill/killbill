@@ -30,12 +30,12 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
-import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.core.PluginControlledPaymentProcessor;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -44,7 +44,6 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
@@ -54,6 +53,7 @@ public class InvoiceHandler {
     private final InternalCallContextFactory internalCallContextFactory;
     private final PluginControlledPaymentProcessor pluginControlledPaymentProcessor;
     private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher controllerDispatcher;
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceHandler.class);
 
@@ -61,11 +61,13 @@ public class InvoiceHandler {
     public InvoiceHandler(final AccountInternalApi accountApi,
                           final PluginControlledPaymentProcessor pluginControlledPaymentProcessor,
                           final NonEntityDao nonEntityDao,
-                          final InternalCallContextFactory internalCallContextFactory) {
+                          final InternalCallContextFactory internalCallContextFactory,
+                          final CacheControllerDispatcher controllerDispatcher) {
         this.accountApi = accountApi;
         this.internalCallContextFactory = internalCallContextFactory;
         this.pluginControlledPaymentProcessor = pluginControlledPaymentProcessor;
         this.nonEntityDao = nonEntityDao;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     @Subscribe
@@ -83,7 +85,7 @@ public class InvoiceHandler {
             final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, event.getInvoiceId().toString(), false);
             properties.add(prop1);
 
-            final CallContext callContext = internalContext.toCallContext(nonEntityDao.retrieveIdFromObject(internalContext.getTenantRecordId(), ObjectType.TENANT));
+            final CallContext callContext = internalContext.toCallContext(nonEntityDao.retrieveIdFromObject(internalContext.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
 
             final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
             pluginControlledPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),

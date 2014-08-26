@@ -33,6 +33,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.cache.BaseCacheLoader;
 import org.killbill.billing.util.cache.Cachable;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CachableKey;
@@ -74,7 +75,6 @@ import com.google.common.collect.Iterables;
  */
 public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, M extends EntityModelDao<E>, E extends Entity> implements InvocationHandler {
 
-    public static final String CACHE_KEY_SEPARATOR = "::";
 
     private final Logger logger = LoggerFactory.getLogger(EntitySqlDaoWrapperInvocationHandler.class);
 
@@ -180,14 +180,27 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         } else if (cachableAnnotation != null) {
             return invokeWithCaching(cachableAnnotation, method, args);
         } else {
-            return prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + " (raw):" + method.getName(), new WithProfilingCallback() {
-                @Override
-                public Object execute() throws Throwable {
-                    return method.invoke(sqlDao, args);
-                }
-            });
+            return invokeRaw(method, args);
         }
     }
+
+    private Object invokeRaw(final Method method, final Object[] args) throws Throwable  {
+        return prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + " (raw):" + method.getName(), new WithProfilingCallback() {
+            @Override
+            public Object execute() throws Throwable {
+                Object result = method.invoke(sqlDao, args);
+                // This is *almost* the default invocation except that we want to intercept getById calls to populate the caches; the pattern is to always fetch
+                // the object after it was created, which means this method is (by pattern) first called right after object creation and contains all the goodies we care
+                // about (record_id, account_record_id, object_id, tenant_record_id)
+                //
+                if (result != null && method.getName().equals("getById")) {
+                    populateCacheOnGetByIdInvocation((M) result);
+                }
+                return result;
+            }
+        });
+    }
+
 
     private Object invokeWithCaching(final Cachable cachableAnnotation, final Method method, final Object[] args)
             throws Throwable {
@@ -312,6 +325,31 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             updateHistoryAndAudit(entityId, entities, entityRecordIds, changeType, context);
         }
         return obj;
+    }
+
+    private void populateCacheOnGetByIdInvocation(M model) {
+
+        final CacheController<Object, Object> cacheRecordId = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
+        cacheRecordId.add(getKey(model.getId().toString(), CacheType.RECORD_ID, model.getTableName()), model.getRecordId());
+
+        final CacheController<Object, Object> cacheObjectId = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
+        cacheObjectId.add(getKey(model.getRecordId().toString(), CacheType.OBJECT_ID, model.getTableName()), model.getId());
+
+        if (model.getTenantRecordId() != null) {
+            final CacheController<Object, Object> cacheTenantRecordId = cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID);
+            cacheTenantRecordId.add(getKey(model.getId().toString(), CacheType.TENANT_RECORD_ID, model.getTableName()), model.getTenantRecordId());
+        }
+
+        if (model.getAccountRecordId() != null) {
+            final CacheController<Object, Object> cacheAccountRecordId = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID);
+            cacheAccountRecordId.add(getKey(model.getId().toString(), CacheType.ACCOUNT_RECORD_ID, model.getTableName()), model.getAccountRecordId());
+        }
+    }
+
+    private String getKey(final String rawKey, final CacheType cacheType, final TableName tableName) {
+        return cacheType.isKeyPrefixedWithTableName() ?
+               tableName + CacheControllerDispatcher.CACHE_KEY_SEPARATOR + rawKey :
+               rawKey;
     }
 
     private void updateHistoryAndAudit(final String entityId, final Map<String, M> entities, final Map<String, Long> entityRecordIds,
@@ -448,7 +486,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             final String str = String.valueOf(keyPieces.get(i)).toUpperCase();
             cacheKey.append(str);
             if (i < keyPieces.size() - 1) {
-                cacheKey.append(CACHE_KEY_SEPARATOR);
+                cacheKey.append(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
             }
         }
         return cacheKey.toString();

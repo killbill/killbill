@@ -25,8 +25,9 @@ import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class CustomFieldModelDao extends EntityBase implements EntityModelDao<CustomField> {
+public class CustomFieldModelDao extends EntityModelDaoBase implements EntityModelDao<CustomField> {
 
     private String fieldName;
     private String fieldValue;

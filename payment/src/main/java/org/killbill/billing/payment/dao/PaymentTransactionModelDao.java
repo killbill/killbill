@@ -29,10 +29,11 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
 import com.google.common.base.Objects;
 
-public class PaymentTransactionModelDao extends EntityBase implements EntityModelDao<PaymentTransaction> {
+public class PaymentTransactionModelDao extends EntityModelDaoBase implements EntityModelDao<PaymentTransaction> {
 
     private UUID attemptId;
     private UUID paymentId;

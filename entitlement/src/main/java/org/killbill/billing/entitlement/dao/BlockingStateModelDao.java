@@ -27,8 +27,9 @@ import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class BlockingStateModelDao extends EntityBase implements EntityModelDao<BlockingState>{
+public class BlockingStateModelDao extends EntityModelDaoBase implements EntityModelDao<BlockingState>{
 
     private UUID blockableId;
     private BlockingStateType type;
@@ -39,6 +40,8 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
     private Boolean blockBilling;
     private DateTime effectiveDate;
     private boolean isActive;
+
+    public BlockingStateModelDao() { /* For the DAO mapper */ }
 
     public BlockingStateModelDao(final UUID id, final UUID blockableId, final BlockingStateType blockingStateType, final String state, final String service, final Boolean blockChange, final Boolean blockEntitlement,
                                  final Boolean blockBilling, final DateTime effectiveDate, final boolean isActive, final DateTime createDate, final DateTime updateDate) {

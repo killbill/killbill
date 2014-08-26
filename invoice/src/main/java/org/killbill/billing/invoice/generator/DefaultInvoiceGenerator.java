@@ -50,6 +50,8 @@ import org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.usage.api.UsageUserApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -72,13 +74,15 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private final InvoiceConfig config;
     private final UsageUserApi usageApi;
     private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
-    public DefaultInvoiceGenerator(final Clock clock, final UsageUserApi usageApi, final InvoiceConfig config, final NonEntityDao nonEntityDao) {
+    public DefaultInvoiceGenerator(final Clock clock, final UsageUserApi usageApi, final InvoiceConfig config, final NonEntityDao nonEntityDao, final CacheControllerDispatcher controllerDispatcher) {
         this.clock = clock;
         this.config = config;
         this.usageApi = usageApi;
         this.nonEntityDao = nonEntityDao;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     /*
@@ -113,7 +117,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                                         @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
                                                         final InternalCallContext context) throws InvoiceApiException {
 
-        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
         try {
 
             final List<InvoiceItem> items = Lists.newArrayList();

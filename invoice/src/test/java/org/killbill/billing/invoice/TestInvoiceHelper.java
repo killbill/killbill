@@ -70,6 +70,7 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.currency.KillBillMoney;
@@ -150,6 +151,7 @@ public class TestInvoiceHelper {
     private final InternalCallContext internalCallContext;
     private final NonEntityDao nonEntityDao;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
 
     // Low level SqlDao used by the tests to directly insert rows
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
@@ -159,7 +161,7 @@ public class TestInvoiceHelper {
     public TestInvoiceHelper(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry, final InvoiceGenerator generator, final IDBI dbi,
                              final BillingInternalApi billingApi, final AccountInternalApi accountApi, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
                              final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final InternalCallContext internalCallContext,
-                             final InternalCallContextFactory internalCallContextFactory) {
+                             final InternalCallContextFactory internalCallContextFactory, final CacheControllerDispatcher cacheControllerDispatcher) {
         this.pluginRegistry = pluginRegistry;
         this.generator = generator;
         this.billingApi = billingApi;
@@ -175,6 +177,7 @@ public class TestInvoiceHelper {
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
 
     public UUID generateRegularInvoice(final Account account, final DateTime targetDate, final CallContext callContext) throws Exception {
@@ -196,7 +199,7 @@ public class TestInvoiceHelper {
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi,
                                                                    invoiceDao, nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock);
+                                                                   clock, cacheControllerDispatcher);
 
         Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, true, internalCallContext);
         Assert.assertNotNull(invoice);

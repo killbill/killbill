@@ -29,6 +29,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 import net.sf.ehcache.loader.CacheLoader;
 
 // Build the abstraction layer between EhCache and Kill Bill
@@ -47,25 +48,23 @@ public class CacheControllerDispatcherProvider implements Provider<CacheControll
         for (final String cacheName : cacheManager.getCacheNames()) {
             final CacheType cacheType = CacheType.findByName(cacheName);
 
-            final Collection<EhCacheBasedCacheController<Object, Object>> cacheControllersForCacheName = getCacheControllersForCacheName(cacheName);
+            final Collection<EhCacheBasedCacheController<Object, Object>> cacheControllersForCacheName = getCacheControllersForCacheName(cacheName, cacheType);
             // EhCache supports multiple cache loaders per type, but not Kill Bill - take the first one
             if (cacheControllersForCacheName.size() > 0) {
                 final EhCacheBasedCacheController<Object, Object> ehCacheBasedCacheController = cacheControllersForCacheName.iterator().next();
                 cacheControllers.put(cacheType, ehCacheBasedCacheController);
             }
         }
-
         return new CacheControllerDispatcher(cacheControllers);
     }
 
-    public Collection<EhCacheBasedCacheController<Object, Object>> getCacheControllersForCacheName(final String name) {
+    private Collection<EhCacheBasedCacheController<Object, Object>> getCacheControllersForCacheName(final String name, final CacheType cacheType) {
         final Cache cache = cacheManager.getCache(name);
-
         // The CacheLoaders were registered in EhCacheCacheManagerProvider
         return Collections2.transform(cache.getRegisteredCacheLoaders(), new Function<CacheLoader, EhCacheBasedCacheController<Object, Object>>() {
             @Override
             public EhCacheBasedCacheController<Object, Object> apply(final CacheLoader input) {
-                return new EhCacheBasedCacheController<Object, Object>(cache);
+                return new EhCacheBasedCacheController<Object, Object>(cache, cacheType);
             }
         });
     }

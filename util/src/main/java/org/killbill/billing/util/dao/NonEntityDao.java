@@ -26,21 +26,17 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 public interface NonEntityDao {
 
-    //
-    // TODO should we check for InternalCallContext?
-    // That seems difficult because those APIs are called when creating a callcontext or from the cache loaders which also dpn't know anything about callcontext
-    //
     public Long retrieveRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache);
 
     public Long retrieveAccountRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache);
 
     public Long retrieveTenantRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache);
 
+    public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache);
+
     // This retrieves from the history table the latest record for which targetId matches the one we are passing
     public Long retrieveLastHistoryRecordIdFromTransaction(final Long targetRecordId, final TableName tableName, final NonEntitySqlDao transactional);
 
     // This is the reverse from retrieveLastHistoryRecordIdFromTransaction; this retrieves the record_id of the object matching a given history row
     public Long retrieveHistoryTargetRecordId(final Long recordId, final TableName tableName);
-
-    public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType);
 }

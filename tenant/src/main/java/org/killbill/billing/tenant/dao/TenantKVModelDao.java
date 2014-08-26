@@ -24,8 +24,9 @@ import org.killbill.billing.tenant.api.TenantKV;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class TenantKVModelDao extends EntityBase implements EntityModelDao<TenantKV> {
+public class TenantKVModelDao extends EntityModelDaoBase implements EntityModelDao<TenantKV> {
 
     private String tenantKey;
     private String tenantValue;

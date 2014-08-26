@@ -26,10 +26,11 @@ import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
 import com.google.common.base.Objects;
 
-public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<PaymentMethod> {
+public class PaymentMethodModelDao extends EntityModelDaoBase implements EntityModelDao<PaymentMethod> {
 
     private String externalKey;
     private UUID accountId;

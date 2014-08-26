@@ -65,7 +65,6 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
                                       @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    @RegisterMapper(UUIDMapper.class)
     UUID getAccountIdFromInvoicePaymentId(@Bind("invoicePaymentId") final String invoicePaymentId,
                                           @BindBean final InternalTenantContext context);
 

@@ -43,6 +43,8 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcher
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.globallocker.LockerType;
@@ -72,6 +74,7 @@ public abstract class ProcessorBase {
     protected final NonEntityDao nonEntityDao;
     protected final TagInternalApi tagInternalApi;
     protected final Clock clock;
+    protected final CacheControllerDispatcher controllerDispatcher;
 
     protected static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
     protected final InvoiceInternalApi invoiceApi;
@@ -84,7 +87,8 @@ public abstract class ProcessorBase {
                          final GlobalLocker locker,
                          final ExecutorService executor,
                          final InvoiceInternalApi invoiceApi,
-                         final Clock clock) {
+                         final Clock clock,
+                         final CacheControllerDispatcher controllerDispatcher) {
         this.pluginRegistry = pluginRegistry;
         this.accountInternalApi = accountInternalApi;
         this.paymentDao = paymentDao;
@@ -94,6 +98,7 @@ public abstract class ProcessorBase {
         this.tagInternalApi = tagInternalApi;
         this.invoiceApi = invoiceApi;
         this.clock = clock;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     protected boolean isAccountAutoPayOff(final UUID accountId, final InternalTenantContext context) {
@@ -152,7 +157,7 @@ public abstract class ProcessorBase {
     }
 
     protected TenantContext buildTenantContext(final InternalTenantContext context) {
-        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
+        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
     }
 
     protected void validateUniqueTransactionExternalKey(@Nullable final String transactionExternalKey, final InternalTenantContext tenantContext) throws PaymentApiException {
@@ -174,9 +179,9 @@ public abstract class ProcessorBase {
         }
     }
 
-
     // TODO Rename - there is no lock!
     public interface WithAccountLockCallback<PluginDispatcherReturnType, ExceptionType extends Exception> {
+
         public PluginDispatcherReturnType doOperation() throws ExceptionType;
     }
 
@@ -185,7 +190,6 @@ public abstract class ProcessorBase {
         private final GlobalLocker locker;
         private final String accountExternalKey;
         private final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback;
-
 
         public CallableWithAccountLock(final GlobalLocker locker,
                                        final String accountExternalKey,
@@ -203,7 +207,7 @@ public abstract class ProcessorBase {
 
     public static class WithAccountLock<ReturnType, ExceptionType extends Exception> {
 
-        public PluginDispatcherReturnType<ReturnType> processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType > callback)
+        public PluginDispatcherReturnType<ReturnType> processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback)
                 throws ExceptionType, LockFailedException {
             GlobalLock lock = null;
             try {

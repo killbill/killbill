@@ -46,9 +46,10 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
@@ -61,6 +62,7 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
 
     private final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
     private final RetryStateMachineHelper retrySMHelper;
+    private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
     public PluginControlledPaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
@@ -73,10 +75,12 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
                                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                                             final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                                             final RetryStateMachineHelper retrySMHelper,
-                                            final Clock clock) {
-        super(pluginRegistry, accountInternalApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock);
+                                            final Clock clock,
+                                            final CacheControllerDispatcher controllerDispatcher) {
+        super(pluginRegistry, accountInternalApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock, controllerDispatcher);
         this.retrySMHelper = retrySMHelper;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     public Payment createAuthorization(final boolean isApiPayment, final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency, final String paymentExternalKey, final String transactionExternalKey,
@@ -204,7 +208,7 @@ public class PluginControlledPaymentProcessor extends ProcessorBase {
 
             final Iterable<PluginProperty> pluginProperties = PluginPropertySerializer.deserialize(attempt.getPluginProperties());
             final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), internalCallContext);
-            final UUID tenantId = nonEntityDao.retrieveIdFromObject(internalCallContext.getTenantRecordId(), ObjectType.TENANT);
+            final UUID tenantId = nonEntityDao.retrieveIdFromObject(internalCallContext.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
             final CallContext callContext = internalCallContext.toCallContext(tenantId);
 
             final State state = retrySMHelper.getState(attempt.getStateName());

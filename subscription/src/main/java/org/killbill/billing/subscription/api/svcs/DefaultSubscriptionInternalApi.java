@@ -25,6 +25,8 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +82,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     private final AddonUtils addonUtils;
     private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
     public DefaultSubscriptionInternalApi(final SubscriptionDao dao,
@@ -87,10 +90,12 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                           final Clock clock,
                                           final CatalogService catalogService,
                                           final AddonUtils addonUtils,
-                                          final NonEntityDao nonEntityDao) {
+                                          final NonEntityDao nonEntityDao,
+                                          final CacheControllerDispatcher controllerDispatcher) {
         super(dao, apiService, clock, catalogService);
         this.addonUtils = addonUtils;
         this.nonEntityDao = nonEntityDao;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     @Override
@@ -151,7 +156,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                                   plan.getProduct().getCategory().toString()));
             }
 
-            final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
+            final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
             return apiService.createPlan(new SubscriptionBuilder()
                                                  .setId(UUID.randomUUID())
                                                  .setBundleId(bundleId)

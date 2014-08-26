@@ -54,7 +54,7 @@ public class MockNonEntityDao implements NonEntityDao {
     }
 
     @Override
-    public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType) {
+    public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType, final CacheController<Object, Object> cache) {
         return null;
     }
 }

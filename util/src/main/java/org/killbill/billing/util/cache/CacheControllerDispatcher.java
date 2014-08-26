@@ -26,6 +26,8 @@ import org.killbill.billing.util.cache.Cachable.CacheType;
 // Kill Bill generic cache dispatcher
 public class CacheControllerDispatcher {
 
+    public static final String CACHE_KEY_SEPARATOR = "::";
+
     private final Map<CacheType, CacheController<Object, Object>> caches;
 
     @Inject
