@@ -38,12 +38,14 @@ import org.killbill.billing.jaxrs.resources.TenantResource;
 import org.killbill.billing.jaxrs.resources.TransactionResource;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.junction.glue.DefaultJunctionModule;
+import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.server.config.KillbillServerConfig;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.TenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
+import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.CacheModule;
@@ -94,6 +96,9 @@ public class KillpayServerModule extends KillbillServerModule {
         install(new DefaultSubscriptionModule(configSource));
         install(new TemplateModule(configSource));
         install(new UsageModule(configSource));
+        // TODO Dependencies for AccountResource
+        install(new DefaultOverdueModule(configSource));
+        install(new EmailModule(configSource));
     }
 
     @Override
