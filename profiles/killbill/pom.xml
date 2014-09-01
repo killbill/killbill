@@ -308,20 +308,6 @@
         </resources>
         <plugins>
             <plugin>
-                <groupId>io.tesla.jettyconsole</groupId>
-                <artifactId>jetty-console-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>createconsole</goal>
-                        </goals>
-                        <configuration>
-                            <backgroundImage>${basedir}/src/main/jettyconsole/killbill.png</backgroundImage>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.4</version>
@@ -415,6 +401,20 @@
                     <stopPort>9966</stopPort>
                     <stopKey>foo</stopKey>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.simplericity.jettyconsole</groupId>
+                <artifactId>jetty-console-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>createconsole</goal>
+                        </goals>
+                        <configuration>
+                            <backgroundImage>${basedir}/src/main/jettyconsole/killbill.png</backgroundImage>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
