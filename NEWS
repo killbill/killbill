@@ -1,4 +1,5 @@
 0.11.10
+    Fix broken logging (war artifacts)
     https://github.com/killbill/killbill/issues/210
     Update killbill-oss-parent to 0.7.22
 
