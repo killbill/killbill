@@ -87,11 +87,19 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-overdue</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-payment</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-platform-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-base</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
@@ -124,26 +132,22 @@
             <artifactId>killbill-embeddeddb-common</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-embeddeddb-h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-embeddeddb-mysql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
     </dependencies>
     <build>
         <plugins>
-            <plugin>
-                <groupId>io.tesla.jettyconsole</groupId>
-                <artifactId>jetty-console-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>createconsole</goal>
-                        </goals>
-                        <configuration>
-                            <backgroundImage>${basedir}/src/main/jettyconsole/killbill.png</backgroundImage>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -240,6 +244,20 @@
                     <stopPort>9966</stopPort>
                     <stopKey>foo</stopKey>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.simplericity.jettyconsole</groupId>
+                <artifactId>jetty-console-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>createconsole</goal>
+                        </goals>
+                        <configuration>
+                            <backgroundImage>${basedir}/src/main/jettyconsole/killbill.png</backgroundImage>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

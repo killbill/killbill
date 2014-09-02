@@ -19,9 +19,13 @@
 package org.killbill.billing.payment.core;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
@@ -46,7 +50,6 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonRunner;
-import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -81,9 +84,10 @@ import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEn
 
 public class PaymentProcessor extends ProcessorBase {
 
+    private static final ImmutableList<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+
     private final PaymentAutomatonRunner paymentAutomatonRunner;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final PaymentStateMachineHelper paymentSMHelper;
 
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessor.class);
 
@@ -98,11 +102,9 @@ public class PaymentProcessor extends ProcessorBase {
                             final GlobalLocker locker,
                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                             final PaymentAutomatonRunner paymentAutomatonRunner,
-                            final PaymentStateMachineHelper paymentSMHelper,
                             final Clock clock,
                             final CacheControllerDispatcher controllerDispatcher) {
         super(pluginRegistry, accountUserApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock, controllerDispatcher);
-        this.paymentSMHelper = paymentSMHelper;
         this.internalCallContextFactory = internalCallContextFactory;
         this.paymentAutomatonRunner = paymentAutomatonRunner;
     }
@@ -116,7 +118,6 @@ public class PaymentProcessor extends ProcessorBase {
     public Payment createCapture(final boolean isApiPayment, @Nullable final UUID attemptId, final Account account, final UUID paymentId, final BigDecimal amount, final Currency currency,
                                  @Nullable final String paymentTransactionExternalKey, final boolean shouldLockAccountAndDispatch,
                                  final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-
         return performOperation(isApiPayment, attemptId, TransactionType.CAPTURE, account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey, shouldLockAccountAndDispatch, null, properties, callContext, internalCallContext);
     }
 
@@ -145,35 +146,52 @@ public class PaymentProcessor extends ProcessorBase {
 
     public Payment createChargeback(final boolean isApiPayment, @Nullable final UUID attemptId, final Account account, final UUID paymentId, @Nullable final String paymentTransactionExternalKey, final BigDecimal amount, final Currency currency, final boolean shouldLockAccountAndDispatch,
                                     final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        return performOperation(isApiPayment, attemptId, TransactionType.CHARGEBACK, account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey, shouldLockAccountAndDispatch, null, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
-    }
-
-    public List<Payment> getAccountPayments(final UUID accountId, final InternalTenantContext tenantContext) throws PaymentApiException {
-        final List<PaymentModelDao> paymentsModelDao = paymentDao.getPaymentsForAccount(accountId, tenantContext);
-        final List<PaymentTransactionModelDao> transactionsModelDao = paymentDao.getTransactionsForAccount(accountId, tenantContext);
-
-        return Lists.<PaymentModelDao, Payment>transform(paymentsModelDao,
-                                                         new Function<PaymentModelDao, Payment>() {
-                                                             @Override
-                                                             public Payment apply(final PaymentModelDao curPaymentModelDao) {
-                                                                 return toPayment(curPaymentModelDao, transactionsModelDao, null);
-                                                             }
-                                                         });
+        return performOperation(isApiPayment, attemptId, TransactionType.CHARGEBACK, account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey, shouldLockAccountAndDispatch, null, PLUGIN_PROPERTIES, callContext, internalCallContext);
     }
 
     public Payment notifyPendingPaymentOfStateChanged(final Account account, final UUID transactionId, final boolean isSuccess, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-
         final PaymentTransactionModelDao transactionModelDao = paymentDao.getPaymentTransaction(transactionId, internalCallContext);
         if (transactionModelDao.getTransactionStatus() != TransactionStatus.PENDING) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, transactionModelDao.getPaymentId());
-
         }
 
         final OperationResult overridePluginResult = isSuccess ? OperationResult.SUCCESS : OperationResult.FAILURE;
 
         return performOperation(true, null, transactionModelDao.getTransactionType(), account, null, transactionModelDao.getPaymentId(),
                                 transactionModelDao.getId(), transactionModelDao.getAmount(), transactionModelDao.getCurrency(), null, transactionModelDao.getTransactionExternalKey(), true,
-                                overridePluginResult, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
+                                overridePluginResult, PLUGIN_PROPERTIES, callContext, internalCallContext);
+    }
+
+    public List<Payment> getAccountPayments(final UUID accountId, final boolean withPluginInfo, final TenantContext context, final InternalTenantContext tenantContext) throws PaymentApiException {
+        final List<PaymentModelDao> paymentsModelDao = paymentDao.getPaymentsForAccount(accountId, tenantContext);
+        final List<PaymentTransactionModelDao> transactionsModelDao = paymentDao.getTransactionsForAccount(accountId, tenantContext);
+
+        final Map<UUID, PaymentPluginApi> paymentPluginByPaymentMethodId = new HashMap<UUID, PaymentPluginApi>();
+        final Collection<UUID> absentPlugins = new HashSet<UUID>();
+        return Lists.<PaymentModelDao, Payment>transform(paymentsModelDao,
+                                                         new Function<PaymentModelDao, Payment>() {
+                                                             @Override
+                                                             public Payment apply(final PaymentModelDao paymentModelDao) {
+                                                                 List<PaymentTransactionInfoPlugin> pluginInfo = null;
+
+                                                                 if (withPluginInfo) {
+                                                                     PaymentPluginApi pluginApi = paymentPluginByPaymentMethodId.get(paymentModelDao.getPaymentMethodId());
+                                                                     if (pluginApi == null && !absentPlugins.contains(paymentModelDao.getPaymentMethodId())) {
+                                                                         try {
+                                                                             pluginApi = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), tenantContext);
+                                                                             paymentPluginByPaymentMethodId.put(paymentModelDao.getPaymentMethodId(), pluginApi);
+                                                                         } catch (final PaymentApiException e) {
+                                                                             log.warn("Unable to retrieve pluginApi for payment method " + paymentModelDao.getPaymentMethodId());
+                                                                             absentPlugins.add(paymentModelDao.getPaymentMethodId());
+                                                                         }
+                                                                     }
+
+                                                                     pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, context);
+                                                                 }
+
+                                                                 return toPayment(paymentModelDao, transactionsModelDao, pluginInfo);
+                                                             }
+                                                         });
     }
 
     public Payment getPayment(final UUID paymentId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
@@ -181,7 +199,7 @@ public class PaymentProcessor extends ProcessorBase {
         if (paymentModelDao == null) {
             return null;
         }
-        return getPayment(paymentModelDao, withPluginInfo, properties, tenantContext, internalTenantContext);
+        return toPayment(paymentModelDao, withPluginInfo, properties, tenantContext, internalTenantContext);
     }
 
     public Payment getPaymentByExternalKey(final String paymentExternalKey, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
@@ -189,11 +207,10 @@ public class PaymentProcessor extends ProcessorBase {
         if (paymentModelDao == null) {
             return null;
         }
-        return getPayment(paymentModelDao, withPluginInfo, properties, tenantContext, internalTenantContext);
-
+        return toPayment(paymentModelDao, withPluginInfo, properties, tenantContext, internalTenantContext);
     }
 
-    public Pagination<Payment> getPayments(final Long offset, final Long limit, final Iterable<PluginProperty> properties,
+    public Pagination<Payment> getPayments(final Long offset, final Long limit, final boolean withPluginInfo, final Iterable<PluginProperty> properties,
                                            final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
         return getEntityPaginationFromPlugins(getAvailablePlugins(),
                                               offset,
@@ -201,109 +218,102 @@ public class PaymentProcessor extends ProcessorBase {
                                               new EntityPaginationBuilder<Payment, PaymentApiException>() {
                                                   @Override
                                                   public Pagination<Payment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                      final Pagination<Payment> result = getPayments(offset, limit, pluginName, properties, tenantContext, internalTenantContext);
-                                                      return result;
+                                                      return getPayments(offset, limit, pluginName, withPluginInfo, properties, tenantContext, internalTenantContext);
                                                   }
                                               }
                                              );
     }
 
-    public Pagination<Payment> getPayments(final Long offset, final Long limit, final String pluginName, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
-        final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
+    public Pagination<Payment> getPayments(final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+        final PaymentPluginApi pluginApi = withPluginInfo ? getPaymentPluginApi(pluginName) : null;
 
         return getEntityPagination(limit,
                                    new SourcePaginationBuilder<PaymentModelDao, PaymentApiException>() {
                                        @Override
                                        public Pagination<PaymentModelDao> build() {
                                            // Find all payments for all accounts
-                                           final Pagination<PaymentModelDao> result = paymentDao.getPayments(pluginName, offset, limit, internalTenantContext);
-                                           return result;
+                                           return paymentDao.getPayments(pluginName, offset, limit, internalTenantContext);
                                        }
                                    },
                                    new Function<PaymentModelDao, Payment>() {
                                        @Override
                                        public Payment apply(final PaymentModelDao paymentModelDao) {
-                                           List<PaymentTransactionInfoPlugin> pluginInfo = null;
-                                           try {
-                                               pluginInfo = pluginApi.getPaymentInfo(paymentModelDao.getAccountId(), paymentModelDao.getId(), properties, tenantContext);
-                                           } catch (final PaymentPluginApiException e) {
-                                               log.warn("Unable to find payment id " + paymentModelDao.getId() + " in plugin " + pluginName);
-                                               // We still want to return a payment object, even though the plugin details are missing
-                                           }
-
+                                           final List<PaymentTransactionInfoPlugin> pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, tenantContext);
                                            return toPayment(paymentModelDao.getId(), pluginInfo, internalTenantContext);
                                        }
                                    }
                                   );
     }
 
-    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
+    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
         return getEntityPaginationFromPlugins(getAvailablePlugins(),
                                               offset,
                                               limit,
                                               new EntityPaginationBuilder<Payment, PaymentApiException>() {
                                                   @Override
                                                   public Pagination<Payment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                      return searchPayments(searchKey, offset, limit, pluginName, properties, tenantContext, internalTenantContext);
+                                                      return searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, properties, tenantContext, internalTenantContext);
                                                   }
                                               }
                                              );
     }
 
-    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
-        final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
+    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+        if (withPluginInfo) {
+            final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
 
-        return getEntityPagination(limit,
-                                   new SourcePaginationBuilder<PaymentTransactionInfoPlugin, PaymentApiException>() {
-                                       @Override
-                                       public Pagination<PaymentTransactionInfoPlugin> build() throws PaymentApiException {
-                                           try {
-                                               return pluginApi.searchPayments(searchKey, offset, limit, properties, tenantContext);
-                                           } catch (final PaymentPluginApiException e) {
-                                               throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENTS, pluginName, searchKey);
+            return getEntityPagination(limit,
+                                       new SourcePaginationBuilder<PaymentTransactionInfoPlugin, PaymentApiException>() {
+                                           @Override
+                                           public Pagination<PaymentTransactionInfoPlugin> build() throws PaymentApiException {
+                                               try {
+                                                   return pluginApi.searchPayments(searchKey, offset, limit, properties, tenantContext);
+                                               } catch (final PaymentPluginApiException e) {
+                                                   throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENTS, pluginName, searchKey);
+                                               }
+                                           }
+
+                                       },
+                                       new Function<PaymentTransactionInfoPlugin, Payment>() {
+                                           final List<PaymentTransactionInfoPlugin> cachedPaymentTransactions = new LinkedList<PaymentTransactionInfoPlugin>();
+
+                                           @Override
+                                           public Payment apply(final PaymentTransactionInfoPlugin pluginTransaction) {
+                                               if (pluginTransaction.getKbPaymentId() == null) {
+                                                   // Garbage from the plugin?
+                                                   log.debug("Plugin {} returned a payment without a kbPaymentId for searchKey {}", pluginName, searchKey);
+                                                   return null;
+                                               }
+
+                                               if (cachedPaymentTransactions.isEmpty() ||
+                                                   (cachedPaymentTransactions.get(0).getKbPaymentId().equals(pluginTransaction.getKbPaymentId()))) {
+                                                   cachedPaymentTransactions.add(pluginTransaction);
+                                                   return null;
+                                               } else {
+                                                   final Payment result = toPayment(pluginTransaction.getKbPaymentId(), ImmutableList.<PaymentTransactionInfoPlugin>copyOf(cachedPaymentTransactions), internalTenantContext);
+                                                   cachedPaymentTransactions.clear();
+                                                   cachedPaymentTransactions.add(pluginTransaction);
+                                                   return result;
+                                               }
                                            }
                                        }
-
-                                   },
-                                   new Function<PaymentTransactionInfoPlugin, Payment>() {
-
-                                       final List<PaymentTransactionInfoPlugin> cachedPaymentTransactions = new LinkedList<PaymentTransactionInfoPlugin>();
-
-                                       @Override
-                                       public Payment apply(final PaymentTransactionInfoPlugin pluginTransaction) {
-
-                                           if (pluginTransaction.getKbPaymentId() == null) {
-                                               // Garbage from the plugin?
-                                               log.debug("Plugin {} returned a payment without a kbPaymentId for searchKey {}", pluginName, searchKey);
-                                               return null;
+                                      );
+        } else {
+            return getEntityPagination(limit,
+                                       new SourcePaginationBuilder<PaymentModelDao, PaymentApiException>() {
+                                           @Override
+                                           public Pagination<PaymentModelDao> build() {
+                                               return paymentDao.searchPayments(searchKey, offset, limit, internalTenantContext);
                                            }
-
-                                           if (cachedPaymentTransactions.isEmpty() ||
-                                               (cachedPaymentTransactions.get(0).getKbPaymentId().equals(pluginTransaction.getKbPaymentId()))) {
-                                               cachedPaymentTransactions.add(pluginTransaction);
-                                               return null;
-                                           } else {
-                                               final Payment result = toPayment(pluginTransaction.getKbPaymentId(), ImmutableList.<PaymentTransactionInfoPlugin>copyOf(cachedPaymentTransactions), internalTenantContext);
-                                               cachedPaymentTransactions.clear();
-                                               cachedPaymentTransactions.add(pluginTransaction);
-                                               return result;
+                                       },
+                                       new Function<PaymentModelDao, Payment>() {
+                                           @Override
+                                           public Payment apply(final PaymentModelDao paymentModelDao) {
+                                               return toPayment(paymentModelDao.getId(), null, internalTenantContext);
                                            }
                                        }
-                                   }
-                                  );
-    }
-
-    public Payment toPayment(final UUID paymentId, @Nullable final List<PaymentTransactionInfoPlugin> pluginTransactions, final InternalTenantContext tenantContext) {
-        final PaymentModelDao paymentModelDao = paymentDao.getPayment(paymentId, tenantContext);
-        if (paymentModelDao == null) {
-            log.warn("Unable to find payment id " + paymentId);
-            return null;
+                                      );
         }
-
-        final InternalTenantContext tenantContextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(paymentModelDao.getAccountId(), tenantContext);
-        final List<PaymentTransactionModelDao> transactionsForAccount = paymentDao.getTransactionsForAccount(paymentModelDao.getAccountId(), tenantContextWithAccountRecordId);
-
-        return toPayment(paymentModelDao, transactionsForAccount, pluginTransactions);
     }
 
     private Payment performOperation(final boolean isApiPayment, @Nullable final UUID attemptId,
@@ -314,7 +324,6 @@ public class PaymentProcessor extends ProcessorBase {
                                      final boolean shouldLockAccountAndDispatch, @Nullable final OperationResult overridePluginOperationResult,
                                      final Iterable<PluginProperty> properties,
                                      final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-
         validateUniqueTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
         final UUID nonNullPaymentId = paymentAutomatonRunner.run(isApiPayment,
                                                                  transactionType,
@@ -335,27 +344,55 @@ public class PaymentProcessor extends ProcessorBase {
         return getPayment(nonNullPaymentId, true, properties, callContext, internalCallContext);
     }
 
-    private Payment getPayment(final PaymentModelDao paymentModelDao, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context, final InternalTenantContext tenantContext) throws PaymentApiException {
-        final InternalTenantContext tenantContextWithAccountRecordId;
-        if (tenantContext.getAccountRecordId() == null) {
-            tenantContextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(paymentModelDao.getAccountId(), tenantContext);
-        } else {
-            tenantContextWithAccountRecordId = tenantContext;
+    // Used in bulk get API (getAccountPayments / getPayments)
+    private List<PaymentTransactionInfoPlugin> getPaymentTransactionInfoPluginsIfNeeded(@Nullable final PaymentPluginApi pluginApi, final PaymentModelDao paymentModelDao, final TenantContext context) {
+        if (pluginApi == null) {
+            return null;
         }
-        final List<PaymentTransactionModelDao> transactionsForPayment = paymentDao.getTransactionsForPayment(paymentModelDao.getId(), tenantContextWithAccountRecordId);
 
-        final PaymentPluginApi plugin = withPluginInfo ? getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), tenantContext) : null;
-        List<PaymentTransactionInfoPlugin> pluginInfo = null;
-        if (plugin != null) {
-            try {
-                pluginInfo = plugin.getPaymentInfo(paymentModelDao.getAccountId(), paymentModelDao.getId(), properties, context);
-            } catch (final PaymentPluginApiException e) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_GET_PAYMENT_INFO, paymentModelDao.getId(), e.toString());
-            }
+        try {
+            return getPaymentTransactionInfoPlugins(pluginApi, paymentModelDao, PLUGIN_PROPERTIES, context);
+        } catch (final PaymentApiException e) {
+            log.warn("Unable to retrieve plugin info for payment " + paymentModelDao.getId());
+            return null;
         }
-        return toPayment(paymentModelDao, transactionsForPayment, pluginInfo);
     }
 
+    private List<PaymentTransactionInfoPlugin> getPaymentTransactionInfoPlugins(final PaymentPluginApi plugin, final PaymentModelDao paymentModelDao, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
+        try {
+            return plugin.getPaymentInfo(paymentModelDao.getAccountId(), paymentModelDao.getId(), properties, context);
+        } catch (final PaymentPluginApiException e) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_GET_PAYMENT_INFO, paymentModelDao.getId(), e.toString());
+        }
+    }
+
+    // Used in bulk get APIs (getPayments / searchPayments)
+    private Payment toPayment(final UUID paymentId, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final InternalTenantContext tenantContext) {
+        final PaymentModelDao paymentModelDao = paymentDao.getPayment(paymentId, tenantContext);
+        if (paymentModelDao == null) {
+            log.warn("Unable to find payment id " + paymentId);
+            return null;
+        }
+
+        return toPayment(paymentModelDao, pluginTransactions, tenantContext);
+    }
+
+    // Used in single get APIs (getPayment / getPaymentByExternalKey)
+    private Payment toPayment(final PaymentModelDao paymentModelDao, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context, final InternalTenantContext tenantContext) throws PaymentApiException {
+        final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), tenantContext);
+        final List<PaymentTransactionInfoPlugin> pluginTransactions = withPluginInfo ? getPaymentTransactionInfoPlugins(plugin, paymentModelDao, properties, context) : null;
+
+        return toPayment(paymentModelDao, pluginTransactions, tenantContext);
+    }
+
+    private Payment toPayment(final PaymentModelDao paymentModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final InternalTenantContext tenantContext) {
+        final InternalTenantContext tenantContextWithAccountRecordId = getInternalTenantContextWithAccountRecordId(paymentModelDao.getAccountId(), tenantContext);
+        final List<PaymentTransactionModelDao> transactionsForPayment = paymentDao.getTransactionsForPayment(paymentModelDao.getId(), tenantContextWithAccountRecordId);
+
+        return toPayment(paymentModelDao, transactionsForPayment, pluginTransactions);
+    }
+
+    // Used in bulk get API (getAccountPayments)
     private Payment toPayment(final PaymentModelDao curPaymentModelDao, final Iterable<PaymentTransactionModelDao> transactionsModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions) {
         final Ordering<PaymentTransaction> perPaymentTransactionOrdering = Ordering.<PaymentTransaction>from(new Comparator<PaymentTransaction>() {
             @Override
@@ -364,6 +401,7 @@ public class PaymentProcessor extends ProcessorBase {
             }
         });
 
+        // Need to filter for optimized codepaths looking up by account_record_id
         final Iterable<PaymentTransactionModelDao> filteredTransactions = Iterables.filter(transactionsModelDao, new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao curPaymentTransactionModelDao) {
@@ -392,5 +430,15 @@ public class PaymentProcessor extends ProcessorBase {
         final List<PaymentTransaction> sortedTransactions = perPaymentTransactionOrdering.immutableSortedCopy(transactions);
         return new DefaultPayment(curPaymentModelDao.getId(), curPaymentModelDao.getCreatedDate(), curPaymentModelDao.getUpdatedDate(), curPaymentModelDao.getAccountId(),
                                   curPaymentModelDao.getPaymentMethodId(), curPaymentModelDao.getPaymentNumber(), curPaymentModelDao.getExternalKey(), sortedTransactions);
+    }
+
+    private InternalTenantContext getInternalTenantContextWithAccountRecordId(final UUID accountId, final InternalTenantContext tenantContext) {
+        final InternalTenantContext tenantContextWithAccountRecordId;
+        if (tenantContext.getAccountRecordId() == null) {
+            tenantContextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
+        } else {
+            tenantContextWithAccountRecordId = tenantContext;
+        }
+        return tenantContextWithAccountRecordId;
     }
 }

@@ -214,6 +214,25 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
+    public Pagination<PaymentModelDao> searchPayments(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(PaymentSqlDao.class,
+                                              new PaginationIteratorBuilder<PaymentModelDao, Payment, PaymentSqlDao>() {
+                                                  @Override
+                                                  public Long getCount(final PaymentSqlDao paymentSqlDao, final InternalTenantContext context) {
+                                                      return paymentSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<PaymentModelDao> build(final PaymentSqlDao paymentSqlDao, final Long limit, final InternalTenantContext context) {
+                                                      return paymentSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
+    }
+
+    @Override
     public PaymentModelDao insertPaymentWithFirstTransaction(final PaymentModelDao payment, final PaymentTransactionModelDao paymentTransaction, final InternalCallContext context) {
 
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<PaymentModelDao>() {
@@ -270,7 +289,6 @@ public class DefaultPaymentDao implements PaymentDao {
         });
 
     }
-
 
     @Override
     public PaymentModelDao getPayment(final UUID paymentId, final InternalTenantContext context) {
@@ -390,6 +408,25 @@ public class DefaultPaymentDao implements PaymentDao {
                 return entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class).getByAccountId(accountId.toString(), context);
             }
         });
+    }
+
+    @Override
+    public Pagination<PaymentMethodModelDao> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(PaymentMethodSqlDao.class,
+                                              new PaginationIteratorBuilder<PaymentMethodModelDao, PaymentMethod, PaymentMethodSqlDao>() {
+                                                  @Override
+                                                  public Long getCount(final PaymentMethodSqlDao paymentMethodSqlDao, final InternalTenantContext context) {
+                                                      return paymentMethodSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<PaymentMethodModelDao> build(final PaymentMethodSqlDao paymentMethodSqlDao, final Long limit, final InternalTenantContext context) {
+                                                      return paymentMethodSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
     }
 
     @Override

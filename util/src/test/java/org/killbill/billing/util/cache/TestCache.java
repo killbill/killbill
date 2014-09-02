@@ -78,8 +78,11 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
         final Long recordIdFromCache = retrieveRecordIdFromCache(tag.getId());
         Assert.assertNotNull(recordIdFromCache);
 
-        Assert.assertEquals(recordIdFromCache, new Long(1));
-        Assert.assertEquals(tagRecordId, new Long(1));
+        Assert.assertEquals(recordIdFromCache, tagRecordId);
+        // We cannot assume the number to be 1 here as the auto_increment implementation
+        // depends on the database.
+        // See also http://h2database.com/html/grammar.html#create_sequence
+        Assert.assertTrue(recordIdFromCache > 0);
 
         Assert.assertEquals(getCacheSize(CacheType.RECORD_ID), 1);
     }

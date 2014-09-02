@@ -63,7 +63,6 @@ public class MockPaymentDao implements PaymentDao {
         return result;
     }
 
-
     @Override
     public PaymentAttemptModelDao insertPaymentAttemptWithProperties(final PaymentAttemptModelDao attempt, final InternalCallContext context) {
         synchronized (this) {
@@ -149,6 +148,11 @@ public class MockPaymentDao implements PaymentDao {
     @Override
     public Pagination<PaymentModelDao> getPayments(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
         return null;
+    }
+
+    @Override
+    public Pagination<PaymentModelDao> searchPayments(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -305,6 +309,11 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public Pagination<PaymentMethodModelDao> getPaymentMethods(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Pagination<PaymentMethodModelDao> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
 

@@ -98,7 +98,7 @@ public class TestPaymentMethod extends TestJaxrsBase {
     }
 
     private void doSearch(final String searchKey, final PaymentMethod paymentMethodJson) throws Exception {
-        final List<PaymentMethod> results1 = killBillClient.searchPaymentMethodsByKey(searchKey);
+        final List<PaymentMethod> results1 = killBillClient.searchPaymentMethodsByKey(searchKey, true);
         Assert.assertEquals(results1.size(), 1);
         Assert.assertEquals(results1.get(0), paymentMethodJson);
 

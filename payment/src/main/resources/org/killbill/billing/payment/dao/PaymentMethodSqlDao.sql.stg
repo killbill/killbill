@@ -30,7 +30,6 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
-
 markPaymentMethodAsDeleted(id) ::= <<
 update <tableName()>
 set is_active = 0
@@ -90,6 +89,13 @@ select
 from <tableName()>
 where account_id = :accountId
 ;
+>>
+
+searchQuery(prefix) ::= <<
+     <idField(prefix)> = :searchKey
+  or <prefix>external_key like :likeSearchKey
+  or <prefix>account_id = :searchKey
+  or <prefix>plugin_name like :likeSearchKey
 >>
 
 getByPluginName() ::= <<

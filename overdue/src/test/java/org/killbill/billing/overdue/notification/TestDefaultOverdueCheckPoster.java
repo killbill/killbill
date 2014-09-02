@@ -30,9 +30,6 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
-import org.killbill.billing.overdue.notification.OverdueCheckNotificationKey;
-import org.killbill.billing.overdue.notification.OverdueCheckNotifier;
-import org.killbill.billing.overdue.notification.OverdueCheckPoster;
 import org.killbill.billing.overdue.service.DefaultOverdueService;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -92,7 +89,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         return entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>>>() {
             @Override
             public Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return ((OverdueCheckPoster)checkPoster).getFutureNotificationsForAccountInTransaction(entitySqlDaoWrapperFactory, overdueQueue, account.getId(), OverdueCheckNotificationKey.class, internalCallContext);
+                return ((OverdueCheckPoster)checkPoster).getFutureNotificationsForAccountInTransaction(entitySqlDaoWrapperFactory, overdueQueue, OverdueCheckNotificationKey.class, internalCallContext);
             }
         });
     }

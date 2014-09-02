@@ -37,7 +37,7 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<OverdueCon
     private static final Period ZERO_PERIOD = new Period();
     private final DefaultOverdueState clearState = new DefaultOverdueState().setName(DefaultBlockingState.CLEAR_STATE_NAME).setClearState(true);
 
-    protected abstract DefaultOverdueState[] getStates();
+    public abstract DefaultOverdueState[] getStates();
 
     @Override
     public OverdueState findState(final String stateName) throws OverdueApiException {

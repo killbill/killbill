@@ -48,14 +48,15 @@ public interface PaymentDao {
 
     public Pagination<PaymentModelDao> getPayments(String pluginName, Long offset, Long limit, InternalTenantContext context);
 
+    public Pagination<PaymentModelDao> searchPayments(String searchKey, Long offset, Long limit, InternalTenantContext context);
+
     public PaymentModelDao insertPaymentWithFirstTransaction(PaymentModelDao payment, PaymentTransactionModelDao paymentTransaction, InternalCallContext context);
 
     public PaymentTransactionModelDao updatePaymentWithNewTransaction(UUID paymentId, PaymentTransactionModelDao paymentTransaction, InternalCallContext context);
 
     public void updatePaymentAndTransactionOnCompletion(UUID accountId, UUID paymentId, final TransactionType transactionType, String currentPaymentStateName, String lastPaymentSuccessStateName, UUID transactionId,
-                                                              TransactionStatus paymentStatus, BigDecimal processedAmount, Currency processedCurrency,
-                                                              String gatewayErrorCode, String gatewayErrorMsg, InternalCallContext context);
-
+                                                        TransactionStatus paymentStatus, BigDecimal processedAmount, Currency processedCurrency,
+                                                        String gatewayErrorCode, String gatewayErrorMsg, InternalCallContext context);
 
     public PaymentModelDao getPayment(UUID paymentId, InternalTenantContext context);
 
@@ -82,6 +83,8 @@ public interface PaymentDao {
     public List<PaymentMethodModelDao> getPaymentMethods(UUID accountId, InternalTenantContext context);
 
     public Pagination<PaymentMethodModelDao> getPaymentMethods(String pluginName, Long offset, Long limit, InternalTenantContext context);
+
+    public Pagination<PaymentMethodModelDao> searchPaymentMethods(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
     public void deletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
 

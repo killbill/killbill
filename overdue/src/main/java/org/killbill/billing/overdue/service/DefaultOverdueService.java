@@ -96,20 +96,24 @@ public class DefaultOverdueService implements OverdueService {
                 overdueConfig = XMLLoader.getObjectFromUri(u, OverdueConfig.class);
                 // File not found?
                 if (overdueConfig == null) {
-                    log.warn("Unable to load the overdue config from " + properties.getConfigURI());
+                    log.warn("Overdue system disabled: unable to load the overdue config from " + properties.getConfigURI());
                     overdueConfig = new OverdueConfig();
                 }
 
                 isConfigLoaded = true;
             } catch (final URISyntaxException e) {
+                log.warn("Overdue system disabled: unable to load the overdue config from " + properties.getConfigURI(), e);
                 overdueConfig = new OverdueConfig();
             } catch (final IllegalArgumentException e) {
+                log.warn("Overdue system disabled: unable to load the overdue config from " + properties.getConfigURI(), e);
                 overdueConfig = new OverdueConfig();
             } catch (final Exception e) {
+                log.warn("Unable to load the overdue config from " + properties.getConfigURI(), e);
                 throw new ServiceException(e);
             }
 
             factory.setOverdueConfig(overdueConfig);
+            listener.setOverdueConfig(overdueConfig);
             ((DefaultOverdueUserApi) userApi).setOverdueConfig(overdueConfig);
         }
     }
