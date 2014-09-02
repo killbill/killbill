@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,34 +22,32 @@ import java.util.UUID;
 
 import javax.inject.Named;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ObjectType;
-import org.killbill.bus.api.BusEvent;
-import org.killbill.clock.Clock;
-import org.killbill.billing.overdue.notification.OverdueAsyncBusNotificationKey;
-import org.killbill.billing.overdue.notification.OverdueAsyncBusNotificationKey.OverdueAsyncBusNotificationAction;
-import org.killbill.billing.overdue.notification.OverdueAsyncBusNotifier;
-import org.killbill.billing.overdue.notification.OverduePoster;
-import org.killbill.billing.overdue.glue.DefaultOverdueModule;
-import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.events.ControlTagCreationInternalEvent;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
+import org.killbill.billing.overdue.glue.DefaultOverdueModule;
+import org.killbill.billing.overdue.notification.OverdueAsyncBusNotificationKey;
+import org.killbill.billing.overdue.notification.OverdueAsyncBusNotificationKey.OverdueAsyncBusNotificationAction;
+import org.killbill.billing.overdue.notification.OverdueAsyncBusNotifier;
+import org.killbill.billing.overdue.notification.OverduePoster;
+import org.killbill.billing.util.callcontext.CallOrigin;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.tag.ControlTagType;
+import org.killbill.bus.api.BusEvent;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
 public class OverdueListener {
 
-    private final OverdueDispatcher dispatcher;
     private final InternalCallContextFactory internalCallContextFactory;
     private final OverduePoster asyncPoster;
     private final Clock clock;
@@ -55,11 +55,9 @@ public class OverdueListener {
     private static final Logger log = LoggerFactory.getLogger(OverdueListener.class);
 
     @Inject
-    public OverdueListener(final OverdueDispatcher dispatcher,
-                           final Clock clock,
-                           @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED)final OverduePoster asyncPoster,
+    public OverdueListener(final Clock clock,
+                           @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED) final OverduePoster asyncPoster,
                            final InternalCallContextFactory internalCallContextFactory) {
-        this.dispatcher = dispatcher;
         this.asyncPoster = asyncPoster;
         this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -78,7 +76,6 @@ public class OverdueListener {
             insertBusEventIntoNotificationQueue(event.getObjectId(), event, OverdueAsyncBusNotificationAction.REFRESH);
         }
     }
-
 
     @Subscribe
     public void handlePaymentInfoEvent(final PaymentInfoInternalEvent event) {

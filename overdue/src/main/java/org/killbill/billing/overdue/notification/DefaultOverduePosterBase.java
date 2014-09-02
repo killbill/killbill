@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,20 +19,10 @@
 package org.killbill.billing.overdue.notification;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.clock.Clock;
-import org.killbill.notificationq.api.NotificationEventWithMetadata;
-import org.killbill.notificationq.api.NotificationQueue;
-import org.killbill.notificationq.api.NotificationQueueService;
-import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.billing.overdue.service.DefaultOverdueService;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -38,6 +30,14 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.clock.Clock;
+import org.killbill.notificationq.api.NotificationEventWithMetadata;
+import org.killbill.notificationq.api.NotificationQueue;
+import org.killbill.notificationq.api.NotificationQueueService;
+import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.skife.jdbi.v2.IDBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -57,7 +57,6 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
 
     @Override
     public <T extends OverdueCheckNotificationKey> void insertOverdueNotification(final UUID accountId, final DateTime futureNotificationTime, final String overdueQueueName, final T notificationKey, final InternalCallContext context) {
-
         try {
             final NotificationQueue overdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
                                                                                                  overdueQueueName);
@@ -65,13 +64,12 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
             transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
                 public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-
                     // Check if we already have notifications for that key
                     final Class<T> clazz = (Class<T>) notificationKey.getClass();
-                    final Collection<NotificationEventWithMetadata<T>> futureNotifications = getFutureNotificationsForAccountInTransaction(entitySqlDaoWrapperFactory, overdueQueue, accountId,
+                    final Collection<NotificationEventWithMetadata<T>> futureNotifications = getFutureNotificationsForAccountInTransaction(entitySqlDaoWrapperFactory, overdueQueue,
                                                                                                                                            clazz, context);
 
-                    boolean shouldInsertNewNotification = cleanupFutureNotificationsFormTransaction(entitySqlDaoWrapperFactory, futureNotifications, futureNotificationTime, overdueQueue);
+                    final boolean shouldInsertNewNotification = cleanupFutureNotificationsFormTransaction(entitySqlDaoWrapperFactory, futureNotifications, futureNotificationTime, overdueQueue);
                     if (shouldInsertNewNotification) {
                         log.debug("Queuing overdue check notification. Account id: {}, timestamp: {}", accountId.toString(), futureNotificationTime.toString());
                         overdueQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), futureNotificationTime, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
@@ -81,12 +79,10 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
                     return null;
                 }
             });
-        } catch (NoSuchNotificationQueue e) {
+        } catch (final NoSuchNotificationQueue e) {
             log.error("Attempting to put items on a non-existent queue (DefaultOverdueCheck).", e);
-            return;
         }
     }
-
 
     @Override
     public <T extends OverdueCheckNotificationKey> void clearOverdueCheckNotifications(final UUID accountId, final String overdueQueueName, final Class<T> clazz, final InternalCallContext context) {
@@ -96,15 +92,16 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
             transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
                 public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                    final Collection<NotificationEventWithMetadata<T>> futureNotifications = getFutureNotificationsForAccountInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue, accountId,
+                    final Collection<NotificationEventWithMetadata<T>> futureNotifications = getFutureNotificationsForAccountInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue,
                                                                                                                                            clazz, context);
                     for (final NotificationEventWithMetadata<T> notification : futureNotifications) {
                         checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), notification.getRecordId());
                     }
+
                     return null;
                 }
             });
-        } catch (NoSuchNotificationQueue e) {
+        } catch (final NoSuchNotificationQueue e) {
             log.error("Attempting to clear items from a non-existent queue (DefaultOverdueCheck).", e);
         }
     }
@@ -112,29 +109,13 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
     @VisibleForTesting
     <T extends OverdueCheckNotificationKey> Collection<NotificationEventWithMetadata<T>> getFutureNotificationsForAccountInTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
                                                                                                                                        final NotificationQueue checkOverdueQueue,
-                                                                                                                                       final UUID accountId,
                                                                                                                                        final Class<T> clazz,
                                                                                                                                        final InternalCallContext context) {
-
-        final List<NotificationEventWithMetadata<T>> notifications = checkOverdueQueue.getFutureNotificationFromTransactionForSearchKey1(clazz, context.getAccountRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
-
-        /*
-        final Collection<NotificationEventWithMetadata<T>> notificationsFiltered = Collections2.filter(notifications, new Predicate<NotificationEventWithMetadata<T>>() {
-            @Override
-            public boolean apply(@Nullable final NotificationEventWithMetadata<T> input) {
-                final OverdueCheckNotificationKey notificationKey = input.getEvent();
-                return (accountId.equals(notificationKey.getUuidKey()));
-            }
-        });
-        return notificationsFiltered;
-        */
-        return notifications;
+        return checkOverdueQueue.getFutureNotificationFromTransactionForSearchKey1(clazz, context.getAccountRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
     }
 
-
     protected abstract <T extends OverdueCheckNotificationKey> boolean cleanupFutureNotificationsFormTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
-                                                                                                      final Collection<NotificationEventWithMetadata<T>> futureNotifications,
-                                                                                                      final DateTime futureNotificationTime, final NotificationQueue overdueQueue);
-
+                                                                                                                 final Collection<NotificationEventWithMetadata<T>> futureNotifications,
+                                                                                                                 final DateTime futureNotificationTime, final NotificationQueue overdueQueue);
 
 }
