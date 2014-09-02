@@ -90,13 +90,13 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
             verifyPayment(insertedPaymentModelDao, paymentModelDao);
 
             // Verify search APIs
-            Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(paymentModelDao.getPaymentMethodId().toString(), 0L, Long.MAX_VALUE, internalCallContext).iterator()).size(), 1);
-            Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(paymentModelDao.getExternalKey(), 0L, Long.MAX_VALUE, internalCallContext).iterator()).size(), 1);
+            Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(paymentModelDao.getPaymentMethodId().toString(), 0L, 100L, internalCallContext).iterator()).size(), 1);
+            Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(paymentModelDao.getExternalKey(), 0L, 100L, internalCallContext).iterator()).size(), 1);
         }
         Assert.assertEquals(paymentDao.getPaymentsForAccount(specifiedFirstPaymentModelDao.getAccountId(), accountCallContext).size(), 4);
 
         // Verify search APIs
-        Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(accountId.toString(), 0L, Long.MAX_VALUE, internalCallContext).iterator()).size(), 4);
+        Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(accountId.toString(), 0L, 100L, internalCallContext).iterator()).size(), 4);
     }
 
     private void verifyPaymentAndTransactions(final InternalCallContext accountCallContext, final PaymentModelDao specifiedFirstPaymentModelDao, final PaymentTransactionModelDao... specifiedFirstPaymentTransactionModelDaos) {
@@ -164,8 +164,8 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(loadedPaymentModelDao.getExternalKey(), specifiedPaymentModelDao.getExternalKey());
 
         // Verify search APIs
-        Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(specifiedPaymentModelDao.getPaymentMethodId().toString(), 0L, Long.MAX_VALUE, internalCallContext).iterator()).size(), 1);
-        Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(specifiedPaymentModelDao.getExternalKey(), 0L, Long.MAX_VALUE, internalCallContext).iterator()).size(), 1);
+        Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(specifiedPaymentModelDao.getPaymentMethodId().toString(), 0L, 100L, internalCallContext).iterator()).size(), 1);
+        Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(specifiedPaymentModelDao.getExternalKey(), 0L, 100L, internalCallContext).iterator()).size(), 1);
     }
 
     private void verifyPaymentTransaction(final PaymentTransactionModelDao loadedPaymentTransactionModelDao, final PaymentTransactionModelDao specifiedPaymentTransactionModelDao) {
