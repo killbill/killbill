@@ -29,6 +29,8 @@ import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
+import org.killbill.billing.overdue.config.DefaultOverdueState;
+import org.killbill.billing.overdue.config.OverdueConfig;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.overdue.notification.OverdueAsyncBusNotificationKey;
 import org.killbill.billing.overdue.notification.OverdueAsyncBusNotificationKey.OverdueAsyncBusNotificationAction;
@@ -51,6 +53,8 @@ public class OverdueListener {
     private final InternalCallContextFactory internalCallContextFactory;
     private final OverduePoster asyncPoster;
     private final Clock clock;
+
+    private OverdueConfig config;
 
     private static final Logger log = LoggerFactory.getLogger(OverdueListener.class);
 
@@ -96,12 +100,34 @@ public class OverdueListener {
     }
 
     private void insertBusEventIntoNotificationQueue(final UUID accountId, final BusEvent event, final OverdueAsyncBusNotificationAction action) {
-        final OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(accountId, action);
-        asyncPoster.insertOverdueNotification(accountId, clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
+        final boolean shouldInsertNotification = shouldInsertNotification();
 
+        if (shouldInsertNotification) {
+            final OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(accountId, action);
+            asyncPoster.insertOverdueNotification(accountId, clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
+        }
+    }
+
+    // Optimization: don't bother running the Overdue machinery if it's disabled
+    private boolean shouldInsertNotification() {
+        if (config == null || config.getStateSet() == null || config.getStateSet().getStates() == null) {
+            return false;
+        }
+
+        for (final DefaultOverdueState state : config.getStateSet().getStates()) {
+            if (state.getCondition() != null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private InternalCallContext createCallContext(final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         return internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "OverdueService", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
+    }
+
+    public void setOverdueConfig(final OverdueConfig config) {
+        this.config = config;
     }
 }

@@ -113,6 +113,7 @@ public class DefaultOverdueService implements OverdueService {
             }
 
             factory.setOverdueConfig(overdueConfig);
+            listener.setOverdueConfig(overdueConfig);
             ((DefaultOverdueUserApi) userApi).setOverdueConfig(overdueConfig);
         }
     }

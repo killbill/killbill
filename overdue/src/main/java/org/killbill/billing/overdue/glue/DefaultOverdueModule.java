@@ -26,6 +26,7 @@ import org.killbill.billing.overdue.api.DefaultOverdueUserApi;
 import org.killbill.billing.overdue.applicator.OverdueEmailGenerator;
 import org.killbill.billing.overdue.applicator.formatters.DefaultOverdueEmailFormatterFactory;
 import org.killbill.billing.overdue.applicator.formatters.OverdueEmailFormatterFactory;
+import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.notification.OverdueAsyncBusNotifier;
 import org.killbill.billing.overdue.notification.OverdueAsyncBusPoster;
 import org.killbill.billing.overdue.notification.OverdueCheckNotifier;
@@ -60,6 +61,8 @@ public class DefaultOverdueModule extends KillBillModule implements OverdueModul
 
         final OverdueProperties config = new ConfigurationObjectFactory(skifeConfigSource).build(OverdueProperties.class);
         bind(OverdueProperties.class).toInstance(config);
+
+        bind(OverdueListener.class).asEagerSingleton();
 
         bind(OverdueNotifier.class).annotatedWith(Names.named(OVERDUE_NOTIFIER_CHECK_NAMED)).to(OverdueCheckNotifier.class).asEagerSingleton();
         bind(OverdueNotifier.class).annotatedWith(Names.named(OVERDUE_NOTIFIER_ASYNC_BUS_NAMED)).to(OverdueAsyncBusNotifier.class).asEagerSingleton();
