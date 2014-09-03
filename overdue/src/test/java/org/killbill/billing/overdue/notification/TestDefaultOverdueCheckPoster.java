@@ -69,7 +69,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         insertOverdueCheckAndVerifyQueueContent(overdueable, 15, 5);
 
         // Verify the final content of the queue
-        Assert.assertEquals(overdueQueue.getFutureNotificationForSearchKey1(OverdueCheckNotificationKey.class, internalCallContext.getAccountRecordId()).size(), 1);
+        Assert.assertEquals(overdueQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()).size(), 1);
     }
 
     private void insertOverdueCheckAndVerifyQueueContent(final Account account, final int nbDaysInFuture, final int expectedNbDaysInFuture) throws IOException {
