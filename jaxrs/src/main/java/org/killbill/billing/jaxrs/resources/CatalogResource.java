@@ -43,6 +43,7 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.xmlloader.XMLWriter;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -69,12 +70,14 @@ public class CatalogResource extends JaxRsResourceBase {
         this.catalogService = catalogService;
     }
 
+    @Timed
     @GET
     @Produces(APPLICATION_XML)
     public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         return Response.status(Status.OK).entity(XMLWriter.writeXML(catalogService.getCurrentCatalog(), StaticCatalog.class)).build();
     }
 
+    @Timed
     @GET
     @Produces(APPLICATION_JSON)
     public Response getCatalogJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
@@ -97,6 +100,7 @@ public class CatalogResource extends JaxRsResourceBase {
     //        return result;
     //    }
 
+    @Timed
     @GET
     @Path("/availableAddons")
     @Produces(APPLICATION_JSON)
@@ -111,6 +115,7 @@ public class CatalogResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(details).build();
     }
 
+    @Timed
     @GET
     @Path("/availableBasePlans")
     @Produces(APPLICATION_JSON)
@@ -124,6 +129,7 @@ public class CatalogResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(details).build();
     }
 
+    @Timed
     @GET
     @Path("/simpleCatalog")
     @Produces(APPLICATION_JSON)

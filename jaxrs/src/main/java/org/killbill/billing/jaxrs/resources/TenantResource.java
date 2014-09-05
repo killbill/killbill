@@ -54,6 +54,7 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -79,6 +80,7 @@ public class TenantResource extends JaxRsResourceBase {
         this.tenantApi = tenantApi;
     }
 
+    @Timed
     @GET
     @Path("/{tenantId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -87,6 +89,7 @@ public class TenantResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(new TenantJson(tenant)).build();
     }
 
+    @Timed
     @GET
     @Produces(APPLICATION_JSON)
     public Response getTenantByApiKey(@QueryParam(QUERY_API_KEY) final String externalKey) throws TenantApiException {
@@ -94,6 +97,7 @@ public class TenantResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(new TenantJson(tenant)).build();
     }
 
+    @Timed
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -108,6 +112,7 @@ public class TenantResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId());
     }
 
+    @Timed
     @POST
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @Consumes(APPLICATION_JSON)
@@ -124,6 +129,7 @@ public class TenantResource extends JaxRsResourceBase {
         return Response.created(uri).build();
     }
 
+    @Timed
     @GET
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @Produces(APPLICATION_JSON)
@@ -135,6 +141,7 @@ public class TenantResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
+    @Timed
     @DELETE
     @Path("/REGISTER_NOTIFICATION_CALLBACK")
     public Response deletePushNotificationCallbacks(@PathParam("tenantId") final String tenantId,

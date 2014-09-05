@@ -78,6 +78,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -110,6 +111,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         this.subscriptionApi = subscriptionApi;
     }
 
+    @Timed
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -121,6 +123,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
+    @Timed
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -165,6 +168,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
+    @Timed
     @PUT
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
     @Produces(APPLICATION_JSON)
@@ -179,6 +183,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
+    @Timed
     @PUT
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
@@ -239,6 +244,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
+    @Timed
     @DELETE
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)

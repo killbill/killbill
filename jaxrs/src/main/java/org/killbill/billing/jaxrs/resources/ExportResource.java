@@ -41,6 +41,7 @@ import org.killbill.billing.util.api.ExportUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Singleton;
 
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
@@ -65,6 +66,7 @@ public class ExportResource extends JaxRsResourceBase {
         this.exportUserApi = exportUserApi;
     }
 
+    @Timed
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(TEXT_PLAIN)
