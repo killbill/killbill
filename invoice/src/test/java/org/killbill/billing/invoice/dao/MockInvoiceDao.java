@@ -33,17 +33,14 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
-import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 import org.killbill.bus.api.PersistentBus;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, InvoiceApiException> implements InvoiceDao {
@@ -62,14 +59,11 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final InternalCallContext context) {
+                              final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final InternalCallContext context) {
         synchronized (monitor) {
             invoices.put(invoice.getId(), invoice);
             for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
                 items.put(invoiceItemModelDao.getId(), invoiceItemModelDao);
-            }
-            for (final InvoicePaymentModelDao paymentModelDao : invoicePayments) {
-                payments.put(paymentModelDao.getId(), paymentModelDao);
             }
             accountRecordIds.put(invoice.getAccountId(), context.getAccountRecordId());
         }

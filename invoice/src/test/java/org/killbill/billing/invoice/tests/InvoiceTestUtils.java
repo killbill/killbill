@@ -34,7 +34,6 @@ import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
-import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.clock.Clock;
@@ -87,7 +86,7 @@ public class InvoiceTestUtils {
         }
         Mockito.when(invoice.getInvoiceItems()).thenReturn(invoiceItems);
 
-        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, ImmutableList.<InvoicePaymentModelDao>of(), true, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContext);
+        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, true, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContext);
 
         return invoice;
     }

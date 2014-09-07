@@ -42,6 +42,7 @@ import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -69,6 +70,7 @@ public class SecurityResource extends JaxRsResourceBase {
         this.securityApi = securityApi;
     }
 
+    @Timed
     @GET
     @Path("/permissions")
     @Produces(APPLICATION_JSON)
@@ -78,6 +80,7 @@ public class SecurityResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
+    @Timed
     @GET
     @Path("/subject")
     @Produces(APPLICATION_JSON)

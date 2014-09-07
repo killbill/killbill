@@ -19,6 +19,22 @@
                     xsi:noNamespaceSchemaLocation="StateMachineConfig.xsd">
 
     <stateMachines>
+        <stateMachine name="BIG_BANG">
+        <states>
+            <state name="BIG_BANG_INIT"/>
+        </states>
+            <transitions>
+                <transition>
+                    <initialState>BIG_BANG_INIT</initialState>
+                    <operation>OP_DUMMY</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>BIG_BANG_INIT</finalState>
+                </transition>
+            </transitions>
+            <operations>
+                <operation name="OP_DUMMY"/>
+            </operations>
+        </stateMachine>
         <stateMachine name="AUTHORIZE">
             <states>
                 <state name="AUTH_INIT"/>
@@ -269,6 +285,24 @@
     </stateMachines>
 
     <linkStateMachines>
+        <linkStateMachine>
+            <initialStateMachine>BIG_BANG</initialStateMachine>
+            <initialState>BIG_BANG_INIT</initialState>
+            <finalStateMachine>AUTHORIZE</finalStateMachine>
+            <finalState>AUTH_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>BIG_BANG</initialStateMachine>
+            <initialState>BIG_BANG_INIT</initialState>
+            <finalStateMachine>PURCHASE</finalStateMachine>
+            <finalState>PURCHASE_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>BIG_BANG</initialStateMachine>
+            <initialState>BIG_BANG_INIT</initialState>
+            <finalStateMachine>CREDIT</finalStateMachine>
+            <finalState>CREDIT_INIT</finalState>
+        </linkStateMachine>
         <linkStateMachine>
             <initialStateMachine>AUTHORIZE</initialStateMachine>
             <initialState>AUTH_SUCCESS</initialState>

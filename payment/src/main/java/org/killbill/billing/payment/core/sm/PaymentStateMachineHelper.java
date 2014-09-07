@@ -35,6 +35,7 @@ import com.google.common.collect.Iterables;
 
 public class PaymentStateMachineHelper {
 
+    private static final String BIG_BANG_STATE_MACHINE_NAME = "BIG_BANG";
     private static final String AUTHORIZE_STATE_MACHINE_NAME = "AUTHORIZE";
     private static final String CAPTURE_STATE_MACHINE_NAME = "CAPTURE";
     private static final String PURCHASE_STATE_MACHINE_NAME = "PURCHASE";
@@ -43,6 +44,8 @@ public class PaymentStateMachineHelper {
     private static final String VOID_STATE_MACHINE_NAME = "VOID";
     private static final String CHARGEBACK_STATE_MACHINE_NAME = "CHARGEBACK";
 
+
+    private static final String BIG_BANG_INIT_STATE_NAME = "BIG_BANG_INIT";
     private static final String AUTHORIZE_INIT_STATE_NAME = "AUTH_INIT";
     private static final String CAPTURE_INIT_STATE_NAME = "CAPTURE_INIT";
     private static final String PURCHASE_INIT_STATE_NAME = "PURCHASE_INIT";
@@ -63,25 +66,8 @@ public class PaymentStateMachineHelper {
         return stateMachine.getState(stateName);
     }
 
-    public String getInitStateNameForTransaction(final TransactionType transactionType) {
-        switch (transactionType) {
-            case AUTHORIZE:
-                return AUTHORIZE_INIT_STATE_NAME;
-            case CAPTURE:
-                return CAPTURE_INIT_STATE_NAME;
-            case PURCHASE:
-                return PURCHASE_INIT_STATE_NAME;
-            case REFUND:
-                return REFUND_INIT_STATE_NAME;
-            case CREDIT:
-                return CREDIT_INIT_STATE_NAME;
-            case VOID:
-                return VOID_INIT_STATE_NAME;
-            case CHARGEBACK:
-                return CHARGEBACK_INIT_STATE_NAME;
-            default:
-                throw new IllegalStateException("Unsupported transaction type " + transactionType + " for null payment id");
-        }
+    public String getInitStateNameForTransaction() {
+        return BIG_BANG_INIT_STATE_NAME;
     }
 
     public StateMachine getStateMachineForStateName(final String stateName) throws MissingEntryException {

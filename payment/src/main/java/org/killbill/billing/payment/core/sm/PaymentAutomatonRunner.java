@@ -46,7 +46,6 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
-import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -112,7 +111,7 @@ public class PaymentAutomatonRunner {
         if (paymentId != null) {
             final PaymentModelDao paymentModelDao = daoHelper.getPayment();
             effectivePaymentMethodId = paymentModelDao.getPaymentMethodId();
-            currentStateName = paymentModelDao.getLastSuccessStateName() != null ? paymentModelDao.getLastSuccessStateName() : paymentSMHelper.getInitStateNameForTransaction(transactionType);
+            currentStateName = paymentModelDao.getLastSuccessStateName() != null ? paymentModelDao.getLastSuccessStateName() : paymentSMHelper.getInitStateNameForTransaction();
 
             // Check for illegal states (should never happen)
             Preconditions.checkState(currentStateName != null, "State name cannot be null for payment " + paymentId);
@@ -121,7 +120,7 @@ public class PaymentAutomatonRunner {
             // If the payment method is not specified, retrieve the default one on the account; it could still be null, in which case
             //
             effectivePaymentMethodId = paymentMethodId != null ? paymentMethodId : account.getPaymentMethodId();
-            currentStateName = paymentSMHelper.getInitStateNameForTransaction(transactionType);
+            currentStateName = paymentSMHelper.getInitStateNameForTransaction();
         }
 
         paymentStateContext.setPaymentMethodId(effectivePaymentMethodId);
@@ -183,7 +182,7 @@ public class PaymentAutomatonRunner {
 
             initialState.runOperation(operation, operationCallback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {
-            throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INVALID_OPERATION, transactionType, initialStateName);
         } catch (final OperationException e) {
             if (e.getCause() == null) {
                 throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));

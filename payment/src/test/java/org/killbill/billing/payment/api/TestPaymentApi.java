@@ -35,6 +35,7 @@ import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
+import org.killbill.billing.payment.dao.PaymentSqlDao;
 import org.killbill.billing.retry.plugin.api.PaymentControlApiException;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.testng.Assert;
@@ -78,7 +79,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey = "krapaut";
 
         final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
-                                                                ImmutableList.<PluginProperty>of(), callContext);
+                                                          ImmutableList.<PluginProperty>of(), callContext);
 
         assertEquals(payment.getExternalKey(), paymentExternalKey);
         assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
@@ -558,6 +559,32 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             assertEquals(latestPayment, initialPayment);
         }
     }
+
+    @Test(groups = "slow")
+    public void testInvalidTransitionAfterFailure() throws PaymentApiException {
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+
+        final String paymentExternalKey = "krapo";
+        final String transactionExternalKey = "grenouye";
+
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.EUR, paymentExternalKey, transactionExternalKey,
+                                                          ImmutableList.<PluginProperty>of(), callContext);
+
+        // Hack the Database to make it look like it was a failure
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, "AUTH_ERRORED", null,
+                                                           payment.getTransactions().get(0).getId(), TransactionStatus.PLUGIN_FAILURE, null, null, null, null, internalCallContext);
+        PaymentSqlDao paymentSqlDao = dbi.onDemand(PaymentSqlDao.class);
+        paymentSqlDao.updateLastSuccessPaymentStateName(payment.getId().toString(), "AUTH_ERRORED", null, internalCallContext);
+
+        try {
+            paymentApi.createCapture(account, payment.getId(), requestedAmount, Currency.EUR, "tetard", ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail("Unexpected success");
+        } catch (PaymentApiException e){
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+    }
+
 
 
 

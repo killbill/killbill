@@ -111,7 +111,7 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
                                                                                                                                        final NotificationQueue checkOverdueQueue,
                                                                                                                                        final Class<T> clazz,
                                                                                                                                        final InternalCallContext context) {
-        return checkOverdueQueue.getFutureNotificationFromTransactionForSearchKey1(clazz, context.getAccountRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+        return checkOverdueQueue.getFutureNotificationFromTransactionForSearchKeys(context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
     }
 
     protected abstract <T extends OverdueCheckNotificationKey> boolean cleanupFutureNotificationsFormTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,

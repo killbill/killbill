@@ -43,10 +43,6 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
     public List<InvoicePaymentModelDao> getByPaymentId(@Bind("paymentId") final String paymentId,
                                                  @BindBean final InternalTenantContext context);
 
-    @SqlBatch(transactional = false)
-    @Audited(ChangeType.INSERT)
-    void batchCreateFromTransaction(@BindBean final List<InvoicePaymentModelDao> items,
-                                    @BindBean final InternalCallContext context);
 
     @SqlQuery
     public List<InvoicePaymentModelDao> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId,

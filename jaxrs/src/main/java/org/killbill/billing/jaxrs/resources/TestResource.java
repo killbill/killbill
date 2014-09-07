@@ -197,7 +197,7 @@ public class TestResource extends JaxRsResourceBase {
         final Iterable<NotificationQueue> filtered = Iterables.filter(queues, new Predicate<NotificationQueue>() {
             @Override
             public boolean apply(@Nullable final NotificationQueue input) {
-                return input.getReadyNotificationEntriesForSearchKey2(tenantRecordId) > 0;
+                return input.getFutureNotificationForSearchKey2(tenantRecordId).size() > 0;
             }
         });
         return !filtered.iterator().hasNext();

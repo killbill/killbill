@@ -57,6 +57,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -81,6 +82,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
+    @Timed
     @GET
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -100,6 +102,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
+    @Timed
     @GET
     @Produces(APPLICATION_JSON)
     public Response getPaymentMethodByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
@@ -117,6 +120,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
+    @Timed
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
@@ -170,6 +174,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                                );
     }
 
+    @Timed
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -226,6 +231,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                                );
     }
 
+    @Timed
     @DELETE
     @Produces(APPLICATION_JSON)
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")

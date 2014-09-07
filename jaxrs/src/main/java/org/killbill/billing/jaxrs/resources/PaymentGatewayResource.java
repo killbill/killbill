@@ -53,6 +53,7 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.clock.Clock;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -80,6 +81,7 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
         this.paymentGatewayApi = paymentGatewayApi;
     }
 
+    @Timed
     @POST
     @Path("/" + HOSTED + "/" + FORM + "/{" + QUERY_ACCOUNT_ID + ":" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
@@ -117,6 +119,7 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
+    @Timed
     @POST
     @Path("/" + NOTIFICATION + "/{" + QUERY_PAYMENT_PLUGIN_NAME + ":" + ANYTHING_PATTERN + "}")
     @Consumes(WILDCARD)

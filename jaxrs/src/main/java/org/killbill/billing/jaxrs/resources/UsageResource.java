@@ -47,6 +47,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Singleton;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -70,6 +71,7 @@ public class UsageResource extends JaxRsResourceBase {
         this.usageUserApi = usageUserApi;
     }
 
+    @Timed
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -85,6 +87,7 @@ public class UsageResource extends JaxRsResourceBase {
         return Response.status(Status.CREATED).build();
     }
 
+    @Timed
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/{unitType}")
     @Produces(APPLICATION_JSON)
