@@ -38,6 +38,7 @@ import org.killbill.commons.jdbi.guice.DataSourceProvider;
 public class KillbillJdbcRealm extends JdbcRealm {
 
     private static final String KILLBILL_AUTHENTICATION_QUERY = "select api_secret, api_salt from tenants where api_key = ?";
+    private static final String SHIRO_DATA_SOURCE_ID = "shiro";
 
     private final DaoConfig config;
 
@@ -73,7 +74,7 @@ public class KillbillJdbcRealm extends JdbcRealm {
 
     private void configureDataSource() {
         final DataSource realDataSource = new DataSourceProvider(config).get();
-        final DataSource dataSource = new ReferenceableDataSourceSpy<DataSource>(realDataSource);
+        final DataSource dataSource = new ReferenceableDataSourceSpy<DataSource>(realDataSource, SHIRO_DATA_SOURCE_ID);
         setDataSource(dataSource);
     }
 }
