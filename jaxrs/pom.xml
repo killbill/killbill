@@ -61,6 +61,11 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <!-- Required to bump the com.codahale.metrics:metrics-jersey dependency -->
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+        </dependency>
+        <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <scope>provided</scope>
