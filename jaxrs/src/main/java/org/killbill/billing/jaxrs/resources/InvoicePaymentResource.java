@@ -95,7 +95,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         this.invoicePaymentApi = invoicePaymentApi;
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
@@ -124,7 +124,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
-    @Timed
+    //@Timed
     @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
@@ -167,7 +167,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(InvoicePaymentResource.class, "getInvoicePayment", result.getId(), uriInfo.getBaseUri().toString());
     }
 
-    @Timed
+    //@Timed
     @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)
@@ -191,7 +191,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
@@ -201,7 +201,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
     }
 
-    @Timed
+    //@Timed
     @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -217,7 +217,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                         context.createContext(createdBy, reason, comment, request), uriInfo);
     }
 
-    @Timed
+    //@Timed
     @DELETE
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -232,7 +232,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                         context.createContext(createdBy, reason, comment, request));
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
@@ -248,7 +248,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
     }
 
-    @Timed
+    //@Timed
     @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
@@ -264,7 +264,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                 context.createContext(createdBy, reason, comment, request));
     }
 
-    @Timed
+    //@Timed
     @DELETE
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)

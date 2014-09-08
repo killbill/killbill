@@ -85,7 +85,7 @@ public class TransactionResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
-    @Timed
+    //@Timed
     @POST
     @Path("/{transactionId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)

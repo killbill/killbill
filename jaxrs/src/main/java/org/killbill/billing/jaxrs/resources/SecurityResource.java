@@ -70,7 +70,7 @@ public class SecurityResource extends JaxRsResourceBase {
         this.securityApi = securityApi;
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/permissions")
     @Produces(APPLICATION_JSON)
@@ -80,7 +80,7 @@ public class SecurityResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/subject")
     @Produces(APPLICATION_JSON)

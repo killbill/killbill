@@ -72,7 +72,7 @@ public class TagResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
@@ -103,7 +103,7 @@ public class TagResource extends JaxRsResourceBase {
                                                 nextPageUri);
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)

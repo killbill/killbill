@@ -80,7 +80,7 @@ public class TenantResource extends JaxRsResourceBase {
         this.tenantApi = tenantApi;
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/{tenantId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -89,7 +89,7 @@ public class TenantResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(new TenantJson(tenant)).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Produces(APPLICATION_JSON)
     public Response getTenantByApiKey(@QueryParam(QUERY_API_KEY) final String externalKey) throws TenantApiException {
@@ -97,7 +97,7 @@ public class TenantResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(new TenantJson(tenant)).build();
     }
 
-    @Timed
+    //@Timed
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -112,7 +112,7 @@ public class TenantResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId());
     }
 
-    @Timed
+    //@Timed
     @POST
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @Consumes(APPLICATION_JSON)
@@ -129,7 +129,7 @@ public class TenantResource extends JaxRsResourceBase {
         return Response.created(uri).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @Produces(APPLICATION_JSON)
@@ -141,7 +141,7 @@ public class TenantResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
-    @Timed
+    //@Timed
     @DELETE
     @Path("/REGISTER_NOTIFICATION_CALLBACK")
     public Response deletePushNotificationCallbacks(@PathParam("tenantId") final String tenantId,

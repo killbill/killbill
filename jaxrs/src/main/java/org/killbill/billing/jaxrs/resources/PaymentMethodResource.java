@@ -82,7 +82,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -102,7 +102,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Produces(APPLICATION_JSON)
     public Response getPaymentMethodByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
@@ -120,7 +120,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
@@ -174,7 +174,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                                );
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -231,7 +231,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                                );
     }
 
-    @Timed
+    //@Timed
     @DELETE
     @Produces(APPLICATION_JSON)
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
