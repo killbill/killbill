@@ -71,7 +71,7 @@ public class UsageResource extends JaxRsResourceBase {
         this.usageUserApi = usageUserApi;
     }
 
-    @Timed
+    //@Timed
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -87,7 +87,7 @@ public class UsageResource extends JaxRsResourceBase {
         return Response.status(Status.CREATED).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/{unitType}")
     @Produces(APPLICATION_JSON)

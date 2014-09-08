@@ -70,14 +70,14 @@ public class CatalogResource extends JaxRsResourceBase {
         this.catalogService = catalogService;
     }
 
-    @Timed
+    //@Timed
     @GET
     @Produces(APPLICATION_XML)
     public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         return Response.status(Status.OK).entity(XMLWriter.writeXML(catalogService.getCurrentCatalog(), StaticCatalog.class)).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Produces(APPLICATION_JSON)
     public Response getCatalogJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
@@ -100,7 +100,7 @@ public class CatalogResource extends JaxRsResourceBase {
     //        return result;
     //    }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/availableAddons")
     @Produces(APPLICATION_JSON)
@@ -115,7 +115,7 @@ public class CatalogResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(details).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/availableBasePlans")
     @Produces(APPLICATION_JSON)
@@ -129,7 +129,7 @@ public class CatalogResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(details).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/simpleCatalog")
     @Produces(APPLICATION_JSON)

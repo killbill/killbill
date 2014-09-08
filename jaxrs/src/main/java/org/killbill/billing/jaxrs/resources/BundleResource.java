@@ -98,7 +98,7 @@ public class BundleResource extends JaxRsResourceBase {
         this.subscriptionApi = subscriptionApi;
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -110,7 +110,7 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Produces(APPLICATION_JSON)
     public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
@@ -120,7 +120,7 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
@@ -146,7 +146,7 @@ public class BundleResource extends JaxRsResourceBase {
                                                 nextPageUri);
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -174,7 +174,7 @@ public class BundleResource extends JaxRsResourceBase {
                                                 nextPageUri);
     }
 
-    @Timed
+    //@Timed
     @PUT
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + PAUSE)
     @Consumes(APPLICATION_JSON)
@@ -194,7 +194,7 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @Timed
+    //@Timed
     @PUT
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + RESUME)
     @Consumes(APPLICATION_JSON)
@@ -214,7 +214,7 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
@@ -224,7 +224,7 @@ public class BundleResource extends JaxRsResourceBase {
         return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
     }
 
-    @Timed
+    //@Timed
     @POST
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -240,7 +240,7 @@ public class BundleResource extends JaxRsResourceBase {
                                         context.createContext(createdBy, reason, comment, request), uriInfo);
     }
 
-    @Timed
+    //@Timed
     @DELETE
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -255,7 +255,7 @@ public class BundleResource extends JaxRsResourceBase {
                                         context.createContext(createdBy, reason, comment, request));
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
@@ -269,7 +269,7 @@ public class BundleResource extends JaxRsResourceBase {
         return super.getTags(bundle.getAccountId(), bundleId, auditMode, includedDeleted, tenantContext);
     }
 
-    @Timed
+    //@Timed
     @PUT
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
@@ -296,7 +296,7 @@ public class BundleResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundleId, uriInfo.getBaseUri().toString());
     }
 
-    @Timed
+    //@Timed
     @POST
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
@@ -312,7 +312,7 @@ public class BundleResource extends JaxRsResourceBase {
                                 context.createContext(createdBy, reason, comment, request));
     }
 
-    @Timed
+    //@Timed
     @DELETE
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)

@@ -111,7 +111,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         this.subscriptionApi = subscriptionApi;
     }
 
-    @Timed
+    //@Timed
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -123,7 +123,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    //@Timed
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -168,7 +168,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
-    @Timed
+    //@Timed
     @PUT
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
     @Produces(APPLICATION_JSON)
@@ -183,7 +183,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @Timed
+    //@Timed
     @PUT
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
@@ -244,7 +244,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
-    @Timed
+    //@Timed
     @DELETE
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
