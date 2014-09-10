@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -43,7 +45,6 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
     private boolean isCompleted;
     private long initialTimeMilliSec;
 
-
     public CompletionUserRequestBase(final UUID userToken) {
         this.events = new LinkedList<BusInternalEvent>();
         this.userToken = userToken;
@@ -78,7 +79,6 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
             notify();
         }
     }
-
 
     private long currentTimeMillis() {
         return System.nanoTime() / NANO_TO_MILLI_SEC;
@@ -131,7 +131,6 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
                 throw new RuntimeException("Unexpected event type " + curEvent.getBusEventType());
         }
     }
-
 
     @Override
     public void onAccountCreation(final AccountCreationInternalEvent curEvent) {

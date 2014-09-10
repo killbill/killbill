@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -79,6 +81,7 @@ public interface JaxrsResource {
     public static final String QUERY_UNPAID_INVOICES_ONLY = "unpaidInvoicesOnly";
 
     public static final String QUERY_PAYMENT_EXTERNAL = "externalPayment";
+    public static final String QUERY_PAYMENT_AMOUNT = "paymentAmount";
     public static final String QUERY_PAYMENT_WITH_REFUNDS_AND_CHARGEBACKS = "withRefundsAndChargebacks";
     public static final String QUERY_PAYMENT_PLUGIN_NAME = "pluginName";
 
@@ -87,11 +90,16 @@ public interface JaxrsResource {
     public static final String QUERY_CUSTOM_FIELDS = "customFieldList";
 
     public static final String QUERY_PAYMENT_METHOD_PLUGIN_NAME = "pluginName";
-    public static final String QUERY_PAYMENT_METHOD_PLUGIN_INFO = "withPluginInfo";
+    public static final String QUERY_WITH_PLUGIN_INFO = "withPluginInfo";
     public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "isDefault";
 
     public static final String QUERY_PAY_ALL_UNPAID_INVOICES = "payAllUnpaidInvoices";
     public static final String QUERY_PAY_INVOICE = "payInvoice";
+
+    public static final String QUERY_PLUGIN_PROPERTY = "pluginProperty";
+
+    public static final String QUERY_START_TIME = "startTime";
+    public static final String QUERY_END_TIME = "endTime";
 
     public static final String QUERY_BUNDLE_TRANSFER_ADDON = "transferAddOn";
     public static final String QUERY_BUNDLE_TRANSFER_CANCEL_IMM = "cancelImmediately";
@@ -134,8 +142,13 @@ public interface JaxrsResource {
     public static final String PAYMENTS = "payments";
     public static final String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;
 
+    public static final String PAYMENT_TRANSACTIONS = "paymentTransactions";
+    public static final String PAYMENT_TRANSACTIONS_PATH = PREFIX + "/" + PAYMENT_TRANSACTIONS;
+
+    public static final String PAYMENT_GATEWAYS = "paymentGateways";
+    public static final String PAYMENT_GATEWAYS_PATH = PREFIX + "/" + PAYMENT_GATEWAYS;
+
     public static final String REFUNDS = "refunds";
-    public static final String REFUNDS_PATH = PREFIX + "/" + "refunds";
 
     public static final String PAYMENT_METHODS = "paymentMethods";
     public static final String PAYMENT_METHODS_PATH = PREFIX + "/" + PAYMENT_METHODS;
@@ -143,6 +156,9 @@ public interface JaxrsResource {
 
     public static final String CREDITS = "credits";
     public static final String CREDITS_PATH = PREFIX + "/" + CREDITS;
+
+    public static final String INVOICE_PAYMENTS = "invoicePayments";
+    public static final String INVOICE_PAYMENTS_PATH = PREFIX + "/" + INVOICE_PAYMENTS;
 
     public static final String CHARGEBACKS = "chargebacks";
     public static final String CHARGEBACKS_PATH = PREFIX + "/" + CHARGEBACKS;
@@ -165,6 +181,9 @@ public interface JaxrsResource {
     public static final String TENANTS = "tenants";
     public static final String TENANTS_PATH = PREFIX + "/" + TENANTS;
 
+    public static final String USAGES = "usages";
+    public static final String USAGES_PATH = PREFIX + "/" + USAGES;
+
     public static final String EXPORT = "export";
     public static final String EXPORT_PATH = PREFIX + "/" + EXPORT;
 
@@ -177,4 +196,10 @@ public interface JaxrsResource {
     public static final String PAUSE = "pause";
     public static final String RESUME = "resume";
 
+    public static final String AUTHORIZATION = "authorization";
+    public static final String CAPTURE = "capture";
+
+    public static final String HOSTED = "hosted";
+    public static final String FORM = "form";
+    public static final String NOTIFICATION = "notification";
 }

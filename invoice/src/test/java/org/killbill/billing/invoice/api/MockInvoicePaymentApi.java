@@ -16,19 +16,11 @@
 
 package org.killbill.billing.invoice.api;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.invoice.model.DefaultInvoicePayment;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 
 public class MockInvoicePaymentApi implements InvoicePaymentApi {
@@ -38,28 +30,6 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
 
     public void add(final Invoice invoice) {
         invoices.add(invoice);
-    }
-
-    @Override
-    public List<Invoice> getAllInvoicesByAccount(final UUID accountId, final TenantContext context) {
-        final ArrayList<Invoice> result = new ArrayList<Invoice>();
-
-        for (final Invoice invoice : invoices) {
-            if (accountId.equals(invoice.getAccountId())) {
-                result.add(invoice);
-            }
-        }
-        return result;
-    }
-
-    @Override
-    public Invoice getInvoice(final UUID invoiceId, final TenantContext context) {
-        for (final Invoice invoice : invoices) {
-            if (invoiceId.equals(invoice.getId())) {
-                return invoice;
-            }
-        }
-        return null;
     }
 
     @Override
@@ -74,82 +44,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment getInvoicePaymentForAttempt(final UUID paymentId, final TenantContext context) {
-        for (final InvoicePayment invoicePayment : invoicePayments) {
-            if (paymentId.equals(invoicePayment.getPaymentId()) && invoicePayment.getType() == InvoicePaymentType.ATTEMPT) {
-                return invoicePayment;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public InvoicePayment createChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
-        InvoicePayment existingPayment = null;
-        for (final InvoicePayment payment : invoicePayments) {
-            if (payment.getId() == invoicePaymentId) {
-                existingPayment = payment;
-                break;
-            }
-        }
-
-        if (existingPayment != null) {
-            invoicePayments.add(new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, null, null, DateTime.now(DateTimeZone.UTC), amount,
-                                                          existingPayment.getCurrency(), existingPayment.getProcessedCurrency(), null, existingPayment.getId()));
-        }
-
-        return existingPayment;
-    }
-
-    @Override
-    public InvoicePayment createChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
-        InvoicePayment existingPayment = null;
-        for (final InvoicePayment payment : invoicePayments) {
-            if (payment.getId() == invoicePaymentId) {
-                existingPayment = payment;
-            }
-        }
-
-        if (existingPayment != null) {
-            this.createChargeback(invoicePaymentId, existingPayment.getAmount(), context);
-        }
-
-        return existingPayment;
-    }
-
-    @Override
-    public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId, final TenantContext context) {
-        BigDecimal amount = BigDecimal.ZERO;
-        for (final InvoicePayment payment : invoicePayments) {
-            if (payment.getId().equals(invoicePaymentId)) {
-                amount = amount.add(payment.getAmount());
-            }
-
-            if (payment.getLinkedInvoicePaymentId().equals(invoicePaymentId)) {
-                amount = amount.add(payment.getAmount());
-            }
-        }
-
-        return amount;
-    }
-
-    @Override
-    public List<InvoicePayment> getChargebacksByAccountId(final UUID accountId, final TenantContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public UUID getAccountIdFromInvoicePaymentId(final UUID uuid, final TenantContext context) throws InvoiceApiException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId, final TenantContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public InvoicePayment getChargebackById(final UUID chargebackId, final TenantContext context) {
+    public List<InvoicePayment> getInvoicePaymentsByAccount(final UUID uuid, final TenantContext tenantContext) {
         throw new UnsupportedOperationException();
     }
 }

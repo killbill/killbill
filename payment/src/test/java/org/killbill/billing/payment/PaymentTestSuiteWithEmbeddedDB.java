@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,26 +18,22 @@
 
 package org.killbill.billing.payment;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
-import org.killbill.billing.TestKillbillConfigSource;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApi;
-import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
+import org.killbill.billing.payment.core.PaymentMethodProcessor;
+import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.TestPaymentModuleWithEmbeddedDB;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
-import org.killbill.billing.payment.retry.FailedPaymentRetryService;
-import org.killbill.billing.payment.retry.PluginFailureRetryService;
-import org.killbill.billing.util.KillbillConfigSource;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.bus.api.PersistentBus;
+import org.killbill.commons.profiling.Profiling;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -50,17 +48,13 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected PaymentConfig paymentConfig;
     @Inject
-    protected PaymentProcessor paymentProcessor;
-    @Inject
     protected PaymentMethodProcessor paymentMethodProcessor;
+    @Inject
+    protected PaymentProcessor paymentProcessor;
     @Inject
     protected InvoiceInternalApi invoiceApi;
     @Inject
     protected OSGIServiceRegistration<PaymentPluginApi> registry;
-    @Inject
-    protected FailedPaymentRetryService retryService;
-    @Inject
-    protected PluginFailureRetryService pluginRetryService;
     @Inject
     protected PersistentBus eventBus;
     @Inject
@@ -68,15 +62,17 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected AccountInternalApi accountApi;
     @Inject
+    protected PaymentStateMachineHelper paymentSMHelper;
+    @Inject
     protected PaymentDao paymentDao;
     @Inject
     protected TestPaymentHelper testHelper;
 
     @Override
-    protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {
-        return new TestKillbillConfigSource("/payment.properties",
-                                            ImmutableMap.<String, String>of("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME,
-                                                                            "killbill.payment.engine.events.off", "false"));
+    protected KillbillConfigSource getConfigSource() {
+        return getConfigSource("/payment.properties",
+                               ImmutableMap.<String, String>of("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME,
+                                                               "killbill.payment.engine.events.off", "false"));
     }
 
     @BeforeClass(groups = "slow")
@@ -89,6 +85,8 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         eventBus.start();
+        Profiling.resetPerThreadProfilingData();
+
     }
 
     @AfterMethod(groups = "slow")

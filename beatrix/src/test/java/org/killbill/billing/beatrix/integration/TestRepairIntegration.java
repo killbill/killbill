@@ -148,6 +148,8 @@ public class TestRepairIntegration extends TestIntegrationBase {
 
             assertListenerStatus();
         }
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     protected SubscriptionBaseTimeline createSubscriptionReapir(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {

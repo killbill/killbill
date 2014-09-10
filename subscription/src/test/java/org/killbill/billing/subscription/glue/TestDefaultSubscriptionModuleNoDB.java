@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,26 +18,19 @@
 
 package org.killbill.billing.subscription.glue;
 
-import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
-
 import org.killbill.billing.GuicyKillbillTestNoDBModule;
 import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
-import org.killbill.notificationq.MockNotificationQueueService;
-import org.killbill.notificationq.api.NotificationQueueConfig;
-import org.killbill.notificationq.api.NotificationQueueService;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
 import org.killbill.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
 import org.killbill.billing.subscription.engine.dao.RepairSubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
-import org.killbill.billing.util.bus.InMemoryBusModule;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.name.Names;
 
 public class TestDefaultSubscriptionModuleNoDB extends TestDefaultSubscriptionModule {
 
-    public TestDefaultSubscriptionModuleNoDB(final ConfigSource configSource) {
+    public TestDefaultSubscriptionModuleNoDB(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
@@ -47,28 +42,12 @@ public class TestDefaultSubscriptionModuleNoDB extends TestDefaultSubscriptionMo
         bind(RepairSubscriptionDao.class).asEagerSingleton();
     }
 
-    private void installNotificationQueue() {
-        bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
-        configureNotificationQueueConfig();
-    }
-
-    protected void configureNotificationQueueConfig() {
-        final NotificationQueueConfig config = new ConfigurationObjectFactory(configSource).buildWithReplacements(NotificationQueueConfig.class,
-                                                                                                                  ImmutableMap.<String, String>of("instanceName", "main"));
-        bind(NotificationQueueConfig.class).toInstance(config);
-    }
-
     @Override
     protected void configure() {
-
-        install(new GuicyKillbillTestNoDBModule());
+        install(new GuicyKillbillTestNoDBModule(configSource));
 
         super.configure();
 
-        install(new InMemoryBusModule(configSource));
-        installNotificationQueue();
-
-        install(new MockNonEntityDaoModule());
-
+        install(new MockNonEntityDaoModule(configSource));
     }
 }

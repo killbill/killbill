@@ -18,11 +18,6 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.UUID;
 
-import org.killbill.billing.catalog.api.Recurring;
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Listing;
@@ -30,7 +25,11 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.Recurring;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class TestPlanDetailJson extends JaxrsTestSuiteNoDB {
 
@@ -41,18 +40,18 @@ public class TestPlanDetailJson extends JaxrsTestSuiteNoDB {
         final BillingPeriod billingPeriod = BillingPeriod.ANNUAL;
         final String priceListName = UUID.randomUUID().toString();
         final PlanDetailJson planDetailJason = new PlanDetailJson(productName, planName, billingPeriod, priceListName, null);
-        Assert.assertEquals(planDetailJason.getProductName(), productName);
-        Assert.assertEquals(planDetailJason.getPlanName(), planName);
-        Assert.assertEquals(planDetailJason.getBillingPeriod(), billingPeriod);
-        Assert.assertEquals(planDetailJason.getPriceListName(), priceListName);
-        Assert.assertEquals(planDetailJason.getFinalPhasePrice(), null);
+        Assert.assertEquals(planDetailJason.getProduct(), productName);
+        Assert.assertEquals(planDetailJason.getPlan(), planName);
+        Assert.assertEquals(planDetailJason.getFinalPhaseBillingPeriod(), billingPeriod);
+        Assert.assertEquals(planDetailJason.getPriceList(), priceListName);
+        Assert.assertEquals(planDetailJason.getFinalPhaseRecurringPrice(), null);
 
         final String asJson = mapper.writeValueAsString(planDetailJason);
-        Assert.assertEquals(asJson, "{\"productName\":\"" + planDetailJason.getProductName() + "\"," +
-                                    "\"planName\":\"" + planDetailJason.getPlanName() + "\"," +
-                                    "\"billingPeriod\":\"" + planDetailJason.getBillingPeriod().toString() + "\"," +
-                                    "\"priceListName\":\"" + planDetailJason.getPriceListName() + "\"," +
-                                    "\"finalPhasePrice\":null}");
+        Assert.assertEquals(asJson, "{\"product\":\"" + planDetailJason.getProduct() + "\"," +
+                                    "\"plan\":\"" + planDetailJason.getPlan() + "\"," +
+                                    "\"priceList\":\"" + planDetailJason.getPriceList() + "\"," +
+                                    "\"finalPhaseBillingPeriod\":\"" + planDetailJason.getFinalPhaseBillingPeriod().toString() + "\"," +
+                                    "\"finalPhaseRecurringPrice\":null}");
 
         final PlanDetailJson fromJson = mapper.readValue(asJson, PlanDetailJson.class);
         Assert.assertEquals(fromJson, planDetailJason);
@@ -83,10 +82,10 @@ public class TestPlanDetailJson extends JaxrsTestSuiteNoDB {
         Mockito.when(listing.getPriceList()).thenReturn(priceList);
 
         final PlanDetailJson planDetailJson = new PlanDetailJson(listing);
-        Assert.assertEquals(planDetailJson.getProductName(), plan.getProduct().getName());
-        Assert.assertEquals(planDetailJson.getPlanName(), plan.getName());
-        Assert.assertEquals(planDetailJson.getBillingPeriod(), plan.getRecurringBillingPeriod());
-        Assert.assertEquals(planDetailJson.getPriceListName(), priceList.getName());
-        Assert.assertEquals(planDetailJson.getFinalPhasePrice().size(), 0);
+        Assert.assertEquals(planDetailJson.getProduct(), plan.getProduct().getName());
+        Assert.assertEquals(planDetailJson.getPlan(), plan.getName());
+        Assert.assertEquals(planDetailJson.getFinalPhaseBillingPeriod(), plan.getRecurringBillingPeriod());
+        Assert.assertEquals(planDetailJson.getPriceList(), priceList.getName());
+        Assert.assertEquals(planDetailJson.getFinalPhaseRecurringPrice().size(), 0);
     }
 }

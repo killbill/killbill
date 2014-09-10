@@ -68,6 +68,8 @@ public class InvoiceApiExceptionMapper extends ExceptionMapperBase implements Ex
             return buildBadRequestResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.EXTERNAL_CHARGE_AMOUNT_INVALID.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.EXTERNAL_CHARGE_CURRENCY_INVALID.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
         } else {
             return fallback(exception, uriInfo);
         }

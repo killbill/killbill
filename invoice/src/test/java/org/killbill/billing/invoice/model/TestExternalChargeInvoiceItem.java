@@ -20,12 +20,11 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class TestExternalChargeInvoiceItem extends InvoiceTestSuiteNoDB {
 
@@ -46,7 +45,8 @@ public class TestExternalChargeInvoiceItem extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(item.getBundleId(), bundleId);
         Assert.assertEquals(item.getCurrency(), currency);
         Assert.assertEquals(item.getInvoiceItemType(), InvoiceItemType.EXTERNAL_CHARGE);
-        Assert.assertEquals(item.getPlanName(), description);
+        Assert.assertEquals(item.getDescription(), description);
+        Assert.assertNull(item.getPlanName());
         Assert.assertNull(item.getEndDate());
         Assert.assertNull(item.getLinkedItemId());
         Assert.assertNull(item.getPhaseName());

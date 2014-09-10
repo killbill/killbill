@@ -87,7 +87,7 @@ public class OverdueWrapperFactory {
 
                 @SuppressWarnings("unchecked")
                 @Override
-                protected DefaultOverdueState[] getStates() {
+                public DefaultOverdueState[] getStates() {
                     return new DefaultOverdueState[0];
                 }
 

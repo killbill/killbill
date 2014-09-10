@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,9 +18,8 @@
 
 package org.killbill.billing.account.glue;
 
-import org.skife.config.ConfigSource;
-
 import org.killbill.billing.mock.glue.MockSubscriptionModule;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
@@ -27,7 +28,7 @@ import org.killbill.billing.util.glue.TagStoreModule;
 
 public class TestAccountModule extends DefaultAccountModule {
 
-    public TestAccountModule(final ConfigSource configSource) {
+    public TestAccountModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
@@ -35,12 +36,12 @@ public class TestAccountModule extends DefaultAccountModule {
     protected void configure() {
         super.configure();
 
-        install(new AuditModule());
+        install(new AuditModule(configSource));
         install(new CacheModule(configSource));
-        install(new CallContextModule());
-        install(new CustomFieldModule());
+        install(new CallContextModule(configSource));
+        install(new CustomFieldModule(configSource));
         // Needed for Audit
-        install(new MockSubscriptionModule());
-        install(new TagStoreModule());
+        install(new MockSubscriptionModule(configSource));
+        install(new TagStoreModule(configSource));
     }
 }

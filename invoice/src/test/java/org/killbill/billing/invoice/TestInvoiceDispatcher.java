@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -25,22 +27,17 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.catalog.api.BillingMode;
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.clock.ClockMock;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -49,11 +46,15 @@ import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
+import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
+import org.killbill.clock.ClockMock;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
@@ -89,9 +90,9 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final DateTime target = new DateTime();
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock);
+                                                                   clock, controllerDispatcher);
 
         Invoice invoice = dispatcher.processAccount(accountId, target, true, context);
         Assert.assertNotNull(invoice);
@@ -142,9 +143,9 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock);
+                                                                   clock, controllerDispatcher);
 
         final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), false, context);
         Assert.assertNotNull(invoice);
@@ -189,22 +190,20 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testCreateNextFutureNotificationDate() throws Exception {
 
-
         final LocalDate startDate = new LocalDate("2012-10-26");
         final LocalDate endDate = new LocalDate("2012-11-26");
-
 
         ((ClockMock) clock).setTime(new DateTime(2012, 10, 13, 1, 12, 23, DateTimeZone.UTC));
 
         final DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.forID("Pacific/Pitcairn"), clock);
 
         final InvoiceItemModelDao item = new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.RECURRING, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                                                                 "planName", "phaseName", null, startDate, endDate, new BigDecimal("23.9"), new BigDecimal("23.9"), Currency.EUR, null);
+                                                                 null, "planName", "phaseName", null, startDate, endDate, new BigDecimal("23.9"), new BigDecimal("23.9"), Currency.EUR, null);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock);
+                                                                   clock, controllerDispatcher);
 
         final Map<UUID, List<DateTime>> result = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), null, dateAndTimeZoneContext);
 

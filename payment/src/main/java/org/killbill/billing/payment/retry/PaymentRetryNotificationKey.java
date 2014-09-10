@@ -13,19 +13,33 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.killbill.billing.payment.retry;
 
 import java.util.UUID;
 
-import org.killbill.notificationq.DefaultUUIDNotificationKey;
+import org.killbill.notificationq.api.NotificationEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class PaymentRetryNotificationKey extends DefaultUUIDNotificationKey {
+public class PaymentRetryNotificationKey implements NotificationEvent {
+
+    private final UUID attemptId;
+    private final String pluginName;
 
     @JsonCreator
-    public PaymentRetryNotificationKey(@JsonProperty("uuidKey") UUID uuidKey) {
-        super(uuidKey);
+    public PaymentRetryNotificationKey(@JsonProperty("attemptId") UUID attemptId,
+                                       @JsonProperty("pluginName") String pluginName) {
+        this.attemptId = attemptId;
+        this.pluginName = pluginName;
+    }
+
+    public UUID getAttemptId() {
+        return attemptId;
+    }
+
+    public String getPluginName() {
+        return pluginName;
     }
 }

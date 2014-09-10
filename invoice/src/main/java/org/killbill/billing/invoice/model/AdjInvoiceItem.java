@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -23,23 +25,16 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 
 public abstract class AdjInvoiceItem extends InvoiceItemBase {
 
     AdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId,
-                   final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        this(id, createdDate, invoiceId, accountId, startDate, endDate, amount, currency, null);
+                   final LocalDate startDate, final LocalDate endDate, @Nullable final String description,
+                   final BigDecimal amount, final Currency currency, @Nullable final UUID reversingId) {
+        super(id, createdDate, invoiceId, accountId, null, null, description, null, null, null, startDate, endDate, amount, currency, reversingId);
     }
-
-    AdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId,
-                   final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, @Nullable final UUID reversingId) {
-        super(id, createdDate, invoiceId, accountId, null, null, null, null, null, startDate, endDate, amount, currency, reversingId);
-    }
-
 
     @Override
     public abstract InvoiceItemType getInvoiceItemType();

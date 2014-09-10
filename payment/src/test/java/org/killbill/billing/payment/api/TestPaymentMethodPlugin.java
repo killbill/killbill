@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,7 +26,7 @@ public class TestPaymentMethodPlugin extends TestPaymentMethodPluginBase impleme
     private final UUID kbPaymentMethodId;
     private final String externalPaymentMethodId;
     private final boolean isDefaultPaymentMethod;
-    private final List<PaymentMethodKVInfo> properties;
+    private final List<PluginProperty> properties;
 
     public TestPaymentMethodPlugin(final UUID kbPaymentMethodId, final PaymentMethodPlugin src, final String externalPaymentId) {
         this.kbPaymentMethodId = kbPaymentMethodId;
@@ -49,7 +51,7 @@ public class TestPaymentMethodPlugin extends TestPaymentMethodPluginBase impleme
     }
 
     @Override
-    public List<PaymentMethodKVInfo> getProperties() {
+    public List<PluginProperty> getProperties() {
         return properties;
     }
 }

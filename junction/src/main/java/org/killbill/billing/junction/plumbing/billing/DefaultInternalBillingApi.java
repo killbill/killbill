@@ -22,6 +22,13 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
+import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,19 +64,23 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     private final CatalogService catalogService;
     private final BlockingCalculator blockCalculator;
     private final TagInternalApi tagApi;
+    private final Clock clock;
 
     @Inject
     public DefaultInternalBillingApi(final AccountInternalApi accountApi,
                                      final BillCycleDayCalculator bcdCalculator,
                                      final SubscriptionBaseInternalApi subscriptionApi,
                                      final BlockingCalculator blockCalculator,
-                                     final CatalogService catalogService, final TagInternalApi tagApi) {
+                                     final CatalogService catalogService,
+                                     final TagInternalApi tagApi,
+                                     final Clock clock) {
         this.accountApi = accountApi;
         this.bcdCalculator = bcdCalculator;
         this.subscriptionApi = subscriptionApi;
         this.catalogService = catalogService;
         this.blockCalculator = blockCalculator;
         this.tagApi = tagApi;
+        this.clock = clock;
     }
 
     @Override
@@ -133,6 +144,12 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         boolean updatedAccountBCD = false;
         for (final SubscriptionBase subscription : subscriptions) {
+
+            // The subscription did not even start, so there is nothing to do yet, we can skip and avoid some NPE down the line when calculating the BCD
+            if (subscription.getState() == null) {
+                continue;
+            }
+
             for (final EffectiveSubscriptionInternalEvent transition : subscriptionApi.getBillingTransitions(subscription, context)) {
                 try {
                     final int bcdLocal = bcdCalculator.calculateBcd(bundle, subscription, transition, account, context);

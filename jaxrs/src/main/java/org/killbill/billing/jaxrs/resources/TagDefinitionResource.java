@@ -38,6 +38,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.TagDefinitionJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -50,6 +51,7 @@ import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.tag.TagDefinition;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -66,11 +68,13 @@ public class TagDefinitionResource extends JaxRsResourceBase {
                                  final CustomFieldUserApi customFieldUserApi,
                                  final AuditUserApi auditUserApi,
                                  final AccountUserApi accountUserApi,
+                                 final PaymentApi paymentApi,
                                  final Clock clock,
                                  final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
+    //@Timed
     @GET
     @Produces(APPLICATION_JSON)
     public Response getTagDefinitions(@javax.ws.rs.core.Context final HttpServletRequest request,
@@ -87,6 +91,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
+    //@Timed
     @GET
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -100,6 +105,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
+    //@Timed
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -117,6 +123,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId());
     }
 
+    //@Timed
     @DELETE
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)

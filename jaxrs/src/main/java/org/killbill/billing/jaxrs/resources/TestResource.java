@@ -34,22 +34,22 @@ import javax.ws.rs.core.Response.Status;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.clock.Clock;
-import org.killbill.clock.ClockMock;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.notificationq.api.NotificationQueue;
-import org.killbill.notificationq.api.NotificationQueueService;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.clock.Clock;
+import org.killbill.clock.ClockMock;
+import org.killbill.notificationq.api.NotificationQueue;
+import org.killbill.notificationq.api.NotificationQueueService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -79,13 +79,12 @@ public class TestResource extends JaxRsResourceBase {
     @Inject
     public TestResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi,
                         final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final RecordIdApi recordIdApi,
-                        final NotificationQueueService notificationQueueService,
+                        final NotificationQueueService notificationQueueService, final PaymentApi paymentApi,
                         final Clock clock, final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.notificationQueueService = notificationQueueService;
         this.recordIdApi = recordIdApi;
     }
-
 
     public final class ClockResource {
 
@@ -148,7 +147,6 @@ public class TestResource extends JaxRsResourceBase {
         return getCurrentTime(timeZoneStr);
     }
 
-
     @PUT
     @Path("/clock")
     @Produces(APPLICATION_JSON)
@@ -176,9 +174,7 @@ public class TestResource extends JaxRsResourceBase {
         return getCurrentTime(timeZoneStr);
     }
 
-
     private void waitForNotificationToComplete(final HttpServletRequest request, final Long timeoutSec) {
-
         final TenantContext tenantContext = context.createContext(request);
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
         final List<NotificationQueue> queues = notificationQueueService.getNotificationQueues();
@@ -193,17 +189,15 @@ public class TestResource extends JaxRsResourceBase {
                     nbTryLeft--;
                 }
             }
-            ;
-        } catch (InterruptedException ignore) {
+        } catch (final InterruptedException ignore) {
         }
     }
 
-    private boolean areAllNotificationsProcessed(final List<NotificationQueue> queues, final Long tenantRecordId) {
-
+    private boolean areAllNotificationsProcessed(final Iterable<NotificationQueue> queues, final Long tenantRecordId) {
         final Iterable<NotificationQueue> filtered = Iterables.filter(queues, new Predicate<NotificationQueue>() {
             @Override
             public boolean apply(@Nullable final NotificationQueue input) {
-                return input.getReadyNotificationEntriesForSearchKey2(tenantRecordId) > 0;
+                return input.getFutureNotificationForSearchKey2(tenantRecordId).size() > 0;
             }
         });
         return !filtered.iterator().hasNext();

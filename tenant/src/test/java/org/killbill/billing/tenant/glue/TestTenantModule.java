@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,14 +18,13 @@
 
 package org.killbill.billing.tenant.glue;
 
-import org.skife.config.ConfigSource;
-
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 
 public class TestTenantModule extends TenantModule {
 
-    public TestTenantModule(final ConfigSource configSource) {
+    public TestTenantModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
@@ -32,6 +33,6 @@ public class TestTenantModule extends TenantModule {
         super.configure();
 
         install(new CacheModule(configSource));
-        install(new CallContextModule());
+        install(new CallContextModule(configSource));
     }
 }

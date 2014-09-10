@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.events.BusEventBase;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 
@@ -31,20 +31,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfoInternalEvent {
 
     private final UUID accountId;
-    private final UUID invoiceId;
     private final UUID paymentId;
     private final BigDecimal amount;
-    private final Integer paymentNumber;
-    private final PaymentStatus status;
+    private final Currency currency;
+    private final TransactionStatus status;
+    private final TransactionType transactionType;
     private final DateTime effectiveDate;
 
     @JsonCreator
     public DefaultPaymentInfoEvent(@JsonProperty("accountId") final UUID accountId,
-                                   @JsonProperty("invoiceId") final UUID invoiceId,
                                    @JsonProperty("paymentId") final UUID paymentId,
                                    @JsonProperty("amount") final BigDecimal amount,
-                                   @JsonProperty("paymentNumber") final Integer paymentNumber,
-                                   @JsonProperty("status") final PaymentStatus status,
+                                   @JsonProperty("currency") final Currency currency,
+                                   @JsonProperty("status") final TransactionStatus status,
+                                   @JsonProperty("transactionType")  final TransactionType transactionType,
                                    @JsonProperty("extFirstPaymentRefId") final String extFirstPaymentRefId /* TODO for backward compatibility only */,
                                    @JsonProperty("extSecondPaymentRefId") final String extSecondPaymentRefId /* TODO for backward compatibility only */,
                                    @JsonProperty("effectiveDate") final DateTime effectiveDate,
@@ -53,22 +53,25 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
                                    @JsonProperty("userToken") final UUID userToken) {
         super(searchKey1, searchKey2, userToken);
         this.accountId = accountId;
-        this.invoiceId = invoiceId;
         this.paymentId = paymentId;
         this.amount = amount;
-        this.paymentNumber = paymentNumber;
+        this.currency = currency;
         this.status = status;
+        this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;
     }
 
-    public DefaultPaymentInfoEvent(final UUID accountId, final UUID invoiceId,
-                                   final UUID paymentId, final BigDecimal amount, final Integer paymentNumber,
-                                   final PaymentStatus status,
+    public DefaultPaymentInfoEvent(final UUID accountId,
+                                   final UUID paymentId,
+                                   final BigDecimal amount,
+                                   final Currency currency,
+                                   final TransactionStatus status,
+                                   final TransactionType transactionType,
                                    final DateTime effectiveDate,
                                    final Long searchKey1,
                                    final Long searchKey2,
                                    final UUID userToken) {
-        this(accountId, invoiceId, paymentId, amount, paymentNumber, status, null, null,
+        this(accountId, paymentId, amount, currency, status, transactionType, null, null,
              effectiveDate, searchKey1, searchKey2, userToken);
     }
 
@@ -78,20 +81,20 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         return BusInternalEventType.PAYMENT_INFO;
     }
 
-
     @Override
     public UUID getAccountId() {
         return accountId;
     }
 
-    @Override
-    public UUID getInvoiceId() {
-        return invoiceId;
-    }
 
     @Override
     public BigDecimal getAmount() {
         return amount;
+    }
+
+    @Override
+    public Currency getCurrency() {
+        return currency;
     }
 
     @Override
@@ -105,12 +108,12 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
     }
 
     @Override
-    public Integer getPaymentNumber() {
-        return paymentNumber;
+    public TransactionType getTransactionType() {
+        return transactionType;
     }
 
     @Override
-    public PaymentStatus getStatus() {
+    public TransactionStatus getStatus() {
         return status;
     }
 
@@ -119,11 +122,11 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         final StringBuilder sb = new StringBuilder();
         sb.append("DefaultPaymentInfoEvent");
         sb.append("{accountId=").append(accountId);
-        sb.append(", invoiceId=").append(invoiceId);
         sb.append(", paymentId=").append(paymentId);
         sb.append(", amount=").append(amount);
-        sb.append(", paymentNumber=").append(paymentNumber);
+        sb.append(", currency=").append(currency);
         sb.append(", status=").append(status);
+        sb.append(", transactionType=").append(transactionType);
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append('}');
         return sb.toString();
@@ -139,11 +142,9 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         result = prime * result
                  + ((effectiveDate == null) ? 0 : effectiveDate.hashCode());
         result = prime * result
-                 + ((invoiceId == null) ? 0 : invoiceId.hashCode());
-        result = prime * result
                  + ((paymentId == null) ? 0 : paymentId.hashCode());
         result = prime * result
-                 + ((paymentNumber == null) ? 0 : paymentNumber.hashCode());
+                 + ((currency == null) ? 0 : currency.hashCode());
         result = prime * result + ((status == null) ? 0 : status.hashCode());
         return result;
     }
@@ -167,6 +168,13 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         } else if (!accountId.equals(other.accountId)) {
             return false;
         }
+        if (transactionType == null) {
+            if (other.transactionType != null) {
+                return false;
+            }
+        } else if (!transactionType.equals(other.transactionType)) {
+            return false;
+        }
         if (amount == null) {
             if (other.amount != null) {
                 return false;
@@ -181,13 +189,6 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         } else if (effectiveDate.compareTo(other.effectiveDate) != 0) {
             return false;
         }
-        if (invoiceId == null) {
-            if (other.invoiceId != null) {
-                return false;
-            }
-        } else if (!invoiceId.equals(other.invoiceId)) {
-            return false;
-        }
         if (paymentId == null) {
             if (other.paymentId != null) {
                 return false;
@@ -195,11 +196,11 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         } else if (!paymentId.equals(other.paymentId)) {
             return false;
         }
-        if (paymentNumber == null) {
-            if (other.paymentNumber != null) {
+        if (currency == null) {
+            if (other.currency != null) {
                 return false;
             }
-        } else if (!paymentNumber.equals(other.paymentNumber)) {
+        } else if (!currency.equals(other.currency)) {
             return false;
         }
         if (status != other.status) {

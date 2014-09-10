@@ -32,7 +32,7 @@ public class OverdueStatesAccount extends DefaultOverdueStateSet {
     private DefaultOverdueState[] accountOverdueStates = new DefaultOverdueState[0];
 
     @Override
-    protected DefaultOverdueState[] getStates() {
+    public DefaultOverdueState[] getStates() {
         return accountOverdueStates;
     }
 

@@ -20,7 +20,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 
-import org.killbill.billing.util.config.catalog.XMLSchemaGenerator;
+import org.killbill.xmlloader.XMLSchemaGenerator;
 
 public class CreateCatalogSchema {
 

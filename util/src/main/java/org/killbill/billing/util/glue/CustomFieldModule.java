@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,14 +18,18 @@
 
 package org.killbill.billing.util.glue;
 
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.customfield.api.DefaultCustomFieldUserApi;
-import org.killbill.billing.util.customfield.dao.DefaultCustomFieldDao;
 import org.killbill.billing.util.customfield.dao.CustomFieldDao;
+import org.killbill.billing.util.customfield.dao.DefaultCustomFieldDao;
 
-import com.google.inject.AbstractModule;
+public class CustomFieldModule extends KillBillModule {
 
-public class CustomFieldModule extends AbstractModule {
+    public CustomFieldModule(final KillbillConfigSource configSource) {
+        super(configSource);
+    }
+
     @Override
     protected void configure() {
         installCustomFieldDao();
@@ -37,5 +43,4 @@ public class CustomFieldModule extends AbstractModule {
     protected void installCustomFieldDao() {
         bind(CustomFieldDao.class).to(DefaultCustomFieldDao.class).asEagerSingleton();
     }
-
 }

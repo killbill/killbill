@@ -18,6 +18,8 @@ package org.killbill.billing.invoice.template.translator;
 
 public interface InvoiceStrings {
 
+    String getInvoiceEmailSubject();
+
     String getInvoiceTitle();
 
     String getInvoiceDate();

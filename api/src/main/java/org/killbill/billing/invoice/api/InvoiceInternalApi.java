@@ -46,6 +46,10 @@ public interface InvoiceInternalApi {
 
     public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
 
+    public InvoicePayment getInvoicePaymentForRefund(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
+
+    public InvoicePayment getInvoicePaymentForChargeback(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
+
     public Invoice getInvoiceForPaymentId(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
 
     /**
@@ -55,13 +59,16 @@ public interface InvoiceInternalApi {
      * @param amount                    amount to refund
      * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
      * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
-     * @param paymentCookieId           payment cookie id
+     * @param transactionExternalKey    refund transaction externalKey
      * @param context                   the call callcontext
      * @return the created invoice payment object associated with this refund
      * @throws InvoiceApiException
      */
     public InvoicePayment createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
-                                       UUID paymentCookieId, InternalCallContext context) throws InvoiceApiException;
+                                       String transactionExternalKey, InternalCallContext context) throws InvoiceApiException;
+
+
+    public InvoicePayment createChargeback(UUID paymentId, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
 
     /**
      * Rebalance CBA for account which have credit and unpaid invoices

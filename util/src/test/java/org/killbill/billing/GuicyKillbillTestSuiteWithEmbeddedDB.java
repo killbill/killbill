@@ -19,14 +19,13 @@ package org.killbill.billing;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
+import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
-
-import org.killbill.commons.embeddeddb.EmbeddedDB;
 
 public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite {
 
@@ -43,13 +42,13 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
     @BeforeSuite(groups = "slow")
     public void beforeSuite() throws Exception {
-        DBTestingHelper.start();
+        DBTestingHelper.get().start();
     }
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         try {
-            DBTestingHelper.get().cleanupAllTables();
+            DBTestingHelper.get().getInstance().cleanupAllTables();
         } catch (final Exception ignored) {
         }
     }
@@ -59,13 +58,13 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         if (hasFailed()) {
             log.error("**********************************************************************************************");
             log.error("*** TESTS HAVE FAILED - LEAVING DB RUNNING FOR DEBUGGING - MAKE SURE TO KILL IT ONCE DONE ****");
-            log.error(DBTestingHelper.get().getCmdLineConnectionString());
+            log.error(DBTestingHelper.get().getInstance().getCmdLineConnectionString());
             log.error("**********************************************************************************************");
             return;
         }
 
         try {
-            DBTestingHelper.get().stop();
+            DBTestingHelper.get().getInstance().stop();
         } catch (final Exception ignored) {
         }
     }

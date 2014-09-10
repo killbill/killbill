@@ -50,6 +50,8 @@ import org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.usage.api.UsageUserApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -72,13 +74,15 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private final InvoiceConfig config;
     private final UsageUserApi usageApi;
     private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
-    public DefaultInvoiceGenerator(final Clock clock, final UsageUserApi usageApi, final InvoiceConfig config, final NonEntityDao nonEntityDao) {
+    public DefaultInvoiceGenerator(final Clock clock, final UsageUserApi usageApi, final InvoiceConfig config, final NonEntityDao nonEntityDao, final CacheControllerDispatcher controllerDispatcher) {
         this.clock = clock;
         this.config = config;
         this.usageApi = usageApi;
         this.nonEntityDao = nonEntityDao;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     /*
@@ -105,7 +109,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         final List<InvoiceItem> usageItems = generateUsageInvoiceItems(invoiceId, events, existingInvoices, targetDate, context);
         invoice.addInvoiceItems(usageItems);
 
-        return inAdvanceItems.size() != 0 ? invoice : null;
+        return invoice.getInvoiceItems().size() != 0 ? invoice : null;
     }
 
     // STEPH_USAGE Only deals with consumable in arrear usage billing.
@@ -113,7 +117,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                                         @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
                                                         final InternalCallContext context) throws InvoiceApiException {
 
-        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
         try {
 
             final List<InvoiceItem> items = Lists.newArrayList();
@@ -123,10 +127,16 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             UUID curSubscriptionId = null;
             while (events.hasNext()) {
                 final BillingEvent event = events.next();
+                // Skip events that are posterior to the targetDate
+                final LocalDate eventLocalEffectiveDate =  new LocalDate(event.getEffectiveDate(), event.getAccount().getTimeZone());
+                if (eventLocalEffectiveDate.isAfter(targetDate)) {
+                    continue;
+                }
+
                 final UUID subscriptionId = event.getSubscription().getId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
                     final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, targetDate, context.toTenantContext(tenantId));
-                    items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(subscriptionId, existingInvoices)));
+                    items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(curSubscriptionId, existingInvoices)));
                     curEvents = Lists.newArrayList();
                 }
                 curSubscriptionId = subscriptionId;

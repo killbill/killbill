@@ -23,9 +23,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 
 public class ExternalChargeInvoiceItem extends InvoiceItemBase {
@@ -42,11 +40,15 @@ public class ExternalChargeInvoiceItem extends InvoiceItemBase {
 
     public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                                      @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, null, description, null, null, date, null, amount, currency);
+        super(id, createdDate, invoiceId, accountId, bundleId, null, description, null, null, null, date, null, amount, currency);
     }
 
     @Override
     public String getDescription() {
+        if (description != null) {
+            return description;
+        }
+
         if (getPlanName() == null) {
             return "External charge";
         } else {

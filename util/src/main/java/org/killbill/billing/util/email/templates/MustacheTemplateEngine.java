@@ -20,9 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Map;
-
-import org.killbill.billing.util.config.catalog.UriAccessor;
 import org.killbill.billing.util.io.IOUtils;
+import org.killbill.xmlloader.UriAccessor;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.samskivert.mustache.Mustache;

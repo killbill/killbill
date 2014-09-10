@@ -31,6 +31,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -40,6 +41,7 @@ import org.killbill.billing.util.api.ExportUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Singleton;
 
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
@@ -57,12 +59,14 @@ public class ExportResource extends JaxRsResourceBase {
                           final CustomFieldUserApi customFieldUserApi,
                           final AuditUserApi auditUserApi,
                           final AccountUserApi accountUserApi,
+                          final PaymentApi paymentApi,
                           final Clock clock,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.exportUserApi = exportUserApi;
     }
 
+    //@Timed
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(TEXT_PLAIN)

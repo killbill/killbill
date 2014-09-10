@@ -1,7 +1,7 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * Groupon licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,80 +17,76 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
-import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
-import org.killbill.billing.payment.dao.PaymentModelDao;
-import org.killbill.billing.payment.dao.RefundModelDao;
-import org.killbill.billing.payment.plugin.api.PaymentInfoPlugin;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class DefaultPayment extends EntityBase implements Payment {
 
     private final UUID accountId;
-    private final UUID invoiceId;
     private final UUID paymentMethodId;
-    private final BigDecimal amount;
-    private final BigDecimal paidAmount;
-    private final Currency currency;
-    private final DateTime effectiveDate;
     private final Integer paymentNumber;
-    private final PaymentStatus paymentStatus;
-    private final List<PaymentAttempt> attempts;
-    private final PaymentInfoPlugin paymentPluginInfo;
+    private final String externalKey;
+    private final BigDecimal authAmount;
+    private final BigDecimal captureAmount;
+    private final BigDecimal purchasedAmount;
+    private final BigDecimal creditAmount;
+    private final BigDecimal refundAmount;
+    private final Boolean isVoided;
 
-    private DefaultPayment(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId, final UUID invoiceId,
-                           final UUID paymentMethodId, final BigDecimal amount, final BigDecimal paidAmount, final Currency currency,
-                           final DateTime effectiveDate, final Integer paymentNumber,
-                           final PaymentStatus paymentStatus,
-                           @Nullable final PaymentInfoPlugin paymentPluginInfo,
-                           final List<PaymentAttempt> attempts) {
+    private final Currency currency;
+    private final List<PaymentTransaction> transactions;
+
+    public DefaultPayment(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
+                          final UUID paymentMethodId,
+                          final Integer paymentNumber,
+                          final String externalKey,
+                          final List<PaymentTransaction> transactions) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
-        this.invoiceId = invoiceId;
         this.paymentMethodId = paymentMethodId;
-        this.amount = amount;
-        this.paidAmount = paidAmount;
-        this.currency = currency;
-        this.effectiveDate = effectiveDate;
         this.paymentNumber = paymentNumber;
-        this.paymentStatus = paymentStatus;
-        this.attempts = attempts;
-        this.paymentPluginInfo = paymentPluginInfo;
+        this.externalKey = externalKey;
+        this.transactions = transactions;
+        this.authAmount = getAmountForType(transactions, TransactionType.AUTHORIZE);
+        this.captureAmount = getAmountForType(transactions, TransactionType.CAPTURE);
+        this.purchasedAmount = getAmountForType(transactions, TransactionType.PURCHASE);
+        this.creditAmount = getAmountForType(transactions, TransactionType.CREDIT);
+        this.refundAmount = getAmountForType(transactions, TransactionType.REFUND);
+        this.isVoided = Iterables.filter(transactions, new Predicate<PaymentTransaction>() {
+            @Override
+            public boolean apply(final PaymentTransaction input) {
+                return input.getTransactionType() == TransactionType.VOID && TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
+            }
+        }).iterator().hasNext();
+        this.currency = (transactions != null && !transactions.isEmpty()) ? transactions.get(0).getCurrency() : null;
     }
 
-    public DefaultPayment(final PaymentModelDao src, @Nullable final PaymentInfoPlugin paymentPluginInfo, final List<PaymentAttemptModelDao> attempts, final List<RefundModelDao> refunds) {
-        this(src.getId(),
-             src.getCreatedDate(),
-             src.getUpdatedDate(),
-             src.getAccountId(),
-             src.getInvoiceId(),
-             src.getPaymentMethodId(),
-             src.getAmount(),
-             toPaidAmount(src.getPaymentStatus(), src.getAmount(), refunds),
-             src.getCurrency(),
-             src.getEffectiveDate(),
-             src.getPaymentNumber(),
-             src.getPaymentStatus(),
-             paymentPluginInfo,
-             toPaymentAttempts(attempts));
-    }
-
-    @Override
-    public Integer getPaymentNumber() {
-        return paymentNumber;
+    private static BigDecimal getAmountForType(final Iterable<PaymentTransaction> transactions, final TransactionType transactiontype) {
+        BigDecimal result = BigDecimal.ZERO;
+        final Iterable<PaymentTransaction> filtered = Iterables.filter(transactions, new Predicate<PaymentTransaction>() {
+            @Override
+            public boolean apply(final PaymentTransaction input) {
+                return input.getTransactionType() == transactiontype && TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
+            }
+        });
+        if (TransactionType.AUTHORIZE.equals(transactiontype) && filtered.iterator().hasNext()) {
+            // HACK - For multi-step AUTH, don't sum the individual transactions
+            result = filtered.iterator().next().getAmount();
+        } else {
+            for (final PaymentTransaction dpt : filtered) {
+                result = result.add(dpt.getAmount());
+            }
+        }
+        return result;
     }
 
     @Override
@@ -99,28 +95,48 @@ public class DefaultPayment extends EntityBase implements Payment {
     }
 
     @Override
-    public UUID getInvoiceId() {
-        return invoiceId;
-    }
-
-    @Override
     public UUID getPaymentMethodId() {
         return paymentMethodId;
     }
 
     @Override
-    public BigDecimal getAmount() {
-        return amount;
+    public Integer getPaymentNumber() {
+        return paymentNumber;
     }
 
     @Override
-    public BigDecimal getPaidAmount() {
-        return paidAmount;
+    public String getExternalKey() {
+        return externalKey;
     }
 
     @Override
-    public DateTime getEffectiveDate() {
-        return effectiveDate;
+    public BigDecimal getAuthAmount() {
+        return authAmount;
+    }
+
+    @Override
+    public BigDecimal getCapturedAmount() {
+        return captureAmount;
+    }
+
+    @Override
+    public BigDecimal getPurchasedAmount() {
+        return purchasedAmount;
+    }
+
+    @Override
+    public BigDecimal getCreditedAmount() {
+        return creditAmount;
+    }
+
+    @Override
+    public BigDecimal getRefundedAmount() {
+        return refundAmount;
+    }
+
+    @Override
+    public Boolean isAuthVoided() {
+        return isVoided;
     }
 
     @Override
@@ -129,79 +145,88 @@ public class DefaultPayment extends EntityBase implements Payment {
     }
 
     @Override
-    public PaymentStatus getPaymentStatus() {
-        return paymentStatus;
+    public List<PaymentTransaction> getTransactions() {
+        return transactions;
     }
 
     @Override
-    public PaymentInfoPlugin getPaymentInfoPlugin() {
-        return paymentPluginInfo;
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultPayment{");
+        sb.append("accountId=").append(accountId);
+        sb.append(", paymentMethodId=").append(paymentMethodId);
+        sb.append(", paymentNumber=").append(paymentNumber);
+        sb.append(", externalKey='").append(externalKey).append('\'');
+        sb.append(", authAmount=").append(authAmount);
+        sb.append(", captureAmount=").append(captureAmount);
+        sb.append(", purchasedAmount=").append(purchasedAmount);
+        sb.append(", refundAmount=").append(refundAmount);
+        sb.append(", currency=").append(currency);
+        sb.append(", transactions=").append(transactions);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override
-    public List<PaymentAttempt> getAttempts() {
-        return attempts;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final DefaultPayment that = (DefaultPayment) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (authAmount != null ? authAmount.compareTo(that.authAmount) != 0 : that.authAmount != null) {
+            return false;
+        }
+        if (captureAmount != null ? captureAmount.compareTo(that.captureAmount) != 0 : that.captureAmount != null) {
+            return false;
+        }
+        if (purchasedAmount != null ? purchasedAmount.compareTo(that.purchasedAmount) != 0 : that.purchasedAmount != null) {
+            return false;
+        }
+        if (currency != that.currency) {
+            return false;
+        }
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
+            return false;
+        }
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
+            return false;
+        }
+        if (paymentNumber != null ? !paymentNumber.equals(that.paymentNumber) : that.paymentNumber != null) {
+            return false;
+        }
+        if (refundAmount != null ? refundAmount.compareTo(that.refundAmount) != 0 : that.refundAmount != null) {
+            return false;
+        }
+        if (transactions != null ? !transactions.equals(that.transactions) : that.transactions != null) {
+            return false;
+        }
+
+        return true;
     }
 
-    private static BigDecimal toPaidAmount(final PaymentStatus paymentStatus, final BigDecimal amount, final Iterable<RefundModelDao> refunds) {
-        if (paymentStatus != PaymentStatus.SUCCESS) {
-            return BigDecimal.ZERO;
-        }
-
-        BigDecimal result = amount;
-        for (final RefundModelDao cur : refunds) {
-            if (cur.getRefundStatus() == RefundStatus.COMPLETED) {
-                result = result.subtract(cur.getAmount());
-            }
-        }
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
+        result = 31 * result + (paymentNumber != null ? paymentNumber.hashCode() : 0);
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        result = 31 * result + (authAmount != null ? authAmount.hashCode() : 0);
+        result = 31 * result + (captureAmount != null ? captureAmount.hashCode() : 0);
+        result = 31 * result + (purchasedAmount != null ? purchasedAmount.hashCode() : 0);
+        result = 31 * result + (refundAmount != null ? refundAmount.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (transactions != null ? transactions.hashCode() : 0);
         return result;
-    }
-
-    private static List<PaymentAttempt> toPaymentAttempts(final Collection<PaymentAttemptModelDao> attempts) {
-        if (attempts == null || attempts.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return new ArrayList<PaymentAttempt>(Collections2.transform(attempts, new Function<PaymentAttemptModelDao, PaymentAttempt>() {
-            @Override
-            public PaymentAttempt apply(final PaymentAttemptModelDao input) {
-                return new PaymentAttempt() {
-                    @Override
-                    public PaymentStatus getPaymentStatus() {
-                        return input.getProcessingStatus();
-                    }
-
-                    @Override
-                    public DateTime getEffectiveDate() {
-                        return input.getEffectiveDate();
-                    }
-
-                    @Override
-                    public UUID getId() {
-                        return input.getId();
-                    }
-
-                    @Override
-                    public DateTime getCreatedDate() {
-                        return input.getCreatedDate();
-                    }
-
-                    @Override
-                    public DateTime getUpdatedDate() {
-                        return input.getUpdatedDate();
-                    }
-
-                    @Override
-                    public String getGatewayErrorCode() {
-                        return input.getGatewayErrorCode();
-                    }
-
-                    @Override
-                    public String getGatewayErrorMsg() {
-                        return input.getGatewayErrorMsg();
-                    }
-                };
-            }
-        }));
     }
 }

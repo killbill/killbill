@@ -25,7 +25,7 @@ import org.testng.annotations.Test;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.overdue.EmailNotification;
 import org.killbill.billing.overdue.OverdueTestSuiteNoDB;
-import org.killbill.billing.util.config.catalog.XMLLoader;
+import org.killbill.xmlloader.XMLLoader;
 
 public class TestOverdueConfig extends OverdueTestSuiteNoDB {
 

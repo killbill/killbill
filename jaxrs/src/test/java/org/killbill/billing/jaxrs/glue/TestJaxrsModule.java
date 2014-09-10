@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,11 +18,15 @@
 
 package org.killbill.billing.jaxrs.glue;
 
+import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.jackson.ObjectMapper;
 
-import com.google.inject.AbstractModule;
+public class TestJaxrsModule extends KillBillModule {
 
-public class TestJaxrsModule extends AbstractModule {
+    public TestJaxrsModule(final KillbillConfigSource configSource) {
+        super(configSource);
+    }
 
     private void installObjectMapper() {
         bind(com.fasterxml.jackson.databind.ObjectMapper.class).toInstance(new ObjectMapper());

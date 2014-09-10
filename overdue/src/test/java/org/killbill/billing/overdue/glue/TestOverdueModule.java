@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,15 +18,13 @@
 
 package org.killbill.billing.overdue.glue;
 
-import org.skife.config.ConfigSource;
-
 import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockEntitlementModule;
-import org.killbill.billing.mock.glue.MockSubscriptionModule;
 import org.killbill.billing.mock.glue.MockInvoiceModule;
 import org.killbill.billing.mock.glue.MockTagModule;
 import org.killbill.billing.overdue.TestOverdueHelper;
 import org.killbill.billing.overdue.applicator.OverdueBusListenerTester;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
@@ -34,7 +34,7 @@ import org.killbill.billing.util.glue.CustomFieldModule;
 
 public class TestOverdueModule extends DefaultOverdueModule {
 
-    public TestOverdueModule(final ConfigSource configSource) {
+    public TestOverdueModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
@@ -42,19 +42,19 @@ public class TestOverdueModule extends DefaultOverdueModule {
     protected void configure() {
         super.configure();
 
-        install(new AuditModule());
+        install(new AuditModule(configSource));
         install(new CacheModule(configSource));
-        install(new CallContextModule());
-        install(new CustomFieldModule());
+        install(new CallContextModule(configSource));
+        install(new CustomFieldModule(configSource));
         install(new EmailModule(configSource));
-        install(new MockAccountModule());
-        install(new MockEntitlementModule());
-        install(new MockInvoiceModule());
-        install(new MockTagModule());
-        install(new TemplateModule());
+        install(new MockAccountModule(configSource));
+        install(new MockEntitlementModule(configSource));
+        install(new MockInvoiceModule(configSource));
+        install(new MockTagModule(configSource));
+        install(new TemplateModule(configSource));
 
         // We can't use the dumb mocks in MockJunctionModule here
-        install(new ApplicatorMockJunctionModule());
+        install(new ApplicatorMockJunctionModule(configSource));
 
         bind(OverdueBusListenerTester.class).asEagerSingleton();
         bind(TestOverdueHelper.class).asEagerSingleton();

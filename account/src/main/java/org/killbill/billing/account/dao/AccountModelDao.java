@@ -29,8 +29,9 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class AccountModelDao extends EntityBase implements EntityModelDao<Account> {
+public class AccountModelDao extends EntityModelDaoBase implements EntityModelDao<Account> {
 
     private String externalKey;
     private String email;

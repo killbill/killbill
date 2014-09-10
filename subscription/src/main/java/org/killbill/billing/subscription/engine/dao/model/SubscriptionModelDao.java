@@ -27,8 +27,9 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class SubscriptionModelDao extends EntityBase implements EntityModelDao<SubscriptionBase> {
+public class SubscriptionModelDao extends EntityModelDaoBase implements EntityModelDao<SubscriptionBase> {
 
     private UUID bundleId;
     private ProductCategory category;

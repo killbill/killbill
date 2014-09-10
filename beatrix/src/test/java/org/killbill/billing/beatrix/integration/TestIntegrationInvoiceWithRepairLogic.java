@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,11 +26,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.Test;
-
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
@@ -41,10 +38,12 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.invoice.api.Invoice;
-import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -151,6 +150,8 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("9.63")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 5, 2), InvoiceItemType.CBA_ADJ, new BigDecimal("-9.63")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     @Test(groups = "slow")
@@ -374,6 +375,8 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 8), new LocalDate(2012, 7, 8), InvoiceItemType.CBA_ADJ, new BigDecimal("-29.95")));
         invoiceChecker.checkInvoice(invoices.get(6).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     @Test(groups = "slow")
@@ -482,6 +485,8 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 7, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("-249.95")));
         invoiceChecker.checkInvoice(invoices.get(4).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     @Test(groups = "slow")
@@ -500,7 +505,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
@@ -535,22 +540,14 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // ITEM ADJUSTMENT PRIOR TO DOING THE REPAIR
         //
         final Invoice invoice1 = invoices.get(1);
-        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), callContext);
-        final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), PaymentStatus.SUCCESS, invoice1.getId(), Currency.USD);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), TransactionStatus.SUCCESS, invoice1.getId(), Currency.USD);
         final Payment payment1 = payments.get(0);
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
         iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("197.26"));
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, callContext);
-        assertListenerStatus();
-
-        try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(clock.getUTCToday()), false, callContext);
-            Assert.fail("Should not gnenerated an new invoice");
-        } catch (InvoiceApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
-        }
+        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, iias, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     //
@@ -576,7 +573,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
@@ -611,22 +608,13 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // ITEM ADJUSTMENT PRIOR TO DOING THE REPAIR
         //
         final Invoice invoice1 = invoices.get(1);
-        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), callContext);
-        final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), PaymentStatus.SUCCESS, invoice1.getId(), Currency.USD);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final ExpectedPaymentCheck expectedPaymentCheck = new ExpectedPaymentCheck(clock.getUTCNow().toLocalDate(), new BigDecimal("2399.95"), TransactionStatus.SUCCESS, invoice1.getId(), Currency.USD);
         final Payment payment1 = payments.get(0);
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
         iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("100.00"));
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), iias, callContext);
-        assertListenerStatus();
-
-        try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(clock.getUTCToday()), false, callContext);
-            Assert.fail("Should not gnenerated an new invoice");
-        } catch (InvoiceApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
-        }
+        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, iias, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        checkNoMoreInvoiceToGenerate(account);
     }
-
 }

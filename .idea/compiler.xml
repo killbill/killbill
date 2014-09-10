@@ -32,17 +32,10 @@
         <module name="killbill-invoice" />
         <module name="killbill-jaxrs" />
         <module name="killbill-junction" />
-        <module name="killbill-osgi" />
-        <module name="killbill-osgi-bundles-jruby" />
-        <module name="killbill-osgi-bundles-lib-killbill" />
-        <module name="killbill-osgi-bundles-lib-slf4j-osgi" />
-        <module name="killbill-osgi-bundles-logger" />
-        <module name="killbill-osgi-bundles-test-beatrix" />
-        <module name="killbill-osgi-bundles-test-payment" />
-        <module name="killbill-osgi-bundles-webconsolebranding" />
         <module name="killbill-overdue" />
         <module name="killbill-payment" />
-        <module name="killbill-server" />
+        <module name="killbill-profiles-killbill" />
+        <module name="killbill-profiles-killpay" />
         <module name="killbill-subscription" />
         <module name="killbill-tenant" />
         <module name="killbill-usage" />
@@ -76,6 +69,9 @@
       <module name="killbill-osgi-test-bundles" target="1.6" />
       <module name="killbill-overdue" target="1.6" />
       <module name="killbill-payment" target="1.6" />
+      <module name="killbill-profiles" target="1.6" />
+      <module name="killbill-profiles-killbill" target="1.6" />
+      <module name="killbill-profiles-killpay" target="1.6" />
       <module name="killbill-server" target="1.6" />
       <module name="killbill-subscription" target="1.6" />
       <module name="killbill-tenant" target="1.6" />

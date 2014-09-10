@@ -17,6 +17,7 @@
 package org.killbill.billing.usage.api.user;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -26,6 +27,7 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.usage.dao.RolledUpUsageDao;
@@ -56,14 +58,25 @@ public class DefaultUsageUserApi implements UsageUserApi {
 
     @Override
     public RolledUpUsage getUsageForSubscription(final UUID subscriptionId,  final String unitType, final DateTime startTime, final DateTime endTime, final TenantContext context) {
-        final RolledUpUsageModelDao usageForSubscription = rolledUpUsageDao.getUsageForSubscription(subscriptionId, internalCallContextFactory.createInternalTenantContext(context));
+        final RolledUpUsageModelDao usageForSubscription = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startTime, endTime, unitType, internalCallContextFactory.createInternalTenantContext(context));
         return new DefaultRolledUpUsage(usageForSubscription);
     }
 
     @Override
     public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final Set<String> unitTypes, final List<DateTime> transitionTimes, final TenantContext tenantContext) {
-        // STEPH_USAGE implement
-        // STEPH_USAGE also dates should be inclusive/exclusive so as to not bill twice for last day
-        return null;
+
+        final InternalTenantContext internalCallContext = internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContext);
+        List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
+        DateTime prevDate = null;
+        for (DateTime curDate : transitionTimes) {
+            if (prevDate != null) {
+                for (String unitType : unitTypes) {
+                    final RolledUpUsageModelDao usageForSubscription = rolledUpUsageDao.getUsageForSubscription(subscriptionId, prevDate, curDate, unitType, internalCallContext);
+                    result.add(new DefaultRolledUpUsage(usageForSubscription));
+                }
+            }
+            prevDate = curDate;
+        }
+        return result;
     }
 }

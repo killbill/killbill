@@ -27,8 +27,8 @@ import org.killbill.billing.overdue.OverdueApiException;
 import org.killbill.billing.overdue.OverdueState;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
-import org.killbill.billing.util.config.catalog.ValidatingConfig;
-import org.killbill.billing.util.config.catalog.ValidationErrors;
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.billing.junction.DefaultBlockingState;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -37,7 +37,7 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<OverdueCon
     private static final Period ZERO_PERIOD = new Period();
     private final DefaultOverdueState clearState = new DefaultOverdueState().setName(DefaultBlockingState.CLEAR_STATE_NAME).setClearState(true);
 
-    protected abstract DefaultOverdueState[] getStates();
+    public abstract DefaultOverdueState[] getStates();
 
     @Override
     public OverdueState findState(final String stateName) throws OverdueApiException {

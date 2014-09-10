@@ -16,11 +16,16 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.google.common.base.Function;
@@ -58,5 +63,32 @@ public abstract class JsonBase {
 
     public List<AuditLogJson> getAuditLogs() {
         return auditLogs;
+    }
+
+    protected List<PluginProperty> propertiesToList(final Map<String, String> propertiesMap) {
+        final List<PluginProperty> properties = new LinkedList<PluginProperty>();
+        for (final String key : propertiesMap.keySet()) {
+            final PluginProperty property = new PluginProperty(key, propertiesMap.get(key), false);
+            properties.add(property);
+        }
+        return properties;
+    }
+
+    protected Map<String, String> propertiesToMap(final Iterable<PluginProperty> properties) {
+        final Map<String, String> propertiesMap = new HashMap<String, String>();
+        for (final PluginProperty pluginProperty : properties) {
+            if (pluginProperty.getValue() != null) {
+                propertiesMap.put(pluginProperty.getKey(), pluginProperty.getValue().toString());
+            }
+        }
+        return propertiesMap;
+    }
+
+    protected static List<PluginPropertyJson> toPluginPropertyJson(final Iterable<PluginProperty> properties) {
+        final List<PluginPropertyJson> pluginProperties = new ArrayList<PluginPropertyJson>();
+        for (final PluginProperty pluginProperty : properties) {
+            pluginProperties.add(new PluginPropertyJson(pluginProperty));
+        }
+        return pluginProperties;
     }
 }

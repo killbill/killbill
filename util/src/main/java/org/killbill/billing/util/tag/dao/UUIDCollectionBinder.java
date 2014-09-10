@@ -39,7 +39,7 @@ public @interface UUIDCollectionBinder {
 
                 @Override
                 public void bind(SQLStatement<?> query, UUIDCollectionBinder bind, Collection<String> ids) {
-                    query.define("tag_definition_ids", ids);
+                    query.define("ids", ids);
 
                     int idx = 0;
                     for (String id : ids) {

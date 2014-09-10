@@ -27,9 +27,9 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementService;
@@ -331,18 +331,22 @@ public class DefaultEventsStream implements EventsStream {
                                                                                                        new Predicate<SubscriptionBase>() {
                                                                                                            @Override
                                                                                                            public boolean apply(final SubscriptionBase subscription) {
-                                                                                                               return ProductCategory.ADD_ON.equals(subscription.getCategory()) &&
-                                                                                                                      // Check the entitlement for that add-on hasn't been cancelled yet
-                                                                                                                      getEntitlementCancellationEvent(subscription.getId()) == null &&
-                                                                                                                      (
-                                                                                                                              // Base subscription cancelled
-                                                                                                                              baseTransitionTriggerNextProduct == null ||
-                                                                                                                              (
-                                                                                                                                      // Change plan - check which add-ons to cancel
-                                                                                                                                      includedAddonsForProduct.contains(subscription.getLastActivePlan().getProduct().getName()) ||
-                                                                                                                                      !availableAddonsForProduct.contains(subscription.getLastActivePlan().getProduct().getName())
-                                                                                                                              )
-                                                                                                                      );
+                                                                                                               final Plan lastActivePlan = subscription.getLastActivePlan();
+                                                                                                               final boolean result = ProductCategory.ADD_ON.equals(subscription.getCategory()) &&
+                                                                                                                                      // Check the subscription started, if not we don't want it, and that way we avoid doing NPE a few lines below.
+                                                                                                                                      lastActivePlan != null &&
+                                                                                                                                      // Check the entitlement for that add-on hasn't been cancelled yet
+                                                                                                                                      getEntitlementCancellationEvent(subscription.getId()) == null &&
+                                                                                                                                      (
+                                                                                                                                              // Base subscription cancelled
+                                                                                                                                              baseTransitionTriggerNextProduct == null ||
+                                                                                                                                              (
+                                                                                                                                                      // Change plan - check which add-ons to cancel
+                                                                                                                                                      includedAddonsForProduct.contains(lastActivePlan.getProduct().getName()) ||
+                                                                                                                                                      !availableAddonsForProduct.contains(subscription.getLastActivePlan().getProduct().getName())
+                                                                                                                                              )
+                                                                                                                                      );
+                                                                                                               return result;
                                                                                                            }
                                                                                                        });
 

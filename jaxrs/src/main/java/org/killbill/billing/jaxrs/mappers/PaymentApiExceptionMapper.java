@@ -40,21 +40,9 @@ public class PaymentApiExceptionMapper extends ExceptionMapperBase implements Ex
     public Response toResponse(final PaymentApiException exception) {
         if (exception.getCode() == ErrorCode.PAYMENT_ADD_PAYMENT_METHOD.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_AMOUNT_DENIED.getCode()) {
-            return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_BAD_ACCOUNT.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_CREATE_PAYMENT.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_BAD.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_WITH_NON_POSITIVE_INV.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_CREATE_REFUND.getCode()) {
+        } else if (exception.getCode() == ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_DEL_DEFAULT_PAYMENT_METHOD.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
@@ -62,41 +50,25 @@ public class PaymentApiExceptionMapper extends ExceptionMapperBase implements Ex
             return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_GET_PAYMENT_METHODS.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_GET_PAYMENT_PROVIDER.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_GET_PAYMENT_PROVIDER_ACCOUNT.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_INTERNAL_ERROR.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.getCode()) {
-            return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_NO_PAYMENT_METHODS.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_NO_SUCH_PAYMENT.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_NO_SUCH_REFUND.getCode()) {
-            return buildNotFoundResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_NULL_INVOICE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_PLUGIN_ACCOUNT_INIT.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_PLUGIN_TIMEOUT.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_REFUND_AMOUNT_TOO_LARGE.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_UPD_GATEWAY_FAILED.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_UPD_PAYMENT_METHOD.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT.getCode()) {
+        } else if (exception.getCode() == ErrorCode.PAYMENT_INVALID_PARAMETER.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
         } else {
             return fallback(exception, uriInfo);

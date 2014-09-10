@@ -17,6 +17,8 @@
 package org.killbill.billing.util.cache;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -24,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.killbill.billing.util.config.CacheConfig;
+import org.killbill.xmlloader.UriAccessor;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -40,12 +43,14 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
                                        final RecordIdCacheLoader recordIdCacheLoader,
                                        final AccountRecordIdCacheLoader accountRecordIdCacheLoader,
                                        final TenantRecordIdCacheLoader tenantRecordIdCacheLoader,
+                                       final ObjectIdCacheLoader objectIdCacheLoader,
                                        final AuditLogCacheLoader auditLogCacheLoader,
                                        final AuditLogViaHistoryCacheLoader auditLogViaHistoryCacheLoader) {
         this.cacheConfig = cacheConfig;
         cacheLoaders.add(recordIdCacheLoader);
         cacheLoaders.add(accountRecordIdCacheLoader);
         cacheLoaders.add(tenantRecordIdCacheLoader);
+        cacheLoaders.add(objectIdCacheLoader);
         cacheLoaders.add(auditLogCacheLoader);
         cacheLoaders.add(auditLogViaHistoryCacheLoader);
     }
@@ -54,8 +59,11 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
     public CacheManager get() {
         final CacheManager cacheManager;
         try {
-            cacheManager = CacheManager.create(EhCacheCacheManagerProvider.class.getResource(cacheConfig.getCacheConfigLocation()).openStream());
+            final InputStream inputStream = UriAccessor.accessUri(cacheConfig.getCacheConfigLocation());
+            cacheManager = CacheManager.create(inputStream);
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
 

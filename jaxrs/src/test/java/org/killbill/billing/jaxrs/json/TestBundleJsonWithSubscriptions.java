@@ -41,7 +41,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         final String externalKey = UUID.randomUUID().toString();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
 
-        EventSubscriptionJson event = new EventSubscriptionJson(someUUID, BillingPeriod.NO_BILLING_PERIOD.toString(), new LocalDate(), new LocalDate(), "product", "priceList", "eventType", "phase", null);
+        final EventSubscriptionJson event = new EventSubscriptionJson(someUUID, BillingPeriod.NO_BILLING_PERIOD.toString(), new LocalDate(), new LocalDate(), "product", "priceList", "eventType", "phase", null);
         final SubscriptionJson subscription = new SubscriptionJson(someUUID, someUUID, someUUID, externalKey,
                                                                                        new LocalDate(), someUUID, someUUID, someUUID, someUUID, new LocalDate(), new LocalDate(),
                                                                                        new LocalDate(), new LocalDate(),

@@ -30,8 +30,9 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class InvoiceModelDao extends EntityBase implements EntityModelDao<Invoice> {
+public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDao<Invoice> {
 
     private UUID accountId;
     private Integer invoiceNumber;

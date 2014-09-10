@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,11 +19,19 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.payment.MockRecurringInvoiceItem;
+import org.killbill.billing.payment.PaymentTestSuiteNoDB;
+import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
+import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,14 +39,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.ErrorCode;
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.invoice.api.Invoice;
-import org.killbill.billing.payment.MockRecurringInvoiceItem;
-import org.killbill.billing.payment.PaymentTestSuiteNoDB;
-import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
-import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -46,6 +49,18 @@ import static org.testng.Assert.fail;
 public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     private static final Logger log = LoggerFactory.getLogger(TestPaymentApiNoDB.class);
+
+    private final Iterable<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+    private final static PaymentOptions PAYMENT_OPTIONS = new PaymentOptions() {
+        @Override
+        public boolean isExternalPayment() {
+            return false;
+        }
+        @Override
+        public String getPaymentControlPluginName() {
+            return InvoicePaymentControlPluginApi.PLUGIN_NAME;
+        }
+    };
 
     private Account account;
 
@@ -63,16 +78,16 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testSimplePaymentWithNoAmount() throws Exception {
+    public void testSimpleInvoicePaymentWithNoAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = null;
-        final BigDecimal expectedAmount = invoiceAmount;
+        final BigDecimal expectedAmount = null;
 
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
 
     @Test(groups = "fast")
-    public void testSimplePaymentWithInvoiceAmount() throws Exception {
+    public void testSimpleInvoicePaymentWithInvoiceAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = invoiceAmount;
         final BigDecimal expectedAmount = invoiceAmount;
@@ -81,7 +96,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testSimplePaymentWithLowerAmount() throws Exception {
+    public void testSimpleInvoicePaymentWithLowerAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = new BigDecimal("8.0091");
         final BigDecimal expectedAmount = requestedAmount;
@@ -90,7 +105,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testSimplePaymentWithInvalidAmount() throws Exception {
+    public void testSimpleInvoicePaymentWithInvalidAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = new BigDecimal("80.0091");
         final BigDecimal expectedAmount = null;
@@ -100,7 +115,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     private void testSimplePayment(final BigDecimal invoiceAmount, final BigDecimal requestedAmount, final BigDecimal expectedAmount) throws Exception {
         final LocalDate now = clock.getUTCToday();
-        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD, callContext);
+        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
 
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -116,64 +131,69 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
                                                             Currency.USD));
 
         try {
-            final Payment paymentInfo = paymentApi.createPayment(account, invoice.getId(), requestedAmount, callContext);
+
+            final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+            final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
+            properties.add(prop1);
+
+            final Payment paymentInfo = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+                                                                                          invoice.getId().toString(), UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
             if (expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
             }
             assertNotNull(paymentInfo.getId());
-            assertTrue(paymentInfo.getAmount().compareTo(expectedAmount) == 0);
+            assertTrue(paymentInfo.getPurchasedAmount().compareTo(expectedAmount) == 0);
             assertNotNull(paymentInfo.getPaymentNumber());
-            assertEquals(paymentInfo.getPaymentStatus(), PaymentStatus.SUCCESS);
-            assertEquals(paymentInfo.getAttempts().size(), 1);
-            assertEquals(paymentInfo.getInvoiceId(), invoice.getId());
+            assertEquals(paymentInfo.getExternalKey(), invoice.getId().toString());
             assertEquals(paymentInfo.getCurrency(), Currency.USD);
+            assertTrue(paymentInfo.getTransactions().get(0).getAmount().compareTo(expectedAmount) == 0);
+            assertEquals(paymentInfo.getTransactions().get(0).getCurrency(), Currency.USD);
+            assertEquals(paymentInfo.getTransactions().get(0).getPaymentId(), paymentInfo.getId());
+            assertEquals(paymentInfo.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
+            assertEquals(paymentInfo.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
 
-            final PaymentAttempt paymentAttempt = paymentInfo.getAttempts().get(0);
-            assertNotNull(paymentAttempt);
-            assertNotNull(paymentAttempt.getId());
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             if (expectedAmount != null) {
                 fail("Failed to create payment", e);
             } else {
                 log.info(e.getMessage());
-                assertEquals(e.getCode(), ErrorCode.PAYMENT_AMOUNT_DENIED.getCode());
             }
         }
     }
 
     @Test(groups = "fast")
     public void testPaymentMethods() throws Exception {
-        List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false, callContext);
+        List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 1);
 
         final PaymentMethod initDefaultMethod = methods.get(0);
         assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
 
         final PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
-        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, newPaymenrMethod, callContext);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), MockPaymentProviderPlugin.PLUGIN_NAME, true, newPaymenrMethod, PLUGIN_PROPERTIES, callContext);
         Mockito.when(account.getPaymentMethodId()).thenReturn(newPaymentMethodId);
 
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 2);
 
         assertEquals(newPaymentMethodId, account.getPaymentMethodId());
 
         boolean failed = false;
         try {
-            paymentApi.deletedPaymentMethod(account, newPaymentMethodId, false, callContext);
-        } catch (PaymentApiException e) {
+            paymentApi.deletePaymentMethod(account, newPaymentMethodId, false, PLUGIN_PROPERTIES, callContext);
+        } catch (final PaymentApiException e) {
             failed = true;
         }
         assertTrue(failed);
 
-        paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), true,  callContext);
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        paymentApi.deletePaymentMethod(account, initDefaultMethod.getId(), true, PLUGIN_PROPERTIES, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 1);
 
         // NOW retry with default payment method with special flag
-        paymentApi.deletedPaymentMethod(account, newPaymentMethodId, true, callContext);
+        paymentApi.deletePaymentMethod(account, newPaymentMethodId, true, PLUGIN_PROPERTIES, callContext);
 
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 0);
     }
 }

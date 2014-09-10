@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,21 +18,18 @@
 
 package org.killbill.billing.util.email;
 
-import org.skife.config.ConfigSource;
+import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.AbstractModule;
+public class EmailModule extends KillBillModule {
 
-public class EmailModule extends AbstractModule {
-
-    protected final ConfigSource configSource;
-
-    public EmailModule(final ConfigSource configSource) {
-        this.configSource = configSource;
+    public EmailModule(final KillbillConfigSource configSource) {
+        super(configSource);
     }
 
     protected void installEmailConfig() {
-        final EmailConfig config = new ConfigurationObjectFactory(configSource).build(EmailConfig.class);
+        final EmailConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(EmailConfig.class);
         bind(EmailConfig.class).toInstance(config);
     }
 

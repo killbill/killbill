@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,8 +18,6 @@
 
 package org.killbill.billing.junction.glue;
 
-import org.skife.config.ConfigSource;
-
 import org.killbill.billing.entitlement.api.svcs.DefaultInternalBlockingApi;
 import org.killbill.billing.entitlement.block.BlockingChecker;
 import org.killbill.billing.entitlement.block.MockBlockingChecker;
@@ -25,13 +25,13 @@ import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.entitlement.dao.MockBlockingStateDao;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.mock.glue.MockEntitlementModule;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
-import org.killbill.billing.util.glue.MetricsModule;
 
 public class TestJunctionModule extends DefaultJunctionModule {
 
-    public TestJunctionModule(final ConfigSource configSource) {
+    public TestJunctionModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
@@ -39,12 +39,15 @@ public class TestJunctionModule extends DefaultJunctionModule {
     protected void configure() {
         super.configure();
 
-        install(new MetricsModule());
         install(new CacheModule(configSource));
-        install(new CallContextModule());
+        install(new CallContextModule(configSource));
     }
 
     public class MockEntitlementModuleForJunction extends MockEntitlementModule {
+
+        public MockEntitlementModuleForJunction(final KillbillConfigSource configSource) {
+            super(configSource);
+        }
 
         @Override
         public void installBlockingApi() {

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,23 +22,22 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.payment.glue.DefaultPaymentService;
+import org.killbill.billing.util.callcontext.CallOrigin;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueHandler;
-import org.killbill.billing.payment.glue.DefaultPaymentService;
-import org.killbill.billing.util.callcontext.CallOrigin;
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.callcontext.UserType;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
@@ -69,9 +70,10 @@ public abstract class BaseRetryService implements RetryService {
                                                                               }
                                                                               final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
                                                                               final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
-                                                                              retry(key.getUuidKey(), callContext);
+                                                                              retryPaymentTransaction(key.getAttemptId(), key.getPluginName(), callContext);
                                                                           }
-                                                                      });
+                                                                      }
+                                                                     );
     }
 
     @Override
@@ -102,38 +104,17 @@ public abstract class BaseRetryService implements RetryService {
             this.internalCallContextFactory = internalCallContextFactory;
         }
 
-        public boolean scheduleRetryFromTransaction(final UUID paymentId, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) {
-            return scheduleRetryInternal(paymentId, timeOfRetry, entitySqlDaoWrapperFactory);
+        public boolean scheduleRetry(final ObjectType objectType, final UUID objectId, final UUID attemptId, final String pluginName, final DateTime timeOfRetry) {
+            return scheduleRetryInternal(objectType, objectId, attemptId, pluginName, timeOfRetry, null);
         }
 
-        public boolean scheduleRetry(final UUID paymentId, final DateTime timeOfRetry) {
-            return scheduleRetryInternal(paymentId, timeOfRetry, null);
-        }
 
-        // STEPH TimedoutPaymentRetryServiceScheduler
-        public void cancelAllScheduleRetryForKey(final UUID paymentId) {
-            /*
-            try {
-                NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
-                NotificationKey key = new NotificationKey() {
-                    @Override
-                    public String toString() {
-                        return paymentId.toString();
-                    }
-                };
-                retryQueue.removeNotificationsByKey(key);
-            } catch (NoSuchNotificationQueue e) {
-                log.error(String.format("Failed to retrieve notification queue %s:%s", DefaultPaymentService.SERVICE_NAME, getQueueName()));
-            }
-             */
-        }
-
-        private boolean scheduleRetryInternal(final UUID paymentId, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
-            final InternalCallContext context = createCallContextFromPaymentId(paymentId);
+        private boolean scheduleRetryInternal(final ObjectType objectType, final UUID objectId, final UUID attemptId, final String pluginName, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
+            final InternalCallContext context = createCallContextFromPaymentId(objectType, objectId);
 
             try {
                 final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
-                final NotificationEvent key = new PaymentRetryNotificationKey(paymentId);
+                final NotificationEvent key = new PaymentRetryNotificationKey(attemptId, pluginName);
                 if (retryQueue != null) {
                     if (transactionalDao == null) {
                         retryQueue.recordFutureNotification(timeOfRetry, key, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
@@ -145,14 +126,14 @@ public abstract class BaseRetryService implements RetryService {
                 log.error(String.format("Failed to retrieve notification queue %s:%s", DefaultPaymentService.SERVICE_NAME, getQueueName()));
                 return false;
             } catch (IOException e) {
-                log.error(String.format("Failed to serialize notificationQueue event for paymentId %s", paymentId));
+                log.error(String.format("Failed to serialize notificationQueue event for object %s, objectId %s", objectId));
                 return false;
             }
             return true;
         }
 
-        protected InternalCallContext createCallContextFromPaymentId(final UUID paymentId) {
-            return internalCallContextFactory.createInternalCallContext(paymentId, ObjectType.PAYMENT, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
+        protected InternalCallContext createCallContextFromPaymentId(final ObjectType objectType, final UUID objectId) {
+            return internalCallContextFactory.createInternalCallContext(objectId, objectType, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
         }
 
         public abstract String getQueueName();

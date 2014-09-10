@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
@@ -52,7 +53,7 @@ public class InternalCallContext extends InternalTenantContext {
         this.contextUserType = userType;
         this.reasonCode = reasonCode;
         this.comments = comment;
-        this.createdDate = createdDate;
+        this.createdDate = new DateTime(createdDate, DateTimeZone.UTC);
         this.updatedDate = updatedDate;
     }
 

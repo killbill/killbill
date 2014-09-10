@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,22 +18,24 @@
 
 package org.killbill.billing.mock.glue;
 
-import org.mockito.Mockito;
-
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.glue.AccountModule;
-import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.glue.KillBillModule;
+import org.mockito.Mockito;
 
-import com.google.inject.AbstractModule;
+public class MockAccountModule extends KillBillModule implements AccountModule {
 
-public class MockAccountModule extends AbstractModule implements AccountModule {
+    public MockAccountModule(final KillbillConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     protected void configure() {
         installAccountUserApi();
         installInternalApi();
     }
-
 
     @Override
     public void installAccountUserApi() {
@@ -42,5 +46,4 @@ public class MockAccountModule extends AbstractModule implements AccountModule {
     public void installInternalApi() {
         bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
     }
-
 }

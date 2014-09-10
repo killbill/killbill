@@ -21,6 +21,8 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -44,12 +46,14 @@ public class SubscriptionChecker {
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final AuditChecker auditChecker;
     private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
 
     @Inject
-    public SubscriptionChecker(final SubscriptionBaseInternalApi subscriptionApi, final AuditChecker auditChecker, final NonEntityDao nonEntityDao) {
+    public SubscriptionChecker(final SubscriptionBaseInternalApi subscriptionApi, final AuditChecker auditChecker, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
         this.subscriptionApi = subscriptionApi;
         this.auditChecker = auditChecker;
         this.nonEntityDao = nonEntityDao;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
 
     public SubscriptionBaseBundle checkBundleNoAudits(final UUID bundleId, final UUID expectedAccountId, final String expectedKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
@@ -61,7 +65,7 @@ public class SubscriptionChecker {
     }
 
     public SubscriptionBase checkSubscriptionCreated(final UUID subscriptionId, final InternalCallContext context) throws SubscriptionBaseApiException {
-        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
         final CallContext callContext = context.toCallContext(tenantId);
 
         final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);

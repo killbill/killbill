@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -13,6 +15,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.killbill.billing.payment.dispatcher;
 
 import java.util.concurrent.Callable;
@@ -22,49 +25,72 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.killbill.commons.profiling.Profiling;
+import org.killbill.commons.profiling.ProfilingData;
 
-import org.killbill.billing.ErrorCode;
-import org.killbill.billing.payment.api.PaymentApiException;
-
-public class PluginDispatcher<T> {
-
-    private static final Logger log = LoggerFactory.getLogger(PluginDispatcher.class);
+public class PluginDispatcher<ReturnType> {
 
     private final TimeUnit DEEFAULT_PLUGIN_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
     private final long timeoutSeconds;
     private final ExecutorService executor;
 
-    public PluginDispatcher(final long tiemoutSeconds, final ExecutorService executor) {
-        this.timeoutSeconds = tiemoutSeconds;
+    public PluginDispatcher(final long timeoutSeconds, final ExecutorService executor) {
+        this.timeoutSeconds = timeoutSeconds;
         this.executor = executor;
     }
 
-
-    public T dispatchWithAccountLock(final Callable<T> task)
-            throws PaymentApiException, TimeoutException {
-        return dispatchWithAccountLockAndTimeout(task, timeoutSeconds, DEEFAULT_PLUGIN_TIMEOUT_UNIT);
+    // TODO Once we switch fully to automata, should this throw PaymentPluginApiException instead?
+    public ReturnType dispatchWithTimeout(final Callable<PluginDispatcherReturnType<ReturnType>> task) throws TimeoutException, ExecutionException, InterruptedException {
+        return dispatchWithTimeout(task, timeoutSeconds, DEEFAULT_PLUGIN_TIMEOUT_UNIT);
     }
 
-    public T dispatchWithAccountLockAndTimeout(final Callable<T> task, final long timeout, final TimeUnit unit)
-            throws PaymentApiException, TimeoutException {
+    public ReturnType dispatchWithTimeout(final Callable<PluginDispatcherReturnType<ReturnType>> task, final long timeout, final TimeUnit unit)
+            throws TimeoutException, ExecutionException, InterruptedException {
 
-        try {
-            final Future<T> future = executor.submit(task);
-            return future.get(timeout, unit);
-        } catch (ExecutionException e) {
-            if (e.getCause() instanceof PaymentApiException) {
-                throw (PaymentApiException) e.getCause();
-            } else {
-                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
+        final Future<PluginDispatcherReturnType<ReturnType>> future = executor.submit(task);
+        final PluginDispatcherReturnType<ReturnType> pluginDispatcherResult = future.get(timeout, unit);
+
+        if (pluginDispatcherResult instanceof WithProfilingPluginDispatcherReturnType) {
+            // Transfer state from dispatch thread into current one.
+            final ProfilingData currentThreadProfilingData = Profiling.getPerThreadProfilingData();
+            if (currentThreadProfilingData != null) {
+                currentThreadProfilingData.merge(((WithProfilingPluginDispatcherReturnType)pluginDispatcherResult).getProfilingData());
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
+        }
+        return pluginDispatcherResult.getReturnType();
+    }
+
+    public interface PluginDispatcherReturnType<ReturnType> {
+        public ReturnType getReturnType();
+    }
+
+    public interface WithProfilingPluginDispatcherReturnType<ReturnType> extends PluginDispatcherReturnType<ReturnType> {
+        public ProfilingData getProfilingData();
+    }
+
+    public static class DefaultWithProfilingPluginDispatcherReturnType<ReturnType> implements WithProfilingPluginDispatcherReturnType<ReturnType> {
+        private final ReturnType returnType;
+        private final ProfilingData profilingData;
+
+        public DefaultWithProfilingPluginDispatcherReturnType(final ReturnType returnType, final ProfilingData profilingData) {
+            this.returnType = returnType;
+            this.profilingData = profilingData;
+        }
+
+        @Override
+        public ReturnType getReturnType() {
+            return returnType;
+        }
+
+        @Override
+        public ProfilingData getProfilingData() {
+            return profilingData;
         }
     }
 
+    public static <ReturnType> PluginDispatcherReturnType<ReturnType> createPluginDispatcherReturnType(final ReturnType returnType) {
+        return new DefaultWithProfilingPluginDispatcherReturnType(returnType, Profiling.getPerThreadProfilingData());
+    }
 
 }

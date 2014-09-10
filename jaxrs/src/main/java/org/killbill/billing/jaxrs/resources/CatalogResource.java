@@ -32,6 +32,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.CatalogJsonSimple;
 import org.killbill.billing.jaxrs.json.PlanDetailJson;
@@ -40,8 +41,9 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
-import org.killbill.billing.util.config.catalog.XMLWriter;
+import org.killbill.xmlloader.XMLWriter;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -61,18 +63,21 @@ public class CatalogResource extends JaxRsResourceBase {
                            final CustomFieldUserApi customFieldUserApi,
                            final AuditUserApi auditUserApi,
                            final AccountUserApi accountUserApi,
+                           final PaymentApi paymentApi,
                            final Clock clock,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.catalogService = catalogService;
     }
 
+    //@Timed
     @GET
     @Produces(APPLICATION_XML)
     public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         return Response.status(Status.OK).entity(XMLWriter.writeXML(catalogService.getCurrentCatalog(), StaticCatalog.class)).build();
     }
 
+    //@Timed
     @GET
     @Produces(APPLICATION_JSON)
     public Response getCatalogJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
@@ -95,6 +100,7 @@ public class CatalogResource extends JaxRsResourceBase {
     //        return result;
     //    }
 
+    //@Timed
     @GET
     @Path("/availableAddons")
     @Produces(APPLICATION_JSON)
@@ -109,6 +115,7 @@ public class CatalogResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(details).build();
     }
 
+    //@Timed
     @GET
     @Path("/availableBasePlans")
     @Produces(APPLICATION_JSON)
@@ -122,6 +129,7 @@ public class CatalogResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(details).build();
     }
 
+    //@Timed
     @GET
     @Path("/simpleCatalog")
     @Produces(APPLICATION_JSON)

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,19 +18,16 @@
 
 package org.killbill.billing.mock.glue;
 
-import java.util.UUID;
-
-import javax.annotation.Nullable;
-
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.dao.MockNonEntityDao;
-import org.killbill.billing.util.cache.CacheController;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.billing.util.dao.TableName;
+import org.killbill.billing.util.glue.KillBillModule;
 
-import com.google.inject.AbstractModule;
+public class MockNonEntityDaoModule extends KillBillModule {
 
-public class MockNonEntityDaoModule extends AbstractModule {
+    public MockNonEntityDaoModule(final KillbillConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     protected void configure() {

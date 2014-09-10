@@ -28,8 +28,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -39,6 +37,7 @@ import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
+import org.killbill.bus.api.PersistentBus;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -60,14 +59,11 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final InternalCallContext context) {
+                              final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final InternalCallContext context) {
         synchronized (monitor) {
             invoices.put(invoice.getId(), invoice);
             for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
                 items.put(invoiceItemModelDao.getId(), invoiceItemModelDao);
-            }
-            for (final InvoicePaymentModelDao paymentModelDao : invoicePayments) {
-                payments.put(paymentModelDao.getId(), paymentModelDao);
             }
             accountRecordIds.put(invoice.getAccountId(), context.getAccountRecordId());
         }
@@ -86,7 +82,6 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
             return invoices.get(id);
         }
     }
-
 
     @Override
     public InvoiceModelDao getByNumber(final Integer number, final InternalTenantContext context) {
@@ -126,7 +121,6 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     @Override
     public List<InvoiceModelDao> getInvoicesByAccount(final LocalDate fromDate, final InternalTenantContext context) {
         final List<InvoiceModelDao> invoicesForAccount = new ArrayList<InvoiceModelDao>();
-
         synchronized (monitor) {
             final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : getAll(context)) {
@@ -201,6 +195,23 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
+    public List<InvoicePaymentModelDao> getInvoicePaymentsByAccount(final InternalTenantContext context) {
+
+        throw new UnsupportedOperationException();
+/*
+        InvoicePaymentModelDao does not export accountId ?
+
+        final List<InvoicePaymentModelDao> invoicesForAccount = new ArrayList<InvoicePaymentModelDao>();
+        synchronized (monitor) {
+            final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
+            for (final InvoicePaymentModelDao payment : payments.values()) {
+            }
+        }
+        return null;
+*/
+    }
+
+    @Override
     public void notifyOfPayment(final InvoicePaymentModelDao invoicePayment, final InternalCallContext context) {
         synchronized (monitor) {
             payments.put(invoicePayment.getId(), invoicePayment);
@@ -253,7 +264,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public InvoicePaymentModelDao postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final InternalCallContext context) throws InvoiceApiException {
+    public InvoicePaymentModelDao postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 
@@ -288,9 +299,8 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public InvoiceItemModelDao insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId,
-                                                    @Nullable final String description, final BigDecimal amount, final LocalDate effectiveDate,
-                                                    final Currency currency, final InternalCallContext context) {
+    public List<InvoiceItemModelDao> insertExternalCharges(final UUID accountId, final LocalDate effectiveDate,
+                                                           final Iterable<InvoiceItemModelDao> charges, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }
 
@@ -319,7 +329,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public InvoicePaymentModelDao createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
-                                               final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final UUID paymentCookieId,
+                                               final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final String transactionExternalKey,
                                                final InternalCallContext context)
             throws InvoiceApiException {
         return null;

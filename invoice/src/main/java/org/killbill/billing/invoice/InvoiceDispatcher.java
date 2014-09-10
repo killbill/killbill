@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -30,27 +32,16 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.invoice.usage.UsageUtils;
-import org.killbill.billing.junction.BillingEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.clock.Clock;
-import org.killbill.commons.locker.GlobalLock;
-import org.killbill.commons.locker.GlobalLocker;
-import org.killbill.commons.locker.LockFailedException;
+import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
@@ -72,21 +63,34 @@ import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLock;
+import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.LockFailedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class InvoiceDispatcher {
@@ -104,9 +108,12 @@ public class InvoiceDispatcher {
     private final GlobalLocker locker;
     private final PersistentBus eventBus;
     private final Clock clock;
+    private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
+    private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
-    public InvoiceDispatcher(final InvoiceGenerator generator, final AccountInternalApi accountApi,
+    public InvoiceDispatcher(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry,
+                             final InvoiceGenerator generator, final AccountInternalApi accountApi,
                              final BillingInternalApi billingApi,
                              final SubscriptionBaseInternalApi SubscriptionApi,
                              final InvoiceDao invoiceDao,
@@ -114,7 +121,8 @@ public class InvoiceDispatcher {
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
                              final PersistentBus eventBus,
-                             final Clock clock) {
+                             final Clock clock, final CacheControllerDispatcher controllerDispatcher) {
+        this.pluginRegistry = pluginRegistry;
         this.generator = generator;
         this.billingApi = billingApi;
         this.subscriptionApi = SubscriptionApi;
@@ -125,6 +133,7 @@ public class InvoiceDispatcher {
         this.locker = locker;
         this.eventBus = eventBus;
         this.clock = clock;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     public void processSubscription(final EffectiveSubscriptionInternalEvent transition,
@@ -142,7 +151,7 @@ public class InvoiceDispatcher {
             }
             final UUID accountId = subscriptionApi.getAccountIdFromSubscriptionId(subscriptionId, context);
             processAccount(accountId, targetDate, false, context);
-        } catch (SubscriptionBaseApiException e) {
+        } catch (final SubscriptionBaseApiException e) {
             log.error("Failed handling SubscriptionBase change.",
                       new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
         }
@@ -155,7 +164,7 @@ public class InvoiceDispatcher {
             lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), accountId.toString(), NB_LOCK_TRY);
 
             return processAccountWithLock(accountId, targetDate, dryRun, context);
-        } catch (LockFailedException e) {
+        } catch (final LockFailedException e) {
             // Not good!
             log.error(String.format("Failed to process invoice for account %s, targetDate %s",
                                     accountId.toString(), targetDate), e);
@@ -166,7 +175,6 @@ public class InvoiceDispatcher {
         }
         return null;
     }
-
 
     private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDateTime,
                                            final boolean dryRun, final InternalCallContext context) throws InvoiceApiException {
@@ -179,7 +187,6 @@ public class InvoiceDispatcher {
             final DateAndTimeZoneContext dateAndTimeZoneContext = billingEvents.iterator().hasNext() ?
                                                                   new DateAndTimeZoneContext(billingEvents.iterator().next().getEffectiveDate(), account.getTimeZone(), clock) :
                                                                   null;
-
 
             List<Invoice> invoices = new ArrayList<Invoice>();
             if (!billingEvents.isAccountAutoInvoiceOff()) {
@@ -206,6 +213,21 @@ public class InvoiceDispatcher {
                 }
             } else {
                 if (!dryRun) {
+                    // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
+                    final List<InvoicePluginApi> invoicePlugins = this.getInvoicePlugins();
+                    final CallContext callContext = buildCallContext(context);
+                    for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
+                        final List<InvoiceItem> items = invoicePlugin.getAdditionalInvoiceItems(invoice, ImmutableList.<PluginProperty>of(), callContext);
+                        if (items != null) {
+                            for (final InvoiceItem item : items) {
+                                if (InvoiceItemType.EXTERNAL_CHARGE.equals(item.getInvoiceItemType()) || InvoiceItemType.TAX.equals(item.getInvoiceItemType())) {
+                                    invoice.addInvoiceItem(item);
+                                } else {
+                                    log.warn("Ignoring invoice item of type {} from InvoicePluginApi {}: {}", item.getInvoiceItemType(), invoicePlugin, item);
+                                }
+                            }
+                        }
+                    }
 
                     // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
                     final Set<UUID> adjustedUniqueOtherInvoiceId = new TreeSet<UUID>();
@@ -219,12 +241,12 @@ public class InvoiceDispatcher {
                     isRealInvoiceWithItems = adjustedUniqueOtherInvoiceId.remove(invoice.getId());
 
                     if (isRealInvoiceWithItems) {
-                        log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(),                                                                                                                                           accountId, targetDate, targetDateTime});
+                        log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(), accountId, targetDate, targetDateTime});
                     } else {
                         final Joiner joiner = Joiner.on(",");
                         final String adjustedInvoices = joiner.join(adjustedUniqueOtherInvoiceId.toArray(new UUID[adjustedUniqueOtherInvoiceId.size()]));
                         log.info("Adjusting existing invoices {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{adjustedInvoices, invoice.getNumberOfItems(),
-                                                                                                                                           accountId, targetDate, targetDateTime});
+                                                                                                                                                     accountId, targetDate, targetDateTime});
                     }
 
                     final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
@@ -235,22 +257,13 @@ public class InvoiceDispatcher {
                                                                                                                                                     return new InvoiceItemModelDao(input);
                                                                                                                                                 }
                                                                                                                                             }));
-                    // Not really needed, there shouldn't be any payment at this stage
-                    final List<InvoicePaymentModelDao> invoicePaymentModelDaos = ImmutableList.<InvoicePaymentModelDao>copyOf(Collections2.transform(invoice.getPayments(),
-                                                                                                                                                     new Function<InvoicePayment, InvoicePaymentModelDao>() {
-                                                                                                                                                         @Override
-                                                                                                                                                         public InvoicePaymentModelDao apply(final InvoicePayment input) {
-                                                                                                                                                             return new InvoicePaymentModelDao(input);
-                                                                                                                                                         }
-                                                                                                                                                     }));
 
-                    final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions = createNextFutureNotificationDate(invoiceItemModelDaos, UsageUtils.getKnownUsages(billingEvents, null), dateAndTimeZoneContext);
-                    invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, callbackDateTimePerSubscriptions, context);
+                    final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents.getUsages(), dateAndTimeZoneContext);
+                    invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, callbackDateTimePerSubscriptions, context);
 
                     final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
                     setChargedThroughDates(dateAndTimeZoneContext, fixedPriceInvoiceItems, recurringInvoiceItems, context);
-
 
                     final List<InvoiceInternalEvent> events = new ArrayList<InvoiceInternalEvent>();
                     if (isRealInvoiceWithItems) {
@@ -258,36 +271,46 @@ public class InvoiceDispatcher {
                                                                    invoice.getBalance(), invoice.getCurrency(),
                                                                    context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
                     }
-                    for (UUID cur : adjustedUniqueOtherInvoiceId) {
+                    for (final UUID cur : adjustedUniqueOtherInvoiceId) {
                         final InvoiceAdjustmentInternalEvent event = new DefaultInvoiceAdjustmentEvent(cur, invoice.getAccountId(),
                                                                                                        context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                         events.add(event);
                     }
 
-
-                    for (InvoiceInternalEvent event : events) {
+                    for (final InvoiceInternalEvent event : events) {
                         postEvent(event, accountId, context);
                     }
                 }
             }
 
-            if (account.isNotifiedForInvoices() && isRealInvoiceWithItems  && !dryRun) {
+            if (account.isNotifiedForInvoices() && isRealInvoiceWithItems && !dryRun) {
                 // Need to re-hydrate the invoice object to get the invoice number (record id)
                 // API_FIX InvoiceNotifier public API?
                 invoiceNotifier.notify(account, new DefaultInvoice(invoiceDao.getById(invoice.getId(), context)), buildTenantContext(context));
             }
 
             return invoice;
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
             log.error("Failed handling SubscriptionBase change.", e);
             return null;
         }
     }
 
     private TenantContext buildTenantContext(final InternalTenantContext context) {
-        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
+        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
     }
 
+    private CallContext buildCallContext(final InternalCallContext context) {
+        return context.toCallContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
+    }
+
+    private List<InvoicePluginApi> getInvoicePlugins() {
+        final List<InvoicePluginApi> invoicePlugins = new ArrayList<InvoicePluginApi>();
+        for (final String name : this.pluginRegistry.getAllServices()) {
+            invoicePlugins.add(this.pluginRegistry.getServiceForName(name));
+        }
+        return invoicePlugins;
+    }
 
     @VisibleForTesting
     Map<UUID, List<DateTime>> createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final Map<String, Usage> knownUsages, final DateAndTimeZoneContext dateAndTimeZoneContext) {
@@ -307,7 +330,7 @@ public class InvoiceDispatcher {
                 result.put(item.getSubscriptionId(), perSubscriptionCallback);
             }
 
-            switch(item.getType()) {
+            switch (item.getType()) {
                 case RECURRING:
                     if ((item.getEndDate() != null) &&
                         (item.getAmount() == null ||
@@ -317,9 +340,8 @@ public class InvoiceDispatcher {
                     break;
 
                 case USAGE:
-                    final Usage usage = knownUsages.get(item.getUsageName());
-                    final String key = item.getSubscriptionId().toString() + ":" + usage.getName();
-                    final LocalDate perSubscriptionUsageRecurringDate  = perSubscriptionUsage.get(key);
+                    final String key = item.getSubscriptionId().toString() + ":" + item.getUsageName();
+                    final LocalDate perSubscriptionUsageRecurringDate = perSubscriptionUsage.get(key);
                     if (perSubscriptionUsageRecurringDate == null || perSubscriptionUsageRecurringDate.compareTo(item.getEndDate()) < 0) {
                         perSubscriptionUsage.put(key, item.getEndDate());
                     }
@@ -331,20 +353,24 @@ public class InvoiceDispatcher {
         }
 
         for (final String key : perSubscriptionUsage.keySet()) {
-            final String [] parts = key.split(":");
+            final String[] parts = key.split(":");
             final UUID subscriptionId = UUID.fromString(parts[0]);
 
             final List<DateTime> perSubscriptionCallback = result.get(subscriptionId);
             final String usageName = parts[1];
-            final Usage usage = knownUsages.get(usageName);
+            final LocalDate endDate = perSubscriptionUsage.get(key);
 
-            final LocalDate endDate =  perSubscriptionUsage.get(key);
-            // STEPH_USAGE WE should double check this is indeed the right date to be called back for that subscription/usage section.
-            final LocalDate nextCallbackUsageDate = (usage.getBillingMode() == BillingMode.IN_ARREAR) ? endDate.plusMonths(usage.getBillingPeriod().getNumberOfMonths()) : endDate;
-            perSubscriptionCallback.add(dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(nextCallbackUsageDate));
+            final DateTime subscriptionUsageCallbackDate = getNextUsageBillingDate(usageName, endDate, dateAndTimeZoneContext, knownUsages);
+            perSubscriptionCallback.add(subscriptionUsageCallbackDate);
         }
 
         return result;
+    }
+
+    private DateTime getNextUsageBillingDate(final String usageName, final LocalDate chargedThroughDate, final DateAndTimeZoneContext dateAndTimeZoneContext, final Map<String, Usage> knownUsages) {
+        final Usage usage = knownUsages.get(usageName);
+        final LocalDate nextCallbackUsageDate = (usage.getBillingMode() == BillingMode.IN_ARREAR) ? chargedThroughDate.plusMonths(usage.getBillingPeriod().getNumberOfMonths()) : chargedThroughDate;
+        return dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(nextCallbackUsageDate);
     }
 
     private void setChargedThroughDates(final DateAndTimeZoneContext dateAndTimeZoneContext,
@@ -366,7 +392,7 @@ public class InvoiceDispatcher {
     private void postEvent(final BusInternalEvent event, final UUID accountId, final InternalCallContext context) {
         try {
             eventBus.post(event);
-        } catch (EventBusException e) {
+        } catch (final EventBusException e) {
             log.error(String.format("Failed to post event %s for account %s", event.getBusEventType(), accountId), e);
         }
     }

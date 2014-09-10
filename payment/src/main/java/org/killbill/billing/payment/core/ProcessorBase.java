@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,39 +26,41 @@ import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.commons.locker.GlobalLock;
-import org.killbill.commons.locker.GlobalLocker;
-import org.killbill.commons.locker.LockFailedException;
-import org.killbill.billing.events.BusInternalEvent;
-import org.killbill.billing.invoice.api.Invoice;
-import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
+import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
+import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLock;
+import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.LockFailedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 
 public abstract class ProcessorBase {
 
@@ -64,33 +68,37 @@ public abstract class ProcessorBase {
 
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final AccountInternalApi accountInternalApi;
-    protected final PersistentBus eventBus;
     protected final GlobalLocker locker;
     protected final ExecutorService executor;
     protected final PaymentDao paymentDao;
     protected final NonEntityDao nonEntityDao;
     protected final TagInternalApi tagInternalApi;
+    protected final Clock clock;
+    protected final CacheControllerDispatcher controllerDispatcher;
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
+    protected static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
     protected final InvoiceInternalApi invoiceApi;
 
     public ProcessorBase(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                          final AccountInternalApi accountInternalApi,
-                         final PersistentBus eventBus,
                          final PaymentDao paymentDao,
                          final NonEntityDao nonEntityDao,
                          final TagInternalApi tagInternalApi,
                          final GlobalLocker locker,
-                         final ExecutorService executor, final InvoiceInternalApi invoiceApi) {
+                         final ExecutorService executor,
+                         final InvoiceInternalApi invoiceApi,
+                         final Clock clock,
+                         final CacheControllerDispatcher controllerDispatcher) {
         this.pluginRegistry = pluginRegistry;
         this.accountInternalApi = accountInternalApi;
-        this.eventBus = eventBus;
         this.paymentDao = paymentDao;
         this.nonEntityDao = nonEntityDao;
         this.locker = locker;
         this.executor = executor;
         this.tagInternalApi = tagInternalApi;
         this.invoiceApi = invoiceApi;
+        this.clock = clock;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     protected boolean isAccountAutoPayOff(final UUID accountId, final InternalTenantContext context) {
@@ -136,71 +144,75 @@ public abstract class ProcessorBase {
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final Account account, final InternalTenantContext context) throws PaymentApiException {
+        final UUID paymentMethodId = getDefaultPaymentMethodId(account);
+        return getPaymentProviderPlugin(paymentMethodId, context);
+    }
+
+    protected UUID getDefaultPaymentMethodId(final Account account) throws PaymentApiException {
         final UUID paymentMethodId = account.getPaymentMethodId();
         if (paymentMethodId == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, account.getId());
         }
-        return getPaymentProviderPlugin(paymentMethodId, context);
-    }
-
-    protected void postPaymentEvent(final BusInternalEvent ev, final UUID accountId, final InternalCallContext context) {
-        if (ev == null) {
-            return;
-        }
-        try {
-            eventBus.post(ev);
-        } catch (EventBusException e) {
-            log.error("Failed to post Payment event event for account {} ", accountId, e);
-        }
-    }
-
-    protected Invoice rebalanceAndGetInvoice(final UUID accountId, final UUID invoiceId, final InternalCallContext context) throws InvoiceApiException {
-        invoiceApi.consumeExistingCBAOnAccountWithUnpaidInvoices(accountId, context);
-        final Invoice invoice = invoiceApi.getInvoiceById(invoiceId, context);
-        return invoice;
+        return paymentMethodId;
     }
 
     protected TenantContext buildTenantContext(final InternalTenantContext context) {
-        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
+        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
     }
 
-    public interface WithAccountLockCallback<T> {
+    protected void validateUniqueTransactionExternalKey(@Nullable final String transactionExternalKey, final InternalTenantContext tenantContext) throws PaymentApiException {
+        // If no key specified, system will allocate a unique one later.
+        if (transactionExternalKey == null) {
+            return;
+        }
 
-        public T doOperation() throws PaymentApiException;
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getPaymentTransactionsByExternalKey(transactionExternalKey, tenantContext);
+        final PaymentTransactionModelDao transactionAlreadyExists = Iterables.tryFind(transactions, new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return input.getTransactionStatus() == TransactionStatus.SUCCESS ||
+                       input.getTransactionStatus() == TransactionStatus.UNKNOWN;
+            }
+        }).orNull();
+        if (transactionAlreadyExists != null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, transactionExternalKey);
+        }
     }
 
-    public static class CallableWithAccountLock<T> implements Callable<T> {
+    // TODO Rename - there is no lock!
+    public interface WithAccountLockCallback<PluginDispatcherReturnType, ExceptionType extends Exception> {
+
+        public PluginDispatcherReturnType doOperation() throws ExceptionType;
+    }
+
+    public static class CallableWithAccountLock<ReturnType, ExceptionType extends Exception> implements Callable<PluginDispatcherReturnType<ReturnType>> {
 
         private final GlobalLocker locker;
         private final String accountExternalKey;
-        private final WithAccountLockCallback<T> callback;
+        private final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback;
 
         public CallableWithAccountLock(final GlobalLocker locker,
                                        final String accountExternalKey,
-                                       final WithAccountLockCallback<T> callback) {
+                                       final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback) {
             this.locker = locker;
             this.accountExternalKey = accountExternalKey;
             this.callback = callback;
         }
 
         @Override
-        public T call() throws Exception {
-            return new WithAccountLock<T>().processAccountWithLock(locker, accountExternalKey, callback);
+        public PluginDispatcherReturnType<ReturnType> call() throws ExceptionType, LockFailedException {
+            return new WithAccountLock<ReturnType, ExceptionType>().processAccountWithLock(locker, accountExternalKey, callback);
         }
     }
 
-    public static class WithAccountLock<T> {
+    public static class WithAccountLock<ReturnType, ExceptionType extends Exception> {
 
-        public T processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<T> callback)
-                throws PaymentApiException {
+        public PluginDispatcherReturnType<ReturnType> processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback)
+                throws ExceptionType, LockFailedException {
             GlobalLock lock = null;
             try {
                 lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), accountExternalKey, NB_LOCK_TRY);
                 return callback.doOperation();
-            } catch (LockFailedException e) {
-                final String format = String.format("Failed to lock account %s", accountExternalKey);
-                log.error(String.format(format), e);
-                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
             } finally {
                 if (lock != null) {
                     lock.release();

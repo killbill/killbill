@@ -30,9 +30,9 @@ import org.killbill.billing.overdue.EmailNotification;
 import org.killbill.billing.overdue.OverdueApiException;
 import org.killbill.billing.overdue.OverdueCancellationPolicy;
 import org.killbill.billing.overdue.OverdueState;
-import org.killbill.billing.util.config.catalog.ValidatingConfig;
-import org.killbill.billing.util.config.catalog.ValidationError;
-import org.killbill.billing.util.config.catalog.ValidationErrors;
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationError;
+import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultOverdueState extends ValidatingConfig<OverdueConfig> implements OverdueState {

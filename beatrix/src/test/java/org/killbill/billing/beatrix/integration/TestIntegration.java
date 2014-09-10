@@ -23,9 +23,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -42,8 +39,10 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PaymentStatus;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
@@ -74,8 +73,9 @@ public class TestIntegration extends TestIntegrationBase {
         // ADD ADD_ON ON THE SAME DAY
         //
         addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+
         Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
-        paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), PaymentStatus.SUCCESS, invoice.getId(), Currency.USD));
+        paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), TransactionStatus.SUCCESS, invoice.getId(), Currency.USD));
 
         //
         // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
@@ -88,6 +88,7 @@ public class TestIntegration extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("399.95")));
 
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     @Test(groups = "slow")
@@ -168,6 +169,8 @@ public class TestIntegration extends TestIntegrationBase {
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 7, 31), callContext);
+
+        checkNoMoreInvoiceToGenerate(account);
 
         log.info("TEST PASSED !");
     }
@@ -250,6 +253,9 @@ public class TestIntegration extends TestIntegrationBase {
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 2), callContext);
+
+        checkNoMoreInvoiceToGenerate(account);
+
     }
 
     @Test(groups = "slow")
@@ -337,6 +343,8 @@ public class TestIntegration extends TestIntegrationBase {
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 3), callContext);
+
+        checkNoMoreInvoiceToGenerate(account);
 
         log.info("TEST PASSED !");
 
@@ -439,6 +447,9 @@ public class TestIntegration extends TestIntegrationBase {
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(3));
         clock.addDays(3);
         assertListenerStatus();
+
+        checkNoMoreInvoiceToGenerate(account);
+
     }
 
     @Test(groups = "slow")
@@ -473,6 +484,9 @@ public class TestIntegration extends TestIntegrationBase {
 
         assertEquals(refreshedBseEntitlement.getState(), EntitlementState.CANCELLED);
         assertEquals(newBaseEntitlement.getState(), EntitlementState.ACTIVE);
+
+        checkNoMoreInvoiceToGenerate(account);
+
     }
 
     @Test(groups = "slow")
@@ -544,6 +558,8 @@ public class TestIntegration extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 5), new LocalDate(2012, 5, 2), InvoiceItemType.RECURRING, new BigDecimal("224.96")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 5), new LocalDate(2012, 4, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("-224.96")));
 
+        checkNoMoreInvoiceToGenerate(account);
+
     }
 
     @Test(groups = "slow")
@@ -606,5 +622,8 @@ public class TestIntegration extends TestIntegrationBase {
         assertEquals(invoices.size(), 14);
 
         assertListenerStatus();
+
+        checkNoMoreInvoiceToGenerate(account);
+
     }
 }

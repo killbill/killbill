@@ -31,6 +31,12 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Default payment provider to use")
     public String getDefaultPaymentProvider();
 
+    // STEPH_RETRY unique property (does not match payment one)
+    @Config("org.killbill.payment.retry.provider.default")
+    @Default("__external_retry__")
+    @Description("Default retry provider to use")
+    public String getDefaultRetryProvider();
+
     @Config("org.killbill.payment.retry.days")
     @Default("8,8,8")
     @Description("Interval in days between payment retries")
@@ -50,7 +56,7 @@ public interface PaymentConfig extends KillbillConfig {
     public int getPluginFailureRetryMaxAttempts();
 
     @Config("org.killbill.payment.plugin.timeout")
-    @Default("90s")
+    @Default("30s")
     @Description("Timeout for each payment attempt")
     public TimeSpan getPaymentPluginTimeout();
 
@@ -58,6 +64,21 @@ public interface PaymentConfig extends KillbillConfig {
     @Default("10")
     @Description("Number of threads for plugin executor dispatcher")
     public int getPaymentPluginThreadNb();
+
+    @Config("org.killbill.payment.janitor.pending")
+    @Default("12h")
+    @Description("Delay after which pending transactions should be marked as failed")
+    public TimeSpan getJanitorPendingCleanupTime();
+
+    @Config("org.killbill.payment.janitor.attempts")
+    @Default("15m")
+    @Description("Delay after which incomplete  attempts should be completed")
+    public TimeSpan getJanitorAttemptCompletionTime();
+
+    @Config("org.killbill.payment.janitor.rate")
+    @Default("1h")
+    @Description("Rate at which janitor tasks are scheduled")
+    public TimeSpan getJanitorRunningRate();
 
     @Config("org.killbill.payment.off")
     @Default("false")

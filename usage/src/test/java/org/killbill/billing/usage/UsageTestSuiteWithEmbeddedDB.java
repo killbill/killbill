@@ -16,6 +16,9 @@
 
 package org.killbill.billing.usage;
 
+import javax.inject.Inject;
+
+import org.killbill.billing.usage.dao.RolledUpUsageDao;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -27,6 +30,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 public class UsageTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
+
+    @Inject
+    protected RolledUpUsageDao rolledUpUsageDao;
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {

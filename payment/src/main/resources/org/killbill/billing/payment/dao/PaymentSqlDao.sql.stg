@@ -1,24 +1,23 @@
 group PaymentSqlDao: EntitySqlDao;
 
+tableName() ::= "payments"
+
+historyTableName() ::= "payment_history"
 
 extraTableFieldsWithComma(prefix) ::= <<
 , <prefix>record_id as payment_number
 >>
 
 defaultOrderBy(prefix) ::= <<
-order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
+order by <prefix>created_date ASC, <recordIdField(prefix)> ASC
 >>
 
 tableFields(prefix) ::= <<
   <prefix>account_id
-, <prefix>invoice_id
 , <prefix>payment_method_id
-, <prefix>amount
-, <prefix>currency
-, <prefix>processed_amount
-, <prefix>processed_currency
-, <prefix>effective_date
-, <prefix>payment_status
+, <prefix>external_key
+, <prefix>state_name
+, <prefix>last_success_state_name
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -27,81 +26,60 @@ tableFields(prefix) ::= <<
 
 tableValues() ::= <<
   :accountId
-, :invoiceId
 , :paymentMethodId
-, :amount
-, :currency
-, :processedAmount
-, :processedCurrency
-, :effectiveDate
-, :paymentStatus
+, :externalKey
+, :stateName
+, :lastSuccessStateName
 , :createdBy
 , :createdDate
 , :updatedBy
 , :updatedDate
 >>
 
-tableName() ::= "payments"
-
-historyTableName() ::= "payment_history"
-
-
-getPaymentsForAccount() ::= <<
-select <allTableFields()>
-, record_id as payment_number
-from payments
-where account_id = :accountId
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
-;
->>
-
-getPaymentsForInvoice() ::= <<
-select <allTableFields()>
-, record_id as payment_number
-from payments
-where invoice_id = :invoiceId
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
-;
->>
-
-
-getLastPaymentForAccountAndPaymentMethod() ::= <<
-select <allTableFields()>
-, record_id as payment_number
-from payments
-where account_id = :accountId
-and payment_method_id = :paymentMethodId
-<AND_CHECK_TENANT()>
-order by effective_date desc limit 1
-;
->>
-
-
-updatePaymentStatus() ::= <<
-update payments
-set payment_status = :paymentStatus
-, processed_amount = :processedAmount
-, processed_currency = :processedCurrency
-, updated_by = :updatedBy
-, updated_date = :createdDate
-where id = :id
-<AND_CHECK_TENANT()>
-;
->>
-
-
-updatePaymentForNewAttempt() ::= <<
+updatePaymentForNewTransaction() ::= <<
 update <tableName()>
-set amount = :amount
-, effective_date = :effectiveDate
-, payment_method_id= :paymentMethodId
+set updated_by = :updatedBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
+updatePaymentStateName() ::= <<
+update <tableName()>
+set state_name = :stateName
 , updated_by = :updatedBy
 , updated_date = :createdDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;
+>>
+
+updateLastSuccessPaymentStateName() ::= <<
+update <tableName()>
+set state_name = :stateName
+, last_success_state_name = :lastSuccessStateName
+, updated_by = :updatedBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
+getPaymentByExternalKey() ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where external_key = :externalKey
+;
+>>
+
+searchQuery(prefix) ::= <<
+     <idField(prefix)> = :searchKey
+  or <prefix>account_id = :searchKey
+  or <prefix>payment_method_id = :searchKey
+  or <prefix>external_key like :likeSearchKey
+  or <prefix>state_name like :likeSearchKey
 >>
 
 getByPluginName() ::= <<
@@ -110,7 +88,7 @@ select
 from <tableName()> t
 join payment_methods pm on pm.id = t.payment_method_id
 where pm.plugin_name = :pluginName
-order by record_id
+order by t.record_id asc
 limit :offset, :rowCount
 ;
 >>

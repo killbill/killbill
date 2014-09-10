@@ -26,22 +26,35 @@ import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<PaymentMethod> {
+import com.google.common.base.Objects;
 
+public class PaymentMethodModelDao extends EntityModelDaoBase implements EntityModelDao<PaymentMethod> {
+
+    private String externalKey;
     private UUID accountId;
     private String pluginName;
     private Boolean isActive;
 
     public PaymentMethodModelDao() { /* For the DAO mapper */ }
 
-    public PaymentMethodModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+    public PaymentMethodModelDao(final UUID id,  @Nullable final String externalKey, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                  final UUID accountId, final String pluginName,
                                  final Boolean isActive) {
         super(id, createdDate, updatedDate);
+        this.externalKey = Objects.firstNonNull(externalKey, id.toString());
         this.accountId = accountId;
         this.pluginName = pluginName;
         this.isActive = isActive;
+    }
+
+    public String getExternalKey() {
+        return externalKey;
+    }
+
+    public void setExternalKey(final String externalKey) {
+        this.externalKey = externalKey;
     }
 
     public UUID getAccountId() {
@@ -50,6 +63,18 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
 
     public String getPluginName() {
         return pluginName;
+    }
+
+    public void setAccountId(final UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public void setPluginName(final String pluginName) {
+        this.pluginName = pluginName;
+    }
+
+    public void setIsActive(final Boolean isActive) {
+        this.isActive = isActive;
     }
 
     // TODO  Required for making the BindBeanFactory with Introspector work
@@ -98,6 +123,12 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
         if (id != null ? !id.equals(that.id) : that.id != null) {
             return false;
         }
+        /*
+        TODO unclear
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
+            return false;
+        }
+        */
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
@@ -111,6 +142,7 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
     @Override
     public int hashCode() {
         int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
         result = 31 * result + (isActive != null ? isActive.hashCode() : 0);
         return result;

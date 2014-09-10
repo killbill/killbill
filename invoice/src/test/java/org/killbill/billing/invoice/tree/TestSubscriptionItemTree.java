@@ -218,7 +218,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         expectedResult.add(expected1);
         expectedResult.add(expected2);
 
-        // First test with items in order
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
         tree.addItem(first);
         tree.addItem(second);
@@ -350,6 +349,51 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         tree.build();
         verifyResult(tree.getView(), expectedResult);
     }
+
+    // The test that first repair (repair1) and new Item (newItem1) end up being ignored.
+    @Test(groups = "fast")
+    public void testOverlappingRepair() {
+
+        final LocalDate startDate = new LocalDate(2012, 5, 1);
+        final LocalDate endDate = new LocalDate(2013, 5, 1);
+
+        final LocalDate changeDate = new LocalDate(2012, 5, 11);
+        final LocalDate monthlyAlignmentDate = new LocalDate(2012, 6, 1);
+
+        final BigDecimal rate1 = new BigDecimal("2400.00");
+        final BigDecimal amount1 = rate1;
+
+        final BigDecimal rate2 = new BigDecimal("300.00");
+        final BigDecimal amount2 = rate2;
+
+        // Start with a ANNUAL plan (high rate, rate1)
+        final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
+
+        // Change to MONTHLY plan 10 days later (low rate, rate2)
+        final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, changeDate, endDate, amount1.negate(), currency, initial.getId());
+        final InvoiceItem newItem1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "someelse", "someelse", changeDate, monthlyAlignmentDate, amount2, rate2, currency);
+
+        // On the same day, now revert back to ANNUAL
+        final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, changeDate, monthlyAlignmentDate, amount2.negate(), currency, newItem1.getId());
+        final InvoiceItem newItem2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, changeDate, endDate, amount1, rate1, currency);
+
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId);
+        tree.addItem(initial);
+        tree.addItem(newItem1);
+        tree.addItem(repair1);
+        tree.addItem(newItem2);
+        tree.addItem(repair2);
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, changeDate, new BigDecimal("65.75"), rate1, currency);
+        expectedResult.add(expected1);
+        expectedResult.add(newItem2);
+
+        tree.build();
+        verifyResult(tree.getView(), expectedResult);
+    }
+
 
     @Test(groups = "fast")
     public void testMergeWithNoExisting() {

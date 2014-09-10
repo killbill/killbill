@@ -19,12 +19,12 @@
     <parent>
         <artifactId>killbill</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.9.3-SNAPSHOT</version>
+        <version>0.11.10-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-internal-api</artifactId>
     <packaging>jar</packaging>
-    <name>Kill Bill internal apis</name>
+    <name>killbill-api</name>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -43,6 +43,14 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing.plugin</groupId>
+            <artifactId>killbill-plugin-api-invoice</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing.plugin</groupId>

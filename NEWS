@@ -1,3 +1,58 @@
+0.11.10
+    Fix broken logging (war artifacts)
+    https://github.com/killbill/killbill/issues/210
+    Update killbill-oss-parent to 0.7.22
+
+0.11.9
+    payment: rework Janitor shutdown sequence
+    jdbc: integrate log4jdbc-log4j2
+    profiling: add support for JAX-RS and EhCache
+    Shiro integration bugfixes
+    Fix tests failures on H2
+    https://github.com/killbill/killbill/issues/204
+    Update killbill-oss-parent to 0.7.20
+
+0.11.8
+    Add support for profiling data
+    Harden code to fix sporadic failure in integration tests
+
+0.11.6
+    Payment subsystem (complete merge payment and direct payment, and does renaming)
+
+0.11.5
+    Extract killbill-platform
+    Implement state machines for payments
+    Merge invoice and direct payments flows
+    https://github.com/killbill/killbill/issues/170
+    https://github.com/killbill/killbill/issues/201
+    Update killbill-oss-parent to 0.7.14
+
+0.11.4
+    Upgrade JRuby to 1.7.12
+    Fix NPE in direct payment APIs for accounts without a default payment method
+
+0.11.3
+    Iteration on new direct payment APIs (unstable)
+
+0.11.2
+    Iteration on new direct payment APIs (unstable)
+    invoice: change external charges APIs to allow bulk insertion
+    osgi: introduce OSGIConfigProperties as an an osgi service to allow plugins to read system properties
+
+0.11.1
+    Introduction of new direct payment APIs (unstable)
+
+0.10.2
+    Add paymentAmount parameter to payAllInvoices API
+    Fix OSGI dependencies issue
+
+0.10.1
+    Allow configuration of EhCache by specifying a URI
+
+0.10.0
+    Merge usage branch (consumable in arrear)
+    Upgrade osgi felix framework and resolve osgi errors
+
 0.9.2
     Add org.killbill.server.properties property
     Add default invoice HTML template

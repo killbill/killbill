@@ -103,7 +103,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     @Override
     public Subscription getSubscriptionForEntitlementId(final UUID entitlementId, final TenantContext context) throws SubscriptionApiException {
         final Long accountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(entitlementId, ObjectType.SUBSCRIPTION, cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
-        final UUID accountId = nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT);
+        final UUID accountId = nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
 
         // Retrieve entitlements
         final AccountEntitlements accountEntitlements;
@@ -128,7 +128,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     @Override
     public SubscriptionBundle getSubscriptionBundle(final UUID bundleId, final TenantContext context) throws SubscriptionApiException {
         final Long accountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(bundleId, ObjectType.BUNDLE, cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
-        final UUID accountId = nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT);
+        final UUID accountId = nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
 
         final Optional<SubscriptionBundle> bundleOptional = Iterables.<SubscriptionBundle>tryFind(getSubscriptionBundlesForAccount(accountId, context),
                                                                                                   new Predicate<SubscriptionBundle>() {

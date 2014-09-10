@@ -28,7 +28,6 @@ import com.google.common.eventbus.Subscribe;
 
 public class KillbillEventHandler {
 
-
     private final List<CompletionUserRequest> activeWaiters;
 
     public KillbillEventHandler() {

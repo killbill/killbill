@@ -16,34 +16,24 @@
 
 package org.killbill.billing.entitlement.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.StatementContext;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.entity.dao.Audited;
+import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
-
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.entitlement.api.BlockingState;
-import org.killbill.billing.entitlement.api.BlockingStateType;
-import org.killbill.billing.junction.DefaultBlockingState;
-import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.util.dao.MapperBase;
-import org.killbill.billing.util.entity.dao.Audited;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-@RegisterMapper(BlockingStateSqlDao.BlockingHistorySqlMapper.class)
 public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao, BlockingState> {
 
     @SqlQuery
@@ -66,37 +56,4 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
     @Audited(ChangeType.UPDATE)
     public void unactiveEvent(@Bind("id") String id,
                               @BindBean final InternalCallContext context);
-
-    public class BlockingHistorySqlMapper extends MapperBase implements ResultSetMapper<BlockingStateModelDao> {
-
-        @Override
-        public BlockingStateModelDao map(final int index, final ResultSet r, final StatementContext ctx)
-                throws SQLException {
-
-            final UUID id;
-            final UUID blockableId;
-            final String stateName;
-            final String service;
-            final boolean blockChange;
-            final boolean blockEntitlement;
-            final boolean blockBilling;
-            final boolean isActive;
-            final DateTime effectiveDate;
-            final DateTime createdDate;
-            final BlockingStateType type;
-
-            id = UUID.fromString(r.getString("id"));
-            blockableId = UUID.fromString(r.getString("blockable_id"));
-            stateName = r.getString("state") == null ? DefaultBlockingState.CLEAR_STATE_NAME : r.getString("state");
-            service = r.getString("service");
-            type = BlockingStateType.valueOf(r.getString("type"));
-            blockChange = r.getBoolean("block_change");
-            blockEntitlement = r.getBoolean("block_entitlement");
-            blockBilling = r.getBoolean("block_billing");
-            isActive = r.getBoolean("is_active");
-            effectiveDate = getDateTime(r, "effective_date");
-            createdDate = getDateTime(r, "created_date");
-            return new BlockingStateModelDao(id, blockableId, type, stateName, service, blockChange, blockEntitlement, blockBilling, effectiveDate, isActive, createdDate, createdDate);
-        }
-    }
 }

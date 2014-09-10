@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,11 +24,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.integration.BeatrixIntegrationModule;
@@ -40,10 +41,16 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -113,7 +120,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         return configXml;
     }
 
-    @Test(groups = "slow", description = "Test overdue stages and return to clear prior to CTD")
+    @Test(groups = "slow", description = "Test overdue stages and return to clear prior to CTD", enabled=false)
     public void testOverdueStages1() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -198,7 +205,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
     }
 
-    @Test(groups = "slow", description = "Test overdue stages and return to clear on CTD")
+    @Test(groups = "slow", description = "Test overdue stages and return to clear on CTD", enabled=false)
     public void testOverdueStages2() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -279,7 +286,6 @@ public class TestOverdueIntegration extends TestOverdueBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-169.32")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2012, 7, 31), InvoiceItemType.CBA_ADJ, new BigDecimal("169.32")));
 
-
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     // New invoice for the partial period since we unblocked on the 1st and so are missing the 31 july
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2012, 8, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
@@ -296,7 +302,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
     }
 
-    @Test(groups = "slow", description = "Test overdue stages and return to clear after CTD")
+    @Test(groups = "slow", description = "Test overdue stages and return to clear after CTD", enabled=false)
     public void testOverdueStages3() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -372,7 +378,6 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012, 8, 1 => Nothing should have happened
         addDaysAndCheckForCompletion(1);
 
-
         allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(true);
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -401,7 +406,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
     // This test is similar to the previous one except that instead of moving the clock to check we will get the next invoice
     // at the end, we carry a change of plan.
     //
-    @Test(groups = "slow", description = "Test overdue stages and follow with an immediate change of plan")
+    @Test(groups = "slow", description = "Test overdue stages and follow with an immediate change of plan", enabled=false)
     public void testOverdueStagesFollowedWithImmediateChange1() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -490,7 +495,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-14.49")), 0);
     }
 
-    @Test(groups = "slow", description = "Test overdue stages and follow with an immediate change of plan and use of credit", enabled=false)
+    @Test(groups = "slow", description = "Test overdue stages and follow with an immediate change of plan and use of credit", enabled = false)
     public void testOverdueStagesFollowedWithImmediateChange2() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -525,9 +530,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD1");
 
         // 2012, 7, 10 => Retry P0
-        addDaysAndCheckForCompletion(8, NextEvent.BLOCK, NextEvent.PAYMENT_ERROR, NextEvent.TAG     );
+        addDaysAndCheckForCompletion(8, NextEvent.BLOCK, NextEvent.PAYMENT_ERROR, NextEvent.TAG);
         checkODState("OD2");
-
 
         // 2012, 7, 18 => Retry P0
         addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR);
@@ -539,14 +543,12 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(false);
 
-
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     // New invoice for the part that was unblocked up to the BCD
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2013, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 23), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-85.4588")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2013, 5, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-1998.9012")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("2084.36")));
-
 
         // Move to 2012, 7, 31 and Make a change of plan
         addDaysAndCheckForCompletion(8, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -571,7 +573,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-1800")), 0);
     }
 
-    @Test(groups = "slow", description = "Test overdue stages with missing payment method")
+    @Test(groups = "slow", description = "Test overdue stages with missing payment method", enabled=false)
     public void testOverdueStateIfNoPaymentMethod() throws Exception {
         // This test is similar to the previous one - but there is no default payment method on the account, so there
         // won't be any payment retry
@@ -636,7 +638,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
 
         // Add a payment method and set it as default
-        paymentApi.addPaymentMethod(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
+        paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, paymentMethodPlugin, PLUGIN_PROPERTIES, callContext);
 
         allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(false);
 
@@ -645,8 +647,6 @@ public class TestOverdueIntegration extends TestOverdueBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 15), new LocalDate(2012, 7, 25), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-80.63")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("80.63")));
-
-
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
 
@@ -668,7 +668,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-12.89")), 0);
     }
 
-    @Test(groups = "slow", description = "Test overdue from non paid external charge")
+    @Test(groups = "slow", description = "Test overdue from non paid external charge", enabled=false)
     public void testShouldBeInOverdueAfterExternalCharge() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -682,7 +682,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Create an external charge on a new invoice
         addDaysAndCheckForCompletion(5);
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        invoiceUserApi.insertExternalChargeForBundle(account.getId(), bundle.getId(), BigDecimal.TEN, "For overdue", new LocalDate(2012, 5, 6), Currency.USD, callContext);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), bundle.getId(), "For overdue", new LocalDate(2012, 5, 6), BigDecimal.TEN, Currency.USD);
+        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), callContext).get(0);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 6), null, InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
 
@@ -711,7 +712,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
 
-    @Test(groups = "slow", description = "Test overdue after refund with no adjustment")
+    @Test(groups = "slow", description = "Test overdue after refund with no adjustment", enabled=false)
     public void testShouldBeInOverdueAfterRefundWithoutAdjustment() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -747,14 +748,14 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now, refund the second (first non-zero dollar) invoice
-        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), false, callContext);
+        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), false, PLUGIN_PROPERTIES, callContext);
         refundPaymentAndCheckForCompletion(account, payment, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
         // We should now be in OD1
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
     }
 
-    @Test(groups = "slow", description = "Test overdue after chargeback")
+    @Test(groups = "slow", description = "Test overdue after chargeback", enabled=false)
     public void testShouldBeInOverdueAfterChargeback() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -790,14 +791,15 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now, create a chargeback for the second (first non-zero dollar) invoice
-        final InvoicePayment payment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
-        createChargeBackAndCheckForCompletion(payment, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
+        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
+        final Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        createChargeBackAndCheckForCompletion(account, payment, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
         // We should now be in OD1
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
     }
 
-    @Test(groups = "slow", description = "Test overdue clear after external payment")
+    @Test(groups = "slow", description = "Test overdue clear after external payment", enabled=false)
     public void testOverdueStateShouldClearAfterExternalPayment() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -843,7 +845,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
 
-    @Test(groups = "slow", description = "Test overdue clear after item adjustment")
+    @Test(groups = "slow", description = "Test overdue clear after item adjustment", enabled=false)
     public void testOverdueStateShouldClearAfterCreditOrInvoiceItemAdjustment() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 

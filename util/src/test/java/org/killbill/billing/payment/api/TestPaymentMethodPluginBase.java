@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -39,67 +41,7 @@ public class TestPaymentMethodPluginBase implements PaymentMethodPlugin {
     }
 
     @Override
-    public String getType() {
-        return "CreditCard";
-    }
-
-    @Override
-    public String getCCName() {
-        return "Bozo";
-    }
-
-    @Override
-    public String getCCType() {
-        return "Visa";
-    }
-
-    @Override
-    public String getCCExpirationMonth() {
-        return "12";
-    }
-
-    @Override
-    public String getCCExpirationYear() {
-        return "2013";
-    }
-
-    @Override
-    public String getCCLast4() {
-        return "4365";
-    }
-
-    @Override
-    public String getAddress1() {
-        return "34, street Foo";
-    }
-
-    @Override
-    public String getAddress2() {
-        return null;
-    }
-
-    @Override
-    public String getCity() {
-        return "SF";
-    }
-
-    @Override
-    public String getState() {
-        return "CA";
-    }
-
-    @Override
-    public String getZip() {
-        return "95321";
-    }
-
-    @Override
-    public String getCountry() {
-        return "Zimbawe";
-    }
-
-    @Override
-    public List<PaymentMethodKVInfo> getProperties() {
-        return ImmutableList.<PaymentMethodKVInfo>of();
+    public List<PluginProperty> getProperties() {
+        return ImmutableList.<PluginProperty>of();
     }
 }

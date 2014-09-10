@@ -9,6 +9,7 @@ CREATE TABLE invoice_items (
     account_id char(36) NOT NULL,
     bundle_id char(36),
     subscription_id char(36),
+    description varchar(255),
     plan_name varchar(50),
     phase_name varchar(50),
     usage_name varchar(50),
@@ -60,7 +61,7 @@ CREATE TABLE invoice_payments (
     amount numeric(15,9) NOT NULL,
     currency char(3) NOT NULL,
     processed_currency char(3) NOT NULL,
-    payment_cookie_id char(36) DEFAULT NULL,
+    payment_cookie_id varchar(255) DEFAULT NULL,
     linked_invoice_payment_id char(36) DEFAULT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
@@ -69,7 +70,7 @@ CREATE TABLE invoice_payments (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX invoice_payments_id ON invoice_payments(id);
-CREATE INDEX invoice_payments ON invoice_payments(payment_id);
+CREATE UNIQUE INDEX invoice_payments ON invoice_payments(payment_id, type);
 CREATE INDEX invoice_payments_invoice_id ON invoice_payments(invoice_id);
 CREATE INDEX invoice_payments_reversals ON invoice_payments(linked_invoice_payment_id);
 CREATE INDEX invoice_payments_tenant_account_record_id ON invoice_payments(tenant_record_id, account_record_id);

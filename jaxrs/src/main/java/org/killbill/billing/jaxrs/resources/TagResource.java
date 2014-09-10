@@ -33,6 +33,7 @@ import javax.ws.rs.core.Response;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -47,6 +48,7 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -64,11 +66,13 @@ public class TagResource extends JaxRsResourceBase {
                        final CustomFieldUserApi customFieldUserApi,
                        final AuditUserApi auditUserApi,
                        final AccountUserApi accountUserApi,
+                       final PaymentApi paymentApi,
                        final Clock clock,
                        final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
+    //@Timed
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
@@ -99,6 +103,7 @@ public class TagResource extends JaxRsResourceBase {
                                                 nextPageUri);
     }
 
+    //@Timed
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)

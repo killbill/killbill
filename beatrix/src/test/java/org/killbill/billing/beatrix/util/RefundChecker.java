@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,22 +26,26 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
+import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.Refund;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class RefundChecker {
@@ -59,28 +65,42 @@ public class RefundChecker {
         this.invoiceUserApi = invoiceApi;
     }
 
-    public Refund checkRefund(final UUID paymentId, final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
+    public PaymentTransaction checkRefund(final UUID paymentId, final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
 
-        final List<Refund> refunds = paymentApi.getPaymentRefunds(paymentId, context);
-        Assert.assertEquals(refunds.size(), 1);
+        final Payment payment = paymentApi.getPayment(paymentId, false, ImmutableList.<PluginProperty>of(), context);
+        final PaymentTransaction refund = Iterables.tryFind(payment.getTransactions(), new Predicate<PaymentTransaction>() {
+            @Override
+            public boolean apply(final PaymentTransaction input) {
+                return input.getTransactionType() == TransactionType.REFUND;
+            }
+        }).orNull();
+
+        Assert.assertNotNull(refund);
 
         final InvoicePayment refundInvoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.REFUND, context);
         final InvoicePayment invoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.ATTEMPT, context);
 
-        final Refund refund = refunds.get(0);
         Assert.assertEquals(refund.getPaymentId(), expected.getPaymentId());
         Assert.assertEquals(refund.getCurrency(), expected.getCurrency());
-        Assert.assertEquals(refund.isAdjusted(), expected.isAdjusted);
-        Assert.assertEquals(refund.getRefundAmount().compareTo(expected.getRefundAmount()), 0);
+        Assert.assertEquals(refund.getAmount().compareTo(expected.getRefundAmount()), 0);
 
         Assert.assertEquals(refundInvoicePayment.getPaymentId(), paymentId);
         Assert.assertEquals(refundInvoicePayment.getLinkedInvoicePaymentId(), invoicePayment.getId());
-        Assert.assertEquals(refundInvoicePayment.getPaymentCookieId(), refund.getId());
+        Assert.assertEquals(refundInvoicePayment.getPaymentCookieId(), refund.getExternalKey());
         Assert.assertEquals(refundInvoicePayment.getInvoiceId(), invoicePayment.getInvoiceId());
         Assert.assertEquals(refundInvoicePayment.getAmount().compareTo(expected.getRefundAmount().negate()), 0);
         Assert.assertEquals(refundInvoicePayment.getCurrency(), expected.getCurrency());
 
         return refund;
+    }
+
+    private PaymentTransaction getRefundTransaction(final Payment payment) {
+        return Iterables.tryFind(payment.getTransactions(), new Predicate<PaymentTransaction>() {
+            @Override
+            public boolean apply(final PaymentTransaction input) {
+                return input.getTransactionType() == TransactionType.REFUND;
+            }
+        }).get();
     }
 
     private InvoicePayment getInvoicePaymentEntry(final UUID paymentId, final InvoicePaymentType type, final CallContext context) {

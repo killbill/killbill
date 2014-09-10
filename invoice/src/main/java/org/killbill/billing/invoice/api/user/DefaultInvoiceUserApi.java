@@ -25,16 +25,11 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -50,6 +45,7 @@ import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
+import org.killbill.billing.invoice.template.HtmlInvoice;
 import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
@@ -60,10 +56,16 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
@@ -112,6 +114,17 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                             return new DefaultInvoice(input);
                                                                         }
                                                                     }));
+    }
+
+    @Override
+    public Invoice getInvoiceByPayment(final UUID paymentId, final TenantContext context) throws InvoiceApiException {
+        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        final UUID invoiceId = dao.getInvoiceIdByPaymentId(paymentId, tenantContext);
+        if (invoiceId == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
+        }
+        final InvoiceModelDao invoiceModelDao = invoiceId != null ? dao.getById(invoiceId, tenantContext) : null;
+        return new DefaultInvoice(invoiceModelDao);
     }
 
     @Override
@@ -244,33 +257,33 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public InvoiceItem insertExternalCharge(final UUID accountId, final BigDecimal amount, @Nullable final String description,
-                                            final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
-        return insertExternalChargeForInvoiceAndBundle(accountId, null, null, amount, description, effectiveDate, currency, context);
-    }
-
-    @Override
-    public InvoiceItem insertExternalChargeForBundle(final UUID accountId, final UUID bundleId, final BigDecimal amount, @Nullable final String description,
-                                                     final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
-        return insertExternalChargeForInvoiceAndBundle(accountId, null, bundleId, amount, description, effectiveDate, currency, context);
-    }
-
-    @Override
-    public InvoiceItem insertExternalChargeForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount, @Nullable final String description,
-                                                      final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
-        return insertExternalChargeForInvoiceAndBundle(accountId, invoiceId, null, amount, description, effectiveDate, currency, context);
-    }
-
-    @Override
-    public InvoiceItem insertExternalChargeForInvoiceAndBundle(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId,
-                                                               final BigDecimal amount, @Nullable final String description, final LocalDate effectiveDate,
-                                                               final Currency currency, final CallContext context) throws InvoiceApiException {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvoiceApiException(ErrorCode.EXTERNAL_CHARGE_AMOUNT_INVALID, amount);
+    public List<InvoiceItem> insertExternalCharges(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> charges, final CallContext context) throws InvoiceApiException {
+        for (final InvoiceItem charge : charges) {
+            if (charge.getAmount() == null || charge.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new InvoiceApiException(ErrorCode.EXTERNAL_CHARGE_AMOUNT_INVALID, charge.getAmount());
+            }
         }
 
-        final InvoiceItemModelDao externalCharge = dao.insertExternalCharge(accountId, invoiceId, bundleId, description, amount, effectiveDate, currency, internalCallContextFactory.createInternalCallContext(accountId, context));
-        return InvoiceItemFactory.fromModelDao(externalCharge);
+        final Iterable<InvoiceItemModelDao> chargesModelDao = Iterables.<InvoiceItem, InvoiceItemModelDao>transform(charges,
+                                                                                                                    new Function<InvoiceItem, InvoiceItemModelDao>() {
+                                                                                                                        @Nullable
+                                                                                                                        @Override
+                                                                                                                        public InvoiceItemModelDao apply(final InvoiceItem externalCharge) {
+                                                                                                                            return new InvoiceItemModelDao(externalCharge);
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                   );
+        final List<InvoiceItemModelDao> externalCharges = dao.insertExternalCharges(accountId, effectiveDate, chargesModelDao, internalCallContextFactory.createInternalCallContext(accountId, context));
+
+        return Lists.<InvoiceItemModelDao, InvoiceItem>transform(externalCharges,
+                                                                 new Function<InvoiceItemModelDao, InvoiceItem>() {
+                                                                     @Nullable
+                                                                     @Override
+                                                                     public InvoiceItem apply(@Nullable final InvoiceItemModelDao externalCharge) {
+                                                                         return InvoiceItemFactory.fromModelDao(externalCharge);
+                                                                     }
+                                                                 }
+                                                                );
     }
 
     @Override
@@ -344,7 +357,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         }
 
-        return generator.generateInvoice(account, invoice, manualPay);
+        HtmlInvoice htmlInvoice = generator.generateInvoice(account, invoice, manualPay);
+        return htmlInvoice.getBody();
     }
 
     @Override

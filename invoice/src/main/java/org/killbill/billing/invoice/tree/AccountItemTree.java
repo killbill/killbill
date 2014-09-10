@@ -94,6 +94,7 @@ public class AccountItemTree {
         Preconditions.checkState(!isBuilt);
         switch (existingItem.getInvoiceItemType()) {
             case EXTERNAL_CHARGE:
+            case TAX:
             case CBA_ADJ:
             case CREDIT_ADJ:
             case REFUND_ADJ:

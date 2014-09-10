@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,12 +29,6 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.catalog.api.Usage;
-import org.mockito.Mockito;
-import org.skife.jdbi.v2.IDBI;
-import org.testng.Assert;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
@@ -42,12 +38,12 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.clock.Clock;
-import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -63,19 +59,27 @@ import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentSqlDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
+import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.mock.MockAccountBuilder;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.billing.util.svcsapi.bus.BusService;
+import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLocker;
+import org.mockito.Mockito;
+import org.skife.jdbi.v2.IDBI;
+import org.testng.Assert;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -137,6 +141,7 @@ public class TestInvoiceHelper {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
+    private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
     private final AccountUserApi accountUserApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final BusService busService;
@@ -146,16 +151,18 @@ public class TestInvoiceHelper {
     private final InternalCallContext internalCallContext;
     private final NonEntityDao nonEntityDao;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
 
     // Low level SqlDao used by the tests to directly insert rows
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
 
     @Inject
-    public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
+    public TestInvoiceHelper(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry, final InvoiceGenerator generator, final IDBI dbi,
                              final BillingInternalApi billingApi, final AccountInternalApi accountApi, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
                              final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final InternalCallContext internalCallContext,
-                             final InternalCallContextFactory internalCallContextFactory) {
+                             final InternalCallContextFactory internalCallContextFactory, final CacheControllerDispatcher cacheControllerDispatcher) {
+        this.pluginRegistry = pluginRegistry;
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountApi = accountApi;
@@ -170,6 +177,7 @@ public class TestInvoiceHelper {
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
 
     public UUID generateRegularInvoice(final Account account, final DateTime targetDate, final CallContext callContext) throws Exception {
@@ -189,9 +197,9 @@ public class TestInvoiceHelper {
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi,
                                                                    invoiceDao, nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock);
+                                                                   clock, cacheControllerDispatcher);
 
         Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, true, internalCallContext);
         Assert.assertNotNull(invoice);
@@ -273,7 +281,7 @@ public class TestInvoiceHelper {
                                                                                                                                          }));
 
         // The test does not use the invoice callback notifier hence the empty map
-        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContext);
+        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContext);
     }
 
     public void createPayment(final InvoicePayment invoicePayment, final InternalCallContext internalCallContext) {
@@ -313,10 +321,14 @@ public class TestInvoiceHelper {
                                                final BillingMode billingMode, final String description,
                                                final long totalOrdering,
                                                final SubscriptionBaseTransitionType type) {
+
+        final Account mockAccount = Mockito.mock(Account.class);
+        Mockito.when(mockAccount.getTimeZone()).thenReturn(DateTimeZone.UTC);
+        final Account accountOrMockAcount = account != null ? account : mockAccount;
         return new BillingEvent() {
             @Override
             public Account getAccount() {
-                return account;
+                return accountOrMockAcount;
             }
 
             @Override

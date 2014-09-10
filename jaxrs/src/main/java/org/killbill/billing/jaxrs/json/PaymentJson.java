@@ -1,7 +1,7 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * Groupon licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -21,115 +21,91 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
-
-import org.killbill.clock.DefaultClock;
 import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentTransaction;
+import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class PaymentJson extends JsonBase {
 
-    private final BigDecimal paidAmount;
-    private final BigDecimal amount;
     private final String accountId;
-    private final String invoiceId;
     private final String paymentId;
     private final String paymentNumber;
-    private final DateTime requestedDate;
-    private final DateTime effectiveDate;
-    private final Integer retryCount;
+    private final String paymentExternalKey;
+    private final BigDecimal authAmount;
+    private final BigDecimal capturedAmount;
+    private final BigDecimal purchasedAmount;
+    private final BigDecimal refundedAmount;
+    private final BigDecimal creditedAmount;
     private final String currency;
-    private final String status;
-    private final String gatewayErrorCode;
-    private final String gatewayErrorMsg;
     private final String paymentMethodId;
-    private final String bundleKeys;
-    private final List<RefundJson> refunds;
-    private final List<ChargebackJson> chargebacks;
+    private final List<? extends PaymentTransactionJson> transactions;
 
     @JsonCreator
-    public PaymentJson(@JsonProperty("amount") final BigDecimal amount,
-                       @JsonProperty("paidAmount") final BigDecimal paidAmount,
-                       @JsonProperty("accountId") final String accountId,
-                       @JsonProperty("invoiceId") final String invoiceId,
+    public PaymentJson(@JsonProperty("accountId") final String accountId,
                        @JsonProperty("paymentId") final String paymentId,
                        @JsonProperty("paymentNumber") final String paymentNumber,
-                       @JsonProperty("paymentMethodId") final String paymentMethodId,
-                       @JsonProperty("requestedDate") final DateTime requestedDate,
-                       @JsonProperty("effectiveDate") final DateTime effectiveDate,
-                       @JsonProperty("retryCount") final Integer retryCount,
+                       @JsonProperty("paymentExternalKey") final String paymentExternalKey,
+                       @JsonProperty("authAmount") final BigDecimal authAmount,
+                       @JsonProperty("capturedAmount") final BigDecimal capturedAmount,
+                       @JsonProperty("purchasedAmount") final BigDecimal purchasedAmount,
+                       @JsonProperty("refundedAmount") final BigDecimal refundedAmount,
+                       @JsonProperty("creditedAmount") final BigDecimal creditedAmount,
                        @JsonProperty("currency") final String currency,
-                       @JsonProperty("status") final String status,
-                       @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
-                       @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,
-                       @JsonProperty("externalBundleKeys") final String bundleKeys,
-                       @JsonProperty("refunds") final List<RefundJson> refunds,
-                       @JsonProperty("chargebacks") final List<ChargebackJson> chargebacks,
+                       @JsonProperty("paymentMethodId") final String paymentMethodId,
+                       @JsonProperty("transactions") final List<? extends PaymentTransactionJson> transactions,
                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
-        this.amount = amount;
-        this.paidAmount = paidAmount;
-        this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.paymentId = paymentId;
         this.paymentNumber = paymentNumber;
-        this.paymentMethodId = paymentMethodId;
-        this.requestedDate = DefaultClock.toUTCDateTime(requestedDate);
-        this.effectiveDate = DefaultClock.toUTCDateTime(effectiveDate);
+        this.paymentExternalKey = paymentExternalKey;
+        this.authAmount = authAmount;
+        this.capturedAmount = capturedAmount;
+        this.purchasedAmount = purchasedAmount;
+        this.refundedAmount = refundedAmount;
+        this.creditedAmount = creditedAmount;
         this.currency = currency;
-        this.retryCount = retryCount;
-        this.status = status;
-        this.gatewayErrorCode = gatewayErrorCode;
-        this.gatewayErrorMsg = gatewayErrorMsg;
-        this.bundleKeys = bundleKeys;
-        this.refunds = refunds;
-        this.chargebacks = chargebacks;
+        this.paymentMethodId = paymentMethodId;
+        this.transactions = transactions;
     }
 
-    public PaymentJson(final Payment payment, final String bundleExternalKey,
-                       final List<RefundJson> refunds, final List<ChargebackJson> chargebacks) {
-        this(payment, bundleExternalKey, refunds, chargebacks, null);
+    public PaymentJson(final Payment dp, @Nullable final AccountAuditLogs accountAuditLogs) {
+        this(dp.getAccountId().toString(),
+             dp.getId().toString(),
+             dp.getPaymentNumber().toString(),
+             dp.getExternalKey(),
+             dp.getAuthAmount(),
+             dp.getCapturedAmount(),
+             dp.getPurchasedAmount(),
+             dp.getRefundedAmount(),
+             dp.getCreditedAmount(),
+             dp.getCurrency() != null ? dp.getCurrency().toString() : null,
+             dp.getPaymentMethodId() != null ? dp.getPaymentMethodId().toString() : null,
+             getTransactions(dp.getTransactions(), dp.getExternalKey(), accountAuditLogs),
+             toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPayment(dp.getId())));
     }
 
-    public PaymentJson(final Payment payment, final String bundleExternalKey,
-                       final List<RefundJson> refunds, final List<ChargebackJson> chargebacks,
-                       @Nullable final List<AuditLog> auditLogs) {
-        this(payment.getAmount(), payment.getPaidAmount(), payment.getAccountId().toString(),
-             payment.getInvoiceId().toString(), payment.getId().toString(),
-             payment.getPaymentNumber().toString(),
-             payment.getPaymentMethodId().toString(),
-             payment.getEffectiveDate(), payment.getEffectiveDate(),
-             payment.getAttempts().size(), payment.getCurrency().toString(), payment.getPaymentStatus().toString(),
-             payment.getAttempts().get(payment.getAttempts().size() - 1).getGatewayErrorCode(),
-             payment.getAttempts().get(payment.getAttempts().size() - 1).getGatewayErrorMsg(),
-             bundleExternalKey, refunds, chargebacks, toAuditLogJson(auditLogs));
-    }
-
-    public PaymentJson(final Payment payment, final List<AuditLog> auditLogs) {
-        this(payment, null, null, null, auditLogs);
-    }
-
-    public String getBundleKeys() {
-        return bundleKeys;
-    }
-
-    public BigDecimal getPaidAmount() {
-        return paidAmount;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
+    private static List<PaymentTransactionJson> getTransactions(final Iterable<PaymentTransaction> transactions, final String paymentExternalKey, @Nullable final AccountAuditLogs accountAuditLogs) {
+        return ImmutableList.copyOf(Iterables.transform(transactions,
+                                                        new Function<PaymentTransaction, PaymentTransactionJson>() {
+                                                            @Override
+                                                            public PaymentTransactionJson apply(final PaymentTransaction paymentTransaction) {
+                                                                final List<AuditLog> auditLogsForPaymentTransaction = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentTransaction(paymentTransaction.getId());
+                                                                return new PaymentTransactionJson(paymentTransaction, paymentExternalKey, auditLogsForPaymentTransaction);
+                                                            }
+                                                        }
+                                                       ));
     }
 
     public String getAccountId() {
         return accountId;
-    }
-
-    public String getInvoiceId() {
-        return invoiceId;
     }
 
     public String getPaymentId() {
@@ -140,67 +116,59 @@ public class PaymentJson extends JsonBase {
         return paymentNumber;
     }
 
-    public DateTime getRequestedDate() {
-        return requestedDate;
+    public String getPaymentExternalKey() {
+        return paymentExternalKey;
     }
 
-    public DateTime getEffectiveDate() {
-        return effectiveDate;
+    public BigDecimal getAuthAmount() {
+        return authAmount;
     }
 
-    public Integer getRetryCount() {
-        return retryCount;
+    public BigDecimal getCapturedAmount() {
+        return capturedAmount;
+    }
+
+    public BigDecimal getRefundedAmount() {
+        return refundedAmount;
+    }
+
+    public BigDecimal getPurchasedAmount() {
+        return purchasedAmount;
+    }
+
+    public BigDecimal getCreditedAmount() {
+        return creditedAmount;
     }
 
     public String getCurrency() {
         return currency;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public String getGatewayErrorCode() {
-        return gatewayErrorCode;
-    }
-
-    public String getGatewayErrorMsg() {
-        return gatewayErrorMsg;
-    }
-
     public String getPaymentMethodId() {
         return paymentMethodId;
     }
 
-    public List<RefundJson> getRefunds() {
-        return refunds;
-    }
-
-    public List<ChargebackJson> getChargebacks() {
-        return chargebacks;
+    public List<? extends PaymentTransactionJson> getTransactions() {
+        return transactions;
     }
 
     @Override
     public String toString() {
-        return "PaymentJson{" +
-               "paidAmount=" + paidAmount +
-               ", amount=" + amount +
-               ", accountId='" + accountId + '\'' +
-               ", invoiceId='" + invoiceId + '\'' +
-               ", paymentId='" + paymentId + '\'' +
-               ", paymentNumber='" + paymentNumber + '\'' +
-               ", requestedDate=" + requestedDate +
-               ", effectiveDate=" + effectiveDate +
-               ", retryCount=" + retryCount +
-               ", currency='" + currency + '\'' +
-               ", status='" + status + '\'' +
-               ", gatewayErrorCode='" + gatewayErrorCode + '\'' +
-               ", gatewayErrorMsg='" + gatewayErrorMsg + '\'' +
-               ", paymentMethodId='" + paymentMethodId + '\'' +
-               ", bundleKeys='" + bundleKeys + '\'' +
-               ", refunds=" + refunds +
-               ", chargebacks=" + chargebacks +
-               '}';
+        final StringBuilder sb = new StringBuilder("PaymentJson{");
+        sb.append("accountId='").append(accountId).append('\'');
+        sb.append(", paymentId='").append(paymentId).append('\'');
+        sb.append(", paymentNumber='").append(paymentNumber).append('\'');
+        sb.append(", paymentExternalKey='").append(paymentExternalKey).append('\'');
+        sb.append(", authAmount=").append(authAmount);
+        sb.append(", capturedAmount=").append(capturedAmount);
+        sb.append(", purchasedAmount=").append(purchasedAmount);
+        sb.append(", refundedAmount=").append(refundedAmount);
+        sb.append(", creditedAmount=").append(creditedAmount);
+        sb.append(", currency='").append(currency).append('\'');
+        sb.append(", paymentMethodId='").append(paymentMethodId).append('\'');
+        sb.append(", transactions=").append(transactions);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override
@@ -217,31 +185,22 @@ public class PaymentJson extends JsonBase {
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
+        if (authAmount != null ? authAmount.compareTo(that.authAmount) != 0 : that.authAmount != null) {
             return false;
         }
-        if (bundleKeys != null ? !bundleKeys.equals(that.bundleKeys) : that.bundleKeys != null) {
+        if (capturedAmount != null ? capturedAmount.compareTo(that.capturedAmount) != 0 : that.capturedAmount != null) {
             return false;
         }
-        if (chargebacks != null ? !chargebacks.equals(that.chargebacks) : that.chargebacks != null) {
+        if (creditedAmount != null ? creditedAmount.compareTo(that.creditedAmount) != 0 : that.creditedAmount != null) {
+            return false;
+        }
+        if (purchasedAmount != null ? purchasedAmount.compareTo(that.purchasedAmount) != 0 : that.purchasedAmount != null) {
             return false;
         }
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
-        if (effectiveDate != null ? effectiveDate.compareTo(that.effectiveDate) != 0 : that.effectiveDate != null) {
-            return false;
-        }
-        if (gatewayErrorCode != null ? !gatewayErrorCode.equals(that.gatewayErrorCode) : that.gatewayErrorCode != null) {
-            return false;
-        }
-        if (gatewayErrorMsg != null ? !gatewayErrorMsg.equals(that.gatewayErrorMsg) : that.gatewayErrorMsg != null) {
-            return false;
-        }
-        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
-            return false;
-        }
-        if (paidAmount != null ? paidAmount.compareTo(that.paidAmount) != 0 : that.paidAmount != null) {
+        if (paymentExternalKey != null ? !paymentExternalKey.equals(that.paymentExternalKey) : that.paymentExternalKey != null) {
             return false;
         }
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
@@ -253,40 +212,30 @@ public class PaymentJson extends JsonBase {
         if (paymentNumber != null ? !paymentNumber.equals(that.paymentNumber) : that.paymentNumber != null) {
             return false;
         }
-        if (refunds != null ? !refunds.equals(that.refunds) : that.refunds != null) {
+        if (refundedAmount != null ? refundedAmount.compareTo(that.refundedAmount) != 0 : that.refundedAmount != null) {
             return false;
         }
-        if (requestedDate != null ? requestedDate.compareTo(that.requestedDate) != 0 : that.requestedDate != null) {
+        if (transactions != null ? !transactions.equals(that.transactions) : that.transactions != null) {
             return false;
         }
-        if (retryCount != null ? !retryCount.equals(that.retryCount) : that.retryCount != null) {
-            return false;
-        }
-        if (status != null ? !status.equals(that.status) : that.status != null) {
-            return false;
-        }
+
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = paidAmount != null ? paidAmount.hashCode() : 0;
-        result = 31 * result + (amount != null ? amount.hashCode() : 0);
-        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
-        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        int result = accountId != null ? accountId.hashCode() : 0;
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
         result = 31 * result + (paymentNumber != null ? paymentNumber.hashCode() : 0);
-        result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
-        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
-        result = 31 * result + (retryCount != null ? retryCount.hashCode() : 0);
+        result = 31 * result + (paymentExternalKey != null ? paymentExternalKey.hashCode() : 0);
+        result = 31 * result + (authAmount != null ? authAmount.hashCode() : 0);
+        result = 31 * result + (capturedAmount != null ? capturedAmount.hashCode() : 0);
+        result = 31 * result + (creditedAmount != null ? creditedAmount.hashCode() : 0);
+        result = 31 * result + (purchasedAmount != null ? purchasedAmount.hashCode() : 0);
+        result = 31 * result + (refundedAmount != null ? refundedAmount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
-        result = 31 * result + (status != null ? status.hashCode() : 0);
-        result = 31 * result + (gatewayErrorCode != null ? gatewayErrorCode.hashCode() : 0);
-        result = 31 * result + (gatewayErrorMsg != null ? gatewayErrorMsg.hashCode() : 0);
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
-        result = 31 * result + (bundleKeys != null ? bundleKeys.hashCode() : 0);
-        result = 31 * result + (refunds != null ? refunds.hashCode() : 0);
-        result = 31 * result + (chargebacks != null ? chargebacks.hashCode() : 0);
+        result = 31 * result + (transactions != null ? transactions.hashCode() : 0);
         return result;
     }
 }

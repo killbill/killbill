@@ -17,163 +17,146 @@
 package org.killbill.billing.payment.dao;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.payment.api.PaymentAttempt;
-import org.killbill.billing.payment.api.PaymentStatus;
-import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.util.dao.TableName;
+import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao<PaymentAttempt> {
+public class PaymentAttemptModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
 
     private UUID accountId;
-    private UUID invoiceId;
-    private UUID paymentId;
     private UUID paymentMethodId;
-    private PaymentStatus processingStatus;
-    private DateTime effectiveDate;
-    private String gatewayErrorCode;
-    private String gatewayErrorMsg;
-    private BigDecimal requestedAmount;
-    private Currency requestedCurrency;
+    private String paymentExternalKey;
+    private UUID transactionId;
+    private String transactionExternalKey;
+    private TransactionType transactionType;
+    private String stateName;
+    private BigDecimal amount;
+    private Currency currency;
+    private String pluginName;
+    private byte [] pluginProperties;
 
     public PaymentAttemptModelDao() { /* For the DAO mapper */ }
 
-    public PaymentAttemptModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
-                                  final UUID accountId, final UUID invoiceId,
-                                  final UUID paymentId, final UUID paymentMethodId,
-                                  final PaymentStatus processingStatus, final DateTime effectiveDate,
-                                  final BigDecimal requestedAmount, final Currency requestedCurrency,
-                                  final String gatewayErrorCode, final String gatewayErrorMsg) {
+    public PaymentAttemptModelDao(final UUID accountId, final UUID paymentMethodId, final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                                  final String paymentExternalKey, final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType,
+                                  final String stateName, final BigDecimal amount, final Currency currency, final String pluginName, final byte [] pluginProperties) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
-        this.invoiceId = invoiceId;
-        this.paymentId = paymentId;
         this.paymentMethodId = paymentMethodId;
-        this.processingStatus = processingStatus;
-        this.effectiveDate = effectiveDate;
-        this.requestedAmount = requestedAmount;
-        this.requestedCurrency = requestedCurrency;
-        this.gatewayErrorCode = gatewayErrorCode;
-        this.gatewayErrorMsg = gatewayErrorMsg;
+        this.paymentExternalKey = paymentExternalKey;
+        this.transactionId = transactionId;
+        this.transactionExternalKey = transactionExternalKey;
+        this.transactionType = transactionType;
+        this.stateName = stateName;
+        this.amount = amount;
+        this.currency = currency;
+        this.pluginName = pluginName;
+        this.pluginProperties = pluginProperties;
     }
 
-    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final UUID paymentMethodId, final PaymentStatus paymentStatus, final DateTime effectiveDate,
-                                  final BigDecimal requestedAmount, final Currency requestedCurrency) {
-        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, paymentMethodId, paymentStatus, effectiveDate, requestedAmount, requestedCurrency, null, null);
+    public PaymentAttemptModelDao(final UUID accountId, final UUID paymentMethodId, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                                  final String paymentExternalKey, final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType, final String stateName,
+                                  final BigDecimal amount, final Currency currency, final String pluginName,  final byte [] pluginProperties) {
+        this(accountId, paymentMethodId, UUID.randomUUID(), createdDate, updatedDate, paymentExternalKey, transactionId, transactionExternalKey, transactionType, stateName,
+             amount, currency, pluginName, pluginProperties);
     }
 
-    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final UUID paymentMethodId, final DateTime effectiveDate,
-                                  final BigDecimal requestedAmount, final Currency requestedCurrency) {
-        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, paymentMethodId, PaymentStatus.UNKNOWN, effectiveDate, requestedAmount, requestedCurrency, null, null);
+    public String getPaymentExternalKey() {
+        return paymentExternalKey;
     }
 
-    public PaymentAttemptModelDao(final PaymentAttemptModelDao src, final PaymentStatus newProcessingStatus, final String gatewayErrorCode, final String gatewayErrorMsg) {
-        this(src.getId(), src.getCreatedDate(), src.getUpdatedDate(), src.getAccountId(), src.getInvoiceId(), src.getPaymentId(), src.getPaymentMethodId(),
-             newProcessingStatus, src.getEffectiveDate(), src.getRequestedAmount(), src.getRequestedCurrency(), gatewayErrorCode, gatewayErrorMsg);
+    public void setPaymentExternalKey(final String paymentExternalKey) {
+        this.paymentExternalKey = paymentExternalKey;
+    }
+
+    public UUID getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(final UUID transactionId) {
+        this.transactionId = transactionId;
+    }
+
+    public String getTransactionExternalKey() {
+        return transactionExternalKey;
+    }
+
+    public void setTransactionExternalKey(final String transactionExternalKey) {
+        this.transactionExternalKey = transactionExternalKey;
+    }
+
+    public String getStateName() {
+        return stateName;
+    }
+
+    public void setStateName(final String stateName) {
+        this.stateName = stateName;
+    }
+
+    public String getPluginName() {
+        return pluginName;
+    }
+
+    public void setPluginName(final String pluginName) {
+        this.pluginName = pluginName;
+    }
+
+    public byte [] getPluginProperties() {
+        return pluginProperties;
+    }
+
+    public void setPluginProperties(final byte [] pluginProperties) {
+        this.pluginProperties = pluginProperties;
     }
 
     public UUID getAccountId() {
         return accountId;
     }
 
-    public UUID getInvoiceId() {
-        return invoiceId;
-    }
-
-    public UUID getPaymentId() {
-        return paymentId;
-    }
-
     public UUID getPaymentMethodId() {
         return paymentMethodId;
     }
 
-    public PaymentStatus getProcessingStatus() {
-        return processingStatus;
+    public TransactionType getTransactionType() {
+        return transactionType;
     }
 
-    public DateTime getEffectiveDate() {
-        return effectiveDate;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public String getGatewayErrorCode() {
-        return gatewayErrorCode;
-    }
-
-    public String getGatewayErrorMsg() {
-        return gatewayErrorMsg;
-    }
-
-    public BigDecimal getRequestedAmount() {
-        return requestedAmount;
-    }
-
-    public Currency getRequestedCurrency() {
-        return requestedCurrency;
+    public Currency getCurrency() {
+        return currency;
     }
 
     public void setAccountId(final UUID accountId) {
         this.accountId = accountId;
     }
 
-    public void setInvoiceId(final UUID invoiceId) {
-        this.invoiceId = invoiceId;
-    }
-
-    public void setPaymentId(final UUID paymentId) {
-        this.paymentId = paymentId;
-    }
-
     public void setPaymentMethodId(final UUID paymentMethodId) {
         this.paymentMethodId = paymentMethodId;
     }
 
-    public void setProcessingStatus(final PaymentStatus processingStatus) {
-        this.processingStatus = processingStatus;
+    public void setTransactionType(final TransactionType transactionType) {
+        this.transactionType = transactionType;
     }
 
-    public void setEffectiveDate(final DateTime effectiveDate) {
-        this.effectiveDate = effectiveDate;
+    public void setAmount(final BigDecimal amount) {
+        this.amount = amount;
     }
 
-    public void setGatewayErrorCode(final String gatewayErrorCode) {
-        this.gatewayErrorCode = gatewayErrorCode;
-    }
-
-    public void setGatewayErrorMsg(final String gatewayErrorMsg) {
-        this.gatewayErrorMsg = gatewayErrorMsg;
-    }
-
-    public void setRequestedAmount(final BigDecimal requestedAmount) {
-        this.requestedAmount = requestedAmount;
-    }
-
-    public void setRequestedCurrency(final Currency requestedCurrency) {
-        this.requestedCurrency = requestedCurrency;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("PaymentAttemptModelDao");
-        sb.append("{accountId=").append(accountId);
-        sb.append(", invoiceId=").append(invoiceId);
-        sb.append(", paymentId=").append(paymentId);
-        sb.append(", processingStatus=").append(processingStatus);
-        sb.append(", effectiveDate=").append(effectiveDate);
-        sb.append(", gatewayErrorCode='").append(gatewayErrorCode).append('\'');
-        sb.append(", gatewayErrorMsg='").append(gatewayErrorMsg).append('\'');
-        sb.append(", requestedAmount=").append(requestedAmount);
-        sb.append(", requestedCurrency=").append(requestedCurrency);
-        sb.append('}');
-        return sb.toString();
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
     }
 
     @Override
@@ -181,7 +164,7 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (!(o instanceof PaymentAttemptModelDao)) {
             return false;
         }
         if (!super.equals(o)) {
@@ -193,33 +176,34 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
             return false;
         }
-        if (gatewayErrorCode != null ? !gatewayErrorCode.equals(that.gatewayErrorCode) : that.gatewayErrorCode != null) {
+        if (currency != that.currency) {
             return false;
         }
-        if (gatewayErrorMsg != null ? !gatewayErrorMsg.equals(that.gatewayErrorMsg) : that.gatewayErrorMsg != null) {
-            return false;
-        }
-        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
-            return false;
-        }
-        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
+        if (paymentExternalKey != null ? !paymentExternalKey.equals(that.paymentExternalKey) : that.paymentExternalKey != null) {
             return false;
         }
         if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
             return false;
         }
-        if (processingStatus != that.processingStatus) {
+        if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
             return false;
         }
-        if (requestedAmount != null ? !requestedAmount.equals(that.requestedAmount) : that.requestedAmount != null) {
+        if (stateName != null ? !stateName.equals(that.stateName) : that.stateName != null) {
             return false;
         }
-        if (requestedCurrency != that.requestedCurrency) {
+        if (transactionExternalKey != null ? !transactionExternalKey.equals(that.transactionExternalKey) : that.transactionExternalKey != null) {
             return false;
         }
+        if (transactionId != null ? !transactionId.equals(that.transactionId) : that.transactionId != null) {
+            return false;
+        }
+        if (transactionType != that.transactionType) {
+            return false;
+        }
+
         return true;
     }
 
@@ -227,15 +211,15 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
-        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
-        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
-        result = 31 * result + (processingStatus != null ? processingStatus.hashCode() : 0);
-        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
-        result = 31 * result + (gatewayErrorCode != null ? gatewayErrorCode.hashCode() : 0);
-        result = 31 * result + (gatewayErrorMsg != null ? gatewayErrorMsg.hashCode() : 0);
-        result = 31 * result + (requestedAmount != null ? requestedAmount.hashCode() : 0);
-        result = 31 * result + (requestedCurrency != null ? requestedCurrency.hashCode() : 0);
+        result = 31 * result + (paymentExternalKey != null ? paymentExternalKey.hashCode() : 0);
+        result = 31 * result + (transactionId != null ? transactionId.hashCode() : 0);
+        result = 31 * result + (transactionExternalKey != null ? transactionExternalKey.hashCode() : 0);
+        result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
+        result = 31 * result + (stateName != null ? stateName.hashCode() : 0);
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
         return result;
     }
 

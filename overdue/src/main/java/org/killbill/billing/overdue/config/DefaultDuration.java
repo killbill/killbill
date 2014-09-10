@@ -25,8 +25,8 @@ import org.joda.time.Period;
 
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.TimeUnit;
-import org.killbill.billing.util.config.catalog.ValidatingConfig;
-import org.killbill.billing.util.config.catalog.ValidationErrors;
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultDuration extends ValidatingConfig<OverdueConfig> implements Duration {

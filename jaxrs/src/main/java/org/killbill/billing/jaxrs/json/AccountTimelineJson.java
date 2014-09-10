@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -29,71 +31,41 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.Refund;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Multimap;
 
 public class AccountTimelineJson {
 
     private final AccountJson account;
     private final List<BundleJson> bundles;
     private final List<InvoiceJson> invoices;
-    private final List<PaymentJson> payments;
+    private final List<InvoicePaymentJson> payments;
 
     @JsonCreator
     public AccountTimelineJson(@JsonProperty("account") final AccountJson account,
                                @JsonProperty("bundles") final List<BundleJson> bundles,
                                @JsonProperty("invoices") final List<InvoiceJson> invoices,
-                               @JsonProperty("payments") final List<PaymentJson> payments) {
+                               @JsonProperty("payments") final List<InvoicePaymentJson> payments) {
         this.account = account;
         this.bundles = bundles;
         this.invoices = invoices;
         this.payments = payments;
     }
 
-    private String getBundleExternalKey(final UUID invoiceId, final List<Invoice> invoices, final List<SubscriptionBundle> bundles) {
-        for (final Invoice cur : invoices) {
-            if (cur.getId().equals(invoiceId)) {
-                return getBundleExternalKey(cur, bundles);
-            }
-        }
-        return null;
-    }
-
-    private String getBundleExternalKey(final Invoice invoice, final List<SubscriptionBundle> bundles) {
-        final Set<UUID> b = new HashSet<UUID>();
-        for (final InvoiceItem cur : invoice.getInvoiceItems()) {
-            b.add(cur.getBundleId());
-        }
-        boolean first = true;
-        final StringBuilder tmp = new StringBuilder();
-        for (final UUID cur : b) {
-            for (final SubscriptionBundle bt : bundles) {
-                if (bt.getId().equals(cur)) {
-                    if (!first) {
-                        tmp.append(",");
-                    }
-                    tmp.append(bt.getExternalKey());
-                    first = false;
-                    break;
-                }
-            }
-        }
-        return tmp.toString();
-    }
-
-    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments,
-                               final List<SubscriptionBundle> bundles, final Multimap<UUID, Refund> refundsByPayment,
-                               final Multimap<UUID, InvoicePayment> chargebacksByPayment, final AccountAuditLogs accountAuditLogs) {
+    public AccountTimelineJson(final Account account,
+                               final List<Invoice> invoices,
+                               final List<Payment> payments,
+                               final List<InvoicePayment> invoicePayments,
+                               final List<SubscriptionBundle> bundles,
+                               final AccountAuditLogs accountAuditLogs) {
         this.account = new AccountJson(account, null, null, accountAuditLogs);
         this.bundles = new LinkedList<BundleJson>();
         for (final SubscriptionBundle bundle : bundles) {
-            final List<AuditLog> bundleAuditLogs = accountAuditLogs.getAuditLogsForBundle(bundle.getId());
             final BundleJson jsonWithSubscriptions = new BundleJson(bundle, accountAuditLogs);
             this.bundles.add(jsonWithSubscriptions);
         }
@@ -118,27 +90,10 @@ public class AccountTimelineJson {
                                               auditLogs));
         }
 
-        this.payments = new LinkedList<PaymentJson>();
+        this.payments = new LinkedList<InvoicePaymentJson>();
         for (final Payment payment : payments) {
-            final List<RefundJson> refunds = new ArrayList<RefundJson>();
-            for (final Refund refund : refundsByPayment.get(payment.getId())) {
-                final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForRefund(refund.getId());
-                // TODO add adjusted invoice items?
-                refunds.add(new RefundJson(refund, null, auditLogs));
-            }
-
-            final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();
-            for (final InvoicePayment chargeback : chargebacksByPayment.get(payment.getId())) {
-                final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForChargeback(chargeback.getId());
-                chargebacks.add(new ChargebackJson(payment.getAccountId(), chargeback, auditLogs));
-            }
-
-            final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForPayment(payment.getId());
-            this.payments.add(new PaymentJson(payment,
-                                              getBundleExternalKey(payment.getInvoiceId(), invoices, bundles),
-                                              refunds,
-                                              chargebacks,
-                                              auditLogs));
+            final UUID invoiceId = JaxRsResourceBase.getInvoiceId(invoicePayments, payment);
+            this.payments.add(new InvoicePaymentJson(payment, invoiceId, accountAuditLogs));
         }
     }
 
@@ -154,7 +109,7 @@ public class AccountTimelineJson {
         return invoices;
     }
 
-    public List<PaymentJson> getPayments() {
+    public List<InvoicePaymentJson> getPayments() {
         return payments;
     }
 
@@ -204,5 +159,39 @@ public class AccountTimelineJson {
         result = 31 * result + (invoices != null ? invoices.hashCode() : 0);
         result = 31 * result + (payments != null ? payments.hashCode() : 0);
         return result;
+    }
+
+    private String getBundleExternalKey(final UUID invoiceId, final List<Invoice> invoices, final List<SubscriptionBundle> bundles) {
+        if (invoiceId == null) {
+            return null;
+        }
+        for (final Invoice cur : invoices) {
+            if (cur.getId().equals(invoiceId)) {
+                return getBundleExternalKey(cur, bundles);
+            }
+        }
+        return null;
+    }
+
+    private String getBundleExternalKey(final Invoice invoice, final List<SubscriptionBundle> bundles) {
+        final Set<UUID> b = new HashSet<UUID>();
+        for (final InvoiceItem cur : invoice.getInvoiceItems()) {
+            b.add(cur.getBundleId());
+        }
+        boolean first = true;
+        final StringBuilder tmp = new StringBuilder();
+        for (final UUID cur : b) {
+            for (final SubscriptionBundle bt : bundles) {
+                if (bt.getId().equals(cur)) {
+                    if (!first) {
+                        tmp.append(",");
+                    }
+                    tmp.append(bt.getExternalKey());
+                    first = false;
+                    break;
+                }
+            }
+        }
+        return tmp.toString();
     }
 }

@@ -17,22 +17,12 @@
 package org.killbill.billing.subscription.alignment;
 
 import java.util.List;
-import java.util.Map;
 
 import org.joda.time.DateTime;
-import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import org.killbill.billing.catalog.DefaultCatalogService;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.catalog.io.VersionedCatalogLoader;
-import org.killbill.clock.DefaultClock;
 import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -43,10 +33,12 @@ import org.killbill.billing.subscription.events.user.ApiEventBase;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
-import org.killbill.billing.util.config.CatalogConfig;
+import org.killbill.clock.DefaultClock;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
@@ -119,7 +111,8 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final TimedPhase newPhase = getNextTimedPhaseOnChange(defaultSubscriptionBase, newProductName, effectiveChangeDate);
         Assert.assertEquals(newPhase.getStartPhase(), defaultSubscriptionBase.getStartDate().plusDays(30),
                             String.format("Start phase: %s, but bundle start date: %s and subscription start date: %s",
-                                          newPhase.getStartPhase(), defaultSubscriptionBase.getBundleStartDate(), defaultSubscriptionBase.getStartDate()));
+                                          newPhase.getStartPhase(), defaultSubscriptionBase.getBundleStartDate(), defaultSubscriptionBase.getStartDate())
+                           );
     }
 
     @Test(groups = "fast")

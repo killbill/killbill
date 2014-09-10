@@ -17,233 +17,197 @@
 package org.killbill.billing.payment.dao;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.testng.annotations.Test;
-
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.api.PaymentStatus;
-import org.killbill.billing.payment.api.RefundStatus;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
+import org.killbill.billing.util.callcontext.CallOrigin;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.UserType;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.fail;
 
 public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
-    public void testRefund() {
+    public void testPaymentAttempt() throws PluginPropertySerializerException {
+        final UUID transactionId = UUID.randomUUID();
+        final String paymentExternalKey = "vraiment?";
+        final String transactionExternalKey = "tduteuqweq";
+        final String stateName = "INIT";
+        final TransactionType transactionType = TransactionType.AUTHORIZE;
+        final String pluginName = "superPlugin";
+
         final UUID accountId = UUID.randomUUID();
-        final UUID paymentId1 = UUID.randomUUID();
-        final BigDecimal amount1 = new BigDecimal(13);
-        final Currency currency = Currency.USD;
 
-        final RefundModelDao refund1 = new RefundModelDao(accountId, paymentId1, amount1, currency, amount1, currency, true);
+        final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+        properties.add(new PluginProperty("key1", "value1", false));
+        properties.add(new PluginProperty("key2", "value2", false));
 
-        paymentDao.insertRefund(refund1, internalCallContext);
-        final RefundModelDao refundCheck = paymentDao.getRefund(refund1.getId(), internalCallContext);
-        assertNotNull(refundCheck);
-        assertEquals(refundCheck.getAccountId(), accountId);
-        assertEquals(refundCheck.getPaymentId(), paymentId1);
-        assertEquals(refundCheck.getAmount().compareTo(amount1), 0);
-        assertEquals(refundCheck.getCurrency(), currency);
-        assertEquals(refundCheck.isAdjusted(), true);
-        assertEquals(refundCheck.getRefundStatus(), RefundStatus.CREATED);
+        final byte[] serialized = PluginPropertySerializer.serialize(properties);
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(UUID.randomUUID(), UUID.randomUUID(), clock.getUTCNow(), clock.getUTCNow(),
+                                                                          paymentExternalKey, transactionId, transactionExternalKey, transactionType, stateName,
+                                                                          BigDecimal.ZERO, Currency.ALL, pluginName, serialized);
 
-        final BigDecimal amount2 = new BigDecimal(7.00);
-        final UUID paymentId2 = UUID.randomUUID();
+        PaymentAttemptModelDao savedAttempt = paymentDao.insertPaymentAttemptWithProperties(attempt, internalCallContext);
+        assertEquals(savedAttempt.getTransactionExternalKey(), transactionExternalKey);
+        assertEquals(savedAttempt.getTransactionType(), transactionType);
+        assertEquals(savedAttempt.getStateName(), stateName);
+        assertEquals(savedAttempt.getPluginName(), pluginName);
 
-        RefundModelDao refund2 = new RefundModelDao(accountId, paymentId2, amount2, currency, amount2, currency, true);
-        paymentDao.insertRefund(refund2, internalCallContext);
-        paymentDao.updateRefundStatus(refund2.getId(), RefundStatus.COMPLETED, amount2, currency, internalCallContext);
-
-        List<RefundModelDao> refundChecks = paymentDao.getRefundsForPayment(paymentId1, internalCallContext);
-        assertEquals(refundChecks.size(), 1);
-
-        refundChecks = paymentDao.getRefundsForPayment(paymentId2, internalCallContext);
-        assertEquals(refundChecks.size(), 1);
-
-        refundChecks = paymentDao.getRefundsForAccount(accountId, internalCallContext);
-        assertEquals(refundChecks.size(), 2);
-        for (RefundModelDao cur : refundChecks) {
-            if (cur.getPaymentId().equals(paymentId1)) {
-                assertEquals(cur.getAmount().compareTo(amount1), 0);
-                assertEquals(cur.getRefundStatus(), RefundStatus.CREATED);
-            } else if (cur.getPaymentId().equals(paymentId2)) {
-                assertEquals(cur.getAmount().compareTo(amount2), 0);
-                assertEquals(cur.getRefundStatus(), RefundStatus.COMPLETED);
-            } else {
-                fail("Unexpected refund");
-            }
+        final Iterable<PluginProperty> deserialized = PluginPropertySerializer.deserialize(savedAttempt.getPluginProperties());
+        int i = 0;
+        for (PluginProperty cur : deserialized) {
+            Assert.assertEquals(cur, properties.get(i++));
         }
+
+        final PaymentAttemptModelDao retrievedAttempt1 = paymentDao.getPaymentAttempt(attempt.getId(), internalCallContext);
+        assertEquals(retrievedAttempt1.getTransactionExternalKey(), transactionExternalKey);
+        assertEquals(retrievedAttempt1.getTransactionType(), transactionType);
+        assertEquals(retrievedAttempt1.getStateName(), stateName);
+        assertEquals(retrievedAttempt1.getPluginName(), pluginName);
+
+        final List<PaymentAttemptModelDao> retrievedAttempts = paymentDao.getPaymentAttemptByTransactionExternalKey(transactionExternalKey, internalCallContext);
+        assertEquals(retrievedAttempts.size(), 1);
+        assertEquals(retrievedAttempts.get(0).getTransactionExternalKey(), transactionExternalKey);
+        assertEquals(retrievedAttempts.get(0).getTransactionType(), transactionType);
+        assertEquals(retrievedAttempts.get(0).getStateName(), stateName);
+        assertEquals(retrievedAttempts.get(0).getPluginName(), pluginName);
     }
 
     @Test(groups = "slow")
-    public void testUpdateStatus() {
-        final UUID accountId = UUID.randomUUID();
-        final UUID invoiceId = UUID.randomUUID();
+    public void testPaymentAndTransactions() {
+
         final UUID paymentMethodId = UUID.randomUUID();
-        final BigDecimal amount = new BigDecimal(13);
-        final Currency currency = Currency.USD;
-        final DateTime effectiveDate = clock.getUTCNow();
-
-        final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, paymentMethodId, amount, currency, effectiveDate);
-        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), paymentMethodId, effectiveDate, amount, currency);
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithFirstAttempt(payment, attempt, internalCallContext);
-        assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
-
-        final PaymentStatus paymentStatus = PaymentStatus.SUCCESS;
-        final String gatewayErrorCode = "OK";
-
-        clock.addDays(1);
-        paymentDao.updatePaymentAndAttemptOnCompletion(payment.getId(), paymentStatus, amount, currency, attempt.getId(), gatewayErrorCode, null, internalCallContext);
-
-        final List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId, internalCallContext);
-        assertEquals(payments.size(), 1);
-        savedPayment = payments.get(0);
-        assertEquals(savedPayment.getId(), payment.getId());
-        assertEquals(savedPayment.getAccountId(), accountId);
-        assertEquals(savedPayment.getInvoiceId(), invoiceId);
-        assertEquals(savedPayment.getPaymentMethodId(), paymentMethodId);
-        assertEquals(savedPayment.getAmount().compareTo(amount), 0);
-        assertEquals(savedPayment.getCurrency(), currency);
-        assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
-        assertEquals(savedPayment.getPaymentStatus(), PaymentStatus.SUCCESS);
-
-        final List<PaymentAttemptModelDao> attempts = paymentDao.getAttemptsForPayment(payment.getId(), internalCallContext);
-        assertEquals(attempts.size(), 1);
-        final PaymentAttemptModelDao savedAttempt = attempts.get(0);
-        assertEquals(savedAttempt.getId(), attempt.getId());
-        assertEquals(savedAttempt.getPaymentId(), payment.getId());
-        assertEquals(savedAttempt.getAccountId(), accountId);
-        assertEquals(savedAttempt.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt.getProcessingStatus(), PaymentStatus.SUCCESS);
-        assertEquals(savedAttempt.getGatewayErrorCode(), gatewayErrorCode);
-        assertEquals(savedAttempt.getRequestedAmount().compareTo(amount), 0);
-    }
-
-    @Test(groups = "slow")
-    public void testPaymentWithAttempt() {
         final UUID accountId = UUID.randomUUID();
-        final UUID invoiceId = UUID.randomUUID();
-        final UUID paymentMethodId = UUID.randomUUID();
-        final BigDecimal amount = new BigDecimal(13);
-        final Currency currency = Currency.USD;
-        final DateTime effectiveDate = clock.getUTCNow();
+        final String externalKey = "hhhhooo";
+        final String transactionExternalKey = "grrrrrr";
+        final String transactionExternalKey2 = "hahahaha";
 
-        final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, paymentMethodId, amount, currency, effectiveDate);
-        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), paymentMethodId, clock.getUTCNow(), amount, currency);
+        final DateTime utcNow = clock.getUTCNow();
 
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithFirstAttempt(payment, attempt, internalCallContext);
-        assertEquals(savedPayment.getId(), payment.getId());
-        assertEquals(savedPayment.getAccountId(), accountId);
-        assertEquals(savedPayment.getInvoiceId(), invoiceId);
-        assertEquals(savedPayment.getPaymentMethodId(), paymentMethodId);
-        assertEquals(savedPayment.getAmount().compareTo(amount), 0);
-        assertEquals(savedPayment.getCurrency(), currency);
-        assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
-        assertEquals(savedPayment.getPaymentStatus(), PaymentStatus.UNKNOWN);
+        final PaymentModelDao paymentModelDao = new PaymentModelDao(utcNow, utcNow, accountId, paymentMethodId, externalKey);
+        final PaymentTransactionModelDao transactionModelDao = new PaymentTransactionModelDao(utcNow, utcNow, null, transactionExternalKey,
+                                                                                              paymentModelDao.getId(), TransactionType.AUTHORIZE, utcNow,
+                                                                                              TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.AED,
+                                                                                              "success", "");
 
-        PaymentAttemptModelDao savedAttempt = paymentDao.getPaymentAttempt(attempt.getId(), internalCallContext);
-        assertEquals(savedAttempt.getId(), attempt.getId());
-        assertEquals(savedAttempt.getPaymentId(), payment.getId());
-        assertEquals(savedAttempt.getAccountId(), accountId);
-        assertEquals(savedAttempt.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt.getProcessingStatus(), PaymentStatus.UNKNOWN);
+        final PaymentModelDao savedPayment = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, transactionModelDao, internalCallContext);
+        assertEquals(savedPayment.getId(), paymentModelDao.getId());
+        assertEquals(savedPayment.getAccountId(), paymentModelDao.getAccountId());
+        assertEquals(savedPayment.getExternalKey(), paymentModelDao.getExternalKey());
+        assertEquals(savedPayment.getPaymentMethodId(), paymentModelDao.getPaymentMethodId());
+        assertNull(savedPayment.getStateName());
 
-        final List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId, internalCallContext);
+        final PaymentModelDao savedPayment2 = paymentDao.getPayment(savedPayment.getId(), internalCallContext);
+        assertEquals(savedPayment2.getId(), paymentModelDao.getId());
+        assertEquals(savedPayment2.getAccountId(), paymentModelDao.getAccountId());
+        assertEquals(savedPayment2.getExternalKey(), paymentModelDao.getExternalKey());
+        assertEquals(savedPayment2.getPaymentMethodId(), paymentModelDao.getPaymentMethodId());
+        assertNull(savedPayment2.getStateName());
+
+        final PaymentModelDao savedPayment3 = paymentDao.getPaymentByExternalKey(externalKey, internalCallContext);
+        assertEquals(savedPayment3.getId(), paymentModelDao.getId());
+        assertEquals(savedPayment3.getAccountId(), paymentModelDao.getAccountId());
+        assertEquals(savedPayment3.getExternalKey(), paymentModelDao.getExternalKey());
+        assertEquals(savedPayment3.getPaymentMethodId(), paymentModelDao.getPaymentMethodId());
+        assertNull(savedPayment3.getStateName());
+
+        final PaymentTransactionModelDao savedTransaction = paymentDao.getPaymentTransaction(transactionModelDao.getId(), internalCallContext);
+        assertEquals(savedTransaction.getTransactionExternalKey(), transactionExternalKey);
+        assertEquals(savedTransaction.getPaymentId(), paymentModelDao.getId());
+        assertEquals(savedTransaction.getTransactionType(), TransactionType.AUTHORIZE);
+        assertEquals(savedTransaction.getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(savedTransaction.getAmount().compareTo(BigDecimal.TEN), 0);
+        assertEquals(savedTransaction.getCurrency(), Currency.AED);
+
+        final List<PaymentTransactionModelDao> savedTransactions = paymentDao.getPaymentTransactionsByExternalKey(transactionExternalKey, internalCallContext);
+        assertEquals(savedTransactions.size(), 1);
+        final PaymentTransactionModelDao savedTransaction2 = savedTransactions.get(0);
+        assertEquals(savedTransaction2.getTransactionExternalKey(), transactionExternalKey);
+        assertEquals(savedTransaction2.getPaymentId(), paymentModelDao.getId());
+        assertEquals(savedTransaction2.getTransactionType(), TransactionType.AUTHORIZE);
+        assertEquals(savedTransaction2.getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(savedTransaction2.getAmount().compareTo(BigDecimal.TEN), 0);
+        assertEquals(savedTransaction2.getCurrency(), Currency.AED);
+
+        final PaymentTransactionModelDao transactionModelDao2 = new PaymentTransactionModelDao(utcNow, utcNow, null, transactionExternalKey2,
+                                                                                               paymentModelDao.getId(), TransactionType.AUTHORIZE, utcNow,
+                                                                                               TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
+                                                                                               "success", "");
+
+        final PaymentTransactionModelDao savedTransactionModelDao2 = paymentDao.updatePaymentWithNewTransaction(savedPayment.getId(), transactionModelDao2, internalCallContext);
+        assertEquals(savedTransactionModelDao2.getTransactionExternalKey(), transactionExternalKey2);
+        assertEquals(savedTransactionModelDao2.getPaymentId(), paymentModelDao.getId());
+        assertEquals(savedTransactionModelDao2.getTransactionType(), TransactionType.AUTHORIZE);
+        assertEquals(savedTransactionModelDao2.getTransactionStatus(), TransactionStatus.UNKNOWN);
+        assertEquals(savedTransactionModelDao2.getAmount().compareTo(BigDecimal.TEN), 0);
+        assertEquals(savedTransactionModelDao2.getCurrency(), Currency.AED);
+
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(savedPayment.getId(), internalCallContext);
+        assertEquals(transactions.size(), 2);
+
+        paymentDao.updatePaymentAndTransactionOnCompletion(accountId, savedPayment.getId(), savedTransactionModelDao2.getTransactionType(), "AUTH_ABORTED", "AUTH_SUCCESS", transactionModelDao2.getId(), TransactionStatus.SUCCESS,
+                                                                 BigDecimal.ONE, Currency.USD, null, "nothing", internalCallContext);
+
+        final PaymentModelDao savedPayment4 = paymentDao.getPayment(savedPayment.getId(), internalCallContext);
+        assertEquals(savedPayment4.getId(), paymentModelDao.getId());
+        assertEquals(savedPayment4.getAccountId(), paymentModelDao.getAccountId());
+        assertEquals(savedPayment4.getExternalKey(), paymentModelDao.getExternalKey());
+        assertEquals(savedPayment4.getPaymentMethodId(), paymentModelDao.getPaymentMethodId());
+        assertEquals(savedPayment4.getStateName(), "AUTH_ABORTED");
+        assertEquals(savedPayment4.getLastSuccessStateName(), "AUTH_SUCCESS");
+
+        final PaymentTransactionModelDao savedTransactionModelDao4 = paymentDao.getPaymentTransaction(savedTransactionModelDao2.getId(), internalCallContext);
+        assertEquals(savedTransactionModelDao4.getTransactionExternalKey(), transactionExternalKey2);
+        assertEquals(savedTransactionModelDao4.getPaymentId(), paymentModelDao.getId());
+        assertEquals(savedTransactionModelDao4.getTransactionType(), TransactionType.AUTHORIZE);
+        assertEquals(savedTransactionModelDao4.getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(savedTransactionModelDao4.getAmount().compareTo(BigDecimal.TEN), 0);
+        assertEquals(savedTransactionModelDao4.getCurrency(), Currency.AED);
+        assertEquals(savedTransactionModelDao4.getProcessedAmount().compareTo(BigDecimal.ONE), 0);
+        assertEquals(savedTransactionModelDao4.getProcessedCurrency(), Currency.USD);
+        assertNull(savedTransactionModelDao4.getGatewayErrorCode());
+        assertEquals(savedTransactionModelDao4.getGatewayErrorMsg(), "nothing");
+
+        paymentDao.updatePaymentAndTransactionOnCompletion(accountId, savedPayment.getId(), savedTransactionModelDao2.getTransactionType(), "AUTH_ABORTED", null, transactionModelDao2.getId(), TransactionStatus.SUCCESS,
+                                                                 BigDecimal.ONE, Currency.USD, null, "nothing", internalCallContext);
+
+        final PaymentModelDao savedPayment4Again = paymentDao.getPayment(savedPayment.getId(), internalCallContext);
+        assertEquals(savedPayment4Again.getId(), paymentModelDao.getId());
+        assertEquals(savedPayment4Again.getStateName(), "AUTH_ABORTED");
+        assertEquals(savedPayment4Again.getLastSuccessStateName(), "AUTH_SUCCESS");
+
+        paymentDao.updatePaymentAndTransactionOnCompletion(accountId, savedPayment.getId(), savedTransactionModelDao2.getTransactionType(), "AUTH_ABORTED", "AUTH_SUCCESS", transactionModelDao2.getId(), TransactionStatus.SUCCESS,
+                                                                 BigDecimal.ONE, Currency.USD, null, "nothing", internalCallContext);
+
+        final PaymentModelDao savedPayment4Final = paymentDao.getPayment(savedPayment.getId(), internalCallContext);
+        assertEquals(savedPayment4Final.getId(), paymentModelDao.getId());
+        assertEquals(savedPayment4Final.getStateName(), "AUTH_ABORTED");
+        assertEquals(savedPayment4Final.getLastSuccessStateName(), "AUTH_SUCCESS");
+
+        final List<PaymentModelDao> payments = paymentDao.getPaymentsForAccount(accountId, internalCallContext);
         assertEquals(payments.size(), 1);
-        savedPayment = payments.get(0);
-        assertEquals(savedPayment.getId(), payment.getId());
-        assertEquals(savedPayment.getAccountId(), accountId);
-        assertEquals(savedPayment.getInvoiceId(), invoiceId);
-        assertEquals(savedPayment.getPaymentMethodId(), paymentMethodId);
-        assertEquals(savedPayment.getAmount().compareTo(amount), 0);
-        assertEquals(savedPayment.getCurrency(), currency);
-        assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
-        assertEquals(savedPayment.getPaymentStatus(), PaymentStatus.UNKNOWN);
 
-        final List<PaymentAttemptModelDao> attempts = paymentDao.getAttemptsForPayment(payment.getId(), internalCallContext);
-        assertEquals(attempts.size(), 1);
-        savedAttempt = attempts.get(0);
-        assertEquals(savedAttempt.getId(), attempt.getId());
-        assertEquals(savedAttempt.getPaymentId(), payment.getId());
-        assertEquals(savedAttempt.getAccountId(), accountId);
-        assertEquals(savedAttempt.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt.getProcessingStatus(), PaymentStatus.UNKNOWN);
-
-    }
-
-    @Test(groups = "slow")
-    public void testNewAttempt() {
-        final UUID accountId = UUID.randomUUID();
-        final UUID invoiceId = UUID.randomUUID();
-        final UUID paymentMethodId = UUID.randomUUID();
-        final BigDecimal amount = new BigDecimal(13);
-        final Currency currency = Currency.USD;
-        final DateTime effectiveDate = clock.getUTCNow();
-
-        final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, paymentMethodId, amount, currency, effectiveDate);
-        final PaymentAttemptModelDao firstAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), paymentMethodId, effectiveDate, amount, currency);
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithFirstAttempt(payment, firstAttempt, internalCallContext);
-
-        final PaymentModelDao lastPayment = paymentDao.getLastPaymentForPaymentMethod(accountId, paymentMethodId, internalCallContext);
-        assertNotNull(lastPayment);
-        assertEquals(lastPayment.getId(), payment.getId());
-        assertEquals(lastPayment.getAccountId(), accountId);
-        assertEquals(lastPayment.getInvoiceId(), invoiceId);
-        assertEquals(lastPayment.getPaymentMethodId(), paymentMethodId);
-        assertEquals(lastPayment.getAmount().compareTo(amount), 0);
-        assertEquals(lastPayment.getCurrency(), currency);
-        assertEquals(lastPayment.getEffectiveDate().compareTo(effectiveDate), 0);
-        assertEquals(lastPayment.getPaymentStatus(), PaymentStatus.UNKNOWN);
-
-        clock.addDays(3);
-        final DateTime newEffectiveDate = clock.getUTCNow();
-        final UUID newPaymentMethodId = UUID.randomUUID();
-        final BigDecimal newAmount = new BigDecimal("15.23");
-        final PaymentAttemptModelDao secondAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), newPaymentMethodId, newEffectiveDate, newAmount, currency);
-        paymentDao.updatePaymentWithNewAttempt(payment.getId(), secondAttempt, internalCallContext);
-
-        final List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId, internalCallContext);
-        assertEquals(payments.size(), 1);
-        savedPayment = payments.get(0);
-        assertEquals(savedPayment.getId(), payment.getId());
-        assertEquals(savedPayment.getAccountId(), accountId);
-        assertEquals(savedPayment.getInvoiceId(), invoiceId);
-        assertEquals(savedPayment.getPaymentMethodId(), newPaymentMethodId);
-        assertEquals(savedPayment.getAmount().compareTo(newAmount), 0);
-        assertEquals(savedPayment.getCurrency(), currency);
-        assertEquals(savedPayment.getEffectiveDate().compareTo(newEffectiveDate), 0);
-        assertEquals(savedPayment.getPaymentStatus(), PaymentStatus.UNKNOWN);
-
-        final List<PaymentAttemptModelDao> attempts = paymentDao.getAttemptsForPayment(payment.getId(), internalCallContext);
-        assertEquals(attempts.size(), 2);
-        final PaymentAttemptModelDao savedAttempt1 = attempts.get(0);
-        assertEquals(savedAttempt1.getPaymentId(), payment.getId());
-        assertEquals(savedAttempt1.getPaymentMethodId(), paymentMethodId);
-        assertEquals(savedAttempt1.getAccountId(), accountId);
-        assertEquals(savedAttempt1.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt1.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt1.getGatewayErrorCode(), null);
-        assertEquals(savedAttempt1.getGatewayErrorMsg(), null);
-        assertEquals(savedAttempt1.getRequestedAmount().compareTo(amount), 0);
-
-        final PaymentAttemptModelDao savedAttempt2 = attempts.get(1);
-        assertEquals(savedAttempt2.getPaymentId(), payment.getId());
-        assertEquals(savedAttempt2.getPaymentMethodId(), newPaymentMethodId);
-        assertEquals(savedAttempt2.getAccountId(), accountId);
-        assertEquals(savedAttempt2.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt2.getProcessingStatus(), PaymentStatus.UNKNOWN);
-        assertEquals(savedAttempt2.getGatewayErrorCode(), null);
-        assertEquals(savedAttempt2.getGatewayErrorMsg(), null);
-        assertEquals(savedAttempt2.getRequestedAmount().compareTo(newAmount), 0);
+        final List<PaymentTransactionModelDao> transactions2 = paymentDao.getTransactionsForAccount(accountId, internalCallContext);
+        assertEquals(transactions2.size(), 2);
     }
 
     @Test(groups = "slow")
@@ -253,9 +217,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final UUID accountId = UUID.randomUUID();
         final String pluginName = "nobody";
         final Boolean isActive = Boolean.TRUE;
-        final String externalPaymentId = UUID.randomUUID().toString();
 
-        final PaymentMethodModelDao method = new PaymentMethodModelDao(paymentMethodId, null, null,
+        final PaymentMethodModelDao method = new PaymentMethodModelDao(paymentMethodId, UUID.randomUUID().toString(), null, null,
                                                                        accountId, pluginName, isActive);
 
         PaymentMethodModelDao savedMethod = paymentDao.insertPaymentMethod(method, internalCallContext);
@@ -284,4 +247,84 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(deletedPaymentMethod.getId(), paymentMethodId);
         assertEquals(deletedPaymentMethod.getPluginName(), pluginName);
     }
+
+    @Test(groups = "slow")
+    public void testPendingTransactions() {
+
+        final UUID paymentMethodId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
+        final String externalKey = "hhhhooo";
+        final String transactionExternalKey1 = "transaction1";
+        final String transactionExternalKey2 = "transaction2";
+        final String transactionExternalKey3 = "transaction3";
+        final String transactionExternalKey4 = "transaction4";
+
+        final DateTime initialTime = clock.getUTCNow();
+
+        final PaymentModelDao paymentModelDao = new PaymentModelDao(initialTime, initialTime, accountId, paymentMethodId, externalKey);
+        final PaymentTransactionModelDao transaction1 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey1,
+                                                                                       paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,
+                                                                                       TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
+                                                                                       "pending", "");
+
+        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, transaction1, internalCallContext);
+
+        final PaymentTransactionModelDao transaction2 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey2,
+                                                                                       paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,
+                                                                                       TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
+                                                                                       "pending", "");
+        paymentDao.updatePaymentWithNewTransaction(paymentModelDao.getId(), transaction2, internalCallContext);
+
+        final PaymentTransactionModelDao transaction3 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey3,
+                                                                                       paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,
+                                                                                       TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.AED,
+                                                                                       "success", "");
+
+        paymentDao.updatePaymentWithNewTransaction(paymentModelDao.getId(), transaction3, internalCallContext);
+
+        clock.addDays(1);
+        final DateTime newTime = clock.getUTCNow();
+
+
+        final InternalCallContext internalCallContextWithNewTime = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, 1687L, UUID.randomUUID(),
+                                                                                        UUID.randomUUID().toString(), CallOrigin.TEST,
+                                                                                        UserType.TEST, "Testing", "This is a test",
+                                                                                        newTime, newTime);
+
+        final PaymentTransactionModelDao transaction4 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey4,
+                                                                                       paymentModelDao.getId(), TransactionType.AUTHORIZE, newTime,
+                                                                                       TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
+                                                                                       "pending", "");
+        paymentDao.updatePaymentWithNewTransaction(paymentModelDao.getId(), transaction4, internalCallContextWithNewTime);
+
+
+        final List<PaymentTransactionModelDao> result = getPendingTransactions(paymentModelDao.getId());
+        Assert.assertEquals(result.size(), 3);
+
+
+        paymentDao.failOldPendingTransactions(TransactionStatus.PAYMENT_FAILURE, newTime, internalCallContext);
+
+        final List<PaymentTransactionModelDao> result2 = getPendingTransactions(paymentModelDao.getId());
+        Assert.assertEquals(result2.size(), 1);
+
+        // Just to guarantee that next clock.getUTCNow() > newTime
+        try { Thread.sleep(1000); } catch (InterruptedException e) {};
+
+        paymentDao.failOldPendingTransactions(TransactionStatus.PAYMENT_FAILURE, clock.getUTCNow(), internalCallContextWithNewTime);
+
+        final List<PaymentTransactionModelDao> result3 = getPendingTransactions(paymentModelDao.getId());
+        Assert.assertEquals(result3.size(), 0);
+
+    }
+
+    private List<PaymentTransactionModelDao> getPendingTransactions(final UUID paymentId) {
+        final List<PaymentTransactionModelDao> total =  paymentDao.getTransactionsForPayment(paymentId, internalCallContext);
+        return ImmutableList.copyOf(Iterables.filter(total, new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return input.getTransactionStatus() == TransactionStatus.PENDING;
+            }
+        }));
+    }
 }
+

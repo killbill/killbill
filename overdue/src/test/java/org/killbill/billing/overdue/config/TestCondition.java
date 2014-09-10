@@ -32,7 +32,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.overdue.OverdueTestSuiteNoDB;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.PaymentResponse;
-import org.killbill.billing.util.config.catalog.XMLLoader;
+import org.killbill.xmlloader.XMLLoader;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.DefaultControlTag;
 import org.killbill.billing.util.tag.DescriptiveTag;

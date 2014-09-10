@@ -1,5 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,29 +18,25 @@
 
 package org.killbill.billing.catalog.glue;
 
-import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
-
 import org.killbill.billing.catalog.DefaultCatalogService;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.user.DefaultCatalogUserApi;
 import org.killbill.billing.catalog.io.ICatalogLoader;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.CatalogConfig;
+import org.killbill.billing.util.glue.KillBillModule;
+import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.AbstractModule;
+public class CatalogModule extends KillBillModule {
 
-public class CatalogModule extends AbstractModule {
-
-    protected final ConfigSource configSource;
-
-    public CatalogModule(final ConfigSource configSource) {
-        this.configSource = configSource;
+    public CatalogModule(final KillbillConfigSource configSource) {
+        super(configSource);
     }
 
     protected void installConfig() {
-        final CatalogConfig config = new ConfigurationObjectFactory(configSource).build(CatalogConfig.class);
+        final CatalogConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(CatalogConfig.class);
         bind(CatalogConfig.class).toInstance(config);
     }
 

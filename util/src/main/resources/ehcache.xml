@@ -71,6 +71,21 @@
                 properties=""/>
     </cache>
 
+    <cache name="object-id"
+           maxElementsInMemory="100000"
+           maxElementsOnDisk="0"
+           eternal="true"
+           overflowToDisk="false"
+           diskPersistent="false"
+           memoryStoreEvictionPolicy="LFU"
+           statistics="true"
+            >
+        <cacheEventListenerFactory
+                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
+                properties=""/>
+    </cache>
+
+
     <cache name="audit-log"
            maxElementsInMemory="500000"
            maxElementsOnDisk="0"

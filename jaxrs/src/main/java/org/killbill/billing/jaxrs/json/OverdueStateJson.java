@@ -62,7 +62,7 @@ public class OverdueStateJson {
         Period reevaluationIntervalPeriod = null;
         try {
             reevaluationIntervalPeriod = overdueState.getReevaluationInterval();
-        } catch (OverdueApiException ignored) {
+        } catch (final OverdueApiException ignored) {
         }
 
         if (reevaluationIntervalPeriod != null) {

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -13,6 +15,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.killbill.billing.catalog;
 
 import java.net.URI;
@@ -29,7 +32,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
@@ -51,9 +53,8 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Unit;
 import org.killbill.clock.Clock;
-import org.killbill.billing.util.config.catalog.ValidatingConfig;
-import org.killbill.billing.util.config.catalog.ValidationErrors;
-
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationErrors;
 
 @XmlRootElement(name = "catalog")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -97,6 +98,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     private class PlanRequestWrapper {
+
         String name;
         String productName;
         BillingPeriod bp;
@@ -161,7 +163,6 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 
         throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
     }
-
 
     //
     // Public methods not exposed in interface
@@ -266,7 +267,6 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
         return versionForDate(requestedDate).findCurrentProduct(name);
     }
 
-
     //
     // Find a phase
     //
@@ -280,7 +280,6 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
         return plan.findPhase(phaseName);
     }
 
-
     //
     // Find a price list
     //
@@ -290,13 +289,12 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
         return versionForDate(requestedDate).findCurrentPriceList(name);
     }
 
-
     //
     // Rules
     //
     @Override
     public BillingActionPolicy planChangePolicy(final PlanPhaseSpecifier from,
-                                         final PlanSpecifier to, final DateTime requestedDate) throws CatalogApiException {
+                                                final PlanSpecifier to, final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).planChangePolicy(from, to);
     }
 
@@ -315,7 +313,6 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).planCreateAlignment(specifier);
     }
-
 
     @Override
     public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final DateTime requestedDate) throws CatalogApiException {
@@ -412,7 +409,6 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
         return versionForDate(clock.getUTCNow()).findCurrentPhase(name);
     }
 
-
     @Override
     public PriceList findCurrentPricelist(final String name)
             throws CatalogApiException {
@@ -421,7 +417,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 
     @Override
     public BillingActionPolicy planChangePolicy(final PlanPhaseSpecifier from,
-                                         final PlanSpecifier to) throws CatalogApiException {
+                                                final PlanSpecifier to) throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).planChangePolicy(from, to);
     }
 

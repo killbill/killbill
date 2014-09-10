@@ -95,6 +95,8 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 12), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2327.62")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 12), new LocalDate(2012, 5, 12), InvoiceItemType.CBA_ADJ, new BigDecimal("-161.26")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     @Test(groups = "slow")
@@ -163,6 +165,8 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 1), new LocalDate(2012, 11, 1), InvoiceItemType.RECURRING, new BigDecimal("69.95")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
 
     }
 
@@ -234,6 +238,8 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 6, 1), new LocalDate(2014, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     @Test(groups = "slow")
@@ -311,5 +317,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 6, 1), new LocalDate(2014, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 }

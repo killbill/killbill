@@ -17,16 +17,17 @@
 package org.killbill.billing.payment.dispatcher;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
 
@@ -36,17 +37,19 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
     public void testDispatchWithTimeout() throws TimeoutException, PaymentApiException {
         boolean gotIt = false;
         try {
-            voidPluginDispatcher.dispatchWithAccountLockAndTimeout(new Callable<Void>() {
+            voidPluginDispatcher.dispatchWithTimeout(new Callable<PluginDispatcherReturnType<Void>>() {
                 @Override
-                public Void call() throws Exception {
+                public PluginDispatcherReturnType<Void> call() throws Exception {
                     Thread.sleep(1000);
                     return null;
                 }
             }, 100, TimeUnit.MILLISECONDS);
             Assert.fail("Failed : should have had Timeout exception");
-        } catch (TimeoutException e) {
+        } catch (final TimeoutException e) {
             gotIt = true;
-        } catch (PaymentApiException e) {
+        } catch (InterruptedException e) {
+            Assert.fail("Failed : should have had Timeout exception");
+        } catch (ExecutionException e) {
             Assert.fail("Failed : should have had Timeout exception");
         }
         Assert.assertTrue(gotIt);
@@ -56,37 +59,50 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
     public void testDispatchWithPaymentApiException() throws TimeoutException, PaymentApiException {
         boolean gotIt = false;
         try {
-            voidPluginDispatcher.dispatchWithAccountLockAndTimeout(new Callable<Void>() {
+            voidPluginDispatcher.dispatchWithTimeout(new Callable<PluginDispatcherReturnType<Void>>() {
                 @Override
-                public Void call() throws Exception {
+                public PluginDispatcherReturnType<Void> call() throws Exception {
                     throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, "foo", "foo");
                 }
             }, 100, TimeUnit.MILLISECONDS);
             Assert.fail("Failed : should have had Timeout exception");
-        } catch (TimeoutException e) {
+        } catch (final TimeoutException e) {
             Assert.fail("Failed : should have had PaymentApiException exception");
-        } catch (PaymentApiException e) {
-            gotIt = true;
+        } catch (InterruptedException e) {
+            Assert.fail("Failed : should have had PaymentApiException exception");
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof PaymentApiException) {
+                gotIt = true;
+            } else {
+                Assert.fail("Failed : should have had PaymentApiException exception");
+            }
         }
         Assert.assertTrue(gotIt);
     }
 
     @Test(groups = "fast")
-    public void testDispatchWithRuntimeExceptionWrappedInPaymentApiException() throws TimeoutException, PaymentApiException {
+    public void testDispatchWithRuntimeException() throws TimeoutException, PaymentApiException {
         boolean gotIt = false;
         try {
-            voidPluginDispatcher.dispatchWithAccountLockAndTimeout(new Callable<Void>() {
+            voidPluginDispatcher.dispatchWithTimeout(new Callable<PluginDispatcherReturnType<Void>>() {
                 @Override
-                public Void call() throws Exception {
+                public PluginDispatcherReturnType<Void> call() throws Exception {
                     throw new RuntimeException("whatever");
                 }
             }, 100, TimeUnit.MILLISECONDS);
             Assert.fail("Failed : should have had Timeout exception");
-        } catch (TimeoutException e) {
+        } catch (final TimeoutException e) {
             Assert.fail("Failed : should have had RuntimeException exception");
-        } catch (PaymentApiException e) {
-            gotIt = true;
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
+            Assert.fail("Failed : should have had RuntimeException (wrapped in an ExecutionException)");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof RuntimeException) {
+                gotIt = true;
+            } else {
+                Assert.fail("Failed : should have had RuntimeException exception");
+            }
         }
         Assert.assertTrue(gotIt);
     }

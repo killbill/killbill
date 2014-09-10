@@ -28,6 +28,7 @@ public @interface Cachable {
     public final String RECORD_ID_CACHE_NAME = "record-id";
     public final String ACCOUNT_RECORD_ID_CACHE_NAME = "account-record-id";
     public final String TENANT_RECORD_ID_CACHE_NAME = "tenant-record-id";
+    public final String OBJECT_ID_CACHE_NAME = "object-id";
     public final String AUDIT_LOG_CACHE_NAME = "audit-log";
     public final String AUDIT_LOG_VIA_HISTORY_CACHE_NAME = "audit-log-via-history";
 
@@ -35,29 +36,36 @@ public @interface Cachable {
 
     public enum CacheType {
         /* Mapping from object 'id (UUID)' -> object 'recordId (Long' */
-        RECORD_ID(RECORD_ID_CACHE_NAME),
+        RECORD_ID(RECORD_ID_CACHE_NAME, false),
 
         /* Mapping from object 'id (UUID)' -> matching account object 'accountRecordId (Long)' */
-        ACCOUNT_RECORD_ID(ACCOUNT_RECORD_ID_CACHE_NAME),
+        ACCOUNT_RECORD_ID(ACCOUNT_RECORD_ID_CACHE_NAME, false),
 
         /* Mapping from object 'id (UUID)' -> matching object 'tenantRecordId (Long)' */
-        TENANT_RECORD_ID(TENANT_RECORD_ID_CACHE_NAME),
+        TENANT_RECORD_ID(TENANT_RECORD_ID_CACHE_NAME, false),
+
+        /* Mapping from object 'recordId (Long') -> object 'id (UUID)'  */
+        OBJECT_ID(OBJECT_ID_CACHE_NAME, true),
 
         /* Mapping from object 'tableName::targetRecordId' -> matching objects 'Iterable<AuditLog>' */
-        AUDIT_LOG(AUDIT_LOG_CACHE_NAME),
+        AUDIT_LOG(AUDIT_LOG_CACHE_NAME, true),
 
         /* Mapping from object 'tableName::historyTableName::targetRecordId' -> matching objects 'Iterable<AuditLog>' */
-        AUDIT_LOG_VIA_HISTORY(AUDIT_LOG_VIA_HISTORY_CACHE_NAME);
+        AUDIT_LOG_VIA_HISTORY(AUDIT_LOG_VIA_HISTORY_CACHE_NAME, true);
 
         private final String cacheName;
+        private final boolean isKeyPrefixedWithTableName;
 
-        CacheType(final String cacheName) {
+        CacheType(final String cacheName, final boolean isKeyPrefixedWithTableName) {
             this.cacheName = cacheName;
+            this.isKeyPrefixedWithTableName = isKeyPrefixedWithTableName;
         }
 
         public String getCacheName() {
             return cacheName;
         }
+
+        public boolean isKeyPrefixedWithTableName() { return isKeyPrefixedWithTableName; }
 
         public static CacheType findByName(final String input) {
             for (final CacheType cacheType : CacheType.values()) {

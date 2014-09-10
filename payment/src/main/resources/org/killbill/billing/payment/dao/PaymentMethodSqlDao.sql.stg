@@ -9,7 +9,8 @@ historyTableName() ::= "payment_method_history"
 andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
 
 tableFields(prefix) ::= <<
-  <prefix>account_id
+  <prefix>external_key
+, <prefix>account_id
 , <prefix>plugin_name
 , <prefix>is_active
 , <prefix>created_by
@@ -19,7 +20,8 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
-  :accountId
+  :externalKey
+, :accountId
 , :pluginName
 , :isActive
 , :createdBy
@@ -27,7 +29,6 @@ tableValues() ::= <<
 , :updatedBy
 , :updatedDate
 >>
-
 
 markPaymentMethodAsDeleted(id) ::= <<
 update <tableName()>
@@ -45,6 +46,23 @@ set is_active = 1
 , updated_by = :updatedBy
 , updated_date = :createdDate
 where  id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
+getByExternalKey() ::= <<
+select <allTableFields()>
+from <tableName()>
+where external_key = :externalKey
+and is_active = 1
+<AND_CHECK_TENANT()>
+;
+>>
+
+getPaymentMethodByExternalKeyIncludedDeleted() ::= <<
+select <allTableFields()>
+from <tableName()>
+where external_key = :externalKey
 <AND_CHECK_TENANT()>
 ;
 >>
@@ -71,6 +89,13 @@ select
 from <tableName()>
 where account_id = :accountId
 ;
+>>
+
+searchQuery(prefix) ::= <<
+     <idField(prefix)> = :searchKey
+  or <prefix>external_key like :likeSearchKey
+  or <prefix>account_id = :searchKey
+  or <prefix>plugin_name like :likeSearchKey
 >>
 
 getByPluginName() ::= <<

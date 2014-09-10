@@ -17,14 +17,15 @@ package org.killbill.billing.events;
 
 import java.util.UUID;
 
+import org.killbill.billing.payment.api.TransactionType;
 
 public interface PaymentErrorInternalEvent extends BusInternalEvent {
 
     public String getMessage();
 
-    public UUID getInvoiceId();
-
     public UUID getAccountId();
 
     public UUID getPaymentId();
+
+    public TransactionType getTransactionType();
 }

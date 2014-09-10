@@ -27,8 +27,9 @@ import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class InvoicePaymentModelDao extends EntityBase implements EntityModelDao<InvoicePayment> {
+public class InvoicePaymentModelDao extends EntityModelDaoBase implements EntityModelDao<InvoicePayment> {
 
     private InvoicePaymentType type;
     private UUID invoiceId;
@@ -37,14 +38,14 @@ public class InvoicePaymentModelDao extends EntityBase implements EntityModelDao
     private BigDecimal amount;
     private Currency currency;
     private Currency processedCurrency;
-    private UUID paymentCookieId;
+    private String paymentCookieId;
     private UUID linkedInvoicePaymentId;
 
     public InvoicePaymentModelDao() { /* For the DAO mapper */ }
 
     public InvoicePaymentModelDao(final UUID id, final DateTime createdDate, final InvoicePaymentType type, final UUID invoiceId,
                                   final UUID paymentId, final DateTime paymentDate, final BigDecimal amount, final Currency currency,
-                                  final Currency processedCurrency, final UUID paymentCookieId, final UUID linkedInvoicePaymentId) {
+                                  final Currency processedCurrency, final String paymentCookieId, final UUID linkedInvoicePaymentId) {
         super(id, createdDate, createdDate);
         this.type = type;
         this.invoiceId = invoiceId;
@@ -91,7 +92,7 @@ public class InvoicePaymentModelDao extends EntityBase implements EntityModelDao
         return processedCurrency;
     }
 
-    public UUID getPaymentCookieId() {
+    public String getPaymentCookieId() {
         return paymentCookieId;
     }
 
@@ -127,7 +128,7 @@ public class InvoicePaymentModelDao extends EntityBase implements EntityModelDao
         this.processedCurrency = processedCurrency;
     }
 
-    public void setPaymentCookieId(final UUID paymentCookieId) {
+    public void setPaymentCookieId(final String paymentCookieId) {
         this.paymentCookieId = paymentCookieId;
     }
 

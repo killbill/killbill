@@ -17,8 +17,10 @@
 package org.killbill.billing.invoice.tree;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -49,7 +51,7 @@ public class SubscriptionItemTree {
     private List<Item> items;
 
     private List<InvoiceItem> existingFixedItems;
-    private List<InvoiceItem> remainingFixedItems;
+    private Map<LocalDate, InvoiceItem> remainingFixedItems;
     private List<InvoiceItem> pendingItemAdj;
 
     private static final Comparator<InvoiceItem> INVOICE_ITEM_COMPARATOR = new Comparator<InvoiceItem>() {
@@ -64,7 +66,9 @@ public class SubscriptionItemTree {
             if (itemTypeComp != 0) {
                 return itemTypeComp;
             }
-            Preconditions.checkState(false, "Unexpected list of items for subscription " + o1.getSubscriptionId());
+            Preconditions.checkState(false, "Unexpected list of items for subscription " + o1.getSubscriptionId() +
+                                            ", type(item1) = " + o1.getInvoiceItemType() + ", start(item1) = " + o1.getStartDate() +
+                                            ", type(item12) = " + o2.getInvoiceItemType() + ", start(item2) = " + o2.getStartDate());
             // Never reached...
             return 0;
         }
@@ -75,7 +79,7 @@ public class SubscriptionItemTree {
         this.root = new ItemsNodeInterval();
         this.items = new LinkedList<Item>();
         this.existingFixedItems = new LinkedList<InvoiceItem>();
-        this.remainingFixedItems = new LinkedList<InvoiceItem>();
+        this.remainingFixedItems = new HashMap<LocalDate, InvoiceItem>();
         this.pendingItemAdj = new LinkedList<InvoiceItem>();
         this.isBuilt = false;
     }
@@ -173,7 +177,7 @@ public class SubscriptionItemTree {
                     }
                 }).orNull();
                 if (existingItem == null) {
-                    remainingFixedItems.add(invoiceItem);
+                    remainingFixedItems.put(invoiceItem.getStartDate(), invoiceItem);
                 }
                 break;
 
@@ -194,7 +198,7 @@ public class SubscriptionItemTree {
     public List<InvoiceItem> getView() {
 
         final List<InvoiceItem> tmp = new LinkedList<InvoiceItem>();
-        tmp.addAll(remainingFixedItems);
+        tmp.addAll(remainingFixedItems.values());
         tmp.addAll(Collections2.filter(Collections2.transform(items, new Function<Item, InvoiceItem>() {
             @Override
             public InvoiceItem apply(final Item input) {

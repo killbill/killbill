@@ -1,13 +1,23 @@
 group PaymentAttemptSqlDao: EntitySqlDao;
 
+tableName() ::= "payment_attempts"
+
+historyTableName() ::= "payment_attempt_history"
+
+
+
 tableFields(prefix) ::= <<
-  <prefix>payment_id
+  <prefix>account_id
 , <prefix>payment_method_id
-, <prefix>gateway_error_code
-, <prefix>gateway_error_msg
-, <prefix>processing_status
-, <prefix>requested_amount
-, <prefix>requested_currency
+, <prefix>payment_external_key
+, <prefix>transaction_id
+, <prefix>transaction_external_key
+, <prefix>transaction_type
+, <prefix>state_name
+, <prefix>amount
+, <prefix>currency
+, <prefix>plugin_name
+, <prefix>plugin_properties
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -15,60 +25,69 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
-  :paymentId
+  :accountId
 , :paymentMethodId
-, :gatewayErrorCode
-, :gatewayErrorMsg
-, :processingStatus
-, :requestedAmount
-, :requestedCurrency
+, :paymentExternalKey
+, :transactionId
+, :transactionExternalKey
+, :transactionType
+, :stateName
+, :amount
+, :currency
+, :pluginName
+, :pluginProperties
 , :createdBy
 , :createdDate
 , :updatedBy
 , :updatedDate
 >>
 
-tableName() ::= "payment_attempts"
-
-historyTableName() ::= "payment_attempt_history"
-
-
-getById(id) ::= <<
-select <allTableFields("pa.")>
-, pa.created_date as effective_date
-, p.account_id as account_id
-, p.invoice_id as invoice_id
-from <tableName()> pa join payments p
-where pa.id = :id
-and pa.payment_id = p.id
-<AND_CHECK_TENANT("pa.")>
-<AND_CHECK_TENANT("p.")>
+getByTransactionExternalKey() ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where transaction_external_key = :transactionExternalKey
+<andCheckSoftDeletionWithComma("")>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy()>
 ;
 >>
 
-getByPaymentId(paymentId) ::= <<
-select <allTableFields("pa.")>
-, pa.created_date as effective_date
-, p.account_id as account_id
-, p.invoice_id as invoice_id
-from <tableName()> pa join payments p
-where pa.payment_id = :paymentId
-and p.id = :paymentId
-<AND_CHECK_TENANT("pa.")>
-<AND_CHECK_TENANT("p.")>
-<defaultOrderBy("pa.")>
+getByPaymentExternalKey() ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where payment_external_key = :paymentExternalKey
+<andCheckSoftDeletionWithComma("")>
+<AND_CHECK_TENANT()>
+<defaultOrderBy()>
+;
+>>
+
+/* Does not include tenant info, global */
+getByStateName() ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where state_name = :stateName
+and created_date \< :createdBeforeDate
+<andCheckSoftDeletionWithComma("")>
+<defaultOrderBy()>
 ;
 >>
 
 
-updatePaymentAttemptStatus() ::= <<
+updateAttempt() ::= <<
 update <tableName()>
-set processing_status = :processingStatus
-, gateway_error_code = :gatewayErrorCode
-, gateway_error_msg = :gatewayErrorMsg
+set state_name = :stateName
+, transaction_id = :transactionId
 , updated_by = :updatedBy
 , updated_date = :createdDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;
 >>
+
+
+
+

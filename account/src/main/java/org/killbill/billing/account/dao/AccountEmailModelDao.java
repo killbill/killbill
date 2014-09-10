@@ -22,8 +22,9 @@ import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class AccountEmailModelDao extends EntityBase implements EntityModelDao<AccountEmail> {
+public class AccountEmailModelDao extends EntityModelDaoBase implements EntityModelDao<AccountEmail> {
 
     private UUID accountId;
     private String email;

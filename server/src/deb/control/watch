@@ -1,3 +1,0 @@
-version=3
-opts=dversionmangle=s/\+dfsg// \
- https://github.com/killbill/killbill/tags .*/killbill-(\d+).(\d+).(\d+).tar.gz debian

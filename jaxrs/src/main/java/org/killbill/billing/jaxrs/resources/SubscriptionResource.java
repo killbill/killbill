@@ -38,6 +38,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,6 +78,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -100,14 +102,16 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                 final EntitlementApi entitlementApi,
                                 final SubscriptionApi subscriptionApi,
                                 final AccountUserApi accountUserApi,
+                                final PaymentApi paymentApi,
                                 final Clock clock,
                                 final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.killbillHandler = killbillHandler;
         this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;
     }
 
+    //@Timed
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -119,6 +123,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
+    //@Timed
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -163,6 +168,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
+    //@Timed
     @PUT
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
     @Produces(APPLICATION_JSON)
@@ -177,6 +183,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
+    //@Timed
     @PUT
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
@@ -237,6 +244,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
+    //@Timed
     @DELETE
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -377,9 +385,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     waiter.waitForCompletion(timeoutSec * 1000);
                 }
                 return callback.doResponseOk(operationValue);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-            } catch (TimeoutException e) {
+            } catch (final TimeoutException e) {
                 return Response.status(Status.fromStatusCode(408)).build();
             } finally {
                 if (waiter != null) {

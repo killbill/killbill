@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -23,9 +25,10 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+
+import com.google.common.base.Objects;
 
 public class RepairAdjInvoiceItem extends AdjInvoiceItem {
 
@@ -36,7 +39,12 @@ public class RepairAdjInvoiceItem extends AdjInvoiceItem {
 
     public RepairAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final Currency currency, final UUID reversingId) {
-        super(id, createdDate, invoiceId, accountId, startDate, endDate, amount, currency, reversingId);
+        this(id, createdDate, invoiceId, accountId, startDate, endDate, null, amount, currency, reversingId);
+    }
+
+    public RepairAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate,
+                                @Nullable final String description, final BigDecimal amount, final Currency currency, final UUID reversingId) {
+        super(id, createdDate, invoiceId, accountId, startDate, endDate, description, amount, currency, reversingId);
     }
 
     @Override
@@ -46,6 +54,6 @@ public class RepairAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return "Adjustment (subscription change)";
+        return Objects.firstNonNull(description, "Adjustment (subscription change)");
     }
 }

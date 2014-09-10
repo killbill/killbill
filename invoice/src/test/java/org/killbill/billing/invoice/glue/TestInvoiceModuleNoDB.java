@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014 Groupon, Inc
+ * Copyright 2014 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,14 +21,11 @@ package org.killbill.billing.invoice.glue;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.mockito.Mockito;
-import org.skife.config.ConfigSource;
-
 import org.killbill.billing.GuicyKillbillTestNoDBModule;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.currency.api.CurrencyConversion;
@@ -36,12 +35,12 @@ import org.killbill.billing.currency.api.Rate;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.MockInvoiceDao;
 import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
-import org.killbill.billing.util.bus.InMemoryBusModule;
-import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.mockito.Mockito;
 
 public class TestInvoiceModuleNoDB extends TestInvoiceModule {
 
-    public TestInvoiceModuleNoDB(final ConfigSource configSource) {
+    public TestInvoiceModuleNoDB(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
@@ -52,9 +51,8 @@ public class TestInvoiceModuleNoDB extends TestInvoiceModule {
     @Override
     public void configure() {
         super.configure();
-        install(new GuicyKillbillTestNoDBModule());
-        install(new MockNonEntityDaoModule());
-        install(new InMemoryBusModule(configSource));
+        install(new GuicyKillbillTestNoDBModule(configSource));
+        install(new MockNonEntityDaoModule(configSource));
 
         bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
         bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));

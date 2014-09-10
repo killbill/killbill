@@ -31,6 +31,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.SubjectJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -41,6 +42,7 @@ import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -61,12 +63,14 @@ public class SecurityResource extends JaxRsResourceBase {
                             final CustomFieldUserApi customFieldUserApi,
                             final AuditUserApi auditUserApi,
                             final AccountUserApi accountUserApi,
+                            final PaymentApi paymentApi,
                             final Clock clock,
                             final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.securityApi = securityApi;
     }
 
+    //@Timed
     @GET
     @Path("/permissions")
     @Produces(APPLICATION_JSON)
@@ -76,6 +80,7 @@ public class SecurityResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
+    //@Timed
     @GET
     @Path("/subject")
     @Produces(APPLICATION_JSON)
