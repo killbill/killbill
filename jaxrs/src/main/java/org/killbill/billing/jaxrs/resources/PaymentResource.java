@@ -83,7 +83,7 @@ public class PaymentResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
-    //@Timed
+    @Timed
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
@@ -102,7 +102,7 @@ public class PaymentResource extends JaxRsResourceBase {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
-    //@Timed
+    @Timed
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
@@ -143,7 +143,7 @@ public class PaymentResource extends JaxRsResourceBase {
                                                );
     }
 
-    //@Timed
+    @Timed
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -187,7 +187,7 @@ public class PaymentResource extends JaxRsResourceBase {
                                                );
     }
 
-    //@Timed
+    @Timed
     @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
@@ -213,7 +213,7 @@ public class PaymentResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
     }
 
-    //@Timed
+    @Timed
     @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
@@ -239,7 +239,7 @@ public class PaymentResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
     }
 
-    //@Timed
+    @Timed
     @DELETE
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
@@ -264,7 +264,7 @@ public class PaymentResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
     }
 
-    //@Timed
+    @Timed
     @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)

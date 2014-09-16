@@ -74,7 +74,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
-    //@Timed
+    @Timed
     @GET
     @Produces(APPLICATION_JSON)
     public Response getTagDefinitions(@javax.ws.rs.core.Context final HttpServletRequest request,
@@ -91,7 +91,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
-    //@Timed
+    @Timed
     @GET
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -105,7 +105,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    //@Timed
+    @Timed
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -123,7 +123,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId());
     }
 
-    //@Timed
+    @Timed
     @DELETE
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
