@@ -83,7 +83,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
             return new OperationException(realException, OperationResult.FAILURE);
         } else if (e.getCause() instanceof LockFailedException) {
             final String format = String.format("Failed to lock account %s", paymentStateContext.getAccount().getExternalKey());
-            logger.error(String.format(format), e);
+            logger.error(String.format(format));
             return new OperationException(realException, OperationResult.FAILURE);
         } else /* if (e instanceof RuntimeException) */ {
             logger.warn("Plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), e);
@@ -93,13 +93,13 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
 
     @Override
     protected OperationException wrapTimeoutException(final PaymentStateContext paymentStateContext, final TimeoutException e) {
-        logger.error("Plugin call TIMEOUT for account {}: {}", paymentStateContext.getAccount().getExternalKey(), e.getMessage());
+        logger.error("Plugin call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
         return new OperationException(e, OperationResult.EXCEPTION);
     }
 
     @Override
     protected OperationException wrapInterruptedException(final PaymentStateContext paymentStateContext, final InterruptedException e) {
-        logger.error("Plugin call was interrupted for account {}: {}", paymentStateContext.getAccount().getExternalKey(), e.getMessage());
+        logger.error("Plugin call was interrupted for account {}", paymentStateContext.getAccount().getExternalKey());
         return new OperationException(e, OperationResult.EXCEPTION);
     }
 

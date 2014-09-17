@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -188,6 +189,8 @@ public class PaymentAutomatonRunner {
                 throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
             } else if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
+            } else if (e.getCause() instanceof TimeoutException) {
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_PLUGIN_TIMEOUT, Objects.firstNonNull(e.getMessage(), ""));
             } else {
                 throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
             }

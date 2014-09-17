@@ -175,6 +175,18 @@ public abstract class ExceptionMapperBase {
                        .build();
     }
 
+    protected Response buildPluginTimeoutResponse(final Exception e, final UriInfo uriInfo) {
+        return buildPluginTimeoutResponse(exceptionToString(e), uriInfo);
+    }
+
+    private Response buildPluginTimeoutResponse(final String error, final UriInfo uriInfo) {
+        return Response.status(Status.ACCEPTED)
+                       .entity(error)
+                       .type(MediaType.TEXT_PLAIN_TYPE)
+                       .build();
+    }
+
+
     private String exceptionToString(final Exception e) {
         try {
             return mapper.writeValueAsString(new BillingExceptionJson(e));

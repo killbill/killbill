@@ -157,7 +157,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
             return (OperationException) e.getCause();
         } else if (e.getCause() instanceof LockFailedException) {
             final String format = String.format("Failed to lock account %s", paymentStateContext.getAccount().getExternalKey());
-            logger.error(String.format(format), e);
+            logger.error(String.format(format));
             return new OperationException(e, getOperationResultOnException(paymentStateContext));
         } else /* most probably RuntimeException */ {
             logger.warn("RetryOperationCallback failed for account {}", paymentStateContext.getAccount().getExternalKey(), e);
@@ -167,13 +167,13 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
 
     @Override
     protected OperationException wrapTimeoutException(final PaymentStateContext paymentStateContext, final TimeoutException e) {
-        logger.error("RetryOperationCallback call TIMEOUT for account {}: {}", paymentStateContext.getAccount().getExternalKey(), e.getMessage());
+        logger.error("RetryOperationCallback call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
         return new OperationException(e, getOperationResultOnException(paymentStateContext));
     }
 
     @Override
     protected OperationException wrapInterruptedException(final PaymentStateContext paymentStateContext, final InterruptedException e) {
-        logger.error("RetryOperationCallback call was interrupted for account {}: {}", paymentStateContext.getAccount().getExternalKey(), e.getMessage());
+        logger.error("RetryOperationCallback call was interrupted for account {}", paymentStateContext.getAccount().getExternalKey());
         return new OperationException(e, getOperationResultOnException(paymentStateContext));
     }
 

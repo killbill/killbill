@@ -63,7 +63,7 @@ public class PaymentApiExceptionMapper extends ExceptionMapperBase implements Ex
         } else if (exception.getCode() == ErrorCode.PAYMENT_NULL_INVOICE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_PLUGIN_TIMEOUT.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
+            return buildPluginTimeoutResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_UPD_PAYMENT_METHOD.getCode()) {
