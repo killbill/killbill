@@ -51,7 +51,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 /**
- * Task to complete 'partially' incomplete attempts
+ * Task to complete 'partially' incomplete payment attempts. Tis only matters for calls that went through PaymentControl apis.
  * <p/>
  * If the state of the transaction associated with the attempt completed, but the attempt state machine did not,
  * we rerun the retry state machine to complete the call and transition the attempt into a terminal state.
