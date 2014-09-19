@@ -83,7 +83,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     }
 
     protected ContiguousIntervalConsumableInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
-        final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, invoiceId, mockUsageUserApi, targetDate, callContext);
+        final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, invoiceId, mockUsageUserApi, true, targetDate, callContext);
         for (BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);
         }

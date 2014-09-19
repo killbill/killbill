@@ -106,6 +106,11 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
             public boolean isEmailNotificationsEnabled() {
                 return false;
             }
+
+            @Override
+            public boolean isInsertZeroUsageItems() {
+                return true;
+            }
         };
         this.generator = new DefaultInvoiceGenerator(clock, null, invoiceConfig, null, controllerDispatcher);
     }

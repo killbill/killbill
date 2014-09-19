@@ -69,12 +69,14 @@ public class ContiguousIntervalConsumableInArrear {
     private final UUID invoiceId;
     private final TenantContext context;
     private final AtomicBoolean isBuilt;
+    private final boolean insertZeroAmountItems;
 
-    public ContiguousIntervalConsumableInArrear(final Usage usage, final UUID invoiceId, final UsageUserApi usageApi, final LocalDate targetDate, final TenantContext context) {
+    public ContiguousIntervalConsumableInArrear(final Usage usage, final UUID invoiceId, final UsageUserApi usageApi, final boolean insertZeroAmountItems, final LocalDate targetDate, final TenantContext context) {
         this.usage = usage;
         this.invoiceId = invoiceId;
         this.unitTypes = getConsumableInArrearUnitTypes(usage);
         this.usageApi = usageApi;
+        this.insertZeroAmountItems = insertZeroAmountItems;
         this.targetDate = targetDate;
         this.context = context;
         this.billingEvents = Lists.newLinkedList();
@@ -149,12 +151,14 @@ public class ContiguousIntervalConsumableInArrear {
             final Iterable<InvoiceItem> billedItems = getBilledItems(ru.getStartDate(), ru.getEndDate(), existingUsage);
             final BigDecimal billedUsage = computeBilledUsage(billedItems);
 
-            // Compare the two and add the missing piece if required. If there has never been any billed item for the period
-            // and if there is nothing to bill for we would also insert a $0 amount
+            // Compare the two and add the missing piece if required.
             if (!billedItems.iterator().hasNext() || billedUsage.compareTo(toBeBilledUsage) < 0) {
-                InvoiceItem item = new UsageInvoiceItem(invoiceId, getAccountId(), getBundleId(), getSubscriptionId(), getPlanName(),
-                                                        getPhaseName(), usage.getName(), ru.getStartDate(), ru.getEndDate(), toBeBilledUsage.subtract(billedUsage), getCurrency());
-                result.add(item);
+                final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
+                if (amountToBill.compareTo(BigDecimal.ZERO) > 0 || insertZeroAmountItems) {
+                    InvoiceItem item = new UsageInvoiceItem(invoiceId, getAccountId(), getBundleId(), getSubscriptionId(), getPlanName(),
+                                                            getPhaseName(), usage.getName(), ru.getStartDate(), ru.getEndDate(), amountToBill, getCurrency());
+                    result.add(item);
+                }
             }
 
         }

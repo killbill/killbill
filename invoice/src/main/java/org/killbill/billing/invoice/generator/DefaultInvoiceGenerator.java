@@ -135,7 +135,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
                 final UUID subscriptionId = event.getSubscription().getId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
-                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, targetDate, context.toTenantContext(tenantId));
+                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, config.isInsertZeroUsageItems(), targetDate, context.toTenantContext(tenantId));
                     items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(curSubscriptionId, existingInvoices)));
                     curEvents = Lists.newArrayList();
                 }
@@ -143,7 +143,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 curEvents.add(event);
             }
             if (curSubscriptionId != null) {
-                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, targetDate, context.toTenantContext(tenantId));
+                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, config.isInsertZeroUsageItems(), targetDate, context.toTenantContext(tenantId));
                 items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(curSubscriptionId, existingInvoices)));
             }
             return items;
