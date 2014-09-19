@@ -104,10 +104,15 @@ public class Janitor {
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
         this.retrySMHelper = retrySMHelper;
         this.controllerDispatcher = controllerDispatcher;
+        this.isStopped = false;
     }
 
     public void start() {
-        isStopped = false;
+        if (isStopped) {
+            log.warn("Janitor is not a restartable service, and was already started, aborting");
+            return;
+        }
+
         // Start task for removing old pending payments.
         final TimeUnit pendingRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
         final long pendingPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
@@ -120,7 +125,10 @@ public class Janitor {
     }
 
     public void stop() {
-        isStopped = true;
+        if (isStopped) {
+            log.warn("Janitor is already in a stopped state");
+            return;
+        }
         try {
             /* Previously submitted tasks will be executed with shutdown(); when task executes as a result of shutdown being called
              * or because it was already in its execution loop, it will check for the volatile boolean isStopped flag and
@@ -135,6 +143,8 @@ public class Janitor {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.warn("Janitor stop sequence got interrupted");
+        } finally {
+            isStopped = true;
         }
     }
 
