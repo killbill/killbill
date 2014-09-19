@@ -37,9 +37,8 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
-import org.killbill.billing.payment.core.Janitor;
+import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
-import org.killbill.billing.payment.glue.TestPaymentModuleWithEmbeddedDB;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -50,9 +49,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import static org.testng.Assert.assertEquals;
 
