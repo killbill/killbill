@@ -34,7 +34,7 @@ public interface InvoiceConfig extends KillbillConfig {
 
     @Config("org.killbill.invoice.usage.insert.zero.amount")
     @Default("true")
-    @Description("Whether to suppress usage items with a zero amount")
+    @Description("Whether to insert usage items with a zero amount")
     public boolean isInsertZeroUsageItems();
 
 }

@@ -94,6 +94,18 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     @Override
     protected OperationException wrapTimeoutException(final PaymentStateContext paymentStateContext, final TimeoutException e) {
         logger.error("Plugin call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
+
+        final PaymentTransactionInfoPlugin paymentInfoPlugin = new DefaultNoOpPaymentInfoPlugin(paymentStateContext.getPaymentId(),
+                                                                                                paymentStateContext.getTransactionId(),
+                                                                                                paymentStateContext.getTransactionType(),
+                                                                                                paymentStateContext.getPaymentTransactionModelDao().getProcessedAmount(),
+                                                                                                paymentStateContext.getPaymentTransactionModelDao().getProcessedCurrency(),
+                                                                                                paymentStateContext.getPaymentTransactionModelDao().getEffectiveDate(),
+                                                                                                paymentStateContext.getPaymentTransactionModelDao().getCreatedDate(),
+                                                                                                PaymentPluginStatus.UNDEFINED,
+                                                                                                null);
+
+        paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
         return new OperationException(e, OperationResult.EXCEPTION);
     }
 

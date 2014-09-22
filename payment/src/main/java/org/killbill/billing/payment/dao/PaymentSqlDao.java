@@ -16,7 +16,10 @@
 
 package org.killbill.billing.payment.dao;
 
+import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -30,6 +33,7 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 @EntitySqlDaoStringTemplate
 public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
@@ -56,6 +60,14 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
     @SqlQuery
     public PaymentModelDao getPaymentByExternalKey(@Bind("externalKey") final String externalKey,
                                                    @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public List<PaymentModelDao> getPaymentsByStates(@StateCollectionBinder final Collection<String> states,
+                                                     @Bind("createdBeforeDate") final Date createdBeforeDate,
+                                                     @Bind("createdAfterDate") final Date createdAfterDate,
+                                                     @BindBean final InternalTenantContext context,
+                                                     @Bind("limit") final int limit);
+
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
     public Iterator<PaymentModelDao> getByPluginName(@Bind("pluginName") final String pluginName,

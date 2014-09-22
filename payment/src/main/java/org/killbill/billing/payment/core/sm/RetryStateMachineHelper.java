@@ -37,6 +37,7 @@ public class RetryStateMachineHelper {
     private static final String INIT_STATE_NAME = "INIT";
     private static final String RETRIED_STATE_NAME = "RETRIED";
 
+
     private final StateMachineConfig retryStateMachineConfig;
     private final StateMachine retryStateMachine;
     private final Operation retryOperation;

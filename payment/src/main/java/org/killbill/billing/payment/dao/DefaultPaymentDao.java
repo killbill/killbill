@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.management.ImmutableDescriptor;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -60,6 +61,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 public class DefaultPaymentDao implements PaymentDao {
 
@@ -165,6 +167,8 @@ public class DefaultPaymentDao implements PaymentDao {
                             return input.getId().toString();
                         }
                     });
+
+
                     return transactional.failOldPendingTransactions(oldPendingTransactionIds, TransactionStatus.PAYMENT_FAILURE.toString(), context);
                 }
                 return 0;
@@ -317,6 +321,16 @@ public class DefaultPaymentDao implements PaymentDao {
             @Override
             public List<PaymentModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).getByAccountRecordId(context);
+            }
+        });
+    }
+
+    @Override
+    public List<PaymentModelDao> getPaymentsByStates(final String[] states, final DateTime createdBeforeDate, final DateTime createdAfterDate, final int limit, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentModelDao>>() {
+            @Override
+            public List<PaymentModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).getPaymentsByStates(ImmutableList.copyOf(states), createdBeforeDate.toDate(), createdAfterDate.toDate(), context, limit);
             }
         });
     }

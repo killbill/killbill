@@ -20,10 +20,13 @@ package org.killbill.billing.payment.core.janitor;
 import java.util.List;
 
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlledPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
@@ -41,10 +44,10 @@ final class PendingTransactionTask extends CompletionTaskBase<Integer> {
     private final List<Integer> itemsForIterations;
 
     public PendingTransactionTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                                 final NonEntityDao nonEntityDao, final PaymentDao paymentDao, final Clock clock,
+                                 final NonEntityDao nonEntityDao, final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
                                  final RetryStateMachineHelper retrySMHelper, final CacheControllerDispatcher controllerDispatcher, final AccountInternalApi accountInternalApi,
-                                 final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner) {
-        super(janitor, internalCallContextFactory, paymentConfig, nonEntityDao, paymentDao, clock, retrySMHelper, controllerDispatcher, accountInternalApi, pluginControlledPaymentAutomatonRunner);
+                                 final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
+        super(janitor, internalCallContextFactory, paymentConfig, nonEntityDao, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, controllerDispatcher, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
         this.itemsForIterations = ImmutableList.of(new Integer(1));
     }
 
@@ -55,7 +58,9 @@ final class PendingTransactionTask extends CompletionTaskBase<Integer> {
 
     @Override
     public void doIteration(final Integer item) {
-        int result = paymentDao.failOldPendingTransactions(TransactionStatus.PLUGIN_FAILURE, getCreatedDateBefore(), fakeCallContext);
+
+        // TODO this is needs to be fixed see- #230
+        int result = paymentDao.failOldPendingTransactions(TransactionStatus.PLUGIN_FAILURE, getCreatedDateBefore(), completionTaskCallContext);
         if (result > 0) {
             log.info("Janitor PendingTransactionTask moved " + result + " PENDING payments ->  PLUGIN_FAILURE");
         }

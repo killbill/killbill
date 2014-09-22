@@ -21,12 +21,20 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlledPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -42,35 +50,39 @@ abstract class CompletionTaskBase<T> implements Runnable {
 
     private Janitor janitor;
     private final String taskName;
-    private final PaymentConfig paymentConfig;
 
+    protected final PaymentConfig paymentConfig;
     protected final Clock clock;
     protected final PaymentDao paymentDao;
-    protected final InternalCallContext fakeCallContext;
+    protected final InternalCallContext completionTaskCallContext;
     protected final InternalCallContextFactory internalCallContextFactory;
     protected final NonEntityDao nonEntityDao;
+    protected final PaymentStateMachineHelper paymentStateMachineHelper;
     protected final RetryStateMachineHelper retrySMHelper;
     protected final CacheControllerDispatcher controllerDispatcher;
     protected final AccountInternalApi accountInternalApi;
     protected final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
+    protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
 
 
     public CompletionTaskBase(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                              final NonEntityDao nonEntityDao, final PaymentDao paymentDao, final Clock clock,
+                              final NonEntityDao nonEntityDao, final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
                               final RetryStateMachineHelper retrySMHelper, final CacheControllerDispatcher controllerDispatcher, final AccountInternalApi accountInternalApi,
-                              final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner) {
+                              final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         this.janitor = janitor;
         this.internalCallContextFactory = internalCallContextFactory;
         this.paymentConfig = paymentConfig;
         this.nonEntityDao = nonEntityDao;
         this.paymentDao = paymentDao;
         this.clock = clock;
+        this.paymentStateMachineHelper = paymentStateMachineHelper;
         this.retrySMHelper = retrySMHelper;
         this.controllerDispatcher = controllerDispatcher;
         this.accountInternalApi = accountInternalApi;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
+        this.pluginRegistry = pluginRegistry;
         this.taskName = this.getClass().getName();
-        this.fakeCallContext = internalCallContextFactory.createInternalCallContext((Long) null, (Long) null, taskName, CallOrigin.INTERNAL, UserType.SYSTEM, UUID.randomUUID());
+        this.completionTaskCallContext = internalCallContextFactory.createInternalCallContext((Long) null, (Long) null, taskName, CallOrigin.INTERNAL, UserType.SYSTEM, UUID.randomUUID());
     }
 
     @Override
@@ -86,13 +98,24 @@ abstract class CompletionTaskBase<T> implements Runnable {
                 log.info("Janitor Task " + taskName + " was requested to stop");
                 return;
             }
-            doIteration(item);
+            try {
+                doIteration(item);
+            } catch(IllegalStateException e) {
+                log.warn(e.getMessage());
+            }
         }
     }
 
     public abstract List<T> getItemsForIteration();
 
     public abstract void doIteration(final T item);
+
+    protected CallContext createCallContext(final String taskName, final InternalTenantContext tenantContext) {
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(tenantContext.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+        final CallContext callContext = new DefaultCallContext(tenantId, taskName, CallOrigin.INTERNAL, UserType.SYSTEM, UUID.randomUUID(), clock);
+        return callContext;
+    }
+
 
     protected DateTime getCreatedDateBefore() {
         final long delayBeforeNowMs = paymentConfig.getJanitorPendingCleanupTime().getMillis();

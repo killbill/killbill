@@ -33,6 +33,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+/**
+ * This class needs to know about the payment state machine xml file. All the knowledge about the xml file is encapsulated here.
+ */
 public class PaymentStateMachineHelper {
 
     private static final String BIG_BANG_STATE_MACHINE_NAME = "BIG_BANG";
@@ -44,17 +47,35 @@ public class PaymentStateMachineHelper {
     private static final String VOID_STATE_MACHINE_NAME = "VOID";
     private static final String CHARGEBACK_STATE_MACHINE_NAME = "CHARGEBACK";
 
+    private static final String BIG_BANG_INIT = "BIG_BANG_INIT";
 
-    private static final String BIG_BANG_INIT_STATE_NAME = "BIG_BANG_INIT";
-    private static final String AUTHORIZE_INIT_STATE_NAME = "AUTH_INIT";
-    private static final String CAPTURE_INIT_STATE_NAME = "CAPTURE_INIT";
-    private static final String PURCHASE_INIT_STATE_NAME = "PURCHASE_INIT";
-    private static final String REFUND_INIT_STATE_NAME = "REFUND_INIT";
-    private static final String CREDIT_INIT_STATE_NAME = "CREDIT_INIT";
-    private static final String VOID_INIT_STATE_NAME = "VOID_INIT";
-    private static final String CHARGEBACK_INIT_STATE_NAME = "CHARGEBACK_INIT";
+    private static final String AUTHORIZE_SUCCESS = "AUTH_SUCCESS";
+    private static final String CAPTURE_SUCCESS = "CAPTURE_SUCCESS";
+    private static final String PURCHASE_SUCCESS = "PURCHASE_SUCCESS";
+    private static final String REFUND_SUCCESS = "REFUND_SUCCESS";
+    private static final String CREDIT_SUCCESS = "CREDIT_SUCCESS";
+    private static final String VOID_SUCCESS = "VOID_SUCCESS";
+    private static final String CHARGEBACK_SUCCESS = "CHARGEBACK_SUCCESS";
 
+    private static final String AUTHORIZE_PENDING = "AUTHORIZE_PENDING";
+
+    private static final String AUTHORIZE_FAILED = "AUTH_FAILED";
+    private static final String CAPTURE_FAILED = "CAPTURE_FAILED";
+    private static final String PURCHASE_FAILED = "PURCHASE_FAILED";
+    private static final String REFUND_FAILED = "REFUND_FAILED";
+    private static final String CREDIT_FAILED = "CREDIT_FAILED";
+    private static final String VOID_FAILED = "VOID_FAILED";
+    private static final String CHARGEBACK_FAILED = "CHARGEBACK_FAILED";
+
+    private static final String AUTH_ERRORED = "AUTH_ERRORED";
+    private static final String CAPTURE_ERRORED = "CAPTURE_ERRORED";
+    private static final String PURCHASE_ERRORED = "PURCHASE_ERRORED";
+    private static final String REFUND_ERRORED = "REFUND_ERRORED";
+    private static final String CREDIT_ERRORED = "CREDIT_ERRORED";
+    private static final String VOID_ERRORED = "VOID_ERRORED";
+    private static final String CHARGEBACK_ERRORED = "CHARGEBACK_ERRORED";
     private final StateMachineConfig stateMachineConfig;
+    private final String[] errorStateNames = {AUTH_ERRORED, CAPTURE_ERRORED, PURCHASE_ERRORED, REFUND_ERRORED, CREDIT_ERRORED, VOID_ERRORED, CHARGEBACK_ERRORED};
 
     @Inject
     public PaymentStateMachineHelper(@javax.inject.Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig) {
@@ -62,12 +83,85 @@ public class PaymentStateMachineHelper {
     }
 
     public State getState(final String stateName) throws MissingEntryException {
-        final StateMachine stateMachine  = stateMachineConfig.getStateMachineForState(stateName);
+        final StateMachine stateMachine = stateMachineConfig.getStateMachineForState(stateName);
         return stateMachine.getState(stateName);
     }
 
     public String getInitStateNameForTransaction() {
-        return BIG_BANG_INIT_STATE_NAME;
+        return BIG_BANG_INIT;
+    }
+
+    public String getSuccessfulStateForTransaction(final TransactionType transactionType) {
+        switch (transactionType) {
+            case AUTHORIZE:
+                return AUTHORIZE_SUCCESS;
+            case CAPTURE:
+                return CAPTURE_SUCCESS;
+            case PURCHASE:
+                return PURCHASE_SUCCESS;
+            case REFUND:
+                return REFUND_SUCCESS;
+            case CREDIT:
+                return CREDIT_SUCCESS;
+            case VOID:
+                return VOID_SUCCESS;
+            case CHARGEBACK:
+                return CHARGEBACK_SUCCESS;
+            default:
+                throw new IllegalStateException("Unsupported transaction type " + transactionType);
+        }
+    }
+
+    public String getPendingStateForTransaction(final TransactionType transactionType) {
+        switch (transactionType) {
+            case AUTHORIZE:
+                return AUTHORIZE_PENDING;
+            default:
+                throw new IllegalStateException("Unsupported transaction type " + transactionType);
+        }
+    }
+
+
+    public String getErroredStateForTransaction(final TransactionType transactionType) {
+        switch (transactionType) {
+            case AUTHORIZE:
+                return AUTH_ERRORED;
+            case CAPTURE:
+                return CAPTURE_ERRORED;
+            case PURCHASE:
+                return PURCHASE_ERRORED;
+            case REFUND:
+                return REFUND_ERRORED;
+            case CREDIT:
+                return CREDIT_ERRORED;
+            case VOID:
+                return VOID_ERRORED;
+            case CHARGEBACK:
+                return CHARGEBACK_ERRORED;
+            default:
+                throw new IllegalStateException("Unsupported transaction type " + transactionType);
+        }
+    }
+
+    public String getFailureStateForTransaction(final TransactionType transactionType) {
+        switch (transactionType) {
+            case AUTHORIZE:
+                return AUTHORIZE_FAILED;
+            case CAPTURE:
+                return CAPTURE_FAILED;
+            case PURCHASE:
+                return PURCHASE_FAILED;
+            case REFUND:
+                return REFUND_FAILED;
+            case CREDIT:
+                return CREDIT_FAILED;
+            case VOID:
+                return VOID_FAILED;
+            case CHARGEBACK:
+                return CHARGEBACK_FAILED;
+            default:
+                throw new IllegalStateException("Unsupported transaction type " + transactionType);
+        }
     }
 
     public StateMachine getStateMachineForStateName(final String stateName) throws MissingEntryException {
@@ -118,4 +212,9 @@ public class PaymentStateMachineHelper {
         }).orNull();
         return transition != null ? transition.getFinalState() : null;
     }
+
+    public String[] getErroredStateNames() {
+        return errorStateNames;
+    }
+
 }

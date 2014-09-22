@@ -220,6 +220,11 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
+    public List<PaymentModelDao> getPaymentsByStates(final String[] states, final DateTime createdBeforeDate, final DateTime createdAfterDate, final int limit, final InternalTenantContext context) {
+        return null;
+    }
+
+    @Override
     public List<PaymentTransactionModelDao> getTransactionsForAccount(final UUID accountId, final InternalTenantContext context) {
         synchronized (this) {
             return ImmutableList.copyOf(Iterables.filter(transactions.values(), new Predicate<PaymentTransactionModelDao>() {
