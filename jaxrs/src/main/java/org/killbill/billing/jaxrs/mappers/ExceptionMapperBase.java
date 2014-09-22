@@ -21,9 +21,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -41,6 +38,8 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.email.EmailApiException;
 import org.killbill.billing.util.jackson.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -113,86 +112,64 @@ public abstract class ExceptionMapperBase {
     protected Response buildConflictingRequestResponse(final Exception e, final UriInfo uriInfo) {
         // Log the full stacktrace
         log.warn("Conflicting request", e);
-        return buildConflictingRequestResponse(exceptionToString(e), uriInfo);
-    }
 
-    private Response buildConflictingRequestResponse(final String error, final UriInfo uriInfo) {
-        return Response.status(Status.CONFLICT)
-                       .entity(error)
-                       .type(MediaType.TEXT_PLAIN_TYPE)
-                       .build();
+        final Response.ResponseBuilder responseBuilder = Response.status(Status.CONFLICT);
+        serializeException(e, responseBuilder);
+        return responseBuilder.build();
     }
 
     protected Response buildNotFoundResponse(final Exception e, final UriInfo uriInfo) {
         // Log the full stacktrace
         log.info("Not found", e);
-        return buildNotFoundResponse(exceptionToString(e), uriInfo);
-    }
 
-    private Response buildNotFoundResponse(final String error, final UriInfo uriInfo) {
-        return Response.status(Status.NOT_FOUND)
-                       .entity(error)
-                       .type(MediaType.TEXT_PLAIN_TYPE)
-                       .build();
+        final Response.ResponseBuilder responseBuilder = Response.status(Status.NOT_FOUND);
+        serializeException(e, responseBuilder);
+        return responseBuilder.build();
     }
 
     protected Response buildBadRequestResponse(final Exception e, final UriInfo uriInfo) {
         // Log the full stacktrace
         log.warn("Bad request", e);
-        return buildBadRequestResponse(exceptionToString(e), uriInfo);
-    }
 
-    private Response buildBadRequestResponse(final String error, final UriInfo uriInfo) {
-        return Response.status(Status.BAD_REQUEST)
-                       .entity(error)
-                       .type(MediaType.TEXT_PLAIN_TYPE)
-                       .build();
+        final Response.ResponseBuilder responseBuilder = Response.status(Status.BAD_REQUEST);
+        serializeException(e, responseBuilder);
+        return responseBuilder.build();
     }
 
     protected Response buildAuthorizationErrorResponse(final Exception e, final UriInfo uriInfo) {
         // Log the full stacktrace
         log.warn("Authorization error", e);
-        return buildAuthorizationErrorResponse(exceptionToString(e), uriInfo);
-    }
 
-    private Response buildAuthorizationErrorResponse(final String error, final UriInfo uriInfo) {
-        return Response.status(Status.UNAUTHORIZED) // TODO Forbidden?
-                       .entity(error)
-                       .type(MediaType.TEXT_PLAIN_TYPE)
-                       .build();
+        // TODO Forbidden?
+        final Response.ResponseBuilder responseBuilder = Response.status(Status.UNAUTHORIZED);
+        serializeException(e, responseBuilder);
+        return responseBuilder.build();
     }
 
     protected Response buildInternalErrorResponse(final Exception e, final UriInfo uriInfo) {
         // Log the full stacktrace
         log.warn("Internal error", e);
-        return buildInternalErrorResponse(exceptionToString(e), uriInfo);
-    }
 
-    private Response buildInternalErrorResponse(final String error, final UriInfo uriInfo) {
-        return Response.status(Status.INTERNAL_SERVER_ERROR)
-                       .entity(error)
-                       .type(MediaType.TEXT_PLAIN_TYPE)
-                       .build();
+        final Response.ResponseBuilder responseBuilder = Response.status(Status.INTERNAL_SERVER_ERROR);
+        serializeException(e, responseBuilder);
+        return responseBuilder.build();
     }
 
     protected Response buildPluginTimeoutResponse(final Exception e, final UriInfo uriInfo) {
-        return buildPluginTimeoutResponse(exceptionToString(e), uriInfo);
+        final Response.ResponseBuilder responseBuilder = Response.status(Status.ACCEPTED);
+        serializeException(e, responseBuilder);
+        return responseBuilder.build();
     }
 
-    private Response buildPluginTimeoutResponse(final String error, final UriInfo uriInfo) {
-        return Response.status(Status.ACCEPTED)
-                       .entity(error)
-                       .type(MediaType.TEXT_PLAIN_TYPE)
-                       .build();
-    }
+    private void serializeException(final Exception e, final Response.ResponseBuilder responseBuilder) {
+        final BillingExceptionJson billingExceptionJson = new BillingExceptionJson(e);
 
-
-    private String exceptionToString(final Exception e) {
         try {
-            return mapper.writeValueAsString(new BillingExceptionJson(e));
-        } catch (final JsonProcessingException jsonException) {
+            final String billingExceptionJsonAsString = mapper.writeValueAsString(billingExceptionJson);
+            responseBuilder.entity(billingExceptionJsonAsString).type(MediaType.APPLICATION_JSON);
+        } catch (JsonProcessingException jsonException) {
             log.warn("Unable to serialize exception", jsonException);
+            responseBuilder.entity(e.toString()).type(MediaType.TEXT_PLAIN_TYPE);
         }
-        return e.toString();
     }
 }
