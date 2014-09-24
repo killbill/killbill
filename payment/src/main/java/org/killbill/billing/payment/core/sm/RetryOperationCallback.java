@@ -167,7 +167,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
 
     @Override
     protected OperationException wrapTimeoutException(final PaymentStateContext paymentStateContext, final TimeoutException e) {
-        logger.error("RetryOperationCallback call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
+        logger.warn("RetryOperationCallback call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
         return new OperationException(e, getOperationResultOnException(paymentStateContext));
     }
 
