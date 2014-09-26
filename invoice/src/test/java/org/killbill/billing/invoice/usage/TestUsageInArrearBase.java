@@ -78,7 +78,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
     protected UsageUserApi createMockUsageUserApi(final List<RolledUpUsage> returnValue) {
         final UsageUserApi result = Mockito.mock(UsageUserApi.class);
-        Mockito.when(result.getAllUsageForSubscription(Mockito.<UUID>any(), Mockito.<Set<String>>any(), Mockito.<List<DateTime>>any(), Mockito.<TenantContext>any())).thenReturn(returnValue);
+        Mockito.when(result.getAllUsageForSubscription(Mockito.<UUID>any(), Mockito.<List<LocalDate>>any(), Mockito.<TenantContext>any())).thenReturn(returnValue);
         return result;
     }
 

@@ -16,8 +16,10 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.concurrent.Immutable;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -32,13 +34,18 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.jaxrs.json.UsageJson;
+import org.killbill.billing.entitlement.api.EntitlementApi;
+import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.jaxrs.json.RolledUpUsageJson;
+import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.usage.api.RolledUpUsage;
+import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -48,6 +55,8 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Singleton;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -56,6 +65,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class UsageResource extends JaxRsResourceBase {
 
     private final UsageUserApi usageUserApi;
+    private final EntitlementApi entitlementApi;
 
     @Inject
     public UsageResource(final JaxrsUriBuilder uriBuilder,
@@ -65,25 +75,35 @@ public class UsageResource extends JaxRsResourceBase {
                          final AccountUserApi accountUserApi,
                          final UsageUserApi usageUserApi,
                          final PaymentApi paymentApi,
+                         final EntitlementApi entitlementApi,
                          final Clock clock,
                          final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.usageUserApi = usageUserApi;
+        this.entitlementApi = entitlementApi;
     }
 
     @Timed
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response recordUsage(final UsageJson json,
+    public Response recordUsage(final SubscriptionUsageRecordJson json,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
                                   @HeaderParam(HDR_COMMENT) final String comment,
                                   @javax.ws.rs.core.Context final HttpServletRequest request,
-                                  @javax.ws.rs.core.Context final UriInfo uriInfo)  {
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException {
+
+        Preconditions.checkNotNull(json.getSubscriptionId());
+        Preconditions.checkNotNull(json.getUnitUsageRecords());
+        Preconditions.checkArgument(!json.getUnitUsageRecords().isEmpty());
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        usageUserApi.recordRolledUpUsage(UUID.fromString(json.getSubscriptionId()), json.getUnitType(), json.getStartTime(), json.getEndTime(), json.getAmount(), callContext);
+        // Verify subscription exists..
+        entitlementApi.getEntitlementForId(UUID.fromString(json.getSubscriptionId()), callContext);
+
+        final SubscriptionUsageRecord record = json.toSubscriptionUsageRecord();
+        usageUserApi.recordRolledUpUsage(record, callContext);
         return Response.status(Status.CREATED).build();
     }
 
@@ -92,18 +112,39 @@ public class UsageResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/{unitType}")
     @Produces(APPLICATION_JSON)
     public Response getUsage(@PathParam("subscriptionId") final String subscriptionId,
-                               @PathParam("unitType") final String unitType,
-                               @QueryParam(QUERY_START_TIME) final String startTime,
-                               @QueryParam(QUERY_END_TIME) final String endTime,
-                               @javax.ws.rs.core.Context final HttpServletRequest request)  {
+                             @PathParam("unitType") final String unitType,
+                             @QueryParam(QUERY_START_DATE) final String startDate,
+                             @QueryParam(QUERY_END_DATE) final String endDate,
+                             @javax.ws.rs.core.Context final HttpServletRequest request)  {
 
         final TenantContext tenantContext = context.createContext(request);
 
-        final DateTime usageStartTime = DATE_TIME_FORMATTER.parseDateTime(startTime);
-        final DateTime usageEndTime = DATE_TIME_FORMATTER.parseDateTime(endTime);
+        final LocalDate usageStartDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDate);
+        final LocalDate usageEndDate = LOCAL_DATE_FORMATTER.parseLocalDate(endDate);
 
-        final RolledUpUsage usage = usageUserApi.getUsageForSubscription(UUID.fromString(subscriptionId), unitType, usageStartTime, usageEndTime, tenantContext);
-        final UsageJson result = new UsageJson(usage);
+        final RolledUpUsage usage = usageUserApi.getUsageForSubscription(UUID.fromString(subscriptionId), unitType, usageStartDate, usageEndDate, tenantContext);
+        final RolledUpUsageJson result = new RolledUpUsageJson(usage);
+        return Response.status(Status.OK).entity(result).build();
+    }
+
+    @Timed
+    @GET
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public Response getAllUsage(@PathParam("subscriptionId") final String subscriptionId,
+                             @QueryParam(QUERY_START_DATE) final String startDate,
+                             @QueryParam(QUERY_END_DATE) final String endDate,
+                             @javax.ws.rs.core.Context final HttpServletRequest request)  {
+
+        final TenantContext tenantContext = context.createContext(request);
+
+        final LocalDate usageStartDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDate);
+        final LocalDate usageEndDate = LOCAL_DATE_FORMATTER.parseLocalDate(endDate);
+
+        // The current JAXRS API only allows to look for one transition
+        final List<LocalDate> startEndDate = ImmutableList.<LocalDate>builder().add(usageStartDate).add(usageEndDate).build();
+        final List<RolledUpUsage> usage = usageUserApi.getAllUsageForSubscription(UUID.fromString(subscriptionId), startEndDate, tenantContext);
+        final RolledUpUsageJson result = new RolledUpUsageJson(usage.get(0));
         return Response.status(Status.OK).entity(result).build();
     }
 

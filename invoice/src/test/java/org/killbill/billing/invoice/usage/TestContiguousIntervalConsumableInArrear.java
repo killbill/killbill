@@ -35,6 +35,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.user.DefaultRolledUpUsage;
 import org.testng.annotations.BeforeClass;
@@ -115,7 +116,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                                   Collections.<Usage>emptyList())
                                                                                                                           );
 
-        final BigDecimal result = intervalConsumableInArrear.computeToBeBilledUsage(new BigDecimal("5325"), "unit");
+        final BigDecimal result = intervalConsumableInArrear.computeToBeBilledUsage(5325L, "unit");
 
         // 5000 = 1000 (tier1) + 4325 (tier2) => 10 + 5 = 15
         assertEquals(result, new BigDecimal("15"));
@@ -129,13 +130,17 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final LocalDate endDate = new LocalDate(2014, 05, 15);
 
         // 2 items for startDate - firstBCDDate
-        final RolledUpUsage usage1 = new DefaultRolledUpUsage(subscriptionId, "unit", startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), firstBCDDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), new BigDecimal("130"));
-        final RolledUpUsage usage2 = new DefaultRolledUpUsage(subscriptionId, "unit", startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), firstBCDDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), new BigDecimal("271"));
+        final List<RolledUpUnit> units1 = new ArrayList<RolledUpUnit>();
+        units1.add(createRolledUpUnit("unit", 130L));
+        units1.add(createRolledUpUnit("unit", 271L));
+        final RolledUpUsage usage1 = new DefaultRolledUpUsage(subscriptionId, startDate, firstBCDDate, units1);
 
         // 1 items for firstBCDDate - endDate
-        final RolledUpUsage usage3 = new DefaultRolledUpUsage(subscriptionId, "unit", firstBCDDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), new BigDecimal("199"));
+        final List<RolledUpUnit> units2 = new ArrayList<RolledUpUnit>();
+        units2.add(createRolledUpUnit("unit", 199L));
+        final RolledUpUsage usage3 = new DefaultRolledUpUsage(subscriptionId, firstBCDDate, endDate, units2);
 
-        final List<RolledUpUsage> usages = ImmutableList.<RolledUpUsage>builder().add(usage1).add(usage2).add(usage3).build();
+        final List<RolledUpUsage> usages = ImmutableList.<RolledUpUsage>builder().add(usage1).add(usage3).build();
         this.mockUsageUserApi = createMockUsageUserApi(usages);
 
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
@@ -181,7 +186,18 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.get(1).getUsageName(), usage.getName());
         assertTrue(result.get(1).getStartDate().compareTo(firstBCDDate) == 0);
         assertTrue(result.get(1).getEndDate().compareTo(endDate) == 0);
-
     }
 
+    private RolledUpUnit createRolledUpUnit(final String unit, final Long amount) {
+        return new RolledUpUnit() {
+            @Override
+            public String getUnitType() {
+                return unit;
+            }
+            @Override
+            public Long getAmount() {
+                return amount;
+            }
+        };
+    }
 }

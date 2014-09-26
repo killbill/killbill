@@ -1,54 +1,46 @@
-group RolledUpUsageSqlDao: EntitySqlDao;
+group RolledUpUsageSqlDao : EntitySqlDao;
 
 tableName() ::= "rolled_up_usage"
 
+
 tableFields(prefix) ::= <<
-  <prefix>id
-, <prefix>subscription_id
+  <prefix>subscription_id
 , <prefix>unit_type
-, <prefix>start_time
-, <prefix>end_time
+, <prefix>record_date
 , <prefix>amount
 , <prefix>created_by
 , <prefix>created_date
-, <prefix>account_record_id
-, <prefix>tenant_record_id
 >>
 
 tableValues() ::= <<
-  :id
-, :subscriptionId
+  :subscriptionId
 , :unitType
-, :startTime
-, :endTime
+, :recordDate
 , :amount
 , :userName
 , :createdDate
-, :accountRecordId
-, :tenantRecordId
 >>
 
-CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT(prefix) ::= "and <CHECK_TENANT(prefix)>"
-
-create() ::= <<
-insert into <tableName()> (
-  <tableFields()>
-)
-values (
-  <tableValues()>
-)
-;
->>
 
 getUsageForSubscription() ::= <<
 select
-  sum(amount)
-from <tableName()> t
+  <allTableFields()>
+from <tableName()>
 where subscription_id = :subscriptionId
-and start_time >= :startTime
-and end_time \<= :endTime
+and record_date >= :startDate
+and record_date \< :endDate
 and unit_type = :unitType
+<AND_CHECK_TENANT()>
+;
+>>
+
+getAllUsageForSubscription() ::= <<
+select
+  <allTableFields()>
+from <tableName()>
+where subscription_id = :subscriptionId
+and record_date >= :startDate
+and record_date \< :endDate
 <AND_CHECK_TENANT()>
 ;
 >>

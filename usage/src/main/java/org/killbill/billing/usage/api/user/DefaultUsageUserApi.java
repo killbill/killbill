@@ -16,24 +16,27 @@
 
 package org.killbill.billing.usage.api.user;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.joda.time.DateTime;
-
+import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
+import org.killbill.billing.usage.api.SubscriptionUsageRecord;
+import org.killbill.billing.usage.api.UnitUsageRecord;
+import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.usage.dao.RolledUpUsageDao;
 import org.killbill.billing.usage.dao.RolledUpUsageModelDao;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 
@@ -50,32 +53,48 @@ public class DefaultUsageUserApi implements UsageUserApi {
     }
 
     @Override
-    public void recordRolledUpUsage(final UUID subscriptionId, final String unitType, final DateTime startTime, final DateTime endTime,
-                                    final BigDecimal amount, final CallContext context) {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(subscriptionId, ObjectType.SUBSCRIPTION, context);
-        rolledUpUsageDao.record(subscriptionId, unitType, startTime, endTime, amount, internalCallContext);
+    public void recordRolledUpUsage(final SubscriptionUsageRecord record, final CallContext callContext) {
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(record.getSubscriptionId(), ObjectType.SUBSCRIPTION, callContext);
+        for (UnitUsageRecord unitUsageRecord : record.getPerUnitUsage()) {
+            for (UsageRecord usageRecord : unitUsageRecord.getDailyAmount()) {
+                rolledUpUsageDao.record(record.getSubscriptionId(), unitUsageRecord.getUnitType(), usageRecord.getDate(), usageRecord.getAmount(), internalCallContext);
+            }
+        }
     }
 
     @Override
-    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId,  final String unitType, final DateTime startTime, final DateTime endTime, final TenantContext context) {
-        final RolledUpUsageModelDao usageForSubscription = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startTime, endTime, unitType, internalCallContextFactory.createInternalTenantContext(context));
-        return new DefaultRolledUpUsage(usageForSubscription);
+    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final String unitType, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+        final List<RolledUpUsageModelDao> usageForSubscription = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContextFactory.createInternalTenantContext(tenantContext));
+        final List<RolledUpUnit> rolledUpAmount = getRolledUpUnits(usageForSubscription);
+        return new DefaultRolledUpUsage(subscriptionId, startDate, endDate, rolledUpAmount);
     }
 
     @Override
-    public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final Set<String> unitTypes, final List<DateTime> transitionTimes, final TenantContext tenantContext) {
-
+    public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final List<LocalDate> transitionTimes, final TenantContext tenantContext) {
         final InternalTenantContext internalCallContext = internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContext);
         List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
-        DateTime prevDate = null;
-        for (DateTime curDate : transitionTimes) {
+        LocalDate prevDate = null;
+        for (LocalDate curDate : transitionTimes) {
             if (prevDate != null) {
-                for (String unitType : unitTypes) {
-                    final RolledUpUsageModelDao usageForSubscription = rolledUpUsageDao.getUsageForSubscription(subscriptionId, prevDate, curDate, unitType, internalCallContext);
-                    result.add(new DefaultRolledUpUsage(usageForSubscription));
-                }
+                final List<RolledUpUsageModelDao> usageForSubscription = rolledUpUsageDao.getAllUsageForSubscription(subscriptionId, prevDate, curDate, internalCallContext);
+                final List<RolledUpUnit> rolledUpAmount = getRolledUpUnits(usageForSubscription);
+                result.add(new DefaultRolledUpUsage(subscriptionId, prevDate, curDate, rolledUpAmount));
             }
             prevDate = curDate;
+        }
+        return result;
+    }
+
+    private List<RolledUpUnit> getRolledUpUnits(final List<RolledUpUsageModelDao> usageForSubscription) {
+        final Map<String, Long> tmp = new HashMap<String, Long>();
+        for (RolledUpUsageModelDao cur : usageForSubscription) {
+            Long currentAmount = tmp.get(cur.getUnitType());
+            Long updatedAmount = (currentAmount != null) ? currentAmount + cur.getAmount() : cur.getAmount();
+            tmp.put(cur.getUnitType(), updatedAmount);
+        }
+        final List<RolledUpUnit> result = new ArrayList<RolledUpUnit>(tmp.size());
+        for (final String unitType : tmp.keySet()) {
+            result.add(new DefaultRolledUpUnit(unitType, tmp.get(unitType)));
         }
         return result;
     }

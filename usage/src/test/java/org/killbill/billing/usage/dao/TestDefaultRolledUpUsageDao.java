@@ -16,11 +16,10 @@
 
 package org.killbill.billing.usage.dao;
 
-import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.killbill.billing.usage.UsageTestSuiteWithEmbeddedDB;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -37,39 +36,72 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
     public void testSimple() {
         final UUID subscriptionId = UUID.randomUUID();
         final String unitType = "foo";
-        final DateTime startDate = new DateTime(2013, 1, 1, 0, 0, DateTimeZone.UTC);
-        final DateTime endDate = new DateTime(2013, 2, 1, 0, 0, DateTimeZone.UTC);
-        final BigDecimal amount1 = BigDecimal.TEN;
-        final BigDecimal amount2 = BigDecimal.TEN;
+        final LocalDate startDate = new LocalDate(2013, 1, 1);
+        final LocalDate endDate = new LocalDate(2013, 2, 1);
+        final Long amount1 = 10L;
+        final Long amount2 = 5L;
 
-        rolledUpUsageDao.record(subscriptionId, unitType, startDate, endDate, amount1, internalCallContext);
-        rolledUpUsageDao.record(subscriptionId, unitType, startDate, endDate, amount2, internalCallContext);
+        rolledUpUsageDao.record(subscriptionId, unitType, startDate, amount1, internalCallContext);
+        rolledUpUsageDao.record(subscriptionId, unitType, endDate.minusDays(1), amount2, internalCallContext);
 
-        final RolledUpUsageModelDao result = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContext);
-        assertEquals(result.getSubscriptionId(), subscriptionId);
-        assertEquals(result.getStartTime().compareTo(startDate), 0);
-        assertEquals(result.getEndTime().compareTo(endDate), 0);
-        assertEquals(result.getUnitType(), unitType);
-        assertEquals(result.getSubscriptionId(), subscriptionId);
-        assertEquals(result.getSubscriptionId(), subscriptionId);
-        assertEquals(result.getAmount().compareTo(amount1.add(amount2)), 0);
+        final List<RolledUpUsageModelDao> result = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContext);
+        assertEquals(result.size(), 2);
+        assertEquals(result.get(0).getSubscriptionId(), subscriptionId);
+        assertEquals(result.get(0).getRecordDate().compareTo(startDate), 0);
+        assertEquals(result.get(0).getUnitType(), unitType);
+        assertEquals(result.get(0).getAmount().compareTo(amount1), 0);
+        assertEquals(result.get(1).getSubscriptionId(), subscriptionId);
+        assertEquals(result.get(1).getRecordDate().compareTo(endDate.minusDays(1)), 0);
+        assertEquals(result.get(1).getUnitType(), unitType);
+        assertEquals(result.get(1).getAmount().compareTo(amount2), 0);
     }
+
+
+    @Test(groups = "slow")
+    public void testMultipleUnits() {
+        final UUID subscriptionId = UUID.randomUUID();
+        final String unitType1 = "foo";
+        final String unitType2 = "bar";
+        final LocalDate startDate = new LocalDate(2013, 1, 1);
+        final LocalDate endDate = new LocalDate(2013, 2, 1);
+        final Long amount1 = 10L;
+        final Long amount2 = 5L;
+        final Long amount3 = 13L;
+
+        rolledUpUsageDao.record(subscriptionId, unitType1, startDate, amount1, internalCallContext);
+        rolledUpUsageDao.record(subscriptionId, unitType1, startDate.plusDays(1), amount2, internalCallContext);
+
+        rolledUpUsageDao.record(subscriptionId, unitType2, endDate.minusDays(1), amount3, internalCallContext);
+
+        final List<RolledUpUsageModelDao> result = rolledUpUsageDao.getAllUsageForSubscription(subscriptionId, startDate, endDate, internalCallContext);
+        assertEquals(result.size(), 3);
+        assertEquals(result.get(0).getSubscriptionId(), subscriptionId);
+        assertEquals(result.get(0).getRecordDate().compareTo(startDate), 0);
+        assertEquals(result.get(0).getUnitType(), unitType1);
+        assertEquals(result.get(0).getAmount().compareTo(amount1), 0);
+        assertEquals(result.get(1).getSubscriptionId(), subscriptionId);
+        assertEquals(result.get(1).getRecordDate().compareTo(startDate.plusDays(1)), 0);
+        assertEquals(result.get(1).getUnitType(), unitType1);
+        assertEquals(result.get(1).getAmount().compareTo(amount2), 0);
+        assertEquals(result.get(2).getSubscriptionId(), subscriptionId);
+        assertEquals(result.get(2).getRecordDate().compareTo(endDate.minusDays(1)), 0);
+        assertEquals(result.get(2).getUnitType(), unitType2);
+        assertEquals(result.get(2).getAmount().compareTo(amount3), 0);
+    }
+
+
 
     @Test(groups = "slow")
     public void testNoEntries() {
         final UUID subscriptionId = UUID.randomUUID();
         final String unitType = "foo";
-        final DateTime startDate = new DateTime(2013, 1, 1, 0, 0, DateTimeZone.UTC);
-        final DateTime endDate = new DateTime(2013, 2, 1, 0, 0, DateTimeZone.UTC);
+        final LocalDate startDate = new LocalDate(2013, 1, 1);
+        final LocalDate endDate = new LocalDate(2013, 2, 1);
 
-        final RolledUpUsageModelDao result = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContext);
-        assertEquals(result.getSubscriptionId(), subscriptionId);
-        assertEquals(result.getStartTime().compareTo(startDate), 0);
-        assertEquals(result.getEndTime().compareTo(endDate), 0);
-        assertEquals(result.getUnitType(), unitType);
-        assertEquals(result.getSubscriptionId(), subscriptionId);
-        assertEquals(result.getSubscriptionId(), subscriptionId);
-        assertEquals(result.getAmount().compareTo(BigDecimal.ZERO), 0);
+        rolledUpUsageDao.record(subscriptionId, unitType, endDate, 9L, internalCallContext);
+
+        final List<RolledUpUsageModelDao> result = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContext);
+        assertEquals(result.size(), 0);
     }
 
 }
