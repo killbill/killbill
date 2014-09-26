@@ -18,13 +18,10 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.LocalDate;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
 
-import com.apple.jobjc.Invoke.FunCall;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
@@ -42,7 +39,7 @@ public class RolledUpUsageJson {
     public RolledUpUsageJson(@JsonProperty("subscriptionId") final String subscriptionId,
                              @JsonProperty("startDate") final LocalDate startDate,
                              @JsonProperty("endDate") final LocalDate endDate,
-                             @JsonProperty("rolledUpUnit") final List<RolledUpUnitJson> rolledUpUnits) {
+                             @JsonProperty("rolledUpUnits") final List<RolledUpUnitJson> rolledUpUnits) {
         this.subscriptionId = subscriptionId;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -50,7 +47,7 @@ public class RolledUpUsageJson {
     }
 
     public RolledUpUsageJson(final RolledUpUsage input) {
-        this(input.getSubscriptionId().toString(), input.getStart(), input.getEnd(), ImmutableList.copyOf(Iterables.transform(input.getRolledUpUnit(), new Function<RolledUpUnit, RolledUpUnitJson>() {
+        this(input.getSubscriptionId().toString(), input.getStart(), input.getEnd(), ImmutableList.copyOf(Iterables.transform(input.getRolledUpUnits(), new Function<RolledUpUnit, RolledUpUnitJson>() {
             @Override
             public RolledUpUnitJson apply(final RolledUpUnit input) {
                 return new RolledUpUnitJson(input);

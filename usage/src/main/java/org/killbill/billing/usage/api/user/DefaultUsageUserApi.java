@@ -55,7 +55,7 @@ public class DefaultUsageUserApi implements UsageUserApi {
     @Override
     public void recordRolledUpUsage(final SubscriptionUsageRecord record, final CallContext callContext) {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(record.getSubscriptionId(), ObjectType.SUBSCRIPTION, callContext);
-        for (UnitUsageRecord unitUsageRecord : record.getPerUnitUsage()) {
+        for (UnitUsageRecord unitUsageRecord : record.getUnitUsageRecord()) {
             for (UsageRecord usageRecord : unitUsageRecord.getDailyAmount()) {
                 rolledUpUsageDao.record(record.getSubscriptionId(), unitUsageRecord.getUnitType(), usageRecord.getDate(), usageRecord.getAmount(), internalCallContext);
             }

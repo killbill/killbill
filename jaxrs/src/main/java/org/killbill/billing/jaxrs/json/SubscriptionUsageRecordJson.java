@@ -17,11 +17,8 @@
 
 package org.killbill.billing.jaxrs.json;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
@@ -41,7 +38,7 @@ public class SubscriptionUsageRecordJson {
 
     @JsonCreator
     public SubscriptionUsageRecordJson(@JsonProperty("subscriptionId") final String subscriptionId,
-                                   @JsonProperty("unitUsageRecords") final List<UnitUsageRecordJson> unitUsageRecords) {
+                                       @JsonProperty("unitUsageRecords") final List<UnitUsageRecordJson> unitUsageRecords) {
         this.subscriptionId = subscriptionId;
         this.unitUsageRecords = unitUsageRecords;
     }
@@ -61,7 +58,7 @@ public class SubscriptionUsageRecordJson {
 
         @JsonCreator
         public UnitUsageRecordJson(@JsonProperty("unitType") final String unitType,
-                                    @JsonProperty("usageRecords") final List<UsageRecordJson> usageRecords) {
+                                   @JsonProperty("usageRecords") final List<UsageRecordJson> usageRecords) {
             this.unitType = unitType;
             this.usageRecords = usageRecords;
         }

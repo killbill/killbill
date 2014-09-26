@@ -141,7 +141,7 @@ public class ContiguousIntervalConsumableInArrear {
 
             // Compute total price amount that should be billed for that period of time (and usage section) across unitTypes.
             BigDecimal toBeBilledUsage = BigDecimal.ZERO;
-            for (final RolledUpUnit cur : ru.getRolledUpUnit()) {
+            for (final RolledUpUnit cur : ru.getRolledUpUnits()) {
                 if (!unitTypes.contains(cur.getUnitType())) {
                     log.warn("ContiguousIntervalConsumableInArrear is skipping unitType " + cur.getUnitType());
                     continue;

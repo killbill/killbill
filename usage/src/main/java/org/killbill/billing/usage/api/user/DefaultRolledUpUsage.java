@@ -53,7 +53,7 @@ public class DefaultRolledUpUsage implements RolledUpUsage {
     }
 
     @Override
-    public List<RolledUpUnit> getRolledUpUnit() {
+    public List<RolledUpUnit> getRolledUpUnits() {
         return rolledUpUnits;
     }
 }
