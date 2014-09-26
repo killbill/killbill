@@ -76,6 +76,7 @@ CREATE TABLE payment_methods (
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX payment_methods_id ON payment_methods(id);
+CREATE INDEX payment_methods_external_key ON payment_methods(external_key);
 CREATE INDEX payment_methods_plugin_name ON payment_methods(plugin_name);
 CREATE INDEX payment_methods_active_accnt ON payment_methods(is_active, account_id);
 CREATE INDEX payment_methods_tenant_account_record_id ON payment_methods(tenant_record_id, account_record_id);
