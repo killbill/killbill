@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -39,7 +37,6 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 /**
@@ -52,11 +49,13 @@ public class SubscriptionConsumableInArrear {
     private final UsageUserApi usageApi;
     private final LocalDate targetDate;
     private final TenantContext context;
+    private final boolean insertZeroAmountItems;
 
-    public SubscriptionConsumableInArrear(final UUID invoiceId, final List<BillingEvent> subscriptionBillingEvents, final UsageUserApi usageApi, final LocalDate targetDate, final TenantContext context) {
+    public SubscriptionConsumableInArrear(final UUID invoiceId, final List<BillingEvent> subscriptionBillingEvents, final UsageUserApi usageApi, final boolean insertZeroAmountItems, LocalDate targetDate, final TenantContext context) {
         this.invoiceId = invoiceId;
         this.subscriptionBillingEvents = subscriptionBillingEvents;
         this.usageApi = usageApi;
+        this.insertZeroAmountItems = insertZeroAmountItems;
         this.targetDate = targetDate;
         this.context = context;
     }
@@ -107,7 +106,7 @@ public class SubscriptionConsumableInArrear {
                 // Add inflight usage interval if non existent
                 ContiguousIntervalConsumableInArrear existingInterval = inFlightInArrearUsageIntervals.get(usage.getName());
                 if (existingInterval == null) {
-                    existingInterval = new ContiguousIntervalConsumableInArrear(usage, invoiceId, usageApi, targetDate, context);
+                    existingInterval = new ContiguousIntervalConsumableInArrear(usage, invoiceId, usageApi, insertZeroAmountItems, targetDate, context);
                     inFlightInArrearUsageIntervals.put(usage.getName(), existingInterval);
                 }
                 // Add billing event for that usage interval

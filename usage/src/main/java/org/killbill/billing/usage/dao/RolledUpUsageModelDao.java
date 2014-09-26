@@ -16,34 +16,34 @@
 
 package org.killbill.billing.usage.dao;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.killbill.billing.util.dao.TableName;
+import org.killbill.billing.util.entity.Entity;
+import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class RolledUpUsageModelDao {
+public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
 
-    private UUID id;
     private UUID subscriptionId;
     private String unitType;
-    private DateTime startTime;
-    private DateTime endTime;
-    private BigDecimal amount;
+    private LocalDate recordDate;
+    private Long amount;
 
     public RolledUpUsageModelDao() { /* For the DAO mapper */ }
 
-    public RolledUpUsageModelDao(final UUID subscriptionId, final String unitType, final DateTime startTime,
-                                 final DateTime endTime, final BigDecimal amount) {
-        this.id = UUID.randomUUID();
+    public RolledUpUsageModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final UUID subscriptionId, final String unitType, final LocalDate recordDate, final Long amount) {
+        super(id, createdDate, updatedDate);
         this.subscriptionId = subscriptionId;
         this.unitType = unitType;
-        this.startTime = startTime;
-        this.endTime = endTime;
+        this.recordDate = recordDate;
         this.amount = amount;
     }
 
-    public UUID getId() {
-        return id;
+    public RolledUpUsageModelDao(final UUID subscriptionId, final String unitType, final LocalDate recordDate, final Long amount) {
+        this(UUID.randomUUID(), null, null, subscriptionId, unitType, recordDate, amount);
     }
 
     public UUID getSubscriptionId() {
@@ -54,20 +54,16 @@ public class RolledUpUsageModelDao {
         return unitType;
     }
 
-    public DateTime getStartTime() {
-        return startTime;
+    public LocalDate getRecordDate() {
+        return recordDate;
     }
 
-    public DateTime getEndTime() {
-        return endTime;
+    public void setRecordDate(final LocalDate recordDate) {
+        this.recordDate = recordDate;
     }
 
-    public BigDecimal getAmount() {
+    public Long getAmount() {
         return amount;
-    }
-
-    public void setId(final UUID id) {
-        this.id = id;
     }
 
     public void setSubscriptionId(final UUID subscriptionId) {
@@ -78,15 +74,7 @@ public class RolledUpUsageModelDao {
         this.unitType = unitType;
     }
 
-    public void setStartTime(final DateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public void setEndTime(final DateTime endTime) {
-        this.endTime = endTime;
-    }
-
-    public void setAmount(final BigDecimal amount) {
+    public void setAmount(final Long amount) {
         this.amount = amount;
     }
 
@@ -97,8 +85,7 @@ public class RolledUpUsageModelDao {
         sb.append("{id=").append(id);
         sb.append(", subscriptionId=").append(subscriptionId);
         sb.append(", unitType='").append(unitType).append('\'');
-        sb.append(", startTime=").append(startTime);
-        sb.append(", endTime=").append(endTime);
+        sb.append(", recordDate=").append(recordDate);
         sb.append(", amount=").append(amount);
         sb.append('}');
         return sb.toString();
@@ -118,16 +105,13 @@ public class RolledUpUsageModelDao {
         if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
             return false;
         }
-        if (endTime != null ? !endTime.equals(that.endTime) : that.endTime != null) {
+        if (recordDate != null ? !recordDate.equals(that.recordDate) : that.recordDate != null) {
             return false;
         }
         if (id != null ? !id.equals(that.id) : that.id != null) {
             return false;
         }
         if (unitType != null ? !unitType.equals(that.unitType) : that.unitType != null) {
-            return false;
-        }
-        if (startTime != null ? !startTime.equals(that.startTime) : that.startTime != null) {
             return false;
         }
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
@@ -142,9 +126,18 @@ public class RolledUpUsageModelDao {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (unitType != null ? unitType.hashCode() : 0);
-        result = 31 * result + (startTime != null ? startTime.hashCode() : 0);
-        result = 31 * result + (endTime != null ? endTime.hashCode() : 0);
+        result = 31 * result + (recordDate != null ? recordDate.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.ROLLED_UP_USAGE;
+    }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return null;
     }
 }

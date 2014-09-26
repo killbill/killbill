@@ -81,7 +81,7 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
         this.paymentGatewayApi = paymentGatewayApi;
     }
 
-    //@Timed
+    @Timed
     @POST
     @Path("/" + HOSTED + "/" + FORM + "/{" + QUERY_ACCOUNT_ID + ":" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
@@ -119,7 +119,7 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
-    //@Timed
+    @Timed
     @POST
     @Path("/" + NOTIFICATION + "/{" + QUERY_PAYMENT_PLUGIN_NAME + ":" + ANYTHING_PATTERN + "}")
     @Consumes(WILDCARD)

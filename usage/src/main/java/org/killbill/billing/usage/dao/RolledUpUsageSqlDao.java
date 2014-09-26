@@ -16,31 +16,38 @@
 
 package org.killbill.billing.usage.dao;
 
-import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
-
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.callcontext.InternalTenantContextBinder;
+import org.killbill.billing.util.entity.Entity;
+import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-@UseStringTemplate3StatementLocator()
-public interface RolledUpUsageSqlDao {
+@EntitySqlDaoStringTemplate()
+public interface RolledUpUsageSqlDao extends EntitySqlDao<RolledUpUsageModelDao, Entity> {
 
     @SqlUpdate
     public void create(@BindBean RolledUpUsageModelDao rolledUpUsage,
                        @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    public BigDecimal getUsageForSubscription(@Bind("subscriptionId") final UUID subscriptionId,
-                                                         @Bind("startTime") final Date startTime,
-                                                         @Bind("endTime") final Date endTime,
-                                                         @Bind("unitType") final String unitType,
-                                                         @InternalTenantContextBinder final InternalTenantContext context);
+    public List<RolledUpUsageModelDao> getUsageForSubscription(@Bind("subscriptionId") final UUID subscriptionId,
+                                                               @Bind("startDate") final Date startDate,
+                                                               @Bind("endDate") final Date endDate,
+                                                               @Bind("unitType") final String unitType,
+                                                               @InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
+    public List<RolledUpUsageModelDao> getAllUsageForSubscription(@Bind("subscriptionId") final UUID subscriptionId,
+                                                                  @Bind("startDate") final Date startDate,
+                                                                  @Bind("endDate") final Date endDate,
+                                                                  @InternalTenantContextBinder final InternalTenantContext context);
 }

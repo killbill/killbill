@@ -24,14 +24,10 @@ import org.killbill.automaton.OperationResult;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.payment.api.DefaultPaymentErrorEvent;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
-import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.slf4j.Logger;
@@ -56,12 +52,13 @@ public abstract class PaymentEnteringStateCallback implements EnteringStateCallb
         // If the transaction was not created -- for instance we had an exception in leavingState callback then we bail; if not, then update state:
         if (paymentStateContext.getPaymentTransactionModelDao() != null && paymentStateContext.getPaymentTransactionModelDao().getId() != null) {
             final PaymentTransactionInfoPlugin paymentInfoPlugin = paymentStateContext.getPaymentInfoPlugin();
-            final TransactionStatus paymentStatus = paymentPluginStatusToPaymentStatus(paymentInfoPlugin, operationResult);
-            daoHelper.processPaymentInfoPlugin(paymentStatus, paymentInfoPlugin, newState.getName());
+            final TransactionStatus transactionStatus = paymentPluginStatusToTransactionStatus(paymentInfoPlugin);
+            // The bus event will be posted from the transaction
+            daoHelper.processPaymentInfoPlugin(transactionStatus, paymentInfoPlugin, newState.getName());
         } else if (!paymentStateContext.isApiPayment()) {
             //
             // If there is NO transaction to update (because payment transaction did not occur), then there is something wrong happening (maybe a missing defaultPaymentMethodId, ...)
-            // so, if the does NOT call originates from api then we still want to send a bus event so the system can react to it if needed.
+            // so, if the call does NOT originates from api then we still want to send a bus event so the system can react to it if needed.
             //
             final BusInternalEvent event = new DefaultPaymentErrorEvent(paymentStateContext.getAccount().getId(),
                                                                         null,
@@ -78,31 +75,27 @@ public abstract class PaymentEnteringStateCallback implements EnteringStateCallb
         }
     }
 
-    private TransactionStatus paymentPluginStatusToPaymentStatus(@Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin, final OperationResult operationResult) {
-        if (paymentInfoPlugin == null) {
-            if (OperationResult.EXCEPTION.equals(operationResult)) {
-                // We got an exception during the plugin call
+    public static TransactionStatus paymentPluginStatusToTransactionStatus(@Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin) {
+
+        //
+        // paymentInfoPlugin when we got an exception from the plugin, or if the plugin behaves badly
+        // and decides to return null; in all cases this is seen as a PLUGIN_FAILURE
+        //
+        if (paymentInfoPlugin == null || paymentInfoPlugin.getStatus() == null) {
                 return TransactionStatus.PLUGIN_FAILURE;
-            } else {
-                // The plugin completed the call but returned null?! Bad plugin...
-                return TransactionStatus.PLUGIN_FAILURE;
-            }
         }
 
-        if (paymentInfoPlugin.getStatus() == null) {
-            // The plugin completed the call but returned an incomplete PaymentInfoPlugin?! Bad plugin...
-            return TransactionStatus.UNKNOWN;
-        }
-
+        //
+        // The plugin returned a status or it timedout and we added manually a UNKNOWN status to end up here
+        //
         switch (paymentInfoPlugin.getStatus()) {
-            case UNDEFINED:
-                return TransactionStatus.UNKNOWN;
             case PROCESSED:
                 return TransactionStatus.SUCCESS;
             case PENDING:
                 return TransactionStatus.PENDING;
             case ERROR:
                 return TransactionStatus.PAYMENT_FAILURE;
+            case UNDEFINED:
             default:
                 return TransactionStatus.UNKNOWN;
         }

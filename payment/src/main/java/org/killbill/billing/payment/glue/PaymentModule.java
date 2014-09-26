@@ -37,7 +37,7 @@ import org.killbill.billing.payment.api.PaymentService;
 import org.killbill.billing.payment.bus.InvoiceHandler;
 import org.killbill.billing.payment.control.PaymentTagHandler;
 import org.killbill.billing.payment.control.dao.InvoicePaymentControlDao;
-import org.killbill.billing.payment.core.Janitor;
+import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;

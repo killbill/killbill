@@ -18,18 +18,14 @@ package org.killbill.billing.usage.dao;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.joda.time.DateTime;
-import org.killbill.billing.usage.api.RolledUpUsage;
-import org.killbill.billing.util.callcontext.TenantContext;
-import org.skife.jdbi.v2.IDBI;
-
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.skife.jdbi.v2.IDBI;
 
 public class DefaultRolledUpUsageDao implements RolledUpUsageDao {
 
@@ -41,17 +37,18 @@ public class DefaultRolledUpUsageDao implements RolledUpUsageDao {
     }
 
     @Override
-    public void record(final UUID subscriptionId, final String unitType, final DateTime startTime, final DateTime endTime,
-                       final BigDecimal amount, final InternalCallContext context) {
-        final RolledUpUsageModelDao rolledUpUsageModelDao = new RolledUpUsageModelDao(subscriptionId, unitType, startTime,
-                                                                                      endTime, amount
-        );
+    public void record(final UUID subscriptionId, final String unitType, final LocalDate date, final Long amount, final InternalCallContext context) {
+        final RolledUpUsageModelDao rolledUpUsageModelDao = new RolledUpUsageModelDao(subscriptionId, unitType, date, amount);
         rolledUpUsageSqlDao.create(rolledUpUsageModelDao, context);
     }
 
     @Override
-    public RolledUpUsageModelDao getUsageForSubscription(UUID subscriptionId, DateTime startTime, DateTime endTime, String unitType, InternalTenantContext context) {
-        final BigDecimal amount = rolledUpUsageSqlDao.getUsageForSubscription(subscriptionId, startTime.toDate(), endTime.toDate(), unitType, context);
-        return new RolledUpUsageModelDao(subscriptionId, unitType, startTime, endTime, amount != null ? amount : BigDecimal.ZERO);
+    public List<RolledUpUsageModelDao> getUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final String unitType, final InternalTenantContext context) {
+        return rolledUpUsageSqlDao.getUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), unitType, context);
+    }
+
+    @Override
+    public List<RolledUpUsageModelDao> getAllUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final InternalTenantContext context) {
+        return rolledUpUsageSqlDao.getAllUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), context);
     }
 }

@@ -35,16 +35,15 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.usage.api.RolledUpUsage;
+import org.killbill.billing.usage.api.SubscriptionUsageRecord;
+import org.killbill.billing.usage.api.UnitUsageRecord;
+import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.usage.api.UsageUserApi;
-import org.killbill.billing.usage.api.user.DefaultRolledUpUsage;
-import org.killbill.billing.usage.api.user.MockUsageUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestConsumableInArrear extends TestIntegrationBase {
 
@@ -55,7 +54,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
 
     protected UsageUserApi createMockUsageUserApi(final List<RolledUpUsage> returnValue) {
         final UsageUserApi result = Mockito.mock(UsageUserApi.class);
-        Mockito.when(result.getAllUsageForSubscription(Mockito.<UUID>any(), Mockito.<Set<String>>any(), Mockito.<List<DateTime>>any(), Mockito.<TenantContext>any())).thenReturn(returnValue);
+        Mockito.when(result.getAllUsageForSubscription(Mockito.<UUID>any(), Mockito.<List<LocalDate>>any(), Mockito.<TenantContext>any())).thenReturn(returnValue);
         return result;
     }
 
@@ -85,8 +84,8 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE);
 
-        setUsage(aoSubscription.getId(), "bullets", new DateTime(2012, 4, 1, 1, 1, DateTimeZone.UTC), new DateTime(2012, 4, 15, 0, 0, DateTimeZone.UTC), new BigDecimal("99"), callContext);
-        setUsage(aoSubscription.getId(), "bullets", new DateTime(2012, 4, 15, 0, 0, DateTimeZone.UTC), new DateTime(2012, 4, 20, 1, 1, DateTimeZone.UTC), new BigDecimal("100"), callContext);
+        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
+        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2012, 5, 1));
@@ -105,8 +104,8 @@ public class TestConsumableInArrear extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
 
 
-        setUsage(aoSubscription.getId(), "bullets", new DateTime(2012, 6, 1, 1, 1, DateTimeZone.UTC), new DateTime(2012, 6, 15, 1, 1, DateTimeZone.UTC), new BigDecimal("50"), callContext);
-        setUsage(aoSubscription.getId(), "bullets", new DateTime(2012, 6, 16, 1, 1, DateTimeZone.UTC), new DateTime(2012, 6, 20, 1, 1, DateTimeZone.UTC), new BigDecimal("300"), callContext);
+        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 1), 50L, callContext);
+        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 16), 300L, callContext);
 
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -118,7 +117,12 @@ public class TestConsumableInArrear extends TestIntegrationBase {
 
     }
 
-    private void setUsage(final UUID subscriptionId, final String unitType, final DateTime startTime, final DateTime endTime, final BigDecimal amount, final CallContext context) {
-        usageUserApi.recordRolledUpUsage(subscriptionId, unitType, startTime, endTime, amount, context);
+    private void setUsage(final UUID subscriptionId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) {
+        final List<UsageRecord> usageRecords = new ArrayList<UsageRecord>();
+        usageRecords.add(new UsageRecord(startDate, amount));
+        final List<UnitUsageRecord> unitUsageRecords = new ArrayList<UnitUsageRecord>();
+        unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
+        final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, unitUsageRecords);
+        usageUserApi.recordRolledUpUsage(record, context);
     }
 }

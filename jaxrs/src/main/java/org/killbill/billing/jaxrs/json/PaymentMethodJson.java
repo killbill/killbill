@@ -52,7 +52,7 @@ public class PaymentMethodJson extends JsonBase {
                              @JsonProperty("accountId") final String accountId,
                              @JsonProperty("isDefault") final Boolean isDefault,
                              @JsonProperty("pluginName") final String pluginName,
-                             @JsonProperty("pluginInfo") final PaymentMethodPluginDetailJson pluginInfo,
+                             @JsonProperty("pluginInfo") @Nullable final PaymentMethodPluginDetailJson pluginInfo,
                              @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.externalKey = externalKey;
@@ -135,14 +135,15 @@ public class PaymentMethodJson extends JsonBase {
                         // N/A
                         return false;
                     }
+
                     @Override
                     public String getExternalPaymentMethodId() {
-                        return pluginInfo.getExternalPaymentId();
+                        return pluginInfo != null ? pluginInfo.getExternalPaymentId() : null;
                     }
 
                     @Override
                     public List<PluginProperty> getProperties() {
-                        if (pluginInfo.getProperties() != null) {
+                        if (pluginInfo != null && pluginInfo.getProperties() != null) {
                             final List<PluginProperty> result = new LinkedList<PluginProperty>();
                             for (final PluginPropertyJson cur : pluginInfo.getProperties()) {
                                 result.add(new PluginProperty(cur.getKey(), cur.getValue(), cur.getIsUpdatable()));

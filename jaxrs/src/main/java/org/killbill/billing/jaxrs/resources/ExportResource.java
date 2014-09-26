@@ -66,7 +66,7 @@ public class ExportResource extends JaxRsResourceBase {
         this.exportUserApi = exportUserApi;
     }
 
-    //@Timed
+    @Timed
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(TEXT_PLAIN)

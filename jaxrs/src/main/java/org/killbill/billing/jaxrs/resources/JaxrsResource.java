@@ -98,8 +98,8 @@ public interface JaxrsResource {
 
     public static final String QUERY_PLUGIN_PROPERTY = "pluginProperty";
 
-    public static final String QUERY_START_TIME = "startTime";
-    public static final String QUERY_END_TIME = "endTime";
+    public static final String QUERY_START_DATE = "startDate";
+    public static final String QUERY_END_DATE = "endDate";
 
     public static final String QUERY_BUNDLE_TRANSFER_ADDON = "transferAddOn";
     public static final String QUERY_BUNDLE_TRANSFER_CANCEL_IMM = "cancelImmediately";

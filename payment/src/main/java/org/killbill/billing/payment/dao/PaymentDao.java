@@ -30,13 +30,13 @@ import org.killbill.billing.util.entity.Pagination;
 
 public interface PaymentDao {
 
-    public int failOldPendingTransactions(final TransactionStatus newTransactionStatus, final DateTime createdBeforeDate, final InternalCallContext context);
+    public int failOldPendingTransactions(TransactionStatus newTransactionStatus, DateTime createdBeforeDate, InternalCallContext context);
 
     public PaymentAttemptModelDao insertPaymentAttemptWithProperties(PaymentAttemptModelDao attempt, InternalCallContext context);
 
     public void updatePaymentAttempt(UUID paymentAttemptId, UUID transactionId, String state, InternalCallContext context);
 
-    public List<PaymentAttemptModelDao> getPaymentAttemptsByState(String stateName, final DateTime createdBeforeDate, InternalTenantContext context);
+    public List<PaymentAttemptModelDao> getPaymentAttemptsByState(String stateName, DateTime createdBeforeDate, InternalTenantContext context);
 
     public List<PaymentAttemptModelDao> getPaymentAttempts(String paymentExternalKey, InternalTenantContext context);
 
@@ -54,7 +54,7 @@ public interface PaymentDao {
 
     public PaymentTransactionModelDao updatePaymentWithNewTransaction(UUID paymentId, PaymentTransactionModelDao paymentTransaction, InternalCallContext context);
 
-    public void updatePaymentAndTransactionOnCompletion(UUID accountId, UUID paymentId, final TransactionType transactionType, String currentPaymentStateName, String lastPaymentSuccessStateName, UUID transactionId,
+    public void updatePaymentAndTransactionOnCompletion(UUID accountId, UUID paymentId, TransactionType transactionType, String currentPaymentStateName, String lastPaymentSuccessStateName, UUID transactionId,
                                                         TransactionStatus paymentStatus, BigDecimal processedAmount, Currency processedCurrency,
                                                         String gatewayErrorCode, String gatewayErrorMsg, InternalCallContext context);
 
@@ -63,6 +63,8 @@ public interface PaymentDao {
     public PaymentTransactionModelDao getPaymentTransaction(UUID transactionId, InternalTenantContext context);
 
     public List<PaymentModelDao> getPaymentsForAccount(UUID accountId, InternalTenantContext context);
+
+    public List<PaymentModelDao> getPaymentsByStates(String [] states, DateTime createdBeforeDate, DateTime createdAfterDate, int limit, InternalTenantContext context);
 
     public List<PaymentTransactionModelDao> getTransactionsForAccount(UUID accountId, InternalTenantContext context);
 
