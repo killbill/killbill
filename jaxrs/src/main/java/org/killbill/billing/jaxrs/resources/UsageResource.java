@@ -37,6 +37,8 @@ import javax.ws.rs.core.UriInfo;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.jaxrs.json.RolledUpUsageJson;
@@ -100,7 +102,10 @@ public class UsageResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         // Verify subscription exists..
-        entitlementApi.getEntitlementForId(UUID.fromString(json.getSubscriptionId()), callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(UUID.fromString(json.getSubscriptionId()), callContext);
+        if (entitlement.getState() != EntitlementState.ACTIVE) {
+            return Response.status(Status.BAD_REQUEST).build();
+        }
 
         final SubscriptionUsageRecord record = json.toSubscriptionUsageRecord();
         usageUserApi.recordRolledUpUsage(record, callContext);
