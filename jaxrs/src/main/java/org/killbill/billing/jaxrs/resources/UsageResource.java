@@ -122,6 +122,9 @@ public class UsageResource extends JaxRsResourceBase {
                              @QueryParam(QUERY_END_DATE) final String endDate,
                              @javax.ws.rs.core.Context final HttpServletRequest request)  {
 
+        if (startDate == null || endDate == null) {
+            return Response.status(Status.BAD_REQUEST).build();
+        }
         final TenantContext tenantContext = context.createContext(request);
 
         final LocalDate usageStartDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDate);
@@ -141,6 +144,9 @@ public class UsageResource extends JaxRsResourceBase {
                              @QueryParam(QUERY_END_DATE) final String endDate,
                              @javax.ws.rs.core.Context final HttpServletRequest request)  {
 
+        if (startDate == null || endDate == null) {
+            return Response.status(Status.BAD_REQUEST).build();
+        }
         final TenantContext tenantContext = context.createContext(request);
 
         final LocalDate usageStartDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDate);
