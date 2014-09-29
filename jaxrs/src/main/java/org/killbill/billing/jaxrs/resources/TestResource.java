@@ -138,7 +138,7 @@ public class TestResource extends JaxRsResourceBase {
             log.info("************      RESETTING CLOCK to " + clock.getUTCNow());
             testClock.resetDeltaFromReality();
         } else {
-            final DateTime newTime = DATE_TIME_FORMATTER.parseDateTime(requestedClockDate);
+            final DateTime newTime = DATE_TIME_FORMATTER.parseDateTime(requestedClockDate).toDateTime(DateTimeZone.UTC);
             testClock.setTime(newTime);
         }
 

@@ -31,8 +31,10 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -45,6 +47,8 @@ import com.google.common.base.CaseFormat;
 
 // Identical to org.skife.jdbi.v2.BeanMapper but maps created_date to createdDate
 public class LowerToCamelBeanMapper<T> implements ResultSetMapper<T> {
+
+    private static final Calendar GMT_CALENDAR = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 
     private final Class<T> type;
     private final Map<String, PropertyDescriptor> properties = new HashMap<String, PropertyDescriptor>();
@@ -102,12 +106,12 @@ public class LowerToCamelBeanMapper<T> implements ResultSetMapper<T> {
                 } else if (type.isAssignableFrom(BigDecimal.class)) {
                     value = rs.getBigDecimal(i);
                 } else if (type.isAssignableFrom(DateTime.class)) {
-                    final Timestamp timestamp = rs.getTimestamp(i);
+                    final Timestamp timestamp = rs.getTimestamp(i, GMT_CALENDAR);
                     value = timestamp == null ? null : new DateTime(timestamp).toDateTime(DateTimeZone.UTC);
                 } else if (type.isAssignableFrom(Time.class)) {
-                    value = rs.getTime(i);
+                    value = rs.getTime(i, GMT_CALENDAR);
                 } else if (type.isAssignableFrom(LocalDate.class)) {
-                    final Date date = rs.getDate(i);
+                    final Date date = rs.getDate(i, GMT_CALENDAR);
                     value = date == null ? null : new LocalDate(date, DateTimeZone.UTC);
                 } else if (type.isAssignableFrom(DateTimeZone.class)) {
                     final String dateTimeZoneString = rs.getString(i);
