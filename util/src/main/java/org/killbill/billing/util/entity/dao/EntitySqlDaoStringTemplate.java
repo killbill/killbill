@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 
+import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.Query;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.SqlStatementCustomizer;
@@ -36,10 +37,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.StringTemplate3StatementLocator;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 import org.skife.jdbi.v2.tweak.StatementLocator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import org.killbill.billing.util.dao.LowerToCamelBeanMapperFactory;
 import org.killbill.billing.util.entity.Entity;
 
 @SqlStatementCustomizingAnnotation(EntitySqlDaoStringTemplate.EntitySqlDaoLocatorFactory.class)

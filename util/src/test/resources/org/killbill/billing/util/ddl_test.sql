@@ -33,3 +33,12 @@ CREATE TABLE kombucha (
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 );
+
+DROP TABLE IF EXISTS full_of_dates;
+CREATE TABLE full_of_dates (
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    date1 date default NULL,
+    datetime1 datetime default NULL,
+    timestamp1 timestamp,
+    PRIMARY KEY(record_id)
+);
