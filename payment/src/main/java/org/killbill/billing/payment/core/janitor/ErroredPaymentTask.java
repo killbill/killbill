@@ -80,6 +80,7 @@ public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
         final DateTime createdAfterDate = clock.getUTCNow().minusDays(OLDER_PAYMENTS_IN_DAYS);
 
         final List<PaymentModelDao> result = paymentDao.getPaymentsByStates(paymentStateMachineHelper.getErroredStateNames(), createdBeforeDate, createdAfterDate, MAX_ITEMS_PER_LOOP, completionTaskCallContext);
+        log.info("Janitor ErroredPaymentTask start run : found {} errored/unknown payments", result.size());
         return result;
     }
 
@@ -149,6 +150,8 @@ public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
         final Currency processedCurrency = pluginErroredTransaction != null ? pluginErroredTransaction.getCurrency() : null;
         final String gatewayErrorCode = pluginErroredTransaction != null ? pluginErroredTransaction.getGatewayErrorCode() : null;
         final String gatewayError = pluginErroredTransaction != null ? pluginErroredTransaction.getGatewayError() : null;
+
+        log.info("Janitor ErroredPaymentTask repairing payment {}, transaction {}", item.getId(), unknownTransaction.getId());
 
         paymentDao.updatePaymentAndTransactionOnCompletion(item.getAccountId(), item.getId(), unknownTransaction.getTransactionType(), newPaymentState, lastSuccessPaymentState,
                                                            unknownTransaction.getId(), transactionStatus, processedAmount, processedCurrency, gatewayErrorCode, gatewayError, internalCallContext);
