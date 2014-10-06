@@ -1,3 +1,9 @@
+0.11.12
+    Fix issues around timezones
+    Switch to HikariCP by default
+    Rename TableName.TRANSACTIONS to TableName.PAYMENT_TRANSACTIONS
+    Update killbill-oss-parent to 0.7.30
+
 0.11.11
     Usage api change
     Update commons for bug fixes

@@ -73,7 +73,7 @@ public class KillbillJdbcRealm extends JdbcRealm {
     }
 
     private void configureDataSource() {
-        final DataSource realDataSource = new DataSourceProvider(config).get();
+        final DataSource realDataSource = new DataSourceProvider(config, SHIRO_DATA_SOURCE_ID).get();
         final DataSource dataSource = new ReferenceableDataSourceSpy(realDataSource, SHIRO_DATA_SOURCE_ID);
         setDataSource(dataSource);
     }

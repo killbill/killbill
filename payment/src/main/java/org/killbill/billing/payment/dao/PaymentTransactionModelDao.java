@@ -23,7 +23,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
@@ -244,11 +243,11 @@ public class PaymentTransactionModelDao extends EntityModelDaoBase implements En
 
     @Override
     public TableName getTableName() {
-        return TableName.TRANSACTIONS;
+        return TableName.PAYMENT_TRANSACTIONS;
     }
 
     @Override
     public TableName getHistoryTableName() {
-        return TableName.TRANSACTION_HISTORY;
+        return TableName.PAYMENT_TRANSACTION_HISTORY;
     }
 }
