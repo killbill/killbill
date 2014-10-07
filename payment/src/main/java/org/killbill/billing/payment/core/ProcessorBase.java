@@ -22,7 +22,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
@@ -39,6 +41,7 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
+import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
@@ -58,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
@@ -220,4 +224,28 @@ public abstract class ProcessorBase {
             }
         }
     }
+
+    protected static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final Callable<PluginDispatcherReturnType<ReturnType>> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
+        final UUID accountId = account != null ? account.getId() : null;
+        final String accountExternalKey = account != null ? account.getExternalKey() : "";
+        try {
+            return pluginFormDispatcher.dispatchWithTimeout(callable);
+        } catch (final TimeoutException e) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, null);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+        } catch (final ExecutionException e) {
+            if (e.getCause() instanceof PaymentApiException) {
+                throw (PaymentApiException) e.getCause();
+            } else if (e.getCause() instanceof LockFailedException) {
+                final String format = String.format("Failed to lock account %s", accountExternalKey);
+                log.error(String.format(format), e);
+                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
+            } else {
+                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            }
+        }
+    }
+
 }
