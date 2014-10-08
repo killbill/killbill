@@ -39,15 +39,17 @@ import com.google.common.collect.Lists;
  */
 public class ItemsInterval {
 
+    private final UUID targetInvoiceId;
     private final NodeInterval interval;
     private LinkedList<Item> items;
 
-    public ItemsInterval(final NodeInterval interval) {
-        this(interval, null);
+    public ItemsInterval(final NodeInterval interval, final UUID targetInvoiceId) {
+        this(interval, targetInvoiceId, null);
     }
 
-    public ItemsInterval(final NodeInterval interval, final Item initialItem) {
+    public ItemsInterval(final NodeInterval interval, final UUID targetInvoiceId, final Item initialItem) {
         this.interval = interval;
+        this.targetInvoiceId = targetInvoiceId;
         this.items = Lists.newLinkedList();
         if (initialItem != null) {
             items.add(initialItem);
@@ -232,7 +234,7 @@ public class ItemsInterval {
             return null;
         }
 
-        final Item result = new Item(item.toProratedInvoiceItem(startDate, endDate), item.getAction());
+        final Item result = new Item(item.toProratedInvoiceItem(startDate, endDate), targetInvoiceId, item.getAction());
         if (item.getAction() == ItemAction.CANCEL && result != null) {
             item.incrementCurrentRepairedAmount(result.getAmount());
         }

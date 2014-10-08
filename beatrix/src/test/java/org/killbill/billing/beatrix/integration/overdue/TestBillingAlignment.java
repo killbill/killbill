@@ -64,17 +64,5 @@ public class TestBillingAlignment extends TestIntegrationBase {
         //
         // Change plan to annual that has been configured to have a 'SubscriptionBase' billing alignment
         changeEntitlementAndCheckForCompletion(bpEntitlement, "Shotgun", BillingPeriod.ANNUAL, null, NextEvent.CHANGE, NextEvent.INVOICE);
-
-
-        /*
-
-        | 64e17f77-fcdd-4c87-8543-1a64d957460c | FIXED      | 2012-04-01 | NULL       |    0.0000 |      NULL | shotgun-monthly |
-        | 07924bfa-cc9b-46dc-ad22-a9a39830a128 | RECURRING  | 2012-05-01 | 2012-06-01 |  249.9500 |  249.9500 | shotgun-monthly |
-        | 92c1e86b-284a-4d33-a920-3cbc6e05f7e6 | RECURRING  | 2012-05-01 | 2012-05-04 |   24.2000 |  249.9500 | shotgun-monthly |
-        | 92c1e86b-284a-4d33-a920-3cbc6e05f7e6 | RECURRING  | 2012-05-04 | 2012-06-01 |  183.6000 | 2399.9500 | shotgun-annual  |
-        | 07924bfa-cc9b-46dc-ad22-a9a39830a128 | REPAIR_ADJ | 2012-05-01 | 2012-06-01 | -249.9500 |      NULL | NULL            |
-        | 07924bfa-cc9b-46dc-ad22-a9a39830a128 | CBA_ADJ    | 2012-05-04 | 2012-05-04 |  249.9500 |      NULL | NULL            |
-        | 92c1e86b-284a-4d33-a920-3cbc6e05f7e6 | CBA_ADJ    | 2012-05-04 | 2012-05-04 | -207.8000 |      NULL | NULL            |
-         */
     }
 }

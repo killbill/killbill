@@ -451,7 +451,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         // on 4/29/2011, cancel SubscriptionBase 1
         events.add(createBillingEvent(subscriptionId1, bundleId, plan1CancelDate, plan1, plan1Phase3, 5));
 
-        expectedAmount = ZERO;
+        expectedAmount = new BigDecimal("-2.40");
         testInvoiceGeneration(accountId, events, invoices, plan1CancelDate, 1, expectedAmount);
 
         // on 5/10/2011, invoice SubscriptionBase 2 (trial)
@@ -496,7 +496,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // on 7/31/2011, convert SubscriptionBase 3 to annual
         events.add(createBillingEvent(subscriptionId3, bundleId, plan3UpgradeToAnnualDate, plan3, plan3Phase2, 31));
-        testInvoiceGeneration(accountId, events, invoices, plan3UpgradeToAnnualDate, 2, ONE_HUNDRED);
+        testInvoiceGeneration(accountId, events, invoices, plan3UpgradeToAnnualDate, 2, new BigDecimal("93.55"));
 
         // on 8/7/2011, invoice SubscriptionBase 4 (plan 2)
         events.add(createBillingEvent(subscriptionId4, bundleId, plan4ChangeOfPlanDate, plan4b, plan4bPhase1, 7));
@@ -518,7 +518,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // on 10/7/2011, invoice SubscriptionBase 4 (plan 2), cancel SubscriptionBase 5
         events.add(createBillingEvent(subscriptionId5, bundleId, plan5CancelDate, plan5, plan5Phase2, 10));
-        testInvoiceGeneration(accountId, events, invoices, plan5CancelDate, 2, TWENTY_FOUR);
+        testInvoiceGeneration(accountId, events, invoices, plan5CancelDate, 2, new BigDecimal("22.00"));
 
         // on 10/10/2011, invoice plan 2 (evergreen)
         expectedAmount = FORTY;
@@ -903,10 +903,10 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         distributeItems(invoices);
 
         // ensure that the original invoice balance is zero
-        assertEquals(invoice1.getBalance().compareTo(new BigDecimal("-10.0")), 0);
+        assertEquals(invoice1.getBalance().compareTo(BigDecimal.ZERO), 0);
 
         // ensure that the account balance is correct
-        assertEquals(invoice2.getBalance().compareTo(FIVE), 0);
+        assertEquals(invoice2.getBalance().compareTo(new BigDecimal("-5.0")), 0);
     }
 
     // Regression test for #170 (see https://github.com/killbill/killbill/pull/173)

@@ -45,6 +45,7 @@ public class Item {
     private final UUID accountId;
     private final UUID bundleId;
     private final UUID subscriptionId;
+    private final UUID targetInvoiceId;
     private final UUID invoiceId;
     private final String planName;
     private final String phaseName;
@@ -71,6 +72,7 @@ public class Item {
         this.accountId = item.accountId;
         this.bundleId = item.bundleId;
         this.subscriptionId = item.subscriptionId;
+        this.targetInvoiceId = item.targetInvoiceId;
         this.invoiceId = item.invoiceId;
         this.planName = item.planName;
         this.phaseName = item.phaseName;
@@ -88,11 +90,12 @@ public class Item {
         this.action = action;
     }
 
-    public Item(final InvoiceItem item, final ItemAction action) {
+    public Item(final InvoiceItem item, final UUID targetInvoiceId, final ItemAction action) {
         this.id = item.getId();
         this.accountId = item.getAccountId();
         this.bundleId = item.getBundleId();
         this.subscriptionId = item.getSubscriptionId();
+        this.targetInvoiceId = targetInvoiceId;
         this.invoiceId = item.getInvoiceId();
         this.planName = item.getPlanName();
         this.phaseName = item.getPhaseName();
@@ -129,7 +132,7 @@ public class Item {
             final BigDecimal maxAvailableAmountAfterAdj = amount.subtract(adjustedAmount);
             final BigDecimal maxAvailableAmountForRepair = maxAvailableAmountAfterAdj.subtract(currentRepairedAmount);
             final BigDecimal positiveAmountForRepair = positiveAmount.compareTo(maxAvailableAmountForRepair) <= 0 ? positiveAmount : maxAvailableAmountForRepair;
-            return positiveAmountForRepair.compareTo(BigDecimal.ZERO) > 0 ? new RepairAdjInvoiceItem(invoiceId, accountId, newStartDate, newEndDate, KillBillMoney.of(positiveAmountForRepair.negate(), currency), currency, linkedId) : null;
+            return positiveAmountForRepair.compareTo(BigDecimal.ZERO) > 0 ? new RepairAdjInvoiceItem(targetInvoiceId, accountId, newStartDate, newEndDate, KillBillMoney.of(positiveAmountForRepair.negate(), currency), currency, linkedId) : null;
         }
     }
 
