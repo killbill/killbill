@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -54,6 +55,7 @@ import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.EntityPaginationBuilder;
@@ -78,6 +80,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentMethodProcessor.class);
 
+    private final PluginDispatcher<UUID> uuidPluginNotificationDispatcher;
+
     @Inject
     public PaymentMethodProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                   final AccountInternalApi accountInternalApi,
@@ -86,47 +90,49 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                   final NonEntityDao nonEntityDao,
                                   final TagInternalApi tagUserApi,
                                   final GlobalLocker locker,
+                                  final PaymentConfig paymentConfig,
                                   @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                                   final Clock clock,
                                   final CacheControllerDispatcher controllerDispatcher) {
         super(pluginRegistry, accountInternalApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock, controllerDispatcher);
+        final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
+        this.uuidPluginNotificationDispatcher = new PluginDispatcher<UUID>(paymentPluginTimeoutSec, executor);
     }
 
     public UUID addPaymentMethod(final String paymentMethodExternalKey, final String paymentPluginServiceName, final Account account,
                                  final boolean setDefault, final PaymentMethodPlugin paymentMethodProps,
                                  final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context)
             throws PaymentApiException {
-        try {
-            final PluginDispatcherReturnType<UUID> result = new WithAccountLock<UUID, PaymentApiException>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<PluginDispatcherReturnType<UUID>, PaymentApiException>() {
+        return dispatchWithExceptionHandling(account,
+                                             new CallableWithAccountLock<UUID, PaymentApiException>(locker,
+                                                                                                    account.getExternalKey(),
+                                                                                                    new WithAccountLockCallback<PluginDispatcherReturnType<UUID>, PaymentApiException>() {
 
-                @Override
-                public PluginDispatcherReturnType<UUID> doOperation() throws PaymentApiException {
-                    PaymentMethod pm = null;
-                    final PaymentPluginApi pluginApi;
-                    try {
-                        pluginApi = getPaymentPluginApi(paymentPluginServiceName);
-                        pm = new DefaultPaymentMethod(paymentMethodExternalKey, account.getId(), paymentPluginServiceName, paymentMethodProps);
-                        pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, properties, callContext);
-                        final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getExternalKey(), pm.getCreatedDate(), pm.getUpdatedDate(),
-                                                                                        pm.getAccountId(), pm.getPluginName(), pm.isActive());
-                        paymentDao.insertPaymentMethod(pmModel, context);
+                                                                                                        @Override
+                                                                                                        public PluginDispatcherReturnType<UUID> doOperation() throws PaymentApiException {
+                                                                                                            PaymentMethod pm = null;
+                                                                                                            final PaymentPluginApi pluginApi;
+                                                                                                            try {
+                                                                                                                pluginApi = getPaymentPluginApi(paymentPluginServiceName);
+                                                                                                                pm = new DefaultPaymentMethod(paymentMethodExternalKey, account.getId(), paymentPluginServiceName, paymentMethodProps);
+                                                                                                                pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, properties, callContext);
+                                                                                                                final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getExternalKey(), pm.getCreatedDate(), pm.getUpdatedDate(),
+                                                                                                                                                                                pm.getAccountId(), pm.getPluginName(), pm.isActive());
+                                                                                                                paymentDao.insertPaymentMethod(pmModel, context);
 
-                        if (setDefault) {
-                            accountInternalApi.updatePaymentMethod(account.getId(), pm.getId(), context);
-                        }
-                    } catch (final PaymentPluginApiException e) {
-                        log.warn("Error adding payment method " + pm.getId() + " for plugin " + paymentPluginServiceName, e);
-                        throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
-                    } catch (final AccountApiException e) {
-                        throw new PaymentApiException(e);
-                    }
-                    return PluginDispatcher.createPluginDispatcherReturnType(pm.getId());
-                }
-            });
-            return result.getReturnType();
-        } catch (final Exception e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
-        }
+                                                                                                                if (setDefault) {
+                                                                                                                    accountInternalApi.updatePaymentMethod(account.getId(), pm.getId(), context);
+                                                                                                                }
+                                                                                                            } catch (final PaymentPluginApiException e) {
+                                                                                                                log.warn("Error adding payment method " + pm.getId() + " for plugin " + paymentPluginServiceName, e);
+                                                                                                                throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
+                                                                                                            } catch (final AccountApiException e) {
+                                                                                                                throw new PaymentApiException(e);
+                                                                                                            }
+                                                                                                            return PluginDispatcher.createPluginDispatcherReturnType(pm.getId());
+                                                                                                        }
+                                                                                                    }),
+                                             uuidPluginNotificationDispatcher);
     }
 
     public List<PaymentMethod> getPaymentMethods(final UUID accountId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {

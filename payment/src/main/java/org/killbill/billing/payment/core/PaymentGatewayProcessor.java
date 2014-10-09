@@ -124,26 +124,4 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                              paymentPluginFormDispatcher);
     }
 
-    private static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final Callable<PluginDispatcherReturnType<ReturnType>> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
-        final UUID accountId = account != null ? account.getId() : null;
-        final String accountExternalKey = account != null ? account.getExternalKey() : "";
-        try {
-            return pluginFormDispatcher.dispatchWithTimeout(callable);
-        } catch (final TimeoutException e) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, null);
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
-        } catch (final ExecutionException e) {
-            if (e.getCause() instanceof PaymentApiException) {
-                throw (PaymentApiException) e.getCause();
-            } else if (e.getCause() instanceof LockFailedException) {
-                final String format = String.format("Failed to lock account %s", accountExternalKey);
-                log.error(String.format(format), e);
-                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
-            } else {
-                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
-            }
-        }
-    }
 }
