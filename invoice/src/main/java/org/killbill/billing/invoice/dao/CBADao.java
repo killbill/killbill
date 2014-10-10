@@ -29,6 +29,7 @@ import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Ordering;
 
 public class CBADao {
@@ -55,7 +56,48 @@ public class CBADao {
         return cba;
     }
 
-    public void doCBAComplexity(final UUID accountId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+    public InvoiceItemModelDao computeCBAComplexity(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+
+        final BigDecimal balance = InvoiceModelDaoHelper.getBalance(invoice);
+
+        // Current balance is negative, we need to generate a credit (positive CBA amount).
+        if (balance.compareTo(BigDecimal.ZERO) < 0) {
+            return new InvoiceItemModelDao(new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(), balance.negate(), invoice.getCurrency()));
+
+        // Current balance is positive, we need to use some of the existing if available (negative CBA amount)
+        } else if (balance.compareTo(BigDecimal.ZERO) > 0) {
+
+            final List<InvoiceModelDao> allInvoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(entitySqlDaoWrapperFactory, context);
+            final BigDecimal accountCBA = getAccountCBAFromTransaction(allInvoices);
+            if (accountCBA.compareTo(BigDecimal.ZERO) <= 0) {
+                return null;
+            }
+            final BigDecimal positiveCreditAmount = accountCBA.compareTo(balance) > 0 ? balance : accountCBA;
+            return new InvoiceItemModelDao(new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(), positiveCreditAmount.negate(), invoice.getCurrency()));
+        } else {
+            // 0 balance, nothing to do.
+            return null;
+        }
+    }
+
+
+    public void addCBAComplexityFromTransaction(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+        final InvoiceItemModelDao cbaItem = computeCBAComplexity(invoice, entitySqlDaoWrapperFactory, context);
+        if (cbaItem != null) {
+            final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+            transInvoiceItemDao.create(cbaItem, context);
+        }
+    }
+
+    public void addCBAComplexityFromTransaction(final UUID invoiceId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+
+        final InvoiceSqlDao transInvoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+        final InvoiceModelDao invoice = transInvoiceDao.getById(invoiceId.toString(), context);
+        invoiceDaoHelper.populateChildren(invoice, entitySqlDaoWrapperFactory, context);
+        addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
+    }
+
+    public void addCBAComplexityFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
 
         List<InvoiceModelDao> invoiceItemModelDaos = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(entitySqlDaoWrapperFactory, context);
         for (InvoiceModelDao cur : invoiceItemModelDaos) {

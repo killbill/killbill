@@ -28,10 +28,13 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDao;
+import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceApiException> {
 
@@ -66,18 +69,20 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     InvoicePaymentModelDao postChargeback(UUID paymentId, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
 
-    /**
-     * Create a refund.
-     *
-     * @param paymentId                 payment associated with that refund
-     * @param amount                    amount to refund
-     * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
-     * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
-     * @param transactionExternalKey    transaction refund externalKey
-     * @param context                   the call callcontext
-     * @return the created invoice payment object associated with this refund
-     * @throws InvoiceApiException
-     */
+    InvoiceItemModelDao doCBAComplexity(InvoiceModelDao invoice, InternalCallContext context) throws InvoiceApiException;
+
+        /**
+         * Create a refund.
+         *
+         * @param paymentId                 payment associated with that refund
+         * @param amount                    amount to refund
+         * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
+         * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
+         * @param transactionExternalKey    transaction refund externalKey
+         * @param context                   the call callcontext
+         * @return the created invoice payment object associated with this refund
+         * @throws InvoiceApiException
+         */
     InvoicePaymentModelDao createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
                                         String transactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
