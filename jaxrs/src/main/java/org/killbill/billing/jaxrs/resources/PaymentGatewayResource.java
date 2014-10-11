@@ -58,11 +58,13 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.WILDCARD;
 
 @Path(JaxrsResource.PAYMENT_GATEWAYS_PATH)
+@Api(value = JaxrsResource.PAYMENT_GATEWAYS_PATH, description = "HPP endpoints")
 public class PaymentGatewayResource extends JaxRsResourceBase {
 
     private final PaymentGatewayApi paymentGatewayApi;

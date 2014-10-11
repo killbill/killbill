@@ -55,6 +55,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -67,7 +68,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 // so to be used with great caution.
 //
 //
-@Path(JaxrsResource.PREFIX + "/test")
+@Path(JaxrsResource.TEST_PATH)
+@Api(value = JaxrsResource.TEST_PATH, description = "Operations for testing")
 public class TestResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(TestResource.class);

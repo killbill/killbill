@@ -46,12 +46,14 @@ import org.killbill.xmlloader.XMLWriter;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 
 @Singleton
 @Path(JaxrsResource.CATALOG_PATH)
+@Api(value = JaxrsResource.CATALOG_PATH, description = "Catalog information")
 public class CatalogResource extends JaxRsResourceBase {
 
     private final CatalogService catalogService;

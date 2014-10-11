@@ -107,11 +107,16 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.ACCOUNTS_PATH)
+@Api(value = JaxrsResource.ACCOUNTS_PATH, description = "Operations on accounts")
 public class AccountResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "accountId";
@@ -145,6 +150,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve an account", response = AccountJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid accountId supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response getAccount(@PathParam("accountId") final String accountId,
                                @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
                                @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,

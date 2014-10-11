@@ -43,11 +43,13 @@ import org.killbill.billing.util.callcontext.CallContext;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Singleton;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Singleton
 @Path(JaxrsResource.EXPORT_PATH)
+@Api(value = JaxrsResource.EXPORT_PATH, description = "Export endpoints")
 public class ExportResource extends JaxRsResourceBase {
 
     private final ExportUserApi exportUserApi;

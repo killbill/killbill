@@ -66,6 +66,10 @@
             <artifactId>jersey-server</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.wordnik</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
+        <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <scope>provided</scope>

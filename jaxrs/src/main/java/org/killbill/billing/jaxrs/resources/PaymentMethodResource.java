@@ -63,11 +63,13 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.PAYMENT_METHODS_PATH)
+@Api(value = JaxrsResource.PAYMENT_METHODS_PATH, description = "Operations on payment methods")
 public class PaymentMethodResource extends JaxRsResourceBase {
 
     @Inject

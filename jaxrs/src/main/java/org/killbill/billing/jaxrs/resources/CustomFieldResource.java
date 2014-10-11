@@ -49,11 +49,13 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.CUSTOM_FIELDS_PATH)
+@Api(value = JaxrsResource.CUSTOM_FIELDS_PATH, description = "Operations on custom fields")
 public class CustomFieldResource extends JaxRsResourceBase {
 
     @Inject

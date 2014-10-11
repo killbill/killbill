@@ -80,10 +80,12 @@ import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.SUBSCRIPTIONS_PATH)
+@Api(value = JaxrsResource.SUBSCRIPTIONS_PATH, description = "Operations on subscriptions")
 public class SubscriptionResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionResource.class);

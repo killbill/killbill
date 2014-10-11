@@ -28,6 +28,7 @@ import org.killbill.billing.server.filters.ProfilingContainerResponseFilter;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.config.DefaultKillbillConfigSource;
+import org.killbill.billing.server.filters.ResponseCorsFilter;
 import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.security.TenantFilter;
 import org.killbill.bus.api.PersistentBus;
@@ -38,10 +39,13 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
+import com.wordnik.swagger.jaxrs.config.BeanConfig;
 
 public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
     private static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
+
+    private static final String SWAGGER_PATH = "api-docs";
 
     private KillbillEventHandler killbilleventHandler;
 
@@ -49,9 +53,11 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
     protected ServletModule getServletModule() {
         // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
         // things like static resources, favicon, etc. are 404'ed)
-        final BaseServerModuleBuilder builder = new BaseServerModuleBuilder().setJaxrsUriPattern("(" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*")
+        final BaseServerModuleBuilder builder = new BaseServerModuleBuilder().setJaxrsUriPattern("/" + SWAGGER_PATH + "|((/" + SWAGGER_PATH + "|" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*)")
                                                                              .addJaxrsResource("org.killbill.billing.jaxrs.mappers")
-                                                                             .addJaxrsResource("org.killbill.billing.jaxrs.resources");
+                                                                             .addJaxrsResource("org.killbill.billing.jaxrs.resources")
+                                                                             // Swagger integration
+                                                                             .addJaxrsResource("com.wordnik.swagger.jersey.listing");
 
         //
         // Add jersey filters which are executed prior jersey write the output stream
@@ -61,6 +67,8 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         // The logging filter is still incompatible with the GZIP filter
         //builder.addJerseyFilter(GZIPContentEncodingFilter.class.getName());
         builder.addJerseyFilter(ProfilingContainerResponseFilter.class.getName());
+
+        builder.addFilter("/" + SWAGGER_PATH + "*", ResponseCorsFilter.class);
 
         // Add TenantFilter right after is multi-tenancy has been configured.
         if (config.isMultiTenancyEnabled()) {
@@ -102,5 +110,19 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         } catch (final PersistentBus.EventBusException e) {
             logger.warn("Failed to unregister for event notifications", e);
         }
+    }
+
+    @Override
+    protected void startLifecycleStage3() {
+        super.startLifecycleStage3();
+
+        final BeanConfig config = new BeanConfig();
+        config.setResourcePackage("org.killbill.billing.jaxrs.resources");
+        config.setTitle("Kill Bill");
+        config.setDescription("Kill Bill is an open-source billing and payments platform");
+        config.setContact("killbilling-users@googlegroups.com");
+        config.setLicense("Apache License, Version 2.0");
+        config.setLicenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html");
+        config.setScan(true);
     }
 }

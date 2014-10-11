@@ -67,10 +67,15 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.PAYMENT_TRANSACTIONS)
+@Api(value = JaxrsResource.PAYMENT_TRANSACTIONS, description = "Operations on payment transactions")
 public class TransactionResource extends JaxRsResourceBase {
 
     @Inject
@@ -90,6 +95,9 @@ public class TransactionResource extends JaxRsResourceBase {
     @Path("/{transactionId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Mark a pending payment transaction as succeeded or failed")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or Payment not found")})
     public Response notifyStateChanged(final PaymentTransactionJson json,
                                          @PathParam("transactionId") final String transactionIdStr,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,

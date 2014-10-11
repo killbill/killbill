@@ -64,6 +64,10 @@
             <artifactId>jersey-guice</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.wordnik</groupId>
+            <artifactId>swagger-jersey-jaxrs_2.10</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP-java6</artifactId>
         </dependency>

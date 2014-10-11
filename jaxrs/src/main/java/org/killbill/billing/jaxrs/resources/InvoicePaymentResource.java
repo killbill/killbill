@@ -71,10 +71,12 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.INVOICE_PAYMENTS_PATH)
+@Api(value = JaxrsResource.INVOICE_PAYMENTS_PATH, description = "Operations on invoice payments")
 public class InvoicePaymentResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "paymentId";

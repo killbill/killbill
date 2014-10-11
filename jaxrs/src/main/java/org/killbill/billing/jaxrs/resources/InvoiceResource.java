@@ -90,11 +90,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 @Path(JaxrsResource.INVOICES_PATH)
+@Api(value = JaxrsResource.INVOICES_PATH, description = "Operations on invoices")
 public class InvoiceResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceResource.class);

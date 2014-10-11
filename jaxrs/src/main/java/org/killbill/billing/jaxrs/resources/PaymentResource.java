@@ -65,10 +65,12 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.PAYMENTS_PATH)
+@Api(value = JaxrsResource.PAYMENTS_PATH, description = "Operations on payments")
 public class PaymentResource extends JaxRsResourceBase {
 
     @Inject

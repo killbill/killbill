@@ -52,11 +52,13 @@ import org.killbill.billing.util.callcontext.TenantContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.CREDITS_PATH)
+@Api(value = JaxrsResource.CREDITS_PATH, description = "Operations on credits")
 public class CreditResource extends JaxRsResourceBase {
 
     private final InvoiceUserApi invoiceUserApi;

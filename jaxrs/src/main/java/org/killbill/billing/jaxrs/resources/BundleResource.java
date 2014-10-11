@@ -71,10 +71,12 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.wordnik.swagger.annotations.Api;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.BUNDLES_PATH)
+@Api(value = JaxrsResource.BUNDLES_PATH, description = "Operations on bundles")
 public class BundleResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "bundleId";

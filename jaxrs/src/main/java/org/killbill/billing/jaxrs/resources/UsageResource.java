@@ -60,10 +60,16 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Singleton;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
+
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.USAGES_PATH)
+@Api(value = JaxrsResource.USAGES_PATH, description = "Operations on usage")
 public class UsageResource extends JaxRsResourceBase {
 
     private final UsageUserApi usageUserApi;
@@ -89,6 +95,8 @@ public class UsageResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Record usage for a subscription")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription (e.g. inactive)")})
     public Response recordUsage(final SubscriptionUsageRecordJson json,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
@@ -116,6 +124,8 @@ public class UsageResource extends JaxRsResourceBase {
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/{unitType}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve usage for a subscription and unit type", response = RolledUpUsageJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Missing start date or end date")})
     public Response getUsage(@PathParam("subscriptionId") final String subscriptionId,
                              @PathParam("unitType") final String unitType,
                              @QueryParam(QUERY_START_DATE) final String startDate,
@@ -139,6 +149,8 @@ public class UsageResource extends JaxRsResourceBase {
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve usage for a subscription", response = RolledUpUsageJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Missing start date or end date")})
     public Response getAllUsage(@PathParam("subscriptionId") final String subscriptionId,
                              @QueryParam(QUERY_START_DATE) final String startDate,
                              @QueryParam(QUERY_END_DATE) final String endDate,
