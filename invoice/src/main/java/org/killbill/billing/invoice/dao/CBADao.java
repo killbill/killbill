@@ -56,6 +56,7 @@ public class CBADao {
         return cba;
     }
 
+    // We expect a clean up to date invoice, with all the items except the cba, that we will compute in that method
     public InvoiceItemModelDao computeCBAComplexity(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
 
         final BigDecimal balance = InvoiceModelDaoHelper.getBalance(invoice);
@@ -80,7 +81,7 @@ public class CBADao {
         }
     }
 
-
+    // We expect a clean up to date invoice, with all the items except the CBA, that we will compute in that method
     public void addCBAComplexityFromTransaction(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
         final InvoiceItemModelDao cbaItem = computeCBAComplexity(invoice, entitySqlDaoWrapperFactory, context);
         if (cbaItem != null) {
@@ -89,6 +90,7 @@ public class CBADao {
         }
     }
 
+    // We let the code below rehydrate the invoice before we can add the CBA item
     public void addCBAComplexityFromTransaction(final UUID invoiceId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
 
         final InvoiceSqlDao transInvoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);

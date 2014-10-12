@@ -205,10 +205,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
-    //
-    // Note that we expect CBA complexity to be run outside of invoice, so provided list of invoiceItems may already contain
-    // some CBA adjustments and there is no calls to CBA complexity.
-    //
     @Override
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
                               final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions,
@@ -231,6 +227,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
                         transInvoiceItemSqlDao.create(invoiceItemModelDao, context);
                     }
+
+                    cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
+
                     notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context.getUserToken());
                 }
                 return null;
