@@ -32,21 +32,23 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.payment.api.PaymentApi;
-import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.CatalogJsonSimple;
 import org.killbill.billing.jaxrs.json.PlanDetailJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.clock.Clock;
 import org.killbill.xmlloader.XMLWriter;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
@@ -75,6 +77,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @Timed
     @GET
     @Produces(APPLICATION_XML)
+    @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class, hidden = true)
+    @ApiResponses(value = {})
     public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         return Response.status(Status.OK).entity(XMLWriter.writeXML(catalogService.getCurrentCatalog(), StaticCatalog.class)).build();
     }
@@ -82,6 +86,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @Timed
     @GET
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve the full catalog as JSON", response = StaticCatalog.class)
+    @ApiResponses(value = {})
     public Response getCatalogJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final StaticCatalog catalog = catalogService.getCurrentCatalog();
 
@@ -106,6 +112,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Path("/availableAddons")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve available add-ons for a given product", response = PlanDetailJson.class, responseContainer = "List")
+    @ApiResponses(value = {})
     public Response getAvailableAddons(@QueryParam("baseProductName") final String baseProductName,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
         final StaticCatalog catalog = catalogService.getCurrentCatalog();
@@ -121,6 +129,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Path("/availableBasePlans")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve available base plans", response = PlanDetailJson.class, responseContainer = "List")
+    @ApiResponses(value = {})
     public Response getAvailableBasePlans(@javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
         final StaticCatalog catalog = catalogService.getCurrentCatalog();
         final List<Listing> listings = catalog.getAvailableBasePlanListings();
@@ -135,6 +145,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Path("/simpleCatalog")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a summarized version of the catalog as JSON", response = CatalogJsonSimple.class)
+    @ApiResponses(value = {})
     public Response getSimpleCatalog(@javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
         final StaticCatalog catalog = catalogService.getCurrentCatalog();
 

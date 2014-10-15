@@ -135,6 +135,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Create an entitlement")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlement supplied")})
     public Response createEntitlement(final SubscriptionJson entitlement,
                                       @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                       @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
@@ -180,6 +182,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @PUT
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Un-cancel an entitlement")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+                           @ApiResponse(code = 404, message = "Entitlement not found")})
     public Response uncancelEntitlementPlan(@PathParam("subscriptionId") final String subscriptionId,
                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                             @HeaderParam(HDR_REASON) final String reason,
@@ -196,6 +201,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
+    @ApiOperation(value = "Change entitlement plan")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+                           @ApiResponse(code = 404, message = "Entitlement not found")})
     public Response changeEntitlementPlan(final SubscriptionJson entitlement,
                                           @PathParam("subscriptionId") final String subscriptionId,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
@@ -256,6 +264,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @DELETE
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Cancel an entitlement plan")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+                           @ApiResponse(code = 404, message = "Entitlement not found")})
     public Response cancelEntitlementPlan(@PathParam("subscriptionId") final String subscriptionId,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,

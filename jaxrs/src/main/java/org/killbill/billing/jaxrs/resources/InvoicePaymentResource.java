@@ -105,6 +105,9 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a payment by id", response = InvoicePaymentJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
+                           @ApiResponse(code = 404, message = "Payment not found")})
     public Response getInvoicePayment(@PathParam("paymentId") final String paymentIdStr,
                                       @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -135,6 +138,9 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Refund a payment, and adjust the invoice if needed")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response createRefundWithAdjustments(final InvoicePaymentTransactionJson json,
                                                 @PathParam("paymentId") final String paymentId,
                                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -178,6 +184,9 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Record a chargeback")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response createChargeback(final InvoicePaymentTransactionJson json,
                                      @PathParam("paymentId") final String paymentId,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,

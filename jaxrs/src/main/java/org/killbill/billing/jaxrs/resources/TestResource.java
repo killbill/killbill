@@ -56,6 +56,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -120,6 +123,8 @@ public class TestResource extends JaxRsResourceBase {
     @GET
     @Path("/clock")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Get the current time", response = ClockResource.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid timezone supplied")})
     public Response getCurrentTime(@QueryParam("timeZone") final String timeZoneStr) {
         final DateTimeZone timeZone = timeZoneStr != null ? DateTimeZone.forID(timeZoneStr) : DateTimeZone.UTC;
         final DateTime now = clock.getUTCNow();
@@ -130,6 +135,8 @@ public class TestResource extends JaxRsResourceBase {
     @POST
     @Path("/clock")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Set the current time", response = ClockResource.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid time or timezone supplied")})
     public Response setTestClockTime(@QueryParam(QUERY_REQUESTED_DT) final String requestedClockDate,
                                      @QueryParam("timeZone") final String timeZoneStr,
                                      @QueryParam("timeoutSec") @DefaultValue("5") final Long timeoutSec,
@@ -152,6 +159,8 @@ public class TestResource extends JaxRsResourceBase {
     @PUT
     @Path("/clock")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Move the current time", response = ClockResource.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid timezone supplied")})
     public Response updateTestClockTime(@QueryParam("days") final Integer addDays,
                                         @QueryParam("weeks") final Integer addWeeks,
                                         @QueryParam("months") final Integer addMonths,

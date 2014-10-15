@@ -230,6 +230,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve bundles for account", response = BundleJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response getAccountBundles(@PathParam("accountId") final String accountId,
                                       @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionApiException {
@@ -286,6 +289,8 @@ public class AccountResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Create account")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account data supplied")})
     public Response createAccount(final AccountJson json,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
@@ -302,6 +307,8 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/{accountId:" + UUID_PATTERN + "}")
+    @ApiOperation(value = "Update account")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account data supplied")})
     public Response updateAccount(final AccountJson json,
                                   @PathParam("accountId") final String accountId,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -319,6 +326,8 @@ public class AccountResource extends JaxRsResourceBase {
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Delete account", hidden = true)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response cancelAccount(@PathParam("accountId") final String accountId,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) {
         /*
@@ -337,6 +346,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TIMELINE)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve account timeline", response = AccountTimelineJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response getAccountTimeline(@PathParam("accountId") final String accountIdString,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionApiException {
@@ -371,6 +383,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve account email notification", response = InvoiceEmailJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response getEmailNotificationsForAccount(@PathParam("accountId") final String accountId,
                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), context.createContext(request));
@@ -384,7 +399,10 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response getEmailNotificationsForAccount(final InvoiceEmailJson json,
+    @ApiOperation(value = "Set account email notification")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response setEmailNotificationsForAccount(final InvoiceEmailJson json,
                                                     @PathParam("accountId") final String accountIdString,
                                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                     @HeaderParam(HDR_REASON) final String reason,
@@ -410,6 +428,8 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CBA_REBALANCING)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Rebalance account CBA")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response rebalanceExistingCBAOnAccount(@PathParam("accountId") final String accountIdString,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                   @HeaderParam(HDR_REASON) final String reason,
@@ -432,6 +452,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICES)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve account invoices", response = InvoiceJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response getInvoices(@PathParam("accountId") final String accountIdString,
                                 @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
                                 @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
@@ -466,6 +489,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICE_PAYMENTS)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve account invoice payments", response = InvoicePaymentJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response getInvoicePayments(@PathParam("accountId") final String accountIdStr,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
@@ -491,6 +517,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICE_PAYMENTS)
+    @ApiOperation(value = "Trigger a payment for all unpaid invoices")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response payAllInvoices(@PathParam("accountId") final String accountId,
                                    @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                    @QueryParam(QUERY_PAYMENT_AMOUNT) final BigDecimal paymentAmount,
@@ -539,6 +568,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add a payment method")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response createPaymentMethod(final PaymentMethodJson json,
                                         @PathParam("accountId") final String accountId,
                                         @QueryParam(QUERY_PAYMENT_METHOD_IS_DEFAULT) @DefaultValue("false") final Boolean isDefault,
@@ -575,6 +607,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve account payment methods", response = PaymentMethodJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response getPaymentMethods(@PathParam("accountId") final String accountId,
                                       @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -601,6 +636,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS + "/{paymentMethodId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS_DEFAULT_PATH_POSTFIX)
+    @ApiOperation(value = "Set the default payment method")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or payment method id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response setDefaultPaymentMethod(@PathParam("accountId") final String accountId,
                                             @PathParam("paymentMethodId") final String paymentMethodId,
                                             @QueryParam(QUERY_PAY_ALL_UNPAID_INVOICES) @DefaultValue("false") final Boolean payAllUnpaidInvoices,
@@ -631,6 +669,8 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve account payments", response = PaymentJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response getPayments(@PathParam("accountId") final String accountIdStr,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -655,6 +695,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Trigger a payment (authorization, purchase or credit)")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response processPayment(final PaymentTransactionJson json,
                                          @PathParam("accountId") final String accountIdStr,
                                          @QueryParam("paymentMethodId") final String paymentMethodIdStr,
@@ -703,6 +746,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + OVERDUE)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve overdue state for account", response = OverdueStateJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response getOverdueAccount(@PathParam("accountId") final String accountId,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, OverdueException, OverdueApiException {
         final TenantContext tenantContext = context.createContext(request);
@@ -844,6 +890,8 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve an account emails", response = AccountEmailJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response getEmails(@PathParam(ID_PARAM_NAME) final String id,
                               @javax.ws.rs.core.Context final HttpServletRequest request) {
         final UUID accountId = UUID.fromString(id);
@@ -861,6 +909,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add account email")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response addEmail(final AccountEmailJson json,
                              @PathParam(ID_PARAM_NAME) final String id,
                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -896,6 +947,8 @@ public class AccountResource extends JaxRsResourceBase {
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS + "/{email}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Delete email from account")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response removeEmail(@PathParam(ID_PARAM_NAME) final String id,
                                 @PathParam("email") final String email,
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
