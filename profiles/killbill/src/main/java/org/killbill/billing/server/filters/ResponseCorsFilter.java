@@ -40,7 +40,7 @@ public class ResponseCorsFilter implements Filter {
         final HttpServletResponse res = (HttpServletResponse) response;
         res.addHeader("Access-Control-Allow-Origin", "*");
         res.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS");
-        res.addHeader("Access-Control-Allow-Headers", "Content-Type");
+        res.addHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Killbill-ApiKey, X-Killbill-ApiSecret");
         chain.doFilter(request, response);
     }
 

@@ -24,10 +24,10 @@ import java.net.URISyntaxException;
 import javax.servlet.ServletContext;
 
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
-import org.killbill.billing.server.filters.ProfilingContainerResponseFilter;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.config.DefaultKillbillConfigSource;
+import org.killbill.billing.server.filters.ProfilingContainerResponseFilter;
 import org.killbill.billing.server.filters.ResponseCorsFilter;
 import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.security.TenantFilter;
@@ -64,11 +64,17 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         //
         builder.addJerseyFilter("com.sun.jersey.api.container.filter.LoggingFilter");
 
+        // Disable WADL - it generates noisy log messages, such as:
+        // c.s.j.s.w.g.AbstractWadlGeneratorGrammarGenerator - Couldn't find grammar element for class javax.ws.rs.core.Response
+        builder.addJerseyParam("com.sun.jersey.config.feature.DisableWADL", "true");
+
         // The logging filter is still incompatible with the GZIP filter
         //builder.addJerseyFilter(GZIPContentEncodingFilter.class.getName());
         builder.addJerseyFilter(ProfilingContainerResponseFilter.class.getName());
 
-        builder.addFilter("/" + SWAGGER_PATH + "*", ResponseCorsFilter.class);
+        // Broader, to support the "Try it out!" feature
+        //builder.addFilter("/" + SWAGGER_PATH + "*", ResponseCorsFilter.class);
+        builder.addFilter("/*", ResponseCorsFilter.class);
 
         // Add TenantFilter right after is multi-tenancy has been configured.
         if (config.isMultiTenancyEnabled()) {
@@ -76,7 +82,6 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         }
         return builder.build();
     }
-
 
     @Override
     protected Module getModule(final ServletContext servletContext) {
@@ -116,13 +121,14 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
     protected void startLifecycleStage3() {
         super.startLifecycleStage3();
 
-        final BeanConfig config = new BeanConfig();
-        config.setResourcePackage("org.killbill.billing.jaxrs.resources");
-        config.setTitle("Kill Bill");
-        config.setDescription("Kill Bill is an open-source billing and payments platform");
-        config.setContact("killbilling-users@googlegroups.com");
-        config.setLicense("Apache License, Version 2.0");
-        config.setLicenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html");
-        config.setScan(true);
+        final BeanConfig beanConfig = new BeanConfig();
+        beanConfig.setResourcePackage("org.killbill.billing.jaxrs.resources");
+        beanConfig.setTitle("Kill Bill");
+        beanConfig.setDescription("Kill Bill is an open-source billing and payments platform");
+        beanConfig.setContact("killbilling-users@googlegroups.com");
+        beanConfig.setLicense("Apache License, Version 2.0");
+        beanConfig.setLicenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html");
+        beanConfig.setBasePath(config.getBaseUrl());
+        beanConfig.setScan(true);
     }
 }
