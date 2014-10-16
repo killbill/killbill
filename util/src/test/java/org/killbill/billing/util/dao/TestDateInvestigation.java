@@ -87,7 +87,7 @@ public class TestDateInvestigation /* extends UtilTestSuiteWithEmbeddedDB */ {
 
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled = false)
     public void testWithGMTPlus8() throws SQLException {
 
         final LocalDate date1_1 = new LocalDate(2014, 10, 1, GregorianChronology.getInstance(DATE_TZ_PLUS_8_GMT));
@@ -102,7 +102,7 @@ public class TestDateInvestigation /* extends UtilTestSuiteWithEmbeddedDB */ {
         assertEquals(result.getDate2().getZone().toString(), "UTC");
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled = false)
     public void testWithGMTMinus20() throws SQLException {
 
         final LocalDate date1_1 = new LocalDate(2014, 10, 1, GregorianChronology.getInstance(DATE_TZ_MINUS_20_GMT));
