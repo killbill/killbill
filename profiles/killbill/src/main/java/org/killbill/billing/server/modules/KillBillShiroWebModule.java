@@ -19,11 +19,16 @@
 package org.killbill.billing.server.modules;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.guice.web.ShiroWebModule;
 import org.apache.shiro.session.mgt.SessionManager;
+import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
+import org.apache.shiro.web.util.WebUtils;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.util.config.RbacConfig;
 import org.killbill.billing.util.glue.EhCacheManagerProvider;
@@ -35,6 +40,7 @@ import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.google.inject.Key;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
 // For Kill Bill server only.
@@ -63,7 +69,7 @@ public class KillBillShiroWebModule extends ShiroWebModule {
         bind(CacheManager.class).toProvider(EhCacheManagerProvider.class).asEagerSingleton();
 
         if (KillBillShiroModule.isRBACEnabled()) {
-            addFilterChain(JaxrsResource.PREFIX + "/**", AUTHC_BASIC);
+            addFilterChain(JaxrsResource.PREFIX + "/**", Key.get(CorsBasicHttpAuthenticationFilter.class));
         }
     }
 
@@ -75,5 +81,17 @@ public class KillBillShiroWebModule extends ShiroWebModule {
 
         // Magic provider to configure the session DAO
         bind(JDBCSessionDao.class).toProvider(JDBCSessionDaoProvider.class).asEagerSingleton();
+    }
+
+    public static final class CorsBasicHttpAuthenticationFilter extends BasicHttpAuthenticationFilter {
+
+        @Override
+        protected boolean isAccessAllowed(final ServletRequest request, final ServletResponse response, final Object mappedValue) {
+            final HttpServletRequest httpRequest = WebUtils.toHttp(request);
+            final String httpMethod = httpRequest.getMethod();
+            // Don't require any authorization or authentication header for OPTIONS requests
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=778548 and http://www.kinvey.com/blog/60/kinvey-adds-cross-origin-resource-sharing-cors
+            return "OPTIONS".equalsIgnoreCase(httpMethod) || super.isAccessAllowed(request, response, mappedValue);
+        }
     }
 }

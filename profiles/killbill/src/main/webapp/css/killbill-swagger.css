@@ -1,0 +1,21 @@
+#api_info {
+  display: none;
+}
+
+/*
+#header {
+  display: none;
+}
+
+.footer {
+  display: none;
+}
+*/
+
+.swagger-section .swagger-ui-wrap {
+  height: 24px;
+}
+
+.swagger-section #header form#api_selector {
+  float: left;
+}

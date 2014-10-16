@@ -191,6 +191,9 @@ public interface JaxrsResource {
     // No PREFIX here!
     public static final String PLUGINS_PATH = "/" + PLUGINS;
 
+    public static final String TEST = "test";
+    public static final String TEST_PATH = PREFIX + "/" + TEST;
+
     public static final String CBA_REBALANCING = "cbaRebalancing";
 
     public static final String PAUSE = "pause";

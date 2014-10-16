@@ -55,11 +55,16 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.TAG_DEFINITIONS_PATH)
+@Api(value = JaxrsResource.TAG_DEFINITIONS_PATH, description = "Operations on tag definitions")
 public class TagDefinitionResource extends JaxRsResourceBase {
 
     @Inject
@@ -77,6 +82,8 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @Timed
     @GET
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "List tag definitions", response = TagDefinitionJson.class, responseContainer = "List")
+    @ApiResponses(value = {})
     public Response getTagDefinitions(@javax.ws.rs.core.Context final HttpServletRequest request,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode) {
         final TenantContext tenantContext = context.createContext(request);
@@ -95,6 +102,8 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @GET
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a tag definition", response = TagDefinitionJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tagDefinitionId supplied")})
     public Response getTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
@@ -109,6 +118,8 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Create a tag definition")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid name or description supplied")})
     public Response createTagDefinition(final TagDefinitionJson json,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -127,6 +138,8 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @DELETE
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Delete a tag definition")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tagDefinitionId supplied")})
     public Response deleteTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,

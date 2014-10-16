@@ -51,6 +51,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.server.DefaultServerService;
 import org.killbill.billing.server.ServerService;
 import org.killbill.billing.server.config.KillbillServerConfig;
+import org.killbill.billing.server.filters.ResponseCorsFilter;
 import org.killbill.billing.server.notifications.PushNotificationListener;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.TenantModule;
@@ -89,6 +90,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         installKillbillModules();
 
         configureResources();
+        configureFilters();
         configurePushNotification();
     }
 
@@ -167,6 +169,10 @@ public class KillbillServerModule extends KillbillPlatformModule {
         bind(TagDefinitionResource.class).asEagerSingleton();
         bind(TagResource.class).asEagerSingleton();
         bind(TenantResource.class).asEagerSingleton();
+    }
+
+    protected void configureFilters() {
+        bind(ResponseCorsFilter.class).asEagerSingleton();
     }
 
     protected void configurePushNotification() {

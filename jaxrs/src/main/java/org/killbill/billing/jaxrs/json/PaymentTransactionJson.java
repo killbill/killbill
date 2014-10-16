@@ -27,17 +27,27 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModel;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
+@ApiModel(description = "Payment transaction")
 public class PaymentTransactionJson extends JsonBase {
 
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String transactionId;
     private final String transactionExternalKey;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String paymentId;
     private final String paymentExternalKey;
+    @ApiModelProperty(dataType = "org.killbill.billing.payment.api.TransactionType")
     private final String transactionType;
+    @ApiModelProperty(dataType = "org.joda.time.DateTime")
     private final DateTime effectiveDate;
+    @ApiModelProperty(value = "Transaction status, required for state change notifications", dataType = "org.killbill.billing.payment.api.TransactionStatus")
     private final String status;
+    @ApiModelProperty(value = "Transaction amount, required except for void operations")
     private final BigDecimal amount;
+    @ApiModelProperty(value = "Amount currency (account currency unless specified)", dataType = "org.killbill.billing.catalog.api.Currency")
     private final String currency;
     private final String gatewayErrorCode;
     private final String gatewayErrorMsg;
