@@ -16,6 +16,18 @@
   height: 24px;
 }
 
+.swagger-section .swagger-ui-wrap ul#resources li.resource div.heading h2 {
+  font-family: "Roboto Light";
+}
+
+.swagger-section #header {
+  background-color: #167bb7;
+}
+
 .swagger-section #header form#api_selector {
   float: left;
+}
+
+.swagger-section #header form#api_selector .input a#explore {
+  background-color: #e44c3a;
 }
