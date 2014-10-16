@@ -44,7 +44,7 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
 
     @Override
     public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException{
-        return new DefaultPriorPaymentControlResult(isAborted, null);
+        return new DefaultPriorPaymentControlResult(isAborted, null, null, null);
     }
 
     @Override

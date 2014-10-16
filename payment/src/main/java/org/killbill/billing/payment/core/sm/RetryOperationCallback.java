@@ -17,6 +17,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -94,7 +95,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
 
                 final PriorPaymentControlResult pluginResult;
                 try {
-                    pluginResult = getPluginResult(retryablePaymentStateContext.getPluginName(), paymentControlContext);
+                    pluginResult = getPluginResult(retryablePaymentStateContext.getPaymentControlPluginNames(), paymentControlContext);
                     if (pluginResult.isAborted()) {
                         // Transition to ABORTED
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.EXCEPTION);
@@ -107,10 +108,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
                 final boolean success;
                 try {
                     // Adjust amount with value returned by plugin if necessary
-                    if (paymentStateContext.getAmount() == null ||
-                        (pluginResult.getAdjustedAmount() != null && pluginResult.getAdjustedAmount().compareTo(paymentStateContext.getAmount()) != 0)) {
-                        ((RetryablePaymentStateContext) paymentStateContext).setAmount(pluginResult.getAdjustedAmount());
-                    }
+                    adjustStateContextValues(paymentStateContext, pluginResult);
 
                     final Payment result = doCallSpecificOperationCallback();
                     ((RetryablePaymentStateContext) paymentStateContext).setResult(result);
@@ -134,7 +132,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
                                                                                                                     retryablePaymentStateContext.isApiPayment(),
                                                                                                                     paymentStateContext.callContext);
 
-                        onCompletion(retryablePaymentStateContext.getPluginName(), updatedPaymentControlContext);
+                        onCompletion(retryablePaymentStateContext.getPaymentControlPluginNames(), updatedPaymentControlContext);
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
                     } else {
                         throw new OperationException(null, getOperationResultAndSetContext(retryablePaymentStateContext, paymentControlContext));
@@ -177,12 +175,30 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
         return new OperationException(e, getOperationResultOnException(paymentStateContext));
     }
 
-    protected void onCompletion(final String pluginName, final PaymentControlContext paymentControlContext) {
-        final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
-        try {
-            plugin.onSuccessCall(paymentControlContext);
-        } catch (final PaymentControlApiException e) {
-            logger.warn("Plugin " + pluginName + " failed to complete onCompletion call for " + paymentControlContext.getPaymentExternalKey(), e);
+    protected void onCompletion(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext) {
+        for (String pluginName : paymentControlPluginNames) {
+            final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
+            if (plugin != null) {
+                try {
+                    plugin.onSuccessCall(paymentControlContext);
+                } catch (final PaymentControlApiException e) {
+                    logger.warn("Plugin " + pluginName + " failed to complete onCompletion call for " + paymentControlContext.getPaymentExternalKey(), e);
+                }
+            }
+        }
+    }
+
+    private final void adjustStateContextValues(final PaymentStateContext inputContext, final PriorPaymentControlResult pluginResult) {
+
+        final RetryablePaymentStateContext input = (RetryablePaymentStateContext) inputContext;
+        if (pluginResult.getAdjustedAmount() != null) {
+            input.setAmount(pluginResult.getAdjustedAmount());
+        }
+        if (pluginResult.getAdjustedCurrency() != null) {
+            input.setCurrency(pluginResult.getAdjustedCurrency());
+        }
+        if (pluginResult.getAdjustedPaymentMethodId() != null) {
+            input.setPaymentMethodId(pluginResult.getAdjustedPaymentMethodId());
         }
     }
 
@@ -192,14 +208,43 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
         return operationResult;
     }
 
-    private PriorPaymentControlResult getPluginResult(final String pluginName, final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
-        final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
-        final PriorPaymentControlResult result = plugin.priorCall(paymentControlContext);
-        return result;
+    private PriorPaymentControlResult getPluginResult(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContextArg) throws PaymentControlApiException {
+
+        // Return as soon as the first plugin aborts, or the last result for the last plugin
+        PriorPaymentControlResult prevResult = null;
+
+        PaymentControlContext inputPaymentControlContext = paymentControlContextArg;
+
+        for (String pluginName : paymentControlPluginNames) {
+            final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
+            if (plugin == null) {
+                // First call to plugin, we log warn, if plugin is not registered
+                logger.warn("Skipping payment plugin control {} when fetching results", pluginName);
+                continue;
+            }
+            prevResult = plugin.priorCall(inputPaymentControlContext);
+            if (prevResult.isAborted()) {
+                break;
+            }
+            inputPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+                                                                          prevResult.getAdjustedPaymentMethodId() != null ? prevResult.getAdjustedPaymentMethodId() : inputPaymentControlContext.getPaymentMethodId(),
+                                                                          retryablePaymentStateContext.getAttemptId(),
+                                                                          paymentStateContext.getPaymentId(),
+                                                                          paymentStateContext.getPaymentExternalKey(),
+                                                                          paymentStateContext.getPaymentTransactionExternalKey(),
+                                                                          paymentStateContext.getTransactionType(),
+                                                                          prevResult.getAdjustedAmount() != null ? prevResult.getAdjustedAmount() : inputPaymentControlContext.getAmount(),
+                                                                          prevResult.getAdjustedCurrency() != null ? prevResult.getAdjustedCurrency() : inputPaymentControlContext.getCurrency(),
+                                                                          paymentStateContext.getProperties(),
+                                                                          retryablePaymentStateContext.isApiPayment(),
+                                                                          paymentStateContext.callContext);
+
+        }
+        return prevResult;
     }
 
     private OperationResult getOperationResultAndSetContext(final RetryablePaymentStateContext retryablePaymentStateContext, final PaymentControlContext paymentControlContext) {
-        final DateTime retryDate = getNextRetryDate(retryablePaymentStateContext.getPluginName(), paymentControlContext);
+        final DateTime retryDate = getNextRetryDate(retryablePaymentStateContext.getPaymentControlPluginNames(), paymentControlContext);
         if (retryDate != null) {
             ((RetryablePaymentStateContext) paymentStateContext).setRetryDate(retryDate);
             return OperationResult.FAILURE;
@@ -208,15 +253,25 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
         }
     }
 
-    private DateTime getNextRetryDate(final String pluginName, final PaymentControlContext paymentControlContext) {
-        try {
+    private DateTime getNextRetryDate(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext) {
+        DateTime candidate = null;
+        for (String pluginName : paymentControlPluginNames) {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
-            final FailureCallResult result = plugin.onFailureCall(paymentControlContext);
-            return result.getNextRetryDate();
-        } catch (final PaymentControlApiException e) {
-            logger.warn("Plugin " + pluginName + " failed to return next retryDate for payment " + paymentControlContext.getPaymentExternalKey(), e);
-            return null;
+            if (plugin != null) {
+                try {
+                    final FailureCallResult result = plugin.onFailureCall(paymentControlContext);
+                    if (candidate == null) {
+                        candidate = result.getNextRetryDate();
+                    } else if (result.getNextRetryDate() != null) {
+                        candidate = candidate.compareTo(result.getNextRetryDate()) > 0 ? result.getNextRetryDate() : candidate;
+                    }
+                } catch (final PaymentControlApiException e) {
+                    logger.warn("Plugin " + pluginName + " failed to return next retryDate for payment " + paymentControlContext.getPaymentExternalKey(), e);
+                    return candidate;
+                }
+            }
         }
+        return candidate;
     }
 
     public static class DefaultPaymentControlContext extends DefaultCallContext implements PaymentControlContext {

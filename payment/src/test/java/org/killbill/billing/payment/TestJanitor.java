@@ -48,6 +48,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
@@ -62,8 +63,8 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public String getPaymentControlPluginName() {
-            return InvoicePaymentControlPluginApi.PLUGIN_NAME;
+        public List<String> getPaymentControlPluginNames() {
+            return ImmutableList.of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
     };
 

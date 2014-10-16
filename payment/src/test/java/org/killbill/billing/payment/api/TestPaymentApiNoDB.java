@@ -57,8 +57,8 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
             return false;
         }
         @Override
-        public String getPaymentControlPluginName() {
-            return InvoicePaymentControlPluginApi.PLUGIN_NAME;
+        public List<String> getPaymentControlPluginNames() {
+            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
     };
 

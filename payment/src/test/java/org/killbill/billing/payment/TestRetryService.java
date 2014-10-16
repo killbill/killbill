@@ -144,7 +144,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         final String transactionExternalKey = UUID.randomUUID().toString();
         try {
             pluginControlledPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amount, Currency.USD, paymentExternalKey, transactionExternalKey,
-                                                            createPropertiesForInvoice(invoice), InvoicePaymentControlPluginApi.PLUGIN_NAME, callContext, internalCallContext);
+                                                            createPropertiesForInvoice(invoice), ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME), callContext, internalCallContext);
         } catch (final PaymentApiException e) {
             failed = true;
         }

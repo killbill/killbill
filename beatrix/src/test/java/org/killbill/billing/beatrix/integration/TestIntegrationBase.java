@@ -128,8 +128,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public String getPaymentControlPluginName() {
-            return InvoicePaymentControlPluginApi.PLUGIN_NAME;
+        public List<String> getPaymentControlPluginNames() {
+            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
     };
 
@@ -140,8 +140,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public String getPaymentControlPluginName() {
-            return InvoicePaymentControlPluginApi.PLUGIN_NAME;
+        public List<String> getPaymentControlPluginNames() {
+            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
     };
 

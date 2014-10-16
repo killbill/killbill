@@ -96,7 +96,7 @@ final class AttemptCompletionTask extends CompletionTaskBase<PaymentAttemptModel
 
             final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
             final boolean isApiPayment = true; // unclear
-            final RetryablePaymentStateContext paymentStateContext = new RetryablePaymentStateContext(attempt.getPluginName(),
+            final RetryablePaymentStateContext paymentStateContext = new RetryablePaymentStateContext(attempt.toPaymentControlPluginNames(),
                                                                                                       isApiPayment,
                                                                                                       transaction.getPaymentId(),
                                                                                                       attempt.getPaymentExternalKey(),

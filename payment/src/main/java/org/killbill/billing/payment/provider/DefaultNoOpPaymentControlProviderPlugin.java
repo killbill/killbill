@@ -33,7 +33,7 @@ public class DefaultNoOpPaymentControlProviderPlugin implements PaymentControlPl
 
     @Override
     public PriorPaymentControlResult priorCall(final PaymentControlContext retryPluginContext) throws PaymentControlApiException {
-        return new DefaultPriorPaymentControlResult(isRetryAborted, null);
+        return new DefaultPriorPaymentControlResult(isRetryAborted, null, null, null);
     }
 
     @Override

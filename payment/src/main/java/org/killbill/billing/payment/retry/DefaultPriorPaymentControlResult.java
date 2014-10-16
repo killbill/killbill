@@ -17,21 +17,30 @@
 package org.killbill.billing.payment.retry;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.retry.plugin.api.PriorPaymentControlResult;
 
 public class DefaultPriorPaymentControlResult implements PriorPaymentControlResult {
 
     private final boolean isAborted;
     private final BigDecimal adjustedRetryAmount;
+    private final Currency adjustedCurrency;
+    private final UUID adjustedPaymentMethodId;
 
-    public DefaultPriorPaymentControlResult(final boolean isAborted, final BigDecimal adjustedRetryAmount) {
+    public DefaultPriorPaymentControlResult(final boolean isAborted,
+                                            final BigDecimal adjustedRetryAmount,
+                                            final Currency adjustedCurrency,
+                                            final UUID adjustedPaymentMethodId) {
         this.isAborted = isAborted;
         this.adjustedRetryAmount = adjustedRetryAmount;
+        this.adjustedCurrency = adjustedCurrency;
+        this.adjustedPaymentMethodId = adjustedPaymentMethodId;
     }
 
     public DefaultPriorPaymentControlResult(final boolean isAborted) {
-        this(isAborted, null);
+        this(isAborted, null, null, null);
     }
 
     @Override
@@ -42,5 +51,14 @@ public class DefaultPriorPaymentControlResult implements PriorPaymentControlResu
     @Override
     public BigDecimal getAdjustedAmount() {
         return adjustedRetryAmount;
+    }
+
+    @Override
+    public Currency getAdjustedCurrency() {
+        return adjustedCurrency;
+    }
+    @Override
+    public UUID getAdjustedPaymentMethodId() {
+        return adjustedPaymentMethodId;
     }
 }

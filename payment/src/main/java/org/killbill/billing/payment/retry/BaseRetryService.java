@@ -19,6 +19,7 @@
 package org.killbill.billing.payment.retry;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -70,7 +71,7 @@ public abstract class BaseRetryService implements RetryService {
                                                                               }
                                                                               final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
                                                                               final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
-                                                                              retryPaymentTransaction(key.getAttemptId(), key.getPluginName(), callContext);
+                                                                              retryPaymentTransaction(key.getAttemptId(), key.getPaymentControlPluginNames(), callContext);
                                                                           }
                                                                       }
                                                                      );
@@ -104,17 +105,17 @@ public abstract class BaseRetryService implements RetryService {
             this.internalCallContextFactory = internalCallContextFactory;
         }
 
-        public boolean scheduleRetry(final ObjectType objectType, final UUID objectId, final UUID attemptId, final String pluginName, final DateTime timeOfRetry) {
-            return scheduleRetryInternal(objectType, objectId, attemptId, pluginName, timeOfRetry, null);
+        public boolean scheduleRetry(final ObjectType objectType, final UUID objectId, final UUID attemptId, final List<String> paymentControlPluginNames, final DateTime timeOfRetry) {
+            return scheduleRetryInternal(objectType, objectId, attemptId, paymentControlPluginNames, timeOfRetry, null);
         }
 
 
-        private boolean scheduleRetryInternal(final ObjectType objectType, final UUID objectId, final UUID attemptId, final String pluginName, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
+        private boolean scheduleRetryInternal(final ObjectType objectType, final UUID objectId, final UUID attemptId, final List<String> paymentControlPluginNames, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
             final InternalCallContext context = createCallContextFromPaymentId(objectType, objectId);
 
             try {
                 final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
-                final NotificationEvent key = new PaymentRetryNotificationKey(attemptId, pluginName);
+                final NotificationEvent key = new PaymentRetryNotificationKey(attemptId, paymentControlPluginNames);
                 if (retryQueue != null) {
                     if (transactionalDao == null) {
                         retryQueue.recordFutureNotification(timeOfRetry, key, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());

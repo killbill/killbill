@@ -368,9 +368,9 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             }
 
             @Override
-            public String getPaymentControlPluginName() {
-                /* Contract with plugin */
-                return "__INVOICE_PAYMENT_CONTROL_PLUGIN__";
+            public List<String> getPaymentControlPluginNames() {
+                /* Will default to org.killbill.payment.control.plugin in payment sub-system */
+                return null;
             }
         };
     }

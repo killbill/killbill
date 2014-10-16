@@ -167,7 +167,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                 eventBus);
 
         paymentStateContext =
-                new RetryablePaymentStateContext(MockPaymentControlProviderPlugin.PLUGIN_NAME,
+                new RetryablePaymentStateContext(ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME),
                                                        true,
                                                        null,
                                                        paymentExternalKey,
@@ -632,7 +632,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                            new PaymentTransactionModelDao(transactionId, attempt.getId(), paymentTransactionExternalKey, utcNow, utcNow, paymentId, TransactionType.AUTHORIZE, utcNow, TransactionStatus.PAYMENT_FAILURE, amount, currency, "bla", "foo"),
                                                            internalCallContext);
 
-        processor.retryPaymentTransaction(attempt.getId(), MockPaymentControlProviderPlugin.PLUGIN_NAME, internalCallContext);
+        processor.retryPaymentTransaction(attempt.getId(), ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
 
         final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
         assertEquals(pas.size(), 2);
@@ -676,7 +676,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                            internalCallContext
                                                           );
 
-        processor.retryPaymentTransaction(attempt.getId(), MockPaymentControlProviderPlugin.PLUGIN_NAME, internalCallContext);
+        processor.retryPaymentTransaction(attempt.getId(), ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
 
         final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
         assertEquals(pas.size(), 2);
@@ -724,7 +724,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                                internalCallContext
                                                               );
 
-            processor.retryPaymentTransaction(attempt.getId(), MockPaymentControlProviderPlugin.PLUGIN_NAME, internalCallContext);
+            processor.retryPaymentTransaction(attempt.getId(), ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
 
             final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
             assertEquals(pas.size(), 2);

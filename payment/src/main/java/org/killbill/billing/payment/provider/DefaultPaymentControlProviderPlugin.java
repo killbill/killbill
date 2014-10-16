@@ -30,7 +30,7 @@ public class DefaultPaymentControlProviderPlugin implements PaymentControlPlugin
 
     @Override
     public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
-        return new DefaultPriorPaymentControlResult(false, null);
+        return new DefaultPriorPaymentControlResult(false, null, null, null);
     }
 
     @Override
