@@ -141,7 +141,7 @@ public class AccountJson extends JsonBase {
         return new AccountData() {
             @Override
             public DateTimeZone getTimeZone() {
-                return (timeZone != null) ? DateTimeZone.forID(timeZone) : null;
+                return (Strings.emptyToNull(timeZone) != null) ? DateTimeZone.forID(timeZone) : null;
             }
 
             @Override
