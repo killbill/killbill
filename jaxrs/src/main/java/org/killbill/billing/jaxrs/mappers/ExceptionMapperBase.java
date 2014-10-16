@@ -48,6 +48,8 @@ public abstract class ExceptionMapperBase {
     private static final Logger log = LoggerFactory.getLogger(ExceptionMapperBase.class);
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    private static final String QUERY_WITH_STACK_TRACE = "withStackTrace";
+
     protected Response fallback(final Exception exception, final UriInfo uriInfo) {
         if (exception.getCause() == null) {
             return buildBadRequestResponse(exception, uriInfo);
@@ -114,7 +116,7 @@ public abstract class ExceptionMapperBase {
         log.warn("Conflicting request", e);
 
         final Response.ResponseBuilder responseBuilder = Response.status(Status.CONFLICT);
-        serializeException(e, responseBuilder);
+        serializeException(e, uriInfo, responseBuilder);
         return responseBuilder.build();
     }
 
@@ -123,7 +125,7 @@ public abstract class ExceptionMapperBase {
         log.info("Not found", e);
 
         final Response.ResponseBuilder responseBuilder = Response.status(Status.NOT_FOUND);
-        serializeException(e, responseBuilder);
+        serializeException(e, uriInfo, responseBuilder);
         return responseBuilder.build();
     }
 
@@ -132,7 +134,7 @@ public abstract class ExceptionMapperBase {
         log.warn("Bad request", e);
 
         final Response.ResponseBuilder responseBuilder = Response.status(Status.BAD_REQUEST);
-        serializeException(e, responseBuilder);
+        serializeException(e, uriInfo, responseBuilder);
         return responseBuilder.build();
     }
 
@@ -142,7 +144,7 @@ public abstract class ExceptionMapperBase {
 
         // TODO Forbidden?
         final Response.ResponseBuilder responseBuilder = Response.status(Status.UNAUTHORIZED);
-        serializeException(e, responseBuilder);
+        serializeException(e, uriInfo, responseBuilder);
         return responseBuilder.build();
     }
 
@@ -151,23 +153,24 @@ public abstract class ExceptionMapperBase {
         log.warn("Internal error", e);
 
         final Response.ResponseBuilder responseBuilder = Response.status(Status.INTERNAL_SERVER_ERROR);
-        serializeException(e, responseBuilder);
+        serializeException(e, uriInfo, responseBuilder);
         return responseBuilder.build();
     }
 
     protected Response buildPluginTimeoutResponse(final Exception e, final UriInfo uriInfo) {
         final Response.ResponseBuilder responseBuilder = Response.status(Status.ACCEPTED);
-        serializeException(e, responseBuilder);
+        serializeException(e, uriInfo, responseBuilder);
         return responseBuilder.build();
     }
 
-    private void serializeException(final Exception e, final Response.ResponseBuilder responseBuilder) {
-        final BillingExceptionJson billingExceptionJson = new BillingExceptionJson(e);
+    private void serializeException(final Exception e, final UriInfo uriInfo, final Response.ResponseBuilder responseBuilder) {
+        final boolean withStackTrace = uriInfo.getQueryParameters() != null && "true".equals(uriInfo.getQueryParameters().getFirst(QUERY_WITH_STACK_TRACE));
+        final BillingExceptionJson billingExceptionJson = new BillingExceptionJson(e, withStackTrace);
 
         try {
             final String billingExceptionJsonAsString = mapper.writeValueAsString(billingExceptionJson);
             responseBuilder.entity(billingExceptionJsonAsString).type(MediaType.APPLICATION_JSON);
-        } catch (JsonProcessingException jsonException) {
+        } catch (final JsonProcessingException jsonException) {
             log.warn("Unable to serialize exception", jsonException);
             responseBuilder.entity(e.toString()).type(MediaType.TEXT_PLAIN_TYPE);
         }
