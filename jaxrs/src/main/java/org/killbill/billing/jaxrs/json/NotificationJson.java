@@ -20,6 +20,7 @@ import org.killbill.billing.notification.plugin.api.ExtBusEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 /*
  * Use to communicate back with client after they registered a callback
@@ -27,8 +28,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class NotificationJson {
 
     private final String eventType;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String accountId;
     private final String objectType;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String objectId;
 
     @JsonCreator

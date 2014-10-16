@@ -21,13 +21,15 @@ import org.killbill.billing.tenant.api.TenantData;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class TenantJson extends JsonBase {
 
-    protected final String tenantId;
-    protected final String externalKey;
-    protected final String apiKey;
-    protected final String apiSecret;
+    @ApiModelProperty(dataType = "java.util.UUID")
+    private final String tenantId;
+    private final String externalKey;
+    private final String apiKey;
+    private final String apiSecret;
 
     @JsonCreator
     public TenantJson(@JsonProperty("tenantId") final String tenantId,

@@ -26,7 +26,6 @@ public class TenantKeyJson {
     private final String key;
     private final List<String> values;
 
-
     @JsonCreator
     public TenantKeyJson(@JsonProperty("key") final String key,
                          @JsonProperty("values") final List<String> values) {

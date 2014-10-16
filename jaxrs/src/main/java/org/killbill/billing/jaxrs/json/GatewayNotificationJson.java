@@ -28,9 +28,11 @@ import org.killbill.billing.payment.plugin.api.GatewayNotification;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class GatewayNotificationJson extends JsonBase {
 
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String kbPaymentId;
     private final Integer status;
     private final String entity;

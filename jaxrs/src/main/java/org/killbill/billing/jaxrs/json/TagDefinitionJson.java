@@ -29,9 +29,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class TagDefinitionJson extends JsonBase {
 
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String id;
     private final Boolean isControlTag;
     private final String name;

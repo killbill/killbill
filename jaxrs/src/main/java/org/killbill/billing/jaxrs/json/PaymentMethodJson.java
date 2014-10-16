@@ -36,11 +36,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class PaymentMethodJson extends JsonBase {
 
     private final String externalKey;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String paymentMethodId;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String accountId;
     private final Boolean isDefault;
     private final String pluginName;
