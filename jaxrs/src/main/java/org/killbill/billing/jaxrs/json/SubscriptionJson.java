@@ -45,9 +45,13 @@ public class SubscriptionJson extends JsonBase {
     private final String subscriptionId;
     private final String externalKey;
     private final LocalDate startDate;
+    @ApiModelProperty(required = true)
     private final String productName;
+    @ApiModelProperty(dataType = "org.killbill.billing.catalog.api.ProductCategory", required = true)
     private final String productCategory;
+    @ApiModelProperty(dataType = "org.killbill.billing.catalog.api.BillingPeriod", required = true)
     private final String billingPeriod;
+    @ApiModelProperty(required = true)
     private final String priceList;
     private final LocalDate cancelledDate;
     private final LocalDate chargedThroughDate;

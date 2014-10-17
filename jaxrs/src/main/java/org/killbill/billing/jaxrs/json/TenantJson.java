@@ -28,7 +28,9 @@ public class TenantJson extends JsonBase {
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String tenantId;
     private final String externalKey;
+    @ApiModelProperty(required = true)
     private final String apiKey;
+    @ApiModelProperty(required = true)
     private final String apiSecret;
 
     @JsonCreator

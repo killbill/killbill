@@ -36,7 +36,7 @@ public class PaymentTransactionJson extends JsonBase {
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String transactionId;
     private final String transactionExternalKey;
-    @ApiModelProperty(dataType = "java.util.UUID")
+    @ApiModelProperty(value = "Associated payment id, required when notifying state transitions", dataType = "java.util.UUID")
     private final String paymentId;
     private final String paymentExternalKey;
     @ApiModelProperty(dataType = "org.killbill.billing.payment.api.TransactionType")

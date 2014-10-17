@@ -34,8 +34,9 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SubscriptionUsageRecordJson {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
+    @ApiModelProperty(dataType = "java.util.UUID", required = true)
     private final String subscriptionId;
+    @ApiModelProperty(required = true)
     private final List<UnitUsageRecordJson> unitUsageRecords;
 
     @JsonCreator

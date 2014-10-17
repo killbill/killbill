@@ -35,7 +35,9 @@ public class CustomFieldJson extends JsonBase {
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String objectId;
     private final ObjectType objectType;
+    @ApiModelProperty(required = true)
     private final String name;
+    @ApiModelProperty(required = true)
     private final String value;
 
     @JsonCreator

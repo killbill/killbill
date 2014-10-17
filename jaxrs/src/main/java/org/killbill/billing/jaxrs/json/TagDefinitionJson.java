@@ -36,7 +36,9 @@ public class TagDefinitionJson extends JsonBase {
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String id;
     private final Boolean isControlTag;
+    @ApiModelProperty(required = true)
     private final String name;
+    @ApiModelProperty(required = true)
     private final String description;
     private final List<String> applicableObjectTypes;
 

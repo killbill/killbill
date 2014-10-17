@@ -32,12 +32,13 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class CreditJson extends JsonBase {
 
+    @ApiModelProperty(required = true)
     private final BigDecimal creditAmount;
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String invoiceId;
     private final String invoiceNumber;
     private final LocalDate effectiveDate;
-    @ApiModelProperty(dataType = "java.util.UUID")
+    @ApiModelProperty(dataType = "java.util.UUID", required = true)
     private final String accountId;
 
     @JsonCreator

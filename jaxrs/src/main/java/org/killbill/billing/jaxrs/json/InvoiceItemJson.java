@@ -35,13 +35,13 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class InvoiceItemJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
+    @ApiModelProperty(dataType = "java.util.UUID", required = true)
     private final String invoiceItemId;
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String invoiceId;
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String linkedInvoiceItemId;
-    @ApiModelProperty(dataType = "java.util.UUID")
+    @ApiModelProperty(dataType = "java.util.UUID", required = true)
     private final String accountId;
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String bundleId;

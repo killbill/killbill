@@ -29,6 +29,7 @@ public class AccountEmailJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String accountId;
+    @ApiModelProperty(required = true)
     private final String email;
 
     @JsonCreator
