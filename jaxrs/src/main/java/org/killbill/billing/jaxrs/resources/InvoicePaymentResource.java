@@ -149,6 +149,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                                 @HeaderParam(HDR_COMMENT) final String comment,
                                                 @javax.ws.rs.core.Context final UriInfo uriInfo,
                                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "InvoicePaymentTransactionJson body should be specified");
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID paymentUuid = UUID.fromString(paymentId);
@@ -194,6 +195,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                      @HeaderParam(HDR_COMMENT) final String comment,
                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "InvoicePaymentTransactionJson body should be specified");
+        verifyNonNullOrEmpty(json.getAmount(), "InvoicePaymentTransactionJson amount needs to be set");
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID paymentUuid = UUID.fromString(paymentId);

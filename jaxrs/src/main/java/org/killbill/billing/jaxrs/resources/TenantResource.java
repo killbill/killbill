@@ -119,6 +119,10 @@ public class TenantResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+        verifyNonNullOrEmpty(json, "TenantJson body should be specified");
+        verifyNonNullOrEmpty(json.getApiKey(), "TenantJson apiKey needs to be set",
+                             json.getApiSecret(), "TenantJson apiSecret needs to be set");
+
         final TenantData data = json.toTenantData();
         final Tenant tenant = tenantApi.createTenant(data, context.createContext(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId());

@@ -312,6 +312,10 @@ public class InvoiceResource extends JaxRsResourceBase {
                                       @HeaderParam(HDR_COMMENT) final String comment,
                                       @javax.ws.rs.core.Context final HttpServletRequest request,
                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
+        verifyNonNullOrEmpty(json, "InvoiceItemJson body should be specified");
+        verifyNonNullOrEmpty(json.getAccountId(), "InvoiceItemJson accountId needs to be set",
+                             json.getInvoiceItemId(), "InvoiceItemJson invoiceItemId needs to be set");
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID accountId = UUID.fromString(json.getAccountId());
@@ -453,6 +457,11 @@ public class InvoiceResource extends JaxRsResourceBase {
                                          @HeaderParam(HDR_COMMENT) final String comment,
                                          @javax.ws.rs.core.Context final HttpServletRequest request,
                                          @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, PaymentApiException {
+        verifyNonNullOrEmpty(payment, "InvoicePaymentJson body should be specified");
+        verifyNonNullOrEmpty(payment.getAccountId(), "InvoicePaymentJson accountId needs to be set",
+                             payment.getTargetInvoiceId(), "InvoicePaymentJson targetInvoiceId needs to be set",
+                             payment.getPurchasedAmount(), "InvoicePaymentJson purchasedAmount needs to be set");
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 

@@ -19,7 +19,6 @@ package org.killbill.billing.jaxrs.resources;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.concurrent.Immutable;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -98,14 +97,14 @@ public class UsageResource extends JaxRsResourceBase {
     @ApiOperation(value = "Record usage for a subscription")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription (e.g. inactive)")})
     public Response recordUsage(final SubscriptionUsageRecordJson json,
-                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                  @HeaderParam(HDR_REASON) final String reason,
-                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request,
-                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException {
-
-        Preconditions.checkNotNull(json.getSubscriptionId());
-        Preconditions.checkNotNull(json.getUnitUsageRecords());
+                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                @HeaderParam(HDR_REASON) final String reason,
+                                @HeaderParam(HDR_COMMENT) final String comment,
+                                @javax.ws.rs.core.Context final HttpServletRequest request,
+                                @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "SubscriptionUsageRecordJson body should be specified");
+        verifyNonNullOrEmpty(json.getSubscriptionId(), "SubscriptionUsageRecordJson subscriptionId needs to be set",
+                             json.getUnitUsageRecords(), "SubscriptionUsageRecordJson unitUsageRecords needs to be set");
         Preconditions.checkArgument(!json.getUnitUsageRecords().isEmpty());
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
@@ -130,7 +129,7 @@ public class UsageResource extends JaxRsResourceBase {
                              @PathParam("unitType") final String unitType,
                              @QueryParam(QUERY_START_DATE) final String startDate,
                              @QueryParam(QUERY_END_DATE) final String endDate,
-                             @javax.ws.rs.core.Context final HttpServletRequest request)  {
+                             @javax.ws.rs.core.Context final HttpServletRequest request) {
 
         if (startDate == null || endDate == null) {
             return Response.status(Status.BAD_REQUEST).build();
@@ -152,9 +151,9 @@ public class UsageResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve usage for a subscription", response = RolledUpUsageJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Missing start date or end date")})
     public Response getAllUsage(@PathParam("subscriptionId") final String subscriptionId,
-                             @QueryParam(QUERY_START_DATE) final String startDate,
-                             @QueryParam(QUERY_END_DATE) final String endDate,
-                             @javax.ws.rs.core.Context final HttpServletRequest request)  {
+                                @QueryParam(QUERY_START_DATE) final String startDate,
+                                @QueryParam(QUERY_END_DATE) final String endDate,
+                                @javax.ws.rs.core.Context final HttpServletRequest request) {
 
         if (startDate == null || endDate == null) {
             return Response.status(Status.BAD_REQUEST).build();
