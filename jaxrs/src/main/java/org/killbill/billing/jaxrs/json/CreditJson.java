@@ -21,23 +21,24 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class CreditJson extends JsonBase {
 
+    @ApiModelProperty(required = true)
     private final BigDecimal creditAmount;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String invoiceId;
     private final String invoiceNumber;
     private final LocalDate effectiveDate;
+    @ApiModelProperty(dataType = "java.util.UUID", required = true)
     private final String accountId;
 
     @JsonCreator

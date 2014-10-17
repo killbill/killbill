@@ -315,6 +315,8 @@ public class BundleResource extends JaxRsResourceBase {
                                    @HeaderParam(HDR_COMMENT) final String comment,
                                    @javax.ws.rs.core.Context final UriInfo uriInfo,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, SubscriptionApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "BundleJson body should be specified");
+        verifyNonNullOrEmpty(json.getAccountId(), "BundleJson accountId needs to be set");
 
         final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
 

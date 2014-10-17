@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -85,7 +86,9 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -197,6 +200,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                           final UriInfo uriInfo) throws CustomFieldApiException {
         final LinkedList<CustomField> input = new LinkedList<CustomField>();
         for (final CustomFieldJson cur : customFields) {
+            verifyNonNullOrEmpty(cur.getName(), "CustomFieldJson name needs to be set");
+            verifyNonNullOrEmpty(cur.getValue(), "CustomFieldJson value needs to be set");
             input.add(new StringCustomField(cur.getName(), cur.getValue(), getObjectType(), id, context.getCreatedDate()));
         }
 
@@ -399,4 +404,13 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return invoicePayment != null ? invoicePayment.getInvoiceId() : null;
     }
 
+    protected void verifyNonNullOrEmpty(final Object... elements) {
+        Preconditions.checkArgument(elements.length % 2 == 0, "%s should have an even number of elements", Arrays.toString(elements));
+        for (int i = 0; i < elements.length; i += 2) {
+            final Object argument = elements[i];
+            final Object errorMessage = elements[i + 1];
+            final boolean expression = argument instanceof String ? Strings.emptyToNull((String) argument) != null : argument != null;
+            Preconditions.checkArgument(expression, errorMessage);
+        }
+    }
 }

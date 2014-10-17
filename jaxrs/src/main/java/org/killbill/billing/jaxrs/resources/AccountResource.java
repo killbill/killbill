@@ -297,6 +297,8 @@ public class AccountResource extends JaxRsResourceBase {
                                   @HeaderParam(HDR_COMMENT) final String comment,
                                   @javax.ws.rs.core.Context final HttpServletRequest request,
                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
+        verifyNonNullOrEmpty(json, "AccountJson body should be specified");
+
         final AccountData data = json.toAccountData();
         final Account account = accountUserApi.createAccount(data, context.createContext(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", account.getId());
@@ -315,6 +317,8 @@ public class AccountResource extends JaxRsResourceBase {
                                   @HeaderParam(HDR_REASON) final String reason,
                                   @HeaderParam(HDR_COMMENT) final String comment,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        verifyNonNullOrEmpty(json, "AccountJson body should be specified");
+
         final AccountData data = json.toAccountData();
         final UUID uuid = UUID.fromString(accountId);
         accountUserApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment, request));
@@ -408,6 +412,8 @@ public class AccountResource extends JaxRsResourceBase {
                                                     @HeaderParam(HDR_REASON) final String reason,
                                                     @HeaderParam(HDR_COMMENT) final String comment,
                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        verifyNonNullOrEmpty(json, "InvoiceEmailJson body should be specified");
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID accountId = UUID.fromString(accountIdString);
@@ -581,6 +587,9 @@ public class AccountResource extends JaxRsResourceBase {
                                         @HeaderParam(HDR_COMMENT) final String comment,
                                         @javax.ws.rs.core.Context final UriInfo uriInfo,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
+        verifyNonNullOrEmpty(json, "PaymentMethodJson body should be specified");
+        verifyNonNullOrEmpty(json.getPluginName(), "PaymentMethodJson pluginName should be specified");
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
@@ -699,14 +708,18 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response processPayment(final PaymentTransactionJson json,
-                                         @PathParam("accountId") final String accountIdStr,
-                                         @QueryParam("paymentMethodId") final String paymentMethodIdStr,
-                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
-                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                         @HeaderParam(HDR_REASON) final String reason,
-                                         @HeaderParam(HDR_COMMENT) final String comment,
-                                         @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                   @PathParam("accountId") final String accountIdStr,
+                                   @QueryParam("paymentMethodId") final String paymentMethodIdStr,
+                                   @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                   @HeaderParam(HDR_REASON) final String reason,
+                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
+        verifyNonNullOrEmpty(json.getTransactionType(), "PaymentTransactionJson transactionType needs to be set",
+                             json.getAmount(), "PaymentTransactionJson amount needs to be set");
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID accountId = UUID.fromString(accountIdStr);
@@ -919,6 +932,9 @@ public class AccountResource extends JaxRsResourceBase {
                              @HeaderParam(HDR_COMMENT) final String comment,
                              @javax.ws.rs.core.Context final HttpServletRequest request,
                              @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
+        verifyNonNullOrEmpty(json, "AccountEmailJson body should be specified");
+        verifyNonNullOrEmpty(json.getEmail(), "AccountEmailJson email needs to be set");
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID accountId = UUID.fromString(id);

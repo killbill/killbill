@@ -54,12 +54,13 @@ public class BillingExceptionJson {
         this.stackTrace = stackTrace;
     }
 
-    public BillingExceptionJson(final Exception exception) {
+    public BillingExceptionJson(final Exception exception, final boolean withStackTrace) {
         this(exception.getClass().getName(),
              exception instanceof BillingExceptionBase ? ((BillingExceptionBase) exception).getCode() : null,
              exception.getLocalizedMessage(),
              exception.getCause() == null ? null : exception.getCause().getClass().getName(),
              exception.getCause() == null ? null : exception.getCause().getLocalizedMessage(),
+             !withStackTrace ? ImmutableList.<StackTraceElementJson>of() :
              Lists.<StackTraceElement, StackTraceElementJson>transform(ImmutableList.<StackTraceElement>copyOf(exception.getStackTrace()),
                                                                        new Function<StackTraceElement, StackTraceElementJson>() {
                                                                            @Override

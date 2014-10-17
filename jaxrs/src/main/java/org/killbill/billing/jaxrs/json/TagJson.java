@@ -27,11 +27,15 @@ import org.killbill.billing.util.tag.TagDefinition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class TagJson extends JsonBase {
 
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String tagId;
+    @ApiModelProperty(dataType = "org.killbill.billing.ObjectType")
     private final ObjectType objectType;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String tagDefinitionId;
     private final String tagDefinitionName;
 

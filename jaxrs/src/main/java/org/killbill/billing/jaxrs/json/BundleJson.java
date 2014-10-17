@@ -31,10 +31,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class BundleJson extends JsonBase {
 
+    @ApiModelProperty(dataType = "java.util.UUID", required = true)
     protected final String accountId;
+    @ApiModelProperty(dataType = "java.util.UUID")
     protected final String bundleId;
     protected final String externalKey;
     private final List<SubscriptionJson> subscriptions;

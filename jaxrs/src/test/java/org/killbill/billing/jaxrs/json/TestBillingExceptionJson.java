@@ -56,7 +56,7 @@ public class TestBillingExceptionJson extends JaxrsTestSuiteNoDB {
             nil.toString();
             Assert.fail();
         } catch (final NullPointerException e) {
-            final BillingExceptionJson exceptionJson = new BillingExceptionJson(e);
+            final BillingExceptionJson exceptionJson = new BillingExceptionJson(e, true);
             Assert.assertEquals(exceptionJson.getClassName(), e.getClass().getName());
             Assert.assertNull(exceptionJson.getCode());
             Assert.assertNull(exceptionJson.getMessage());
@@ -66,6 +66,14 @@ public class TestBillingExceptionJson extends JaxrsTestSuiteNoDB {
             Assert.assertEquals(exceptionJson.getStackTrace().get(0).getClassName(), TestBillingExceptionJson.class.getName());
             Assert.assertEquals(exceptionJson.getStackTrace().get(0).getMethodName(), "testFromException");
             Assert.assertFalse(exceptionJson.getStackTrace().get(0).getNativeMethod());
+
+            final BillingExceptionJson exceptionJsonNoStackTrace = new BillingExceptionJson(e, false);
+            Assert.assertEquals(exceptionJsonNoStackTrace.getClassName(), e.getClass().getName());
+            Assert.assertNull(exceptionJsonNoStackTrace.getCode());
+            Assert.assertNull(exceptionJsonNoStackTrace.getMessage());
+            Assert.assertNull(exceptionJsonNoStackTrace.getCauseClassName());
+            Assert.assertNull(exceptionJsonNoStackTrace.getCauseMessage());
+            Assert.assertTrue(exceptionJsonNoStackTrace.getStackTrace().isEmpty());
         }
     }
 }

@@ -19,15 +19,17 @@ package org.killbill.billing.jaxrs.json;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.account.api.AccountEmail;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class AccountEmailJson extends JsonBase {
 
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String accountId;
+    @ApiModelProperty(required = true)
     private final String email;
 
     @JsonCreator

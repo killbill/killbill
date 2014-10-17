@@ -146,6 +146,18 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                       @HeaderParam(HDR_COMMENT) final String comment,
                                       @javax.ws.rs.core.Context final HttpServletRequest request,
                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
+        verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified");
+        verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
+                             entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set",
+                             entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
+                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+        final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
+        if (createAddOnEntitlement) {
+            verifyNonNullOrEmpty(entitlement.getBundleId(), "SubscriptionJson bundleId should be specified");
+        } else {
+            verifyNonNullOrEmpty(entitlement.getAccountId(), "SubscriptionJson accountId should be specified");
+        }
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
@@ -158,7 +170,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
                 final LocalDate inputLocalDate = toLocalDate(accountId, requestedDate, callContext);
                 final UUID bundleId = entitlement.getBundleId() != null ? UUID.fromString(entitlement.getBundleId()) : null;
-                return (entitlement.getProductCategory().equals(ProductCategory.ADD_ON.toString())) ?
+                return createAddOnEntitlement ?
                        entitlementApi.addEntitlement(bundleId, spec, inputLocalDate, callContext) :
                        entitlementApi.createBaseEntitlement(accountId, spec, entitlement.getExternalKey(), inputLocalDate, callContext);
             }
@@ -214,6 +226,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
+        verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified");
+        verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
+                             entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
+                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {

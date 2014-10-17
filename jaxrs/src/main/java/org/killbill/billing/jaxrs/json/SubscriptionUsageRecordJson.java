@@ -30,10 +30,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SubscriptionUsageRecordJson {
 
+    @ApiModelProperty(dataType = "java.util.UUID", required = true)
     private final String subscriptionId;
+    @ApiModelProperty(required = true)
     private final List<UnitUsageRecordJson> unitUsageRecords;
 
     @JsonCreator

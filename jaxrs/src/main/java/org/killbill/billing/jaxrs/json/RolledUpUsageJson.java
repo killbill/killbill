@@ -27,9 +27,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class RolledUpUsageJson {
 
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String subscriptionId;
     private final LocalDate startDate;
     private final LocalDate endDate;

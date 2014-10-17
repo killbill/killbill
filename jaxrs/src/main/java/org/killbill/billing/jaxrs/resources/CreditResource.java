@@ -108,6 +108,10 @@ public class CreditResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
+        verifyNonNullOrEmpty(json, "CreditJson body should be specified");
+        verifyNonNullOrEmpty(json.getAccountId(), "CreditJson accountId needs to be set",
+                             json.getCreditAmount(), "CreditJson creditAmount needs to be set");
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);

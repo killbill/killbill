@@ -31,11 +31,13 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class InvoiceJson extends JsonBase {
 
     private final BigDecimal amount;
     private final String currency;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String invoiceId;
     private final LocalDate invoiceDate;
     private final LocalDate targetDate;
@@ -43,6 +45,7 @@ public class InvoiceJson extends JsonBase {
     private final BigDecimal balance;
     private final BigDecimal creditAdj;
     private final BigDecimal refundAdj;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String accountId;
     private final List<InvoiceItemJson> items;
     private final String bundleKeys;
