@@ -220,6 +220,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
+        verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified");
+        verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
+                             entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
+                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {

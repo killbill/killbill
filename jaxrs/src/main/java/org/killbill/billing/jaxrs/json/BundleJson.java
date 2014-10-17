@@ -35,7 +35,7 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class BundleJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
+    @ApiModelProperty(dataType = "java.util.UUID", required = true)
     protected final String accountId;
     @ApiModelProperty(dataType = "java.util.UUID")
     protected final String bundleId;

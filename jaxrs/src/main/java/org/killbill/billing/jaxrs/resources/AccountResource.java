@@ -317,6 +317,8 @@ public class AccountResource extends JaxRsResourceBase {
                                   @HeaderParam(HDR_REASON) final String reason,
                                   @HeaderParam(HDR_COMMENT) final String comment,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        verifyNonNullOrEmpty(json, "AccountJson body should be specified");
+
         final AccountData data = json.toAccountData();
         final UUID uuid = UUID.fromString(accountId);
         accountUserApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment, request));
@@ -410,6 +412,8 @@ public class AccountResource extends JaxRsResourceBase {
                                                     @HeaderParam(HDR_REASON) final String reason,
                                                     @HeaderParam(HDR_COMMENT) final String comment,
                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        verifyNonNullOrEmpty(json, "InvoiceEmailJson body should be specified");
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID accountId = UUID.fromString(accountIdString);
