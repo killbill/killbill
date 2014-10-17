@@ -16,6 +16,7 @@
 
 package org.killbill.billing.payment.provider;
 
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.retry.plugin.api.FailureCallResult;
@@ -29,17 +30,17 @@ public class DefaultPaymentControlProviderPlugin implements PaymentControlPlugin
     public static final String PLUGIN_NAME = "__DEFAULT_PAYMENT_CONTROL__";
 
     @Override
-    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
+    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentControlApiException {
         return new DefaultPriorPaymentControlResult(false, null, null, null);
     }
 
     @Override
-    public void onSuccessCall(final PaymentControlContext paymentControlContext) {
+    public void onSuccessCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) {
 
     }
 
     @Override
-    public FailureCallResult onFailureCall(final PaymentControlContext paymentControlContext) {
+    public FailureCallResult onFailureCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) {
         return new DefaultFailureCallResult(null);
     }
 }

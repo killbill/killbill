@@ -180,7 +180,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
-                    plugin.onSuccessCall(paymentControlContext);
+                    plugin.onSuccessCall(paymentControlContext, paymentStateContext.getProperties());
                 } catch (final PaymentControlApiException e) {
                     logger.warn("Plugin " + pluginName + " failed to complete onCompletion call for " + paymentControlContext.getPaymentExternalKey(), e);
                 }
@@ -222,7 +222,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
                 logger.warn("Skipping payment plugin control {} when fetching results", pluginName);
                 continue;
             }
-            prevResult = plugin.priorCall(inputPaymentControlContext);
+            prevResult = plugin.priorCall(inputPaymentControlContext, paymentStateContext.getProperties());
             if (prevResult.isAborted()) {
                 break;
             }
@@ -259,7 +259,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
-                    final FailureCallResult result = plugin.onFailureCall(paymentControlContext);
+                    final FailureCallResult result = plugin.onFailureCall(paymentControlContext, paymentStateContext.getProperties());
                     if (candidate == null) {
                         candidate = result.getNextRetryDate();
                     } else if (result.getNextRetryDate() != null) {
@@ -382,6 +382,26 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
         @Override
         public Iterable<PluginProperty> getPluginProperties() {
             return properties;
+        }
+
+        @Override
+        public String toString() {
+            return "DefaultPaymentControlContext{" +
+                   "account=" + account +
+                   ", paymentMethodId=" + paymentMethodId +
+                   ", attemptId=" + attemptId +
+                   ", paymentId=" + paymentId +
+                   ", paymentExternalKey='" + paymentExternalKey + '\'' +
+                   ", transactionId=" + transactionId +
+                   ", transactionExternalKey='" + transactionExternalKey + '\'' +
+                   ", transactionType=" + transactionType +
+                   ", amount=" + amount +
+                   ", currency=" + currency +
+                   ", processedAmount=" + processedAmount +
+                   ", processedCurrency=" + processedCurrency +
+                   ", isApiPayment=" + isApiPayment +
+                   ", properties=" + properties +
+                   '}';
         }
     }
 }

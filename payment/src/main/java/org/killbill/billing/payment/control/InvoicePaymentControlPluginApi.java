@@ -110,7 +110,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     @Override
-    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
+    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentControlApiException {
 
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
@@ -131,7 +131,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     @Override
-    public void onSuccessCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
+    public void onSuccessCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentControlApiException {
 
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
@@ -188,7 +188,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     @Override
-    public FailureCallResult onFailureCall(final PaymentControlContext paymentControlContext) throws
+    public FailureCallResult onFailureCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) throws
                                                                                               PaymentControlApiException {
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);

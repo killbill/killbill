@@ -17,6 +17,7 @@
 package org.killbill.billing.payment.provider;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.retry.plugin.api.FailureCallResult;
@@ -43,17 +44,17 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
     }
 
     @Override
-    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException{
+    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentControlApiException{
         return new DefaultPriorPaymentControlResult(isAborted, null, null, null);
     }
 
     @Override
-    public void onSuccessCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
+    public void onSuccessCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentControlApiException {
 
     }
 
     @Override
-    public FailureCallResult onFailureCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
+    public FailureCallResult onFailureCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentControlApiException {
         return new DefaultFailureCallResult(nextRetryDate);
     }
 }
