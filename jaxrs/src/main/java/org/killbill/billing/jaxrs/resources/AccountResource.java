@@ -588,6 +588,7 @@ public class AccountResource extends JaxRsResourceBase {
                                         @javax.ws.rs.core.Context final UriInfo uriInfo,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         verifyNonNullOrEmpty(json, "PaymentMethodJson body should be specified");
+        verifyNonNullOrEmpty(json.getPluginName(), "PaymentMethodJson pluginName should be specified");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
