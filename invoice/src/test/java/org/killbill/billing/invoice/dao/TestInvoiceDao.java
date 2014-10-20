@@ -1131,10 +1131,10 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoice(invoice2, true, context);
 
         final InvoiceModelDao savedInvoice1 = invoiceDao.getById(invoice1.getId(), context);
-        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice1), KillBillMoney.of(FIVE, savedInvoice1.getCurrency()));
+        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice1), KillBillMoney.of(TEN, savedInvoice1.getCurrency()));
 
         final InvoiceModelDao savedInvoice2 = invoiceDao.getById(invoice2.getId(), context);
-        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice2), KillBillMoney.of(TEN, savedInvoice2.getCurrency()));
+        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice2), KillBillMoney.of(FIVE, savedInvoice2.getCurrency()));
     }
 
     @Test(groups = "slow")

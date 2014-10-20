@@ -65,10 +65,15 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.PAYMENTS_PATH)
+@Api(value = JaxrsResource.PAYMENTS_PATH, description = "Operations on payments")
 public class PaymentResource extends JaxRsResourceBase {
 
     @Inject
@@ -87,6 +92,9 @@ public class PaymentResource extends JaxRsResourceBase {
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a payment by id", response = PaymentJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Payment not found")})
     public Response getPayment(@PathParam("paymentId") final String paymentIdStr,
                                @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -106,6 +114,8 @@ public class PaymentResource extends JaxRsResourceBase {
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Get payments", response = PaymentJson.class, responseContainer = "List")
+    @ApiResponses(value = {})
     public Response getPayments(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                 @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                 @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
@@ -147,6 +157,8 @@ public class PaymentResource extends JaxRsResourceBase {
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Search payments", response = PaymentJson.class, responseContainer = "List")
+    @ApiResponses(value = {})
     public Response searchPayments(@PathParam("searchKey") final String searchKey,
                                    @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                    @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
@@ -192,6 +204,9 @@ public class PaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Capture an existing authorization")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response captureAuthorization(final PaymentTransactionJson json,
                                          @PathParam("paymentId") final String paymentIdStr,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -200,6 +215,9 @@ public class PaymentResource extends JaxRsResourceBase {
                                          @HeaderParam(HDR_COMMENT) final String comment,
                                          @javax.ws.rs.core.Context final UriInfo uriInfo,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
+        verifyNonNullOrEmpty(json.getAmount(), "PaymentTransactionJson amount needs to be set");
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID paymentId = UUID.fromString(paymentIdStr);
@@ -218,6 +236,9 @@ public class PaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Refund an existing payment")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response refundPayment(final PaymentTransactionJson json,
                                   @PathParam("paymentId") final String paymentIdStr,
                                   @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -226,6 +247,9 @@ public class PaymentResource extends JaxRsResourceBase {
                                   @HeaderParam(HDR_COMMENT) final String comment,
                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
+        verifyNonNullOrEmpty(json.getAmount(), "PaymentTransactionJson amount needs to be set");
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID paymentId = UUID.fromString(paymentIdStr);
@@ -244,6 +268,9 @@ public class PaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Void an existing payment")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response voidPayment(final PaymentTransactionJson json,
                                 @PathParam("paymentId") final String paymentIdStr,
                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -269,6 +296,9 @@ public class PaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Record a chargeback")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response chargebackPayment(final PaymentTransactionJson json,
                                       @PathParam("paymentId") final String paymentIdStr,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -277,6 +307,9 @@ public class PaymentResource extends JaxRsResourceBase {
                                       @HeaderParam(HDR_COMMENT) final String comment,
                                       @javax.ws.rs.core.Context final UriInfo uriInfo,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
+        verifyNonNullOrEmpty(json.getAmount(), "PaymentTransactionJson amount needs to be set");
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID paymentId = UUID.fromString(paymentIdStr);

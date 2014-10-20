@@ -110,7 +110,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     @Override
-    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
+    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentControlApiException {
 
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
@@ -124,14 +124,14 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             case REFUND:
                 return getPluginRefundResult(paymentControlContext, internalContext);
             case CHARGEBACK:
-                return new DefaultPriorPaymentControlResult(false, paymentControlContext.getAmount());
+                return new DefaultPriorPaymentControlResult(false, paymentControlContext.getAmount(), null, null);
             default:
                 throw new IllegalStateException("Unexpected transactionType " + transactionType);
         }
     }
 
     @Override
-    public void onSuccessCall(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
+    public void onSuccessCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentControlApiException {
 
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
@@ -188,7 +188,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     @Override
-    public FailureCallResult onFailureCall(final PaymentControlContext paymentControlContext) throws
+    public FailureCallResult onFailureCall(final PaymentControlContext paymentControlContext, Iterable<PluginProperty> properties) throws
                                                                                               PaymentControlApiException {
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
@@ -209,7 +209,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public void process_AUTO_PAY_OFF_removal(final Account account, final InternalCallContext internalCallContext) {
         final List<PluginAutoPayOffModelDao> entries = controlDao.getAutoPayOffEntry(account.getId());
         for (PluginAutoPayOffModelDao cur : entries) {
-            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, account.getId(), cur.getAttemptId(), PLUGIN_NAME, clock.getUTCNow());
+            // TODO In theory we should pass not only PLUGIN_NAME, but also all the plugin list associated which the original call
+            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, account.getId(), cur.getAttemptId(), ImmutableList.<String>of(PLUGIN_NAME), clock.getUTCNow());
         }
         controlDao.removeAutoPayOffEntry(account.getId());
     }
@@ -240,7 +241,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                      " aborted : invoice balance is = " + invoice.getBalance() +
                                                      ", requested payment amount is = " + paymentControlPluginContext.getAmount());
             } else {
-                return new DefaultPriorPaymentControlResult(isAborted, requestedAmount);
+                return new DefaultPriorPaymentControlResult(isAborted, requestedAmount, null, null);
             }
         } catch (InvoiceApiException e) {
             throw new PaymentControlApiException(e);
@@ -273,7 +274,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                  " aborted : invoice item sum amount is " + amountToBeRefunded +
                                                  ", requested refund amount is = " + paymentControlPluginContext.getAmount());
         } else {
-            return new DefaultPriorPaymentControlResult(isAborted, amountToBeRefunded);
+            return new DefaultPriorPaymentControlResult(isAborted, amountToBeRefunded, null, null);
         }
     }
 

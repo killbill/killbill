@@ -177,7 +177,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private List<InvoiceItem> generateInAdvanceInvoiceItems(final UUID accountId, final UUID invoiceId, final BillingEventSet eventSet,
                                                             @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
                                                             final Currency targetCurrency) throws InvoiceApiException {
-        final AccountItemTree accountItemTree = new AccountItemTree(accountId);
+        final AccountItemTree accountItemTree = new AccountItemTree(accountId, invoiceId);
         if (existingInvoices != null) {
             for (final Invoice invoice : existingInvoices) {
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {

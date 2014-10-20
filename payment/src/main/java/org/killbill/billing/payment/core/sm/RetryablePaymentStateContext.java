@@ -17,6 +17,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -38,15 +39,15 @@ import com.google.common.collect.Iterables;
 public class RetryablePaymentStateContext extends PaymentStateContext {
 
     private DateTime retryDate;
-    private String pluginName;
+    private List<String> paymentControlPluginNames;
     private Payment result;
 
-    public RetryablePaymentStateContext(@Nullable final String pluginName, final boolean isApiPayment, @Nullable final UUID paymentId, final String paymentExternalKey,
+    public RetryablePaymentStateContext(@Nullable final List<String> paymentControlPluginNames, final boolean isApiPayment, @Nullable final UUID paymentId, final String paymentExternalKey,
                                         @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
                                         final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
                                         final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext, final CallContext callContext) {
         super(isApiPayment, paymentId, null, null, paymentExternalKey, paymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, null, properties, internalCallContext, callContext);
-        this.pluginName = pluginName;
+        this.paymentControlPluginNames = paymentControlPluginNames;
     }
 
     public DateTime getRetryDate() {
@@ -57,12 +58,8 @@ public class RetryablePaymentStateContext extends PaymentStateContext {
         this.retryDate = retryDate;
     }
 
-    public String getPluginName() {
-        return pluginName;
-    }
-
-    public void setPluginName(final String pluginName) {
-        this.pluginName = pluginName;
+    public List<String> getPaymentControlPluginNames() {
+        return paymentControlPluginNames;
     }
 
     public Payment getResult() {
@@ -75,6 +72,10 @@ public class RetryablePaymentStateContext extends PaymentStateContext {
 
     public void setAmount(final BigDecimal adjustedAmount) {
         this.amount = adjustedAmount;
+    }
+
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
     }
 
     public PaymentTransaction getCurrentTransaction() {

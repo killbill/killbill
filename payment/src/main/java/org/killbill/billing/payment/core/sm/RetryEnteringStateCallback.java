@@ -51,7 +51,7 @@ public class RetryEnteringStateCallback implements EnteringStateCallback {
 
         if ("RETRIED".equals(state.getName())) {
             retryServiceScheduler.scheduleRetry(ObjectType.PAYMENT_ATTEMPT, attempt.getId(), attempt.getId(),
-                                                paymentStateContext.getPluginName(), paymentStateContext.getRetryDate());
+                                                paymentStateContext.getPaymentControlPluginNames(), paymentStateContext.getRetryDate());
         }
     }
 }

@@ -47,13 +47,13 @@ public class PaymentStateContext {
     protected PaymentTransactionInfoPlugin paymentInfoPlugin;
     protected BigDecimal amount;
     protected String paymentExternalKey;
+    protected Currency currency;
 
     // Can be updated later via paymentTransactionModelDao (e.g. for auth or purchase)
     protected final UUID paymentId;
     protected final UUID transactionId;
     protected final String paymentTransactionExternalKey;
     protected final Account account;
-    protected final Currency currency;
     protected final TransactionType transactionType;
     protected final boolean shouldLockAccountAndDispatch;
     protected final Iterable<PluginProperty> properties;

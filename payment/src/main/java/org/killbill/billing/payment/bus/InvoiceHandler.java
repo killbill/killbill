@@ -40,10 +40,12 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
@@ -54,15 +56,18 @@ public class InvoiceHandler {
     private final PluginControlledPaymentProcessor pluginControlledPaymentProcessor;
     private final NonEntityDao nonEntityDao;
     private final CacheControllerDispatcher controllerDispatcher;
+    private final PaymentConfig paymentConfig;
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceHandler.class);
 
     @Inject
-    public InvoiceHandler(final AccountInternalApi accountApi,
+    public InvoiceHandler(final PaymentConfig paymentConfig,
+                          final AccountInternalApi accountApi,
                           final PluginControlledPaymentProcessor pluginControlledPaymentProcessor,
                           final NonEntityDao nonEntityDao,
                           final InternalCallContextFactory internalCallContextFactory,
                           final CacheControllerDispatcher controllerDispatcher) {
+        this.paymentConfig = paymentConfig;
         this.accountApi = accountApi;
         this.internalCallContextFactory = internalCallContextFactory;
         this.pluginControlledPaymentProcessor = pluginControlledPaymentProcessor;
@@ -88,8 +93,9 @@ public class InvoiceHandler {
             final CallContext callContext = internalContext.toCallContext(nonEntityDao.retrieveIdFromObject(internalContext.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
 
             final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
+            final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames() != null ? paymentConfig.getPaymentControlPluginNames() : ImmutableList.of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
             pluginControlledPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-                                                            properties, InvoicePaymentControlPluginApi.PLUGIN_NAME, callContext, internalContext);
+                                                            properties, paymentControlPluginNames, callContext, internalContext);
         } catch (final AccountApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {

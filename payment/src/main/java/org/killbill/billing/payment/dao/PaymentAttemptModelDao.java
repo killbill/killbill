@@ -31,7 +31,12 @@ import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+
 public class PaymentAttemptModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
+
+    private static final Joiner JOINER = Joiner.on(",");
 
     private UUID accountId;
     private UUID paymentMethodId;
@@ -66,9 +71,9 @@ public class PaymentAttemptModelDao extends EntityModelDaoBase implements Entity
 
     public PaymentAttemptModelDao(final UUID accountId, final UUID paymentMethodId, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                   final String paymentExternalKey, final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType, final String stateName,
-                                  final BigDecimal amount, final Currency currency, final String pluginName,  final byte [] pluginProperties) {
+                                  final BigDecimal amount, final Currency currency, final List<String> paymentControlPluginNames,  final byte [] pluginProperties) {
         this(accountId, paymentMethodId, UUID.randomUUID(), createdDate, updatedDate, paymentExternalKey, transactionId, transactionExternalKey, transactionType, stateName,
-             amount, currency, pluginName, pluginProperties);
+             amount, currency, toPluginNames(paymentControlPluginNames), pluginProperties);
     }
 
     public String getPaymentExternalKey() {
@@ -159,6 +164,14 @@ public class PaymentAttemptModelDao extends EntityModelDaoBase implements Entity
         this.currency = currency;
     }
 
+    public final List<String> toPaymentControlPluginNames() {
+        if (pluginName == null) {
+            return ImmutableList.<String>of();
+        }
+        final String [] parts = pluginName.split(",");
+        return ImmutableList.<String>copyOf(parts);
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -233,4 +246,7 @@ public class PaymentAttemptModelDao extends EntityModelDaoBase implements Entity
         return TableName.PAYMENT_ATTEMPT_HISTORY;
     }
 
+    private static final String toPluginNames(final List<String> paymentControlPluginNames) {
+        return paymentControlPluginNames == null || paymentControlPluginNames.size() == 0 ? null : JOINER.join(paymentControlPluginNames);
+    }
 }

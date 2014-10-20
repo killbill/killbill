@@ -73,7 +73,7 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
                                                                                   utcNow, utcNow, stateContext.getPaymentExternalKey(), null,
                                                                                   stateContext.paymentTransactionExternalKey, transactionType, initialState.getName(),
                                                                                   stateContext.getAmount(), stateContext.getCurrency(),
-                                                                                  stateContext.getPluginName(), serializedProperties);
+                                                                                  stateContext.getPaymentControlPluginNames(), serializedProperties);
 
                 retryablePaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(attempt, stateContext.internalCallContext);
                 stateContext.setAttemptId(attempt.getId());

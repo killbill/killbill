@@ -21,7 +21,7 @@
     <parent>
         <artifactId>killbill-profiles</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.11.13-SNAPSHOT</version>
+        <version>0.11.14-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-profiles-killbill</artifactId>
@@ -62,6 +62,10 @@
         <dependency>
             <groupId>com.sun.jersey.contribs</groupId>
             <artifactId>jersey-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.wordnik</groupId>
+            <artifactId>swagger-jersey-jaxrs_2.10</artifactId>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -204,6 +208,10 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-platform-osgi-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-osgi-bundles-lib-killbill</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>

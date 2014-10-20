@@ -47,11 +47,15 @@ import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.SECURITY_PATH)
+@Api(value = JaxrsResource.SECURITY_PATH, description = "Information about RBAC")
 public class SecurityResource extends JaxRsResourceBase {
 
     private final SecurityApi securityApi;
@@ -74,6 +78,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @GET
     @Path("/permissions")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "List user permissions", response = String.class, responseContainer = "List")
+    @ApiResponses(value = {})
     public Response getCurrentUserPermissions(@javax.ws.rs.core.Context final HttpServletRequest request) {
         final Set<Permission> permissions = securityApi.getCurrentUserPermissions(context.createContext(request));
         final List<String> json = ImmutableList.<String>copyOf(Iterables.<Permission, String>transform(permissions, Functions.toStringFunction()));
@@ -84,6 +90,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @GET
     @Path("/subject")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Get user information", response = SubjectJson.class)
+    @ApiResponses(value = {})
     public Response getCurrentUserSubject(@javax.ws.rs.core.Context final HttpServletRequest request) {
         final Subject subject = SecurityUtils.getSubject();
         final SubjectJson subjectJson = new SubjectJson(subject);

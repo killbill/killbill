@@ -31,10 +31,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class PaymentJson extends JsonBase {
 
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String accountId;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String paymentId;
     private final String paymentNumber;
     private final String paymentExternalKey;
@@ -44,6 +47,7 @@ public class PaymentJson extends JsonBase {
     private final BigDecimal refundedAmount;
     private final BigDecimal creditedAmount;
     private final String currency;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String paymentMethodId;
     private final List<? extends PaymentTransactionJson> transactions;
 

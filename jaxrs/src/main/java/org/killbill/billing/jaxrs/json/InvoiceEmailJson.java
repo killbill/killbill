@@ -19,9 +19,11 @@ package org.killbill.billing.jaxrs.json;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class InvoiceEmailJson extends JsonBase {
 
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String accountId;
     private final boolean isNotifiedForInvoices;
 

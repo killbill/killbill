@@ -18,6 +18,7 @@
 
 package org.killbill.billing.payment.retry;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -35,5 +36,5 @@ public interface RetryService {
 
     public String getQueueName();
 
-    public void retryPaymentTransaction(final UUID attemptId, String pluginName, final InternalCallContext context);
+    public void retryPaymentTransaction(final UUID attemptId, List<String> paymentControlPluginNames, final InternalCallContext context);
 }

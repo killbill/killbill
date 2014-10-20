@@ -48,14 +48,16 @@ import com.google.common.collect.Iterables;
 public class AccountItemTree {
 
     private final UUID accountId;
+    private final UUID targetInvoiceId;
     private final Map<UUID, SubscriptionItemTree> subscriptionItemTree;
     private final List<InvoiceItem> allExistingItems;
     private List<InvoiceItem> pendingItemAdj;
 
     private boolean isBuilt;
 
-    public AccountItemTree(final UUID accountId) {
+    public AccountItemTree(final UUID accountId, final UUID targetInvoiceId) {
         this.accountId = accountId;
+        this.targetInvoiceId = targetInvoiceId;
         this.subscriptionItemTree = new HashMap<UUID, SubscriptionItemTree>();
         this.isBuilt = false;
         this.allExistingItems = new LinkedList<InvoiceItem>();
@@ -123,7 +125,7 @@ public class AccountItemTree {
         }
 
         if (!subscriptionItemTree.containsKey(subscriptionId)) {
-            subscriptionItemTree.put(subscriptionId, new SubscriptionItemTree(subscriptionId));
+            subscriptionItemTree.put(subscriptionId, new SubscriptionItemTree(subscriptionId, targetInvoiceId));
         }
         final SubscriptionItemTree tree = subscriptionItemTree.get(subscriptionId);
         tree.addItem(existingItem);
@@ -145,7 +147,7 @@ public class AccountItemTree {
             final UUID subscriptionId = getSubscriptionId(item, null);
             SubscriptionItemTree tree = subscriptionItemTree.get(subscriptionId);
             if (tree == null) {
-                tree = new SubscriptionItemTree(subscriptionId);
+                tree = new SubscriptionItemTree(subscriptionId, targetInvoiceId);
                 subscriptionItemTree.put(subscriptionId, tree);
             }
             tree.mergeProposedItem(item);

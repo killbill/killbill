@@ -77,6 +77,10 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.invoiceItems.addAll(invoiceItems);
     }
 
+    public void addInvoiceItem(final InvoiceItemModelDao invoiceItem) {
+        this.invoiceItems.add(invoiceItem);
+    }
+
     public List<InvoiceItemModelDao> getInvoiceItems() {
         return invoiceItems;
     }

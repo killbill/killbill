@@ -17,6 +17,8 @@
 
 package org.killbill.billing.util.glue;
 
+import java.lang.reflect.Method;
+
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.killbill.billing.KillbillApi;
@@ -25,6 +27,7 @@ import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.killbill.commons.profiling.ProfilingFeature.ProfilingFeatureType;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 
 public class KillbillApiAopModule extends AbstractModule {
@@ -33,7 +36,7 @@ public class KillbillApiAopModule extends AbstractModule {
     protected void configure() {
 
         bindInterceptor(Matchers.subclassesOf(KillbillApi.class),
-                        Matchers.any(),
+                        Matchers.not(SYNTHETIC_METHOD_MATCHER),
                         new ProfilingMethodInterceptor());
     }
 
@@ -51,4 +54,21 @@ public class KillbillApiAopModule extends AbstractModule {
             });
         }
     }
+
+    private static final Matcher<Method> SYNTHETIC_METHOD_MATCHER = new Matcher<Method>() {
+        @Override
+        public boolean matches(final Method method) {
+            return method.isSynthetic();
+        }
+
+        @Override
+        public Matcher<Method> and(final Matcher<? super Method> other) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matcher<Method> or(final Matcher<? super Method> other) {
+            throw new UnsupportedOperationException();
+        }
+    };
 }

@@ -34,15 +34,18 @@ import com.google.common.base.Preconditions;
 
 public class ItemsNodeInterval extends NodeInterval {
 
+    private final UUID targetInvoiceId;
     private ItemsInterval items;
 
-    public ItemsNodeInterval() {
-        this.items = new ItemsInterval(this);
+    public ItemsNodeInterval(final UUID targetInvoiceId) {
+        this.items = new ItemsInterval(this, targetInvoiceId);
+        this.targetInvoiceId = targetInvoiceId;
     }
 
-    public ItemsNodeInterval(final NodeInterval parent, final Item item) {
+    public ItemsNodeInterval(final NodeInterval parent, final UUID targetInvoiceId, final Item item) {
         super(parent, item.getStartDate(), item.getEndDate());
-        this.items = new ItemsInterval(this, item);
+        this.items = new ItemsInterval(this, targetInvoiceId, item);
+        this.targetInvoiceId = targetInvoiceId;
     }
 
     @JsonIgnore

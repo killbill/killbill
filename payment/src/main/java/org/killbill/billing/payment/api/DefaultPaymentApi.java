@@ -35,6 +35,7 @@ import org.killbill.billing.payment.core.PluginControlledPaymentProcessor;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,13 +48,15 @@ public class DefaultPaymentApi implements PaymentApi {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentApi.class);
 
+    private final PaymentConfig paymentConfig;
     private final PaymentProcessor paymentProcessor;
     private final PaymentMethodProcessor paymentMethodProcessor;
     private final PluginControlledPaymentProcessor pluginControlledPaymentProcessor;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultPaymentApi(final PaymentProcessor paymentProcessor, final PaymentMethodProcessor paymentMethodProcessor, final PluginControlledPaymentProcessor pluginControlledPaymentProcessor, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultPaymentApi(final PaymentConfig paymentConfig, final PaymentProcessor paymentProcessor, final PaymentMethodProcessor paymentMethodProcessor, final PluginControlledPaymentProcessor pluginControlledPaymentProcessor, final InternalCallContextFactory internalCallContextFactory) {
+        this.paymentConfig = paymentConfig;
         this.paymentProcessor = paymentProcessor;
         this.paymentMethodProcessor = paymentMethodProcessor;
         this.pluginControlledPaymentProcessor = pluginControlledPaymentProcessor;
@@ -137,7 +140,7 @@ public class DefaultPaymentApi implements PaymentApi {
                                            paymentMethodId :
                                            paymentMethodProcessor.createOrGetExternalPaymentMethod(UUID.randomUUID().toString(), account, properties, callContext, internalCallContext);
         return pluginControlledPaymentProcessor.createPurchase(IS_API_PAYMENT, account, nonNulPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
-                                                               properties, paymentOptions.getPaymentControlPluginName(), callContext, internalCallContext);
+                                                               properties, toPaymentControlPluginNames(paymentOptions), callContext, internalCallContext);
 
     }
 
@@ -192,7 +195,7 @@ public class DefaultPaymentApi implements PaymentApi {
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         return pluginControlledPaymentProcessor.createRefund(IS_API_PAYMENT, account, paymentId, amount, currency, paymentTransactionExternalKey,
-                                                             properties, paymentOptions.getPaymentControlPluginName(), callContext, internalCallContext);
+                                                             properties, toPaymentControlPluginNames(paymentOptions), callContext, internalCallContext);
 
     }
 
@@ -259,7 +262,7 @@ public class DefaultPaymentApi implements PaymentApi {
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         return pluginControlledPaymentProcessor.createChargeback(account, paymentId, paymentTransactionExternalKey, amount, currency,
-                                                                 paymentOptions.getPaymentControlPluginName(), callContext, internalCallContext);
+                                                                 toPaymentControlPluginNames(paymentOptions), callContext, internalCallContext);
     }
 
     @Override
@@ -421,6 +424,10 @@ public class DefaultPaymentApi implements PaymentApi {
             }
             log.info(logLine.toString());
         }
+    }
+
+    private List<String> toPaymentControlPluginNames(final PaymentOptions paymentOptions) {
+        return paymentOptions.getPaymentControlPluginNames() != null ? paymentOptions.getPaymentControlPluginNames() : paymentConfig.getPaymentControlPluginNames();
     }
 
     private void checkNotNullParameter(final Object parameter, final String parameterName) throws PaymentApiException {

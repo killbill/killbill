@@ -26,13 +26,18 @@ import org.killbill.billing.util.customfield.CustomField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class CustomFieldJson extends JsonBase {
 
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String customFieldId;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String objectId;
     private final ObjectType objectType;
+    @ApiModelProperty(required = true)
     private final String name;
+    @ApiModelProperty(required = true)
     private final String value;
 
     @JsonCreator

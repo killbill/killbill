@@ -43,13 +43,12 @@ import com.google.common.collect.Ordering;
  */
 public class SubscriptionItemTree {
 
-    private boolean isBuilt;
-
+    private final UUID targetInvoiceId;
     private final UUID subscriptionId;
+
     private ItemsNodeInterval root;
-
+    private boolean isBuilt;
     private List<Item> items;
-
     private List<InvoiceItem> existingFixedItems;
     private Map<LocalDate, InvoiceItem> remainingFixedItems;
     private List<InvoiceItem> pendingItemAdj;
@@ -74,9 +73,10 @@ public class SubscriptionItemTree {
         }
     };
 
-    public SubscriptionItemTree(final UUID subscriptionId) {
+    public SubscriptionItemTree(final UUID subscriptionId, final UUID targetInvoiceId) {
         this.subscriptionId = subscriptionId;
-        this.root = new ItemsNodeInterval();
+        this.targetInvoiceId = targetInvoiceId;
+        this.root = new ItemsNodeInterval(targetInvoiceId);
         this.items = new LinkedList<Item>();
         this.existingFixedItems = new LinkedList<InvoiceItem>();
         this.remainingFixedItems = new HashMap<LocalDate, InvoiceItem>();
@@ -108,10 +108,10 @@ public class SubscriptionItemTree {
         if (!isBuilt) {
             build();
         }
-        root = new ItemsNodeInterval();
+        root = new ItemsNodeInterval(targetInvoiceId);
         for (Item item : items) {
             Preconditions.checkState(item.getAction() == ItemAction.ADD);
-            root.addExistingItem(new ItemsNodeInterval(root, new Item(item, reverse ? ItemAction.CANCEL : ItemAction.ADD)));
+            root.addExistingItem(new ItemsNodeInterval(root, targetInvoiceId,  new Item(item, reverse ? ItemAction.CANCEL : ItemAction.ADD)));
         }
         items.clear();
         isBuilt = false;
@@ -133,11 +133,11 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
-                root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
+                root.addExistingItem(new ItemsNodeInterval(root, targetInvoiceId, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD)));
                 break;
 
             case REPAIR_ADJ:
-                root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, ItemAction.CANCEL)));
+                root.addExistingItem(new ItemsNodeInterval(root, targetInvoiceId, new Item(invoiceItem, targetInvoiceId, ItemAction.CANCEL)));
                 break;
 
             case FIXED:
@@ -163,9 +163,9 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
-                final boolean result = root.addProposedItem(new ItemsNodeInterval(root, new Item(invoiceItem, ItemAction.ADD)));
+                final boolean result = root.addProposedItem(new ItemsNodeInterval(root, targetInvoiceId, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD)));
                 if (!result) {
-                    items.add(new Item(invoiceItem, ItemAction.ADD));
+                    items.add(new Item(invoiceItem, targetInvoiceId, ItemAction.ADD));
                 }
                 break;
 

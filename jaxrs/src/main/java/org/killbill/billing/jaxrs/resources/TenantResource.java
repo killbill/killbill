@@ -57,11 +57,16 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.TENANTS_PATH)
+@Api(value = JaxrsResource.TENANTS_PATH, description = "Operations on tenants")
 public class TenantResource extends JaxRsResourceBase {
 
     private final TenantUserApi tenantApi;
@@ -84,6 +89,9 @@ public class TenantResource extends JaxRsResourceBase {
     @GET
     @Path("/{tenantId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a tenant by id", response = TenantJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied"),
+                           @ApiResponse(code = 404, message = "Tenant not found")})
     public Response getTenant(@PathParam("tenantId") final String tenantId) throws TenantApiException {
         final Tenant tenant = tenantApi.getTenantById(UUID.fromString(tenantId));
         return Response.status(Status.OK).entity(new TenantJson(tenant)).build();
@@ -92,6 +100,8 @@ public class TenantResource extends JaxRsResourceBase {
     @Timed
     @GET
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a tenant by its API key", response = TenantJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Tenant not found")})
     public Response getTenantByApiKey(@QueryParam(QUERY_API_KEY) final String externalKey) throws TenantApiException {
         final Tenant tenant = tenantApi.getTenantByApiKey(externalKey);
         return Response.status(Status.OK).entity(new TenantJson(tenant)).build();
@@ -101,12 +111,18 @@ public class TenantResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Create a tenant")
+    @ApiResponses(value = {@ApiResponse(code = 500, message = "Tenant already exists")})
     public Response createTenant(final TenantJson json,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+        verifyNonNullOrEmpty(json, "TenantJson body should be specified");
+        verifyNonNullOrEmpty(json.getApiKey(), "TenantJson apiKey needs to be set",
+                             json.getApiSecret(), "TenantJson apiSecret needs to be set");
+
         final TenantData data = json.toTenantData();
         final Tenant tenant = tenantApi.createTenant(data, context.createContext(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId());
@@ -117,6 +133,8 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Create a push notification")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response registerPushNotificationCallback(@PathParam("tenantId") final String tenantId,
                                                      @QueryParam(QUERY_NOTIFICATION_CALLBACK) final String notificationCallback,
                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -133,6 +151,8 @@ public class TenantResource extends JaxRsResourceBase {
     @GET
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a push notification", response = TenantKeyJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response getPushNotificationCallbacks(@javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
 
         final TenantContext tenatContext = context.createContext(request);
@@ -144,6 +164,8 @@ public class TenantResource extends JaxRsResourceBase {
     @Timed
     @DELETE
     @Path("/REGISTER_NOTIFICATION_CALLBACK")
+    @ApiOperation(value = "Delete a push notification")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response deletePushNotificationCallbacks(@PathParam("tenantId") final String tenantId,
                                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                     @HeaderParam(HDR_REASON) final String reason,

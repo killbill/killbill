@@ -1,0 +1,50 @@
+#api_info {
+  display: none;
+}
+
+/*
+#header {
+  display: none;
+}
+
+.footer {
+  display: none;
+}
+*/
+
+#kb-logo-container {
+  max-width: 175px;
+  margin-left: -220px;
+  margin-top: -10px;
+  float: left;
+}
+
+img#kb-logo {
+  max-width: 100%;
+  height: auto;
+  width: auto\9; /* ie8 */
+}
+
+.swagger-section .swagger-ui-wrap {
+  height: 24px;
+}
+
+.swagger-section .swagger-ui-wrap {
+  font-family: "Roboto Light";
+}
+
+.swagger-section .swagger-ui-wrap ul#resources li.resource div.heading h2 {
+  font-family: "Roboto Light";
+}
+
+.swagger-section #header {
+  background-color: transparent;
+}
+
+.swagger-section #header form#api_selector {
+  float: left;
+}
+
+.swagger-section #header form#api_selector .input a#explore {
+  background-color: #e44c3a;
+}

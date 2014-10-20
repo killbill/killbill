@@ -22,11 +22,14 @@ import org.joda.time.DateTimeZone;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SessionJson {
 
     private final String id;
+    @ApiModelProperty(dataType = "org.joda.time.DateTime")
     private final DateTime startDate;
+    @ApiModelProperty(dataType = "org.joda.time.DateTime")
     private final DateTime lastAccessDate;
     private final Long timeout;
     private final String host;

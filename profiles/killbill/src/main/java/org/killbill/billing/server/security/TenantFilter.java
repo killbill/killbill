@@ -130,6 +130,8 @@ public class TenantFilter implements Filter {
                     ("/1.0/kb/tenants".equals(path) && "POST".equals(httpServletRequest.getMethod())) ||
                     // Metrics servlets
                     (KillbillGuiceListener.METRICS_SERVLETS_PATHS.contains(path) && "GET".equals(httpServletRequest.getMethod())) ||
+                    // See KillBillShiroWebModule#CorsBasicHttpAuthenticationFilter
+                    "OPTIONS".equals(httpServletRequest.getMethod()) ||
                     // Welcome screen, static resources, etc.
                     (!path.startsWith("/1.0") && "GET".equals(httpServletRequest.getMethod()))
                     ) {

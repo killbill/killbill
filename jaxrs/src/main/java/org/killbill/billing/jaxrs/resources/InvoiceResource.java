@@ -63,6 +63,7 @@ import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.InvoiceJson;
 import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
+import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
@@ -90,11 +91,16 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 @Path(JaxrsResource.INVOICES_PATH)
+@Api(value = JaxrsResource.INVOICES_PATH, description = "Operations on invoices")
 public class InvoiceResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceResource.class);
@@ -123,6 +129,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve an invoice by id", response = InvoiceJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied"),
+                           @ApiResponse(code = 404, message = "Invoice not found")})
     public Response getInvoice(@PathParam("invoiceId") final String invoiceId,
                                @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -143,6 +152,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceNumber:" + NUMBER_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve an invoice by number", response = InvoiceJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice not found")})
     public Response getInvoiceByNumber(@PathParam("invoiceNumber") final Integer invoiceNumber,
                                        @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -163,6 +174,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/html")
     @Produces(TEXT_HTML)
+    @ApiOperation(value = "Render an invoice as HTML", response = String.class)
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice not found")})
     public Response getInvoiceAsHTML(@PathParam("invoiceId") final String invoiceId,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, IOException, AccountApiException {
         return Response.status(Status.OK).entity(invoiceApi.getInvoiceAsHTML(UUID.fromString(invoiceId), context.createContext(request))).build();
@@ -172,6 +185,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "List invoices", response = InvoiceJson.class, responseContainer = "List")
+    @ApiResponses(value = {})
     public Response getInvoices(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                 @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                 @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final Boolean withItems,
@@ -202,6 +217,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Search invoices", response = InvoiceJson.class, responseContainer = "List")
+    @ApiResponses(value = {})
     public Response searchInvoices(@PathParam("searchKey") final String searchKey,
                                    @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                    @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
@@ -233,6 +250,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Trigger an invoice generation", response = InvoiceJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
     public Response createFutureInvoice(@QueryParam(QUERY_ACCOUNT_ID) final String accountId,
                                         @QueryParam(QUERY_TARGET_DATE) final String targetDateTime,
                                         @QueryParam(QUERY_DRY_RUN) @DefaultValue("false") final Boolean dryRun,
@@ -258,6 +277,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/{invoiceId:" + UUID_PATTERN + "}" + "/{invoiceItemId:" + UUID_PATTERN + "}/cba")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Delete a CBA item")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id, invoice id or invoice item id supplied"),
+                           @ApiResponse(code = 404, message = "Account or invoice not found")})
     public Response deleteCBA(@PathParam("invoiceId") final String invoiceId,
                               @PathParam("invoiceItemId") final String invoiceItemId,
                               @QueryParam(QUERY_ACCOUNT_ID) final String accountId,
@@ -279,6 +301,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/{invoiceId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Adjust an invoice item")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id, invoice id or invoice item id supplied"),
+                           @ApiResponse(code = 404, message = "Invoice not found")})
     public Response adjustInvoiceItem(final InvoiceItemJson json,
                                       @PathParam("invoiceId") final String invoiceId,
                                       @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
@@ -287,6 +312,10 @@ public class InvoiceResource extends JaxRsResourceBase {
                                       @HeaderParam(HDR_COMMENT) final String comment,
                                       @javax.ws.rs.core.Context final HttpServletRequest request,
                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
+        verifyNonNullOrEmpty(json, "InvoiceItemJson body should be specified");
+        verifyNonNullOrEmpty(json.getAccountId(), "InvoiceItemJson accountId needs to be set",
+                             json.getInvoiceItemId(), "InvoiceItemJson invoiceItemId needs to be set");
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID accountId = UUID.fromString(json.getAccountId());
@@ -316,6 +345,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/" + CHARGES + "/{accountId:" + UUID_PATTERN + "}")
+    @ApiOperation(value = "Create external charge(s)", response = InvoiceItemJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response createExternalCharges(final Iterable<InvoiceItemJson> externalChargesJson,
                                           @PathParam("accountId") final String accountId,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
@@ -384,6 +416,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve payments associated with an invoice", response = InvoicePaymentJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied"),
+                           @ApiResponse(code = 404, message = "Invoice not found")})
     public Response getPayments(@PathParam("invoiceId") final String invoiceId,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
@@ -411,6 +446,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
+    @ApiOperation(value = "Trigger a payment for invoice")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or invoice id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response createInstantPayment(final InvoicePaymentJson payment,
                                          @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -419,6 +457,11 @@ public class InvoiceResource extends JaxRsResourceBase {
                                          @HeaderParam(HDR_COMMENT) final String comment,
                                          @javax.ws.rs.core.Context final HttpServletRequest request,
                                          @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, PaymentApiException {
+        verifyNonNullOrEmpty(payment, "InvoicePaymentJson body should be specified");
+        verifyNonNullOrEmpty(payment.getAccountId(), "InvoicePaymentJson accountId needs to be set",
+                             payment.getTargetInvoiceId(), "InvoicePaymentJson targetInvoiceId needs to be set",
+                             payment.getPurchasedAmount(), "InvoicePaymentJson purchasedAmount needs to be set");
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
@@ -434,6 +477,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Trigger an email notification for invoice")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied"),
+                           @ApiResponse(code = 404, message = "Account or invoice not found")})
     public Response triggerEmailNotificationForInvoice(@PathParam("invoiceId") final String invoiceId,
                                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                        @HeaderParam(HDR_REASON) final String reason,
@@ -458,6 +504,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve invoice custom fields", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
@@ -469,6 +517,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add custom fields to invoice")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                        final List<CustomFieldJson> customFields,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -485,6 +535,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Remove custom fields from invoice")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                        @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -499,6 +551,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve invoice tags", response = TagJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied"),
+                           @ApiResponse(code = 404, message = "Invoice not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final String invoiceIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
@@ -514,6 +569,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add tags to invoice")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -530,6 +587,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Remove tags from invoice")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,

@@ -17,6 +17,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
@@ -81,23 +82,23 @@ public class PluginControlledPaymentAutomatonRunner extends PaymentAutomatonRunn
     public Payment run(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
                        @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
                        @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                       final Iterable<PluginProperty> properties, @Nullable final String pluginName,
+                       final Iterable<PluginProperty> properties, @Nullable final List<String> paymentControlPluginNames,
                        final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return run(retrySMHelper.getInitialState(), isApiPayment, transactionType, account, paymentMethodId, paymentId, paymentExternalKey, paymentTransactionExternalKey,
-                   amount, currency, properties, pluginName, callContext, internalCallContext);
+                   amount, currency, properties, paymentControlPluginNames, callContext, internalCallContext);
     }
 
     public Payment run(final State state, final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
                        @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
                        @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                       final Iterable<PluginProperty> properties, @Nullable final String pluginName,
+                       final Iterable<PluginProperty> properties, @Nullable final List<String> paymentControlPluginNames,
                        final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
 
         final RetryablePaymentStateContext paymentStateContext = createContext(isApiPayment, transactionType, account, paymentMethodId,
                                                                                      paymentId, paymentExternalKey,
                                                                                      paymentTransactionExternalKey,
                                                                                      amount, currency,
-                                                                                     properties, pluginName, callContext, internalCallContext);
+                                                                                     properties, paymentControlPluginNames, callContext, internalCallContext);
         try {
 
             final OperationCallback callback = createOperationCallback(transactionType, paymentStateContext);
@@ -149,8 +150,8 @@ public class PluginControlledPaymentAutomatonRunner extends PaymentAutomatonRunn
     RetryablePaymentStateContext createContext(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
                                                @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
                                                @Nullable final BigDecimal amount, @Nullable final Currency currency, final Iterable<PluginProperty> properties,
-                                               final String pluginName, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        return new RetryablePaymentStateContext(pluginName, isApiPayment, paymentId, paymentExternalKey, paymentTransactionExternalKey, transactionType, account,
+                                               final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+        return new RetryablePaymentStateContext(paymentControlPluginNames, isApiPayment, paymentId, paymentExternalKey, paymentTransactionExternalKey, transactionType, account,
                                                 paymentMethodId, amount, currency, properties, internalCallContext, callContext);
     }
 

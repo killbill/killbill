@@ -51,17 +51,16 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
-import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import org.killbill.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
-import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
+import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.junction.BillingEventSet;
@@ -203,7 +202,9 @@ public class InvoiceDispatcher {
 
             final LocalDate targetDate = dateAndTimeZoneContext != null ? dateAndTimeZoneContext.computeTargetDate(targetDateTime) : null;
             final Invoice invoice = targetDate != null ? generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency, context) : null;
-            boolean isRealInvoiceWithItems = false;
+            //
+            // If invoice comes back null, there is nothing new to generate, we can bail early
+            //
             if (invoice == null) {
                 log.info("Generated null invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
                 if (!dryRun) {
@@ -211,75 +212,87 @@ public class InvoiceDispatcher {
                                                                                context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                     postEvent(event, accountId, context);
                 }
-            } else {
-                if (!dryRun) {
-                    // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
-                    final List<InvoicePluginApi> invoicePlugins = this.getInvoicePlugins();
-                    final CallContext callContext = buildCallContext(context);
-                    for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
-                        final List<InvoiceItem> items = invoicePlugin.getAdditionalInvoiceItems(invoice, ImmutableList.<PluginProperty>of(), callContext);
-                        if (items != null) {
-                            for (final InvoiceItem item : items) {
-                                if (InvoiceItemType.EXTERNAL_CHARGE.equals(item.getInvoiceItemType()) || InvoiceItemType.TAX.equals(item.getInvoiceItemType())) {
-                                    invoice.addInvoiceItem(item);
-                                } else {
-                                    log.warn("Ignoring invoice item of type {} from InvoicePluginApi {}: {}", item.getInvoiceItemType(), invoicePlugin, item);
-                                }
-                            }
+                return invoice;
+            }
+
+            // Generate missing credit (> 0 for generation and < 0 for use) prior we call the plugin
+            final InvoiceItem cbaItem = computeCBAOnExistingInvoice(invoice, context);
+            if (cbaItem != null) {
+                invoice.addInvoiceItem(cbaItem);
+            }
+
+            //
+            // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
+            //
+            final List<InvoicePluginApi> invoicePlugins = this.getInvoicePlugins();
+            final CallContext callContext = buildCallContext(context);
+            for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
+                final List<InvoiceItem> items = invoicePlugin.getAdditionalInvoiceItems(invoice, ImmutableList.<PluginProperty>of(), callContext);
+                if (items != null) {
+                    for (final InvoiceItem item : items) {
+                        if (InvoiceItemType.EXTERNAL_CHARGE.equals(item.getInvoiceItemType()) || InvoiceItemType.TAX.equals(item.getInvoiceItemType())) {
+                            invoice.addInvoiceItem(item);
+                        } else {
+                            log.warn("Ignoring invoice item of type {} from InvoicePluginApi {}: {}", item.getInvoiceItemType(), invoicePlugin, item);
                         }
                     }
+                }
+            }
 
-                    // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
-                    final Set<UUID> adjustedUniqueOtherInvoiceId = new TreeSet<UUID>();
-                    adjustedUniqueOtherInvoiceId.addAll(Collections2.transform(invoice.getInvoiceItems(), new Function<InvoiceItem, UUID>() {
-                        @Nullable
-                        @Override
-                        public UUID apply(@Nullable final InvoiceItem input) {
-                            return input.getInvoiceId();
-                        }
-                    }));
-                    isRealInvoiceWithItems = adjustedUniqueOtherInvoiceId.remove(invoice.getId());
+            boolean isRealInvoiceWithItems = false;
+            if (!dryRun) {
 
-                    if (isRealInvoiceWithItems) {
-                        log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(), accountId, targetDate, targetDateTime});
-                    } else {
-                        final Joiner joiner = Joiner.on(",");
-                        final String adjustedInvoices = joiner.join(adjustedUniqueOtherInvoiceId.toArray(new UUID[adjustedUniqueOtherInvoiceId.size()]));
-                        log.info("Adjusting existing invoices {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{adjustedInvoices, invoice.getNumberOfItems(),
-                                                                                                                                                     accountId, targetDate, targetDateTime});
+                // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
+                final Set<UUID> adjustedUniqueOtherInvoiceId = new TreeSet<UUID>();
+                adjustedUniqueOtherInvoiceId.addAll(Collections2.transform(invoice.getInvoiceItems(), new Function<InvoiceItem, UUID>() {
+                    @Nullable
+                    @Override
+                    public UUID apply(@Nullable final InvoiceItem input) {
+                        return input.getInvoiceId();
                     }
+                }));
+                isRealInvoiceWithItems = adjustedUniqueOtherInvoiceId.remove(invoice.getId());
 
-                    final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
-                    final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.<InvoiceItemModelDao>copyOf(Collections2.transform(invoice.getInvoiceItems(),
-                                                                                                                                            new Function<InvoiceItem, InvoiceItemModelDao>() {
-                                                                                                                                                @Override
-                                                                                                                                                public InvoiceItemModelDao apply(final InvoiceItem input) {
-                                                                                                                                                    return new InvoiceItemModelDao(input);
-                                                                                                                                                }
-                                                                                                                                            }));
+                if (isRealInvoiceWithItems) {
+                    log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(), accountId, targetDate, targetDateTime});
+                } else {
+                    final Joiner joiner = Joiner.on(",");
+                    final String adjustedInvoices = joiner.join(adjustedUniqueOtherInvoiceId.toArray(new UUID[adjustedUniqueOtherInvoiceId.size()]));
+                    log.info("Adjusting existing invoices {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{adjustedInvoices, invoice.getNumberOfItems(),
+                                                                                                                                                 accountId, targetDate, targetDateTime});
+                }
 
-                    final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents.getUsages(), dateAndTimeZoneContext);
-                    invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, callbackDateTimePerSubscriptions, context);
+                // Transformation to Invoice -> InvoiceModelDao
+                final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
+                final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.copyOf(Collections2.transform(invoice.getInvoiceItems(),
+                                                                                                                   new Function<InvoiceItem, InvoiceItemModelDao>() {
+                                                                                                                       @Override
+                                                                                                                       public InvoiceItemModelDao apply(final InvoiceItem input) {
+                                                                                                                           return new InvoiceItemModelDao(input);
+                                                                                                                       }
+                                                                                                                   }));
 
-                    final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
-                    final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
-                    setChargedThroughDates(dateAndTimeZoneContext, fixedPriceInvoiceItems, recurringInvoiceItems, context);
+                final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents.getUsages(), dateAndTimeZoneContext);
+                invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, callbackDateTimePerSubscriptions, context);
 
-                    final List<InvoiceInternalEvent> events = new ArrayList<InvoiceInternalEvent>();
-                    if (isRealInvoiceWithItems) {
-                        events.add(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                   invoice.getBalance(), invoice.getCurrency(),
-                                                                   context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
-                    }
-                    for (final UUID cur : adjustedUniqueOtherInvoiceId) {
-                        final InvoiceAdjustmentInternalEvent event = new DefaultInvoiceAdjustmentEvent(cur, invoice.getAccountId(),
-                                                                                                       context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
-                        events.add(event);
-                    }
+                final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
+                final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
+                setChargedThroughDates(dateAndTimeZoneContext, fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
-                    for (final InvoiceInternalEvent event : events) {
-                        postEvent(event, accountId, context);
-                    }
+                final List<InvoiceInternalEvent> events = new ArrayList<InvoiceInternalEvent>();
+                if (isRealInvoiceWithItems) {
+                    events.add(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
+                                                               invoice.getBalance(), invoice.getCurrency(),
+                                                               context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
+                }
+                for (final UUID cur : adjustedUniqueOtherInvoiceId) {
+                    final InvoiceAdjustmentInternalEvent event = new DefaultInvoiceAdjustmentEvent(cur, invoice.getAccountId(),
+                                                                                                   context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+                    events.add(event);
+                }
+
+                for (final InvoiceInternalEvent event : events) {
+                    postEvent(event, accountId, context);
                 }
             }
 
@@ -294,6 +307,21 @@ public class InvoiceDispatcher {
             log.error("Failed handling SubscriptionBase change.", e);
             return null;
         }
+    }
+
+    private InvoiceItem computeCBAOnExistingInvoice(final Invoice invoice, final InternalCallContext context) throws InvoiceApiException {
+        // Transformation to Invoice -> InvoiceModelDao
+        final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
+        final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.copyOf(Collections2.transform(invoice.getInvoiceItems(),
+                                                                                                           new Function<InvoiceItem, InvoiceItemModelDao>() {
+                                                                                                               @Override
+                                                                                                               public InvoiceItemModelDao apply(final InvoiceItem input) {
+                                                                                                                   return new InvoiceItemModelDao(input);
+                                                                                                               }
+                                                                                                           }));
+        invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
+        final InvoiceItemModelDao cbaItem = invoiceDao.doCBAComplexity(invoiceModelDao, context);
+        return cbaItem != null ? InvoiceItemFactory.fromModelDao(cbaItem) : null;
     }
 
     private TenantContext buildTenantContext(final InternalTenantContext context) {

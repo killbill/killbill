@@ -269,6 +269,12 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
+    public InvoiceItemModelDao doCBAComplexity(final InvoiceModelDao invoice, final InternalCallContext context) throws InvoiceApiException {
+        // Do nothing unless we need it..
+        return null;
+    }
+
+    @Override
     public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }

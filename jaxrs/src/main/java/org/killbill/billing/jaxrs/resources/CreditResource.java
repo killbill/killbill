@@ -30,13 +30,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.payment.api.PaymentApi;
-import org.killbill.clock.Clock;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -44,19 +41,26 @@ import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.CreditJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.clock.Clock;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.CREDITS_PATH)
+@Api(value = JaxrsResource.CREDITS_PATH, description = "Operations on credits")
 public class CreditResource extends JaxRsResourceBase {
 
     private final InvoiceUserApi invoiceUserApi;
@@ -80,6 +84,9 @@ public class CreditResource extends JaxRsResourceBase {
     @GET
     @Path("/{creditId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a credit by id", response = CreditJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid credit id supplied"),
+                           @ApiResponse(code = 404, message = "Credit not found")})
     public Response getCredit(@PathParam("creditId") final String creditId,
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
@@ -92,12 +99,19 @@ public class CreditResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Create a credit")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response createCredit(final CreditJson json,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
+        verifyNonNullOrEmpty(json, "CreditJson body should be specified");
+        verifyNonNullOrEmpty(json.getAccountId(), "CreditJson accountId needs to be set",
+                             json.getCreditAmount(), "CreditJson creditAmount needs to be set");
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);

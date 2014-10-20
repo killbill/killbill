@@ -17,25 +17,16 @@
 
 package org.killbill.billing.jaxrs.resources;
 
-import java.net.URI;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -43,8 +34,6 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.jaxrs.json.PaymentJson;
 import org.killbill.billing.jaxrs.json.PaymentTransactionJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -56,21 +45,20 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
-import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.base.Function;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.PAYMENT_TRANSACTIONS)
+@Api(value = JaxrsResource.PAYMENT_TRANSACTIONS, description = "Operations on payment transactions")
 public class TransactionResource extends JaxRsResourceBase {
 
     @Inject
@@ -90,13 +78,19 @@ public class TransactionResource extends JaxRsResourceBase {
     @Path("/{transactionId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Mark a pending payment transaction as succeeded or failed")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or Payment not found")})
     public Response notifyStateChanged(final PaymentTransactionJson json,
-                                         @PathParam("transactionId") final String transactionIdStr,
-                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                         @HeaderParam(HDR_REASON) final String reason,
-                                         @HeaderParam(HDR_COMMENT) final String comment,
-                                         @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                       @PathParam("transactionId") final String transactionIdStr,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
+        verifyNonNullOrEmpty(json.getPaymentId(), "PaymentTransactionJson paymentId needs to be set",
+                             json.getStatus(), "PaymentTransactionJson status needs to be set");
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
@@ -104,12 +98,10 @@ public class TransactionResource extends JaxRsResourceBase {
         final Payment payment = paymentApi.getPayment(paymentId, false, ImmutableList.<PluginProperty>of(), callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
-        final boolean success = json.getStatus().equals(TransactionStatus.SUCCESS.name());
+        final boolean success = TransactionStatus.SUCCESS.name().equals(json.getStatus());
         final Payment result = paymentApi.notifyPendingTransactionOfStateChanged(account, UUID.fromString(transactionIdStr), success, callContext);
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", result.getId());
     }
-
-
 
     @Override
     protected ObjectType getObjectType() {

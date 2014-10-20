@@ -62,9 +62,11 @@ import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.wordnik.swagger.annotations.Api;
 
 @Singleton
 @Path(JaxrsResource.PLUGINS_PATH + "{subResources:.*}")
+@Api(value = JaxrsResource.PLUGINS_PATH + "{subResources:.*}", description = "Plugins servlets", hidden = true)
 public class PluginResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(PluginResource.class);

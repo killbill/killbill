@@ -58,11 +58,16 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.WILDCARD;
 
 @Path(JaxrsResource.PAYMENT_GATEWAYS_PATH)
+@Api(value = JaxrsResource.PAYMENT_GATEWAYS_PATH, description = "HPP endpoints")
 public class PaymentGatewayResource extends JaxRsResourceBase {
 
     private final PaymentGatewayApi paymentGatewayApi;
@@ -86,7 +91,9 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
     @Path("/" + HOSTED + "/" + FORM + "/{" + QUERY_ACCOUNT_ID + ":" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    // Generate form data to redirect the customer to the gateway
+    @ApiOperation(value = "Generate form data to redirect the customer to the gateway", response = HostedPaymentPageFormDescriptorJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid accountId supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response buildFormDescriptor(final HostedPaymentPageFieldsJson json,
                                         @PathParam(QUERY_ACCOUNT_ID) final String accountIdString,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -124,6 +131,8 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
     @Path("/" + NOTIFICATION + "/{" + QUERY_PAYMENT_PLUGIN_NAME + ":" + ANYTHING_PATTERN + "}")
     @Consumes(WILDCARD)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Process a gateway notification", notes = "The response is built by the appropriate plugin")
+    @ApiResponses(value = {})
     public Response processNotification(final String body,
                                         @PathParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,

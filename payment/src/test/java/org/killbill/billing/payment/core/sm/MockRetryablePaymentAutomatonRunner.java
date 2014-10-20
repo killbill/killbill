@@ -17,6 +17,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
@@ -48,6 +49,8 @@ import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
+import com.google.common.collect.ImmutableList;
+
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 
@@ -77,10 +80,10 @@ public class MockRetryablePaymentAutomatonRunner extends PluginControlledPayment
                                                      @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
                                                      @Nullable final BigDecimal amount, @Nullable final Currency currency,
                                                      final Iterable<PluginProperty> properties,
-                                                     final String pluginName, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                                                     final List<String> pluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         if (context == null) {
             return super.createContext(isApiPayment, transactionType, account, paymentMethodId, paymentId, paymentExternalKey, paymentTransactionExternalKey,
-                                       amount, currency, properties, pluginName, callContext, internalCallContext);
+                                       amount, currency, properties, pluginNames, callContext, internalCallContext);
         } else {
             return context;
         }

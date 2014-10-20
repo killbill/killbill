@@ -38,10 +38,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
-import org.killbill.billing.payment.api.PaymentApi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
@@ -49,7 +45,6 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApi;
@@ -65,9 +60,11 @@ import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.SubscriptionJson;
+import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -77,13 +74,21 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.SUBSCRIPTIONS_PATH)
+@Api(value = JaxrsResource.SUBSCRIPTIONS_PATH, description = "Operations on subscriptions")
 public class SubscriptionResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
@@ -115,6 +120,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a subscription by id", response = SubscriptionJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+                           @ApiResponse(code = 404, message = "Subscription not found")})
     public Response getEntitlement(@PathParam("subscriptionId") final String subscriptionId,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
@@ -127,6 +135,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Create an entitlement")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlement supplied")})
     public Response createEntitlement(final SubscriptionJson entitlement,
                                       @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                       @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
@@ -136,6 +146,18 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                       @HeaderParam(HDR_COMMENT) final String comment,
                                       @javax.ws.rs.core.Context final HttpServletRequest request,
                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
+        verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified");
+        verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
+                             entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set",
+                             entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
+                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+        final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
+        if (createAddOnEntitlement) {
+            verifyNonNullOrEmpty(entitlement.getBundleId(), "SubscriptionJson bundleId should be specified");
+        } else {
+            verifyNonNullOrEmpty(entitlement.getAccountId(), "SubscriptionJson accountId should be specified");
+        }
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
@@ -148,7 +170,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
                 final LocalDate inputLocalDate = toLocalDate(accountId, requestedDate, callContext);
                 final UUID bundleId = entitlement.getBundleId() != null ? UUID.fromString(entitlement.getBundleId()) : null;
-                return (entitlement.getProductCategory().equals(ProductCategory.ADD_ON.toString())) ?
+                return createAddOnEntitlement ?
                        entitlementApi.addEntitlement(bundleId, spec, inputLocalDate, callContext) :
                        entitlementApi.createBaseEntitlement(accountId, spec, entitlement.getExternalKey(), inputLocalDate, callContext);
             }
@@ -172,6 +194,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @PUT
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Un-cancel an entitlement")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+                           @ApiResponse(code = 404, message = "Entitlement not found")})
     public Response uncancelEntitlementPlan(@PathParam("subscriptionId") final String subscriptionId,
                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                             @HeaderParam(HDR_REASON) final String reason,
@@ -188,6 +213,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
+    @ApiOperation(value = "Change entitlement plan")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+                           @ApiResponse(code = 404, message = "Entitlement not found")})
     public Response changeEntitlementPlan(final SubscriptionJson entitlement,
                                           @PathParam("subscriptionId") final String subscriptionId,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
@@ -198,6 +226,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
+        verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified");
+        verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
+                             entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
+                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
@@ -248,6 +281,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @DELETE
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Cancel an entitlement plan")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+                           @ApiResponse(code = 404, message = "Entitlement not found")})
     public Response cancelEntitlementPlan(@PathParam("subscriptionId") final String subscriptionId,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
@@ -400,6 +436,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve subscription custom fields", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
@@ -410,6 +448,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add custom fields to subscription")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                        final List<CustomFieldJson> customFields,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -425,6 +465,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Remove custom fields from subscription")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                        @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -439,6 +481,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve subscription tags", response = TagJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+                           @ApiResponse(code = 404, message = "Subscription not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final String subscriptionIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
@@ -453,6 +498,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add tags to subscription")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -468,6 +515,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Remove tags from subscription")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,

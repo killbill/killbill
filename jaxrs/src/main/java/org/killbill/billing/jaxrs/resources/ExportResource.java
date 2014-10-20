@@ -31,23 +31,28 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.payment.api.PaymentApi;
-import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.ExportUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.clock.Clock;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Singleton;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Singleton
 @Path(JaxrsResource.EXPORT_PATH)
+@Api(value = JaxrsResource.EXPORT_PATH, description = "Export endpoints")
 public class ExportResource extends JaxRsResourceBase {
 
     private final ExportUserApi exportUserApi;
@@ -70,6 +75,9 @@ public class ExportResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(TEXT_PLAIN)
+    @ApiOperation(value = "Export account data", response = String.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public StreamingOutput exportDataForAccount(@PathParam("accountId") final String accountId,
                                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                 @HeaderParam(HDR_REASON) final String reason,

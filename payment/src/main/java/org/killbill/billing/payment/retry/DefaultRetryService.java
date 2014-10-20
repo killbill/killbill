@@ -16,6 +16,7 @@
 
 package org.killbill.billing.payment.retry;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -45,8 +46,8 @@ public class DefaultRetryService extends BaseRetryService implements RetryServic
 
 
     @Override
-    public void retryPaymentTransaction(final UUID attemptId, final String pluginName, final InternalCallContext context) {
-        processor.retryPaymentTransaction(attemptId, pluginName, context);
+    public void retryPaymentTransaction(final UUID attemptId, final List<String> paymentControlPluginNames, final InternalCallContext context) {
+        processor.retryPaymentTransaction(attemptId, paymentControlPluginNames, context);
     }
 
     public static class DefaultRetryServiceScheduler extends RetryServiceScheduler {

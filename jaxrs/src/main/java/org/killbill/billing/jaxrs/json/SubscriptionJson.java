@@ -33,17 +33,25 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SubscriptionJson extends JsonBase {
 
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String accountId;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String bundleId;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String subscriptionId;
     private final String externalKey;
     private final LocalDate startDate;
+    @ApiModelProperty(required = true)
     private final String productName;
+    @ApiModelProperty(dataType = "org.killbill.billing.catalog.api.ProductCategory", required = true)
     private final String productCategory;
+    @ApiModelProperty(dataType = "org.killbill.billing.catalog.api.BillingPeriod", required = true)
     private final String billingPeriod;
+    @ApiModelProperty(required = true)
     private final String priceList;
     private final LocalDate cancelledDate;
     private final LocalDate chargedThroughDate;

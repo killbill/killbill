@@ -32,9 +32,12 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class AccountJson extends JsonBase {
 
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String accountId;
     private final String externalKey;
     private final BigDecimal accountCBA;
@@ -44,6 +47,7 @@ public class AccountJson extends JsonBase {
     private final String email;
     private final Integer billCycleDayLocal;
     private final String currency;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String paymentMethodId;
     private final String timeZone;
     private final String address1;
@@ -137,7 +141,7 @@ public class AccountJson extends JsonBase {
         return new AccountData() {
             @Override
             public DateTimeZone getTimeZone() {
-                return (timeZone != null) ? DateTimeZone.forID(timeZone) : null;
+                return (Strings.emptyToNull(timeZone) != null) ? DateTimeZone.forID(timeZone) : null;
             }
 
             @Override
@@ -203,7 +207,7 @@ public class AccountJson extends JsonBase {
 
             @Override
             public Currency getCurrency() {
-                if (currency == null) {
+                if (Strings.emptyToNull(currency) == null) {
                     return null;
                 } else {
                     return Currency.valueOf(currency);

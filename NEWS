@@ -1,3 +1,10 @@
+0.11.13
+    Swagger integration
+    Fixes for PaymentControlApi
+    https://github.com/killbill/killbill/issues/152
+    https://github.com/killbill/killbill/issues/227
+    https://github.com/killbill/killbill/issues/198
+
 0.11.12
     Fix issues around timezones
     Switch to HikariCP by default
