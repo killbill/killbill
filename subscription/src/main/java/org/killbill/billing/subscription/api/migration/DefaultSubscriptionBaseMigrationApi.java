@@ -198,7 +198,8 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
 
             if (cur.getEventType() == EventType.PHASE) {
                 nextEventDate = nextEventDate != null && nextEventDate.compareTo(cur.getEventTime()) < 0 ? nextEventDate : cur.getEventTime();
-                final PhaseEvent nextPhaseEvent = PhaseEventData.createNextPhaseEvent(cur.getPhase().getName(), defaultSubscriptionBase, now, cur.getEventTime());
+                final PhaseEvent nextPhaseEvent = PhaseEventData.createNextPhaseEvent(defaultSubscriptionBase.getId(), defaultSubscriptionBase.getActiveVersion(),
+                                                                                      cur.getPhase().getName(), now, cur.getEventTime());
                 events.add(nextPhaseEvent);
 
 

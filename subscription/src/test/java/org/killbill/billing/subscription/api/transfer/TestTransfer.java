@@ -20,11 +20,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -38,9 +33,12 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
@@ -68,7 +66,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final DateTime bundleCreatedDate = bundle.getCreatedDate();
 
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
         final SubscriptionBase subscription = subscriptions.get(0);
         testUtil.assertDateWithin(subscription.getStartDate(), beforeMigration.minusMonths(2), afterMigration.minusMonths(2));
@@ -137,7 +135,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(bundlesForAccountAndKey.size(), 1);
 
         final SubscriptionBaseBundle newBundle = bundlesForAccountAndKey.get(0);
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
 
         final SubscriptionBase newBaseSubscription = subscriptions.get(0);
@@ -187,7 +185,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final SubscriptionBaseBundle newBundle = bundlesForAccountAndKey.get(0);
 
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
 
         final SubscriptionBase newBaseSubscription = subscriptions.get(0);
@@ -237,7 +235,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(bundlesForAccountAndKey.size(), 1);
 
         final SubscriptionBaseBundle newBundle = bundlesForAccountAndKey.get(0);
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
 
         final SubscriptionBase newBaseSubscription = subscriptions.get(0);
@@ -286,7 +284,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(bundlesForAccountAndKey.size(), 1);
 
         final SubscriptionBaseBundle newBundle = bundlesForAccountAndKey.get(0);
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
 
         final SubscriptionBase newBaseSubscription = subscriptions.get(0);
@@ -379,7 +377,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(bundlesForAccountAndKey.size(), 1);
 
         final SubscriptionBaseBundle newBundle = bundlesForAccountAndKey.get(0);
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 3);
         boolean foundBP = false;
         boolean foundAO1 = false;
@@ -472,7 +470,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(bundlesForAccountAndKey.size(), 1);
 
         final SubscriptionBaseBundle newBundle = bundlesForAccountAndKey.get(0);
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
     }
 
@@ -516,7 +514,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(bundlesForAccountAndKey.size(), 1);
 
         final SubscriptionBaseBundle newBundle = bundlesForAccountAndKey.get(0);
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
     }
 }

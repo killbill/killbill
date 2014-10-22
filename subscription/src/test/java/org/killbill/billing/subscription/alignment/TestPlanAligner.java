@@ -243,7 +243,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final Plan plan = catalogService.getFullCatalog().findPlan(productName, clock.getUTCNow());
 
         // Same here for the requested date
-        final TimedPhase[] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(defaultSubscriptionBase, plan, initialPhase, priceList, clock.getUTCNow(), effectiveDate);
+        final TimedPhase[] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(defaultSubscriptionBase.getAlignStartDate(), defaultSubscriptionBase.getBundleStartDate(), plan, initialPhase, priceList, clock.getUTCNow(), effectiveDate);
         Assert.assertEquals(phases.length, 2);
 
         return phases;

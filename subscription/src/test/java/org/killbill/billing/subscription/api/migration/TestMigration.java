@@ -20,8 +20,6 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -32,10 +30,12 @@ import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.events.user.ApiEventType;
+import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -45,7 +45,7 @@ import static org.testng.Assert.assertTrue;
 public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
-    public void testSingleBasePlan() throws SubscriptionBaseMigrationApiException {
+    public void testSingleBasePlan() throws SubscriptionBaseMigrationApiException, SubscriptionBaseApiException {
         final DateTime startDate = clock.getUTCNow().minusMonths(2);
         final DateTime beforeMigration = clock.getUTCNow();
         final AccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlan(startDate);
@@ -59,7 +59,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(bundles.size(), 1);
         final SubscriptionBaseBundle bundle = bundles.get(0);
 
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
         final SubscriptionBase subscription = subscriptions.get(0);
         assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
@@ -74,7 +74,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testPlanWithAddOn() throws SubscriptionBaseMigrationApiException {
+    public void testPlanWithAddOn() throws SubscriptionBaseMigrationApiException, SubscriptionBaseApiException {
         final DateTime beforeMigration = clock.getUTCNow();
         final DateTime initalBPStart = clock.getUTCNow().minusMonths(3);
         final DateTime initalAddonStart = clock.getUTCNow().minusMonths(1).plusDays(7);
@@ -90,7 +90,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(bundles.size(), 1);
         final SubscriptionBaseBundle bundle = bundles.get(0);
 
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 2);
 
         final SubscriptionBase baseSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) ?
@@ -119,7 +119,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testSingleBasePlanFutureCancelled() throws SubscriptionBaseMigrationApiException {
+    public void testSingleBasePlanFutureCancelled() throws SubscriptionBaseMigrationApiException, SubscriptionBaseApiException {
         final DateTime startDate = clock.getUTCNow().minusMonths(1);
         final DateTime beforeMigration = clock.getUTCNow();
         final AccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlanFutreCancelled(startDate);
@@ -134,7 +134,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
         final SubscriptionBaseBundle bundle = bundles.get(0);
         //assertEquals(bundle.getStartDate(), effectiveDate);
 
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
         final SubscriptionBase subscription = subscriptions.get(0);
         assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
@@ -163,7 +163,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testSingleBasePlanWithPendingPhase() throws SubscriptionBaseMigrationApiException {
+    public void testSingleBasePlanWithPendingPhase() throws SubscriptionBaseMigrationApiException, SubscriptionBaseApiException {
         final DateTime trialDate = clock.getUTCNow().minusDays(10);
         final AccountMigration toBeMigrated = testUtil.createAccountForMigrationFuturePendingPhase(trialDate);
 
@@ -175,7 +175,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(bundles.size(), 1);
         final SubscriptionBaseBundle bundle = bundles.get(0);
 
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
         final SubscriptionBase subscription = subscriptions.get(0);
 
@@ -206,7 +206,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testSingleBasePlanWithPendingChange() throws SubscriptionBaseMigrationApiException {
+    public void testSingleBasePlanWithPendingChange() throws SubscriptionBaseMigrationApiException, SubscriptionBaseApiException {
         final DateTime beforeMigration = clock.getUTCNow();
         final AccountMigration toBeMigrated = testUtil.createAccountForMigrationFuturePendingChange();
         final DateTime afterMigration = clock.getUTCNow();
@@ -219,7 +219,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(bundles.size(), 1);
         final SubscriptionBaseBundle bundle = bundles.get(0);
 
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
         final SubscriptionBase subscription = subscriptions.get(0);
         //assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
@@ -261,7 +261,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
         final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
         assertEquals(bundles.size(), 1);
 
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundles.get(0).getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundles.get(0).getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptions.get(0);
 

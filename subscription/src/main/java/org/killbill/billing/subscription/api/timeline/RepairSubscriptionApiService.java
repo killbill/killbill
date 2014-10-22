@@ -16,10 +16,11 @@
 
 package org.killbill.billing.subscription.api.timeline;
 
-import org.joda.time.DateTime;
+import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.CatalogService;
-import org.killbill.clock.Clock;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.subscription.alignment.PlanAligner;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -27,8 +28,9 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseApiServ
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
-import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.clock.Clock;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -47,7 +49,7 @@ public class RepairSubscriptionApiService extends DefaultSubscriptionBaseApiServ
 
     // Nothing to do for repair as we pass all the repair events in the stream
     @Override
-    public int cancelAddOnsIfRequired(final DefaultSubscriptionBase baseSubscription, final DateTime effectiveDate, final InternalCallContext context) {
+    public int cancelAddOnsIfRequired(final Product baseProduct, final UUID bundleId, final DateTime effectiveDate, final CallContext context) {
         return 0;
     }
 }

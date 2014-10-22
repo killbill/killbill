@@ -16,18 +16,24 @@
 
 package org.killbill.billing.subscription.api;
 
-import org.joda.time.DateTime;
+import java.util.List;
+import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
+import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.util.callcontext.TenantContext;
 
 public interface SubscriptionBaseApiService {
 
@@ -37,7 +43,7 @@ public interface SubscriptionBaseApiService {
             throws SubscriptionBaseApiException;
 
     @Deprecated
-    public boolean recreatePlan(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs, final CallContext context)
+    public boolean recreatePlan(DefaultSubscriptionBase subscription, PlanPhaseSpecifier spec, DateTime requestedDateWithMs, CallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean cancel(DefaultSubscriptionBase subscription, CallContext context)
@@ -67,5 +73,26 @@ public interface SubscriptionBaseApiService {
                                          String priceList, BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public int cancelAddOnsIfRequired(final DefaultSubscriptionBase baseSubscription, final DateTime effectiveDate, final InternalCallContext context);
+    public int cancelAddOnsIfRequired(final Product baseProduct, final UUID bundleId, final DateTime effectiveDate, final CallContext context);
+
+    public PlanChangeResult getPlanChangeResult(final DefaultSubscriptionBase subscription, final String productName,
+                                                final BillingPeriod term, final String priceList, final DateTime effectiveDate) throws SubscriptionBaseApiException;
+
+        //
+    // Lower level APIs for dryRun functionality
+    //
+    public List<SubscriptionBaseEvent> getEventsOnCreation(UUID subscriptionId, DateTime alignStartDate, DateTime bundleStartDate, long activeVersion,
+                                                           Plan plan, PhaseType initialPhase,
+                                                           String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
+                                                           boolean reCreate, TenantContext context)
+            throws CatalogApiException, SubscriptionBaseApiException;
+
+    public List<SubscriptionBaseEvent> getEventsOnChangePlan(DefaultSubscriptionBase subscription, Plan newPlan,
+                                                             String newPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
+                                                             boolean addCancellationAddOnForEventsIfRequired, TenantContext context)
+            throws CatalogApiException, SubscriptionBaseApiException;
+
+    public List<SubscriptionBaseEvent> getEventsOnCancelPlan(final DefaultSubscriptionBase subscription,
+                                                             final DateTime requestedDate, final DateTime effectiveDate, final DateTime processedDate,
+                                                             final boolean addCancellationAddOnForEventsIfRequired, final TenantContext context);
 }

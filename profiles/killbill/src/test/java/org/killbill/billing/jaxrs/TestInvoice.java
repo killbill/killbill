@@ -26,16 +26,20 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.AuditLog;
 import org.killbill.billing.client.model.Invoice;
+import org.killbill.billing.client.model.InvoiceDryRun;
 import org.killbill.billing.client.model.InvoiceItem;
 import org.killbill.billing.client.model.InvoicePayment;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentMethod;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
@@ -89,7 +93,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Then create a dryRun Invoice
         final DateTime futureDate = clock.getUTCNow().plusMonths(1).plusDays(3);
-        killBillClient.createDryRunInvoice(accountJson.getAccountId(), futureDate, createdBy, reason, comment);
+        killBillClient.createDryRunInvoice(accountJson.getAccountId(), futureDate, null, createdBy, reason, comment);
 
         // The one more time with no DryRun
         killBillClient.createInvoice(accountJson.getAccountId(), futureDate, createdBy, reason, comment);
@@ -97,6 +101,21 @@ public class TestInvoice extends TestJaxrsBase {
         // Check again # invoices, should be 3 this time
         final List<Invoice> newInvoiceList = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
         assertEquals(newInvoiceList.size(), 3);
+    }
+
+
+    @Test(groups = "slow", description = "Can create a subscription in dryRun mode and get an invoice back")
+    public void testDryRunSubscriptionCreate() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        // "Assault-Rifle", BillingPeriod.ANNUAL, "rescue", BillingActionPolicy.IMMEDIATE,
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+        final InvoiceDryRun dryRunArg = new InvoiceDryRun(SubscriptionEventType.START_BILLING,
+                                                          null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, null, null);
+        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), initialDate, dryRunArg, createdBy, reason, comment);
+        assertEquals(dryRunInvoice.getItems().size(), 1);
+
     }
 
     @Test(groups = "slow", description = "Can retrieve invoice payments")

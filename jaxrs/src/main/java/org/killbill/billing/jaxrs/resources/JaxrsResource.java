@@ -65,7 +65,6 @@ public interface JaxrsResource {
     public static final String QUERY_CALL_COMPLETION = "callCompletion";
     public static final String QUERY_USE_REQUESTED_DATE_FOR_BILLING = "useRequestedDateForBilling";
     public static final String QUERY_CALL_TIMEOUT = "callTimeoutSec";
-    public static final String QUERY_DRY_RUN = "dryRun";
     public static final String QUERY_TARGET_DATE = "targetDate";
     public static final String QUERY_BILLING_POLICY = "billingPolicy";
     public static final String QUERY_ENTITLEMENT_POLICY = "entitlementPolicy";
@@ -159,6 +158,7 @@ public interface JaxrsResource {
 
     public static final String INVOICE_PAYMENTS = "invoicePayments";
     public static final String INVOICE_PAYMENTS_PATH = PREFIX + "/" + INVOICE_PAYMENTS;
+    public static final String DRY_RUN = "dryRun";
 
     public static final String CHARGEBACKS = "chargebacks";
     public static final String CHARGEBACKS_PATH = PREFIX + "/" + CHARGEBACKS;

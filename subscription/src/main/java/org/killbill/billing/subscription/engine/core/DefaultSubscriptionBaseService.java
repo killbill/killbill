@@ -21,8 +21,11 @@ package org.killbill.billing.subscription.engine.core;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
@@ -41,9 +44,13 @@ import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
@@ -68,27 +75,31 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
     private final Clock clock;
     private final SubscriptionDao dao;
     private final PlanAligner planAligner;
-    private final AddonUtils addonUtils;
     private final PersistentBus eventBus;
     private final NotificationQueueService notificationQueueService;
     private final InternalCallContextFactory internalCallContextFactory;
     private NotificationQueue subscriptionEventQueue;
     private final SubscriptionBaseApiService apiService;
+    private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
     public DefaultSubscriptionBaseService(final Clock clock, final SubscriptionDao dao, final PlanAligner planAligner,
-                                          final AddonUtils addonUtils, final PersistentBus eventBus,
+                                          final PersistentBus eventBus,
                                           final NotificationQueueService notificationQueueService,
                                           final InternalCallContextFactory internalCallContextFactory,
-                                          final SubscriptionBaseApiService apiService) {
+                                          final SubscriptionBaseApiService apiService,
+                                          final NonEntityDao nonEntityDao,
+                                          final CacheControllerDispatcher controllerDispatcher) {
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
-        this.addonUtils = addonUtils;
         this.eventBus = eventBus;
         this.notificationQueueService = notificationQueueService;
         this.internalCallContextFactory = internalCallContextFactory;
         this.apiService = apiService;
+        this.nonEntityDao = nonEntityDao;
+        this.controllerDispatcher = controllerDispatcher;
     }
 
     @Override
@@ -164,7 +175,8 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
         if (event.getType() == EventType.PHASE) {
             onPhaseEvent(subscription, context);
         } else if (event.getType() == EventType.API_USER && subscription.getCategory() == ProductCategory.BASE) {
-            theRealSeqId = onBasePlanEvent(subscription, (ApiEvent) event, context);
+            final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+            theRealSeqId = onBasePlanEvent(subscription, (ApiEvent) event, context.toCallContext(tenantId));
         }
 
         try {
@@ -183,7 +195,8 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
             final DateTime now = clock.getUTCNow();
             final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now);
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                                              PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
+                                              PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(),
+                                                                                  nextTimedPhase.getPhase().getName(), now, nextTimedPhase.getStartPhase()) :
                                               null;
             if (nextPhaseEvent != null) {
                 dao.createNextPhaseEvent(subscription, nextPhaseEvent, context);
@@ -193,7 +206,8 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
         }
     }
 
-    private int onBasePlanEvent(final DefaultSubscriptionBase baseSubscription, final ApiEvent event, final InternalCallContext context) {
-        return apiService.cancelAddOnsIfRequired(baseSubscription, event.getEffectiveDate(), context);
+    private int onBasePlanEvent(final DefaultSubscriptionBase baseSubscription, final ApiEvent event, final CallContext context) {
+        final Product baseProduct = (baseSubscription.getState() == EntitlementState.CANCELLED) ? null : baseSubscription.getCurrentPlan().getProduct();
+        return apiService.cancelAddOnsIfRequired(baseProduct, baseSubscription.getBundleId(), event.getEffectiveDate(), context);
     }
 }

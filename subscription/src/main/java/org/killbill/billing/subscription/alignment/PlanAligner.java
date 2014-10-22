@@ -64,24 +64,26 @@ public class PlanAligner extends BaseAligner {
     /**
      * Returns the current and next phase for the subscription in creation
      *
-     * @param subscription  the subscription in creation (only the start date and the bundle start date are looked at)
-     * @param plan          the current Plan
-     * @param initialPhase  the initialPhase on which we should create that subscription. can be null
-     * @param priceList     the priceList
-     * @param requestedDate the requested date (only used to load the catalog)
-     * @param effectiveDate the effective creation date (driven by the catalog policy, i.e. when the creation occurs)
+     * @param alignStartDate  the subscription (align) startDate for the subscription
+     * @param bundleStartDate the bundle startDate used alignment
+     * @param plan            the current Plan
+     * @param initialPhase    the initialPhase on which we should create that subscription. can be null
+     * @param priceList       the priceList
+     * @param requestedDate   the requested date (only used to load the catalog)
+     * @param effectiveDate   the effective creation date (driven by the catalog policy, i.e. when the creation occurs)
      * @return the current and next phases
      * @throws CatalogApiException         for catalog errors
      * @throws org.killbill.billing.subscription.api.user.SubscriptionBaseApiException for subscription errors
      */
-    public TimedPhase[] getCurrentAndNextTimedPhaseOnCreate(final DefaultSubscriptionBase subscription,
+    public TimedPhase[] getCurrentAndNextTimedPhaseOnCreate(final DateTime alignStartDate,
+                                                            final DateTime bundleStartDate,
                                                             final Plan plan,
-                                                            final PhaseType initialPhase,
+                                                            @Nullable final PhaseType initialPhase,
                                                             final String priceList,
                                                             final DateTime requestedDate,
                                                             final DateTime effectiveDate) throws CatalogApiException, SubscriptionBaseApiException {
-        final List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getAlignStartDate(),
-                                                                   subscription.getBundleStartDate(),
+        final List<TimedPhase> timedPhases = getTimedPhaseOnCreate(alignStartDate,
+                                                                   bundleStartDate,
                                                                    plan,
                                                                    initialPhase,
                                                                    priceList,
@@ -187,7 +189,7 @@ public class PlanAligner extends BaseAligner {
     private List<TimedPhase> getTimedPhaseOnCreate(final DateTime subscriptionStartDate,
                                                    final DateTime bundleStartDate,
                                                    final Plan plan,
-                                                   final PhaseType initialPhase,
+                                                   @Nullable final PhaseType initialPhase,
                                                    final String priceList,
                                                    final DateTime requestedDate)
             throws CatalogApiException, SubscriptionBaseApiException {

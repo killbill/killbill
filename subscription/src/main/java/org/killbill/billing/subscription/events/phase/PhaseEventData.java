@@ -17,6 +17,8 @@
 package org.killbill.billing.subscription.events.phase;
 
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -56,15 +58,15 @@ public class PhaseEventData extends EventBase implements PhaseEvent {
                 + ", isActive()=" + isActive() + "]\n";
     }
 
-    public static PhaseEvent createNextPhaseEvent(final String phaseName, final DefaultSubscriptionBase subscription, final DateTime now, final DateTime effectiveDate) {
+    public static PhaseEvent createNextPhaseEvent(final UUID subscriptionId, final long activeVersion, final String phaseName,  final DateTime now, final DateTime effectiveDate) {
         return (phaseName == null) ?
                 null :
                 new PhaseEventData(new PhaseEventBuilder()
-                                           .setSubscriptionId(subscription.getId())
+                                           .setSubscriptionId(subscriptionId)
                                            .setRequestedDate(now)
                                            .setEffectiveDate(effectiveDate)
                                            .setProcessedDate(now)
-                                           .setActiveVersion(subscription.getActiveVersion())
+                                           .setActiveVersion(activeVersion)
                                            .setPhaseName(phaseName));
     }
 }

@@ -49,6 +49,7 @@ import org.killbill.billing.beatrix.util.SubscriptionChecker;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -57,9 +58,10 @@ import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
-import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
@@ -296,7 +298,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     protected void checkNoMoreInvoiceToGenerate(final Account account) {
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), false, callContext);
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), null, callContext);
             fail("Should not have generated an extra invoice");
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
@@ -407,7 +409,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected Payment createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final BigDecimal amount, final Currency currency,  final NextEvent... events) {
+    protected Payment createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final BigDecimal amount, final Currency currency, final NextEvent... events) {
         return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
             public Payment apply(@Nullable final Void input) {
@@ -435,7 +437,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
                     properties.add(prop1);
 
-                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(),  UUID.randomUUID().toString(),
+                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), UUID.randomUUID().toString(),
                                                                        UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
@@ -682,8 +684,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         assertEquals(tags.size(), 1);
     }
 
-
-    protected void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type, final NextEvent...additionalEvents) throws TagDefinitionApiException, TagApiException {
+    protected void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
         busHandler.pushExpectedEvent(NextEvent.TAG);
         busHandler.pushExpectedEvents(additionalEvents);
         tagUserApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
@@ -701,5 +702,72 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
         log.debug("            ************    DONE WITH BUS HANDLER CHECK    ********************");
         return result;
+    }
+
+    protected static class TestDryRunArguments implements DryRunArguments {
+
+        private final PlanPhaseSpecifier spec;
+        private final SubscriptionEventType action;
+        private final UUID subscriptionId;
+        private final UUID bundleId;
+        private final DateTime effectiveDate;
+        private final BillingActionPolicy billingPolicy;
+
+        public TestDryRunArguments() {
+            this.spec = null;
+            this.action = null;
+            this.subscriptionId = null;
+            this.bundleId = null;
+            this.effectiveDate = null;
+            this.billingPolicy = null;
+        }
+
+        public TestDryRunArguments(final String productName,
+                                   final ProductCategory category,
+                                   final BillingPeriod billingPeriod,
+                                   final String priceList,
+                                   final PhaseType phaseType,
+                                   final SubscriptionEventType action,
+                                   final UUID subscriptionId,
+                                   final UUID bundleId,
+                                   final DateTime effectiveDate,
+                                   final BillingActionPolicy billingPolicy) {
+            this.spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceList, phaseType);
+            this.action = action;
+            this.subscriptionId = subscriptionId;
+            this.bundleId = bundleId;
+            this.effectiveDate = effectiveDate;
+            this.billingPolicy = billingPolicy;
+        }
+
+        @Override
+        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+            return spec;
+        }
+
+        @Override
+        public SubscriptionEventType getAction() {
+            return action;
+        }
+
+        @Override
+        public UUID getSubscriptionId() {
+            return subscriptionId;
+        }
+
+        @Override
+        public DateTime getEffectiveDate() {
+            return effectiveDate;
+        }
+
+        @Override
+        public UUID getBundleId() {
+            return bundleId;
+        }
+
+        @Override
+        public BillingActionPolicy getBillingActionPolicy() {
+            return billingPolicy;
+        }
     }
 }

@@ -57,6 +57,7 @@ import org.killbill.clock.Clock;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -115,7 +116,9 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
             if (bundle == null) {
                 throw new SubscriptionBaseRepairException(ErrorCode.SUB_REPAIR_UNKNOWN_BUNDLE, descBundle);
             }
-            final List<SubscriptionDataRepair> subscriptions = convertToSubscriptionsDataRepair(dao.getSubscriptions(bundle.getId(), internalCallContextFactory.createInternalTenantContext(context)));
+            final List<SubscriptionDataRepair> subscriptions = convertToSubscriptionsDataRepair(dao.getSubscriptions(bundle.getId(),
+                                                                                                                     ImmutableList.<SubscriptionBaseEvent>of(),
+                                                                                                                     internalCallContextFactory.createInternalTenantContext(context)));
             if (subscriptions.size() == 0) {
                 throw new SubscriptionBaseRepairException(ErrorCode.SUB_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, bundle.getId());
             }
@@ -149,7 +152,7 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
             }
 
             // Subscriptions are ordered with BASE subscription first-- if exists
-            final List<SubscriptionDataRepair> subscriptions = convertToSubscriptionsDataRepair(dao.getSubscriptions(input.getId(), tenantContext));
+            final List<SubscriptionDataRepair> subscriptions = convertToSubscriptionsDataRepair(dao.getSubscriptions(input.getId(), ImmutableList.<SubscriptionBaseEvent>of(), tenantContext));
             if (subscriptions.size() == 0) {
                 throw new SubscriptionBaseRepairException(ErrorCode.SUB_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, input.getId());
             }

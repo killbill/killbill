@@ -305,8 +305,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
-        return buildBundleSubscriptions(getSubscriptionFromBundleId(bundleId, context), null, context);
+    public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final List<SubscriptionBaseEvent> dryRunEvents, final InternalTenantContext context) {
+        return buildBundleSubscriptions(getSubscriptionFromBundleId(bundleId, context), null, dryRunEvents, context);
     }
 
     private List<SubscriptionBase> getSubscriptionFromBundleId(final UUID bundleId, final InternalTenantContext context) {
@@ -353,7 +353,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 eventsForSubscriptions.putAll(cur.getId(), ImmutableList.copyOf(events));
             }
 
-            result.put(bundleId, buildBundleSubscriptions(subscriptionsForBundle, eventsForSubscriptions, context));
+            result.put(bundleId, buildBundleSubscriptions(subscriptionsForBundle, eventsForSubscriptions, null, context));
         }
         return result;
     }
@@ -830,7 +830,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             bundleInput.add(input);
         }
 
-        final List<SubscriptionBase> reloadedSubscriptions = buildBundleSubscriptions(bundleInput, null, context);
+        final List<SubscriptionBase> reloadedSubscriptions = buildBundleSubscriptions(bundleInput, null, null, context);
         for (final SubscriptionBase cur : reloadedSubscriptions) {
             if (cur.getId().equals(input.getId())) {
                 return cur;
@@ -840,7 +840,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         throw new SubscriptionBaseError("Unexpected code path in buildSubscription");
     }
 
-    private List<SubscriptionBase> buildBundleSubscriptions(final List<SubscriptionBase> input, @Nullable final Multimap<UUID, SubscriptionBaseEvent> eventsForSubscription, final InternalTenantContext context) {
+
+    private List<SubscriptionBase> buildBundleSubscriptions(final List<SubscriptionBase> input, @Nullable final Multimap<UUID, SubscriptionBaseEvent> eventsForSubscription,
+                                                            @Nullable List<SubscriptionBaseEvent> dryRunEvents, final InternalTenantContext context) {
         if (input == null || input.size() == 0) {
             return Collections.emptyList();
         }
@@ -866,6 +868,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             final List<SubscriptionBaseEvent> events = eventsForSubscription != null ?
                                                        (List<SubscriptionBaseEvent>) eventsForSubscription.get(cur.getId()) :
                                                        getEventsForSubscription(cur.getId(), context);
+            mergeDryRunEvents(cur.getId(), events, dryRunEvents);
 
             SubscriptionBase reloaded = createSubscriptionForInternalUse(cur, events);
 
@@ -917,6 +920,26 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }
 
         return result;
+    }
+
+    private void mergeDryRunEvents(final UUID subscriptionId, final List<SubscriptionBaseEvent> events, @Nullable List<SubscriptionBaseEvent> dryRunEvents) {
+        if (dryRunEvents == null || dryRunEvents.isEmpty()) {
+            return;
+        }
+        for (SubscriptionBaseEvent curDryRun : dryRunEvents) {
+            if (curDryRun.getSubscriptionId() != null && curDryRun.getSubscriptionId().equals(subscriptionId)) {
+
+                //boolean inserted = false;
+                final Iterator<SubscriptionBaseEvent> it = events.iterator();
+                while (it.hasNext()) {
+                    final SubscriptionBaseEvent event = it.next();
+                    if (event.getEffectiveDate().isAfter(curDryRun.getEffectiveDate())) {
+                        it.remove();
+                    }
+                }
+                events.add(curDryRun);
+            }
+        }
     }
 
     @Override

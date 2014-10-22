@@ -18,15 +18,13 @@ package org.killbill.billing.junction;
 
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.invoice.api.DryRunArguments;
 
 public interface BillingInternalApi {
 
     /**
      * @return an ordered list of billing event for the given accounts
      */
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, InternalCallContext context);
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, DryRunArguments dryRunArguments, InternalCallContext context);
 }

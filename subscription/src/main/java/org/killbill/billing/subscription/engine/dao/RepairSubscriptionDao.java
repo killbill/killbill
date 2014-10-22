@@ -272,7 +272,7 @@ public class RepairSubscriptionDao extends EntityDaoBase<SubscriptionBundleModel
     }
 
     @Override
-    public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
+    public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final List<SubscriptionBaseEvent> dryRunEvents, final InternalTenantContext context) {
         throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 

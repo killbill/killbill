@@ -22,16 +22,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
-import org.killbill.clock.Clock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -40,16 +30,23 @@ import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.entitlement.EntitlementTransitionType;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
+import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -84,7 +81,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     @Override
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final InternalCallContext context) {
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) {
         final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final DefaultBillingEventSet result = new DefaultBillingEventSet();
         result.setRecurrringBillingMode(catalogService.getCurrentCatalog().getRecurringBillingMode());
@@ -100,8 +97,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 return result; // billing is off, we are done
             }
 
-            addBillingEventsForBundles(bundles, account, context, result);
+            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result);
         } catch (AccountApiException e) {
+            log.warn("Failed while getting BillingEvent", e);
+        } catch (SubscriptionBaseApiException e) {
             log.warn("Failed while getting BillingEvent", e);
         }
 
@@ -122,10 +121,29 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
     }
 
-    private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final Account account, final InternalCallContext context,
-                                            final DefaultBillingEventSet result) {
+    private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final Account account, final DryRunArguments dryRunArguments, final InternalCallContext context,
+                                            final DefaultBillingEventSet result) throws SubscriptionBaseApiException {
+
+        final boolean dryRunMode = dryRunArguments != null;
+
+        // In dryRun mode, when we care about invoice generated for new BASE subscription, no such bundle exists yet; we still
+        // want to tap into subscriptionBase logic, so we make up a bundleId
+        if (dryRunArguments != null &&
+            dryRunArguments.getAction() == SubscriptionEventType.START_BILLING &&
+            dryRunArguments.getBundleId() == null) {
+            final UUID fakeBundleId = UUID.randomUUID();
+            final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(fakeBundleId, dryRunArguments, context);
+
+            addBillingEventsForSubscription(subscriptions, fakeBundleId, account, dryRunMode, context, result);
+
+        }
+
         for (final SubscriptionBaseBundle bundle : bundles) {
-            final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), context);
+            final DryRunArguments dryRunArgumentsForBundle = (dryRunArguments != null &&
+                                                             dryRunArguments.getBundleId() != null &&
+                                                             dryRunArguments.getBundleId().equals(bundle.getId())) ?
+                                                             dryRunArguments : null;
+            final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), dryRunArgumentsForBundle, context);
 
             //Check if billing is off for the bundle
             final List<Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE, context);
@@ -135,14 +153,18 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                     result.getSubscriptionIdsWithAutoInvoiceOff().add(subscription.getId());
                 }
             } else { // billing is not off
-                addBillingEventsForSubscription(subscriptions, bundle, account, context, result);
+                addBillingEventsForSubscription(subscriptions, bundle.getId(), account, dryRunMode, context, result);
             }
         }
     }
 
-    private void addBillingEventsForSubscription(final List<SubscriptionBase> subscriptions, final SubscriptionBaseBundle bundle, final Account account, final InternalCallContext context, final DefaultBillingEventSet result) {
+    private void addBillingEventsForSubscription(final List<SubscriptionBase> subscriptions, final UUID bundleId, final Account account,
+                                                 final boolean dryRunMode,
+                                                 final InternalCallContext context,
+                                                 final DefaultBillingEventSet result) {
 
-        boolean updatedAccountBCD = false;
+        // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
+        boolean updatedAccountBCD = dryRunMode;
         for (final SubscriptionBase subscription : subscriptions) {
 
             // The subscription did not even start, so there is nothing to do yet, we can skip and avoid some NPE down the line when calculating the BCD
@@ -152,7 +174,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             for (final EffectiveSubscriptionInternalEvent transition : subscriptionApi.getBillingTransitions(subscription, context)) {
                 try {
-                    final int bcdLocal = bcdCalculator.calculateBcd(bundle, subscription, transition, account, context);
+                    final int bcdLocal = bcdCalculator.calculateBcd(bundleId, subscription, transition, account, context);
 
                     if (account.getBillCycleDayLocal() == 0 && !updatedAccountBCD) {
                         final MutableAccountData modifiedData = account.toMutableAccountData();

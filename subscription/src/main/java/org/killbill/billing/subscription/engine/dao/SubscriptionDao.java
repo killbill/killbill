@@ -61,7 +61,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
     // SubscriptionBase retrieval
     public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context);
 
-    public List<SubscriptionBase> getSubscriptions(UUID bundleId, InternalTenantContext context);
+    public List<SubscriptionBase> getSubscriptions(UUID bundleId, List<SubscriptionBaseEvent> dryRunEvents, InternalTenantContext context);
 
     public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(InternalTenantContext context);
 

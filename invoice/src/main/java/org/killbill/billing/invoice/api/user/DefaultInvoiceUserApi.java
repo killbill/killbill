@@ -34,6 +34,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceDispatcher;
+import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -199,8 +200,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                     }));
     }
 
+
     @Override
-    public Invoice triggerInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final boolean dryRun,
+    public Invoice triggerInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final DryRunArguments dryRunArguments,
                                             final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
@@ -212,7 +214,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
 
         final DateTime processingDateTime = targetDate.toDateTimeAtCurrentTime(account.getTimeZone());
-        final Invoice result = dispatcher.processAccount(accountId, processingDateTime, dryRun, internalContext);
+        final Invoice result = dispatcher.processAccount(accountId, processingDateTime, dryRunArguments, internalContext);
         if (result == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate);
         } else {

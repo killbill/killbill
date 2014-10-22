@@ -20,16 +20,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -40,13 +31,15 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -92,6 +85,10 @@ public class InvoiceChecker {
     public void checkInvoice(final UUID invoiceId, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
         final Invoice invoice = invoiceUserApi.getInvoice(invoiceId, context);
         Assert.assertNotNull(invoice);
+        checkInvoice(invoice, context, expected);
+    }
+
+    public void checkInvoiceNoAudits(final Invoice invoice, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
 
         final List<InvoiceItem> actual = invoice.getInvoiceItems();
         Assert.assertEquals(actual.size(), expected.size());
@@ -156,6 +153,11 @@ public class InvoiceChecker {
                 Assert.fail(failureMessage);
             }
         }
+
+    }
+
+    public void checkInvoice(final Invoice invoice, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
+        checkInvoiceNoAudits(invoice, context, expected);
         auditChecker.checkInvoiceCreated(invoice, context);
     }
 
@@ -191,23 +193,32 @@ public class InvoiceChecker {
         private final LocalDate startDate;
         private final LocalDate endDate;
         private final InvoiceItemType type;
-        private final BigDecimal Amount;
+        private final BigDecimal amount;
 
-        public ExpectedInvoiceItemCheck(final InvoiceItemType type, final BigDecimal amount) {
-            this.checkDates = false;
+        public ExpectedInvoiceItemCheck(final InvoiceItemType type, final BigDecimal amount, boolean checkDates) {
+            this.checkDates = checkDates;
             this.type = type;
             this.startDate = null;
             this.endDate = null;
-            Amount = amount;
+            this.amount = amount;
+        }
+
+        public ExpectedInvoiceItemCheck(final InvoiceItemType type, final BigDecimal amount) {
+            this(type, amount, false);
+        }
+
+        public ExpectedInvoiceItemCheck(final LocalDate startDate, final LocalDate endDate,
+                                        final InvoiceItemType type, final BigDecimal amount, boolean checkDates) {
+            this.checkDates = checkDates;
+            this.startDate = startDate;
+            this.endDate = endDate;
+            this.type = type;
+            this.amount = amount;
         }
 
         public ExpectedInvoiceItemCheck(final LocalDate startDate, final LocalDate endDate,
                                         final InvoiceItemType type, final BigDecimal amount) {
-            this.checkDates = true;
-            this.startDate = startDate;
-            this.endDate = endDate;
-            this.type = type;
-            Amount = amount;
+            this(startDate, endDate, type, amount, true);
         }
 
         public boolean shouldCheckDates() {
@@ -227,7 +238,7 @@ public class InvoiceChecker {
         }
 
         public BigDecimal getAmount() {
-            return Amount;
+            return amount;
         }
     }
 

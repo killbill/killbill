@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -45,14 +46,23 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -60,6 +70,7 @@ import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
+import org.killbill.billing.jaxrs.json.InvoiceDryRunJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.InvoiceJson;
 import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
@@ -81,6 +92,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
+import org.killbill.clock.ClockUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -254,7 +266,6 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
     public Response createFutureInvoice(@QueryParam(QUERY_ACCOUNT_ID) final String accountId,
                                         @QueryParam(QUERY_TARGET_DATE) final String targetDateTime,
-                                        @QueryParam(QUERY_DRY_RUN) @DefaultValue("false") final Boolean dryRun,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
@@ -263,12 +274,67 @@ public class InvoiceResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final LocalDate inputDate = toLocalDate(UUID.fromString(accountId), targetDateTime, callContext);
 
-        final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRun,
-                                                                             callContext);
-        if (dryRun) {
-            return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice)).build();
-        } else {
+        try {
+            final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, null,
+                                                                                 callContext);
             return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", generatedInvoice.getId());
+        } catch (InvoiceApiException e) {
+            if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+            throw e;
+        }
+    }
+
+    @Timed
+    @POST
+    @Path("/" + DRY_RUN)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Generate a dryRun invoice", response = InvoiceJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
+    public Response generateDryRunInvoice(@Nullable final InvoiceDryRunJson dryRunSubscriptionSpec,
+                                          @QueryParam(QUERY_ACCOUNT_ID) final String accountId,
+                                          @QueryParam(QUERY_TARGET_DATE) final String targetDateTime,
+                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                          @HeaderParam(HDR_REASON) final String reason,
+                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request,
+                                          @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final LocalDate inputDate = toLocalDate(UUID.fromString(accountId), targetDateTime, callContext);
+
+        // Passing a null or empty body means we are trying to generate an invoice with a (future) targetDate
+        // On the other hand if body is not null, we are attempting a dryRun subscription operation
+        if (dryRunSubscriptionSpec != null && dryRunSubscriptionSpec.getDryRunAction() != null) {
+            if (SubscriptionEventType.START_BILLING.toString().equals(dryRunSubscriptionSpec.getDryRunAction())) {
+                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductName(), "DryRun subscription product category should be specified");
+                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBillingPeriod(), "DryRun subscription billingPeriod should be specified");
+                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductCategory(), "DryRun subscription product category should be specified");
+                if (dryRunSubscriptionSpec.getProductCategory().equals(ProductCategory.ADD_ON)) {
+                    verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBundleId(), "DryRun bundle ID should be specified");
+                }
+            } else if (SubscriptionEventType.CHANGE.toString().equals(dryRunSubscriptionSpec.getDryRunAction())) {
+                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductName(), "DryRun subscription product category should be specified");
+                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBillingPeriod(), "DryRun subscription billingPeriod should be specified");
+                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getSubscriptionId(), "DryRun subscriptionID should be specified");
+            }  else if (SubscriptionEventType.STOP_BILLING.toString().equals(dryRunSubscriptionSpec.getDryRunAction())) {
+                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getSubscriptionId(), "DryRun subscriptionID should be specified");
+            }
+        }
+
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
+
+        final DryRunArguments dryRunArguments = new DefaultDryRunArguments(dryRunSubscriptionSpec, account.getTimeZone(), clock);
+        try {
+            final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRunArguments,
+                                                                                 callContext);
+            return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice, true, null)).build();
+        } catch (InvoiceApiException e) {
+            if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+            throw e;
         }
     }
 
@@ -603,4 +669,81 @@ public class InvoiceResource extends JaxRsResourceBase {
     protected ObjectType getObjectType() {
         return ObjectType.INVOICE;
     }
+
+    private static class DefaultDryRunArguments implements DryRunArguments {
+
+        private final SubscriptionEventType action;
+        private final UUID subscriptionId;
+        private final DateTime effectiveDate;
+        private final PlanPhaseSpecifier specifier;
+        private final UUID bundleId;
+        private final BillingActionPolicy billingPolicy;
+
+        public DefaultDryRunArguments(final SubscriptionEventType action, final UUID subscriptionId, final UUID bundleId,
+                                      final PlanPhaseSpecifier specifier, final DateTime effectiveDate, final BillingActionPolicy billingPolicy) {
+            this.action = action;
+            this.subscriptionId = subscriptionId;
+            this.bundleId = bundleId;
+            this.effectiveDate = effectiveDate;
+            this.billingPolicy = billingPolicy;
+            this.specifier = specifier;
+        }
+
+        public DefaultDryRunArguments(final InvoiceDryRunJson input, final DateTimeZone accountTimeZone, final Clock clock) {
+            if (input == null) {
+                this.action = null;
+                this.subscriptionId = null;
+                this.effectiveDate = null;
+                this.specifier = null;
+                this.bundleId = null;
+                this.billingPolicy = null;
+            } else {
+                this.action = input.getDryRunAction() != null ? SubscriptionEventType.valueOf(input.getDryRunAction()) : null;
+                this.subscriptionId = input.getSubscriptionId() != null ? UUID.fromString(input.getSubscriptionId()) : null;
+                this.bundleId = input.getBundleId() != null ? UUID.fromString(input.getBundleId()) : null;
+                this.effectiveDate = input.getEffectiveDate() != null ? ClockUtil.computeDateTimeWithUTCReferenceTime(input.getEffectiveDate(), clock.getUTCNow().toLocalTime(), accountTimeZone, clock) : null;
+                this.billingPolicy = input.getBillingPolicy() != null ? BillingActionPolicy.valueOf(input.getBillingPolicy()) : null;
+                this.specifier = (input.getProductName() != null &&
+                                  input.getProductCategory() != null &&
+                                  input.getBillingPeriod() != null) ?
+                                 new PlanPhaseSpecifier(input.getProductName(),
+                                                        ProductCategory.valueOf(input.getProductCategory()),
+                                                        BillingPeriod.valueOf(input.getBillingPeriod()),
+                                                        input.getPriceListName(),
+                                                        input.getPhaseType() != null ? PhaseType.valueOf(input.getPhaseType()) : null) :
+                                 null;
+            }
+        }
+
+        @Override
+        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+            return specifier;
+        }
+
+        @Override
+        public SubscriptionEventType getAction() {
+            return action;
+        }
+
+        @Override
+        public UUID getSubscriptionId() {
+            return subscriptionId;
+        }
+
+        @Override
+        public DateTime getEffectiveDate() {
+            return effectiveDate;
+        }
+
+        @Override
+        public UUID getBundleId() {
+            return bundleId;
+        }
+
+        @Override
+        public BillingActionPolicy getBillingActionPolicy() {
+            return billingPolicy;
+        }
+    }
+
 }

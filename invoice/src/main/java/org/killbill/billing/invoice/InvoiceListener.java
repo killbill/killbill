@@ -65,7 +65,7 @@ public class InvoiceListener {
 
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-            dispatcher.processAccount(event.getAccountId(), event.getEffectiveDate(), false, context);
+            dispatcher.processAccount(event.getAccountId(), event.getEffectiveDate(), null, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
         }
@@ -94,7 +94,7 @@ public class InvoiceListener {
 
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-            dispatcher.processAccount(event.getAccountId(), event.getEffectiveTransitionTime(), false, context);
+            dispatcher.processAccount(event.getAccountId(), event.getEffectiveTransitionTime(), null, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
         }
@@ -111,7 +111,7 @@ public class InvoiceListener {
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             final UUID accountId = accountApi.getByRecordId(event.getSearchKey1(), context);
-            dispatcher.processAccount(accountId, clock.getUTCNow(), false, context);
+            dispatcher.processAccount(accountId, clock.getUTCNow(), null, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
         } catch (AccountApiException e) {

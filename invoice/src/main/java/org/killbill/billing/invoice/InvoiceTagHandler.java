@@ -63,7 +63,7 @@ public class InvoiceTagHandler {
 
     private void processUnpaid_AUTO_INVOICING_OFF_invoices(final UUID accountId, final InternalCallContext context) {
         try {
-            dispatcher.processAccount(accountId, clock.getUTCNow(), false, context);
+            dispatcher.processAccount(accountId, clock.getUTCNow(), null, context);
         } catch (InvoiceApiException e) {
             log.warn(String.format("Failed to process process removal AUTO_INVOICING_OFF for account %s", accountId), e);
         }

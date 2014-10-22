@@ -16,6 +16,7 @@
 
 package org.killbill.billing.subscription.api.svcs;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,29 +26,25 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.clock.Clock;
-import org.killbill.clock.DefaultClock;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
+import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -64,10 +61,17 @@ import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
+import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
+import org.killbill.clock.Clock;
+import org.killbill.clock.DefaultClock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -111,7 +115,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
             final Catalog catalog = catalogService.getFullCatalog();
             final Plan plan = catalog.findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, requestedDate);
-
             final PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
@@ -123,39 +126,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleId);
             }
 
-            DateTime bundleStartDate = null;
             final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundleId, context);
-            switch (plan.getProduct().getCategory()) {
-                case BASE:
-                    if (baseSubscription != null) {
-                        if (baseSubscription.getState() == EntitlementState.ACTIVE) {
-                            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
-                        }
-                    }
-                    bundleStartDate = requestedDate;
-                    break;
-                case ADD_ON:
-                    if (baseSubscription == null) {
-                        throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BP, bundleId);
-                    }
-                    if (effectiveDate.isBefore(baseSubscription.getStartDate())) {
-                        throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, effectiveDate.toString(), baseSubscription.getStartDate().toString());
-                    }
-                    addonUtils.checkAddonCreationRights(baseSubscription, plan);
-                    bundleStartDate = baseSubscription.getStartDate();
-                    break;
-                case STANDALONE:
-                    if (baseSubscription != null) {
-                        throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
-                    }
-                    // Not really but we don't care, there is no alignment for STANDALONE subscriptions
-                    bundleStartDate = requestedDate;
-                    break;
-                default:
-                    throw new SubscriptionBaseError(String.format("Can't create subscription of type %s",
-                                                                  plan.getProduct().getCategory().toString()));
-            }
-
+            final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, requestedDate, effectiveDate);
             final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
             return apiService.createPlan(new SubscriptionBuilder()
                                                  .setId(UUID.randomUUID())
@@ -240,7 +212,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     public static SubscriptionBaseBundle getActiveBundleForKeyNotException(final List<SubscriptionBaseBundle> existingBundles, final SubscriptionDao dao, final Clock clock, final InternalTenantContext context) {
         for (SubscriptionBaseBundle cur : existingBundles) {
-            final List<SubscriptionBase> subscriptions = dao.getSubscriptions(cur.getId(), context);
+            final List<SubscriptionBase> subscriptions = dao.getSubscriptions(cur.getId(), ImmutableList.<SubscriptionBaseEvent>of(), context);
             for (SubscriptionBase s : subscriptions) {
                 if (s.getCategory() == ProductCategory.ADD_ON) {
                     continue;
@@ -255,9 +227,18 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     @Override
     public List<SubscriptionBase> getSubscriptionsForBundle(UUID bundleId,
-                                                            InternalTenantContext context) {
-        final List<SubscriptionBase> internalSubscriptions = dao.getSubscriptions(bundleId, context);
-        return createSubscriptionsForApiUse(internalSubscriptions);
+                                                            @Nullable final DryRunArguments dryRunArguments,
+                                                            InternalTenantContext context) throws SubscriptionBaseApiException {
+
+        final List<SubscriptionBaseEvent> outputDryRunEvents = new ArrayList<SubscriptionBaseEvent>();
+        final List<SubscriptionBase> outputSubscriptions = new ArrayList<SubscriptionBase>();
+
+        populateDryRunEvents(bundleId, dryRunArguments, outputDryRunEvents, outputSubscriptions, context);
+        final List<SubscriptionBase> result = dao.getSubscriptions(bundleId, outputDryRunEvents, context);
+        if (result != null && !result.isEmpty()) {
+            outputSubscriptions.addAll(result);
+        }
+        return createSubscriptionsForApiUse(outputSubscriptions);
     }
 
     @Override
@@ -328,23 +309,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public DateTime getNextBillingDate(final UUID accountId, final InternalTenantContext context) {
-        final List<SubscriptionBaseBundle> bundles = getBundlesForAccount(accountId, context);
-        DateTime result = null;
-        for (final SubscriptionBaseBundle bundle : bundles) {
-            final List<SubscriptionBase> subscriptions = getSubscriptionsForBundle(bundle.getId(), context);
-            for (final SubscriptionBase subscription : subscriptions) {
-                final DateTime chargedThruDate = subscription.getChargedThroughDate();
-                if (result == null ||
-                    (chargedThruDate != null && chargedThruDate.isBefore(result))) {
-                    result = subscription.getChargedThroughDate();
-                }
-            }
-        }
-        return result;
-    }
-
-    @Override
     public List<EntitlementAOStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName, final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBase subscription = dao.getSubscriptionFromId(subscriptionId, context);
         if (subscription == null) {
@@ -356,7 +320,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
         final List<EntitlementAOStatusDryRun> result = new LinkedList<EntitlementAOStatusDryRun>();
 
-        final List<SubscriptionBase> bundleSubscriptions = dao.getSubscriptions(subscription.getBundleId(), context);
+        final List<SubscriptionBase> bundleSubscriptions = dao.getSubscriptions(subscription.getBundleId(), ImmutableList.<SubscriptionBaseEvent>of(), context);
         for (final SubscriptionBase cur : bundleSubscriptions) {
             if (cur.getId().equals(subscriptionId)) {
                 continue;
@@ -389,6 +353,128 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     @Override
     public void updateExternalKey(final UUID bundleId, final String newExternalKey, final InternalCallContext context) {
         dao.updateBundleExternalKey(bundleId, newExternalKey, context);
+    }
+
+    private void populateDryRunEvents(@Nullable final UUID bundleId,
+                                      @Nullable final DryRunArguments dryRunArguments,
+                                      final List<SubscriptionBaseEvent> outputDryRunEvents,
+                                      final List<SubscriptionBase> outputSubscriptions,
+                                      InternalTenantContext context) throws SubscriptionBaseApiException {
+        if (dryRunArguments == null || dryRunArguments.getAction() == null) {
+            return;
+        }
+
+        final DateTime utcNow = clock.getUTCNow();
+        List<SubscriptionBaseEvent> dryRunEvents = null;
+        try {
+            final PlanPhaseSpecifier inputSpec = dryRunArguments.getPlanPhaseSpecifier();
+            final String realPriceList = (inputSpec != null && inputSpec.getPriceListName() != null) ? inputSpec.getPriceListName() : PriceListSet.DEFAULT_PRICELIST_NAME;
+            final Catalog catalog = catalogService.getFullCatalog();
+            final Plan plan = (inputSpec != null && inputSpec.getProductName() != null && inputSpec.getBillingPeriod() != null) ?
+                              catalog.findPlan(inputSpec.getProductName(), inputSpec.getBillingPeriod(), realPriceList, utcNow) : null;
+            final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+
+            if (dryRunArguments != null) {
+                switch (dryRunArguments.getAction()) {
+                    case START_BILLING:
+
+                        final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundleId, context);
+                        final DateTime startEffectiveDate = dryRunArguments.getEffectiveDate() != null ? dryRunArguments.getEffectiveDate() : utcNow;
+                        final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, startEffectiveDate);
+                        final UUID subscriptionId = UUID.randomUUID();
+                        dryRunEvents = apiService.getEventsOnCreation(subscriptionId, startEffectiveDate, bundleStartDate, 1L, plan, inputSpec.getPhaseType(), realPriceList,
+                                                                      utcNow, startEffectiveDate, utcNow, false, context.toTenantContext(tenantId));
+                        final SubscriptionBuilder builder = new SubscriptionBuilder()
+                                .setId(subscriptionId)
+                                .setBundleId(bundleId)
+                                .setCategory(plan.getProduct().getCategory())
+                                .setBundleStartDate(bundleStartDate)
+                                .setAlignStartDate(startEffectiveDate);
+                        final DefaultSubscriptionBase newSubscription = new DefaultSubscriptionBase(builder, apiService, clock);
+                        newSubscription.rebuildTransitions(dryRunEvents, catalog);
+                        outputSubscriptions.add(newSubscription);
+                        break;
+
+                    case CHANGE:
+                        final DefaultSubscriptionBase subscriptionForChange = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), context);
+                        DateTime changeEffectiveDate = dryRunArguments.getEffectiveDate();
+                        if (changeEffectiveDate == null) {
+                            BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
+                            if (policy == null) {
+                                final PlanChangeResult planChangeResult = apiService.getPlanChangeResult(subscriptionForChange,
+                                                                                                         dryRunArguments.getPlanPhaseSpecifier().getProductName(),
+                                                                                                         dryRunArguments.getPlanPhaseSpecifier().getBillingPeriod(),
+                                                                                                         dryRunArguments.getPlanPhaseSpecifier().getPriceListName(), utcNow);
+                                policy = planChangeResult.getPolicy();
+                            }
+                            changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(policy);
+                        }
+                        dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, realPriceList, utcNow, changeEffectiveDate, utcNow, true, context.toTenantContext(tenantId));
+                        break;
+
+                    case STOP_BILLING:
+                        final DefaultSubscriptionBase subscriptionForCancellation = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), context);
+                        DateTime cancelEffectiveDate = dryRunArguments.getEffectiveDate();
+                        if (dryRunArguments.getEffectiveDate() == null) {
+                            BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
+                            if (policy == null) {
+
+                                final Plan currentPlan = subscriptionForCancellation.getCurrentPlan();
+                                final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
+                                                                                            currentPlan.getProduct().getCategory(),
+                                                                                            subscriptionForCancellation.getCurrentPlan().getRecurringBillingPeriod(),
+                                                                                            subscriptionForCancellation.getCurrentPriceList().getName(),
+                                                                                            subscriptionForCancellation.getCurrentPhase().getPhaseType());
+                                policy = catalogService.getFullCatalog().planCancelPolicy(spec, utcNow);
+                            }
+                            cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy);
+                        }
+                        dryRunEvents = apiService.getEventsOnCancelPlan(subscriptionForCancellation, utcNow, cancelEffectiveDate, utcNow, true, context.toTenantContext(tenantId));
+                        break;
+
+                    default:
+                        throw new IllegalArgumentException("Unexpected dryRunArguments action " + dryRunArguments.getAction());
+                }
+            }
+        } catch (CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
+        if (dryRunEvents != null && !dryRunEvents.isEmpty()) {
+            outputDryRunEvents.addAll(dryRunEvents);
+        }
+    }
+
+    private DateTime getBundleStartDateWithSanity(final UUID bundleId, @Nullable final DefaultSubscriptionBase baseSubscription, final Plan plan,
+                                                  final DateTime requestedDate, final DateTime effectiveDate) throws SubscriptionBaseApiException, CatalogApiException {
+        switch (plan.getProduct().getCategory()) {
+            case BASE:
+                if (baseSubscription != null &&
+                    baseSubscription.getState() == EntitlementState.ACTIVE) {
+                    throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
+                }
+                return requestedDate;
+
+            case ADD_ON:
+                if (baseSubscription == null) {
+                    throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BP, bundleId);
+                }
+                if (effectiveDate.isBefore(baseSubscription.getStartDate())) {
+                    throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, effectiveDate.toString(), baseSubscription.getStartDate().toString());
+                }
+                addonUtils.checkAddonCreationRights(baseSubscription, plan);
+                return baseSubscription.getStartDate();
+
+            case STANDALONE:
+                if (baseSubscription != null) {
+                    throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
+                }
+                // Not really but we don't care, there is no alignment for STANDALONE subscriptions
+                return requestedDate;
+
+            default:
+                throw new SubscriptionBaseError(String.format("Can't create subscription of type %s",
+                                                              plan.getProduct().getCategory().toString()));
+        }
     }
 
     private List<EffectiveSubscriptionInternalEvent> convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(final SubscriptionBase subscription,

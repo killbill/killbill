@@ -40,12 +40,15 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceInternalEvent;
+import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -149,7 +152,7 @@ public class InvoiceDispatcher {
                 return;
             }
             final UUID accountId = subscriptionApi.getAccountIdFromSubscriptionId(subscriptionId, context);
-            processAccount(accountId, targetDate, false, context);
+            processAccount(accountId, targetDate, null, context);
         } catch (final SubscriptionBaseApiException e) {
             log.error("Failed handling SubscriptionBase change.",
                       new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
@@ -157,12 +160,12 @@ public class InvoiceDispatcher {
     }
 
     public Invoice processAccount(final UUID accountId, final DateTime targetDate,
-                                  final boolean dryRun, final InternalCallContext context) throws InvoiceApiException {
+                                  @Nullable final DryRunArguments dryRunArguments, final InternalCallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), accountId.toString(), NB_LOCK_TRY);
 
-            return processAccountWithLock(accountId, targetDate, dryRun, context);
+            return processAccountWithLock(accountId, targetDate, dryRunArguments, context);
         } catch (final LockFailedException e) {
             // Not good!
             log.error(String.format("Failed to process invoice for account %s, targetDate %s",
@@ -176,11 +179,13 @@ public class InvoiceDispatcher {
     }
 
     private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDateTime,
-                                           final boolean dryRun, final InternalCallContext context) throws InvoiceApiException {
+                                           @Nullable final DryRunArguments dryRunArguments, final InternalCallContext context) throws InvoiceApiException {
+
+        final boolean isDryRun = dryRunArguments != null;
         try {
 
             // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
-            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, context);
+            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, dryRunArguments, context);
 
             final Account account = accountApi.getAccountById(accountId, context);
             final DateAndTimeZoneContext dateAndTimeZoneContext = billingEvents.iterator().hasNext() ?
@@ -207,7 +212,7 @@ public class InvoiceDispatcher {
             //
             if (invoice == null) {
                 log.info("Generated null invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
-                if (!dryRun) {
+                if (!isDryRun) {
                     final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
                                                                                context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                     postEvent(event, accountId, context);
@@ -240,7 +245,7 @@ public class InvoiceDispatcher {
             }
 
             boolean isRealInvoiceWithItems = false;
-            if (!dryRun) {
+            if (!isDryRun) {
 
                 // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
                 final Set<UUID> adjustedUniqueOtherInvoiceId = new TreeSet<UUID>();
@@ -296,7 +301,7 @@ public class InvoiceDispatcher {
                 }
             }
 
-            if (account.isNotifiedForInvoices() && isRealInvoiceWithItems && !dryRun) {
+            if (account.isNotifiedForInvoices() && isRealInvoiceWithItems && !isDryRun) {
                 // Need to re-hydrate the invoice object to get the invoice number (record id)
                 // API_FIX InvoiceNotifier public API?
                 invoiceNotifier.notify(account, new DefaultInvoice(invoiceDao.getById(invoice.getId(), context)), buildTenantContext(context));
@@ -443,5 +448,4 @@ public class InvoiceDispatcher {
             }
         }
     }
-
 }

@@ -62,7 +62,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
-        final Integer billCycleDayLocal = billCycleDayCalculator.calculateBcdForAlignment(BillingAlignment.BUNDLE, bundle, subscription,
+        final Integer billCycleDayLocal = billCycleDayCalculator.calculateBcdForAlignment(BillingAlignment.BUNDLE, bundle.getId(), subscription,
                                                                                           account, catalog, null, internalCallContext);
 
         Assert.assertEquals(billCycleDayLocal, (Integer) expectedBCDUTC);

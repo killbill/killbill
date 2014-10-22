@@ -38,13 +38,17 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -194,14 +198,14 @@ public class TestInvoiceHelper {
                                           fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
                                           BillingMode.IN_ADVANCE, "", 1L, SubscriptionBaseTransitionType.CREATE));
 
-        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
+        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi,
                                                                    invoiceDao, nonEntityDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock, cacheControllerDispatcher);
 
-        Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, true, internalCallContext);
+        Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, new DryRunFutureDateArguments(), internalCallContext);
         Assert.assertNotNull(invoice);
 
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
@@ -209,7 +213,7 @@ public class TestInvoiceHelper {
         List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(context);
         Assert.assertEquals(invoices.size(), 0);
 
-        invoice = dispatcher.processAccount(account.getId(), targetDate, false, context);
+        invoice = dispatcher.processAccount(account.getId(), targetDate, null, context);
         Assert.assertNotNull(invoice);
 
         invoices = invoiceDao.getInvoicesByAccount(context);
@@ -419,5 +423,35 @@ public class TestInvoiceHelper {
                 }
             }
         };
+    }
+    public static class DryRunFutureDateArguments implements DryRunArguments {
+        public DryRunFutureDateArguments() {
+        }
+        @Override
+        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+            return null;
+        }
+        @Override
+        public SubscriptionEventType getAction() {
+            return null;
+        }
+        @Override
+        public UUID getSubscriptionId() {
+            return null;
+        }
+        @Override
+        public DateTime getEffectiveDate() {
+            return null;
+        }
+
+        @Override
+        public UUID getBundleId() {
+            return null;
+        }
+
+        @Override
+        public BillingActionPolicy getBillingActionPolicy() {
+            return null;
+        }
     }
 }

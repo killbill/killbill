@@ -17,6 +17,7 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -60,7 +61,7 @@ public class BillCycleDayCalculator {
         this.subscriptionApi = subscriptionApi;
     }
 
-    protected int calculateBcd(final SubscriptionBaseBundle bundle, final SubscriptionBase subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
+    protected int calculateBcd(final UUID bundleId, final SubscriptionBase subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
             throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
 
         final Catalog catalog = catalogService.getFullCatalog();
@@ -85,11 +86,11 @@ public class BillCycleDayCalculator {
                                        phase.getPhaseType()),
                 transition.getRequestedTransitionTime());
 
-        return calculateBcdForAlignment(alignment, bundle, subscription, account, catalog, plan, context);
+        return calculateBcdForAlignment(alignment, bundleId, subscription, account, catalog, plan, context);
     }
 
     @VisibleForTesting
-    int calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBaseBundle bundle, final SubscriptionBase subscription,
+    int calculateBcdForAlignment(final BillingAlignment alignment, final UUID bundleId, final SubscriptionBase subscription,
                                  final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, SubscriptionBaseApiException, CatalogApiException {
         int result = 0;
         switch (alignment) {
@@ -100,7 +101,7 @@ public class BillCycleDayCalculator {
                 }
                 break;
             case BUNDLE:
-                final SubscriptionBase baseSub = subscriptionApi.getBaseSubscription(bundle.getId(), context);
+                final SubscriptionBase baseSub = subscriptionApi.getBaseSubscription(bundleId, context);
                 Plan basePlan = baseSub.getCurrentPlan();
                 if (basePlan == null) {
                     // The BP has been cancelled
