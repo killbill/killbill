@@ -65,7 +65,7 @@ function start() {
             debug_opts_eclipse=$DEBUG_OPTS_ECLIPSE
         fi
     fi
-    export MAVEN_OPTS="$MAVEN_OPTS $debug_opts_eclipse"
+    export MAVEN_OPTS="$MAVEN_OPTS $debug_opts_eclipse -Djetty.port=$PORT"
 
     echo "Starting IRS MAVEN_OPTS = $MAVEN_OPTS"
     echo "$start_cmd"
@@ -74,7 +74,7 @@ function start() {
 }
 
 
-while getopts ":pswdh" options; do
+while getopts ":p:swdh" options; do
   case $options in
 	s ) START=1;;
 	d ) DEBUG=1;;
