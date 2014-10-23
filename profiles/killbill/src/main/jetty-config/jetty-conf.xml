@@ -61,16 +61,16 @@
         <Arg>
             <New class="org.eclipse.jetty.server.bio.SocketConnector">
                 <Set name="host">
-                    <SystemProperty name="xn.server.ip"/>
+                    <SystemProperty name="jetty.host"/>
                 </Set>
                 <Set name="port">
-                    <SystemProperty name="xn.server.port" default="8080"/>
+                    <SystemProperty name="jetty.port" default="8080"/>
                 </Set>
                 <Set name="maxIdleTime">300000</Set>
                 <Set name="Acceptors">2</Set>
                 <Set name="statsOn">true</Set>
                 <Set name="confidentialPort">
-                    <SystemProperty name="xn.server.ssl.port" default="8443"/>
+                    <SystemProperty name="jetty.ssl.port" default="8443"/>
                 </Set>
             </New>
         </Arg>
