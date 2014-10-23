@@ -75,8 +75,10 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, refererenceDateTime, internalCallContext);
 
         // And so that datetime in UTC becomes expectedDate below
-        final DateTime expectedDate = new DateTime(2013, 8, 7, 9, 28, 10, 0, DateTimeZone.UTC);
+        final DateTime expectedDate = new DateTime(2013, 8, 8, 1, 28, 10, 0, DateTimeZone.UTC);
         Assert.assertEquals(targetDate, expectedDate);
+
+        Assert.assertEquals(targetDate.toDateTime(timeZoneUtcMinus8).toLocalDate(), inputDate);
     }
 
 
@@ -121,8 +123,11 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, refererenceDateTime, internalCallContext);
 
         // And so that datetime in UTC becomes expectedDate below
-        final DateTime expectedDate = new DateTime(2013, 8, 7, 15, 28, 10, 0, DateTimeZone.UTC);
+        final DateTime expectedDate = new DateTime(2013, 8, 6, 20, 28, 10, 0, DateTimeZone.UTC);
         Assert.assertEquals(targetDate, expectedDate);
+
+        Assert.assertEquals(targetDate.toDateTime(timeZoneUtcPlus5).toLocalDate(), inputDate);
+
     }
 
     @Test(groups = "fast")
