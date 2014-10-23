@@ -19,7 +19,9 @@ package org.killbill.billing.jaxrs.resources;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -115,9 +117,10 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve available add-ons for a given product", response = PlanDetailJson.class, responseContainer = "List")
     @ApiResponses(value = {})
     public Response getAvailableAddons(@QueryParam("baseProductName") final String baseProductName,
+                                       @Nullable @QueryParam("priceListName") final String priceListName,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
         final StaticCatalog catalog = catalogService.getCurrentCatalog();
-        final List<Listing> listings = catalog.getAvailableAddonListings(baseProductName);
+        final List<Listing> listings = catalog.getAvailableAddOnListings(baseProductName, priceListName);
         final List<PlanDetailJson> details = new ArrayList<PlanDetailJson>();
         for (final Listing listing : listings) {
             details.add(new PlanDetailJson(listing));

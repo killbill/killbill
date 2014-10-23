@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -458,8 +459,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
-    public List<Listing> getAvailableAddonListings(final String baseProductName) throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).getAvailableAddonListings(baseProductName);
+    public List<Listing> getAvailableAddOnListings(final String baseProductName, @Nullable final String priceListName) throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).getAvailableAddOnListings(baseProductName, priceListName);
     }
 
     @Override

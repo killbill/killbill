@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -352,7 +353,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     @Override
-    public List<Listing> getAvailableAddonListings(final String baseProductName) {
+    public List<Listing> getAvailableAddOnListings(final String baseProductName, @Nullable final String priceListName) {
         final List<Listing> availAddons = new ArrayList<Listing>();
 
         try {
@@ -361,9 +362,11 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
                 for ( Product availAddon : product.getAvailable() ) {
                     for ( BillingPeriod billingPeriod : BillingPeriod.values()) {
                         for( PriceList priceList : getPriceLists().getAllPriceLists()) {
-                            Plan addonInList = priceList.findPlan(availAddon, billingPeriod);
-                            if ( (addonInList != null) ) {
-                                availAddons.add(new DefaultListing(addonInList, priceList));
+                            if (priceListName == null || priceListName.equals(priceList.getName())) {
+                                Plan addonInList = priceList.findPlan(availAddon, billingPeriod);
+                                if ( (addonInList != null) ) {
+                                    availAddons.add(new DefaultListing(addonInList, priceList));
+                                }
                             }
                         }
                     }
