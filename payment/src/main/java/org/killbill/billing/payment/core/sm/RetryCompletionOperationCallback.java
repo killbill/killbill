@@ -27,13 +27,13 @@ import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
-import org.killbill.billing.retry.plugin.api.PaymentControlContext;
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.routing.plugin.api.PaymentRoutingContext;
+import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
 import org.killbill.commons.locker.GlobalLocker;
 
 public class RetryCompletionOperationCallback extends RetryOperationCallback {
 
-    public RetryCompletionOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryablePaymentStateContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry) {
+    public RetryCompletionOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryablePaymentStateContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry) {
         super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, retryPluginRegistry);
     }
 
@@ -44,7 +44,7 @@ public class RetryCompletionOperationCallback extends RetryOperationCallback {
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
                 final PaymentTransactionModelDao transaction = paymentStateContext.getPaymentTransactionModelDao();
-                final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+                final PaymentRoutingContext updatedPaymentControlContext = new DefaultPaymentRoutingContext(paymentStateContext.getAccount(),
                                                                                                             paymentStateContext.getPaymentMethodId(),
                                                                                                             retryablePaymentStateContext.getAttemptId(),
                                                                                                             transaction.getPaymentId(),

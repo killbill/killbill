@@ -29,7 +29,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
-import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.mockito.Mockito;
@@ -58,7 +58,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
         }
         @Override
         public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+            return ImmutableList.<String>of(InvoicePaymentRoutingPluginApi.PLUGIN_NAME);
         }
     };
 
@@ -133,7 +133,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
         try {
 
             final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-            final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
+            final PluginProperty prop1 = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
             properties.add(prop1);
 
             final Payment paymentInfo = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),

@@ -28,7 +28,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
-import org.killbill.billing.payment.core.sm.PluginControlledPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -61,14 +61,14 @@ abstract class CompletionTaskBase<T> implements Runnable {
     protected final RetryStateMachineHelper retrySMHelper;
     protected final CacheControllerDispatcher controllerDispatcher;
     protected final AccountInternalApi accountInternalApi;
-    protected final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
+    protected final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
 
 
     public CompletionTaskBase(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                               final NonEntityDao nonEntityDao, final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
                               final RetryStateMachineHelper retrySMHelper, final CacheControllerDispatcher controllerDispatcher, final AccountInternalApi accountInternalApi,
-                              final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
+                              final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         this.janitor = janitor;
         this.internalCallContextFactory = internalCallContextFactory;
         this.paymentConfig = paymentConfig;

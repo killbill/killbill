@@ -99,7 +99,7 @@ public class TestTagApi extends TestIntegrationBase {
         assertListenerStatus();
 
         //
-        // Add 2 Tags on the invoice (1 control tag and 1 user tag)
+        // Add 2 Tags on the invoice (1 invoice tag and 1 user tag)
         //
         busHandler.pushExpectedEvents(NextEvent.TAG);
         tagUserApi.addTag(invoice.getId(), ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), callContext);

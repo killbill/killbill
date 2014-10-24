@@ -33,10 +33,10 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentSqlDao;
-import org.killbill.billing.retry.plugin.api.PaymentControlApiException;
+import org.killbill.billing.routing.plugin.api.PaymentRoutingApiException;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -58,7 +58,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         @Override
         public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+            return ImmutableList.<String>of(InvoicePaymentRoutingPluginApi.PLUGIN_NAME);
         }
     };
 
@@ -297,7 +297,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                         createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
             Assert.fail("Unexpected success");
         } catch (PaymentApiException e) {
-            assertTrue(e.getCause() instanceof PaymentControlApiException);
+            assertTrue(e.getCause() instanceof PaymentRoutingApiException);
         }
     }
 
@@ -378,7 +378,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             paymentApi.createRefundWithPaymentControl(account, payment.getId(), BigDecimal.TEN, Currency.USD, transactionExternalKey2,
                                                       refundProperties, INVOICE_PAYMENT, callContext);
         } catch (PaymentApiException e) {
-            assertTrue(e.getCause() instanceof PaymentControlApiException);
+            assertTrue(e.getCause() instanceof PaymentRoutingApiException);
         }
     }
 
@@ -413,7 +413,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final List<PluginProperty> refundProperties = new ArrayList<PluginProperty>();
         final HashMap<UUID, BigDecimal> uuidBigDecimalHashMap = new HashMap<UUID, BigDecimal>();
         uuidBigDecimalHashMap.put(invoiceItem.getId(), null);
-        final PluginProperty refundIdsProp = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, uuidBigDecimalHashMap, false);
+        final PluginProperty refundIdsProp = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, uuidBigDecimalHashMap, false);
         refundProperties.add(refundIdsProp);
 
         final Payment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, transactionExternalKey2,
@@ -590,7 +590,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {
         final List<PluginProperty> result = new ArrayList<PluginProperty>();
-        result.add(new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
+        result.add(new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
         return result;
     }
 }

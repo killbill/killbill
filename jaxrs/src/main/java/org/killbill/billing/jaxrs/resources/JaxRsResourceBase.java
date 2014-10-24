@@ -374,7 +374,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
             @Override
             public List<String> getPaymentControlPluginNames() {
-                /* Will default to org.killbill.payment.control.plugin in payment sub-system */
+                /* Will default to org.killbill.payment.invoice.plugin in payment sub-system */
                 return null;
             }
         };

@@ -78,7 +78,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
                 final List<TagDefinitionModelDao> definitionList = new LinkedList<TagDefinitionModelDao>();
                 Iterators.addAll(definitionList, all);
 
-                // Add control tag definitions
+                // Add invoice tag definitions
                 for (final ControlTagType controlTag : ControlTagType.values()) {
                     definitionList.add(new TagDefinitionModelDao(controlTag));
                 }
@@ -148,7 +148,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     @Override
     public TagDefinitionModelDao create(final String definitionName, final String description,
                                         final InternalCallContext context) throws TagDefinitionApiException {
-        // Make sure a control tag with this name don't already exist
+        // Make sure a invoice tag with this name don't already exist
         if (TagModelDaoHelper.isControlTag(definitionName)) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_CONFLICTS_WITH_CONTROL_TAG, definitionName);
         }

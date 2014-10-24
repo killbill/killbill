@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package org.killbill.billing.payment.control.dao;
+package org.killbill.billing.payment.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,14 +28,14 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 
-public class TestInvoicePaymentControlDao extends PaymentTestSuiteWithEmbeddedDB {
+public class TestInvoicePaymentRoutingDao extends PaymentTestSuiteWithEmbeddedDB {
 
-    private InvoicePaymentControlDao dao;
+    private InvoicePaymentRoutingDao dao;
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
         super.beforeClass();
-        dao = new InvoicePaymentControlDao(dbi);
+        dao = new InvoicePaymentRoutingDao(dbi);
     }
 
     @Test(groups = "slow")

@@ -22,25 +22,25 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
 import org.killbill.commons.locker.GlobalLocker;
 
 public class RetryVoidOperationCallback extends RetryOperationCallback {
 
-    public RetryVoidOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryablePaymentStateContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry) {
+    public RetryVoidOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryablePaymentStateContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry) {
         super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
     }
 
     @Override
     protected Payment doCallSpecificOperationCallback() throws PaymentApiException {
         return paymentProcessor.createVoid(retryablePaymentStateContext.isApiPayment(),
-                                                 retryablePaymentStateContext.getAttemptId(),
-                                                 retryablePaymentStateContext.getAccount(),
-                                                 retryablePaymentStateContext.getPaymentId(),
-                                                 retryablePaymentStateContext.getPaymentTransactionExternalKey(),
-                                                 false,
-                                                 retryablePaymentStateContext.getProperties(),
-                                                 retryablePaymentStateContext.getCallContext(),
-                                                 retryablePaymentStateContext.getInternalCallContext());
+                                           retryablePaymentStateContext.getAttemptId(),
+                                           retryablePaymentStateContext.getAccount(),
+                                           retryablePaymentStateContext.getPaymentId(),
+                                           retryablePaymentStateContext.getPaymentTransactionExternalKey(),
+                                           false,
+                                           retryablePaymentStateContext.getProperties(),
+                                           retryablePaymentStateContext.getCallContext(),
+                                           retryablePaymentStateContext.getInternalCallContext());
     }
 }

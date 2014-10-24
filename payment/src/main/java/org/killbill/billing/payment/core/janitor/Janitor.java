@@ -26,7 +26,7 @@ import javax.inject.Named;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
-import org.killbill.billing.payment.core.sm.PluginControlledPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
@@ -63,7 +63,7 @@ public class Janitor {
                    final Clock clock,
                    final NonEntityDao nonEntityDao,
                    final InternalCallContextFactory internalCallContextFactory,
-                   final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
+                   final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                    @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
                    final PaymentStateMachineHelper paymentSMHelper,
                    final RetryStateMachineHelper retrySMHelper,

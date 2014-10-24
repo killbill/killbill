@@ -46,7 +46,7 @@ import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.bus.api.PersistentBus;
@@ -59,19 +59,19 @@ import com.google.common.base.Objects;
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 
-public class PluginControlledPaymentAutomatonRunner extends PaymentAutomatonRunner {
+public class PluginRoutingPaymentAutomatonRunner extends PaymentAutomatonRunner {
 
     private final PaymentProcessor paymentProcessor;
     private final RetryServiceScheduler retryServiceScheduler;
 
     private final RetryStateMachineHelper retrySMHelper;
 
-    protected final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry;
+    protected final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry;
 
     @Inject
-    public PluginControlledPaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
-                                                  final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final Clock clock, final PaymentProcessor paymentProcessor, @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
-                                                  final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor, PaymentStateMachineHelper paymentSMHelper, RetryStateMachineHelper retrySMHelper, final PersistentBus eventBus) {
+    public PluginRoutingPaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+                                               final OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry, final Clock clock, final PaymentProcessor paymentProcessor, @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
+                                               final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor, PaymentStateMachineHelper paymentSMHelper, RetryStateMachineHelper retrySMHelper, final PersistentBus eventBus) {
         super(stateMachineConfig, paymentConfig, paymentDao, locker, pluginRegistry, clock, executor, eventBus, paymentSMHelper);
         this.paymentProcessor = paymentProcessor;
         this.paymentControlPluginRegistry = retryPluginRegistry;

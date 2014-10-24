@@ -18,33 +18,33 @@ package org.killbill.billing.payment.glue;
 
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
-import org.killbill.billing.payment.provider.DefaultPaymentControlProviderPlugin;
-import org.killbill.billing.payment.provider.DefaultPaymentControlProviderPluginRegistry;
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
+import org.killbill.billing.payment.provider.DefaultPaymentRoutingProviderPlugin;
+import org.killbill.billing.payment.provider.DefaultPaymentRoutingProviderPluginRegistry;
+import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
 import org.killbill.billing.util.config.PaymentConfig;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-public class DefaultPaymentControlProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<PaymentControlPluginApi>> {
+public class DefaultPaymentRoutingProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<PaymentRoutingPluginApi>> {
 
     private final PaymentConfig paymentConfig;
-    private final DefaultPaymentControlProviderPlugin externalPaymentControlProviderPlugin;
-    private final InvoicePaymentControlPluginApi invoicePaymentControlPlugin;
+    private final DefaultPaymentRoutingProviderPlugin externalPaymentControlProviderPlugin;
+    private final InvoicePaymentRoutingPluginApi invoicePaymentControlPlugin;
 
     @Inject
-    public DefaultPaymentControlProviderPluginRegistryProvider(final PaymentConfig paymentConfig,
-                                                               final DefaultPaymentControlProviderPlugin externalPaymentControlProviderPlugin,
-                                                              final InvoicePaymentControlPluginApi invoicePaymentControlPlugin) {
+    public DefaultPaymentRoutingProviderPluginRegistryProvider(final PaymentConfig paymentConfig,
+                                                               final DefaultPaymentRoutingProviderPlugin externalPaymentControlProviderPlugin,
+                                                               final InvoicePaymentRoutingPluginApi invoicePaymentControlPlugin) {
         this.paymentConfig = paymentConfig;
         this.externalPaymentControlProviderPlugin = externalPaymentControlProviderPlugin;
         this.invoicePaymentControlPlugin = invoicePaymentControlPlugin;
     }
 
     @Override
-    public OSGIServiceRegistration<PaymentControlPluginApi> get() {
-        final DefaultPaymentControlProviderPluginRegistry pluginRegistry = new DefaultPaymentControlProviderPluginRegistry(paymentConfig);
+    public OSGIServiceRegistration<PaymentRoutingPluginApi> get() {
+        final DefaultPaymentRoutingProviderPluginRegistry pluginRegistry = new DefaultPaymentRoutingProviderPluginRegistry(paymentConfig);
 
         // Make the external payment provider plugin available by default
         final OSGIServiceDescriptor desc = new OSGIServiceDescriptor() {
@@ -55,7 +55,7 @@ public class DefaultPaymentControlProviderPluginRegistryProvider implements Prov
 
             @Override
             public String getRegistrationName() {
-                return DefaultPaymentControlProviderPlugin.PLUGIN_NAME;
+                return DefaultPaymentRoutingProviderPlugin.PLUGIN_NAME;
             }
         };
         pluginRegistry.registerService(desc, externalPaymentControlProviderPlugin);
@@ -69,7 +69,7 @@ public class DefaultPaymentControlProviderPluginRegistryProvider implements Prov
 
             @Override
             public String getRegistrationName() {
-                return InvoicePaymentControlPluginApi.PLUGIN_NAME;
+                return InvoicePaymentRoutingPluginApi.PLUGIN_NAME;
             }
         };
         pluginRegistry.registerService(desc2, invoicePaymentControlPlugin);

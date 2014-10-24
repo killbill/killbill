@@ -36,7 +36,7 @@ import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
@@ -64,7 +64,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
         @Override
         public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+            return ImmutableList.of(InvoicePaymentRoutingPluginApi.PLUGIN_NAME);
         }
     };
 
@@ -185,7 +185,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final List<PluginProperty> refundProperties = new ArrayList<PluginProperty>();
         final HashMap<UUID, BigDecimal> uuidBigDecimalHashMap = new HashMap<UUID, BigDecimal>();
         uuidBigDecimalHashMap.put(invoiceItem.getId(), new BigDecimal("1.0"));
-        final PluginProperty refundIdsProp = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, uuidBigDecimalHashMap, false);
+        final PluginProperty refundIdsProp = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, uuidBigDecimalHashMap, false);
         refundProperties.add(refundIdsProp);
 
         final Payment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, transactionExternalKey2,
@@ -218,7 +218,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
     private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {
         final List<PluginProperty> result = new ArrayList<PluginProperty>();
-        result.add(new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
+        result.add(new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
         return result;
     }
 }

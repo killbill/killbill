@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package org.killbill.billing.payment.control.dao;
+package org.killbill.billing.payment.invoice.dao;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -33,12 +33,12 @@ import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 
-public class InvoicePaymentControlDao {
+public class InvoicePaymentRoutingDao {
 
     private final IDBI dbi;
 
     @Inject
-    public InvoicePaymentControlDao(final IDBI dbi) {
+    public InvoicePaymentRoutingDao(final IDBI dbi) {
         this.dbi = dbi;
     }
 

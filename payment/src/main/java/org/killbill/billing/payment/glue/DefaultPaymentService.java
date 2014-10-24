@@ -21,7 +21,7 @@ package org.killbill.billing.payment.glue;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentService;
 import org.killbill.billing.payment.bus.InvoiceHandler;
-import org.killbill.billing.payment.control.PaymentTagHandler;
+import org.killbill.billing.payment.invoice.PaymentTagHandler;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.platform.api.LifecycleHandlerType;

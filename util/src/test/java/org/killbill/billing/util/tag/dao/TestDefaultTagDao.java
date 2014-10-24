@@ -63,7 +63,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         result = tagDefinitionDao.getByIds(uuids, internalCallContext);
         assertEquals(result.size(), 3);
 
-        // Add control tag and retry
+        // Add invoice tag and retry
         uuids.add(ControlTagType.AUTO_PAY_OFF.getId());
         result = tagDefinitionDao.getByIds(uuids, internalCallContext);
         assertEquals(result.size(), 4);
@@ -85,7 +85,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         // Control Tag
         try {
             tagDefinitionDao.create(ControlTagType.AUTO_INVOICING_OFF.name(), ControlTagType.AUTO_INVOICING_OFF.name(), internalCallContext);
-            Assert.fail("Should not be able to create a control tag");
+            Assert.fail("Should not be able to create a invoice tag");
         } catch (TagDefinitionApiException ignore) {
         }
         final TagDefinitionModelDao resdef_AUTO_INVOICING_OFF = tagDefinitionDao.getById(ControlTagType.AUTO_INVOICING_OFF.getId(), internalCallContext);
@@ -107,7 +107,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         // Control Tag
         try {
             tagDefinitionDao.create(ControlTagType.AUTO_PAY_OFF.name(), ControlTagType.AUTO_INVOICING_OFF.name(), internalCallContext);
-            Assert.fail("Should not be able to create a control tag");
+            Assert.fail("Should not be able to create a invoice tag");
         } catch (TagDefinitionApiException ignore) {
         }
         final TagDefinitionModelDao resdef_AUTO_PAY_OFF = tagDefinitionDao.getByName(ControlTagType.AUTO_PAY_OFF.name(), internalCallContext);

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package org.killbill.billing.payment.control.dao;
+package org.killbill.billing.payment.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.UUID;

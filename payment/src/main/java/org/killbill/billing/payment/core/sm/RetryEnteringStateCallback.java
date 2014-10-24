@@ -29,11 +29,11 @@ import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler
 
 public class RetryEnteringStateCallback implements EnteringStateCallback {
 
-    private PluginControlledPaymentAutomatonRunner retryablePaymentAutomatonRunner;
+    private PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner;
     private final RetryablePaymentStateContext paymentStateContext;
     private final RetryServiceScheduler retryServiceScheduler;
 
-    public RetryEnteringStateCallback(final PluginControlledPaymentAutomatonRunner retryablePaymentAutomatonRunner, final RetryablePaymentStateContext paymentStateContext,
+    public RetryEnteringStateCallback(final PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner, final RetryablePaymentStateContext paymentStateContext,
                                       final RetryServiceScheduler retryServiceScheduler) {
         this.retryablePaymentAutomatonRunner = retryablePaymentAutomatonRunner;
         this.paymentStateContext = paymentStateContext;

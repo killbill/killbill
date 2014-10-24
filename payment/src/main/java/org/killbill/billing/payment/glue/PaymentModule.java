@@ -35,15 +35,15 @@ import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
 import org.killbill.billing.payment.api.PaymentService;
 import org.killbill.billing.payment.bus.InvoiceHandler;
-import org.killbill.billing.payment.control.PaymentTagHandler;
-import org.killbill.billing.payment.control.dao.InvoicePaymentControlDao;
+import org.killbill.billing.payment.invoice.PaymentTagHandler;
+import org.killbill.billing.payment.invoice.dao.InvoicePaymentRoutingDao;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
-import org.killbill.billing.payment.core.PluginControlledPaymentProcessor;
+import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
-import org.killbill.billing.payment.core.sm.PluginControlledPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.DefaultPaymentDao;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -53,7 +53,7 @@ import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.payment.retry.DefaultRetryService.DefaultRetryServiceScheduler;
 import org.killbill.billing.payment.retry.RetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.commons.concurrent.WithProfilingThreadPoolExecutor;
@@ -83,7 +83,7 @@ public class PaymentModule extends KillBillModule {
     protected void installPaymentDao() {
         bind(PaymentDao.class).to(DefaultPaymentDao.class).asEagerSingleton();
         // Payment Control Plugin Dao
-        bind(InvoicePaymentControlDao.class).asEagerSingleton();
+        bind(InvoicePaymentRoutingDao.class).asEagerSingleton();
     }
 
     protected void installPaymentProviderPlugins(final PaymentConfig config) {
@@ -134,7 +134,7 @@ public class PaymentModule extends KillBillModule {
     }
 
     protected void installAutomatonRunner() {
-        bind(PluginControlledPaymentAutomatonRunner.class).asEagerSingleton();
+        bind(PluginRoutingPaymentAutomatonRunner.class).asEagerSingleton();
     }
 
     protected void installProcessors(final PaymentConfig paymentConfig) {
@@ -153,7 +153,7 @@ public class PaymentModule extends KillBillModule {
                                                                                           });
         bind(ExecutorService.class).annotatedWith(Names.named(PLUGIN_EXECUTOR_NAMED)).toInstance(pluginExecutorService);
         bind(PaymentProcessor.class).asEagerSingleton();
-        bind(PluginControlledPaymentProcessor.class).asEagerSingleton();
+        bind(PluginRoutingPaymentProcessor.class).asEagerSingleton();
         bind(PaymentGatewayProcessor.class).asEagerSingleton();
         bind(PaymentMethodProcessor.class).asEagerSingleton();
     }
@@ -165,7 +165,7 @@ public class PaymentModule extends KillBillModule {
 
         bind(PaymentConfig.class).toInstance(paymentConfig);
         bind(new TypeLiteral<OSGIServiceRegistration<PaymentPluginApi>>() {}).toProvider(DefaultPaymentProviderPluginRegistryProvider.class).asEagerSingleton();
-        bind(new TypeLiteral<OSGIServiceRegistration<PaymentControlPluginApi>>() {}).toProvider(DefaultPaymentControlProviderPluginRegistryProvider.class).asEagerSingleton();
+        bind(new TypeLiteral<OSGIServiceRegistration<PaymentRoutingPluginApi>>() {}).toProvider(DefaultPaymentRoutingProviderPluginRegistryProvider.class).asEagerSingleton();
 
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(PaymentGatewayApi.class).to(DefaultPaymentGatewayApi.class).asEagerSingleton();

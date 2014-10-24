@@ -17,9 +17,9 @@
 package org.killbill.billing.payment.retry;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.retry.plugin.api.FailureCallResult;
+import org.killbill.billing.routing.plugin.api.OnFailurePaymentRoutingResult;
 
-public class DefaultFailureCallResult implements FailureCallResult {
+public class DefaultFailureCallResult implements OnFailurePaymentRoutingResult {
 
     private final DateTime nextRetryDate;
 

@@ -80,7 +80,7 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Rate at which janitor tasks are scheduled")
     public TimeSpan getJanitorRunningRate();
 
-    @Config("org.killbill.payment.control.plugin")
+    @Config("org.killbill.payment.invoice.plugin")
     @Default("__INVOICE_PAYMENT_CONTROL_PLUGIN__")
     @Description("Whether the payment subsystem is off")
     public List<String> getPaymentControlPluginNames();

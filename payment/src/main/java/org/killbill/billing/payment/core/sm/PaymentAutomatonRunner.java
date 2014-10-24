@@ -45,7 +45,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
@@ -205,7 +205,7 @@ public class PaymentAutomatonRunner {
         final PluginProperty invoiceProperty = Iterables.tryFind(properties, new Predicate<PluginProperty>() {
             @Override
             public boolean apply(final PluginProperty input) {
-                return InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID.equals(input.getKey());
+                return InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID.equals(input.getKey());
             }
         }).orNull();
 

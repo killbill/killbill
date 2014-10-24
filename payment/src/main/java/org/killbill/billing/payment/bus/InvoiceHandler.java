@@ -32,8 +32,8 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.control.InvoicePaymentControlPluginApi;
-import org.killbill.billing.payment.core.PluginControlledPaymentProcessor;
+import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
+import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -53,7 +53,7 @@ public class InvoiceHandler {
 
     private final AccountInternalApi accountApi;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final PluginControlledPaymentProcessor pluginControlledPaymentProcessor;
+    private final PluginRoutingPaymentProcessor pluginRoutingPaymentProcessor;
     private final NonEntityDao nonEntityDao;
     private final CacheControllerDispatcher controllerDispatcher;
     private final PaymentConfig paymentConfig;
@@ -63,14 +63,14 @@ public class InvoiceHandler {
     @Inject
     public InvoiceHandler(final PaymentConfig paymentConfig,
                           final AccountInternalApi accountApi,
-                          final PluginControlledPaymentProcessor pluginControlledPaymentProcessor,
+                          final PluginRoutingPaymentProcessor pluginRoutingPaymentProcessor,
                           final NonEntityDao nonEntityDao,
                           final InternalCallContextFactory internalCallContextFactory,
                           final CacheControllerDispatcher controllerDispatcher) {
         this.paymentConfig = paymentConfig;
         this.accountApi = accountApi;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.pluginControlledPaymentProcessor = pluginControlledPaymentProcessor;
+        this.pluginRoutingPaymentProcessor = pluginRoutingPaymentProcessor;
         this.nonEntityDao = nonEntityDao;
         this.controllerDispatcher = controllerDispatcher;
     }
@@ -87,14 +87,14 @@ public class InvoiceHandler {
             account = accountApi.getAccountById(event.getAccountId(), internalContext);
 
             final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-            final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, event.getInvoiceId().toString(), false);
+            final PluginProperty prop1 = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, event.getInvoiceId().toString(), false);
             properties.add(prop1);
 
             final CallContext callContext = internalContext.toCallContext(nonEntityDao.retrieveIdFromObject(internalContext.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
 
             final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
-            final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames() != null ? paymentConfig.getPaymentControlPluginNames() : ImmutableList.of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
-            pluginControlledPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+            final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames() != null ? paymentConfig.getPaymentControlPluginNames() : ImmutableList.of(InvoicePaymentRoutingPluginApi.PLUGIN_NAME);
+            pluginRoutingPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                             properties, paymentControlPluginNames, callContext, internalContext);
         } catch (final AccountApiException e) {
             log.error("Failed to process invoice payment", e);

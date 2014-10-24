@@ -23,7 +23,6 @@ import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.sql.rowset.Joinable;
 
 import org.killbill.automaton.MissingEntryException;
 import org.killbill.automaton.State;
@@ -39,7 +38,7 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.core.sm.PluginControlledPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -61,27 +60,27 @@ import com.google.inject.name.Named;
 
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
-public class PluginControlledPaymentProcessor extends ProcessorBase {
+public class PluginRoutingPaymentProcessor extends ProcessorBase {
 
     private static final Joiner JOINER = Joiner.on(", ");
 
-    private final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
+    private final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
     private final RetryStateMachineHelper retrySMHelper;
     private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
-    public PluginControlledPaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
-                                            final AccountInternalApi accountInternalApi,
-                                            final InvoiceInternalApi invoiceApi,
-                                            final TagInternalApi tagUserApi,
-                                            final PaymentDao paymentDao,
-                                            final NonEntityDao nonEntityDao,
-                                            final GlobalLocker locker,
-                                            @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
-                                            final PluginControlledPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
-                                            final RetryStateMachineHelper retrySMHelper,
-                                            final Clock clock,
-                                            final CacheControllerDispatcher controllerDispatcher) {
+    public PluginRoutingPaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+                                         final AccountInternalApi accountInternalApi,
+                                         final InvoiceInternalApi invoiceApi,
+                                         final TagInternalApi tagUserApi,
+                                         final PaymentDao paymentDao,
+                                         final NonEntityDao nonEntityDao,
+                                         final GlobalLocker locker,
+                                         @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
+                                         final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
+                                         final RetryStateMachineHelper retrySMHelper,
+                                         final Clock clock,
+                                         final CacheControllerDispatcher controllerDispatcher) {
         super(pluginRegistry, accountInternalApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock, controllerDispatcher);
         this.retrySMHelper = retrySMHelper;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;

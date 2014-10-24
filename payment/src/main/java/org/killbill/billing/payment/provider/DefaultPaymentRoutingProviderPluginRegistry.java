@@ -22,27 +22,27 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
-public class DefaultPaymentControlProviderPluginRegistry implements OSGIServiceRegistration<PaymentControlPluginApi> {
+public class DefaultPaymentRoutingProviderPluginRegistry implements OSGIServiceRegistration<PaymentRoutingPluginApi> {
 
     private final static Logger log = LoggerFactory.getLogger(DefaultPaymentProviderPluginRegistry.class);
 
     private final String defaultPlugin;
-    private final Map<String, PaymentControlPluginApi> pluginsByName = new ConcurrentHashMap<String, PaymentControlPluginApi>();
+    private final Map<String, PaymentRoutingPluginApi> pluginsByName = new ConcurrentHashMap<String, PaymentRoutingPluginApi>();
 
     @Inject
-    public DefaultPaymentControlProviderPluginRegistry(final PaymentConfig config) {
+    public DefaultPaymentRoutingProviderPluginRegistry(final PaymentConfig config) {
         this.defaultPlugin = config.getDefaultRetryProvider();
     }
 
     @Override
-    public void registerService(final OSGIServiceDescriptor desc, final PaymentControlPluginApi service) {
+    public void registerService(final OSGIServiceDescriptor desc, final PaymentRoutingPluginApi service) {
         log.info("DefaultPaymentControlProviderPluginRegistry registering service " + desc.getRegistrationName());
         pluginsByName.put(desc.getRegistrationName(), service);
     }
@@ -54,11 +54,11 @@ public class DefaultPaymentControlProviderPluginRegistry implements OSGIServiceR
     }
 
     @Override
-    public PaymentControlPluginApi getServiceForName(final String name) {
+    public PaymentRoutingPluginApi getServiceForName(final String name) {
         if (name == null) {
             throw new IllegalArgumentException("Null payment plugin APi name");
         }
-        final PaymentControlPluginApi plugin = pluginsByName.get(name);
+        final PaymentRoutingPluginApi plugin = pluginsByName.get(name);
         return plugin;
     }
 
@@ -68,7 +68,7 @@ public class DefaultPaymentControlProviderPluginRegistry implements OSGIServiceR
     }
 
     @Override
-    public Class<PaymentControlPluginApi> getServiceType() {
-        return PaymentControlPluginApi.class;
+    public Class<PaymentRoutingPluginApi> getServiceType() {
+        return PaymentRoutingPluginApi.class;
     }
 }

@@ -22,29 +22,29 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
-import org.killbill.billing.retry.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
 import org.killbill.commons.locker.GlobalLocker;
 
 public class RetryPurchaseOperationCallback extends RetryOperationCallback {
 
-    public RetryPurchaseOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryablePaymentStateContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry) {
+    public RetryPurchaseOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryablePaymentStateContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry) {
         super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, retryPluginRegistry);
     }
 
     @Override
     protected Payment doCallSpecificOperationCallback() throws PaymentApiException {
         return paymentProcessor.createPurchase(retryablePaymentStateContext.isApiPayment(),
-                                                     retryablePaymentStateContext.getAttemptId(),
-                                                     retryablePaymentStateContext.getAccount(),
-                                                     retryablePaymentStateContext.getPaymentMethodId(),
-                                                     retryablePaymentStateContext.getPaymentId(),
-                                                     retryablePaymentStateContext.getAmount(),
-                                                     retryablePaymentStateContext.getCurrency(),
-                                                     retryablePaymentStateContext.getPaymentExternalKey(),
-                                                     retryablePaymentStateContext.getPaymentTransactionExternalKey(),
-                                                     false,
-                                                     retryablePaymentStateContext.getProperties(),
-                                                     retryablePaymentStateContext.getCallContext(),
-                                                     retryablePaymentStateContext.getInternalCallContext());
+                                               retryablePaymentStateContext.getAttemptId(),
+                                               retryablePaymentStateContext.getAccount(),
+                                               retryablePaymentStateContext.getPaymentMethodId(),
+                                               retryablePaymentStateContext.getPaymentId(),
+                                               retryablePaymentStateContext.getAmount(),
+                                               retryablePaymentStateContext.getCurrency(),
+                                               retryablePaymentStateContext.getPaymentExternalKey(),
+                                               retryablePaymentStateContext.getPaymentTransactionExternalKey(),
+                                               false,
+                                               retryablePaymentStateContext.getProperties(),
+                                               retryablePaymentStateContext.getCallContext(),
+                                               retryablePaymentStateContext.getInternalCallContext());
     }
 }

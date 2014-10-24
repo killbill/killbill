@@ -31,14 +31,14 @@ import com.google.common.base.Preconditions;
 
 public class RetryLeavingStateCallback implements LeavingStateCallback {
 
-    private PluginControlledPaymentAutomatonRunner retryablePaymentAutomatonRunner;
+    private PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner;
     private final RetryablePaymentStateContext stateContext;
     private final State initialState;
     private final State retriedState;
     private final TransactionType transactionType;
     private final PaymentDao paymentDao;
 
-    public RetryLeavingStateCallback(final PluginControlledPaymentAutomatonRunner retryablePaymentAutomatonRunner, final PaymentStateContext stateContext, final PaymentDao paymentDao,
+    public RetryLeavingStateCallback(final PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner, final PaymentStateContext stateContext, final PaymentDao paymentDao,
                                      final State initialState, final State retriedState, final TransactionType transactionType) {
         this.retryablePaymentAutomatonRunner = retryablePaymentAutomatonRunner;
         this.paymentDao = paymentDao;
