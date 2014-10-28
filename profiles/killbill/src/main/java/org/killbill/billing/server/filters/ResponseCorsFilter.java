@@ -28,8 +28,30 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
+import org.killbill.billing.jaxrs.resources.JaxrsResource;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+
 @Singleton
 public class ResponseCorsFilter implements Filter {
+
+    private final String allowedHeaders;
+
+    public ResponseCorsFilter() {
+        allowedHeaders = Joiner.on(",").join(ImmutableList.<String>of("Authorization",
+                                                                      "Content-Type",
+                                                                      JaxrsResource.HDR_API_KEY,
+                                                                      JaxrsResource.HDR_API_SECRET,
+                                                                      JaxrsResource.HDR_COMMENT,
+                                                                      JaxrsResource.HDR_CREATED_BY,
+                                                                      JaxrsResource.HDR_PAGINATION_CURRENT_OFFSET,
+                                                                      JaxrsResource.HDR_PAGINATION_MAX_NB_RECORDS,
+                                                                      JaxrsResource.HDR_PAGINATION_NEXT_OFFSET,
+                                                                      JaxrsResource.HDR_PAGINATION_NEXT_PAGE_URI,
+                                                                      JaxrsResource.HDR_PAGINATION_TOTAL_NB_RECORDS,
+                                                                      JaxrsResource.HDR_REASON));
+    }
 
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
@@ -40,7 +62,7 @@ public class ResponseCorsFilter implements Filter {
         final HttpServletResponse res = (HttpServletResponse) response;
         res.addHeader("Access-Control-Allow-Origin", "*");
         res.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS");
-        res.addHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Killbill-ApiKey, X-Killbill-ApiSecret");
+        res.addHeader("Access-Control-Allow-Headers", allowedHeaders);
         chain.doFilter(request, response);
     }
 
