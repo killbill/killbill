@@ -752,6 +752,10 @@ public class AccountResource extends JaxRsResourceBase {
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
         }
+        // Aborted payment?
+        if (result == null) {
+            return Response.noContent().build();
+        }
         return uriBuilder.buildResponse(PaymentResource.class, "getPayment", result.getId(), uriInfo.getBaseUri().toString());
     }
 
