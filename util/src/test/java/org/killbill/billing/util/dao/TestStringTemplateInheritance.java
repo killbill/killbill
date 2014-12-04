@@ -18,14 +18,14 @@ package org.killbill.billing.util.dao;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.regex.Pattern;
 
 import org.antlr.stringtemplate.StringTemplateGroup;
+import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import org.killbill.billing.util.UtilTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -66,127 +66,131 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
         Assert.assertEquals(kombucha.getInstanceOf("isIsTimeForKombucha").toString(), "select hour(current_timestamp()) = 17 as is_time;");
 
         // Verify inherited templates
-        Assert.assertEquals(kombucha.getInstanceOf("getById").toString(), "select\n" +
-                                                                          "  t.record_id\n" +
-                                                                          ", t.id\n" +
-                                                                          ", t.tea\n" +
-                                                                          ", t.mushroom\n" +
-                                                                          ", t.sugar\n" +
-                                                                          ", t.account_record_id\n" +
-                                                                          ", t.tenant_record_id\n" +
-                                                                          "from kombucha t\n" +
-                                                                          "where t.id = :id\n" +
-                                                                          "and t.tenant_record_id = :tenantRecordId\n" +
+        assertPattern(kombucha.getInstanceOf("getById").toString(), "select\r?\n" +
+                                                                    "  t.record_id\r?\n" +
+                                                                    ", t.id\r?\n" +
+                                                                    ", t.tea\r?\n" +
+                                                                    ", t.mushroom\r?\n" +
+                                                                    ", t.sugar\r?\n" +
+                                                                    ", t.account_record_id\r?\n" +
+                                                                    ", t.tenant_record_id\r?\n" +
+                                                                    "from kombucha t\r?\n" +
+                                                                    "where t.id = :id\r?\n" +
+                                                                    "and t.tenant_record_id = :tenantRecordId\r?\n" +
+                                                                    ";");
+        assertPattern(kombucha.getInstanceOf("getByRecordId").toString(), "select\r?\n" +
+                                                                          "  t.record_id\r?\n" +
+                                                                          ", t.id\r?\n" +
+                                                                          ", t.tea\r?\n" +
+                                                                          ", t.mushroom\r?\n" +
+                                                                          ", t.sugar\r?\n" +
+                                                                          ", t.account_record_id\r?\n" +
+                                                                          ", t.tenant_record_id\r?\n" +
+                                                                          "from kombucha t\r?\n" +
+                                                                          "where t.record_id = :recordId\r?\n" +
+                                                                          "and t.tenant_record_id = :tenantRecordId\r?\n" +
                                                                           ";");
-        Assert.assertEquals(kombucha.getInstanceOf("getByRecordId").toString(), "select\n" +
-                                                                                "  t.record_id\n" +
-                                                                                ", t.id\n" +
-                                                                                ", t.tea\n" +
-                                                                                ", t.mushroom\n" +
-                                                                                ", t.sugar\n" +
-                                                                                ", t.account_record_id\n" +
-                                                                                ", t.tenant_record_id\n" +
-                                                                                "from kombucha t\n" +
-                                                                                "where t.record_id = :recordId\n" +
-                                                                                "and t.tenant_record_id = :tenantRecordId\n" +
-                                                                                ";");
-        Assert.assertEquals(kombucha.getInstanceOf("getRecordId").toString(), "select\n" +
-                                                                              "  t.record_id\n" +
-                                                                              "from kombucha t\n" +
-                                                                              "where t.id = :id\n" +
-                                                                              "and t.tenant_record_id = :tenantRecordId\n" +
-                                                                              ";");
-        Assert.assertEquals(kombucha.getInstanceOf("getHistoryRecordId").toString(), "select\n" +
-                                                                                     "  max(t.record_id)\n" +
-                                                                                     "from kombucha_history t\n" +
-                                                                                     "where t.target_record_id = :targetRecordId\n" +
-                                                                                     "and t.tenant_record_id = :tenantRecordId\n" +
-                                                                                     ";");
-        Assert.assertEquals(kombucha.getInstanceOf("getAll").toString(), "select\n" +
-                                                                         "  t.record_id\n" +
-                                                                         ", t.id\n" +
-                                                                         ", t.tea\n" +
-                                                                         ", t.mushroom\n" +
-                                                                         ", t.sugar\n" +
-                                                                         ", t.account_record_id\n" +
-                                                                         ", t.tenant_record_id\n" +
-                                                                         "from kombucha t\n" +
-                                                                         "where t.tenant_record_id = :tenantRecordId\n" +
-                                                                         "order by t.record_id ASC\n" +
-                                                                         ";");
-        Assert.assertEquals(kombucha.getInstanceOf("get", ImmutableMap.<String, String>of("orderBy", "record_id", "offset", "3", "rowCount", "12")).toString(), "select\n" +
-                                                                                                                                                               "  t.record_id\n" +
-                                                                                                                                                               ", t.id\n" +
-                                                                                                                                                               ", t.tea\n" +
-                                                                                                                                                               ", t.mushroom\n" +
-                                                                                                                                                               ", t.sugar\n" +
-                                                                                                                                                               ", t.account_record_id\n" +
-                                                                                                                                                               ", t.tenant_record_id\n" +
-                                                                                                                                                               "from kombucha t\n" +
-                                                                                                                                                               "where t.tenant_record_id = :tenantRecordId\n" +
-                                                                                                                                                               "order by t.record_id\n" +
-                                                                                                                                                               "limit :offset, :rowCount\n" +
-                                                                                                                                                               ";");
-        Assert.assertEquals(kombucha.getInstanceOf("test").toString(), "select\n" +
-                                                                       "  t.record_id\n" +
-                                                                       ", t.id\n" +
-                                                                       ", t.tea\n" +
-                                                                       ", t.mushroom\n" +
-                                                                       ", t.sugar\n" +
-                                                                       ", t.account_record_id\n" +
-                                                                       ", t.tenant_record_id\n" +
-                                                                       "from kombucha t\n" +
-                                                                       "where t.tenant_record_id = :tenantRecordId\n" +
-                                                                       "limit 1\n" +
-                                                                       ";");
-        Assert.assertEquals(kombucha.getInstanceOf("addHistoryFromTransaction").toString(), "insert into kombucha_history (\n" +
-                                                                                            "  id\n" +
-                                                                                            ", target_record_id\n" +
-                                                                                            ", change_type\n" +
-                                                                                            ", tea\n" +
-                                                                                            ", mushroom\n" +
-                                                                                            ", sugar\n" +
-                                                                                            ", account_record_id\n" +
-                                                                                            ", tenant_record_id\n" +
-                                                                                            ")\n" +
-                                                                                            "values (\n" +
-                                                                                            "  :id\n" +
-                                                                                            ", :targetRecordId\n" +
-                                                                                            ", :changeType\n" +
-                                                                                            ",   :tea\n" +
-                                                                                            ", :mushroom\n" +
-                                                                                            ", :sugar\n" +
-                                                                                            ", :accountRecordId\n" +
-                                                                                            ", :tenantRecordId\n" +
-                                                                                            ")\n" +
-                                                                                            ";");
+        assertPattern(kombucha.getInstanceOf("getRecordId").toString(), "select\r?\n" +
+                                                                        "  t.record_id\r?\n" +
+                                                                        "from kombucha t\r?\n" +
+                                                                        "where t.id = :id\r?\n" +
+                                                                        "and t.tenant_record_id = :tenantRecordId\r?\n" +
+                                                                        ";");
+        assertPattern(kombucha.getInstanceOf("getHistoryRecordId").toString(), "select\r?\n" +
+                                                                               "  max\\(t.record_id\\)\r?\n" +
+                                                                               "from kombucha_history t\r?\n" +
+                                                                               "where t.target_record_id = :targetRecordId\r?\n" +
+                                                                               "and t.tenant_record_id = :tenantRecordId\r?\n" +
+                                                                               ";");
+        assertPattern(kombucha.getInstanceOf("getAll").toString(), "select\r?\n" +
+                                                                   "  t.record_id\r?\n" +
+                                                                   ", t.id\r?\n" +
+                                                                   ", t.tea\r?\n" +
+                                                                   ", t.mushroom\r?\n" +
+                                                                   ", t.sugar\r?\n" +
+                                                                   ", t.account_record_id\r?\n" +
+                                                                   ", t.tenant_record_id\r?\n" +
+                                                                   "from kombucha t\r?\n" +
+                                                                   "where t.tenant_record_id = :tenantRecordId\r?\n" +
+                                                                   "order by t.record_id ASC\r?\n" +
+                                                                   ";");
+        assertPattern(kombucha.getInstanceOf("get", ImmutableMap.<String, String>of("orderBy", "record_id", "offset", "3", "rowCount", "12")).toString(), "select\r?\n" +
+                                                                                                                                                          "  t.record_id\r?\n" +
+                                                                                                                                                          ", t.id\r?\n" +
+                                                                                                                                                          ", t.tea\r?\n" +
+                                                                                                                                                          ", t.mushroom\r?\n" +
+                                                                                                                                                          ", t.sugar\r?\n" +
+                                                                                                                                                          ", t.account_record_id\r?\n" +
+                                                                                                                                                          ", t.tenant_record_id\r?\n" +
+                                                                                                                                                          "from kombucha t\r?\n" +
+                                                                                                                                                          "where t.tenant_record_id = :tenantRecordId\r?\n" +
+                                                                                                                                                          "order by t.record_id\r?\n" +
+                                                                                                                                                          "limit :offset, :rowCount\r?\n" +
+                                                                                                                                                          ";");
+        assertPattern(kombucha.getInstanceOf("test").toString(), "select\r?\n" +
+                                                                 "  t.record_id\r?\n" +
+                                                                 ", t.id\r?\n" +
+                                                                 ", t.tea\r?\n" +
+                                                                 ", t.mushroom\r?\n" +
+                                                                 ", t.sugar\r?\n" +
+                                                                 ", t.account_record_id\r?\n" +
+                                                                 ", t.tenant_record_id\r?\n" +
+                                                                 "from kombucha t\r?\n" +
+                                                                 "where t.tenant_record_id = :tenantRecordId\r?\n" +
+                                                                 "limit 1\r?\n" +
+                                                                 ";");
+        assertPattern(kombucha.getInstanceOf("addHistoryFromTransaction").toString(), "insert into kombucha_history \\(\r?\n" +
+                                                                                      "  id\r?\n" +
+                                                                                      ", target_record_id\r?\n" +
+                                                                                      ", change_type\r?\n" +
+                                                                                      ", tea\r?\n" +
+                                                                                      ", mushroom\r?\n" +
+                                                                                      ", sugar\r?\n" +
+                                                                                      ", account_record_id\r?\n" +
+                                                                                      ", tenant_record_id\r?\n" +
+                                                                                      "\\)\r?\n" +
+                                                                                      "values \\(\r?\n" +
+                                                                                      "  :id\r?\n" +
+                                                                                      ", :targetRecordId\r?\n" +
+                                                                                      ", :changeType\r?\n" +
+                                                                                      ",   :tea\r?\n" +
+                                                                                      ", :mushroom\r?\n" +
+                                                                                      ", :sugar\r?\n" +
+                                                                                      ", :accountRecordId\r?\n" +
+                                                                                      ", :tenantRecordId\r?\n" +
+                                                                                      "\\)\r?\n" +
+                                                                                      ";");
 
-        Assert.assertEquals(kombucha.getInstanceOf("insertAuditFromTransaction").toString(), "insert into audit_log (\n" +
-                                                                                             "id\n" +
-                                                                                             ", table_name\n" +
-                                                                                             ", target_record_id\n" +
-                                                                                             ", change_type\n" +
-                                                                                             ", created_by\n" +
-                                                                                             ", reason_code\n" +
-                                                                                             ", comments\n" +
-                                                                                             ", user_token\n" +
-                                                                                             ", created_date\n" +
-                                                                                             ", account_record_id\n" +
-                                                                                             ", tenant_record_id\n" +
-                                                                                             ")\n" +
-                                                                                             "values (\n" +
-                                                                                             "  :id\n" +
-                                                                                             ", :tableName\n" +
-                                                                                             ", :targetRecordId\n" +
-                                                                                             ", :changeType\n" +
-                                                                                             ", :createdBy\n" +
-                                                                                             ", :reasonCode\n" +
-                                                                                             ", :comments\n" +
-                                                                                             ", :userToken\n" +
-                                                                                             ", :createdDate\n" +
-                                                                                             ", :accountRecordId\n" +
-                                                                                             ", :tenantRecordId\n" +
-                                                                                             ")\n" +
-                                                                                             ";");
+        assertPattern(kombucha.getInstanceOf("insertAuditFromTransaction").toString(), "insert into audit_log \\(\r?\n" +
+                                                                                       "id\r?\n" +
+                                                                                       ", table_name\r?\n" +
+                                                                                       ", target_record_id\r?\n" +
+                                                                                       ", change_type\r?\n" +
+                                                                                       ", created_by\r?\n" +
+                                                                                       ", reason_code\r?\n" +
+                                                                                       ", comments\r?\n" +
+                                                                                       ", user_token\r?\n" +
+                                                                                       ", created_date\r?\n" +
+                                                                                       ", account_record_id\r?\n" +
+                                                                                       ", tenant_record_id\r?\n" +
+                                                                                       "\\)\r?\n" +
+                                                                                       "values \\(\r?\n" +
+                                                                                       "  :id\r?\n" +
+                                                                                       ", :tableName\r?\n" +
+                                                                                       ", :targetRecordId\r?\n" +
+                                                                                       ", :changeType\r?\n" +
+                                                                                       ", :createdBy\r?\n" +
+                                                                                       ", :reasonCode\r?\n" +
+                                                                                       ", :comments\r?\n" +
+                                                                                       ", :userToken\r?\n" +
+                                                                                       ", :createdDate\r?\n" +
+                                                                                       ", :accountRecordId\r?\n" +
+                                                                                       ", :tenantRecordId\r?\n" +
+                                                                                       "\\)\r?\n" +
+                                                                                       ";");
+    }
+
+    private void assertPattern(final String actual, final String expected) {
+        Assert.assertTrue(Pattern.compile(expected).matcher(actual).find(), String.format("Expected to see:\n%s\nin:\n%s", expected, actual));
     }
 }
