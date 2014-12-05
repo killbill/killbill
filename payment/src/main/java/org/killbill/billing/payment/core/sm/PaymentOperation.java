@@ -180,13 +180,27 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                                                                                                         paymentStateContext.getPaymentTransactionModelDao().getProcessedCurrency(),
                                                                                                         paymentStateContext.getPaymentTransactionModelDao().getEffectiveDate(),
                                                                                                         paymentStateContext.getPaymentTransactionModelDao().getCreatedDate(),
-                                                                                                        PaymentPluginStatus.PROCESSED,
+                                                                                                        buildPaymentPluginStatusFromOperationResult(paymentStateContext.getOverridePluginOperationResult()),
                                                                                                         null);
                 paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
                 return paymentStateContext.getOverridePluginOperationResult();
             }
         } catch (final PaymentPluginApiException e) {
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+        }
+    }
+
+    private PaymentPluginStatus buildPaymentPluginStatusFromOperationResult(final OperationResult operationResult) {
+        switch (operationResult) {
+            case PENDING:
+                return PaymentPluginStatus.PENDING;
+            case SUCCESS:
+                return PaymentPluginStatus.PROCESSED;
+            case FAILURE:
+                return PaymentPluginStatus.ERROR;
+            case EXCEPTION:
+            default:
+                return PaymentPluginStatus.UNDEFINED;
         }
     }
 
