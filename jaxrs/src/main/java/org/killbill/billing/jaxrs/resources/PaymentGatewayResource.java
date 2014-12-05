@@ -58,6 +58,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.inject.Singleton;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
@@ -66,6 +67,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.WILDCARD;
 
+@Singleton
 @Path(JaxrsResource.PAYMENT_GATEWAYS_PATH)
 @Api(value = JaxrsResource.PAYMENT_GATEWAYS_PATH, description = "HPP endpoints")
 public class PaymentGatewayResource extends JaxRsResourceBase {
