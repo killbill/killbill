@@ -24,6 +24,21 @@ import com.google.common.io.CharStreams;
 import com.google.common.io.InputSupplier;
 
 public class IOUtils {
+
+    // Private Constructor Only Static methods.
+    private IOUtils() {
+    }
+
+    /**
+     * Method takes an InputStream and then converts this to a String. Standard IOException can
+     * be thrown.
+     *
+     * @param stream InputStream to be converted to a String
+     * @return String representation of the previously passed InputStream
+     * @throws IOException
+     * @see java.io.InputStream
+     * @see java.io.IOException
+     */
     public static String toString(final InputStream stream) throws IOException {
         final InputSupplier<InputStream> inputSupplier = new InputSupplier<InputStream>() {
             @Override
