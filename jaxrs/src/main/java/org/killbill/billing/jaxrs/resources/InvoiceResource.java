@@ -462,7 +462,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                 if (!paidInvoices.contains(externalCharge.getInvoiceId())) {
                     paidInvoices.add(externalCharge.getInvoiceId());
                     final Invoice invoice = invoiceApi.getInvoice(externalCharge.getInvoiceId(), callContext);
-                    createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), false, callContext);
+                    createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), false, pluginProperties, callContext);
                 }
             }
         }
@@ -533,7 +533,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(payment.getAccountId()), callContext);
         final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
-        final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), externalPayment, callContext);
+        final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), externalPayment, pluginProperties, callContext);
         // STEPH should that live in InvoicePayment instead?
         return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
     }
