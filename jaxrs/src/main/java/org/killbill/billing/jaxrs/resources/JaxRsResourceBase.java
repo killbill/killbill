@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -333,7 +334,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return null;
     }
 
-    protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<String> pluginProperties, PluginProperty... additionalProperties) {
+    protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<String> pluginProperties, final PluginProperty... additionalProperties) {
         final Collection<PluginProperty> properties = new LinkedList<PluginProperty>();
         if (pluginProperties == null) {
             return properties;
@@ -345,15 +346,20 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             final String value = property.size() == 1 ? null : Joiner.on("=").join(property.subList(1, property.size()));
             properties.add(new PluginProperty(key, value, false));
         }
-        for (PluginProperty cur : additionalProperties) {
+        for (final PluginProperty cur : additionalProperties) {
             properties.add(cur);
         }
         return properties;
     }
 
-    protected Payment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final Boolean externalPayment, final CallContext callContext) throws PaymentApiException {
+    protected Payment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final Boolean externalPayment, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
 
         final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+        final Iterator<PluginProperty> pluginPropertyIterator = pluginProperties.iterator();
+        while (pluginPropertyIterator.hasNext()) {
+            properties.add(pluginPropertyIterator.next());
+        }
+
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String transactionExternalKey = UUID.randomUUID().toString();
         final PluginProperty invoiceProperty = new PluginProperty("IPCD_INVOICE_ID" /* InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID (contract with plugin)  */,
