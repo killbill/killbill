@@ -20,6 +20,7 @@ package org.killbill.billing.payment.bus;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,8 +33,8 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
 import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
+import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -45,7 +46,6 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
@@ -93,9 +93,10 @@ public class InvoiceHandler {
             final CallContext callContext = internalContext.toCallContext(nonEntityDao.retrieveIdFromObject(internalContext.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
 
             final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
-            final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames() != null ? paymentConfig.getPaymentControlPluginNames() : ImmutableList.of(InvoicePaymentRoutingPluginApi.PLUGIN_NAME);
+            final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames() != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames()) : new LinkedList<String>();
+            paymentControlPluginNames.add(InvoicePaymentRoutingPluginApi.PLUGIN_NAME);
             pluginRoutingPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-                                                            properties, paymentControlPluginNames, callContext, internalContext);
+                                                         properties, paymentControlPluginNames, callContext, internalContext);
         } catch (final AccountApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {

@@ -366,6 +366,14 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected PaymentOptions createInvoicePaymentControlPluginApiPaymentOptions(final boolean isExternalPayment) {
+        return createControlPluginApiPaymentOptions(isExternalPayment, ImmutableList.<String>of("__INVOICE_PAYMENT_CONTROL_PLUGIN__"));
+    }
+
+    protected PaymentOptions createControlPluginApiPaymentOptions(@Nullable final List<String> paymentControlPluginNames) {
+        return createControlPluginApiPaymentOptions(false, paymentControlPluginNames);
+    }
+
+    protected PaymentOptions createControlPluginApiPaymentOptions(final boolean isExternalPayment, final List<String> paymentControlPluginNames) {
         return new PaymentOptions() {
             @Override
             public boolean isExternalPayment() {
@@ -374,8 +382,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
             @Override
             public List<String> getPaymentControlPluginNames() {
-                /* Will default to org.killbill.payment.invoice.plugin in payment sub-system */
-                return null;
+                // DefaultPaymentApi will add the default configured ones to this list
+                return paymentControlPluginNames;
             }
         };
     }

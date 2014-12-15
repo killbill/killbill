@@ -81,8 +81,8 @@ public interface PaymentConfig extends KillbillConfig {
     public TimeSpan getJanitorRunningRate();
 
     @Config("org.killbill.payment.invoice.plugin")
-    @Default("__INVOICE_PAYMENT_CONTROL_PLUGIN__")
-    @Description("Whether the payment subsystem is off")
+    @Default("")
+    @Description("Default payment control plugin names")
     public List<String> getPaymentControlPluginNames();
 
     @Config("org.killbill.payment.off")

@@ -47,12 +47,12 @@ public class PaymentStateContext {
     protected PaymentTransactionInfoPlugin paymentInfoPlugin;
     protected BigDecimal amount;
     protected String paymentExternalKey;
+    protected String paymentTransactionExternalKey;
     protected Currency currency;
 
     // Can be updated later via paymentTransactionModelDao (e.g. for auth or purchase)
     protected final UUID paymentId;
     protected final UUID transactionId;
-    protected final String paymentTransactionExternalKey;
     protected final Account account;
     protected final TransactionType transactionType;
     protected final boolean shouldLockAccountAndDispatch;
@@ -80,7 +80,7 @@ public class PaymentStateContext {
         this.isApiPayment = isApiPayment;
         this.paymentId = paymentId;
         this.transactionId = transactionId;
-        this.attemptId= attemptId;
+        this.attemptId = attemptId;
         this.paymentExternalKey = paymentExternalKey;
         this.paymentTransactionExternalKey = paymentTransactionExternalKey;
         this.transactionType = transactionType;
@@ -146,6 +146,10 @@ public class PaymentStateContext {
 
     public String getPaymentTransactionExternalKey() {
         return paymentTransactionExternalKey;
+    }
+
+    public void setPaymentTransactionExternalKey(final String paymentTransactionExternalKey) {
+        this.paymentTransactionExternalKey = paymentTransactionExternalKey;
     }
 
     public Account getAccount() {
