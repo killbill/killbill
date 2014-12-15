@@ -54,7 +54,7 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
             if (paymentStateContext.getTransactionId() == null) {
                 daoHelper.createNewPaymentTransaction();
             } else {
-                final PaymentTransactionModelDao transactionModelDao =  daoHelper.paymentDao.getPaymentTransaction(paymentStateContext.getTransactionId(), paymentStateContext.getInternalCallContext());
+                final PaymentTransactionModelDao transactionModelDao = daoHelper.paymentDao.getPaymentTransaction(paymentStateContext.getTransactionId(), paymentStateContext.getInternalCallContext());
                 paymentStateContext.setPaymentTransactionModelDao(transactionModelDao);
             }
         } catch (PaymentApiException e) {

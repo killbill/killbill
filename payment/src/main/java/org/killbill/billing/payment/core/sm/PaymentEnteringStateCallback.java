@@ -82,7 +82,7 @@ public abstract class PaymentEnteringStateCallback implements EnteringStateCallb
         // and decides to return null; in all cases this is seen as a PLUGIN_FAILURE
         //
         if (paymentInfoPlugin == null || paymentInfoPlugin.getStatus() == null) {
-                return TransactionStatus.PLUGIN_FAILURE;
+            return TransactionStatus.PLUGIN_FAILURE;
         }
 
         //

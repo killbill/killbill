@@ -42,7 +42,6 @@ public class RetryEnteringStateCallback implements EnteringStateCallback {
 
     @Override
     public void enteringState(final State state, final OperationCallback operationCallback, final OperationResult operationResult, final LeavingStateCallback leavingStateCallback) {
-
         final PaymentAttemptModelDao attempt = retryablePaymentAutomatonRunner.paymentDao.getPaymentAttempt(paymentStateContext.getAttemptId(), paymentStateContext.internalCallContext);
         final UUID transactionId = paymentStateContext.getCurrentTransaction() != null ?
                                    paymentStateContext.getCurrentTransaction().getId() :

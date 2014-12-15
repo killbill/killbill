@@ -176,7 +176,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
     }
 
     protected void onCompletion(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContext) {
-        for (String pluginName : paymentControlPluginNames) {
+        for (final String pluginName : paymentControlPluginNames) {
             final PaymentRoutingPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
@@ -209,17 +209,16 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
     }
 
     private PriorPaymentRoutingResult getPluginResult(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContextArg) throws PaymentRoutingApiException {
-
         // Return as soon as the first plugin aborts, or the last result for the last plugin
         PriorPaymentRoutingResult prevResult = null;
 
         PaymentRoutingContext inputPaymentRoutingContext = paymentControlContextArg;
 
-        for (String pluginName : paymentControlPluginNames) {
+        for (final String pluginName : paymentControlPluginNames) {
             final PaymentRoutingPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin == null) {
                 // First call to plugin, we log warn, if plugin is not registered
-                logger.warn("Skipping payment plugin invoice {} when fetching results", pluginName);
+                logger.warn("Skipping unknown payment control plugin {} when fetching results", pluginName);
                 continue;
             }
             prevResult = plugin.priorCall(inputPaymentRoutingContext, paymentStateContext.getProperties());
@@ -255,7 +254,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
 
     private DateTime getNextRetryDate(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContext) {
         DateTime candidate = null;
-        for (String pluginName : paymentControlPluginNames) {
+        for (final String pluginName : paymentControlPluginNames) {
             final PaymentRoutingPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {

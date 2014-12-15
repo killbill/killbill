@@ -34,15 +34,15 @@ public class RetryCaptureOperationCallback extends RetryOperationCallback {
     @Override
     protected Payment doCallSpecificOperationCallback() throws PaymentApiException {
         return paymentProcessor.createCapture(retryablePaymentStateContext.isApiPayment(),
-                                                    retryablePaymentStateContext.getAttemptId(),
-                                                    retryablePaymentStateContext.getAccount(),
-                                                    retryablePaymentStateContext.getPaymentMethodId(),
-                                                    retryablePaymentStateContext.getAmount(),
-                                                    retryablePaymentStateContext.getCurrency(),
-                                                    retryablePaymentStateContext.getPaymentTransactionExternalKey(),
-                                                    false,
-                                                    retryablePaymentStateContext.getProperties(),
-                                                    retryablePaymentStateContext.getCallContext(),
-                                                    retryablePaymentStateContext.getInternalCallContext());
+                                              retryablePaymentStateContext.getAttemptId(),
+                                              retryablePaymentStateContext.getAccount(),
+                                              retryablePaymentStateContext.getPaymentMethodId(),
+                                              retryablePaymentStateContext.getAmount(),
+                                              retryablePaymentStateContext.getCurrency(),
+                                              retryablePaymentStateContext.getPaymentTransactionExternalKey(),
+                                              false,
+                                              retryablePaymentStateContext.getProperties(),
+                                              retryablePaymentStateContext.getCallContext(),
+                                              retryablePaymentStateContext.getInternalCallContext());
     }
 }

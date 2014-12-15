@@ -40,12 +40,12 @@ public class PurchaseOperation extends PaymentOperation {
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting PURCHASE for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
         return plugin.purchasePayment(paymentStateContext.getAccount().getId(),
-                                     paymentStateContext.getPaymentId(),
-                                     paymentStateContext.getTransactionId(),
-                                     paymentStateContext.getPaymentMethodId(),
-                                     paymentStateContext.getAmount(),
-                                     paymentStateContext.getCurrency(),
-                                     paymentStateContext.getProperties(),
-                                     paymentStateContext.getCallContext());
+                                      paymentStateContext.getPaymentId(),
+                                      paymentStateContext.getTransactionId(),
+                                      paymentStateContext.getPaymentMethodId(),
+                                      paymentStateContext.getAmount(),
+                                      paymentStateContext.getCurrency(),
+                                      paymentStateContext.getProperties(),
+                                      paymentStateContext.getCallContext());
     }
 }
