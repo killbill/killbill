@@ -96,7 +96,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
                 final PriorPaymentRoutingResult pluginResult;
                 try {
                     pluginResult = getPluginResult(retryablePaymentStateContext.getPaymentControlPluginNames(), paymentControlContext);
-                    if (pluginResult.isAborted()) {
+                    if (pluginResult != null && pluginResult.isAborted()) {
                         // Transition to ABORTED
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.EXCEPTION);
                     }
