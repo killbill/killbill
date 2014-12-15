@@ -60,6 +60,7 @@ import org.killbill.commons.concurrent.WithProfilingThreadPoolExecutor;
 import org.killbill.xmlloader.XMLLoader;
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Resources;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
@@ -75,6 +76,11 @@ public class PaymentModule extends KillBillModule {
 
     public static final String STATE_MACHINE_RETRY = "RetryStateMachine";
     public static final String STATE_MACHINE_PAYMENT = "PaymentStateMachine";
+
+    @VisibleForTesting
+    static final String DEFAULT_STATE_MACHINE_RETRY_XML = "org/killbill/billing/payment/retry/RetryStates.xml";
+    @VisibleForTesting
+    static final String DEFAULT_STATE_MACHINE_PAYMENT_XML = "org/killbill/billing/payment/PaymentStates.xml";
 
     public PaymentModule(final KillbillConfigSource configSource) {
         super(configSource);
@@ -106,11 +112,11 @@ public class PaymentModule extends KillBillModule {
 
     protected void installStateMachines() {
 
-        bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_RETRY)).toInstance(new StateMachineProvider("org/killbill/billing/payment/retry/RetryStates.xml"));
+        bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_RETRY)).toInstance(new StateMachineProvider(DEFAULT_STATE_MACHINE_RETRY_XML));
         bind(StateMachineConfig.class).annotatedWith(Names.named(STATE_MACHINE_RETRY)).toProvider(Key.get(StateMachineProvider.class, Names.named(STATE_MACHINE_RETRY)));
         bind(RetryStateMachineHelper.class).asEagerSingleton();
 
-        bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_PAYMENT)).toInstance(new StateMachineProvider("org/killbill/billing/payment/PaymentStates.xml"));
+        bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_PAYMENT)).toInstance(new StateMachineProvider(DEFAULT_STATE_MACHINE_PAYMENT_XML));
         bind(StateMachineConfig.class).annotatedWith(Names.named(STATE_MACHINE_PAYMENT)).toProvider(Key.get(StateMachineProvider.class, Names.named(STATE_MACHINE_PAYMENT)));
         bind(PaymentStateMachineHelper.class).asEagerSingleton();
     }
