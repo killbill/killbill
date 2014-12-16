@@ -83,6 +83,7 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethod;
+import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditLevel;
@@ -710,6 +711,7 @@ public class AccountResource extends JaxRsResourceBase {
     public Response processPayment(final PaymentTransactionJson json,
                                    @PathParam("accountId") final String accountIdStr,
                                    @QueryParam("paymentMethodId") final String paymentMethodIdStr,
+                                   @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
@@ -729,22 +731,23 @@ public class AccountResource extends JaxRsResourceBase {
         final UUID paymentId = json.getPaymentId() == null ? null : UUID.fromString(json.getPaymentId());
 
         final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
+        final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final Payment result;
         switch (transactionType) {
             case AUTHORIZE:
-                result = paymentApi.createAuthorization(account, paymentMethodId, paymentId, json.getAmount(), currency,
-                                                        json.getPaymentExternalKey(), json.getTransactionExternalKey(),
-                                                        pluginProperties, callContext);
+                result = paymentApi.createAuthorizationWithPaymentControl(account, paymentMethodId, paymentId, json.getAmount(), currency,
+                                                                          json.getPaymentExternalKey(), json.getTransactionExternalKey(),
+                                                                          pluginProperties, paymentOptions, callContext);
                 break;
             case PURCHASE:
-                result = paymentApi.createPurchase(account, paymentMethodId, paymentId, json.getAmount(), currency,
-                                                   json.getPaymentExternalKey(), json.getTransactionExternalKey(),
-                                                   pluginProperties, callContext);
+                result = paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, paymentId, json.getAmount(), currency,
+                                                                     json.getPaymentExternalKey(), json.getTransactionExternalKey(),
+                                                                     pluginProperties, paymentOptions, callContext);
                 break;
             case CREDIT:
-                result = paymentApi.createCredit(account, paymentMethodId, paymentId, json.getAmount(), currency,
-                                                 json.getPaymentExternalKey(), json.getTransactionExternalKey(),
-                                                 pluginProperties, callContext);
+                result = paymentApi.createCreditWithPaymentControl(account, paymentMethodId, paymentId, json.getAmount(), currency,
+                                                                   json.getPaymentExternalKey(), json.getTransactionExternalKey(),
+                                                                   pluginProperties, paymentOptions, callContext);
                 break;
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();

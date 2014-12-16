@@ -296,7 +296,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                         createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
             Assert.fail("Unexpected success");
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             assertTrue(e.getCause() instanceof PaymentRoutingApiException);
         }
     }
@@ -377,7 +377,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         try {
             paymentApi.createRefundWithPaymentControl(account, payment.getId(), BigDecimal.TEN, Currency.USD, transactionExternalKey2,
                                                       refundProperties, INVOICE_PAYMENT, callContext);
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             assertTrue(e.getCause() instanceof PaymentRoutingApiException);
         }
     }
@@ -472,7 +472,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             paymentApi.createPurchase(account, account.getPaymentMethodId(), payment.getId(), requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
                                       ImmutableList.<PluginProperty>of(), callContext);
             Assert.fail("Purchase not succeed after a chargeback");
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             Assert.assertTrue(true);
         }
     }
@@ -532,7 +532,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         try {
             paymentApi.createCapture(account, UUID.randomUUID(), requestedAmount, account.getCurrency(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
             Assert.fail("Expected capture to fail...");
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_PAYMENT.getCode());
 
             final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
@@ -552,7 +552,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         try {
             paymentApi.createCapture(account, initialPayment.getId(), requestedAmount, Currency.AMD, UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
             Assert.fail("Expected capture to fail...");
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
 
             final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
@@ -574,13 +574,13 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         // Hack the Database to make it look like it was a failure
         paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, "AUTH_ERRORED", null,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.PLUGIN_FAILURE, null, null, null, null, internalCallContext);
-        PaymentSqlDao paymentSqlDao = dbi.onDemand(PaymentSqlDao.class);
+        final PaymentSqlDao paymentSqlDao = dbi.onDemand(PaymentSqlDao.class);
         paymentSqlDao.updateLastSuccessPaymentStateName(payment.getId().toString(), "AUTH_ERRORED", null, internalCallContext);
 
         try {
             paymentApi.createCapture(account, payment.getId(), requestedAmount, Currency.EUR, "tetard", ImmutableList.<PluginProperty>of(), callContext);
             Assert.fail("Unexpected success");
-        } catch (PaymentApiException e){
+        } catch (final PaymentApiException e){
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
         }
     }

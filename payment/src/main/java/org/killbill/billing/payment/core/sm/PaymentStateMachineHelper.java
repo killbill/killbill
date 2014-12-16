@@ -121,7 +121,6 @@ public class PaymentStateMachineHelper {
         }
     }
 
-
     public String getErroredStateForTransaction(final TransactionType transactionType) {
         switch (transactionType) {
             case AUTHORIZE:

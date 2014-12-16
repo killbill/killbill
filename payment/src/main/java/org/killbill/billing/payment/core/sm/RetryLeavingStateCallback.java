@@ -16,14 +16,17 @@
 
 package org.killbill.billing.payment.core.sm;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.dao.PaymentModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 
@@ -31,7 +34,7 @@ import com.google.common.base.Preconditions;
 
 public class RetryLeavingStateCallback implements LeavingStateCallback {
 
-    private PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner;
+    private final PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner;
     private final RetryablePaymentStateContext stateContext;
     private final State initialState;
     private final State retriedState;
@@ -50,37 +53,39 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
 
     @Override
     public void leavingState(final State state) throws OperationException {
-
         final DateTime utcNow = retryablePaymentAutomatonRunner.clock.getUTCNow();
 
-        Preconditions.checkState(stateContext.getPaymentExternalKey() != null || /* CAPTURE, PURCHASE, CREDIT calls will provide the paymentId */
-                                 stateContext.getPaymentId() != null);
-        if (stateContext.getPaymentExternalKey() == null) {
+        if (stateContext.getPaymentId() != null && stateContext.getPaymentExternalKey() == null) {
             final PaymentModelDao payment = paymentDao.getPayment(stateContext.getPaymentId(), stateContext.internalCallContext);
-            Preconditions.checkState(payment != null);
+            Preconditions.checkNotNull(payment, "payment cannot be null for id " + stateContext.getPaymentId());
             stateContext.setPaymentExternalKey(payment.getExternalKey());
+        } else if (stateContext.getPaymentExternalKey() == null) {
+            stateContext.setPaymentExternalKey(UUID.randomUUID().toString());
+        }
+        if (stateContext.getTransactionId() != null && stateContext.getPaymentTransactionExternalKey() == null) {
+            final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(stateContext.getTransactionId(), stateContext.internalCallContext);
+            Preconditions.checkNotNull(paymentTransactionModelDao, "paymentTransaction cannot be null for id " + stateContext.getTransactionId());
+            stateContext.setPaymentTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey());
+        } else if (stateContext.getPaymentTransactionExternalKey() == null) {
+            stateContext.setPaymentTransactionExternalKey(UUID.randomUUID().toString());
         }
 
-
-        if (state.getName().equals(initialState.getName()) ||
-            state.getName().equals(retriedState.getName())) {
-
+        if (state.getName().equals(initialState.getName()) || state.getName().equals(retriedState.getName())) {
             try {
-                final byte [] serializedProperties = PluginPropertySerializer.serialize(stateContext.getProperties());
-
+                final byte[] serializedProperties = PluginPropertySerializer.serialize(stateContext.getProperties());
 
                 final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
-                                                                                  utcNow, utcNow, stateContext.getPaymentExternalKey(), null,
-                                                                                  stateContext.paymentTransactionExternalKey, transactionType, initialState.getName(),
+                                                                                  utcNow, utcNow, stateContext.getPaymentExternalKey(), stateContext.getTransactionId(),
+                                                                                  stateContext.getPaymentTransactionExternalKey(), transactionType, initialState.getName(),
                                                                                   stateContext.getAmount(), stateContext.getCurrency(),
                                                                                   stateContext.getPaymentControlPluginNames(), serializedProperties);
 
-                retryablePaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(attempt, stateContext.internalCallContext);
+                retryablePaymentAutomatonRunner.paymentDao.insertPaymentAttemptWithProperties(attempt, stateContext.getInternalCallContext());
+
                 stateContext.setAttemptId(attempt.getId());
-            } catch (PluginPropertySerializerException e) {
+            } catch (final PluginPropertySerializerException e) {
                 throw new OperationException(e);
             }
-
         }
     }
 }

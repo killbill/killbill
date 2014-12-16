@@ -205,7 +205,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     }
 
     private OperationResult processPaymentInfoPlugin() {
-        if (paymentStateContext.getPaymentInfoPlugin() == null) {
+        if (paymentStateContext.getPaymentInfoPlugin() == null || paymentStateContext.getPaymentInfoPlugin().getStatus() == null) {
             return OperationResult.FAILURE;
         }
 

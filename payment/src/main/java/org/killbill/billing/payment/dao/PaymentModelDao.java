@@ -21,7 +21,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
@@ -39,7 +38,6 @@ public class PaymentModelDao extends EntityModelDaoBase implements EntityModelDa
     private String externalKey;
     private String stateName;
     private String lastSuccessStateName;
-
 
     public PaymentModelDao() { /* For the DAO mapper */ }
 

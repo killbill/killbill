@@ -71,7 +71,7 @@ public class PluginRoutingPaymentAutomatonRunner extends PaymentAutomatonRunner 
     @Inject
     public PluginRoutingPaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                                final OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry, final Clock clock, final PaymentProcessor paymentProcessor, @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
-                                               final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor, PaymentStateMachineHelper paymentSMHelper, RetryStateMachineHelper retrySMHelper, final PersistentBus eventBus) {
+                                               final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor, final PaymentStateMachineHelper paymentSMHelper, final RetryStateMachineHelper retrySMHelper, final PersistentBus eventBus) {
         super(stateMachineConfig, paymentConfig, paymentDao, locker, pluginRegistry, clock, executor, eventBus, paymentSMHelper);
         this.paymentProcessor = paymentProcessor;
         this.paymentControlPluginRegistry = retryPluginRegistry;
@@ -93,23 +93,20 @@ public class PluginRoutingPaymentAutomatonRunner extends PaymentAutomatonRunner 
                        @Nullable final BigDecimal amount, @Nullable final Currency currency,
                        final Iterable<PluginProperty> properties, @Nullable final List<String> paymentControlPluginNames,
                        final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-
         final RetryablePaymentStateContext paymentStateContext = createContext(isApiPayment, transactionType, account, paymentMethodId,
-                                                                                     paymentId, paymentExternalKey,
-                                                                                     paymentTransactionExternalKey,
-                                                                                     amount, currency,
-                                                                                     properties, paymentControlPluginNames, callContext, internalCallContext);
+                                                                               paymentId, paymentExternalKey,
+                                                                               paymentTransactionExternalKey,
+                                                                               amount, currency,
+                                                                               properties, paymentControlPluginNames, callContext, internalCallContext);
         try {
-
             final OperationCallback callback = createOperationCallback(transactionType, paymentStateContext);
             final LeavingStateCallback leavingStateCallback = new RetryLeavingStateCallback(this, paymentStateContext, paymentDao, retrySMHelper.getInitialState(), retrySMHelper.getRetriedState(), transactionType);
             final EnteringStateCallback enteringStateCallback = new RetryEnteringStateCallback(this, paymentStateContext, retryServiceScheduler);
 
             state.runOperation(retrySMHelper.getRetryOperation(), callback, enteringStateCallback, leavingStateCallback);
-
-        } catch (MissingEntryException e) {
+        } catch (final MissingEntryException e) {
             throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
-        } catch (OperationException e) {
+        } catch (final OperationException e) {
             if (e.getCause() == null) {
                 // Unclear if we should check whether there is a result that was set and return that result.
                 throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
@@ -123,18 +120,15 @@ public class PluginRoutingPaymentAutomatonRunner extends PaymentAutomatonRunner 
     }
 
     public Payment completeRun(final RetryablePaymentStateContext paymentStateContext) throws PaymentApiException {
-
         try {
-
             final OperationCallback callback = new RetryCompletionOperationCallback(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
             final LeavingStateCallback leavingStateCallback = new RetryNoopLeavingStateCallback();
             final EnteringStateCallback enteringStateCallback = new RetryEnteringStateCallback(this, paymentStateContext, retryServiceScheduler);
 
             retrySMHelper.getInitialState().runOperation(retrySMHelper.getRetryOperation(), callback, enteringStateCallback, leavingStateCallback);
-
-        } catch (MissingEntryException e) {
+        } catch (final MissingEntryException e) {
             throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
-        } catch (OperationException e) {
+        } catch (final OperationException e) {
             if (e.getCause() == null) {
                 throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
             } else if (e.getCause() instanceof PaymentApiException) {

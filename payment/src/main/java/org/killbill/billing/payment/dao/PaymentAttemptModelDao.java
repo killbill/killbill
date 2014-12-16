@@ -24,7 +24,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
@@ -48,13 +47,13 @@ public class PaymentAttemptModelDao extends EntityModelDaoBase implements Entity
     private BigDecimal amount;
     private Currency currency;
     private String pluginName;
-    private byte [] pluginProperties;
+    private byte[] pluginProperties;
 
     public PaymentAttemptModelDao() { /* For the DAO mapper */ }
 
     public PaymentAttemptModelDao(final UUID accountId, final UUID paymentMethodId, final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                   final String paymentExternalKey, final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType,
-                                  final String stateName, final BigDecimal amount, final Currency currency, final String pluginName, final byte [] pluginProperties) {
+                                  final String stateName, final BigDecimal amount, final Currency currency, final String pluginName, final byte[] pluginProperties) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.paymentMethodId = paymentMethodId;
@@ -71,7 +70,7 @@ public class PaymentAttemptModelDao extends EntityModelDaoBase implements Entity
 
     public PaymentAttemptModelDao(final UUID accountId, final UUID paymentMethodId, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                   final String paymentExternalKey, final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType, final String stateName,
-                                  final BigDecimal amount, final Currency currency, final List<String> paymentControlPluginNames,  final byte [] pluginProperties) {
+                                  final BigDecimal amount, final Currency currency, final List<String> paymentControlPluginNames, final byte[] pluginProperties) {
         this(accountId, paymentMethodId, UUID.randomUUID(), createdDate, updatedDate, paymentExternalKey, transactionId, transactionExternalKey, transactionType, stateName,
              amount, currency, toPluginNames(paymentControlPluginNames), pluginProperties);
     }
@@ -116,11 +115,11 @@ public class PaymentAttemptModelDao extends EntityModelDaoBase implements Entity
         this.pluginName = pluginName;
     }
 
-    public byte [] getPluginProperties() {
+    public byte[] getPluginProperties() {
         return pluginProperties;
     }
 
-    public void setPluginProperties(final byte [] pluginProperties) {
+    public void setPluginProperties(final byte[] pluginProperties) {
         this.pluginProperties = pluginProperties;
     }
 
@@ -168,7 +167,7 @@ public class PaymentAttemptModelDao extends EntityModelDaoBase implements Entity
         if (pluginName == null) {
             return ImmutableList.<String>of();
         }
-        final String [] parts = pluginName.split(",");
+        final String[] parts = pluginName.split(",");
         return ImmutableList.<String>copyOf(parts);
     }
 

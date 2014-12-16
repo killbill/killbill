@@ -25,17 +25,11 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.api.DefaultPaymentErrorEvent;
-import org.killbill.billing.payment.api.DefaultPaymentInfoEvent;
-import org.killbill.billing.payment.api.DefaultPaymentPluginErrorEvent;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
-import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -43,11 +37,9 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.bus.api.PersistentBus;
-import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class PaymentAutomatonDAOHelper {
