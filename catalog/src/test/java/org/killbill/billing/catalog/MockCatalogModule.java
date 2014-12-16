@@ -18,7 +18,9 @@
 
 package org.killbill.billing.catalog;
 
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.KillBillModule;
@@ -35,8 +37,12 @@ public class MockCatalogModule extends KillBillModule {
         final Catalog catalog = Mockito.mock(Catalog.class);
 
         final CatalogService catalogService = Mockito.mock(CatalogService.class);
-        Mockito.when(catalogService.getCurrentCatalog()).thenReturn(new MockCatalog());
-        Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
-        bind(CatalogService.class).toInstance(catalogService);
+        try {
+            Mockito.when(catalogService.getCurrentCatalog(Mockito.any(InternalCallContext.class))).thenReturn(new MockCatalog());
+            Mockito.when(catalogService.getFullCatalog(Mockito.any(InternalCallContext.class))).thenReturn(catalog);
+            bind(CatalogService.class).toInstance(catalogService);
+        } catch (CatalogApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

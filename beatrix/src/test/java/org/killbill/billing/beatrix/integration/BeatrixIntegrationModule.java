@@ -41,7 +41,7 @@ import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.provider.MockPaymentProviderPluginModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
-import org.killbill.billing.tenant.glue.TenantModule;
+import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.email.EmailModule;
@@ -90,7 +90,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
         install(new IntegrationTestOverdueModule(configSource));
         install(new AuditModule(configSource));
         install(new CurrencyModule(configSource));
-        install(new TenantModule(configSource));
+        install(new DefaultTenantModule(configSource));
         install(new ExportModule(configSource));
         install(new NonEntityDaoModule(configSource));
         install(new RecordIdModule(configSource));

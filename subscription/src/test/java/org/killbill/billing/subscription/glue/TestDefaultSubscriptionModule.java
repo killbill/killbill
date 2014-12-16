@@ -21,6 +21,7 @@ package org.killbill.billing.subscription.glue;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.catalog.glue.CatalogModule;
+import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.DefaultSubscriptionTestInitializer;
 import org.killbill.billing.subscription.SubscriptionTestInitializer;
@@ -41,6 +42,7 @@ public class TestDefaultSubscriptionModule extends DefaultSubscriptionModule {
         install(new CatalogModule(configSource));
         install(new CallContextModule(configSource));
         install(new CacheModule(configSource));
+        install(new MockTenantModule(configSource));
 
         bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
 

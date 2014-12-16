@@ -19,6 +19,7 @@ package org.killbill.billing.junction;
 import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.invoice.api.DryRunArguments;
 
 public interface BillingInternalApi {
@@ -26,5 +27,5 @@ public interface BillingInternalApi {
     /**
      * @return an ordered list of billing event for the given accounts
      */
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, DryRunArguments dryRunArguments, InternalCallContext context);
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, DryRunArguments dryRunArguments, InternalCallContext context) throws CatalogApiException;
 }

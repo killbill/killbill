@@ -73,15 +73,15 @@ public interface SubscriptionBaseApiService {
                                          String priceList, BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public int cancelAddOnsIfRequired(final Product baseProduct, final UUID bundleId, final DateTime effectiveDate, final CallContext context);
+    public int cancelAddOnsIfRequired(final Product baseProduct, final UUID bundleId, final DateTime effectiveDate, final CallContext context) throws CatalogApiException;
 
     public PlanChangeResult getPlanChangeResult(final DefaultSubscriptionBase subscription, final String productName,
-                                                final BillingPeriod term, final String priceList, final DateTime effectiveDate) throws SubscriptionBaseApiException;
+                                                final BillingPeriod term, final String priceList, final DateTime effectiveDate, TenantContext context) throws SubscriptionBaseApiException;
 
         //
     // Lower level APIs for dryRun functionality
     //
-    public List<SubscriptionBaseEvent> getEventsOnCreation(UUID subscriptionId, DateTime alignStartDate, DateTime bundleStartDate, long activeVersion,
+    public List<SubscriptionBaseEvent> getEventsOnCreation(UUID bundleId, UUID subscriptionId, DateTime alignStartDate, DateTime bundleStartDate, long activeVersion,
                                                            Plan plan, PhaseType initialPhase,
                                                            String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
                                                            boolean reCreate, TenantContext context)
@@ -94,5 +94,5 @@ public interface SubscriptionBaseApiService {
 
     public List<SubscriptionBaseEvent> getEventsOnCancelPlan(final DefaultSubscriptionBase subscription,
                                                              final DateTime requestedDate, final DateTime effectiveDate, final DateTime processedDate,
-                                                             final boolean addCancellationAddOnForEventsIfRequired, final TenantContext context);
+                                                             final boolean addCancellationAddOnForEventsIfRequired, final TenantContext context) throws CatalogApiException;
 }

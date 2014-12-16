@@ -27,6 +27,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -286,7 +287,11 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     private SubscriptionBase buildSubscription(final DefaultSubscriptionBase in, final InternalTenantContext context) {
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(new SubscriptionBuilder(in), null, clock);
         if (events.size() > 0) {
-            subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), catalogService.getFullCatalog());
+            try {
+                subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), catalogService.getFullCatalog(context));
+            } catch (CatalogApiException e) {
+                e.printStackTrace();
+            }
         }
         return subscription;
 

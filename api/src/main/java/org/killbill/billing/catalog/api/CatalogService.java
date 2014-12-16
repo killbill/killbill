@@ -18,15 +18,17 @@
 
 package org.killbill.billing.catalog.api;
 
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.platform.api.KillbillService;
+import org.killbill.billing.util.callcontext.TenantContext;
 
 /**
  * The interface {@code CatalogService} is a {@code KillbillService} required to handle catalog operations.
  */
 public interface CatalogService extends KillbillService {
 
-    public abstract Catalog getFullCatalog();
+    public abstract Catalog getFullCatalog(InternalTenantContext context) throws CatalogApiException;
 
-    public abstract StaticCatalog getCurrentCatalog();
+    public abstract StaticCatalog getCurrentCatalog(InternalTenantContext context) throws CatalogApiException;
 
 }

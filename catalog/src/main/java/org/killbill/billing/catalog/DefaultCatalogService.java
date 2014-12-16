@@ -18,19 +18,30 @@
 
 package org.killbill.billing.catalog;
 
+import java.util.List;
+
+import org.killbill.billing.ErrorCode;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.platform.api.KillbillService;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
+import org.killbill.billing.tenant.api.TenantApiException;
+import org.killbill.billing.tenant.api.TenantInternalApi;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
+import org.killbill.billing.tenant.api.TenantUserApi;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.CatalogConfig;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-public class DefaultCatalogService implements KillbillService, Provider<Catalog>, CatalogService {
+public class DefaultCatalogService implements KillbillService, CatalogService {
 
     private static final String CATALOG_SERVICE_NAME = "catalog-service";
 
@@ -40,12 +51,15 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
     private boolean isInitialized;
 
     private final VersionedCatalogLoader loader;
+    private final TenantInternalApi tenantApi;
 
     @Inject
-    public DefaultCatalogService(final CatalogConfig config, final VersionedCatalogLoader loader) {
+    public DefaultCatalogService(final CatalogConfig config, final TenantInternalApi tenantApi, final VersionedCatalogLoader loader) {
         this.config = config;
         this.isInitialized = false;
         this.loader = loader;
+        this.tenantApi = tenantApi;
+
     }
 
     @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)
@@ -54,7 +68,6 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
             try {
                 final String url = config.getCatalogURI();
                 catalog = loader.load(url);
-
                 isInitialized = true;
             } catch (Exception e) {
                 throw new ServiceException(e);
@@ -68,17 +81,30 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
     }
 
     @Override
-    public Catalog getFullCatalog() {
-        return catalog;
+    public Catalog getFullCatalog(final InternalTenantContext context) throws CatalogApiException {
+        return getCatalog(context);
     }
 
     @Override
-    public Catalog get() {
-        return catalog;
+    public StaticCatalog getCurrentCatalog(final InternalTenantContext context) throws CatalogApiException {
+        return getCatalog(context);
     }
 
-    @Override
-    public StaticCatalog getCurrentCatalog() {
-        return catalog;
+    private VersionedCatalog getCatalog(final InternalTenantContext context) throws CatalogApiException {
+        if (context.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+            return catalog;
+        }
+        try {
+            final List<String> catalogXMLs = tenantApi.getTenantCatalogs(context);
+            if (catalogXMLs.isEmpty()) {
+                return catalog;
+            }
+            return loader.load(catalogXMLs);
+        } catch (TenantApiException e) {
+            throw new CatalogApiException(e);
+        } catch (ServiceException e) {
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, "Failed to load catalog for tenant " + context.getTenantRecordId());
+        }
     }
+
 }

@@ -58,7 +58,7 @@ public interface SubscriptionBaseInternalApi {
     public List<SubscriptionBase> getSubscriptionsForBundle(UUID bundleId, DryRunArguments dryRunArguments, InternalTenantContext context)
             throws SubscriptionBaseApiException;
 
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(InternalTenantContext context);
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
 
@@ -68,7 +68,7 @@ public interface SubscriptionBaseInternalApi {
 
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context) throws SubscriptionBaseApiException;
 
-    public void setChargedThroughDate(UUID subscriptionId, DateTime chargedThruDate, InternalCallContext context);
+    public void setChargedThroughDate(UUID subscriptionId, DateTime chargedThruDate, InternalCallContext context) throws SubscriptionBaseApiException;
 
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(SubscriptionBase subscription, InternalTenantContext context);
 

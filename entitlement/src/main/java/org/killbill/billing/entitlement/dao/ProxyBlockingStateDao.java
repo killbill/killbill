@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -276,6 +277,9 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                                                                              });
             eventsStreams = Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(subscriptions, context).getEventsStreams().values());
         } catch (EntitlementApiException e) {
+            log.error("Error computing blocking states for addons for account record id " + context.getAccountRecordId(), e);
+            throw new RuntimeException(e);
+        } catch (SubscriptionBaseApiException e) {
             log.error("Error computing blocking states for addons for account record id " + context.getAccountRecordId(), e);
             throw new RuntimeException(e);
         }

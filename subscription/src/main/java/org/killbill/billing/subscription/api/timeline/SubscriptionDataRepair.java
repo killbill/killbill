@@ -24,6 +24,8 @@ import org.joda.time.DateTime;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Plan;
@@ -132,7 +134,7 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
         }
     }
 
-    public void addFutureAddonCancellation(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final CallContext context) {
+    public void addFutureAddonCancellation(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final CallContext context) throws CatalogApiException {
 
         if (getCategory() != ProductCategory.BASE) {
             return;
@@ -149,7 +151,7 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
     }
 
     private void trickleDownBPEffectForAddon(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final DateTime effectiveDate, final CallContext context)
-            throws SubscriptionBaseApiException {
+            throws SubscriptionBaseApiException, CatalogApiException {
 
         if (getCategory() != ProductCategory.BASE) {
             return;
@@ -161,7 +163,7 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
     }
 
     private void addAddonCancellationIfRequired(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final Product baseProduct,
-                                                final DateTime effectiveDate, final CallContext context) {
+                                                final DateTime effectiveDate, final CallContext context) throws CatalogApiException {
 
         final DateTime now = clock.getUTCNow();
         final Iterator<SubscriptionDataRepair> it = addOnSubscriptionInRepair.iterator();
@@ -183,8 +185,10 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
                                                                                 .setEffectiveDate(effectiveDate)
                                                                                 .setRequestedDate(now)
                                                                                 .setFromDisk(true));
-                repairDao.cancelSubscription(cur, cancelEvent, internalCallContextFactory.createInternalCallContext(cur.getId(), ObjectType.SUBSCRIPTION, context), 0);
-                cur.rebuildTransitions(repairDao.getEventsForSubscription(cur.getId(), internalCallContextFactory.createInternalTenantContext(context)), catalogService.getFullCatalog());
+                final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(cur.getId(), ObjectType.SUBSCRIPTION, context);
+                repairDao.cancelSubscription(cur, cancelEvent, internalCallContext, 0);
+                final Catalog fullCatalog = catalogService.getFullCatalog(internalCallContext);
+                cur.rebuildTransitions(repairDao.getEventsForSubscription(cur.getId(), internalCallContextFactory.createInternalTenantContext(context)), fullCatalog);
             }
         }
     }

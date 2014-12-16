@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.util;
 import java.net.URI;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -69,9 +70,11 @@ public class JaxrsUriBuilder {
         return ri.entity(obj).build();
     }
 
-    private UriBuilder getUriBuilder(final Class<? extends JaxrsResource> theClassMaybeEnhanced, final String getMethodName) {
+    private UriBuilder getUriBuilder(final Class<? extends JaxrsResource> theClassMaybeEnhanced, @Nullable final String getMethodName) {
         final Class theClass = getNonEnhancedClass(theClassMaybeEnhanced);
-        return UriBuilder.fromResource(theClass).path(theClass, getMethodName);
+        return getMethodName != null ? UriBuilder.fromResource(theClass).path(theClass, getMethodName) :
+               UriBuilder.fromResource(theClass);
+
     }
 
     private Class getNonEnhancedClass(final Class<? extends JaxrsResource> theClassMaybeEnhanced) {

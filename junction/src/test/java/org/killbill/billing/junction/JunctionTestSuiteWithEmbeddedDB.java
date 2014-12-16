@@ -118,7 +118,7 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
 
     private Catalog initCatalog(final CatalogService catalogService) throws Exception {
         ((DefaultCatalogService) catalogService).loadCatalog();
-        final Catalog catalog = catalogService.getFullCatalog();
+        final Catalog catalog = catalogService.getFullCatalog(internalCallContext);
         assertNotNull(catalog);
         return catalog;
     }

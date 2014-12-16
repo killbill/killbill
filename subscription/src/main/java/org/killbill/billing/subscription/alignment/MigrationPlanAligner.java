@@ -18,6 +18,7 @@ package org.killbill.billing.subscription.alignment;
 
 import org.joda.time.DateTime;
 
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Duration;
@@ -42,15 +43,15 @@ public class MigrationPlanAligner extends BaseAligner {
     }
 
 
-    public TimedMigration[] getEventsMigration(final SubscriptionMigrationCase[] input, final DateTime now)
+    public TimedMigration[] getEventsMigration(final SubscriptionMigrationCase[] input, final DateTime now, final InternalTenantContext context)
             throws SubscriptionBaseMigrationApiException {
 
         try {
             TimedMigration[] events;
-            final Plan plan0 = catalogService.getFullCatalog().findPlan(input[0].getPlanPhaseSpecifier().getProductName(),
+            final Plan plan0 = catalogService.getFullCatalog(context).findPlan(input[0].getPlanPhaseSpecifier().getProductName(),
                                                                         input[0].getPlanPhaseSpecifier().getBillingPeriod(), input[0].getPlanPhaseSpecifier().getPriceListName(), now);
 
-            final Plan plan1 = (input.length > 1) ? catalogService.getFullCatalog().findPlan(input[1].getPlanPhaseSpecifier().getProductName(),
+            final Plan plan1 = (input.length > 1) ? catalogService.getFullCatalog(context).findPlan(input[1].getPlanPhaseSpecifier().getProductName(),
                                                                                              input[1].getPlanPhaseSpecifier().getBillingPeriod(), input[1].getPlanPhaseSpecifier().getPriceListName(), now) :
                                null;
 

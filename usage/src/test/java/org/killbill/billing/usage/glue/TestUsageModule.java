@@ -18,6 +18,7 @@
 
 package org.killbill.billing.usage.glue;
 
+import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.usage.api.user.MockUsageUserApi;
@@ -36,6 +37,7 @@ public class TestUsageModule extends UsageModule {
     protected void installUsageUserApi() {
         bind(MockUsageUserApi.class).asEagerSingleton();
         bind(UsageUserApi.class).to(MockUsageUserApi.class).asEagerSingleton();
+        install(new MockTenantModule(configSource));
     }
 
 }

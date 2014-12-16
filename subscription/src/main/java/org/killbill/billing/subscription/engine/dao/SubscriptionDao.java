@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData;
@@ -53,17 +54,17 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     public SubscriptionBaseBundle createSubscriptionBundle(DefaultSubscriptionBaseBundle bundle, InternalCallContext context);
 
-    public SubscriptionBase getSubscriptionFromId(UUID subscriptionId, InternalTenantContext context);
+    public SubscriptionBase getSubscriptionFromId(UUID subscriptionId, InternalTenantContext context) throws CatalogApiException;
 
     // ACCOUNT retrieval
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context);
 
     // SubscriptionBase retrieval
-    public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context);
+    public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context) throws CatalogApiException;
 
-    public List<SubscriptionBase> getSubscriptions(UUID bundleId, List<SubscriptionBaseEvent> dryRunEvents, InternalTenantContext context);
+    public List<SubscriptionBase> getSubscriptions(UUID bundleId, List<SubscriptionBaseEvent> dryRunEvents, InternalTenantContext context) throws CatalogApiException;
 
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(InternalTenantContext context);
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(InternalTenantContext context) throws CatalogApiException;
 
     // Update
     public void updateChargedThroughDate(DefaultSubscriptionBase subscription, InternalCallContext context);

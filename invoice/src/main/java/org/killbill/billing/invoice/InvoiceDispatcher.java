@@ -41,6 +41,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
@@ -311,6 +312,12 @@ public class InvoiceDispatcher {
         } catch (final AccountApiException e) {
             log.error("Failed handling SubscriptionBase change.", e);
             return null;
+        } catch (CatalogApiException e) {
+            log.error("Failed handling SubscriptionBase change.", e);
+            return null;
+        } catch (SubscriptionBaseApiException e) {
+            log.error("Failed handling SubscriptionBase change.", e);
+            return null;
         }
     }
 
@@ -409,7 +416,7 @@ public class InvoiceDispatcher {
     private void setChargedThroughDates(final DateAndTimeZoneContext dateAndTimeZoneContext,
                                         final Collection<InvoiceItem> fixedPriceItems,
                                         final Collection<InvoiceItem> recurringItems,
-                                        final InternalCallContext context) {
+                                        final InternalCallContext context) throws SubscriptionBaseApiException {
         final Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
         addInvoiceItemsToChargeThroughDates(dateAndTimeZoneContext, chargeThroughDates, fixedPriceItems);
         addInvoiceItemsToChargeThroughDates(dateAndTimeZoneContext, chargeThroughDates, recurringItems);

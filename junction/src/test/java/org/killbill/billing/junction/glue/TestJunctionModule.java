@@ -25,6 +25,7 @@ import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.entitlement.dao.MockBlockingStateDao;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.mock.glue.MockEntitlementModule;
+import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
@@ -41,6 +42,7 @@ public class TestJunctionModule extends DefaultJunctionModule {
 
         install(new CacheModule(configSource));
         install(new CallContextModule(configSource));
+        install(new MockTenantModule(configSource));
     }
 
     public class MockEntitlementModuleForJunction extends MockEntitlementModule {

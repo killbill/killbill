@@ -18,6 +18,7 @@ package org.killbill.billing.entitlement.api;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.account.api.Account;
@@ -155,7 +156,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testCancelWithEntitlementPolicyIMMAndCTD() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+    public void testCancelWithEntitlementPolicyIMMAndCTD() throws AccountApiException, EntitlementApiException, SubscriptionApiException, SubscriptionBaseApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
@@ -198,7 +199,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testCancelWithEntitlementPolicyEOTAndCTD() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+    public void testCancelWithEntitlementPolicyEOTAndCTD() throws AccountApiException, EntitlementApiException, SubscriptionApiException, SubscriptionBaseApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 

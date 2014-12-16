@@ -16,6 +16,7 @@
 
 package org.killbill.billing.catalog;
 
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.StaticCatalog;
 
@@ -24,7 +25,7 @@ public class MockCatalogService extends DefaultCatalogService {
     private final MockCatalog catalog;
 
     public MockCatalogService(final MockCatalog catalog) {
-        super(null, null);
+        super(null, null, null);
         this.catalog = catalog;
     }
 
@@ -38,19 +39,13 @@ public class MockCatalogService extends DefaultCatalogService {
     }
 
     @Override
-    public Catalog getFullCatalog() {
+    public Catalog getFullCatalog(InternalTenantContext context) {
         return catalog;
     }
 
     @Override
-    public Catalog get() {
+    public StaticCatalog getCurrentCatalog(InternalTenantContext context) {
         return catalog;
     }
-
-    @Override
-    public StaticCatalog getCurrentCatalog() {
-        return catalog;
-    }
-
 
 }

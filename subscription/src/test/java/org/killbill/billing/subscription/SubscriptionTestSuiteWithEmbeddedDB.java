@@ -105,7 +105,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
         super.beforeMethod();
         subscriptionTestInitializer.startTestFamework(testListener, clock, busService, subscriptionBaseService);
 
-        this.catalog = subscriptionTestInitializer.initCatalog(catalogService);
+        this.catalog = subscriptionTestInitializer.initCatalog(catalogService, internalCallContext);
         this.accountData = subscriptionTestInitializer.initAccountData();
         this.bundle = subscriptionTestInitializer.initBundle(subscriptionInternalApi, internalCallContext);
 

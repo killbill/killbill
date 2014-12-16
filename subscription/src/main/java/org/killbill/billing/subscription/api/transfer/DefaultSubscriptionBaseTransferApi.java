@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
@@ -76,12 +77,12 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    private SubscriptionBaseEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final DefaultSubscriptionBase subscription, final DateTime transferDate, final CallContext context)
+    private SubscriptionBaseEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final DefaultSubscriptionBase subscription, final DateTime transferDate, final InternalTenantContext context)
             throws CatalogApiException {
 
         SubscriptionBaseEvent newEvent = null;
 
-        final Catalog catalog = catalogService.getFullCatalog();
+        final Catalog catalog = catalogService.getFullCatalog(context);
 
         final DateTime effectiveDate = existingEvent.getEffectiveDate().isBefore(transferDate) ? transferDate : existingEvent.getEffectiveDate();
 
@@ -138,7 +139,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
     @VisibleForTesting
     List<SubscriptionBaseEvent> toEvents(final List<ExistingEvent> existingEvents, final DefaultSubscriptionBase subscription,
-                                    final DateTime transferDate, final CallContext context) throws SubscriptionBaseTransferApiException {
+                                    final DateTime transferDate, final InternalTenantContext context) throws SubscriptionBaseTransferApiException {
 
         try {
             final List<SubscriptionBaseEvent> result = new LinkedList<SubscriptionBaseEvent>();
@@ -263,9 +264,9 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                                                                                                             .setCategory(productCategory)
                                                                                                             .setBundleStartDate(effectiveTransferDate)
                                                                                                             .setAlignStartDate(subscriptionAlignStartDate),
-                                                                                                    ImmutableList.<SubscriptionBaseEvent>of());
+                                                                                                    ImmutableList.<SubscriptionBaseEvent>of(), fromInternalCallContext);
 
-                final List<SubscriptionBaseEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate, context);
+                final List<SubscriptionBaseEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate, fromInternalCallContext);
                 final SubscriptionMigrationData curData = new SubscriptionMigrationData(defaultSubscriptionBase, events, null);
                 subscriptionMigrationDataList.add(curData);
             }
@@ -276,6 +277,8 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
             return bundleMigrationData.getData();
         } catch (SubscriptionBaseRepairException e) {
+            throw new SubscriptionBaseTransferApiException(e);
+        } catch (CatalogApiException e) {
             throw new SubscriptionBaseTransferApiException(e);
         }
     }

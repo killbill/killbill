@@ -18,6 +18,7 @@
 
 package org.killbill.billing.catalog;
 
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.platform.api.KillbillService.ServiceException;
 import org.killbill.billing.util.config.CatalogConfig;
@@ -28,30 +29,30 @@ import org.testng.annotations.Test;
 public class TestCatalogService extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
-    public void testCatalogServiceDirectory() throws ServiceException {
+    public void testCatalogServiceDirectory() throws ServiceException, CatalogApiException {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override
             public String getCatalogURI() {
                 return "file:src/test/resources/versionedCatalog";
             }
 
-        }, new VersionedCatalogLoader(new DefaultClock()));
+        }, null,  new VersionedCatalogLoader(new DefaultClock()));
         service.loadCatalog();
-        Assert.assertNotNull(service.getFullCatalog());
-        Assert.assertEquals(service.getFullCatalog().getCatalogName(), "WeaponsHireSmall");
+        Assert.assertNotNull(service.getFullCatalog(internalCallContext));
+        Assert.assertEquals(service.getFullCatalog(internalCallContext).getCatalogName(), "WeaponsHireSmall");
     }
 
     @Test(groups = "fast")
-    public void testCatalogServiceFile() throws ServiceException {
+    public void testCatalogServiceFile() throws ServiceException, CatalogApiException {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override
             public String getCatalogURI() {
                 return "file:src/test/resources/WeaponsHire.xml";
             }
 
-        }, new VersionedCatalogLoader(new DefaultClock()));
+        }, null, new VersionedCatalogLoader(new DefaultClock()));
         service.loadCatalog();
-        Assert.assertNotNull(service.getFullCatalog());
-        Assert.assertEquals(service.getFullCatalog().getCatalogName(), "Firearms");
+        Assert.assertNotNull(service.getFullCatalog(internalCallContext));
+        Assert.assertEquals(service.getFullCatalog(internalCallContext).getCatalogName(), "Firearms");
     }
 }

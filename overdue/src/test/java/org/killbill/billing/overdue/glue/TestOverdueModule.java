@@ -22,6 +22,7 @@ import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockEntitlementModule;
 import org.killbill.billing.mock.glue.MockInvoiceModule;
 import org.killbill.billing.mock.glue.MockTagModule;
+import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.overdue.TestOverdueHelper;
 import org.killbill.billing.overdue.applicator.OverdueBusListenerTester;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -52,6 +53,8 @@ public class TestOverdueModule extends DefaultOverdueModule {
         install(new MockInvoiceModule(configSource));
         install(new MockTagModule(configSource));
         install(new TemplateModule(configSource));
+        install(new MockTenantModule(configSource));
+
 
         // We can't use the dumb mocks in MockJunctionModule here
         install(new ApplicatorMockJunctionModule(configSource));

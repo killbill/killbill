@@ -99,9 +99,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         Mockito.when(subscriptionInternalApi.getBillingTransitions(Mockito.<SubscriptionBase>any(),  Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
         Mockito.when(subscriptionInternalApi.getAllTransitions(Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
 
-        catalog = ((MockCatalog) catalogService.getCurrentCatalog());
+        catalog = ((MockCatalog) catalogService.getCurrentCatalog(internalCallContext));
         // TODO The MockCatalog module returns two different things for full vs current catalog
-        Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
+        Mockito.when(catalogService.getFullCatalog(internalCallContext)).thenReturn(catalog);
         // Set a default alignment
         catalog.setBillingAlignment(BillingAlignment.ACCOUNT);
 
@@ -111,7 +111,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testBillingEventsEmpty() throws AccountApiException {
+    public void testBillingEventsEmpty() throws AccountApiException, CatalogApiException {
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L, 0L), null, internalCallContext);
         Assert.assertEquals(events.size(), 0);
     }

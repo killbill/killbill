@@ -34,6 +34,7 @@ import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
@@ -76,7 +77,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testDryRunInvoice() throws InvoiceApiException, AccountApiException {
+    public void testDryRunInvoice() throws InvoiceApiException, AccountApiException, CatalogApiException {
         final UUID accountId = account.getId();
 
         final BillingEventSet events = new MockBillingEventSet();

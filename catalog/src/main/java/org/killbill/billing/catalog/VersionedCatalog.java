@@ -68,9 +68,15 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     @XmlElement(name = "catalogVersion", required = true)
     private final List<StandaloneCatalog> versions = new ArrayList<StandaloneCatalog>();
 
+    // Default CTOR for XMLWriter.writeXML
+    public VersionedCatalog() {
+        this.clock = null;
+    }
+
     public VersionedCatalog(final Clock clock) {
         this.clock = clock;
     }
+
 
     //
     // Private methods

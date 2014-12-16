@@ -21,6 +21,7 @@ package org.killbill.billing.invoice.glue;
 import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.invoice.TestInvoiceHelper;
 import org.killbill.billing.junction.BillingInternalApi;
+import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.usage.glue.UsageModule;
@@ -54,6 +55,8 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
         install(new CacheModule(configSource));
         install(new TemplateModule(configSource));
         install(new EmailModule(configSource));
+        install(new MockTenantModule(configSource));
+
 
         install(new TagStoreModule(configSource));
         install(new CustomFieldModule(configSource));

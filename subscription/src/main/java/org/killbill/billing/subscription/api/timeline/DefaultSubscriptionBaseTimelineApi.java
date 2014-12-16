@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -116,14 +117,15 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
             if (bundle == null) {
                 throw new SubscriptionBaseRepairException(ErrorCode.SUB_REPAIR_UNKNOWN_BUNDLE, descBundle);
             }
+            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(bundle.getAccountId(), context);
             final List<SubscriptionDataRepair> subscriptions = convertToSubscriptionsDataRepair(dao.getSubscriptions(bundle.getId(),
                                                                                                                      ImmutableList.<SubscriptionBaseEvent>of(),
-                                                                                                                     internalCallContextFactory.createInternalTenantContext(context)));
+                                                                                                                     internalTenantContext));
             if (subscriptions.size() == 0) {
                 throw new SubscriptionBaseRepairException(ErrorCode.SUB_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, bundle.getId());
             }
             final String viewId = getViewId(((DefaultSubscriptionBaseBundle) bundle).getLastSysUpdateDate(), subscriptions);
-            final List<SubscriptionBaseTimeline> repairs = createGetSubscriptionRepairList(subscriptions, Collections.<SubscriptionBaseTimeline>emptyList());
+            final List<SubscriptionBaseTimeline> repairs = createGetSubscriptionRepairList(subscriptions, Collections.<SubscriptionBaseTimeline>emptyList(), internalTenantContext);
             return createGetBundleRepair(bundle.getId(), bundle.getExternalKey(), viewId, repairs);
         } catch (CatalogApiException e) {
             throw new SubscriptionBaseRepairException(e);
@@ -206,7 +208,7 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
                         validateFirstNewEvent(curInputRepair, curRepair.getNewEvents().get(0), lastRemainingBPEventTime, lastRemainingEventTime);
                     }
 
-                    final SubscriptionDataRepair curOutputRepair = createSubscriptionDataRepair(curInputRepair, newBundleStartDate, newSubscriptionStartDate, remaining);
+                    final SubscriptionDataRepair curOutputRepair = createSubscriptionDataRepair(curInputRepair, newBundleStartDate, newSubscriptionStartDate, remaining, tenantContext);
                     repairDao.initializeRepair(curInputRepair.getId(), remaining, tenantContext);
                     inRepair.add(curOutputRepair);
                     if (curOutputRepair.getCategory() == ProductCategory.ADD_ON) {
@@ -227,7 +229,8 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
                     // We need to add any existing addon that are not in the input repair list
                     for (final SubscriptionBase cur : subscriptions) {
                         if (cur.getCategory() == ProductCategory.ADD_ON && !inRepair.contains(cur)) {
-                            final SubscriptionDataRepair curOutputRepair = createSubscriptionDataRepair((SubscriptionDataRepair) cur, newBundleStartDate, null, ((SubscriptionDataRepair) cur).getEvents());
+                            final SubscriptionDataRepair curOutputRepair = createSubscriptionDataRepair((SubscriptionDataRepair) cur, newBundleStartDate, null,
+                                                                                                        ((SubscriptionDataRepair) cur).getEvents(), tenantContext);
                             repairDao.initializeRepair(curOutputRepair.getId(), ((SubscriptionDataRepair) cur).getEvents(), tenantContext);
                             inRepair.add(curOutputRepair);
                             addOnSubscriptionInRepair.add(curOutputRepair);
@@ -237,7 +240,8 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
                 case ADD_ON_REPAIR:
                     // We need to set the baseSubscription as it is useful to calculate addon validity
                     final SubscriptionDataRepair baseSubscription = (SubscriptionDataRepair) subscriptions.get(0);
-                    baseSubscriptionRepair = createSubscriptionDataRepair(baseSubscription, baseSubscription.getBundleStartDate(), baseSubscription.getAlignStartDate(), baseSubscription.getEvents());
+                    baseSubscriptionRepair = createSubscriptionDataRepair(baseSubscription, baseSubscription.getBundleStartDate(), baseSubscription.getAlignStartDate(),
+                                                                          baseSubscription.getEvents(), tenantContext);
                     break;
                 case STANDALONE_REPAIR:
                 default:
@@ -260,7 +264,7 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
             if (dryRun) {
                 baseSubscriptionRepair.addFutureAddonCancellation(addOnSubscriptionInRepair, context);
 
-                final List<SubscriptionBaseTimeline> repairs = createGetSubscriptionRepairList(subscriptions, convertDataRepair(inRepair));
+                final List<SubscriptionBaseTimeline> repairs = createGetSubscriptionRepairList(subscriptions, convertDataRepair(inRepair, tenantContext), tenantContext);
                 return createGetBundleRepair(input.getId(), bundle.getExternalKey(), input.getViewId(), repairs);
             } else {
                 dao.repair(bundle.getAccountId(), input.getId(), inRepair, internalCallContextFactory.createInternalCallContext(bundle.getAccountId(), context));
@@ -441,7 +445,7 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
         };
     }
 
-    private List<SubscriptionBaseTimeline> createGetSubscriptionRepairList(final List<SubscriptionDataRepair> subscriptions, final List<SubscriptionBaseTimeline> inRepair) throws CatalogApiException {
+    private List<SubscriptionBaseTimeline> createGetSubscriptionRepairList(final List<SubscriptionDataRepair> subscriptions, final List<SubscriptionBaseTimeline> inRepair, final InternalTenantContext tenantContext) throws CatalogApiException {
 
         final List<SubscriptionBaseTimeline> result = new LinkedList<SubscriptionBaseTimeline>();
         final Set<UUID> repairIds = new TreeSet<UUID>();
@@ -452,17 +456,17 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
 
         for (final SubscriptionBase cur : subscriptions) {
             if (!repairIds.contains(cur.getId())) {
-                result.add(new DefaultSubscriptionBaseTimeline((SubscriptionDataRepair) cur, catalogService.getFullCatalog()));
+                result.add(new DefaultSubscriptionBaseTimeline((SubscriptionDataRepair) cur, catalogService.getFullCatalog(tenantContext)));
             }
         }
 
         return result;
     }
 
-    private List<SubscriptionBaseTimeline> convertDataRepair(final List<SubscriptionDataRepair> input) throws CatalogApiException {
+    private List<SubscriptionBaseTimeline> convertDataRepair(final List<SubscriptionDataRepair> input, final InternalTenantContext tenantContext) throws CatalogApiException {
         final List<SubscriptionBaseTimeline> result = new LinkedList<SubscriptionBaseTimeline>();
         for (final SubscriptionDataRepair cur : input) {
-            result.add(new DefaultSubscriptionBaseTimeline(cur, catalogService.getFullCatalog()));
+            result.add(new DefaultSubscriptionBaseTimeline(cur, catalogService.getFullCatalog(tenantContext)));
         }
 
         return result;
@@ -478,7 +482,8 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
         return null;
     }
 
-    private SubscriptionDataRepair createSubscriptionDataRepair(final DefaultSubscriptionBase curData, final DateTime newBundleStartDate, final DateTime newSubscriptionStartDate, final List<SubscriptionBaseEvent> initialEvents) {
+    private SubscriptionDataRepair createSubscriptionDataRepair(final DefaultSubscriptionBase curData, final DateTime newBundleStartDate, final DateTime newSubscriptionStartDate,
+                                                                final List<SubscriptionBaseEvent> initialEvents, final InternalTenantContext tenantContext) throws CatalogApiException {
         final SubscriptionBuilder builder = new SubscriptionBuilder(curData);
         builder.setActiveVersion(curData.getActiveVersion() + 1);
         if (newBundleStartDate != null) {
@@ -494,7 +499,8 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
         }
 
         final SubscriptionDataRepair subscriptiondataRepair = new SubscriptionDataRepair(builder, curData.getEvents(), repairApiService, (SubscriptionDao) repairDao, clock, addonUtils, catalogService, internalCallContextFactory);
-        subscriptiondataRepair.rebuildTransitions(curData.getEvents(), catalogService.getFullCatalog());
+        final Catalog fullCatalog = catalogService.getFullCatalog(tenantContext);
+        subscriptiondataRepair.rebuildTransitions(curData.getEvents(), fullCatalog);
         return subscriptiondataRepair;
     }
 

@@ -25,6 +25,7 @@ import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultCatalogService;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogService;
@@ -50,10 +51,10 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
     public DefaultSubscriptionTestInitializer() {
     }
 
-    public Catalog initCatalog(final CatalogService catalogService) throws Exception {
+    public Catalog initCatalog(final CatalogService catalogService, final InternalTenantContext context) throws Exception {
 
         ((DefaultCatalogService) catalogService).loadCatalog();
-        final Catalog catalog = catalogService.getFullCatalog();
+        final Catalog catalog = catalogService.getFullCatalog(context);
         assertNotNull(catalog);
         return catalog;
     }

@@ -96,6 +96,10 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-catalog</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-internal-api</artifactId>
         </dependency>
         <dependency>

@@ -19,6 +19,8 @@ package org.killbill.billing.subscription.api;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
@@ -57,10 +59,10 @@ public class SubscriptionApiBase {
         return new DefaultSubscriptionBase((DefaultSubscriptionBase) internalSubscription, apiService, clock);
     }
 
-    protected DefaultSubscriptionBase createSubscriptionForApiUse(SubscriptionBuilder builder, List<SubscriptionBaseEvent> events) {
+    protected DefaultSubscriptionBase createSubscriptionForApiUse(SubscriptionBuilder builder, List<SubscriptionBaseEvent> events, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder, apiService, clock);
         if (events.size() > 0) {
-            subscription.rebuildTransitions(events, catalogService.getFullCatalog());
+            subscription.rebuildTransitions(events, catalogService.getFullCatalog(context));
         }
         return subscription;
     }

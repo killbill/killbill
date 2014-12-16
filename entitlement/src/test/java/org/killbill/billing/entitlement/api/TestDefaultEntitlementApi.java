@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -107,7 +108,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
 
     @Test(groups = "slow")
-    public void testUncancelEffectiveCancelledEntitlement() throws AccountApiException, EntitlementApiException {
+    public void testUncancelEffectiveCancelledEntitlement() throws AccountApiException, EntitlementApiException, SubscriptionBaseApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
@@ -396,7 +397,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
     }
 
     @Test(groups = "slow")
-    public void testTransferBundle() throws AccountApiException, EntitlementApiException {
+    public void testTransferBundle() throws AccountApiException, EntitlementApiException, SubscriptionBaseApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 

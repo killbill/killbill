@@ -30,6 +30,7 @@ import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.EntitlementTransitionType;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
@@ -81,10 +82,11 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     @Override
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) {
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException {
         final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final DefaultBillingEventSet result = new DefaultBillingEventSet();
-        result.setRecurrringBillingMode(catalogService.getCurrentCatalog().getRecurringBillingMode());
+        final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(context);
+        result.setRecurrringBillingMode(currentCatalog.getRecurringBillingMode());
 
         try {
             final Account account = accountApi.getAccountById(accountId, context);
@@ -183,7 +185,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                         updatedAccountBCD = true;
                     }
 
-                    final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcdLocal, account.getCurrency(), catalogService.getFullCatalog());
+                    final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcdLocal, account.getCurrency(), catalogService.getFullCatalog(context));
                     result.add(event);
                 } catch (CatalogApiException e) {
                     log.error("Failing to identify catalog components while creating BillingEvent from transition: " +

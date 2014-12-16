@@ -23,6 +23,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -158,28 +159,29 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
             return;
         }
 
-        final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(event.getSubscriptionId(), context);
-        if (subscription == null) {
-            log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
-            return;
-        }
-        if (subscription.getActiveVersion() > event.getActiveVersion()) {
-            // Skip repaired events
-            return;
-        }
-
-        //
-        // Do any internal processing on that event before we send the event to the bus
-        //
-        int theRealSeqId = seqId;
-        if (event.getType() == EventType.PHASE) {
-            onPhaseEvent(subscription, context);
-        } else if (event.getType() == EventType.API_USER && subscription.getCategory() == ProductCategory.BASE) {
-            final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
-            theRealSeqId = onBasePlanEvent(subscription, (ApiEvent) event, context.toCallContext(tenantId));
-        }
 
         try {
+            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(event.getSubscriptionId(), context);
+            if (subscription == null) {
+                log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
+                return;
+            }
+            if (subscription.getActiveVersion() > event.getActiveVersion()) {
+                // Skip repaired events
+                return;
+            }
+
+            //
+            // Do any internal processing on that event before we send the event to the bus
+            //
+            int theRealSeqId = seqId;
+            if (event.getType() == EventType.PHASE) {
+                onPhaseEvent(subscription, context);
+            } else if (event.getType() == EventType.API_USER && subscription.getCategory() == ProductCategory.BASE) {
+                final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+                theRealSeqId = onBasePlanEvent(subscription, (ApiEvent) event, context.toCallContext(tenantId));
+            }
+
             final SubscriptionBaseTransitionData transition = (subscription.getTransitionFromEvent(event, theRealSeqId));
             final EffectiveSubscriptionInternalEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition, subscription.getAlignStartDate(),
                                                                                                       context.getUserToken(),
@@ -187,13 +189,15 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
             eventBus.post(busEvent);
         } catch (EventBusException e) {
             log.warn("Failed to post subscription event " + event, e);
+        } catch (CatalogApiException e) {
+            log.warn("Failed to post subscription event " + event, e);
         }
     }
 
     private void onPhaseEvent(final DefaultSubscriptionBase subscription, final InternalCallContext context) {
         try {
             final DateTime now = clock.getUTCNow();
-            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now);
+            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now, context);
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                                               PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(),
                                                                                   nextTimedPhase.getPhase().getName(), now, nextTimedPhase.getStartPhase()) :
@@ -206,7 +210,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
         }
     }
 
-    private int onBasePlanEvent(final DefaultSubscriptionBase baseSubscription, final ApiEvent event, final CallContext context) {
+    private int onBasePlanEvent(final DefaultSubscriptionBase baseSubscription, final ApiEvent event, final CallContext context) throws CatalogApiException {
         final Product baseProduct = (baseSubscription.getState() == EntitlementState.CANCELLED) ? null : baseSubscription.getCurrentPlan().getProduct();
         return apiService.cancelAddOnsIfRequired(baseProduct, baseSubscription.getBundleId(), event.getEffectiveDate(), context);
     }

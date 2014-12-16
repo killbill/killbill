@@ -25,6 +25,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockInvoiceModule;
 import org.killbill.billing.mock.glue.MockSubscriptionModule;
+import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.payment.TestPaymentHelper;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPluginModule;
@@ -70,6 +71,7 @@ public class TestPaymentModule extends PaymentModule {
         install(new MockAccountModule(configSource));
         install(new MockSubscriptionModule(configSource));
         install(new MemoryGlobalLockerModule(configSource));
+        install(new MockTenantModule(configSource));
         install(new CacheModule(configSource));
         installExternalApis();
         bind(TestPaymentHelper.class).asEagerSingleton();

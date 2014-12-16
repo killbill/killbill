@@ -54,7 +54,7 @@ import org.killbill.billing.server.config.KillbillServerConfig;
 import org.killbill.billing.server.filters.ResponseCorsFilter;
 import org.killbill.billing.server.notifications.PushNotificationListener;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
-import org.killbill.billing.tenant.glue.TenantModule;
+import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.dao.AuditLogModelDaoMapper;
 import org.killbill.billing.util.dao.RecordIdIdMappingsMapper;
@@ -147,7 +147,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         install(new SecurityModule(configSource));
         install(new TagStoreModule(configSource));
         install(new TemplateModule(configSource));
-        install(new TenantModule(configSource));
+        install(new DefaultTenantModule(configSource));
         install(new UsageModule(configSource));
     }
 

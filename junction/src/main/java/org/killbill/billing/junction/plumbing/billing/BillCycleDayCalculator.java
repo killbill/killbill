@@ -64,7 +64,7 @@ public class BillCycleDayCalculator {
     protected int calculateBcd(final UUID bundleId, final SubscriptionBase subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
             throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
 
-        final Catalog catalog = catalogService.getFullCatalog();
+        final Catalog catalog = catalogService.getFullCatalog(context);
 
         final Plan prevPlan = (transition.getPreviousPlan() != null) ? catalog.findPlan(transition.getPreviousPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
         final Plan nextPlan = (transition.getNextPlan() != null) ? catalog.findPlan(transition.getNextPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;

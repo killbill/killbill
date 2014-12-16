@@ -1,5 +1,4 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
  * Copyright 2014 Groupon, Inc
  * Copyright 2014 The Billing Project, LLC
  *
@@ -16,43 +15,36 @@
  * under the License.
  */
 
-package org.killbill.billing.tenant.glue;
+package org.killbill.billing.mock.glue;
 
+import org.killbill.billing.glue.TenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.tenant.api.DefaultTenantService;
+import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.tenant.api.TenantService;
 import org.killbill.billing.tenant.api.TenantUserApi;
-import org.killbill.billing.tenant.api.user.DefaultTenantUserApi;
-import org.killbill.billing.tenant.dao.DefaultTenantDao;
-import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.util.glue.KillBillModule;
+import org.mockito.Mockito;
 
-public class TenantModule extends KillBillModule {
+public class MockTenantModule extends KillBillModule implements TenantModule {
 
-    public TenantModule(final KillbillConfigSource configSource) {
+    public MockTenantModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
-    private void installConfig() {
+    @Override
+    public void installTenantUserApi() {
+        bind(TenantUserApi.class).toInstance(Mockito.mock(TenantUserApi.class));
+        bind(TenantInternalApi.class).toInstance(Mockito.mock(TenantInternalApi.class));
     }
 
-    protected void installTenantDao() {
-        bind(TenantDao.class).to(DefaultTenantDao.class).asEagerSingleton();
-    }
-
-    protected void installTenantUserApi() {
-        bind(TenantUserApi.class).to(DefaultTenantUserApi.class).asEagerSingleton();
-    }
-
-    private void installTenantService() {
-        bind(TenantService.class).to(DefaultTenantService.class).asEagerSingleton();
+    @Override
+    public void installTenantService() {
+        bind(TenantService.class).toInstance(Mockito.mock(TenantService.class));
     }
 
     @Override
     protected void configure() {
-        installConfig();
-        installTenantDao();
-        installTenantService();
         installTenantUserApi();
+        installTenantService();
     }
 }

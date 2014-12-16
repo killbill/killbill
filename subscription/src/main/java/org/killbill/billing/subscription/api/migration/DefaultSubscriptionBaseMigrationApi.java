@@ -25,6 +25,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.clock.Clock;
@@ -116,10 +118,10 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
             for (final SubscriptionMigration curSub : sortedSubscriptions) {
                 SubscriptionMigrationData data = null;
                 if (bundleStartDate == null) {
-                    data = createInitialSubscription(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now, curSub.getChargedThroughDate(), context);
+                    data = createInitialSubscription(accountId, bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now, curSub.getChargedThroughDate(), context);
                     bundleStartDate = data.getInitialEvents().get(0).getEffectiveDate();
                 } else {
-                    data = createSubscriptionMigrationDataWithBundleDate(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now,
+                    data = createSubscriptionMigrationDataWithBundleDate(accountId, bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now,
                                                                          bundleStartDate, curSub.getChargedThroughDate(), context);
                 }
                 if (data != null) {
@@ -133,40 +135,53 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
         return new AccountMigrationData(accountBundleData);
     }
 
-    private SubscriptionMigrationData createInitialSubscription(final UUID bundleId, final ProductCategory productCategory,
+    private SubscriptionMigrationData createInitialSubscription(final UUID accountId, final UUID bundleId, final ProductCategory productCategory,
                                                                 final SubscriptionMigrationCase[] input, final DateTime now, final DateTime ctd, final CallContext context)
             throws SubscriptionBaseMigrationApiException {
-        final TimedMigration[] events = migrationAligner.getEventsMigration(input, now);
+
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
+        final TimedMigration[] events = migrationAligner.getEventsMigration(input, now, internalCallContext);
         final DateTime migrationStartDate = events[0].getEventTime();
         final List<SubscriptionBaseEvent> emptyEvents = Collections.emptyList();
-        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
-                                                                                      .setId(UUID.randomUUID())
-                                                                                      .setBundleId(bundleId)
-                                                                                      .setCategory(productCategory)
-                                                                                      .setBundleStartDate(migrationStartDate)
-                                                                                      .setAlignStartDate(migrationStartDate),
-                                                                              emptyEvents);
-        return new SubscriptionMigrationData(defaultSubscriptionBase, toEvents(defaultSubscriptionBase, now, ctd, events, context), ctd);
+
+        final DefaultSubscriptionBase defaultSubscriptionBase;
+        try {
+            defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
+                                                                          .setId(UUID.randomUUID())
+                                                                          .setBundleId(bundleId)
+                                                                          .setCategory(productCategory)
+                                                                          .setBundleStartDate(migrationStartDate)
+                                                                          .setAlignStartDate(migrationStartDate),
+                                                                  emptyEvents, internalCallContext);
+            return new SubscriptionMigrationData(defaultSubscriptionBase, toEvents(defaultSubscriptionBase, now, ctd, events, context), ctd);
+        } catch (CatalogApiException e) {
+            throw new SubscriptionBaseMigrationApiException(e);
+        }
     }
 
-    private SubscriptionMigrationData createSubscriptionMigrationDataWithBundleDate(final UUID bundleId, final ProductCategory productCategory,
+    private SubscriptionMigrationData createSubscriptionMigrationDataWithBundleDate(final UUID accountId, final UUID bundleId, final ProductCategory productCategory,
                                                                                     final SubscriptionMigrationCase[] input, final DateTime now, final DateTime bundleStartDate, final DateTime ctd, final CallContext context)
             throws SubscriptionBaseMigrationApiException {
-        final TimedMigration[] events = migrationAligner.getEventsMigration(input, now);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
+        final TimedMigration[] events = migrationAligner.getEventsMigration(input, now, internalCallContext);
         final DateTime migrationStartDate = events[0].getEventTime();
         final List<SubscriptionBaseEvent> emptyEvents = Collections.emptyList();
-        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
-                                                                                      .setId(UUID.randomUUID())
-                                                                                      .setBundleId(bundleId)
-                                                                                      .setCategory(productCategory)
-                                                                                      .setBundleStartDate(bundleStartDate)
-                                                                                      .setAlignStartDate(migrationStartDate),
-                                                                              emptyEvents);
-        return new SubscriptionMigrationData(defaultSubscriptionBase, toEvents(defaultSubscriptionBase, now, ctd, events, context), ctd);
+        final DefaultSubscriptionBase defaultSubscriptionBase;
+        try {
+            defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
+                                                                                                        .setId(UUID.randomUUID())
+                                                                                                        .setBundleId(bundleId)
+                                                                                                        .setCategory(productCategory)
+                                                                                                        .setBundleStartDate(bundleStartDate)
+                                                                                                        .setAlignStartDate(migrationStartDate),
+                                                                                                emptyEvents, internalCallContext);
+            return new SubscriptionMigrationData(defaultSubscriptionBase, toEvents(defaultSubscriptionBase, now, ctd, events, context), ctd);
+        } catch (CatalogApiException e) {
+            throw new SubscriptionBaseMigrationApiException(e);
+        }
     }
 
     private List<SubscriptionBaseEvent> toEvents(final DefaultSubscriptionBase defaultSubscriptionBase, final DateTime now, final DateTime ctd, final TimedMigration[] migrationEvents, final CallContext context) {
-
 
         if (ctd == null) {
             throw new SubscriptionBaseError(String.format("Could not create migration billing event ctd = %s", ctd));
@@ -183,7 +198,6 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
 
         for (final TimedMigration cur : migrationEvents) {
 
-
             final ApiEventBuilder builder = new ApiEventBuilder()
                     .setSubscriptionId(defaultSubscriptionBase.getId())
                     .setEventPlan((cur.getPlan() != null) ? cur.getPlan().getName() : null)
@@ -195,13 +209,11 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
                     .setRequestedDate(now)
                     .setFromDisk(true);
 
-
             if (cur.getEventType() == EventType.PHASE) {
                 nextEventDate = nextEventDate != null && nextEventDate.compareTo(cur.getEventTime()) < 0 ? nextEventDate : cur.getEventTime();
                 final PhaseEvent nextPhaseEvent = PhaseEventData.createNextPhaseEvent(defaultSubscriptionBase.getId(), defaultSubscriptionBase.getActiveVersion(),
                                                                                       cur.getPhase().getName(), now, cur.getEventTime());
                 events.add(nextPhaseEvent);
-
 
             } else if (cur.getEventType() == EventType.API_USER) {
 
@@ -271,7 +283,6 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
                 return comp;
             }
         });
-
         return events;
     }
 }

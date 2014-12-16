@@ -111,8 +111,13 @@ public class EventsStreamBuilder {
 
     public AccountEventsStreams buildForAccount(final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         // Retrieve the subscriptions (map bundle id -> subscriptions)
-        final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(internalTenantContext);
-        return buildForAccount(subscriptions, internalTenantContext);
+        final Map<UUID, List<SubscriptionBase>> subscriptions;
+        try {
+            subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(internalTenantContext);
+            return buildForAccount(subscriptions, internalTenantContext);
+        } catch (SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
     }
 
     // Special signature for ProxyBlockingStateDao to save a DAO call

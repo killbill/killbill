@@ -16,22 +16,30 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.DefaultValue;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.jaxrs.json.CatalogJsonSimple;
@@ -39,10 +47,15 @@ import org.killbill.billing.jaxrs.json.PlanDetailJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
+import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
+import org.killbill.xmlloader.XMLLoader;
 import org.killbill.xmlloader.XMLWriter;
 
 import com.codahale.metrics.annotation.Timed;
@@ -60,20 +73,26 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 @Api(value = JaxrsResource.CATALOG_PATH, description = "Catalog information")
 public class CatalogResource extends JaxRsResourceBase {
 
-    private final CatalogService catalogService;
+    private final CatalogUserApi catalogUserApi;
+    private final TenantUserApi tenantApi;
+
+    // Catalog API don't quite support multiple catalogs per tenant
+    private static final String catalogName = "unused";
 
     @Inject
-    public CatalogResource(final CatalogService catalogService,
-                           final JaxrsUriBuilder uriBuilder,
+    public CatalogResource(final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,
                            final AuditUserApi auditUserApi,
                            final AccountUserApi accountUserApi,
                            final PaymentApi paymentApi,
+                           final TenantUserApi tenantApi,
+                           final CatalogUserApi catalogUserApi,
                            final Clock clock,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
-        this.catalogService = catalogService;
+        this.catalogUserApi = catalogUserApi;
+        this.tenantApi = tenantApi;
     }
 
     @Timed
@@ -82,7 +101,29 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class, hidden = true)
     @ApiResponses(value = {})
     public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
-        return Response.status(Status.OK).entity(XMLWriter.writeXML(catalogService.getCurrentCatalog(), StaticCatalog.class)).build();
+        final TenantContext tenantContext = context.createContext(request);
+        return Response.status(Status.OK).entity(XMLWriter.writeXML((VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext), VersionedCatalog.class)).build();
+    }
+
+    @Timed
+    @POST
+    @Produces(APPLICATION_XML)
+    @Consumes(APPLICATION_XML)
+    @ApiOperation(value = "Upload the full catalog as XML")
+    @ApiResponses(value = {})
+    public Response uploadCatalogXml(final String catalogXML,
+                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                     @HeaderParam(HDR_REASON) final String reason,
+                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request,
+                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+        // Validation purpose:  Will throw if bad XML or catalog validation fails
+        final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
+        XMLLoader.getObjectFromStream(new URI(JaxrsResource.CATALOG_PATH), stream, StandaloneCatalog.class);
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        tenantApi.addTenantKeyValue(TenantKey.CATALOG.toString(), catalogXML, callContext);
+        return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null);
     }
 
     @Timed
@@ -91,8 +132,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve the full catalog as JSON", response = StaticCatalog.class)
     @ApiResponses(value = {})
     public Response getCatalogJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
-        final StaticCatalog catalog = catalogService.getCurrentCatalog();
-
+        final TenantContext tenantContext = context.createContext(request);
+        final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
         return Response.status(Status.OK).entity(catalog).build();
     }
 
@@ -119,7 +160,8 @@ public class CatalogResource extends JaxRsResourceBase {
     public Response getAvailableAddons(@QueryParam("baseProductName") final String baseProductName,
                                        @Nullable @QueryParam("priceListName") final String priceListName,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
-        final StaticCatalog catalog = catalogService.getCurrentCatalog();
+        final TenantContext tenantContext = context.createContext(request);
+        final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
         final List<Listing> listings = catalog.getAvailableAddOnListings(baseProductName, priceListName);
         final List<PlanDetailJson> details = new ArrayList<PlanDetailJson>();
         for (final Listing listing : listings) {
@@ -135,7 +177,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve available base plans", response = PlanDetailJson.class, responseContainer = "List")
     @ApiResponses(value = {})
     public Response getAvailableBasePlans(@javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
-        final StaticCatalog catalog = catalogService.getCurrentCatalog();
+        final TenantContext tenantContext = context.createContext(request);
+        final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
         final List<Listing> listings = catalog.getAvailableBasePlanListings();
         final List<PlanDetailJson> details = new ArrayList<PlanDetailJson>();
         for (final Listing listing : listings) {
@@ -151,8 +194,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a summarized version of the catalog as JSON", response = CatalogJsonSimple.class)
     @ApiResponses(value = {})
     public Response getSimpleCatalog(@javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
-        final StaticCatalog catalog = catalogService.getCurrentCatalog();
-
+        final TenantContext tenantContext = context.createContext(request);
+        final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
         final CatalogJsonSimple json = new CatalogJsonSimple(catalog);
         return Response.status(Status.OK).entity(json).build();
     }

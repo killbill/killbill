@@ -1,5 +1,4 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
  * Copyright 2014 Groupon, Inc
  * Copyright 2014 The Billing Project, LLC
  *
@@ -16,23 +15,27 @@
  * under the License.
  */
 
-package org.killbill.billing.tenant.glue;
+package org.killbill.billing.tenant.api;
 
-import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.glue.CacheModule;
-import org.killbill.billing.util.glue.CallContextModule;
+import java.util.List;
 
-public class TestTenantModule extends DefaultTenantModule {
+import javax.inject.Inject;
 
-    public TestTenantModule(final KillbillConfigSource configSource) {
-        super(configSource);
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
+import org.killbill.billing.tenant.dao.TenantDao;
+
+public class DefaultTenantInternalApi implements TenantInternalApi {
+
+    private final TenantDao tenantDao;
+
+    @Inject
+    public DefaultTenantInternalApi(final TenantDao tenantDao) {
+        this.tenantDao = tenantDao;
     }
 
     @Override
-    protected void configure() {
-        super.configure();
-
-        install(new CacheModule(configSource));
-        install(new CallContextModule(configSource));
+    public List<String> getTenantCatalogs(final InternalTenantContext tenantContext) throws TenantApiException {
+        return tenantDao.getTenantValueForKey(TenantKey.CATALOG.toString(), tenantContext);
     }
 }

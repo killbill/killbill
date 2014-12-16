@@ -18,24 +18,35 @@ package org.killbill.billing.catalog.api.user;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 
 public class DefaultCatalogUserApi implements CatalogUserApi {
 
     private final CatalogService catalogService;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultCatalogUserApi(final CatalogService catalogService) {
+    public DefaultCatalogUserApi(final CatalogService catalogService, final InternalCallContextFactory internalCallContextFactory) {
         this.catalogService = catalogService;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
-    public Catalog getCatalog(final String catalogName, final TenantContext context) {
-        // STEPH TODO this is  hack until we decides what do do exactly:
-        // Probably we want one catalog for tenant but but TBD
-        return catalogService.getFullCatalog();
+    public Catalog getCatalog(final String catalogName, final TenantContext tenantContext) throws CatalogApiException {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
+        return catalogService.getFullCatalog(internalTenantContext);
+    }
+
+    @Override
+    public StaticCatalog getCurrentCatalog(final String catalogName, final TenantContext tenantContext) throws CatalogApiException {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
+        return catalogService.getCurrentCatalog(internalTenantContext);
     }
 }

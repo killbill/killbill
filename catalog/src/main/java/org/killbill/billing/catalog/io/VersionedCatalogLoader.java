@@ -16,20 +16,30 @@
 
 package org.killbill.billing.catalog.io;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
+
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.VersionedCatalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.killbill.billing.platform.api.KillbillService.ServiceException;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.UriAccessor;
+import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
+import org.xml.sax.SAXException;
 
 public class VersionedCatalogLoader implements ICatalogLoader {
     private static final Object PROTOCOL_FOR_FILE = "file";
@@ -76,6 +86,22 @@ public class VersionedCatalogLoader implements ICatalogLoader {
                 result.add(catalog);
             }
 
+            return result;
+        } catch (Exception e) {
+            throw new ServiceException("Problem encountered loading catalog", e);
+        }
+    }
+
+    public VersionedCatalog load(final List<String> catalogXMLs) throws ServiceException {
+        final VersionedCatalog result = new VersionedCatalog(clock);
+        final URI uri;
+        try {
+            uri = new URI("/tenantCatalog");
+            for (final String cur : catalogXMLs) {
+                final InputStream curCatalogStream = new ByteArrayInputStream(cur.getBytes());
+                final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(uri, curCatalogStream, StandaloneCatalog.class);
+                result.add(catalog);
+            }
             return result;
         } catch (Exception e) {
             throw new ServiceException("Problem encountered loading catalog", e);

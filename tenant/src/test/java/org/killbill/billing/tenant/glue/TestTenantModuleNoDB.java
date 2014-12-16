@@ -21,6 +21,8 @@ package org.killbill.billing.tenant.glue;
 import org.killbill.billing.GuicyKillbillTestNoDBModule;
 import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.tenant.dao.DefaultTenantDao;
+import org.killbill.billing.tenant.dao.TenantDao;
 
 public class TestTenantModuleNoDB extends TestTenantModule {
 
