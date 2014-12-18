@@ -19,13 +19,14 @@ package org.killbill.billing.catalog;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 
 public class MockCatalogService extends DefaultCatalogService {
 
     private final MockCatalog catalog;
 
-    public MockCatalogService(final MockCatalog catalog) {
-        super(null, null, null);
+    public MockCatalogService(final MockCatalog catalog, final CacheControllerDispatcher cacheControllerDispatcher) {
+        super(null, null, cacheControllerDispatcher);
         this.catalog = catalog;
     }
 

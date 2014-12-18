@@ -33,6 +33,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.VersionedCatalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.killbill.billing.platform.api.KillbillService.ServiceException;
 import org.testng.Assert;
@@ -115,7 +116,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testLoad() throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
+    public void testLoad() throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, CatalogApiException {
         final VersionedCatalog c = loader.load(Resources.getResource("versionedCatalog").toString());
         Assert.assertEquals(c.size(), 3);
         final Iterator<StandaloneCatalog> it = c.iterator();

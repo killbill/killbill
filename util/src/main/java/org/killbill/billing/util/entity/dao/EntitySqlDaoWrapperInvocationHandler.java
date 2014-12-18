@@ -29,6 +29,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -86,7 +88,12 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private final NonEntityDao nonEntityDao;
     private final Profiling prof;
 
-    public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass, final S sqlDao, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
+    public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass,
+                                                final S sqlDao,
+                                                final Clock clock,
+                                                // Special DAO that don't require caching can invoke EntitySqlDaoWrapperInvocationHandler with no caching (e.g NoCachingTenantDao)
+                                                @Nullable final CacheControllerDispatcher cacheControllerDispatcher,
+                                                @Nullable final NonEntityDao nonEntityDao) {
         this.sqlDaoClass = sqlDaoClass;
         this.sqlDao = sqlDao;
         this.clock = clock;

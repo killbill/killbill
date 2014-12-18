@@ -19,6 +19,7 @@
 package org.killbill.billing.account.glue;
 
 import org.killbill.billing.mock.glue.MockSubscriptionModule;
+import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.CacheModule;
@@ -40,6 +41,7 @@ public class TestAccountModule extends DefaultAccountModule {
         install(new CacheModule(configSource));
         install(new CallContextModule(configSource));
         install(new CustomFieldModule(configSource));
+        install(new MockTenantModule(configSource));
         // Needed for Audit
         install(new MockSubscriptionModule(configSource));
         install(new TagStoreModule(configSource));

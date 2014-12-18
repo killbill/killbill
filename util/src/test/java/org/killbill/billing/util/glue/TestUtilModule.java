@@ -18,6 +18,7 @@
 
 package org.killbill.billing.util.glue;
 
+import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.mockito.Mockito;
@@ -37,7 +38,7 @@ public class TestUtilModule extends KillBillModule {
     protected void configure() {
         //install(new CallContextModule());
         install(new CacheModule(configSource));
-
+        install(new MockTenantModule(configSource));
         installHack();
     }
 }

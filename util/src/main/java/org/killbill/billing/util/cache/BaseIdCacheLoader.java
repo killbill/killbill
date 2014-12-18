@@ -24,8 +24,8 @@ import org.skife.jdbi.v2.IDBI;
 
 public abstract class BaseIdCacheLoader extends BaseCacheLoader {
 
-    protected BaseIdCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
-        super(dbi, nonEntityDao);
+    protected BaseIdCacheLoader() {
+        super();
     }
 
     @Override

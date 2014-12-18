@@ -27,15 +27,17 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.dao.NonEntityDao;
 
-import net.sf.ehcache.CacheException;
 import net.sf.ehcache.loader.CacheLoader;
 
 @Singleton
 public class RecordIdCacheLoader extends BaseIdCacheLoader implements CacheLoader {
 
+    private final NonEntityDao nonEntityDao;
+
     @Inject
     public RecordIdCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
-        super(dbi, nonEntityDao);
+        super();
+        this.nonEntityDao = nonEntityDao;
     }
 
     @Override

@@ -31,6 +31,7 @@ public @interface Cachable {
     public final String OBJECT_ID_CACHE_NAME = "object-id";
     public final String AUDIT_LOG_CACHE_NAME = "audit-log";
     public final String AUDIT_LOG_VIA_HISTORY_CACHE_NAME = "audit-log-via-history";
+    public final String TENANT_CATALOG_CACHE_NAME = "tenant-catalog";
 
     public CacheType value();
 
@@ -51,7 +52,10 @@ public @interface Cachable {
         AUDIT_LOG(AUDIT_LOG_CACHE_NAME, true),
 
         /* Mapping from object 'tableName::historyTableName::targetRecordId' -> matching objects 'Iterable<AuditLog>' */
-        AUDIT_LOG_VIA_HISTORY(AUDIT_LOG_VIA_HISTORY_CACHE_NAME, true);
+        AUDIT_LOG_VIA_HISTORY(AUDIT_LOG_VIA_HISTORY_CACHE_NAME, true),
+
+        /* Tenant catalog cache */
+        TENANT_CATALOG(TENANT_CATALOG_CACHE_NAME, false);
 
         private final String cacheName;
         private final boolean isKeyPrefixedWithTableName;

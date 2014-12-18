@@ -16,11 +16,13 @@
 
 package org.killbill.billing.catalog;
 
-import org.testng.annotations.BeforeClass;
-
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
+import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.catalog.glue.TestCatalogModuleNoDB;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
+import org.killbill.billing.tenant.api.TenantInternalApi;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.testng.annotations.BeforeClass;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -30,6 +32,12 @@ public abstract class CatalogTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @Inject
     protected VersionedCatalogLoader loader;
+
+    @Inject
+    protected TenantInternalApi tenantInternalApi;
+
+    @Inject
+    protected CacheControllerDispatcher cacheControllerDispatcher;
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {

@@ -62,7 +62,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         super.beforeMethod();
         final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
         final SubscriptionDao dao = Mockito.mock(SubscriptionDao.class);
-        final CatalogService catalogService = new MockCatalogService(new MockCatalog());
+         final CatalogService catalogService = new MockCatalogService(new MockCatalog(), cacheControllerDispatcher);
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
         final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
         final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(clock, nonEntityDao, new CacheControllerDispatcher());

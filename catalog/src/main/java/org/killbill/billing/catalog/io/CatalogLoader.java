@@ -19,10 +19,10 @@
 package org.killbill.billing.catalog.io;
 
 import org.killbill.billing.catalog.VersionedCatalog;
-import org.killbill.billing.platform.api.KillbillService.ServiceException;
+import org.killbill.billing.catalog.api.CatalogApiException;
 
-public interface ICatalogLoader {
+public interface CatalogLoader {
 
     public abstract VersionedCatalog load(String urlString)
-            throws ServiceException;
+            throws CatalogApiException;
 }

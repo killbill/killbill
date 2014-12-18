@@ -21,10 +21,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.skife.jdbi.v2.IDBI;
-
 import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.dao.NonEntityDao;
 
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Ehcache;
@@ -33,15 +30,10 @@ import net.sf.ehcache.loader.CacheLoader;
 
 public abstract class BaseCacheLoader implements CacheLoader {
 
-    protected final IDBI dbi;
-    protected final NonEntityDao nonEntityDao;
-
     private Status cacheLoaderStatus;
 
     @Inject
-    public BaseCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
-        this.dbi = dbi;
-        this.nonEntityDao = nonEntityDao;
+    public BaseCacheLoader() {
         this.cacheLoaderStatus = Status.STATUS_UNINITIALISED;
     }
 

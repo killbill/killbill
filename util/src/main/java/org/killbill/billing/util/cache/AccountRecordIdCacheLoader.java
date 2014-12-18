@@ -32,9 +32,12 @@ import net.sf.ehcache.loader.CacheLoader;
 @Singleton
 public class AccountRecordIdCacheLoader extends BaseIdCacheLoader implements CacheLoader {
 
+    private final NonEntityDao nonEntityDao;
+
     @Inject
-    public AccountRecordIdCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
-        super(dbi, nonEntityDao);
+    public AccountRecordIdCacheLoader(final NonEntityDao nonEntityDao) {
+        super();
+        this.nonEntityDao = nonEntityDao;
     }
 
     @Override

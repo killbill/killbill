@@ -35,7 +35,7 @@ public class AuditLogCacheLoader extends BaseCacheLoader implements CacheLoader 
 
     @Inject
     public AuditLogCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
-        super(dbi, nonEntityDao);
+        super();
         this.auditSqlDao = dbi.onDemand(AuditSqlDao.class);
     }
 

@@ -22,7 +22,7 @@ import org.killbill.billing.catalog.DefaultCatalogService;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.user.DefaultCatalogUserApi;
-import org.killbill.billing.catalog.io.ICatalogLoader;
+import org.killbill.billing.catalog.io.CatalogLoader;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.CatalogConfig;
@@ -42,7 +42,7 @@ public class CatalogModule extends KillBillModule {
 
     protected void installCatalog() {
         bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
-        bind(ICatalogLoader.class).to(VersionedCatalogLoader.class).asEagerSingleton();
+        bind(CatalogLoader.class).to(VersionedCatalogLoader.class).asEagerSingleton();
     }
 
     protected void installCatalogUserApi() {

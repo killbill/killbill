@@ -27,10 +27,15 @@ import org.killbill.billing.tenant.api.TenantService;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.tenant.api.user.DefaultTenantUserApi;
 import org.killbill.billing.tenant.dao.DefaultTenantDao;
+import org.killbill.billing.tenant.dao.NoCachingTenantDao;
 import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.util.glue.KillBillModule;
 
+import com.google.inject.name.Names;
+
 public class DefaultTenantModule  extends KillBillModule implements TenantModule {
+
+    public static final String NO_CACHING_TENANT = "NoCachingTenant";
 
     public DefaultTenantModule(final KillbillConfigSource configSource) {
         super(configSource);
@@ -41,6 +46,7 @@ public class DefaultTenantModule  extends KillBillModule implements TenantModule
 
     public void installTenantDao() {
         bind(TenantDao.class).to(DefaultTenantDao.class).asEagerSingleton();
+        bind(TenantDao.class).annotatedWith(Names.named(NO_CACHING_TENANT)).to(NoCachingTenantDao.class).asEagerSingleton();
     }
 
     public void installTenantUserApi() {

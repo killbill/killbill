@@ -37,6 +37,7 @@ import org.killbill.billing.subscription.api.user.TestSubscriptionHelper;
 import org.killbill.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.glue.TestDefaultSubscriptionModuleNoDB;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.SubscriptionConfig;
 import org.killbill.clock.ClockMock;
 import org.mockito.Mockito;
@@ -90,9 +91,13 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected SubscriptionTestInitializer subscriptionTestInitializer;
 
+    @Inject
+    protected CacheControllerDispatcher cacheControllerDispatcher;
+
     protected Catalog catalog;
     protected AccountData accountData;
     protected SubscriptionBaseBundle bundle;
+
 
     @Override
     protected KillbillConfigSource getConfigSource() {

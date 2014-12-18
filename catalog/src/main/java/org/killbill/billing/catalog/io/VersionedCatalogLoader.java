@@ -17,7 +17,6 @@
 package org.killbill.billing.catalog.io;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -25,23 +24,19 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
-
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.killbill.billing.platform.api.KillbillService.ServiceException;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.UriAccessor;
-import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
-import org.xml.sax.SAXException;
 
-public class VersionedCatalogLoader implements ICatalogLoader {
+public class VersionedCatalogLoader implements CatalogLoader {
     private static final Object PROTOCOL_FOR_FILE = "file";
     private final String XML_EXTENSION = ".xml";
     private final Clock clock;
@@ -55,7 +50,7 @@ public class VersionedCatalogLoader implements ICatalogLoader {
       * @see org.killbill.billing.catalog.io.ICatalogLoader#load(java.lang.String)
       */
     @Override
-    public VersionedCatalog load(final String uriString) throws ServiceException {
+    public VersionedCatalog load(final String uriString) throws CatalogApiException {
         try {
             List<URI> xmlURIs = null;
 
@@ -85,14 +80,13 @@ public class VersionedCatalogLoader implements ICatalogLoader {
                 final StandaloneCatalog catalog = XMLLoader.getObjectFromUri(u, StandaloneCatalog.class);
                 result.add(catalog);
             }
-
             return result;
         } catch (Exception e) {
-            throw new ServiceException("Problem encountered loading catalog", e);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, "Problem encountered loading catalog ", e);
         }
     }
 
-    public VersionedCatalog load(final List<String> catalogXMLs) throws ServiceException {
+    public VersionedCatalog load(final List<String> catalogXMLs) throws CatalogApiException {
         final VersionedCatalog result = new VersionedCatalog(clock);
         final URI uri;
         try {
@@ -104,7 +98,7 @@ public class VersionedCatalogLoader implements ICatalogLoader {
             }
             return result;
         } catch (Exception e) {
-            throw new ServiceException("Problem encountered loading catalog", e);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, "Problem encountered loading catalog ", e);
         }
     }
 

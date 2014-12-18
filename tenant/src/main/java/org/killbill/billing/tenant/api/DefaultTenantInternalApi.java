@@ -20,22 +20,24 @@ package org.killbill.billing.tenant.api;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.dao.TenantDao;
+import org.killbill.billing.tenant.glue.DefaultTenantModule;
 
 public class DefaultTenantInternalApi implements TenantInternalApi {
 
     private final TenantDao tenantDao;
 
     @Inject
-    public DefaultTenantInternalApi(final TenantDao tenantDao) {
+    public DefaultTenantInternalApi(@Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantDao tenantDao) {
         this.tenantDao = tenantDao;
     }
 
     @Override
-    public List<String> getTenantCatalogs(final InternalTenantContext tenantContext) throws TenantApiException {
+    public List<String> getTenantCatalogs(final InternalTenantContext tenantContext) {
         return tenantDao.getTenantValueForKey(TenantKey.CATALOG.toString(), tenantContext);
     }
 }

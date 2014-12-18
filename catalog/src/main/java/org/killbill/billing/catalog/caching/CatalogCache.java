@@ -15,12 +15,13 @@
  * under the License.
  */
 
-package org.killbill.billing.tenant.api;
-
-import java.util.List;
+package org.killbill.billing.catalog.caching;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.VersionedCatalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
 
-public interface TenantInternalApi {
-    List<String> getTenantCatalogs(InternalTenantContext tenantContext);
+public interface CatalogCache {
+    public void loadDefaultCatalog(final String url) throws CatalogApiException;
+    public VersionedCatalog getCatalog(InternalTenantContext tenantContext) throws CatalogApiException;
 }

@@ -45,7 +45,8 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
                                        final TenantRecordIdCacheLoader tenantRecordIdCacheLoader,
                                        final ObjectIdCacheLoader objectIdCacheLoader,
                                        final AuditLogCacheLoader auditLogCacheLoader,
-                                       final AuditLogViaHistoryCacheLoader auditLogViaHistoryCacheLoader) {
+                                       final AuditLogViaHistoryCacheLoader auditLogViaHistoryCacheLoader,
+                                       final TenantCatalogCacheLoader tenantCatalogCacheLoader) {
         this.cacheConfig = cacheConfig;
         cacheLoaders.add(recordIdCacheLoader);
         cacheLoaders.add(accountRecordIdCacheLoader);
@@ -53,6 +54,7 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
         cacheLoaders.add(objectIdCacheLoader);
         cacheLoaders.add(auditLogCacheLoader);
         cacheLoaders.add(auditLogViaHistoryCacheLoader);
+        cacheLoaders.add(tenantCatalogCacheLoader);
     }
 
     @Override

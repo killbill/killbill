@@ -21,6 +21,7 @@ package org.killbill.billing.catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.platform.api.KillbillService.ServiceException;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.CatalogConfig;
 import org.killbill.clock.DefaultClock;
 import org.testng.Assert;
@@ -36,7 +37,7 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
                 return "file:src/test/resources/versionedCatalog";
             }
 
-        }, null,  new VersionedCatalogLoader(new DefaultClock()));
+        }, new VersionedCatalogLoader(new DefaultClock()), cacheControllerDispatcher);
         service.loadCatalog();
         Assert.assertNotNull(service.getFullCatalog(internalCallContext));
         Assert.assertEquals(service.getFullCatalog(internalCallContext).getCatalogName(), "WeaponsHireSmall");
@@ -50,7 +51,7 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
                 return "file:src/test/resources/WeaponsHire.xml";
             }
 
-        }, null, new VersionedCatalogLoader(new DefaultClock()));
+        },  new VersionedCatalogLoader(new DefaultClock()), cacheControllerDispatcher);
         service.loadCatalog();
         Assert.assertNotNull(service.getFullCatalog(internalCallContext));
         Assert.assertEquals(service.getFullCatalog(internalCallContext).getCatalogName(), "Firearms");
