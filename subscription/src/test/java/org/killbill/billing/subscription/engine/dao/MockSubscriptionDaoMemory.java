@@ -290,7 +290,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
             try {
                 subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), catalogService.getFullCatalog(context));
             } catch (CatalogApiException e) {
-                e.printStackTrace();
+                log.warn("Failed to rebuild subscription", e);
             }
         }
         return subscription;
