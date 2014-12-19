@@ -92,7 +92,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @ApiResponses(value = {})
     public Response getOverdueConfigXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final TenantContext tenantContext = context.createContext(request);
-        return Response.status(Status.OK).entity(XMLWriter.writeXML(overdueApi.getOverdueConfig(tenantContext), OverdueConfig.class)).build();
+        return Response.status(Status.OK).entity(XMLWriter.writeXML((DefaultOverdueConfig )overdueApi.getOverdueConfig(tenantContext), DefaultOverdueConfig.class)).build();
     }
 
     @Timed

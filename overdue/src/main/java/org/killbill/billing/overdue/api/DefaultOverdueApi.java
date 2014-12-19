@@ -17,13 +17,29 @@
 
 package org.killbill.billing.overdue.api;
 
+import javax.inject.Inject;
+
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.overdue.caching.OverdueConfigCache;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 
 public class DefaultOverdueApi implements OverdueApi {
 
+    private final OverdueConfigCache overdueConfigCache;
+    private final InternalCallContextFactory internalCallContextFactory;
+
+    @Inject
+    public DefaultOverdueApi(final OverdueConfigCache overdueConfigCache,
+                             final InternalCallContextFactory internalCallContextFactory) {
+        this.overdueConfigCache = overdueConfigCache;
+        this.internalCallContextFactory = internalCallContextFactory;
+    }
+
     @Override
-    public OverdueConfig getOverdueConfig(final TenantContext tenantContext) throws CatalogApiException {
-        return null;
+    public OverdueConfig getOverdueConfig(final TenantContext tenantContext) throws OverdueApiException {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
+        return overdueConfigCache.getOverdueConfig(internalTenantContext);
     }
 }
