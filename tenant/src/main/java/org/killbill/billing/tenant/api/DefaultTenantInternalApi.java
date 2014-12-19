@@ -40,4 +40,10 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
     public List<String> getTenantCatalogs(final InternalTenantContext tenantContext) {
         return tenantDao.getTenantValueForKey(TenantKey.CATALOG.toString(), tenantContext);
     }
+
+    @Override
+    public String getTenantOverdueConfig(final InternalTenantContext tenantContext) {
+        final List<String> values = tenantDao.getTenantValueForKey(TenantKey.OVERDUE_CONFIG.toString(), tenantContext);
+        return values.isEmpty() ? null : values.get(0);
+    }
 }

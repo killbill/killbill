@@ -27,6 +27,7 @@ import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.overdue.applicator.OverdueBusListenerTester;
 import org.killbill.billing.overdue.applicator.OverdueStateApplicator;
+import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.calculator.BillingStateCalculator;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.overdue.glue.TestOverdueModuleWithEmbeddedDB;
@@ -95,6 +96,8 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected NonEntityDao nonEntityDao;
     @Inject
     protected TestOverdueHelper testOverdueHelper;
+    @Inject
+    protected OverdueConfigCache overdueConfigCache;
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
@@ -108,6 +111,7 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
         cacheControllerDispatcher.clearAll();
         bus.start();
         bus.register(listener);
+        service.loadConfig();
         service.initialize();
         service.start();
     }

@@ -18,13 +18,14 @@
 
 package org.killbill.billing.overdue;
 
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.platform.api.KillbillService;
 
 public interface OverdueService extends KillbillService {
 
-    String OVERDUE_SERVICE_NAME = "overdue-service";
+    public static final String OVERDUE_SERVICE_NAME = "overdue-service";
 
-    public String getName();
-
-    public OverdueInternalApi getUserApi();
+    public OverdueConfig getOverdueConfig(final InternalTenantContext internalTenantContext) throws OverdueApiException;
 }

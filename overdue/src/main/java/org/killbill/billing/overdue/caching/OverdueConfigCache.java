@@ -1,5 +1,4 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
  * Copyright 2014 Groupon, Inc
  * Copyright 2014 The Billing Project, LLC
  *
@@ -16,15 +15,17 @@
  * under the License.
  */
 
-package org.killbill.billing.beatrix.integration.overdue;
+package org.killbill.billing.overdue.caching;
 
-import org.killbill.billing.overdue.glue.DefaultOverdueModule;
-import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueConfig;
 
-public class IntegrationTestOverdueModule extends DefaultOverdueModule {
+public interface OverdueConfigCache {
 
-    public IntegrationTestOverdueModule(final KillbillConfigSource configSource) {
-        super(configSource);
-    }
+    public void loadDefaultOverdueConfig(String url) throws OverdueApiException;
 
+    public void loadDefaultOverdueConfig(OverdueConfig config) throws OverdueApiException;
+
+    public OverdueConfig getOverdueConfig(InternalTenantContext tenantContext) throws OverdueApiException;
 }

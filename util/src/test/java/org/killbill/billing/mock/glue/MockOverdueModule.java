@@ -21,12 +21,16 @@ package org.killbill.billing.mock.glue;
 import org.killbill.billing.glue.OverdueModule;
 import org.killbill.billing.overdue.OverdueInternalApi;
 import org.killbill.billing.overdue.api.OverdueApi;
+import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.mockito.Mockito;
 
+import com.google.inject.Inject;
+
 public class MockOverdueModule extends KillBillModule implements OverdueModule {
 
+    @Inject
     public MockOverdueModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
@@ -36,6 +40,7 @@ public class MockOverdueModule extends KillBillModule implements OverdueModule {
         bind(OverdueInternalApi.class).toInstance(Mockito.mock(OverdueInternalApi.class));
         bind(OverdueApi.class).toInstance(Mockito.mock(OverdueApi.class));
     }
+
 
     @Override
     protected void configure() {

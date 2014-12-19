@@ -25,6 +25,9 @@ import org.killbill.billing.mock.glue.MockTagModule;
 import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.overdue.TestOverdueHelper;
 import org.killbill.billing.overdue.applicator.OverdueBusListenerTester;
+import org.killbill.billing.overdue.caching.EhCacheOverdueConfigCache;
+import org.killbill.billing.overdue.caching.MockOverdueConfigCache;
+import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
@@ -62,4 +65,9 @@ public class TestOverdueModule extends DefaultOverdueModule {
         bind(OverdueBusListenerTester.class).asEagerSingleton();
         bind(TestOverdueHelper.class).asEagerSingleton();
     }
+
+    public void installOverdueConfigCache() {
+        bind(OverdueConfigCache.class).to(MockOverdueConfigCache.class).asEagerSingleton();
+    }
+
 }

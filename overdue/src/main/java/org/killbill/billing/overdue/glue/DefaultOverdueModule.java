@@ -28,6 +28,8 @@ import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.applicator.OverdueEmailGenerator;
 import org.killbill.billing.overdue.applicator.formatters.DefaultOverdueEmailFormatterFactory;
 import org.killbill.billing.overdue.applicator.formatters.OverdueEmailFormatterFactory;
+import org.killbill.billing.overdue.caching.EhCacheOverdueConfigCache;
+import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.notification.OverdueAsyncBusNotifier;
 import org.killbill.billing.overdue.notification.OverdueAsyncBusPoster;
@@ -55,6 +57,8 @@ public class DefaultOverdueModule extends KillBillModule implements OverdueModul
     @Override
     protected void configure() {
         installOverdueUserApi();
+
+        installOverdueConfigCache();
 
         // internal bindings
         installOverdueService();
@@ -90,5 +94,9 @@ public class DefaultOverdueModule extends KillBillModule implements OverdueModul
     public void installOverdueUserApi() {
         bind(OverdueInternalApi.class).to(DefaultOverdueInternalApi.class).asEagerSingleton();
         bind(OverdueApi.class).to(DefaultOverdueApi.class).asEagerSingleton();
+    }
+
+    public void installOverdueConfigCache() {
+        bind(OverdueConfigCache.class).to(EhCacheOverdueConfigCache.class).asEagerSingleton();
     }
 }

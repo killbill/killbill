@@ -18,6 +18,6 @@ package org.killbill.billing.glue;
 
 public interface OverdueModule {
 
-    public abstract void installOverdueUserApi();
+    public void installOverdueUserApi();
 
 }

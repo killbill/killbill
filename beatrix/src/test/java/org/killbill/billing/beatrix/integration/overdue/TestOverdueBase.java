@@ -60,9 +60,7 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         final String configXml = getOverdueConfig();
         final InputStream is = new ByteArrayInputStream(configXml.getBytes());
         final DefaultOverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
-        overdueWrapperFactory.setOverdueConfig(config);
-        overdueListener.setOverdueConfig(config);
-        ((DefaultOverdueInternalApi) overdueUserApi).setOverdueConfig(config);
+        overdueConfigCache.loadDefaultOverdueConfig(config);
 
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
         assertNotNull(account);

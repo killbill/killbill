@@ -44,7 +44,6 @@ public class TestOverdueStateApplicator extends OverdueTestSuiteWithEmbeddedDB {
     public void testApplicator() throws Exception {
         final InputStream is = new ByteArrayInputStream(testOverdueHelper.getConfigXml().getBytes());
         final DefaultOverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
-        overdueWrapperFactory.setOverdueConfig(config);
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());

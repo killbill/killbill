@@ -22,5 +22,7 @@ import java.util.List;
 import org.killbill.billing.callcontext.InternalTenantContext;
 
 public interface TenantInternalApi {
-    List<String> getTenantCatalogs(InternalTenantContext tenantContext);
+    public List<String> getTenantCatalogs(InternalTenantContext tenantContext);
+
+    public String getTenantOverdueConfig(InternalTenantContext tenantContext);
 }

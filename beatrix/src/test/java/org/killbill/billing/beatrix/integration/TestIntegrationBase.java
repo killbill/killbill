@@ -72,6 +72,8 @@ import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.osgi.config.OSGIConfig;
 import org.killbill.billing.overdue.OverdueInternalApi;
+import org.killbill.billing.overdue.api.OverdueConfig;
+import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
 import org.killbill.billing.payment.api.Payment;
@@ -247,6 +249,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     @Inject
     protected TestApiListener busHandler;
 
+    @Inject
+    protected OverdueConfigCache overdueConfigCache;
+
     protected void assertListenerStatus() {
         busHandler.assertListenerStatus();
     }
@@ -267,6 +272,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         log.debug("RESET TEST FRAMEWORK");
 
         controlCacheDispatcher.clearAll();
+
+        overdueConfigCache.loadDefaultOverdueConfig((OverdueConfig) null);
 
         clock.resetDeltaFromReality();
         busHandler.reset();
