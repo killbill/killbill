@@ -22,6 +22,7 @@ import java.util.UUID;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
+import org.killbill.billing.payment.api.PaymentResponse;
 import org.killbill.billing.util.tag.Tag;
 
 public class BillingState {

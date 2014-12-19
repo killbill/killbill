@@ -30,8 +30,8 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.overdue.OverdueService;
-import org.killbill.billing.overdue.api.DefaultOverdueUserApi;
-import org.killbill.billing.overdue.config.OverdueConfig;
+import org.killbill.billing.overdue.api.DefaultOverdueInternalApi;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
 import org.killbill.xmlloader.XMLLoader;
@@ -59,10 +59,10 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         super.beforeMethod();
         final String configXml = getOverdueConfig();
         final InputStream is = new ByteArrayInputStream(configXml.getBytes());
-        final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
+        final DefaultOverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
         overdueListener.setOverdueConfig(config);
-        ((DefaultOverdueUserApi) overdueUserApi).setOverdueConfig(config);
+        ((DefaultOverdueInternalApi) overdueUserApi).setOverdueConfig(config);
 
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
         assertNotNull(account);

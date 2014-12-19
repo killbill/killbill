@@ -16,10 +16,12 @@
 
 package org.killbill.billing.jaxrs.json;
 
-import org.joda.time.Period;
+import java.util.List;
 
-import org.killbill.billing.overdue.OverdueApiException;
-import org.killbill.billing.overdue.OverdueState;
+import org.joda.time.Period;
+import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueState;
+import org.killbill.billing.util.config.PaymentConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,7 +30,7 @@ public class OverdueStateJson {
 
     private final String name;
     private final String externalMessage;
-    private final Integer daysBetweenPaymentRetries;
+    private final List<Integer> daysBetweenPaymentRetries;
     private final Boolean disableEntitlementAndChangesBlocked;
     private final Boolean blockChanges;
     private final Boolean isClearState;
@@ -37,7 +39,7 @@ public class OverdueStateJson {
     @JsonCreator
     public OverdueStateJson(@JsonProperty("name") final String name,
                             @JsonProperty("externalMessage") final String externalMessage,
-                            @JsonProperty("daysBetweenPaymentRetries") final Integer daysBetweenPaymentRetries,
+                            @JsonProperty("daysBetweenPaymentRetries") final List<Integer> daysBetweenPaymentRetries,
                             @JsonProperty("disableEntitlementAndChangesBlocked") final Boolean disableEntitlementAndChangesBlocked,
                             @JsonProperty("blockChanges") final Boolean blockChanges,
                             @JsonProperty("clearState") final Boolean isClearState,
@@ -51,17 +53,17 @@ public class OverdueStateJson {
         this.reevaluationIntervalDays = reevaluationIntervalDays;
     }
 
-    public OverdueStateJson(final OverdueState overdueState) {
+    public OverdueStateJson(final OverdueState overdueState, final PaymentConfig paymentConfig) {
         this.name = overdueState.getName();
         this.externalMessage = overdueState.getExternalMessage();
-        this.daysBetweenPaymentRetries = overdueState.getDaysBetweenPaymentRetries();
-        this.disableEntitlementAndChangesBlocked = overdueState.disableEntitlementAndChangesBlocked();
-        this.blockChanges = overdueState.blockChanges();
+        this.daysBetweenPaymentRetries = paymentConfig.getPaymentRetryDays();
+        this.disableEntitlementAndChangesBlocked = overdueState.isDisableEntitlementAndChangesBlocked();
+        this.blockChanges = overdueState.isBlockChanges();
         this.isClearState = overdueState.isClearState();
 
         Period reevaluationIntervalPeriod = null;
         try {
-            reevaluationIntervalPeriod = overdueState.getReevaluationInterval();
+            reevaluationIntervalPeriod = overdueState.getAutoReevaluationInterval();
         } catch (final OverdueApiException ignored) {
         }
 
@@ -80,7 +82,7 @@ public class OverdueStateJson {
         return externalMessage;
     }
 
-    public Integer getDaysBetweenPaymentRetries() {
+    public List<Integer> getDaysBetweenPaymentRetries() {
         return daysBetweenPaymentRetries;
     }
 

@@ -29,8 +29,8 @@ import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.config.DefaultOverdueState;
-import org.killbill.billing.overdue.config.OverdueConfig;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.overdue.notification.OverdueAsyncBusNotificationKey;
 import org.killbill.billing.overdue.notification.OverdueAsyncBusNotificationKey.OverdueAsyncBusNotificationAction;
@@ -54,7 +54,7 @@ public class OverdueListener {
     private final OverduePoster asyncPoster;
     private final Clock clock;
 
-    private OverdueConfig config;
+    private DefaultOverdueConfig config;
 
     private static final Logger log = LoggerFactory.getLogger(OverdueListener.class);
 
@@ -110,12 +110,12 @@ public class OverdueListener {
 
     // Optimization: don't bother running the Overdue machinery if it's disabled
     private boolean shouldInsertNotification() {
-        if (config == null || config.getStateSet() == null || config.getStateSet().getStates() == null) {
+        if (config == null || config.getOverdueStatesAccount() == null || config.getOverdueStatesAccount().getStates() == null) {
             return false;
         }
 
-        for (final DefaultOverdueState state : config.getStateSet().getStates()) {
-            if (state.getCondition() != null) {
+        for (final DefaultOverdueState state : config.getOverdueStatesAccount().getStates()) {
+            if (state.getConditionEvaluation() != null) {
                 return true;
             }
         }
@@ -127,7 +127,7 @@ public class OverdueListener {
         return internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "OverdueService", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
     }
 
-    public void setOverdueConfig(final OverdueConfig config) {
+    public void setOverdueConfig(final DefaultOverdueConfig config) {
         this.config = config;
     }
 }

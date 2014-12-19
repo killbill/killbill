@@ -1,5 +1,4 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
  * Copyright 2014 Groupon, Inc
  * Copyright 2014 The Billing Project, LLC
  *
@@ -16,15 +15,15 @@
  * under the License.
  */
 
-package org.killbill.billing.overdue;
+package org.killbill.billing.overdue.api;
 
-import org.killbill.billing.platform.api.KillbillService;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.util.callcontext.TenantContext;
 
-public interface OverdueService extends KillbillService {
+public class DefaultOverdueApi implements OverdueApi {
 
-    String OVERDUE_SERVICE_NAME = "overdue-service";
-
-    public String getName();
-
-    public OverdueInternalApi getUserApi();
+    @Override
+    public OverdueConfig getOverdueConfig(final TenantContext tenantContext) throws CatalogApiException {
+        return null;
+    }
 }

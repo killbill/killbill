@@ -71,7 +71,7 @@ import org.killbill.billing.lifecycle.api.Lifecycle;
 import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.osgi.config.OSGIConfig;
-import org.killbill.billing.overdue.OverdueUserApi;
+import org.killbill.billing.overdue.OverdueInternalApi;
 import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
 import org.killbill.billing.payment.api.Payment;
@@ -171,7 +171,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     protected SubscriptionBaseTimelineApi repairApi;
 
     @Inject
-    protected OverdueUserApi overdueUserApi;
+    protected OverdueInternalApi overdueUserApi;
 
     @Inject
     protected InvoiceUserApi invoiceUserApi;

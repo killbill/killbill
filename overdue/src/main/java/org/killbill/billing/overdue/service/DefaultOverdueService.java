@@ -24,11 +24,11 @@ import java.net.URISyntaxException;
 import javax.inject.Named;
 
 import org.killbill.billing.lifecycle.api.BusService;
+import org.killbill.billing.overdue.OverdueInternalApi;
 import org.killbill.billing.overdue.OverdueProperties;
 import org.killbill.billing.overdue.OverdueService;
-import org.killbill.billing.overdue.OverdueUserApi;
-import org.killbill.billing.overdue.api.DefaultOverdueUserApi;
-import org.killbill.billing.overdue.config.OverdueConfig;
+import org.killbill.billing.overdue.api.DefaultOverdueInternalApi;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.notification.OverdueNotifier;
@@ -48,7 +48,7 @@ public class DefaultOverdueService implements OverdueService {
 
     public static final String OVERDUE_SERVICE_NAME = "overdue-service";
 
-    private final OverdueUserApi userApi;
+    private final OverdueInternalApi userApi;
     private final OverdueProperties properties;
     private final OverdueNotifier asyncNotifier;
     private final OverdueNotifier checkNotifier;
@@ -56,12 +56,12 @@ public class DefaultOverdueService implements OverdueService {
     private final OverdueListener listener;
     private final OverdueWrapperFactory factory;
 
-    private OverdueConfig overdueConfig;
+    private DefaultOverdueConfig overdueConfig;
     private boolean isConfigLoaded;
 
     @Inject
     public DefaultOverdueService(
-            final OverdueUserApi userApi,
+            final OverdueInternalApi userApi,
             final OverdueProperties properties,
             @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED) final OverdueNotifier checkNotifier,
             @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED) final OverdueNotifier asyncNotifier,
@@ -84,7 +84,7 @@ public class DefaultOverdueService implements OverdueService {
     }
 
     @Override
-    public OverdueUserApi getUserApi() {
+    public OverdueInternalApi getUserApi() {
         return userApi;
     }
 
@@ -93,20 +93,20 @@ public class DefaultOverdueService implements OverdueService {
         if (!isConfigLoaded) {
             try {
                 final URI u = new URI(properties.getConfigURI());
-                overdueConfig = XMLLoader.getObjectFromUri(u, OverdueConfig.class);
+                overdueConfig = XMLLoader.getObjectFromUri(u, DefaultOverdueConfig.class);
                 // File not found?
                 if (overdueConfig == null) {
                     log.warn("Overdue system disabled: unable to load the overdue config from " + properties.getConfigURI());
-                    overdueConfig = new OverdueConfig();
+                    overdueConfig = new DefaultOverdueConfig();
                 }
 
                 isConfigLoaded = true;
             } catch (final URISyntaxException e) {
                 log.warn("Overdue system disabled: unable to load the overdue config from " + properties.getConfigURI(), e);
-                overdueConfig = new OverdueConfig();
+                overdueConfig = new DefaultOverdueConfig();
             } catch (final IllegalArgumentException e) {
                 log.warn("Overdue system disabled: unable to load the overdue config from " + properties.getConfigURI(), e);
-                overdueConfig = new OverdueConfig();
+                overdueConfig = new DefaultOverdueConfig();
             } catch (final Exception e) {
                 log.warn("Unable to load the overdue config from " + properties.getConfigURI(), e);
                 throw new ServiceException(e);
@@ -114,7 +114,7 @@ public class DefaultOverdueService implements OverdueService {
 
             factory.setOverdueConfig(overdueConfig);
             listener.setOverdueConfig(overdueConfig);
-            ((DefaultOverdueUserApi) userApi).setOverdueConfig(overdueConfig);
+            ((DefaultOverdueInternalApi) userApi).setOverdueConfig(overdueConfig);
         }
     }
 

@@ -30,7 +30,7 @@ import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.jaxrs.json.BillingExceptionJson;
-import org.killbill.billing.overdue.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.subscription.api.SubscriptionBillingApiException;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseRepairException;

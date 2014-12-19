@@ -22,27 +22,28 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.net.URI;
 
+import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlRootElement(name = "overdueConfig")
 @XmlAccessorType(XmlAccessType.NONE)
-public class OverdueConfig extends ValidatingConfig<OverdueConfig> {
+public class DefaultOverdueConfig extends ValidatingConfig<DefaultOverdueConfig> implements OverdueConfig {
 
     @XmlElement(required = true, name = "accountOverdueStates")
-    private OverdueStatesAccount accountOverdueStates = new OverdueStatesAccount();
+    private DefaultOverdueStatesAccount accountOverdueStates = new DefaultOverdueStatesAccount();
 
-    public DefaultOverdueStateSet getStateSet() {
+    public DefaultOverdueStatesAccount getOverdueStatesAccount() {
         return accountOverdueStates;
     }
 
     @Override
-    public ValidationErrors validate(final OverdueConfig root,
+    public ValidationErrors validate(final DefaultOverdueConfig root,
                                      final ValidationErrors errors) {
         return accountOverdueStates.validate(root, errors);
     }
 
-    public OverdueConfig setOverdueStates(final OverdueStatesAccount accountOverdueStates) {
+    public DefaultOverdueConfig setOverdueStates(final DefaultOverdueStatesAccount accountOverdueStates) {
         this.accountOverdueStates = accountOverdueStates;
         return this;
     }

@@ -23,24 +23,25 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlID;
 
 import org.joda.time.Period;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.TimeUnit;
-import org.killbill.billing.overdue.EmailNotification;
-import org.killbill.billing.overdue.OverdueApiException;
-import org.killbill.billing.overdue.OverdueCancellationPolicy;
-import org.killbill.billing.overdue.OverdueState;
+import org.killbill.billing.overdue.ConditionEvaluation;
+import org.killbill.billing.overdue.api.EmailNotification;
+import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueCancellationPolicy;
+import org.killbill.billing.overdue.api.OverdueCondition;
+import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultOverdueState extends ValidatingConfig<OverdueConfig> implements OverdueState {
+public class DefaultOverdueState extends ValidatingConfig<DefaultOverdueConfig> implements OverdueState {
 
     private static final int MAX_NAME_LENGTH = 50;
 
     @XmlElement(required = false, name = "condition")
-    private DefaultCondition condition;
+    private DefaultOverdueCondition condition;
 
     @XmlAttribute(required = true, name = "name")
     @XmlID
@@ -74,6 +75,15 @@ public class DefaultOverdueState extends ValidatingConfig<OverdueConfig> impleme
     // - set payment retry interval
     // - backup payment mechanism?
 
+    public ConditionEvaluation getConditionEvaluation() {
+        return condition;
+    }
+
+    @Override
+    public OverdueCondition getOverdueCondition() {
+        return condition;
+    }
+
     @Override
     public String getName() {
         return name;
@@ -85,31 +95,26 @@ public class DefaultOverdueState extends ValidatingConfig<OverdueConfig> impleme
     }
 
     @Override
-    public boolean blockChanges() {
+    public boolean isBlockChanges() {
         return blockChanges || disableEntitlement;
     }
 
     @Override
-    public boolean disableEntitlementAndChangesBlocked() {
+    public boolean isDisableEntitlementAndChangesBlocked() {
         return disableEntitlement;
     }
 
     @Override
-    public OverdueCancellationPolicy getSubscriptionCancellationPolicy() {
+    public OverdueCancellationPolicy getOverdueCancellationPolicy() {
         return subscriptionCancellationPolicy;
     }
 
     @Override
-    public Period getReevaluationInterval() throws OverdueApiException {
+    public Period getAutoReevaluationInterval() throws OverdueApiException {
         if (autoReevaluationInterval == null || autoReevaluationInterval.getUnit() == TimeUnit.UNLIMITED || autoReevaluationInterval.getNumber() == 0) {
             throw new OverdueApiException(ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL, name);
         }
         return autoReevaluationInterval.toJodaPeriod();
-    }
-
-    @Override
-    public DefaultCondition getCondition() {
-        return condition;
     }
 
     protected DefaultOverdueState setName(final String name) {
@@ -142,7 +147,7 @@ public class DefaultOverdueState extends ValidatingConfig<OverdueConfig> impleme
         return this;
     }
 
-    protected DefaultOverdueState setCondition(final DefaultCondition condition) {
+    protected DefaultOverdueState setCondition(final DefaultOverdueCondition condition) {
         this.condition = condition;
         return this;
     }
@@ -152,8 +157,9 @@ public class DefaultOverdueState extends ValidatingConfig<OverdueConfig> impleme
         return isClearState;
     }
 
+
     @Override
-    public ValidationErrors validate(final OverdueConfig root,
+    public ValidationErrors validate(final DefaultOverdueConfig root,
                                      final ValidationErrors errors) {
         if (name.length() > MAX_NAME_LENGTH) {
             errors.add(new ValidationError(String.format("Name of state '%s' exceeds the maximum length of %d", name, MAX_NAME_LENGTH), root.getURI(), DefaultOverdueState.class, name));
@@ -162,12 +168,7 @@ public class DefaultOverdueState extends ValidatingConfig<OverdueConfig> impleme
     }
 
     @Override
-    public int getDaysBetweenPaymentRetries() {
-        return 8;
-    }
-
-    @Override
-    public EmailNotification getEnterStateEmailNotification() {
+    public EmailNotification getEmailNotification() {
         return enterStateEmailNotification;
     }
 }

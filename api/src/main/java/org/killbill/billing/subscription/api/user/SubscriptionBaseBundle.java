@@ -21,7 +21,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import org.killbill.billing.entitlement.api.Blockable;
-import org.killbill.billing.overdue.OverdueState;
 import org.killbill.billing.util.entity.Entity;
 
 public interface SubscriptionBaseBundle extends Blockable, Entity {

@@ -29,7 +29,7 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultDuration extends ValidatingConfig<OverdueConfig> implements Duration {
+public class DefaultDuration extends ValidatingConfig<DefaultOverdueConfig> implements Duration {
     @XmlElement(required = true)
     private TimeUnit unit;
 
@@ -93,7 +93,7 @@ public class DefaultDuration extends ValidatingConfig<OverdueConfig> implements 
     }
 
     @Override
-    public ValidationErrors validate(final OverdueConfig catalog, final ValidationErrors errors) {
+    public ValidationErrors validate(final DefaultOverdueConfig catalog, final ValidationErrors errors) {
         //TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
         return errors;
     }

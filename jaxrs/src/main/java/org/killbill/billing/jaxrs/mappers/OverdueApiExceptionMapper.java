@@ -23,7 +23,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import org.killbill.billing.overdue.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueApiException;
 
 @Singleton
 @Provider

@@ -21,8 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.entitlement.api.Blockable;
-import org.killbill.billing.overdue.OverdueState;
+import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.applicator.formatters.OverdueEmailFormatterFactory;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.util.email.templates.TemplateEngine;
@@ -51,6 +50,6 @@ public class OverdueEmailGenerator {
         data.put("nextOverdueState", nextOverdueState);
 
         // TODO single template for all languages for now
-        return templateEngine.executeTemplate(nextOverdueState.getEnterStateEmailNotification().getTemplateName(), data);
+        return templateEngine.executeTemplate(nextOverdueState.getEmailNotification().getTemplateName(), data);
     }
 }

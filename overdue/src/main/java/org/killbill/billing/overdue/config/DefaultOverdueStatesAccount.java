@@ -21,8 +21,9 @@ import javax.xml.bind.annotation.XmlElement;
 import org.joda.time.Period;
 
 import org.killbill.billing.catalog.api.TimeUnit;
+import org.killbill.billing.overdue.api.OverdueStatesAccount;
 
-public class OverdueStatesAccount extends DefaultOverdueStateSet {
+public class DefaultOverdueStatesAccount extends DefaultOverdueStateSet implements OverdueStatesAccount {
 
     @XmlElement(required = false, name = "initialReevaluationInterval")
     private DefaultDuration initialReevaluationInterval;
@@ -44,12 +45,12 @@ public class OverdueStatesAccount extends DefaultOverdueStateSet {
         return initialReevaluationInterval.toJodaPeriod();
     }
 
-    protected OverdueStatesAccount setAccountOverdueStates(final DefaultOverdueState[] accountOverdueStates) {
+    protected DefaultOverdueStatesAccount setAccountOverdueStates(final DefaultOverdueState[] accountOverdueStates) {
         this.accountOverdueStates = accountOverdueStates;
         return this;
     }
 
-    protected OverdueStatesAccount setInitialReevaluationInterval(final DefaultDuration initialReevaluationInterval) {
+    protected DefaultOverdueStatesAccount setInitialReevaluationInterval(final DefaultDuration initialReevaluationInterval) {
         this.initialReevaluationInterval = initialReevaluationInterval;
         return this;
     }

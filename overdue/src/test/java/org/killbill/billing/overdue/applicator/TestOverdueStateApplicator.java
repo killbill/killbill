@@ -22,14 +22,14 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import org.killbill.billing.overdue.api.OverdueState;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.overdue.OverdueState;
 import org.killbill.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
-import org.killbill.billing.overdue.config.OverdueConfig;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
 import org.killbill.xmlloader.XMLLoader;
 import org.killbill.billing.events.OverdueChangeInternalEvent;
@@ -43,27 +43,27 @@ public class TestOverdueStateApplicator extends OverdueTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testApplicator() throws Exception {
         final InputStream is = new ByteArrayInputStream(testOverdueHelper.getConfigXml().getBytes());
-        final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
+        final DefaultOverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
 
-        final OverdueStateSet overdueStateSet = config.getStateSet();
-        final OverdueState clearState = config.getStateSet().findState(DefaultBlockingState.CLEAR_STATE_NAME);
+        final OverdueStateSet overdueStateSet = config.getOverdueStatesAccount();
+        final OverdueState clearState = config.getOverdueStatesAccount().findState(DefaultBlockingState.CLEAR_STATE_NAME);
         OverdueState state;
 
-        state = config.getStateSet().findState("OD1");
+        state = config.getOverdueStatesAccount().findState("OD1");
         applicator.apply(overdueStateSet, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD1");
 
-        state = config.getStateSet().findState("OD2");
+        state = config.getOverdueStatesAccount().findState("OD2");
         applicator.apply(overdueStateSet, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD2");
 
-        state = config.getStateSet().findState("OD3");
+        state = config.getOverdueStatesAccount().findState("OD3");
         applicator.apply(overdueStateSet, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD3");

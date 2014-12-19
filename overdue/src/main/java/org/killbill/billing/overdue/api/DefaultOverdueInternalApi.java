@@ -15,7 +15,8 @@
  */
 
 package org.killbill.billing.overdue.api;
-
+import org.killbill.billing.overdue.OverdueInternalApi;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,11 +26,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.junction.BlockingInternalApi;
-import org.killbill.billing.overdue.OverdueApiException;
 import org.killbill.billing.overdue.OverdueService;
-import org.killbill.billing.overdue.OverdueState;
-import org.killbill.billing.overdue.OverdueUserApi;
-import org.killbill.billing.overdue.config.OverdueConfig;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
@@ -41,18 +38,18 @@ import org.killbill.billing.util.callcontext.TenantContext;
 
 import com.google.inject.Inject;
 
-public class DefaultOverdueUserApi implements OverdueUserApi {
+public class DefaultOverdueInternalApi implements OverdueInternalApi {
 
-    Logger log = LoggerFactory.getLogger(DefaultOverdueUserApi.class);
+    Logger log = LoggerFactory.getLogger(DefaultOverdueInternalApi.class);
 
     private final OverdueWrapperFactory factory;
     private final BlockingInternalApi accessApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
-    private OverdueConfig overdueConfig;
+    private DefaultOverdueConfig overdueConfig;
 
     @Inject
-    public DefaultOverdueUserApi(final OverdueWrapperFactory factory, final BlockingInternalApi accessApi, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultOverdueInternalApi(final OverdueWrapperFactory factory, final BlockingInternalApi accessApi, final InternalCallContextFactory internalCallContextFactory) {
         this.factory = factory;
         this.accessApi = accessApi;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -63,7 +60,7 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
     public OverdueState getOverdueStateFor(final Account overdueable, final TenantContext context) throws OverdueException {
         try {
             final String stateName = accessApi.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContextFactory.createInternalTenantContext(context)).getStateName();
-            final OverdueStateSet states = overdueConfig.getStateSet();
+            final OverdueStateSet states = overdueConfig.getOverdueStatesAccount();
             return states.findState(stateName);
         } catch (OverdueApiException e) {
             throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, overdueable.getId(), overdueable.getClass().getSimpleName());
@@ -93,7 +90,7 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
         throw new UnsupportedOperationException();
     }
 
-    public void setOverdueConfig(final OverdueConfig config) {
+    public void setOverdueConfig(final DefaultOverdueConfig config) {
         this.overdueConfig = config;
     }
 }

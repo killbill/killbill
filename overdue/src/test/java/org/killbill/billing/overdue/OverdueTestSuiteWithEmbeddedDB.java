@@ -86,7 +86,7 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected OverdueStateApplicator applicator;
     @Inject
-    protected OverdueUserApi overdueApi;
+    protected OverdueInternalApi overdueApi;
     @Inject
     protected OverdueProperties overdueProperties;
     @Inject

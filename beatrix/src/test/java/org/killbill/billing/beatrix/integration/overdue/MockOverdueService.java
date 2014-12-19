@@ -21,8 +21,8 @@ package org.killbill.billing.beatrix.integration.overdue;
 import javax.inject.Named;
 
 import org.killbill.billing.lifecycle.api.BusService;
+import org.killbill.billing.overdue.OverdueInternalApi;
 import org.killbill.billing.overdue.OverdueProperties;
-import org.killbill.billing.overdue.OverdueUserApi;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.notification.OverdueNotifier;
@@ -34,7 +34,7 @@ import com.google.inject.Inject;
 public class MockOverdueService extends DefaultOverdueService {
 
     @Inject
-    public MockOverdueService(final OverdueUserApi userApi, final OverdueProperties properties,
+    public MockOverdueService(final OverdueInternalApi userApi, final OverdueProperties properties,
                               @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED) final OverdueNotifier checkNotifier,
                               @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED) final OverdueNotifier asyncNotifier,
                               final BusService busService, final OverdueListener listener, final OverdueWrapperFactory factory) {

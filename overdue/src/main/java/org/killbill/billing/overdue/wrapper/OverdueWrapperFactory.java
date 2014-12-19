@@ -19,6 +19,7 @@ package org.killbill.billing.overdue.wrapper;
 import java.util.UUID;
 
 import org.joda.time.Period;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,10 +28,8 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.clock.Clock;
 import org.killbill.billing.overdue.applicator.OverdueStateApplicator;
 import org.killbill.billing.overdue.calculator.BillingStateCalculator;
-import org.killbill.billing.overdue.config.DefaultDuration;
 import org.killbill.billing.overdue.config.DefaultOverdueState;
 import org.killbill.billing.overdue.config.DefaultOverdueStateSet;
-import org.killbill.billing.overdue.config.OverdueConfig;
 import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -48,7 +47,7 @@ public class OverdueWrapperFactory {
     private final OverdueStateApplicator overdueStateApplicator;
     private final BlockingInternalApi api;
     private final Clock clock;
-    private OverdueConfig config;
+    private DefaultOverdueConfig config;
 
     @Inject
     public OverdueWrapperFactory(final BlockingInternalApi api, final Clock clock,
@@ -82,7 +81,7 @@ public class OverdueWrapperFactory {
     }
 
     private OverdueStateSet getOverdueStateSet() {
-        if (config == null || config.getStateSet() == null) {
+        if (config == null || config.getOverdueStatesAccount() == null) {
             return new DefaultOverdueStateSet() {
 
                 @SuppressWarnings("unchecked")
@@ -97,11 +96,11 @@ public class OverdueWrapperFactory {
                 }
             };
         } else {
-            return config.getStateSet();
+            return config.getOverdueStatesAccount();
         }
     }
 
-    public void setOverdueConfig(final OverdueConfig config) {
+    public void setOverdueConfig(final DefaultOverdueConfig config) {
         this.config = config;
     }
 

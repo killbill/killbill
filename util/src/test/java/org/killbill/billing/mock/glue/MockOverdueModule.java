@@ -19,7 +19,8 @@
 package org.killbill.billing.mock.glue;
 
 import org.killbill.billing.glue.OverdueModule;
-import org.killbill.billing.overdue.OverdueUserApi;
+import org.killbill.billing.overdue.OverdueInternalApi;
+import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.mockito.Mockito;
@@ -32,7 +33,8 @@ public class MockOverdueModule extends KillBillModule implements OverdueModule {
 
     @Override
     public void installOverdueUserApi() {
-        bind(OverdueUserApi.class).toInstance(Mockito.mock(OverdueUserApi.class));
+        bind(OverdueInternalApi.class).toInstance(Mockito.mock(OverdueInternalApi.class));
+        bind(OverdueApi.class).toInstance(Mockito.mock(OverdueApi.class));
     }
 
     @Override

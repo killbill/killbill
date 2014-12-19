@@ -23,8 +23,8 @@ import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.overdue.OverdueApiException;
-import org.killbill.billing.overdue.OverdueState;
+import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
 import org.killbill.xmlloader.ValidatingConfig;
@@ -32,7 +32,7 @@ import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.billing.junction.DefaultBlockingState;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public abstract class DefaultOverdueStateSet extends ValidatingConfig<OverdueConfig> implements OverdueStateSet {
+public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOverdueConfig> implements OverdueStateSet {
 
     private static final Period ZERO_PERIOD = new Period();
     private final DefaultOverdueState clearState = new DefaultOverdueState().setName(DefaultBlockingState.CLEAR_STATE_NAME).setClearState(true);
@@ -64,7 +64,7 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<OverdueCon
     @Override
     public DefaultOverdueState calculateOverdueState(final BillingState billingState, final LocalDate now) throws OverdueApiException {
         for (final DefaultOverdueState overdueState : getStates()) {
-            if (overdueState.getCondition() != null && overdueState.getCondition().evaluate(billingState, now)) {
+            if (overdueState.getConditionEvaluation() != null && overdueState.getConditionEvaluation().evaluate(billingState, now)) {
                 return overdueState;
             }
         }
@@ -72,7 +72,7 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<OverdueCon
     }
 
     @Override
-    public ValidationErrors validate(final OverdueConfig root,
+    public ValidationErrors validate(final DefaultOverdueConfig root,
                                      final ValidationErrors errors) {
         for (final DefaultOverdueState state : getStates()) {
             state.validate(root, errors);

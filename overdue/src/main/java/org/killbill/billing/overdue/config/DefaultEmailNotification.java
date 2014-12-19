@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
-import org.killbill.billing.overdue.EmailNotification;
+import org.killbill.billing.overdue.api.EmailNotification;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultEmailNotification implements EmailNotification {

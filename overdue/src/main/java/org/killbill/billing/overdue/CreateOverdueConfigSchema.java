@@ -20,7 +20,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 
-import org.killbill.billing.overdue.config.OverdueConfig;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.xmlloader.XMLSchemaGenerator;
 
 public class CreateOverdueConfigSchema {
@@ -36,7 +36,7 @@ public class CreateOverdueConfigSchema {
 
         final File f = new File(args[0]);
         final Writer w = new FileWriter(f);
-        w.write(XMLSchemaGenerator.xmlSchemaAsString(OverdueConfig.class));
+        w.write(XMLSchemaGenerator.xmlSchemaAsString(DefaultOverdueConfig.class));
         w.close();
     }
 }

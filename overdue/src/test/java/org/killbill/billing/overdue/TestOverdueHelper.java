@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.overdue.api.OverdueState;
 import org.mockito.Mockito;
 import org.testng.Assert;
 
@@ -110,9 +111,9 @@ public class TestOverdueHelper {
 
     public void checkStateApplied(final BlockingState result, final OverdueState state) {
         Assert.assertEquals(result.getStateName(), state.getName());
-        Assert.assertEquals(result.isBlockChange(), state.blockChanges());
-        Assert.assertEquals(result.isBlockEntitlement(), state.disableEntitlementAndChangesBlocked());
-        Assert.assertEquals(result.isBlockBilling(), state.disableEntitlementAndChangesBlocked());
+        Assert.assertEquals(result.isBlockChange(), state.isBlockChanges());
+        Assert.assertEquals(result.isBlockEntitlement(), state.isDisableEntitlementAndChangesBlocked());
+        Assert.assertEquals(result.isBlockBilling(), state.isDisableEntitlementAndChangesBlocked());
     }
 
     public Account createAccount(final LocalDate dateOfLastUnPaidInvoice) throws SubscriptionBaseApiException, AccountApiException {

@@ -19,17 +19,17 @@ package org.killbill.billing.overdue.wrapper;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.junction.BlockingInternalApi;
-import org.killbill.billing.overdue.OverdueApiException;
 import org.killbill.billing.overdue.OverdueService;
-import org.killbill.billing.overdue.OverdueState;
+import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.applicator.OverdueStateApplicator;
 import org.killbill.billing.overdue.calculator.BillingStateCalculator;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
+import org.killbill.clock.Clock;
 
 public class OverdueWrapper {
 

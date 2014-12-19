@@ -28,11 +28,11 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.payment.api.PaymentResponse;
 import org.killbill.clock.Clock;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueException;
-import org.killbill.billing.overdue.config.api.PaymentResponse;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.util.tag.Tag;

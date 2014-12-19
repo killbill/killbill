@@ -28,9 +28,10 @@ import org.joda.time.LocalDate;
 
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.TimeUnit;
-import org.killbill.billing.overdue.Condition;
+import org.killbill.billing.overdue.ConditionEvaluation;
+import org.killbill.billing.overdue.api.OverdueCondition;
 import org.killbill.billing.overdue.config.api.BillingState;
-import org.killbill.billing.overdue.config.api.PaymentResponse;
+import org.killbill.billing.payment.api.PaymentResponse;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.billing.util.tag.ControlTagType;
@@ -38,7 +39,7 @@ import org.killbill.billing.util.tag.Tag;
 
 @XmlAccessorType(XmlAccessType.NONE)
 
-public class DefaultCondition extends ValidatingConfig<OverdueConfig> implements Condition {
+public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConfig> implements ConditionEvaluation, OverdueCondition {
 
     @XmlElement(required = false, name = "numberOfUnpaidInvoicesEqualsOrExceeds")
     private Integer numberOfUnpaidInvoicesEqualsOrExceeds;
@@ -92,13 +93,13 @@ public class DefaultCondition extends ValidatingConfig<OverdueConfig> implements
     }
 
     @Override
-    public ValidationErrors validate(final OverdueConfig root,
+    public ValidationErrors validate(final DefaultOverdueConfig root,
                                      final ValidationErrors errors) {
         return errors;
     }
 
     @Override
-    public void initialize(final OverdueConfig root, final URI uri) {
+    public void initialize(final DefaultOverdueConfig root, final URI uri) {
     }
 
     public Duration getTimeOffset() {
@@ -108,5 +109,30 @@ public class DefaultCondition extends ValidatingConfig<OverdueConfig> implements
             return new DefaultDuration().setUnit(TimeUnit.DAYS).setNumber(0); // zero time
         }
 
+    }
+
+    @Override
+    public Integer getNumberOfUnpaidInvoicesEqualsOrExceeds() {
+        return numberOfUnpaidInvoicesEqualsOrExceeds;
+    }
+
+    @Override
+    public BigDecimal getTotalUnpaidInvoiceBalanceEqualsOrExceeds() {
+        return totalUnpaidInvoiceBalanceEqualsOrExceeds;
+    }
+
+    @Override
+    public Duration getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds() {
+        return timeSinceEarliestUnpaidInvoiceEqualsOrExceeds;
+    }
+
+    @Override
+    public PaymentResponse [] getResponseForLastFailedPaymentIn() {
+        return responseForLastFailedPayment;
+    }
+
+    @Override
+    public ControlTagType getControlTagType() {
+        return controlTag;
     }
 }

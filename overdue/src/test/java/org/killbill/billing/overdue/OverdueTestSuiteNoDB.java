@@ -82,7 +82,7 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected OverdueStateApplicator applicator;
     @Inject
-    protected OverdueUserApi overdueApi;
+    protected OverdueInternalApi overdueApi;
     @Inject
     protected OverdueProperties overdueProperties;
     @Inject

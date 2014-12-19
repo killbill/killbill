@@ -16,10 +16,10 @@
 
 package org.killbill.billing.overdue.config.io;
 
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.overdue.OverdueTestSuiteNoDB;
-import org.killbill.billing.overdue.config.OverdueConfig;
 import org.killbill.xmlloader.XMLLoader;
 
 import com.google.common.io.Resources;
@@ -28,6 +28,6 @@ public class TestReadConfig extends OverdueTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConfigLoad() throws Exception {
-        XMLLoader.getObjectFromString(Resources.getResource("OverdueConfig.xml").toExternalForm(), OverdueConfig.class);
+        XMLLoader.getObjectFromString(Resources.getResource("OverdueConfig.xml").toExternalForm(), DefaultOverdueConfig.class);
     }
 }

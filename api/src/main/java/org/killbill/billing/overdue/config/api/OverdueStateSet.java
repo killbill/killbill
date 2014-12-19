@@ -18,9 +18,8 @@ package org.killbill.billing.overdue.config.api;
 
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
-
-import org.killbill.billing.overdue.OverdueApiException;
-import org.killbill.billing.overdue.OverdueState;
+import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueState;
 
 public interface OverdueStateSet {
 

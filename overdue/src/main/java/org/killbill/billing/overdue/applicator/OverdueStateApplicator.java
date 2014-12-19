@@ -44,10 +44,10 @@ import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.events.OverdueChangeInternalEvent;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.junction.DefaultBlockingState;
-import org.killbill.billing.overdue.OverdueApiException;
-import org.killbill.billing.overdue.OverdueCancellationPolicy;
 import org.killbill.billing.overdue.OverdueService;
-import org.killbill.billing.overdue.OverdueState;
+import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueCancellationPolicy;
+import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
@@ -121,7 +121,7 @@ public class OverdueStateApplicator {
 
     public void apply(final OverdueStateSet overdueStateSet, final BillingState billingState,
                       final Account account, final OverdueState previousOverdueState,
-                      final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
+                      final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException, OverdueApiException {
         try {
 
             if (isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(context)) {
@@ -137,7 +137,7 @@ public class OverdueStateApplicator {
                                                         (firstOverdueState != null && billingState != null && billingState.getDateOfEarliestUnpaidInvoice() != null);
 
             if (conditionForNextNotfication) {
-                final Period reevaluationInterval = nextOverdueState.isClearState() ? overdueStateSet.getInitialReevaluationInterval() : nextOverdueState.getReevaluationInterval();
+                final Period reevaluationInterval = nextOverdueState.isClearState() ? overdueStateSet.getInitialReevaluationInterval() : nextOverdueState.getAutoReevaluationInterval();
                 // If there is no configuration in the config, we assume this is because the overdue conditions are not time based and so there is nothing to retry
                 if (reevaluationInterval == null) {
                     log.debug("OverdueStateApplicator <notificationQ> : Missing InitialReevaluationInterval from config, NOT inserting notification for account " + account.getId());
@@ -258,15 +258,15 @@ public class OverdueStateApplicator {
     }
 
     private boolean blockChanges(final OverdueState nextOverdueState) {
-        return nextOverdueState.blockChanges();
+        return nextOverdueState.isBlockChanges();
     }
 
     private boolean blockBilling(final OverdueState nextOverdueState) {
-        return nextOverdueState.disableEntitlementAndChangesBlocked();
+        return nextOverdueState.isDisableEntitlementAndChangesBlocked();
     }
 
     private boolean blockEntitlement(final OverdueState nextOverdueState) {
-        return nextOverdueState.disableEntitlementAndChangesBlocked();
+        return nextOverdueState.isDisableEntitlementAndChangesBlocked();
     }
 
     protected void createFutureNotification(final Account account, final DateTime timeOfNextCheck, final InternalCallContext context) {
@@ -280,12 +280,12 @@ public class OverdueStateApplicator {
     }
 
     private void cancelSubscriptionsIfRequired(final Account account, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
-        if (nextOverdueState.getSubscriptionCancellationPolicy() == OverdueCancellationPolicy.NONE) {
+        if (nextOverdueState.getOverdueCancellationPolicy() == OverdueCancellationPolicy.NONE) {
             return;
         }
         try {
             final BillingActionPolicy actionPolicy;
-            switch (nextOverdueState.getSubscriptionCancellationPolicy()) {
+            switch (nextOverdueState.getOverdueCancellationPolicy()) {
                 case END_OF_TERM:
                     actionPolicy = BillingActionPolicy.END_OF_TERM;
                     break;
@@ -293,7 +293,7 @@ public class OverdueStateApplicator {
                     actionPolicy = BillingActionPolicy.IMMEDIATE;
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected OverdueCancellationPolicy " + nextOverdueState.getSubscriptionCancellationPolicy());
+                    throw new IllegalStateException("Unexpected OverdueCancellationPolicy " + nextOverdueState.getOverdueCancellationPolicy());
             }
             final List<Entitlement> toBeCancelled = new LinkedList<Entitlement>();
             computeEntitlementsToCancel(account, toBeCancelled, context);
@@ -335,19 +335,19 @@ public class OverdueStateApplicator {
         // The alternative would be to: throw new OverdueApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
 
         // If sending is not configured, skip
-        if (nextOverdueState.getEnterStateEmailNotification() == null) {
+        if (nextOverdueState.getEmailNotification() == null) {
             return;
         }
 
         final List<String> to = ImmutableList.<String>of(account.getEmail());
         // TODO - should we look at the account CC: list?
         final List<String> cc = ImmutableList.<String>of();
-        final String subject = nextOverdueState.getEnterStateEmailNotification().getSubject();
+        final String subject = nextOverdueState.getEmailNotification().getSubject();
 
         try {
             // Generate and send the email
             final String emailBody = overdueEmailGenerator.generateEmail(account, billingState, account, nextOverdueState);
-            if (nextOverdueState.getEnterStateEmailNotification().isHTML()) {
+            if (nextOverdueState.getEmailNotification().isHTML()) {
                 emailSender.sendHTMLEmail(to, cc, subject, emailBody);
             } else {
                 emailSender.sendPlainTextEmail(to, cc, subject, emailBody);

@@ -16,13 +16,13 @@
 
 package org.killbill.billing.overdue.config;
 
-public class MockOverdueRules extends OverdueConfig {
+public class MockOverdueRules extends DefaultOverdueConfig {
 
     public static final String CLEAR_STATE = "Clear";
 
     @SuppressWarnings("unchecked")
     public MockOverdueRules() {
-        final OverdueStatesAccount bundleODS = new OverdueStatesAccount();
+        final DefaultOverdueStatesAccount bundleODS = new DefaultOverdueStatesAccount();
         bundleODS.setAccountOverdueStates(new DefaultOverdueState[]{new DefaultOverdueState().setName(CLEAR_STATE)});
         setOverdueStates(bundleODS);
 

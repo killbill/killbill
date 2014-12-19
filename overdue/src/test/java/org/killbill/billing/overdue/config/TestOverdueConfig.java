@@ -19,11 +19,10 @@ package org.killbill.billing.overdue.config;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
+import org.killbill.billing.overdue.api.EmailNotification;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.catalog.api.TimeUnit;
-import org.killbill.billing.overdue.EmailNotification;
 import org.killbill.billing.overdue.OverdueTestSuiteNoDB;
 import org.killbill.xmlloader.XMLLoader;
 
@@ -68,15 +67,15 @@ public class TestOverdueConfig extends OverdueTestSuiteNoDB {
                            "   </accountOverdueStates>" +
                            "</overdueConfig>";
         final InputStream is = new ByteArrayInputStream(xml.getBytes());
-        final OverdueConfig c = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
-        Assert.assertEquals(c.getStateSet().size(), 2);
+        final DefaultOverdueConfig c = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
+        Assert.assertEquals(c.getOverdueStatesAccount().size(), 2);
 
-        Assert.assertNull(c.getStateSet().getStates()[0].getEnterStateEmailNotification());
+        Assert.assertNull(c.getOverdueStatesAccount().getStates()[0].getEmailNotification());
 
-        Assert.assertNotNull(c.getStateSet().getInitialReevaluationInterval());
-        Assert.assertEquals(c.getStateSet().getInitialReevaluationInterval().getDays(), 1);
+        Assert.assertNotNull(c.getOverdueStatesAccount().getInitialReevaluationInterval());
+        Assert.assertEquals(c.getOverdueStatesAccount().getInitialReevaluationInterval().getDays(), 1);
 
-        final EmailNotification secondNotification = c.getStateSet().getStates()[1].getEnterStateEmailNotification();
+        final EmailNotification secondNotification = c.getOverdueStatesAccount().getStates()[1].getEmailNotification();
         Assert.assertEquals(secondNotification.getSubject(), "ToTo");
         Assert.assertEquals(secondNotification.getTemplateName(), "Titi");
         Assert.assertFalse(secondNotification.isHTML());

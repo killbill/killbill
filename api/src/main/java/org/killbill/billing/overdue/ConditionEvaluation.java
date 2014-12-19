@@ -16,11 +16,20 @@
 
 package org.killbill.billing.overdue;
 
-public interface EmailNotification {
+import org.joda.time.LocalDate;
 
-    public String getSubject();
+import org.killbill.billing.entitlement.api.Blockable;
+import org.killbill.billing.overdue.config.api.BillingState;
 
-    public String getTemplateName();
 
-    public Boolean isHTML();
+public interface ConditionEvaluation {
+
+    /**
+     * Evaluate the condition in a given state, at a given date.
+     *
+     * @param state the billing state
+     * @param now   the day to use to evaluate the condition, in the account timezone
+     * @return true if the condition is true, false otherwise
+     */
+    public boolean evaluate(BillingState state, LocalDate now);
 }
