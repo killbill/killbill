@@ -16,139 +16,99 @@
 
 package org.killbill.billing.invoice.template.translator;
 
-import java.util.Locale;
+import java.util.ResourceBundle;
 
 import org.killbill.billing.util.template.translation.DefaultTranslatorBase;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 
-import com.google.inject.Inject;
+public class DefaultInvoiceTranslator extends DefaultTranslatorBase {
 
-public class DefaultInvoiceTranslator extends DefaultTranslatorBase implements InvoiceStrings {
-
-    private Locale locale;
-
-    @Inject
-    public DefaultInvoiceTranslator(final TranslatorConfig config) {
-        super(config);
+    public DefaultInvoiceTranslator(final ResourceBundle bundle, final ResourceBundle defaultBundle) {
+        super(bundle, defaultBundle);
     }
 
-    public void setLocale(final Locale locale) {
-        this.locale = locale;
-    }
-
-    @Override
-    protected String getBundlePath() {
-        return config.getInvoiceTemplateBundlePath();
-    }
-
-    @Override
-    protected String getTranslationType() {
-        return "invoice";
-    }
-
-    @Override
     public String getInvoiceEmailSubject() {
-        String subject = getTranslation(locale, "invoiceEmailSubject");
+        String subject = getTranslation("invoiceEmailSubject");
         return (!"invoiceEmailSubject".equals(subject)) ? subject : null;
     }
 
-    @Override
     public String getInvoiceTitle() {
-        return getTranslation(locale, "invoiceTitle");
+        return getTranslation("invoiceTitle");
     }
 
-    @Override
     public String getInvoiceDate() {
-        return getTranslation(locale, "invoiceDate");
+        return getTranslation("invoiceDate");
     }
 
-    @Override
     public String getInvoiceNumber() {
-        return getTranslation(locale, "invoiceNumber");
+        return getTranslation("invoiceNumber");
     }
 
-    @Override
     public String getAccountOwnerName() {
-        return getTranslation(locale, "accountOwnerName");
+        return getTranslation("accountOwnerName");
     }
 
-    @Override
     public String getAccountOwnerEmail() {
-        return getTranslation(locale, "accountOwnerEmail");
+        return getTranslation("accountOwnerEmail");
     }
 
-    @Override
     public String getAccountOwnerPhone() {
-        return getTranslation(locale, "accountOwnerPhone");
+        return getTranslation("accountOwnerPhone");
     }
 
-    @Override
     public String getCompanyName() {
-        return getTranslation(locale, "companyName");
+        return getTranslation("companyName");
     }
 
-    @Override
     public String getCompanyAddress() {
-        return getTranslation(locale, "companyAddress");
+        return getTranslation("companyAddress");
     }
 
-    @Override
     public String getCompanyCityProvincePostalCode() {
-        return getTranslation(locale, "companyCityProvincePostalCode");
+        return getTranslation("companyCityProvincePostalCode");
     }
 
-    @Override
     public String getCompanyCountry() {
-        return getTranslation(locale, "companyCountry");
+        return getTranslation("companyCountry");
     }
 
-    @Override
     public String getCompanyUrl() {
-        return getTranslation(locale, "companyUrl");
+        return getTranslation("companyUrl");
     }
 
-    @Override
     public String getInvoiceItemBundleName() {
-        return getTranslation(locale, "invoiceItemBundleName");
+        return getTranslation("invoiceItemBundleName");
     }
 
-    @Override
     public String getInvoiceItemDescription() {
-        return getTranslation(locale, "invoiceItemDescription");
+        return getTranslation("invoiceItemDescription");
     }
 
-    @Override
     public String getInvoiceItemServicePeriod() {
-        return getTranslation(locale, "invoiceItemServicePeriod");
+        return getTranslation("invoiceItemServicePeriod");
     }
 
-    @Override
     public String getInvoiceItemAmount() {
-        return getTranslation(locale, "invoiceItemAmount");
+        return getTranslation("invoiceItemAmount");
     }
 
-    @Override
     public String getInvoiceAmount() {
-        return getTranslation(locale, "invoiceAmount");
+        return getTranslation("invoiceAmount");
     }
 
-    @Override
     public String getInvoiceAmountPaid() {
-        return getTranslation(locale, "invoiceAmountPaid");
+        return getTranslation("invoiceAmountPaid");
     }
 
-    @Override
     public String getInvoiceBalance() {
-        return getTranslation(locale, "invoiceBalance");
+        return getTranslation("invoiceBalance");
     }
 
-    @Override
     public String getProcessedPaymentCurrency() {
-        return getTranslation(locale, "processedPaymentCurrency");
+        return getTranslation("processedPaymentCurrency");
     }
 
-    @Override
     public String getProcessedPaymentRate() {
-        return getTranslation(locale, "processedPaymentRate");
+        return getTranslation("processedPaymentRate");
     }
 }

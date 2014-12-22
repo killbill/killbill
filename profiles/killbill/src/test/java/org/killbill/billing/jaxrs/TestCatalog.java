@@ -29,7 +29,18 @@ import org.killbill.billing.client.model.Product;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.io.Resources;
+
 public class TestCatalog extends TestJaxrsBase {
+
+    @Test(groups = "slow", description = "Upload and retrieve a per tenant catalog")
+    public void testMultiTenantCatalog() throws Exception {
+        final String catalogPath = Resources.getResource("SpyCarBasic.xml").getPath();
+        killBillClient.uploadXMLCatalog(catalogPath, createdBy, reason, comment);
+
+        final String catalog = killBillClient.getXMLCatalog();
+        Assert.assertNotNull(catalog);
+    }
 
     @Test(groups = "slow", description = "Can retrieve a simplified version of the catalog")
     public void testCatalogSimple() throws Exception {

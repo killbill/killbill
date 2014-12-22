@@ -14,18 +14,24 @@ package org.killbill.billing.util.email;/*
  * under the License.
  */
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.Locale;
 import java.util.Map;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
 
-import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
+import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.template.translation.DefaultCatalogTranslator;
 import org.killbill.billing.util.template.translation.Translator;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
+import org.killbill.xmlloader.UriAccessor;
+import org.skife.config.ConfigSource;
+import org.skife.config.ConfigurationObjectFactory;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -33,70 +39,61 @@ import static org.testng.Assert.assertEquals;
 
 public class DefaultCatalogTranslationTest extends UtilTestSuiteNoDB {
 
-    private Translator translation;
-
     @Override
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
-        final ConfigSource configSource = new ConfigSource() {
-            private final Map<String, String> properties = ImmutableMap.<String, String>of("org.killbill.template.invoiceFormatterFactoryClass",
-                                                                                           "org.killbill.billing.mock.MockInvoiceFormatterFactory");
+    }
 
-            @Override
-            public String getString(final String propertyName) {
-                return properties.get(propertyName);
-            }
-        };
-
-        final TranslatorConfig config = new ConfigurationObjectFactory(configSource).build(TranslatorConfig.class);
-        translation = new DefaultCatalogTranslator(config);
+    private ResourceBundle getBundle(final Locale locale) throws IOException, URISyntaxException {
+        final String propertiesFileNameWithCountry = "org/killbill/billing/util/template/translation/CatalogTranslation" + "_" + locale.getLanguage() + "_" + locale.getCountry() + ".properties";
+        final InputStream inputStream = UriAccessor.accessUri(propertiesFileNameWithCountry);
+        if (inputStream == null) {
+            return null;
+        } else {
+            return new PropertyResourceBundle(inputStream);
+        }
     }
 
     @Test(groups = "fast")
-    public void testInitialization() {
+    public void testBundle_us() throws IOException, URISyntaxException {
         final String shotgunMonthly = "shotgun-monthly";
         final String shotgunAnnual = "shotgun-annual";
         final String badText = "Bad text";
 
-        assertEquals(translation.getTranslation(Locale.US, shotgunMonthly), "Monthly shotgun plan");
-        assertEquals(translation.getTranslation(Locale.US, shotgunAnnual), "Annual shotgun plan");
-        assertEquals(translation.getTranslation(Locale.US, badText), badText);
+        final ResourceBundle bundle_en_US = getBundle(Locale.US);
+        final DefaultCatalogTranslator translation = new DefaultCatalogTranslator(bundle_en_US, null);
 
-        assertEquals(translation.getTranslation(Locale.CANADA_FRENCH, shotgunMonthly), "Fusil de chasse mensuel");
-        assertEquals(translation.getTranslation(Locale.CANADA_FRENCH, shotgunAnnual), "Fusil de chasse annuel");
-        assertEquals(translation.getTranslation(Locale.CANADA_FRENCH, badText), badText);
-
-        assertEquals(translation.getTranslation(Locale.CHINA, shotgunMonthly), "Monthly shotgun plan");
-        assertEquals(translation.getTranslation(Locale.CHINA, shotgunAnnual), "Annual shotgun plan");
-        assertEquals(translation.getTranslation(Locale.CHINA, badText), badText);
+        assertEquals(translation.getTranslation(shotgunMonthly), "Monthly shotgun plan");
+        assertEquals(translation.getTranslation(shotgunAnnual), "Annual shotgun plan");
+        assertEquals(translation.getTranslation(badText), badText);
     }
 
     @Test(groups = "fast")
-    public void testExistingTranslation() {
-        // If the translation exists, return the translation
-        final String originalText = "shotgun-monthly";
-        assertEquals(translation.getTranslation(Locale.US, originalText), "Monthly shotgun plan");
+    public void testBundle_ca_fr() throws IOException, URISyntaxException {
+        final String shotgunMonthly = "shotgun-monthly";
+        final String shotgunAnnual = "shotgun-annual";
+        final String badText = "Bad text";
+
+        final ResourceBundle bundle_ca_fr = getBundle(Locale.CANADA_FRENCH);
+        final DefaultCatalogTranslator translation = new DefaultCatalogTranslator(bundle_ca_fr, null);
+
+        assertEquals(translation.getTranslation(shotgunMonthly), "Fusil de chasse mensuel");
+        assertEquals(translation.getTranslation(shotgunAnnual), "Fusil de chasse annuel");
+        assertEquals(translation.getTranslation(badText), badText);
     }
 
     @Test(groups = "fast")
-    public void testMissingTranslation() {
-        // If the translation is missing from the file, return the original text
-        final String originalText = "missing translation";
-        assertEquals(translation.getTranslation(Locale.US, originalText), originalText);
+    public void testBundle_ch() throws IOException, URISyntaxException {
+        final String shotgunMonthly = "shotgun-monthly";
+        final String shotgunAnnual = "shotgun-annual";
+        final String badText = "Bad text";
+
+        final DefaultCatalogTranslator translation = new DefaultCatalogTranslator(null, null);
+
+        assertEquals(translation.getTranslation(shotgunMonthly), shotgunMonthly);
+        assertEquals(translation.getTranslation(shotgunAnnual), shotgunAnnual);
+        assertEquals(translation.getTranslation(badText), badText);
     }
 
-    @Test(groups = "fast")
-    public void testMissingTranslationFileWithEnglishText() {
-        // If the translation file doesn't exist, return the "English" translation
-        final String originalText = "shotgun-monthly";
-        assertEquals(translation.getTranslation(Locale.CHINA, originalText), "Monthly shotgun plan");
-    }
-
-    @Test(groups = "fast")
-    public void testMissingFileAndText() {
-        // If the file is missing, and the "English" translation is missing, return the original text
-        final String originalText = "missing translation";
-        assertEquals(translation.getTranslation(Locale.CHINA, originalText), originalText);
-    }
 }

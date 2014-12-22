@@ -359,7 +359,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         }
 
-        HtmlInvoice htmlInvoice = generator.generateInvoice(account, invoice, manualPay);
+        HtmlInvoice htmlInvoice = generator.generateInvoice(account, invoice, manualPay, internalContext);
         return htmlInvoice.getBody();
     }
 

@@ -18,11 +18,21 @@
 package org.killbill.billing.tenant.api;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 
 public interface TenantInternalApi {
+
     public List<String> getTenantCatalogs(InternalTenantContext tenantContext);
 
     public String getTenantOverdueConfig(InternalTenantContext tenantContext);
+
+    public String getInvoiceTemplate(Locale locale, InternalTenantContext tenantContext);
+
+    public String getManualPayInvoiceTemplate(Locale locale, InternalTenantContext tenantContext);
+
+    public String getInvoiceTranslation(Locale locale, InternalTenantContext tenantContext);
+
+    public String getCatalogTranslation(Locale locale, InternalTenantContext tenantContext);
 }

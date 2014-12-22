@@ -19,5 +19,5 @@ package org.killbill.billing.util.template.translation;
 import java.util.Locale;
 
 public interface Translator {
-    public String getTranslation(Locale locale, String originalText);
+    public String getTranslation(String originalText);
 }

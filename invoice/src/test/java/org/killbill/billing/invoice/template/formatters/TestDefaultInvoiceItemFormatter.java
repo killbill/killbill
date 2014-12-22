@@ -111,7 +111,7 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
 
     private void checkOutput(final InvoiceItem invoiceItem, final String template, final String expected, final Locale locale) {
         final Map<String, Object> data = new HashMap<String, Object>();
-        data.put("invoiceItem", new DefaultInvoiceItemFormatter(config, invoiceItem,  DateTimeFormat.mediumDate().withLocale(locale), locale));
+        data.put("invoiceItem", new DefaultInvoiceItemFormatter(config, invoiceItem,  DateTimeFormat.mediumDate().withLocale(locale), locale, internalCallContext, resourceBundleFactory));
 
         final String formattedText = templateEngine.executeTemplateText(template, data);
         Assert.assertEquals(formattedText, expected);

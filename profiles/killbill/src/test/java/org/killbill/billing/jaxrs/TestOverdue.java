@@ -31,10 +31,21 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Ordering;
+import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertEquals;
 
 public class TestOverdue extends TestJaxrsBase {
+
+    @Test(groups = "slow", description = "Upload and retrieve a per tenant overdue config")
+    public void testMultiTenantOverdueConfig() throws Exception {
+        final String overdueConfigPath = Resources.getResource("overdue.xml").getPath();
+        killBillClient.uploadXMLOverdueConfig(overdueConfigPath, createdBy, reason, comment);
+
+        final String overdueConfig = killBillClient.getXMLOverdueConfig();
+        Assert.assertNotNull(overdueConfig);
+    }
+
 
     @Test(groups = "slow", description = "Can retrieve the account overdue status")
     public void testOverdueStatus() throws Exception {

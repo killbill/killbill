@@ -29,6 +29,9 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
+import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,13 +68,17 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     private final DateTimeFormatter dateFormatter;
     private final Locale locale;
     private final CurrencyConversionApi currencyConversionApi;
+    private final InternalTenantContext context;
+    private final ResourceBundleFactory bundleFactory;
 
-    public DefaultInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale, final CurrencyConversionApi currencyConversionApi) {
+    public DefaultInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale, final CurrencyConversionApi currencyConversionApi, final ResourceBundleFactory bundleFactory, final InternalTenantContext context) {
         this.config = config;
         this.invoice = invoice;
-        dateFormatter = DateTimeFormat.mediumDate().withLocale(locale);
+        this.dateFormatter = DateTimeFormat.mediumDate().withLocale(locale);
         this.locale = locale;
         this.currencyConversionApi = currencyConversionApi;
+        this.bundleFactory = bundleFactory;
+        this.context = context;
     }
 
     @Override
@@ -109,7 +116,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
         final List<InvoiceItem> formatters = new ArrayList<InvoiceItem>();
         for (final InvoiceItem item : invoiceItems) {
-            formatters.add(new DefaultInvoiceItemFormatter(config, item, dateFormatter, locale));
+            formatters.add(new DefaultInvoiceItemFormatter(config, item, dateFormatter, locale, context, bundleFactory));
         }
         return formatters;
     }

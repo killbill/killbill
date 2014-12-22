@@ -16,39 +16,16 @@
 
 package org.killbill.billing.util.email.templates;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.Map;
-import org.killbill.billing.util.io.IOUtils;
-import org.killbill.xmlloader.UriAccessor;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
 
 public class MustacheTemplateEngine implements TemplateEngine {
 
     @Override
-    public String executeTemplate(final String templateName, final Map<String, Object> data) throws IOException {
-        final String templateText = getTemplateText(templateName);
-        return executeTemplateText(templateText, data);
-    }
-
-    @VisibleForTesting
     public String executeTemplateText(final String templateText, final Map<String, Object> data) {
         final Template template = Mustache.compiler().compile(templateText);
         return template.execute(data);
-    }
-
-    private String getTemplateText(final String templateName) throws IOException {
-        final InputStream templateStream;
-        try {
-            templateStream = UriAccessor.accessUri(templateName);
-        } catch (URISyntaxException e) {
-            throw new IOException(e);
-        }
-
-        return IOUtils.toString(templateStream);
     }
 }

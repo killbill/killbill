@@ -88,7 +88,7 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
 
         final HtmlInvoice htmlInvoice;
         try {
-            htmlInvoice = generator.generateInvoice(account, invoice, manualPay);
+            htmlInvoice = generator.generateInvoice(account, invoice, manualPay, internalTenantContext);
         } catch (IOException e) {
             throw new InvoiceApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
         }

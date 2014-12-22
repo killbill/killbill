@@ -54,12 +54,12 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final TranslatorConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         final TemplateEngine templateEngine = new MustacheTemplateEngine();
         final InvoiceFormatterFactory factory = new DefaultInvoiceFormatterFactory();
-        g = new HtmlInvoiceGenerator(factory, templateEngine, config, null);
+        g = new HtmlInvoiceGenerator(factory, templateEngine, config, null, resourceBundleFactory, null);
     }
 
     @Test(groups = "fast")
     public void testGenerateInvoice() throws Exception {
-        final HtmlInvoice output = g.generateInvoice(createAccount(), createInvoice(), false);
+        final HtmlInvoice output = g.generateInvoice(createAccount(), createInvoice(), false, internalCallContext);
         Assert.assertNotNull(output);
         Assert.assertNotNull(output.getBody());
         Assert.assertEquals(output.getSubject(), "Your invoice");
@@ -68,7 +68,7 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testGenerateEmptyInvoice() throws Exception {
         final Invoice invoice = Mockito.mock(Invoice.class);
-        final HtmlInvoice output = g.generateInvoice(createAccount(), invoice, false);
+        final HtmlInvoice output = g.generateInvoice(createAccount(), invoice, false, internalCallContext);
         Assert.assertNotNull(output);
         Assert.assertNotNull(output.getBody());
         Assert.assertEquals(output.getSubject(), "Your invoice");
@@ -76,7 +76,7 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testGenerateNullInvoice() throws Exception {
-        final HtmlInvoice output = g.generateInvoice(createAccount(), null, false);
+        final HtmlInvoice output = g.generateInvoice(createAccount(), null, false, internalCallContext);
         Assert.assertNull(output);
     }
 

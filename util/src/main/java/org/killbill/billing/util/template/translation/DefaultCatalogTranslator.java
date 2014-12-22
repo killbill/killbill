@@ -16,21 +16,12 @@
 
 package org.killbill.billing.util.template.translation;
 
-import com.google.inject.Inject;
+import java.util.ResourceBundle;
 
 public class DefaultCatalogTranslator extends DefaultTranslatorBase {
-    @Inject
-    public DefaultCatalogTranslator(final TranslatorConfig config) {
-        super(config);
-    }
 
-    @Override
-    protected String getBundlePath() {
-        return config.getCatalogBundlePath();
-    }
-
-    @Override
-    protected String getTranslationType() {
-        return "catalog";
+    public DefaultCatalogTranslator(final ResourceBundle bundle,
+                                    final ResourceBundle defaultBundle) {
+        super(bundle, defaultBundle);
     }
 }

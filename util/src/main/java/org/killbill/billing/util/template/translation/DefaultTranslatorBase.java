@@ -16,104 +16,39 @@
 
 package org.killbill.billing.util.template.translation;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
-import org.killbill.xmlloader.UriAccessor;
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.killbill.billing.util.LocaleUtils;
-
-import com.google.inject.Inject;
-
 public abstract class DefaultTranslatorBase implements Translator {
 
-    protected final TranslatorConfig config;
     protected final Logger log = LoggerFactory.getLogger(DefaultTranslatorBase.class);
 
-    @Inject
-    public DefaultTranslatorBase(final TranslatorConfig config) {
-        this.config = config;
+    private final ResourceBundle bundle;
+    private final ResourceBundle defaultBundle;
+
+    public DefaultTranslatorBase(@Nullable final ResourceBundle bundle,
+                                 @Nullable final ResourceBundle defaultBundle) {
+        this.bundle = bundle;
+        this.defaultBundle = defaultBundle;
     }
 
-    protected abstract String getBundlePath();
-
-    /*
-     * string used for exception handling
-     */
-    protected abstract String getTranslationType();
-
     @Override
-    public String getTranslation(final Locale locale, final String originalText) {
-        final String bundlePath = getBundlePath();
-        ResourceBundle bundle = getBundle(locale, bundlePath);
-
+    public String getTranslation(final String originalText) {
+        if (originalText == null) {
+            return null;
+        }
         if ((bundle != null) && (bundle.containsKey(originalText))) {
             return bundle.getString(originalText);
         } else {
-            if (config.getDefaultLocale() == null) {
-                log.debug("No default locale configured, returning original text");
-                return originalText;
-            }
-
-            final Locale defaultLocale = LocaleUtils.toLocale(config.getDefaultLocale());
-            try {
-                bundle = getBundle(defaultLocale, bundlePath);
-
-                if ((bundle != null) && (bundle.containsKey(originalText))) {
-                    return bundle.getString(originalText);
-                } else {
-                    return originalText;
-                }
-            } catch (MissingResourceException mrex) {
-                log.warn("Missing translation bundle for locale {}", defaultLocale);
-                return originalText;
-            }
-        }
-    }
-
-    private ResourceBundle getBundle(final Locale locale, final String bundlePath) {
-        try {
-            // Try to load the bundle from the classpath first
-            return ResourceBundle.getBundle(bundlePath, locale);
-        } catch (MissingResourceException ignored) {
-        }
-
-        // Try to load it from a properties file
-        final String propertiesFileNameWithCountry = bundlePath + "_" + locale.getLanguage() + "_" + locale.getCountry() + ".properties";
-        ResourceBundle bundle = getBundleFromPropertiesFile(propertiesFileNameWithCountry);
-        if (bundle != null) {
-            return bundle;
-        } else {
-            final String propertiesFileName = bundlePath + "_" + locale.getLanguage() + ".properties";
-            bundle = getBundleFromPropertiesFile(propertiesFileName);
-        }
-
-        return bundle;
-    }
-
-    private ResourceBundle getBundleFromPropertiesFile(final String propertiesFileName) {
-        try {
-            final InputStream inputStream = UriAccessor.accessUri(propertiesFileName);
-            if (inputStream == null) {
-                return null;
+            if ((defaultBundle != null) && (defaultBundle.containsKey(originalText))) {
+                return defaultBundle.getString(originalText);
             } else {
-                return new PropertyResourceBundle(inputStream);
+                return originalText;
             }
-        } catch (IllegalArgumentException iae) {
-            return null;
-        } catch (MissingResourceException mrex) {
-            return null;
-        } catch (URISyntaxException e) {
-            return null;
-        } catch (IOException e) {
-            return null;
         }
     }
 }

@@ -16,7 +16,7 @@
 
 package org.killbill.billing.util.template.translation;
 
-import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.UUID;
 
 import org.mockito.Mockito;
@@ -29,25 +29,16 @@ public class TestDefaultTranslatorBase extends UtilTestSuiteNoDB {
 
     private final class TestTranslatorBase extends DefaultTranslatorBase {
 
-        public TestTranslatorBase(final TranslatorConfig config) {
-            super(config);
+        public TestTranslatorBase(final TranslatorConfig config, final ResourceBundle bundle) {
+            super(bundle, bundle);
         }
 
-        @Override
-        protected String getBundlePath() {
-            return UUID.randomUUID().toString();
-        }
-
-        @Override
-        protected String getTranslationType() {
-            return UUID.randomUUID().toString();
-        }
     }
 
     @Test(groups = "fast")
     public void testResourceDoesNotExist() throws Exception {
-        final TestTranslatorBase translator = new TestTranslatorBase(Mockito.mock(TranslatorConfig.class));
+        final TestTranslatorBase translator = new TestTranslatorBase(Mockito.mock(TranslatorConfig.class), Mockito.mock(ResourceBundle.class));
         final String originalText = UUID.randomUUID().toString();
-        Assert.assertEquals(translator.getTranslation(Locale.FRANCE, originalText), originalText);
+        Assert.assertEquals(translator.getTranslation(originalText), originalText);
     }
 }

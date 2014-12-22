@@ -18,6 +18,7 @@
 package org.killbill.billing.tenant.api;
 
 import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -44,6 +45,49 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
     @Override
     public String getTenantOverdueConfig(final InternalTenantContext tenantContext) {
         final List<String> values = tenantDao.getTenantValueForKey(TenantKey.OVERDUE_CONFIG.toString(), tenantContext);
-        return values.isEmpty() ? null : values.get(0);
+        return getUniqueValue(values, "overdue config", tenantContext);
+    }
+
+    @Override
+    public String getInvoiceTemplate(final Locale locale, final InternalTenantContext tenantContext) {
+        final List<String> values = tenantDao.getTenantValueForKey(getKeyFromLocale(TenantKey.INVOICE_TEMPLATE_.toString(), locale), tenantContext);
+        return getUniqueValue(values, "invoice template", tenantContext);
+    }
+
+    @Override
+    public String getManualPayInvoiceTemplate(final Locale locale, final InternalTenantContext tenantContext) {
+        final List<String> values = tenantDao.getTenantValueForKey(getKeyFromLocale(TenantKey.INVOICE_MP_TEMPLATE_.toString(), locale), tenantContext);
+        return getUniqueValue(values, "manual pay invoice template", tenantContext);
+    }
+
+    @Override
+    public String getInvoiceTranslation(final Locale locale, final InternalTenantContext tenantContext) {
+        final List<String> values = tenantDao.getTenantValueForKey(getKeyFromLocale(TenantKey.INVOICE_TRANSLATION_.toString(), locale), tenantContext);
+        return getUniqueValue(values, "invoice translation", tenantContext);
+    }
+
+    @Override
+    public String getCatalogTranslation(final Locale locale, final InternalTenantContext tenantContext) {
+        final List<String> values = tenantDao.getTenantValueForKey(getKeyFromLocale(TenantKey.CATALOG_TRANSLATION_.toString(), locale), tenantContext);
+        return getUniqueValue(values, "catalog translation", tenantContext);
+    }
+
+    private String getUniqueValue(final List<String> values, final String msg, final InternalTenantContext tenantContext) {
+        if (values.isEmpty()) {
+            return null;
+        }
+        if (values.size() > 1) {
+            throw new IllegalStateException(String.format("Unexpected number of values %d for %s and tenant %d",
+                                                          values.size(), msg, tenantContext.getTenantRecordId()));
+        }
+        return values.get(0);
+    }
+
+    private String getKeyFromLocale(final String prefix, final Locale locale) {
+        final StringBuilder tmp = new StringBuilder(prefix);
+        tmp.append(locale.getLanguage())
+           .append("_")
+           .append(locale.getCountry());
+        return tmp.toString();
     }
 }

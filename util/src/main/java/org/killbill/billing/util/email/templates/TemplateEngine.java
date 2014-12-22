@@ -16,9 +16,10 @@
 
 package org.killbill.billing.util.email.templates;
 
-import java.io.IOException;
 import java.util.Map;
 
 public interface TemplateEngine {
-    public String executeTemplate(String templateName, Map<String, Object> data) throws IOException;
+
+    public String executeTemplateText(final String templateText, final Map<String, Object> data);
+
 }
