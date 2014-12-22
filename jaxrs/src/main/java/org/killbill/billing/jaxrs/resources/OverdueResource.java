@@ -102,11 +102,11 @@ public class OverdueResource extends JaxRsResourceBase {
     @ApiOperation(value = "Upload the full catalog as XML")
     @ApiResponses(value = {})
     public Response uploadOverdueConfigXml(final String overdueXML,
-                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                     @HeaderParam(HDR_REASON) final String reason,
-                                     @HeaderParam(HDR_COMMENT) final String comment,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request,
-                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                           @HeaderParam(HDR_REASON) final String reason,
+                                           @HeaderParam(HDR_COMMENT) final String comment,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request,
+                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         // Validation purpose:  Will throw if bad XML or catalog validation fails
         final InputStream stream = new ByteArrayInputStream(overdueXML.getBytes());
         XMLLoader.getObjectFromStream(new URI(JaxrsResource.OVERDUE_PATH), stream, DefaultOverdueConfig.class);

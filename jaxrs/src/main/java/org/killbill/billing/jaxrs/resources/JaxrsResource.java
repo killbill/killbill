@@ -51,7 +51,7 @@ public interface JaxrsResource {
     /*
      * Patterns
      */
-    public static String STRING_PATTERN = "[\\w-]+";
+    public static String STRING_PATTERN = "\\w+";
     public static String UUID_PATTERN = "\\w+-\\w+-\\w+-\\w+-\\w+";
     public static String NUMBER_PATTERN = "[0-9]+";
     public static String ANYTHING_PATTERN = ".*";
@@ -100,6 +100,8 @@ public interface JaxrsResource {
 
     public static final String QUERY_START_DATE = "startDate";
     public static final String QUERY_END_DATE = "endDate";
+
+    public static final String QUERY_DELETE_IF_EXISTS = "deleteIfExists";
 
     public static final String QUERY_BUNDLE_TRANSFER_ADDON = "transferAddOn";
     public static final String QUERY_BUNDLE_TRANSFER_CANCEL_IMM = "cancelImmediately";
@@ -206,4 +208,11 @@ public interface JaxrsResource {
     public static final String HOSTED = "hosted";
     public static final String FORM = "form";
     public static final String NOTIFICATION = "notification";
+
+
+    public static final String INVOICE_TEMPLATE = "template";
+    public static final String INVOICE_MP_TEMPLATE = "manualPayTemplate";
+    public static final String INVOICE_TRANSLATION = "translation";
+    public static final String INVOICE_CATALOG_TRANSLATION = "catalogTranslation";
+
 }

@@ -18,9 +18,26 @@ package org.killbill.billing.util;
 
 import java.util.Locale;
 
+import javax.annotation.Nullable;
+
 public class LocaleUtils {
 
     private LocaleUtils() {
+    }
+
+    public static String localeString(final Locale locale, @Nullable String prefix) {
+        final StringBuilder tmp = new StringBuilder();
+        if (prefix != null) {
+            tmp.append(prefix);
+            if (!prefix.endsWith("_")) {
+                tmp.append("_");
+            }
+        }
+        tmp.append(locale.getLanguage())
+           .append("_")
+           .append(locale.getCountry());
+        return tmp.toString();
+
     }
 
     // From commons-lang

@@ -18,14 +18,18 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.PropertyResourceBundle;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -81,6 +85,10 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.tenant.api.TenantApiException;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
+import org.killbill.billing.tenant.api.TenantUserApi;
+import org.killbill.billing.util.LocaleUtils;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -110,6 +118,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Path(JaxrsResource.INVOICES_PATH)
 @Api(value = JaxrsResource.INVOICES_PATH, description = "Operations on invoices")
@@ -117,9 +126,12 @@ public class InvoiceResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceResource.class);
     private static final String ID_PARAM_NAME = "invoiceId";
+    private static final String LOCALE_PARAM_NAME = "locale";
 
     private final InvoiceUserApi invoiceApi;
     private final InvoiceNotifier invoiceNotifier;
+    private final TenantUserApi tenantApi;
+    private final Locale defaultLocale;
 
     @Inject
     public InvoiceResource(final AccountUserApi accountUserApi,
@@ -131,10 +143,13 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,
                            final AuditUserApi auditUserApi,
+                           final TenantUserApi tenantApi,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.invoiceApi = invoiceApi;
         this.invoiceNotifier = invoiceNotifier;
+        this.tenantApi = tenantApi;
+        this.defaultLocale = Locale.getDefault();
     }
 
     @Timed
@@ -318,7 +333,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductName(), "DryRun subscription product category should be specified");
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBillingPeriod(), "DryRun subscription billingPeriod should be specified");
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getSubscriptionId(), "DryRun subscriptionID should be specified");
-            }  else if (SubscriptionEventType.STOP_BILLING.toString().equals(dryRunSubscriptionSpec.getDryRunAction())) {
+            } else if (SubscriptionEventType.STOP_BILLING.toString().equals(dryRunSubscriptionSpec.getDryRunAction())) {
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getSubscriptionId(), "DryRun subscriptionID should be specified");
             }
         }
@@ -565,6 +580,207 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         return Response.status(Status.OK).build();
     }
+
+    @Timed
+    @GET
+    @Path("/" + INVOICE_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
+    @Produces(TEXT_PLAIN)
+    @ApiOperation(value = "Retrieves the invoice translation for the tenant", response = String.class, hidden = true)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid locale supplied"),
+                           @ApiResponse(code = 404, message = "Translation not found")})
+    public Response getInvoiceTranslation(@PathParam("locale") final String localeStr,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
+        return getTemplateResource(localeStr, TenantKey.INVOICE_TRANSLATION_, request);
+    }
+
+    @Timed
+    @POST
+    @Produces(TEXT_PLAIN)
+    @Consumes(TEXT_PLAIN)
+    @Path("/" + INVOICE_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
+    @ApiOperation(value = "Upload the invoice translation for the tenant")
+    @ApiResponses(value = {})
+    public Response uploadInvoiceTranslation(final String invoiceTranslation,
+                                             @PathParam("locale") final String localeStr,
+                                             @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request,
+                                             @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+        return uploadTemplateResource(invoiceTranslation,
+                                      localeStr,
+                                      deleteIfExists,
+                                      TenantKey.INVOICE_TRANSLATION_,
+                                      "getInvoiceTranslation",
+                                      createdBy,
+                                      reason,
+                                      comment,
+                                      request,
+                                      uriInfo);
+    }
+
+    @Timed
+    @GET
+    @Path("/" + INVOICE_CATALOG_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
+    @Produces(TEXT_PLAIN)
+    @ApiOperation(value = "Retrieves the catalog translation for the tenant", response = String.class, hidden = true)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid locale supplied"),
+                           @ApiResponse(code = 404, message = "Template not found")})
+    public Response getCatalogTranslation(@PathParam("locale") final String localeStr,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
+        return getTemplateResource(localeStr, TenantKey.CATALOG_TRANSLATION_, request);
+    }
+
+    @Timed
+    @POST
+    @Produces(TEXT_PLAIN)
+    @Consumes(TEXT_PLAIN)
+    @Path("/" + INVOICE_CATALOG_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
+    @ApiOperation(value = "Upload the catalog translation for the tenant")
+    @ApiResponses(value = {})
+    public Response uploadCatalogTranslation(final String catalogTranslation,
+                                             @PathParam("locale") final String localeStr,
+                                             @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request,
+                                             @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+
+        return uploadTemplateResource(catalogTranslation,
+                                      localeStr,
+                                      deleteIfExists,
+                                      TenantKey.CATALOG_TRANSLATION_,
+                                      "getCatalogTranslation",
+                                      createdBy,
+                                      reason,
+                                      comment,
+                                      request,
+                                      uriInfo);
+    }
+
+    @Timed
+    @GET
+    @Path("/" + INVOICE_TEMPLATE)
+    @Produces(TEXT_HTML)
+    @ApiOperation(value = "Retrieves the invoice template for the tenant", response = String.class, hidden = true)
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Template not found")})
+    public Response getInvoiceTemplate(@PathParam("locale") final String localeStr,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
+        return getTemplateResource(null, TenantKey.INVOICE_TEMPLATE, request);
+    }
+
+    @Timed
+    @POST
+    @Produces(TEXT_HTML)
+    @Consumes(TEXT_HTML)
+    @Path("/" + INVOICE_TEMPLATE)
+    @ApiOperation(value = "Upload the invoice template for the tenant")
+    @ApiResponses(value = {})
+    public Response uploadInvoiceTemplate(final String catalogTranslation,
+                                          @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
+                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                          @HeaderParam(HDR_REASON) final String reason,
+                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request,
+                                          @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+        return uploadTemplateResource(catalogTranslation,
+                                      null,
+                                      deleteIfExists,
+                                      TenantKey.INVOICE_TEMPLATE,
+                                      "getInvoiceTemplate",
+                                      createdBy,
+                                      reason,
+                                      comment,
+                                      request,
+                                      uriInfo);
+    }
+
+    @Timed
+    @GET
+    @Path("/" + INVOICE_MP_TEMPLATE)
+    @Produces(TEXT_HTML)
+    @ApiOperation(value = "Retrieves the manualPay invoice template for the tenant", response = String.class, hidden = true)
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Template not found")})
+    public Response getInvoiceMPTemplate(@PathParam("locale") final String localeStr,
+                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
+        return getTemplateResource(null, TenantKey.INVOICE_MP_TEMPLATE, request);
+    }
+
+    @Timed
+    @POST
+    @Produces(TEXT_HTML)
+    @Consumes(TEXT_HTML)
+    @Path("/" + INVOICE_MP_TEMPLATE)
+    @ApiOperation(value = "Upload the manualPay invoice template for the tenant")
+    @ApiResponses(value = {})
+    public Response uploadInvoiceMPTemplate(final String catalogTranslation,
+                                            @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
+                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                            @HeaderParam(HDR_REASON) final String reason,
+                                            @HeaderParam(HDR_COMMENT) final String comment,
+                                            @javax.ws.rs.core.Context final HttpServletRequest request,
+                                            @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+        return uploadTemplateResource(catalogTranslation,
+                                      null,
+                                      deleteIfExists,
+                                      TenantKey.INVOICE_MP_TEMPLATE,
+                                      "getInvoiceMPTemplate",
+                                      createdBy,
+                                      reason,
+                                      comment,
+                                      request,
+                                      uriInfo);
+    }
+
+    private Response uploadTemplateResource(final String templateResource,
+                                            @Nullable final String localeStr,
+                                            final boolean deleteIfExists,
+                                            final TenantKey tenantKey,
+                                            final String getMethodStr,
+                                            final String createdBy,
+                                            final String reason,
+                                            final String comment,
+                                            final HttpServletRequest request,
+                                            final UriInfo uriInfo) throws Exception {
+        final String tenantKeyStr;
+        if (localeStr != null) {
+            // Validation purpose:  Will throw bad stream
+            final InputStream stream = new ByteArrayInputStream(templateResource.getBytes());
+            new PropertyResourceBundle(stream);
+            final Locale locale = localeStr != null ? LocaleUtils.toLocale(localeStr) : defaultLocale;
+            tenantKeyStr = LocaleUtils.localeString(locale, tenantKey.toString());
+        } else {
+            tenantKeyStr = tenantKey.toString();
+        }
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        if (!tenantApi.getTenantValueForKey(tenantKeyStr, callContext).isEmpty()) {
+            if (deleteIfExists) {
+                tenantApi.deleteTenantKey(tenantKeyStr, callContext);
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
+        }
+        tenantApi.addTenantKeyValue(tenantKeyStr, templateResource, callContext);
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr, localeStr);
+    }
+
+    private Response getTemplateResource(@Nullable final String localeStr,
+                                         final TenantKey tenantKey,
+                                         final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final String tenantKeyStr = localeStr != null ?
+                                    LocaleUtils.localeString(LocaleUtils.toLocale(localeStr), tenantKey.toString()) :
+                                    tenantKey.toString();
+        final List<String> result = tenantApi.getTenantValueForKey(tenantKeyStr, tenantContext);
+        return result.isEmpty() ? Response.status(Status.NOT_FOUND).build() : Response.status(Status.OK).entity(result.get(0)).build();
+    }
+
+
+
 
     @Timed
     @GET
