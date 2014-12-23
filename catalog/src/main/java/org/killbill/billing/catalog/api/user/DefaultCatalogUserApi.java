@@ -18,12 +18,18 @@ package org.killbill.billing.catalog.api.user;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.caching.CatalogCache;
+import org.killbill.billing.tenant.api.TenantApiException;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
+import org.killbill.billing.tenant.api.TenantUserApi;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 
@@ -31,10 +37,17 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
 
     private final CatalogService catalogService;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final TenantUserApi tenantApi;
+    private final CatalogCache catalogCache;
 
     @Inject
-    public DefaultCatalogUserApi(final CatalogService catalogService, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultCatalogUserApi(final CatalogService catalogService,
+                                 final TenantUserApi tenantApi,
+                                 final CatalogCache catalogCache,
+                                 final InternalCallContextFactory internalCallContextFactory) {
         this.catalogService = catalogService;
+        this.tenantApi = tenantApi;
+        this.catalogCache = catalogCache;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -46,7 +59,24 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
 
     @Override
     public StaticCatalog getCurrentCatalog(final String catalogName, final TenantContext tenantContext) throws CatalogApiException {
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
+        final InternalTenantContext internalTenantContext = createInternalTenantContext(tenantContext);
         return catalogService.getCurrentCatalog(internalTenantContext);
     }
+
+    @Override
+    public void uploadCatalog(final String catalogXML, final CallContext callContext) throws CatalogApiException {
+        try {
+            final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
+            catalogCache.clearCatalog(internalTenantContext);
+            tenantApi.addTenantKeyValue(TenantKey.CATALOG.toString(), catalogXML, callContext);
+        } catch (TenantApiException e) {
+            throw new CatalogApiException(e);
+        }
+    }
+
+    private InternalTenantContext createInternalTenantContext(final TenantContext tenantContext) {
+        // Only tenantRecordId will be populated-- this is important to always create the (ehcache) key the same way
+        return internalCallContextFactory.createInternalTenantContext(tenantContext);
+    }
+
 }

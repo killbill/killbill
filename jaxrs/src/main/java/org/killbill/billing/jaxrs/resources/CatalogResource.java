@@ -74,7 +74,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 public class CatalogResource extends JaxRsResourceBase {
 
     private final CatalogUserApi catalogUserApi;
-    private final TenantUserApi tenantApi;
 
     // Catalog API don't quite support multiple catalogs per tenant
     private static final String catalogName = "unused";
@@ -86,13 +85,11 @@ public class CatalogResource extends JaxRsResourceBase {
                            final AuditUserApi auditUserApi,
                            final AccountUserApi accountUserApi,
                            final PaymentApi paymentApi,
-                           final TenantUserApi tenantApi,
                            final CatalogUserApi catalogUserApi,
                            final Clock clock,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.catalogUserApi = catalogUserApi;
-        this.tenantApi = tenantApi;
     }
 
     @Timed
@@ -122,7 +119,7 @@ public class CatalogResource extends JaxRsResourceBase {
         XMLLoader.getObjectFromStream(new URI(JaxrsResource.CATALOG_PATH), stream, StandaloneCatalog.class);
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        tenantApi.addTenantKeyValue(TenantKey.CATALOG.toString(), catalogXML, callContext);
+        catalogUserApi.uploadCatalog(catalogXML, callContext);
         return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null);
     }
 

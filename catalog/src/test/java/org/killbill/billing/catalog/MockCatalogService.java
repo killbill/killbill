@@ -26,7 +26,7 @@ public class MockCatalogService extends DefaultCatalogService {
     private final MockCatalog catalog;
 
     public MockCatalogService(final MockCatalog catalog, final CacheControllerDispatcher cacheControllerDispatcher) {
-        super(null, null, cacheControllerDispatcher);
+        super(null, null);
         this.catalog = catalog;
     }
 

@@ -25,6 +25,7 @@ import javax.inject.Singleton;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.tenant.api.TenantInternalApi;
+import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 
 @Singleton
@@ -62,8 +63,7 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader {
         }
 
         final LoaderCallback callback = (LoaderCallback) cacheLoaderArgument.getArgs()[0];
-
-        final List<String> catalogXMLs = tenantApi.getTenantCatalogs(internalTenantContext);
+        final List<String> catalogXMLs = tenantApi.getTenantCatalogs(internalTenantContext, (CacheInvalidationCallback) callback);
         if (catalogXMLs.isEmpty()) {
             return null;
         }
@@ -75,7 +75,7 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader {
         }
     }
 
-    public interface LoaderCallback {
+    public interface LoaderCallback extends CacheInvalidationCallback {
         public Object loadCatalog(final List<String> catalogXMLs) throws CatalogApiException;
     }
 }

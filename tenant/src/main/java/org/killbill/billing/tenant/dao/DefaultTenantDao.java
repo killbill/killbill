@@ -26,6 +26,8 @@ import org.apache.shiro.crypto.RandomNumberGenerator;
 import org.apache.shiro.crypto.SecureRandomNumberGenerator;
 import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.util.ByteSource;
+import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.skife.jdbi.v2.IDBI;
 
 import org.killbill.billing.ErrorCode;
@@ -131,10 +133,12 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final TenantKVModelDao tenantKVModelDao = new TenantKVModelDao(UUID.randomUUID(), context.getCreatedDate(), context.getUpdatedDate(), key, value);
                 entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).create(tenantKVModelDao, context);
+                broadcastConfigurationChangeFromTransaction(entitySqlDaoWrapperFactory, key, context);
                 return null;
             }
         });
     }
+
 
     @Override
     public void deleteTenantKey(final String key, final InternalCallContext context) {
@@ -150,5 +154,14 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
                 return null;
             }
         });
+    }
+
+    private void broadcastConfigurationChangeFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
+                                                             final String key, final InternalCallContext context) throws EntityPersistenceException {
+        if (key.equals(TenantKey.CATALOG.toString()) ||
+            key.equals(TenantKey.OVERDUE_CONFIG.toString())) {
+            final TenantBroadcastModelDao broadcast = new TenantBroadcastModelDao(key);
+            entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class).create(broadcast, context);
+        }
     }
 }

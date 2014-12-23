@@ -27,8 +27,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
  */
 public interface CatalogService extends KillbillService {
 
-    public abstract Catalog getFullCatalog(InternalTenantContext context) throws CatalogApiException;
+    public Catalog getFullCatalog(InternalTenantContext context) throws CatalogApiException;
 
-    public abstract StaticCatalog getCurrentCatalog(InternalTenantContext context) throws CatalogApiException;
-
+    public StaticCatalog getCurrentCatalog(InternalTenantContext context) throws CatalogApiException;
 }

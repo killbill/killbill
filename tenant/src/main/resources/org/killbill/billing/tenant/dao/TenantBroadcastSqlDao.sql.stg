@@ -1,0 +1,42 @@
+group TenantBroadcastSqlDao: EntitySqlDao;
+
+tableName() ::= "tenant_broadcasts"
+
+tableFields(prefix) ::= <<
+  <prefix>type
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>updated_date
+, <prefix>updated_by
+>>
+
+tableValues() ::= <<
+ :type
+, :createdDate
+, :createdBy
+, :updatedDate
+, :updatedBy
+>>
+
+/* No account_record_id field */
+accountRecordIdFieldWithComma(prefix) ::= ""
+accountRecordIdValueWithComma(prefix) ::= ""
+
+
+getLatestEntries() ::= <<
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where record_id > :recordId
+<defaultOrderBy("t.")>
+;
+>>
+
+
+getLatestEntry() ::= <<
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where record_id = (select max(record_id) from <tableName()>)
+;
+>>

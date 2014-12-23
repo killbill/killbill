@@ -19,13 +19,17 @@ package org.killbill.billing.catalog.caching;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
+import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.cache.TenantCatalogCacheLoader.LoaderCallback;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -38,15 +42,16 @@ public class EhCacheCatalogCache implements CatalogCache {
 
     private VersionedCatalog defaultCatalog;
 
-    public EhCacheCatalogCache(final CacheController cacheController, final VersionedCatalogLoader loader) {
-        this.cacheController = cacheController;
+    @Inject
+    public EhCacheCatalogCache(final CacheControllerDispatcher cacheControllerDispatcher, final VersionedCatalogLoader loader) {
+        this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
         this.loader = loader;
-        this.cacheLoaderArgument = initializeCacheLoaderArgument();
+        this.cacheLoaderArgument = initializeCacheLoaderArgument(this);
     }
 
     @Override
     public void loadDefaultCatalog(final String url) throws CatalogApiException {
-        defaultCatalog = loader.load(url);
+        defaultCatalog = (url != null) ? loader.load(url) : null;
     }
 
     @Override
@@ -68,16 +73,26 @@ public class EhCacheCatalogCache implements CatalogCache {
         }
     }
 
+    @Override
+    public void clearCatalog(final InternalTenantContext tenantContext) {
+        cacheController.remove(tenantContext);
+    }
+
     //
     // Build the LoaderCallback that is required to build the catalog from the xml from a module that knows
     // nothing about catalog.
     //
     // This is a contract between the TenantCatalogCacheLoader and the EhCacheCatalogCache
-    private CacheLoaderArgument initializeCacheLoaderArgument() {
+    private CacheLoaderArgument initializeCacheLoaderArgument(final EhCacheCatalogCache parentCache) {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
             public Object loadCatalog(final List<String> catalogXMLs) throws CatalogApiException {
                 return loader.load(catalogXMLs);
+            }
+
+            @Override
+            public void invalidateCache(final InternalTenantContext tenantContext) {
+                parentCache.clearCatalog(tenantContext);
             }
         };
         final Object[] args = new Object[1];

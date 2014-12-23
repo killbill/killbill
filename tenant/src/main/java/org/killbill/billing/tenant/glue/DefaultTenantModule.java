@@ -18,35 +18,50 @@
 
 package org.killbill.billing.tenant.glue;
 
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.killbill.billing.glue.TenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.DefaultTenantInternalApi;
 import org.killbill.billing.tenant.api.DefaultTenantService;
+import org.killbill.billing.tenant.api.TenantCacheInvalidation;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.tenant.api.TenantService;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.tenant.api.user.DefaultTenantUserApi;
+import org.killbill.billing.tenant.dao.DefaultTenantBroadcastDao;
 import org.killbill.billing.tenant.dao.DefaultTenantDao;
+import org.killbill.billing.tenant.dao.NoCachingTenantBroadcastDao;
 import org.killbill.billing.tenant.dao.NoCachingTenantDao;
+import org.killbill.billing.tenant.dao.TenantBroadcastDao;
 import org.killbill.billing.tenant.dao.TenantDao;
+import org.killbill.billing.util.config.TenantConfig;
 import org.killbill.billing.util.glue.KillBillModule;
+import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.name.Names;
 
-public class DefaultTenantModule  extends KillBillModule implements TenantModule {
+public class DefaultTenantModule extends KillBillModule implements TenantModule {
 
     public static final String NO_CACHING_TENANT = "NoCachingTenant";
+
+    public static final String TENANT_EXECUTOR_NAMED = "TenantExecutor";
 
     public DefaultTenantModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
     private void installConfig() {
+        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final TenantConfig tenantConfig = factory.build(TenantConfig.class);
+        bind(TenantConfig.class).toInstance(tenantConfig);
     }
 
     public void installTenantDao() {
         bind(TenantDao.class).to(DefaultTenantDao.class).asEagerSingleton();
         bind(TenantDao.class).annotatedWith(Names.named(NO_CACHING_TENANT)).to(NoCachingTenantDao.class).asEagerSingleton();
+        bind(TenantBroadcastDao.class).to(DefaultTenantBroadcastDao.class).asEagerSingleton();
+        bind(TenantBroadcastDao.class).annotatedWith(Names.named(NO_CACHING_TENANT)).to(NoCachingTenantBroadcastDao.class).asEagerSingleton();
     }
 
     public void installTenantUserApi() {
@@ -58,11 +73,22 @@ public class DefaultTenantModule  extends KillBillModule implements TenantModule
         bind(TenantService.class).to(DefaultTenantService.class).asEagerSingleton();
     }
 
+    public void installTenantCacheInvalidation() {
+        bind(TenantCacheInvalidation.class).asEagerSingleton();
+    }
+
+    protected void installExecutor() {
+        final ScheduledExecutorService tenantExecutor = org.killbill.commons.concurrent.Executors.newSingleThreadScheduledExecutor("TenantExecutor");
+        bind(ScheduledExecutorService.class).annotatedWith(Names.named(TENANT_EXECUTOR_NAMED)).toInstance(tenantExecutor);
+    }
+
     @Override
     protected void configure() {
         installConfig();
         installTenantDao();
         installTenantService();
         installTenantUserApi();
+        installTenantCacheInvalidation();
+        installExecutor();
     }
 }

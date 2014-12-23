@@ -23,6 +23,7 @@ import javax.inject.Singleton;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.tenant.api.TenantInternalApi;
+import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 
 @Singleton
@@ -60,8 +61,7 @@ public class TenantOverdueConfigCacheLoader extends BaseCacheLoader {
         }
 
         final LoaderCallback callback = (LoaderCallback) cacheLoaderArgument.getArgs()[0];
-
-        final String overdueXML = tenantApi.getTenantOverdueConfig(internalTenantContext);
+        final String overdueXML = tenantApi.getTenantOverdueConfig(internalTenantContext, (CacheInvalidationCallback) callback);
         if (overdueXML == null) {
             return null;
         }
@@ -73,8 +73,7 @@ public class TenantOverdueConfigCacheLoader extends BaseCacheLoader {
         }
     }
 
-    public interface LoaderCallback {
-
+    public interface LoaderCallback extends CacheInvalidationCallback {
         public Object loadCatalog(final String overdueXML) throws OverdueApiException;
     }
 }

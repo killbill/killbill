@@ -15,19 +15,18 @@
  * under the License.
  */
 
-package org.killbill.billing.overdue.caching;
+package org.killbill.billing.util.config;
 
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.overdue.api.OverdueApiException;
-import org.killbill.billing.overdue.api.OverdueConfig;
+import org.skife.config.Config;
+import org.skife.config.Default;
+import org.skife.config.Description;
+import org.skife.config.TimeSpan;
 
-public interface OverdueConfigCache {
+public interface TenantConfig extends KillbillConfig {
 
-    public void loadDefaultOverdueConfig(String url) throws OverdueApiException;
+    @Config("org.killbill.tenant.broadcast.rate")
+    @Default("5s")
+    @Description("Rate at which janitor tasks are scheduled")
+    public TimeSpan getTenantBroadcastServiceRunningRate();
 
-    public void loadDefaultOverdueConfig(OverdueConfig config) throws OverdueApiException;
-
-    public OverdueConfig getOverdueConfig(InternalTenantContext tenantContext) throws OverdueApiException;
-
-    public void clearOverdueConfig(InternalTenantContext tenantContext);
 }

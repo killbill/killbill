@@ -67,7 +67,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 public class OverdueResource extends JaxRsResourceBase {
 
     private final OverdueApi overdueApi;
-    private final TenantUserApi tenantApi;
 
     @Inject
     public OverdueResource(final JaxrsUriBuilder uriBuilder,
@@ -77,12 +76,10 @@ public class OverdueResource extends JaxRsResourceBase {
                            final AccountUserApi accountUserApi,
                            final PaymentApi paymentApi,
                            final OverdueApi overdueApi,
-                           final TenantUserApi tenantUserApi,
                            final Clock clock,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.overdueApi = overdueApi;
-        this.tenantApi = tenantUserApi;
     }
 
     @Timed
@@ -112,7 +109,7 @@ public class OverdueResource extends JaxRsResourceBase {
         XMLLoader.getObjectFromStream(new URI(JaxrsResource.OVERDUE_PATH), stream, DefaultOverdueConfig.class);
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        tenantApi.addTenantKeyValue(TenantKey.OVERDUE_CONFIG.toString(), overdueXML, callContext);
+        overdueApi.uploadOverdueConfig(overdueXML, callContext);
         return uriBuilder.buildResponse(uriInfo, OverdueResource.class, null, null);
     }
 }

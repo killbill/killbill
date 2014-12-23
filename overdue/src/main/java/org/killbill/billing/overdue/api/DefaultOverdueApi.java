@@ -22,6 +22,10 @@ import javax.inject.Inject;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
+import org.killbill.billing.tenant.api.TenantApiException;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
+import org.killbill.billing.tenant.api.TenantUserApi;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 
@@ -29,17 +33,36 @@ public class DefaultOverdueApi implements OverdueApi {
 
     private final OverdueConfigCache overdueConfigCache;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final TenantUserApi tenantApi;
 
     @Inject
     public DefaultOverdueApi(final OverdueConfigCache overdueConfigCache,
+                             final TenantUserApi tenantApi,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.overdueConfigCache = overdueConfigCache;
+        this.tenantApi = tenantApi;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
     public OverdueConfig getOverdueConfig(final TenantContext tenantContext) throws OverdueApiException {
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
+        final InternalTenantContext internalTenantContext = createInternalTenantContext(tenantContext);
         return overdueConfigCache.getOverdueConfig(internalTenantContext);
+    }
+
+    @Override
+    public void uploadOverdueConfig(final String overdueXML, final CallContext callContext) throws OverdueApiException {
+        try {
+            final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
+            overdueConfigCache.clearOverdueConfig(internalTenantContext);
+            tenantApi.addTenantKeyValue(TenantKey.OVERDUE_CONFIG.toString(), overdueXML, callContext);
+        } catch (TenantApiException e) {
+            throw new OverdueApiException(e);
+        }
+    }
+
+    private InternalTenantContext createInternalTenantContext(final TenantContext tenantContext) {
+        // Only tenantRecordId will be populated-- this is important to always create the (ehcache) key the same way
+        return internalCallContextFactory.createInternalTenantContext(tenantContext);
     }
 }

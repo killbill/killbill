@@ -52,6 +52,7 @@ public enum TableName {
     TAG_HISTORY("tag_history"),
     TENANT("tenants", ObjectType.TENANT),
     TENANT_KVS("tenant_kvs", ObjectType.TENANT_KVS),
+    TENANT_BROADCASTS("tenant_broadcasts"),
     TAG("tags", ObjectType.TAG, TAG_HISTORY),
     ROLLED_UP_USAGE("rolled_up_usage");
 

@@ -22,6 +22,8 @@ import org.killbill.billing.catalog.DefaultCatalogService;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.user.DefaultCatalogUserApi;
+import org.killbill.billing.catalog.caching.CatalogCache;
+import org.killbill.billing.catalog.caching.EhCacheCatalogCache;
 import org.killbill.billing.catalog.io.CatalogLoader;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -49,10 +51,15 @@ public class CatalogModule extends KillBillModule {
         bind(CatalogUserApi.class).to(DefaultCatalogUserApi.class).asEagerSingleton();
     }
 
+    public void installOverdueConfigCache() {
+        bind(CatalogCache.class).to(EhCacheCatalogCache.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         installConfig();
         installCatalog();
         installCatalogUserApi();
+        installOverdueConfigCache();
     }
 }

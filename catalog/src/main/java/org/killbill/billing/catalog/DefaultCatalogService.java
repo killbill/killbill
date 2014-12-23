@@ -24,13 +24,9 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.caching.CatalogCache;
-import org.killbill.billing.catalog.caching.EhCacheCatalogCache;
-import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.platform.api.KillbillService;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.CatalogConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,11 +45,10 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
 
     @Inject
     public DefaultCatalogService(final CatalogConfig config,
-                                 final VersionedCatalogLoader loader,
-                                 final CacheControllerDispatcher cacheControllerDispatcher) {
+                                 final CatalogCache catalogCache) {
         this.config = config;
         this.isInitialized = false;
-        this.catalogCache = new EhCacheCatalogCache(cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG), loader);
+        this.catalogCache = catalogCache;
     }
 
     @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)

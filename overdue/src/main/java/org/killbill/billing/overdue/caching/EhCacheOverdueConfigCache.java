@@ -45,15 +45,15 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
 
     private static final Logger log = LoggerFactory.getLogger(EhCacheOverdueConfigCache.class);
 
-    private OverdueConfig defaultOverdueConfig;
-
     private final CacheController cacheController;
     private final CacheLoaderArgument cacheLoaderArgument;
+
+    private OverdueConfig defaultOverdueConfig;
 
     @Inject
     public EhCacheOverdueConfigCache(final CacheControllerDispatcher cacheControllerDispatcher) {
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_OVERDUE_CONFIG);
-        this.cacheLoaderArgument = initializeCacheLoaderArgument();
+        this.cacheLoaderArgument = initializeCacheLoaderArgument(this);
     }
 
     @Override
@@ -98,7 +98,16 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
         }
     }
 
-    private CacheLoaderArgument initializeCacheLoaderArgument() {
+    @Override
+    public void clearOverdueConfig(final InternalTenantContext tenantContext) {
+
+        if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+            return;
+        }
+        cacheController.remove(tenantContext);
+    }
+
+    private CacheLoaderArgument initializeCacheLoaderArgument(final EhCacheOverdueConfigCache parentCache) {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
             public Object loadCatalog(final String catalogXMLs) throws OverdueApiException {
@@ -111,6 +120,11 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
                 } catch (Exception e) {
                     throw new OverdueApiException(ErrorCode.OVERDUE_INVALID_FOR_TENANT, "Problem encountered loading overdue config ", e);
                 }
+            }
+
+            @Override
+            public void invalidateCache(final InternalTenantContext tenantContext) {
+                parentCache.clearOverdueConfig(tenantContext);
             }
         };
         final Object[] args = new Object[1];

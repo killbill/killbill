@@ -24,9 +24,13 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 
 public interface TenantInternalApi {
 
-    public List<String> getTenantCatalogs(InternalTenantContext tenantContext);
+    public interface CacheInvalidationCallback {
+        public void invalidateCache(InternalTenantContext tenantContext);
+    }
 
-    public String getTenantOverdueConfig(InternalTenantContext tenantContext);
+    public List<String> getTenantCatalogs(InternalTenantContext tenantContext, CacheInvalidationCallback cacheInvalidationCallback);
+
+    public String getTenantOverdueConfig(InternalTenantContext tenantContext, CacheInvalidationCallback cacheInvalidationCallback);
 
     public String getInvoiceTemplate(Locale locale, InternalTenantContext tenantContext);
 

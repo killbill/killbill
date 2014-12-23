@@ -15,19 +15,23 @@
  * under the License.
  */
 
-package org.killbill.billing.overdue.caching;
+package org.killbill.billing.tenant.dao;
 
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.overdue.api.OverdueApiException;
-import org.killbill.billing.overdue.api.OverdueConfig;
+import java.util.List;
 
-public interface OverdueConfigCache {
+import org.killbill.billing.util.entity.Entity;
+import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
 
-    public void loadDefaultOverdueConfig(String url) throws OverdueApiException;
+@EntitySqlDaoStringTemplate
+public interface TenantBroadcastSqlDao extends EntitySqlDao<TenantBroadcastModelDao, Entity> {
 
-    public void loadDefaultOverdueConfig(OverdueConfig config) throws OverdueApiException;
+    @SqlQuery
+    public List<TenantBroadcastModelDao> getLatestEntries(@Bind("recordId") final Long recordId);
 
-    public OverdueConfig getOverdueConfig(InternalTenantContext tenantContext) throws OverdueApiException;
+    @SqlQuery
+    public TenantBroadcastModelDao getLatestEntry();
 
-    public void clearOverdueConfig(InternalTenantContext tenantContext);
 }

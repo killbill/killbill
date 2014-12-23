@@ -28,7 +28,7 @@ import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.DefaultProduct;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -41,13 +41,11 @@ import com.google.common.io.Resources;
 
 public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
 
-    private CatalogCache catalogCache;
+    final CacheInvalidationCallback cacheInvalidationCallback = Mockito.mock(CacheInvalidationCallback.class);
 
     @BeforeMethod(groups = "fast")
     protected void beforeMethod() throws Exception {
-        this.catalogCache = new EhCacheCatalogCache(cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG), loader);
         cacheControllerDispatcher.clearAll();
-
     }
 
     //
@@ -55,7 +53,11 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
     //
     @Test(groups = "fast", expectedExceptions = CatalogApiException.class)
     public void testMissingDefaultCatalog() throws CatalogApiException {
-        Mockito.when(tenantInternalApi.getTenantCatalogs((Mockito.<InternalTenantContext>any()))).thenReturn(ImmutableList.<String>of());
+
+        final InternalTenantContext tenantContext = Mockito.mock(InternalTenantContext.class);
+        Mockito.when(tenantContext.getTenantRecordId()).thenReturn(0L);
+        catalogCache.loadDefaultCatalog(null);
+        Mockito.when(tenantInternalApi.getTenantCatalogs(tenantContext, cacheInvalidationCallback)).thenReturn(ImmutableList.<String>of());
         catalogCache.getCatalog(internalCallContext);
     }
 
@@ -64,8 +66,12 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
     //
     @Test(groups = "fast")
     public void testDefaultCatalog() throws CatalogApiException {
+
+        final InternalTenantContext tenantContext = Mockito.mock(InternalTenantContext.class);
+        Mockito.when(tenantContext.getTenantRecordId()).thenReturn(0L);
+
         catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
-        Mockito.when(tenantInternalApi.getTenantCatalogs((Mockito.<InternalTenantContext>any()))).thenReturn(ImmutableList.<String>of());
+        Mockito.when(tenantInternalApi.getTenantCatalogs(tenantContext, cacheInvalidationCallback)).thenReturn(ImmutableList.<String>of());
         VersionedCatalog result = catalogCache.getCatalog(internalCallContext);
         Assert.assertNotNull(result);
         final DefaultProduct[] products = result.getProducts(clock.getUTCNow());
@@ -83,7 +89,7 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         final InternalTenantContext tenantContext = Mockito.mock(InternalTenantContext.class);
         Mockito.when(tenantContext.getTenantRecordId()).thenReturn(99L);
 
-        Mockito.when(tenantInternalApi.getTenantCatalogs((Mockito.<InternalTenantContext>any()))).thenReturn(ImmutableList.<String>of());
+        Mockito.when(tenantInternalApi.getTenantCatalogs(Mockito.any(InternalTenantContext.class), Mockito.any(CacheInvalidationCallback.class))).thenReturn(ImmutableList.<String>of());
         VersionedCatalog result = catalogCache.getCatalog(tenantContext);
         Assert.assertNotNull(result);
         final DefaultProduct[] products = result.getProducts(clock.getUTCNow());
@@ -107,13 +113,13 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         final InternalTenantContext tenantContext = Mockito.mock(InternalTenantContext.class);
         Mockito.when(tenantContext.getTenantRecordId()).thenReturn(156L);
 
-        Mockito.when(tenantInternalApi.getTenantCatalogs((Mockito.<InternalTenantContext>any()))).thenReturn(ImmutableList.<String>of(catalogXML));
+        Mockito.when(tenantInternalApi.getTenantCatalogs(Mockito.any(InternalTenantContext.class), Mockito.any(CacheInvalidationCallback.class))).thenReturn(ImmutableList.<String>of(catalogXML));
         VersionedCatalog result = catalogCache.getCatalog(tenantContext);
         Assert.assertNotNull(result);
         final DefaultProduct[] products = result.getProducts(clock.getUTCNow());
         Assert.assertEquals(products.length, 6);
 
-        Mockito.when(tenantInternalApi.getTenantCatalogs(tenantContext)).thenThrow(RuntimeException.class);
+        Mockito.when(tenantInternalApi.getTenantCatalogs(tenantContext, cacheInvalidationCallback)).thenThrow(RuntimeException.class);
 
         VersionedCatalog result2 = catalogCache.getCatalog(tenantContext);
         Assert.assertNotNull(result2);

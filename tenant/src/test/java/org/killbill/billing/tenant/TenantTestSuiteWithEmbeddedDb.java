@@ -16,6 +16,11 @@
 
 package org.killbill.billing.tenant;
 
+import javax.inject.Named;
+
+import org.killbill.billing.tenant.dao.NoCachingTenantBroadcastDao;
+import org.killbill.billing.tenant.dao.TenantBroadcastDao;
+import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -32,6 +37,13 @@ public class TenantTestSuiteWithEmbeddedDb extends GuicyKillbillTestSuiteWithEmb
 
     @Inject
     protected DefaultTenantDao tenantDao;
+
+    @Named(DefaultTenantModule.NO_CACHING_TENANT)
+    @Inject
+    protected TenantBroadcastDao noCachingTenantBroadcastDao;
+
+    @Inject
+    protected TenantBroadcastDao tenantBroadcastDao;
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {

@@ -16,12 +16,39 @@
 
 package org.killbill.billing.tenant.api;
 
+import javax.inject.Inject;
+
+import org.killbill.billing.platform.api.LifecycleHandlerType;
+import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
+
 public class DefaultTenantService implements TenantService {
 
     private static final String TENANT_SERVICE_NAME = "tenant-service";
 
+    private final TenantCacheInvalidation tenantCacheInvalidation;
+
+    @Inject
+    public DefaultTenantService(final TenantCacheInvalidation tenantCacheInvalidation) {
+        this.tenantCacheInvalidation = tenantCacheInvalidation;
+    }
+
     @Override
     public String getName() {
         return TENANT_SERVICE_NAME;
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
+    public void initialize() {
+        tenantCacheInvalidation.initialize();
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
+    public void start() {
+        tenantCacheInvalidation.start();
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
+    public void stop()  {
+        tenantCacheInvalidation.stop();
     }
 }
