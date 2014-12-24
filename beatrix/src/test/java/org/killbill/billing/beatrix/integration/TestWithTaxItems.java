@@ -100,7 +100,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testXXX() throws Exception {
+    public void testBasicTaxItems() throws Exception {
 
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
