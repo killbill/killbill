@@ -1,5 +1,5 @@
 language: java
-script: mvn clean install -Ptravis
+script: mvn -B -q clean install -Ptravis
 # Remove --quiet to avoid timeouts
 install: mvn install -DskipTests=true
 
@@ -8,9 +8,9 @@ notifications:
     - kill-bill-commits@googlegroups.com
 
 jdk:
-  - openjdk6
   - openjdk7
   - oraclejdk7
+  - oraclejdk8
 
 env:
   - MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=192m"
