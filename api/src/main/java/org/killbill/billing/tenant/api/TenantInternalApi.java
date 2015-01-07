@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 
 public interface TenantInternalApi {
 
@@ -28,9 +29,11 @@ public interface TenantInternalApi {
         public void invalidateCache(InternalTenantContext tenantContext);
     }
 
-    public List<String> getTenantCatalogs(InternalTenantContext tenantContext, CacheInvalidationCallback cacheInvalidationCallback);
+    public void initializeCacheInvalidationCallback(final TenantKey key, final CacheInvalidationCallback cacheInvalidationCallback);
 
-    public String getTenantOverdueConfig(InternalTenantContext tenantContext, CacheInvalidationCallback cacheInvalidationCallback);
+    public List<String> getTenantCatalogs(InternalTenantContext tenantContext);
+
+    public String getTenantOverdueConfig(InternalTenantContext tenantContext);
 
     public String getInvoiceTemplate(Locale locale, InternalTenantContext tenantContext);
 

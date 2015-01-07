@@ -23,15 +23,21 @@ import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.user.DefaultCatalogUserApi;
 import org.killbill.billing.catalog.caching.CatalogCache;
+import org.killbill.billing.catalog.caching.CatalogCacheInvalidationCallback;
 import org.killbill.billing.catalog.caching.EhCacheCatalogCache;
 import org.killbill.billing.catalog.io.CatalogLoader;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.config.CatalogConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.google.inject.name.Names;
+
 public class CatalogModule extends KillBillModule {
+
+    public static final String CATALOG_INVALIDATION_CALLBACK = "CatalogInvalidationCallback";
 
     public CatalogModule(final KillbillConfigSource configSource) {
         super(configSource);
@@ -51,8 +57,9 @@ public class CatalogModule extends KillBillModule {
         bind(CatalogUserApi.class).to(DefaultCatalogUserApi.class).asEagerSingleton();
     }
 
-    public void installOverdueConfigCache() {
+    public void installCatalogConfigCache() {
         bind(CatalogCache.class).to(EhCacheCatalogCache.class).asEagerSingleton();
+        bind(CacheInvalidationCallback.class).annotatedWith(Names.named(CATALOG_INVALIDATION_CALLBACK)).to(CatalogCacheInvalidationCallback.class).asEagerSingleton();
     }
 
     @Override
@@ -60,6 +67,6 @@ public class CatalogModule extends KillBillModule {
         installConfig();
         installCatalog();
         installCatalogUserApi();
-        installOverdueConfigCache();
+        installCatalogConfigCache();
     }
 }

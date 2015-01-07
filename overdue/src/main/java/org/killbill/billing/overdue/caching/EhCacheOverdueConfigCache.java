@@ -27,7 +27,6 @@ import javax.inject.Inject;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
@@ -53,7 +52,7 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
     @Inject
     public EhCacheOverdueConfigCache(final CacheControllerDispatcher cacheControllerDispatcher) {
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_OVERDUE_CONFIG);
-        this.cacheLoaderArgument = initializeCacheLoaderArgument(this);
+        this.cacheLoaderArgument = initializeCacheLoaderArgument();
     }
 
     @Override
@@ -107,7 +106,7 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
         cacheController.remove(tenantContext);
     }
 
-    private CacheLoaderArgument initializeCacheLoaderArgument(final EhCacheOverdueConfigCache parentCache) {
+    private CacheLoaderArgument initializeCacheLoaderArgument() {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
             public Object loadCatalog(final String catalogXMLs) throws OverdueApiException {
@@ -120,11 +119,6 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
                 } catch (Exception e) {
                     throw new OverdueApiException(ErrorCode.OVERDUE_INVALID_FOR_TENANT, "Problem encountered loading overdue config ", e);
                 }
-            }
-
-            @Override
-            public void invalidateCache(final InternalTenantContext tenantContext) {
-                parentCache.clearOverdueConfig(tenantContext);
             }
         };
         final Object[] args = new Object[1];

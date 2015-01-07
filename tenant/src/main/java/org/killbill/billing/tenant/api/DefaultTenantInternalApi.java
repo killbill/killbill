@@ -24,7 +24,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.tenant.api.TenantCacheInvalidation.CacheInvalidationKey;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
@@ -32,21 +31,20 @@ import org.killbill.billing.util.LocaleUtils;
 
 /**
  * This is the private API which is used to extract per tenant objects (catalog, overdue, invoice templates, ..)
- * <p>
+ * <p/>
  * Some of these per tenant objects are cached at a higher level in their respective modules (catalog, overdue) to
  * avoid reconstructing the object state from the xml definition each time. As a result, the module also registers
  * a callback which is used for the cache invalidation when the state changes and the operation occurred on a remote node.
  * For those objects, the private api is called from the module.
- * <p>
+ * <p/>
  * Some others (invoice templates,...) are not cached (yet) and so the logic is simpler.
- * <p>
+ * <p/>
  * The api can only be used to retrieve objects where no caching is required.
  */
 public class DefaultTenantInternalApi implements TenantInternalApi {
 
     private final TenantDao tenantDao;
     private final TenantCacheInvalidation tenantCacheInvalidation;
-
 
     @Inject
     public DefaultTenantInternalApi(@Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantDao tenantDao,
@@ -56,14 +54,17 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
     }
 
     @Override
-    public List<String> getTenantCatalogs(final InternalTenantContext tenantContext, final CacheInvalidationCallback cacheInvalidationCallback) {
-        tenantCacheInvalidation.registerCallback(new CacheInvalidationKey(tenantContext.getTenantRecordId(), TenantKey.CATALOG), cacheInvalidationCallback);
+    public void initializeCacheInvalidationCallback(final TenantKey key, final CacheInvalidationCallback cacheInvalidationCallback) {
+        tenantCacheInvalidation.registerCallback(key, cacheInvalidationCallback);
+    }
+
+    @Override
+    public List<String> getTenantCatalogs(final InternalTenantContext tenantContext) {
         return tenantDao.getTenantValueForKey(TenantKey.CATALOG.toString(), tenantContext);
     }
 
     @Override
-    public String getTenantOverdueConfig(final InternalTenantContext tenantContext, final CacheInvalidationCallback cacheInvalidationCallback) {
-        tenantCacheInvalidation.registerCallback(new CacheInvalidationKey(tenantContext.getTenantRecordId(), TenantKey.OVERDUE_CONFIG), cacheInvalidationCallback);
+    public String getTenantOverdueConfig(final InternalTenantContext tenantContext) {
         final List<String> values = tenantDao.getTenantValueForKey(TenantKey.OVERDUE_CONFIG.toString(), tenantContext);
         return getUniqueValue(values, "overdue config", tenantContext);
     }

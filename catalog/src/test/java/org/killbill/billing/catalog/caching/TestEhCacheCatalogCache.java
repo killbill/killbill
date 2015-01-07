@@ -57,7 +57,7 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         final InternalTenantContext tenantContext = Mockito.mock(InternalTenantContext.class);
         Mockito.when(tenantContext.getTenantRecordId()).thenReturn(0L);
         catalogCache.loadDefaultCatalog(null);
-        Mockito.when(tenantInternalApi.getTenantCatalogs(tenantContext, cacheInvalidationCallback)).thenReturn(ImmutableList.<String>of());
+        Mockito.when(tenantInternalApi.getTenantCatalogs(tenantContext)).thenReturn(ImmutableList.<String>of());
         catalogCache.getCatalog(internalCallContext);
     }
 
@@ -71,7 +71,7 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         Mockito.when(tenantContext.getTenantRecordId()).thenReturn(0L);
 
         catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
-        Mockito.when(tenantInternalApi.getTenantCatalogs(tenantContext, cacheInvalidationCallback)).thenReturn(ImmutableList.<String>of());
+        Mockito.when(tenantInternalApi.getTenantCatalogs(tenantContext)).thenReturn(ImmutableList.<String>of());
         VersionedCatalog result = catalogCache.getCatalog(internalCallContext);
         Assert.assertNotNull(result);
         final DefaultProduct[] products = result.getProducts(clock.getUTCNow());
@@ -89,7 +89,7 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         final InternalTenantContext tenantContext = Mockito.mock(InternalTenantContext.class);
         Mockito.when(tenantContext.getTenantRecordId()).thenReturn(99L);
 
-        Mockito.when(tenantInternalApi.getTenantCatalogs(Mockito.any(InternalTenantContext.class), Mockito.any(CacheInvalidationCallback.class))).thenReturn(ImmutableList.<String>of());
+        Mockito.when(tenantInternalApi.getTenantCatalogs(Mockito.any(InternalTenantContext.class))).thenReturn(ImmutableList.<String>of());
         VersionedCatalog result = catalogCache.getCatalog(tenantContext);
         Assert.assertNotNull(result);
         final DefaultProduct[] products = result.getProducts(clock.getUTCNow());
@@ -113,13 +113,13 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         final InternalTenantContext tenantContext = Mockito.mock(InternalTenantContext.class);
         Mockito.when(tenantContext.getTenantRecordId()).thenReturn(156L);
 
-        Mockito.when(tenantInternalApi.getTenantCatalogs(Mockito.any(InternalTenantContext.class), Mockito.any(CacheInvalidationCallback.class))).thenReturn(ImmutableList.<String>of(catalogXML));
+        Mockito.when(tenantInternalApi.getTenantCatalogs(Mockito.any(InternalTenantContext.class))).thenReturn(ImmutableList.<String>of(catalogXML));
         VersionedCatalog result = catalogCache.getCatalog(tenantContext);
         Assert.assertNotNull(result);
         final DefaultProduct[] products = result.getProducts(clock.getUTCNow());
         Assert.assertEquals(products.length, 6);
 
-        Mockito.when(tenantInternalApi.getTenantCatalogs(tenantContext, cacheInvalidationCallback)).thenThrow(RuntimeException.class);
+        Mockito.when(tenantInternalApi.getTenantCatalogs(tenantContext)).thenThrow(RuntimeException.class);
 
         VersionedCatalog result2 = catalogCache.getCatalog(tenantContext);
         Assert.assertNotNull(result2);

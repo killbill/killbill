@@ -26,7 +26,7 @@ public interface TenantConfig extends KillbillConfig {
 
     @Config("org.killbill.tenant.broadcast.rate")
     @Default("5s")
-    @Description("Rate at which janitor tasks are scheduled")
+    @Description("Rate at which tenant broadcast task is scheduled")
     public TimeSpan getTenantBroadcastServiceRunningRate();
 
 }

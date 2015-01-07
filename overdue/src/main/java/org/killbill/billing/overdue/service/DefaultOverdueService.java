@@ -18,9 +18,6 @@
 
 package org.killbill.billing.overdue.service;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import javax.inject.Named;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -29,18 +26,16 @@ import org.killbill.billing.overdue.OverdueProperties;
 import org.killbill.billing.overdue.OverdueService;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueConfig;
-import org.killbill.billing.overdue.caching.EhCacheOverdueConfigCache;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
-import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.notification.OverdueNotifier;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.tenant.api.TenantInternalApi;
+import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.bus.api.PersistentBus.EventBusException;
-import org.killbill.xmlloader.XMLLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,8 +54,9 @@ public class DefaultOverdueService implements OverdueService {
     private final OverdueListener listener;
 
     private final OverdueConfigCache overdueConfigCache;
+    private final CacheInvalidationCallback overdueCacheInvalidationCallback;
 
-    private DefaultOverdueConfig overdueConfig;
+    private final TenantInternalApi tenantInternalApi;
     private boolean isConfigLoaded;
 
     @Inject
@@ -69,7 +65,9 @@ public class DefaultOverdueService implements OverdueService {
                                  @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED) final OverdueNotifier asyncNotifier,
                                  final BusService busService,
                                  final OverdueListener listener,
-                                 final OverdueConfigCache overdueConfigCache) {
+                                 final OverdueConfigCache overdueConfigCache,
+                                 @Named(DefaultOverdueModule.OVERDUE_INVALIDATION_CALLBACK) final CacheInvalidationCallback overdueCacheInvalidationCallback,
+                                 final TenantInternalApi tenantInternalApi) {
         this.properties = properties;
         this.checkNotifier = checkNotifier;
         this.asyncNotifier = asyncNotifier;
@@ -77,6 +75,8 @@ public class DefaultOverdueService implements OverdueService {
         this.listener = listener;
         this.isConfigLoaded = false;
         this.overdueConfigCache = overdueConfigCache;
+        this.overdueCacheInvalidationCallback = overdueCacheInvalidationCallback;
+        this.tenantInternalApi = tenantInternalApi;
     }
 
     @Override
@@ -102,6 +102,7 @@ public class DefaultOverdueService implements OverdueService {
         registerForBus();
         checkNotifier.initialize();
         asyncNotifier.initialize();
+        tenantInternalApi.initializeCacheInvalidationCallback(TenantKey.OVERDUE_CONFIG, overdueCacheInvalidationCallback);
     }
 
     private void registerForBus() {

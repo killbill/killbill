@@ -36,7 +36,7 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
                 return "file:src/test/resources/versionedCatalog";
             }
 
-        }, catalogCache);
+        }, tenantInternalApi, catalogCache, cacheInvalidationCallback);
         service.loadCatalog();
         Assert.assertNotNull(service.getFullCatalog(internalCallContext));
         Assert.assertEquals(service.getFullCatalog(internalCallContext).getCatalogName(), "WeaponsHireSmall");
@@ -50,7 +50,7 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
                 return "file:src/test/resources/WeaponsHire.xml";
             }
 
-        },  catalogCache);
+        },  tenantInternalApi, catalogCache, cacheInvalidationCallback);
         service.loadCatalog();
         Assert.assertNotNull(service.getFullCatalog(internalCallContext));
         Assert.assertEquals(service.getFullCatalog(internalCallContext).getCatalogName(), "Firearms");

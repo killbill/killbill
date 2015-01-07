@@ -25,9 +25,13 @@ import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class TenantOverdueConfigCacheLoader extends BaseCacheLoader {
+
+    private static final Logger logger = LoggerFactory.getLogger(TenantOverdueConfigCacheLoader.class);
 
     private final TenantInternalApi tenantApi;
 
@@ -61,11 +65,13 @@ public class TenantOverdueConfigCacheLoader extends BaseCacheLoader {
         }
 
         final LoaderCallback callback = (LoaderCallback) cacheLoaderArgument.getArgs()[0];
-        final String overdueXML = tenantApi.getTenantOverdueConfig(internalTenantContext, (CacheInvalidationCallback) callback);
+        final String overdueXML = tenantApi.getTenantOverdueConfig(internalTenantContext);
         if (overdueXML == null) {
             return null;
         }
         try {
+            logger.info("Loading overdue cache for tenant " + internalTenantContext.getTenantRecordId());
+
             return callback.loadCatalog(overdueXML);
         } catch (OverdueApiException e) {
             throw new IllegalStateException(String.format("Failed to de-serialize overdue config for tenant %s : %s",
@@ -73,7 +79,7 @@ public class TenantOverdueConfigCacheLoader extends BaseCacheLoader {
         }
     }
 
-    public interface LoaderCallback extends CacheInvalidationCallback {
+    public interface LoaderCallback {
         public Object loadCatalog(final String overdueXML) throws OverdueApiException;
     }
 }

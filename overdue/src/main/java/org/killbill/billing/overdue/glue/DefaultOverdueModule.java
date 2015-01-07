@@ -29,6 +29,7 @@ import org.killbill.billing.overdue.applicator.OverdueEmailGenerator;
 import org.killbill.billing.overdue.applicator.formatters.DefaultOverdueEmailFormatterFactory;
 import org.killbill.billing.overdue.applicator.formatters.OverdueEmailFormatterFactory;
 import org.killbill.billing.overdue.caching.EhCacheOverdueConfigCache;
+import org.killbill.billing.overdue.caching.OverdueCacheInvalidationCallback;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.notification.OverdueAsyncBusNotifier;
@@ -40,6 +41,7 @@ import org.killbill.billing.overdue.notification.OverduePoster;
 import org.killbill.billing.overdue.service.DefaultOverdueService;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 
@@ -47,6 +49,7 @@ import com.google.inject.name.Names;
 
 public class DefaultOverdueModule extends KillBillModule implements OverdueModule {
 
+    public static final String OVERDUE_INVALIDATION_CALLBACK = "overdueInvalidationCallback";
     public static final String OVERDUE_NOTIFIER_CHECK_NAMED = "overdueNotifierCheck";
     public static final String OVERDUE_NOTIFIER_ASYNC_BUS_NAMED = "overdueNotifierAsyncBus";
 
@@ -98,5 +101,6 @@ public class DefaultOverdueModule extends KillBillModule implements OverdueModul
 
     public void installOverdueConfigCache() {
         bind(OverdueConfigCache.class).to(EhCacheOverdueConfigCache.class).asEagerSingleton();
+        bind(CacheInvalidationCallback.class).annotatedWith(Names.named(OVERDUE_INVALIDATION_CALLBACK)).to(OverdueCacheInvalidationCallback.class).asEagerSingleton();
     }
 }

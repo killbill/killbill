@@ -27,9 +27,13 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class TenantCatalogCacheLoader extends BaseCacheLoader {
+
+    private final Logger logger = LoggerFactory.getLogger(TenantCatalogCacheLoader.class);
 
     private final TenantInternalApi tenantApi;
 
@@ -63,11 +67,12 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader {
         }
 
         final LoaderCallback callback = (LoaderCallback) cacheLoaderArgument.getArgs()[0];
-        final List<String> catalogXMLs = tenantApi.getTenantCatalogs(internalTenantContext, (CacheInvalidationCallback) callback);
+        final List<String> catalogXMLs = tenantApi.getTenantCatalogs(internalTenantContext);
         if (catalogXMLs.isEmpty()) {
             return null;
         }
         try {
+            logger.info("Loading catalog cache for tenant " + internalTenantContext.getTenantRecordId());
             return callback.loadCatalog(catalogXMLs);
         } catch (CatalogApiException e) {
             throw new IllegalStateException(String.format("Failed to de-serialize catalog for tenant %s : %s",
@@ -75,7 +80,7 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader {
         }
     }
 
-    public interface LoaderCallback extends CacheInvalidationCallback {
+    public interface LoaderCallback {
         public Object loadCatalog(final List<String> catalogXMLs) throws CatalogApiException;
     }
 }

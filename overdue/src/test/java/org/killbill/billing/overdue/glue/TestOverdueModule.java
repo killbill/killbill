@@ -27,14 +27,18 @@ import org.killbill.billing.overdue.TestOverdueHelper;
 import org.killbill.billing.overdue.applicator.OverdueBusListenerTester;
 import org.killbill.billing.overdue.caching.EhCacheOverdueConfigCache;
 import org.killbill.billing.overdue.caching.MockOverdueConfigCache;
+import org.killbill.billing.overdue.caching.OverdueCacheInvalidationCallback;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
+
+import com.google.inject.name.Names;
 
 public class TestOverdueModule extends DefaultOverdueModule {
 
@@ -68,6 +72,7 @@ public class TestOverdueModule extends DefaultOverdueModule {
 
     public void installOverdueConfigCache() {
         bind(OverdueConfigCache.class).to(MockOverdueConfigCache.class).asEagerSingleton();
+        bind(CacheInvalidationCallback.class).annotatedWith(Names.named(OVERDUE_INVALIDATION_CALLBACK)).to(OverdueCacheInvalidationCallback.class).asEagerSingleton();
     }
 
 }

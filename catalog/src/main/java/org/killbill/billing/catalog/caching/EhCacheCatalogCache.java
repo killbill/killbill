@@ -33,8 +33,12 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.cache.TenantCatalogCacheLoader.LoaderCallback;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EhCacheCatalogCache implements CatalogCache {
+
+    private final Logger logger = LoggerFactory.getLogger(EhCacheCatalogCache.class);
 
     private final CacheController cacheController;
     private final VersionedCatalogLoader loader;
@@ -88,11 +92,6 @@ public class EhCacheCatalogCache implements CatalogCache {
             @Override
             public Object loadCatalog(final List<String> catalogXMLs) throws CatalogApiException {
                 return loader.load(catalogXMLs);
-            }
-
-            @Override
-            public void invalidateCache(final InternalTenantContext tenantContext) {
-                parentCache.clearCatalog(tenantContext);
             }
         };
         final Object[] args = new Object[1];

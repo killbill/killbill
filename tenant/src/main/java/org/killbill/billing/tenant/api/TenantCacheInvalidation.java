@@ -50,9 +50,10 @@ import org.slf4j.LoggerFactory;
 public class TenantCacheInvalidation {
 
     private final static int TERMINATION_TIMEOUT_SEC = 5;
+
     private static final Logger logger = LoggerFactory.getLogger(TenantCacheInvalidation.class);
 
-    private final Map<CacheInvalidationKey, CacheInvalidationCallback> cache;
+    private final Map<TenantKey, CacheInvalidationCallback> cache;
     private final TenantBroadcastDao broadcastDao;
     private final ScheduledExecutorService tenantExecutor;
     private final TenantConfig tenantConfig;
@@ -63,7 +64,7 @@ public class TenantCacheInvalidation {
     public TenantCacheInvalidation(@Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantBroadcastDao broadcastDao,
                                    @Named(DefaultTenantModule.TENANT_EXECUTOR_NAMED) final ScheduledExecutorService tenantExecutor,
                                    final TenantConfig tenantConfig) {
-        this.cache = new HashMap<CacheInvalidationKey, CacheInvalidationCallback>();
+        this.cache = new HashMap<TenantKey, CacheInvalidationCallback>();
         this.broadcastDao = broadcastDao;
         this.tenantExecutor = tenantExecutor;
         this.tenantConfig = tenantConfig;
@@ -106,13 +107,13 @@ public class TenantCacheInvalidation {
         }
     }
 
-    public void registerCallback(final CacheInvalidationKey key, final CacheInvalidationCallback value) {
+    public void registerCallback(final TenantKey key, final CacheInvalidationCallback value) {
         if (!cache.containsKey(key)) {
             cache.put(key, value);
         }
     }
 
-    public CacheInvalidationCallback getCacheInvalidation(final CacheInvalidationKey key) {
+    public CacheInvalidationCallback getCacheInvalidation(final TenantKey key) {
         return cache.get(key);
     }
 
@@ -150,59 +151,15 @@ public class TenantCacheInvalidation {
                     return;
                 }
 
-                final CacheInvalidationKey key = new CacheInvalidationKey(cur.getTenantRecordId(), TenantKey.valueOf(cur.getType()));
-                final CacheInvalidationCallback callback = parent.getCacheInvalidation(key);
+                final CacheInvalidationCallback callback = parent.getCacheInvalidation(TenantKey.valueOf(cur.getType()));
                 if (callback != null) {
                     final InternalTenantContext tenantContext = new InternalTenantContext(cur.getTenantRecordId(), null);
                     callback.invalidateCache(tenantContext);
+                } else {
+                    logger.warn("Failed to find CacheInvalidationCallback for " + cur.getType());
                 }
                 parent.setLatestRecordIdProcessed(cur.getRecordId());
             }
-        }
-    }
-
-    public static final class CacheInvalidationKey {
-
-        private final Long tenantRecordId;
-        private final TenantKey type;
-
-        public CacheInvalidationKey(final Long tenantRecordId, final TenantKey type) {
-            this.tenantRecordId = tenantRecordId;
-            this.type = type;
-        }
-
-        public Long getTenantRecordId() {
-            return tenantRecordId;
-        }
-
-        public TenantKey getType() {
-            return type;
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof CacheInvalidationKey)) {
-                return false;
-            }
-
-            final CacheInvalidationKey that = (CacheInvalidationKey) o;
-            if (tenantRecordId != null ? !tenantRecordId.equals(that.tenantRecordId) : that.tenantRecordId != null) {
-                return false;
-            }
-            if (type != that.type) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = tenantRecordId != null ? tenantRecordId.hashCode() : 0;
-            result = 31 * result + (type != null ? type.hashCode() : 0);
-            return result;
         }
     }
 }
