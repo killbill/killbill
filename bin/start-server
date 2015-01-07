@@ -30,13 +30,14 @@ DEBUG_OPTS_ECLIPSE=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,ad
 DEBUG_OPTS_ECLIPSE_WAIT=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=12345 "
 
 # Default JVM settings if unset
-MAVEN_OPTS=${MAVEN_OPTS-"-Duser.timezone=GMT -Dcom.sun.management.jmxremote.port=8989 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Xms512m -Xmx1024m -XX:MaxPermSize=512m -XX:MaxDirectMemorySize=512m -XX:+UseConcMarkSweepGC"}
+MAVEN_OPTS=${MAVEN_OPTS-"-Duser.timezone=GMT -Xms512m -Xmx1024m -XX:MaxPermSize=512m -XX:MaxDirectMemorySize=512m -XX:+UseConcMarkSweepGC"}
 
 LOG="$SERVER/src/main/resources/logback.xml"
 LOG_DIR="$SERVER/logs"
 
 # From Argument Options
 PORT=8080
+JMX_PORT=8989
 START=
 DEBUG=
 WAIT_DEBUGGER=
@@ -48,6 +49,8 @@ function usage() {
     echo -n " -d (debugger turned on)"
     echo -n " -w (along with -d, wait for debugger before starting)"
     echo -n " -p <port_number> default 8080"
+    echo -n " -j <jmx port_number> default 8989"
+    echo -n " -l <log_dir> default $SERVER/logs"
     echo -n "-h this message"
     exit 1
 }
@@ -65,7 +68,7 @@ function start() {
             debug_opts_eclipse=$DEBUG_OPTS_ECLIPSE
         fi
     fi
-    export MAVEN_OPTS="$MAVEN_OPTS $debug_opts_eclipse -Djetty.port=$PORT"
+    export MAVEN_OPTS="$MAVEN_OPTS $debug_opts_eclipse -Dorg.killbill.hostname.postfix=$PORT -Djetty.port=$PORT -Dcom.sun.management.jmxremote.port=$JMX_PORT -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 
     echo "Starting IRS MAVEN_OPTS = $MAVEN_OPTS"
     echo "$start_cmd"
@@ -74,12 +77,14 @@ function start() {
 }
 
 
-while getopts ":p:swdh" options; do
+while getopts ":p:j:l:swdh" options; do
   case $options in
 	s ) START=1;;
 	d ) DEBUG=1;;
 	w ) WAIT_DEBUGGER=1;;
 	p ) PORT=$OPTARG;;
+	j ) JMX_PORT=$OPTARG;;
+	l ) LOG_DIR=$OPTARG;;
     h ) usage;;
     * ) usage;;
   esac
