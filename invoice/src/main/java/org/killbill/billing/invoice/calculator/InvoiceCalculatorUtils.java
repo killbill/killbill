@@ -140,7 +140,7 @@ public abstract class InvoiceCalculatorUtils {
 
         for (final InvoiceItem invoiceItem : invoiceItems) {
             if (isCharge(invoiceItem) &&
-                invoiceItem.getCreatedDate().equals(invoiceCreatedDate)) {
+                (invoiceItem.getCreatedDate() != null && invoiceItem.getCreatedDate().equals(invoiceCreatedDate))) {
                 amountCharged = amountCharged.add(invoiceItem.getAmount());
             }
         }
