@@ -17,14 +17,10 @@
 
 package org.killbill.billing.payment.core;
 
-import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
@@ -47,10 +43,8 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
-import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +53,11 @@ import com.google.inject.name.Named;
 
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
+// We don't take any lock here because the call needs to be re-entrant
+// from the plugin: for example, the BitPay plugin will create the payment during the
+// processNotification call, while the PayU plugin will create it during buildFormDescriptor.
+// These calls are not necessarily idempotent though (the PayU plugin will create
+// a voucher in the gateway during the buildFormDescriptor call).
 public class PaymentGatewayProcessor extends ProcessorBase {
 
     private final PluginDispatcher<HostedPaymentPageFormDescriptor> paymentPluginFormDispatcher;
@@ -93,35 +92,29 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                                      try {
                                                          final GatewayNotification result = plugin.processNotification(notification, properties, callContext);
                                                          return PluginDispatcher.createPluginDispatcherReturnType(result);
-                                                     } catch (PaymentPluginApiException e) {
+                                                     } catch (final PaymentPluginApiException e) {
                                                          throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
                                                      }
                                                  }
                                              }, paymentPluginNotificationDispatcher);
     }
 
-
-
     public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return dispatchWithExceptionHandling(account,
-                                             new CallableWithAccountLock<HostedPaymentPageFormDescriptor, PaymentApiException>(locker,
-                                                                                                                               account.getExternalKey(),
-                                                                                                                               new WithAccountLockCallback<PluginDispatcherReturnType<HostedPaymentPageFormDescriptor>, PaymentApiException>() {
-                                                                                                                                   @Override
-                                                                                                                                   public PluginDispatcherReturnType<HostedPaymentPageFormDescriptor> doOperation() throws PaymentApiException {
-                                                                                                                                       final PaymentPluginApi plugin = getPaymentProviderPlugin(account, internalCallContext);
+                                             new Callable<PluginDispatcherReturnType<HostedPaymentPageFormDescriptor>>() {
+                                                 @Override
+                                                 public PluginDispatcherReturnType<HostedPaymentPageFormDescriptor> call() throws PaymentApiException {
+                                                     final PaymentPluginApi plugin = getPaymentProviderPlugin(account, internalCallContext);
 
-                                                                                                                                       try {
-                                                                                                                                           final HostedPaymentPageFormDescriptor result = plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
-                                                                                                                                           return PluginDispatcher.createPluginDispatcherReturnType(result);
-                                                                                                                                       } catch (final RuntimeException e) {
-                                                                                                                                           throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
-                                                                                                                                       } catch (final PaymentPluginApiException e) {
-                                                                                                                                           throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
-                                                                                                                                       }
-                                                                                                                                   }
-                                                                                                                               }),
-                                             paymentPluginFormDispatcher);
+                                                     try {
+                                                         final HostedPaymentPageFormDescriptor result = plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
+                                                         return PluginDispatcher.createPluginDispatcherReturnType(result);
+                                                     } catch (final RuntimeException e) {
+                                                         throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+                                                     } catch (final PaymentPluginApiException e) {
+                                                         throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                                                     }
+                                                 }
+                                             }, paymentPluginFormDispatcher);
     }
-
 }

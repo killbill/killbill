@@ -127,6 +127,7 @@
         <stateMachine name="PURCHASE">
             <states>
                 <state name="PURCHASE_INIT"/>
+                <state name="PURCHASE_PENDING"/>
                 <state name="PURCHASE_SUCCESS"/>
                 <state name="PURCHASE_FAILED"/>
                 <state name="PURCHASE_ERRORED"/>
@@ -143,6 +144,30 @@
                     <operation>OP_PURCHASE</operation>
                     <operationResult>FAILURE</operationResult>
                     <finalState>PURCHASE_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>PURCHASE_INIT</initialState>
+                    <operation>OP_PURCHASE</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>PURCHASE_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>PURCHASE_PENDING</initialState>
+                    <operation>OP_PURCHASE</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>PURCHASE_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>PURCHASE_PENDING</initialState>
+                    <operation>OP_PURCHASE</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>PURCHASE_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>PURCHASE_PENDING</initialState>
+                    <operation>OP_PURCHASE</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>PURCHASE_ERRORED</finalState>
                 </transition>
                 <transition>
                     <initialState>PURCHASE_INIT</initialState>
