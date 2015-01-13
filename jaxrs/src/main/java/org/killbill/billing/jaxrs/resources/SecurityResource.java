@@ -32,6 +32,7 @@ import org.apache.shiro.subject.Subject;
 
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.SubjectJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -81,7 +82,9 @@ public class SecurityResource extends JaxRsResourceBase {
     @ApiOperation(value = "List user permissions", response = String.class, responseContainer = "List")
     @ApiResponses(value = {})
     public Response getCurrentUserPermissions(@javax.ws.rs.core.Context final HttpServletRequest request) {
-        final Set<Permission> permissions = securityApi.getCurrentUserPermissions(context.createContext(request));
+        // The getCurrentUserPermissions takes a TenantContext which is not used because permissions are cross tenants (at this point)
+        final TenantContext nullTenantContext = null;
+        final Set<Permission> permissions = securityApi.getCurrentUserPermissions(nullTenantContext);
         final List<String> json = ImmutableList.<String>copyOf(Iterables.<Permission, String>transform(permissions, Functions.toStringFunction()));
         return Response.status(Status.OK).entity(json).build();
     }

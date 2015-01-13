@@ -128,6 +128,8 @@ public class TenantFilter implements Filter {
             final String path = httpServletRequest.getRequestURI();
             if (    // Chicken - egg problem
                     ("/1.0/kb/tenants".equals(path) && "POST".equals(httpServletRequest.getMethod())) ||
+                    // Retrieve user permissions should not require tenant info since this is cross tenants
+                    (("/1.0/kb/security/subject".equals(path) || "/1.0/kb/security/permissions".equals(path)) && "GET".equals(httpServletRequest.getMethod())) ||
                     // Metrics servlets
                     (KillbillGuiceListener.METRICS_SERVLETS_PATHS.contains(path) && "GET".equals(httpServletRequest.getMethod())) ||
                     // See KillBillShiroWebModule#CorsBasicHttpAuthenticationFilter
