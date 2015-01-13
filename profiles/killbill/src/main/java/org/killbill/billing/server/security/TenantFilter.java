@@ -125,21 +125,63 @@ public class TenantFilter implements Filter {
 
         if (request instanceof HttpServletRequest) {
             final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+            // TODO Wrong - See https://github.com/killbill/killbill/issues/221
             final String path = httpServletRequest.getRequestURI();
+            final String httpMethod = httpServletRequest.getMethod();
             if (    // Chicken - egg problem
-                    ("/1.0/kb/tenants".equals(path) && "POST".equals(httpServletRequest.getMethod())) ||
+                    isTenantCreationRequest(path, httpMethod) ||
                     // Metrics servlets
-                    (KillbillGuiceListener.METRICS_SERVLETS_PATHS.contains(path) && "GET".equals(httpServletRequest.getMethod())) ||
+                    isMetricsRequest(path, httpMethod) ||
                     // See KillBillShiroWebModule#CorsBasicHttpAuthenticationFilter
-                    "OPTIONS".equals(httpServletRequest.getMethod()) ||
-                    // Welcome screen, static resources, etc.
-                    (!path.startsWith("/1.0") && "GET".equals(httpServletRequest.getMethod()))
+                    isOptionsRequest(httpMethod) ||
+                    // Static resources
+                    isStaticResourceRequest(path, httpMethod)
                     ) {
                 shouldSkip = true;
             }
         }
 
         return shouldSkip;
+    }
+
+    private boolean isTenantCreationRequest(final String path, final String httpMethod) {
+        return JaxrsResource.TENANTS_PATH.equals(path) && "POST".equals(httpMethod);
+    }
+
+    private boolean isMetricsRequest(final String path, final String httpMethod) {
+        return (KillbillGuiceListener.METRICS_SERVLETS_PATHS.contains(path) && "GET".equals(httpMethod));
+    }
+
+    private boolean isOptionsRequest(final String httpMethod) {
+        return "OPTIONS".equals(httpMethod);
+    }
+
+    private boolean isStaticResourceRequest(final String path, final String httpMethod) {
+        if (isPluginRequest(path)) {
+            // For plugins requests, we want to validate the Tenant except for HTML, JS, etc. files
+            return isStaticFileRequest(path) && "GET".equals(httpMethod);
+        } else {
+            // Welcome screen, Swagger, etc.
+            return !isKbApiRequest(path) && "GET".equals(httpMethod);
+        }
+    }
+
+    private boolean isKbApiRequest(final String path) {
+        return path.startsWith(JaxrsResource.PREFIX);
+    }
+
+    private boolean isPluginRequest(final String path) {
+        return path.startsWith(JaxrsResource.PLUGINS_PATH);
+    }
+
+    private boolean isStaticFileRequest(final String path) {
+        return path.endsWith(".htm") ||
+               path.endsWith(".html") ||
+               path.endsWith(".js") ||
+               path.endsWith(".css") ||
+               path.endsWith(".gz") ||
+               path.endsWith(".xml") ||
+               path.endsWith(".txt");
     }
 
     private void sendAuthError(final ServletResponse response, final String errorMessage) throws IOException {
