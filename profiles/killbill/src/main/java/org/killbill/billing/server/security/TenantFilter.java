@@ -149,7 +149,7 @@ public class TenantFilter implements Filter {
     }
 
     private boolean isMetricsRequest(final String path, final String httpMethod) {
-        return (KillbillGuiceListener.METRICS_SERVLETS_PATHS.contains(path) && "GET".equals(httpMethod));
+        return KillbillGuiceListener.METRICS_SERVLETS_PATHS.contains(path) && "GET".equals(httpMethod);
     }
 
     private boolean isOptionsRequest(final String httpMethod) {
@@ -181,7 +181,10 @@ public class TenantFilter implements Filter {
                path.endsWith(".css") ||
                path.endsWith(".gz") ||
                path.endsWith(".xml") ||
-               path.endsWith(".txt");
+               path.endsWith(".txt") ||
+               path.endsWith(".map")||
+               path.endsWith(".woff")||
+               path.endsWith(".ttf");
     }
 
     private void sendAuthError(final ServletResponse response, final String errorMessage) throws IOException {
