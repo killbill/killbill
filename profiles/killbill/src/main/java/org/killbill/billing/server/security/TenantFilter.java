@@ -147,7 +147,7 @@ public class TenantFilter implements Filter {
     }
 
     private boolean isPermissionRequest(final String path, final String httpMethod) {
-        return JaxrsResource.SECURITY_PATH.startsWith(path) && "GET".equals(httpMethod);
+        return path != null && path.startsWith(JaxrsResource.SECURITY_PATH) && "GET".equals(httpMethod);
     }
 
     private boolean isTenantCreationRequest(final String path, final String httpMethod) {
