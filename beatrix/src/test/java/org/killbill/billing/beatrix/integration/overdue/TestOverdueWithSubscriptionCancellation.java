@@ -110,7 +110,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
     }
 
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled = false, description = "https://github.com/killbill/killbill/issues/248")
     public void testCheckSubscriptionCancellationWithMultipleBundles() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
