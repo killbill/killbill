@@ -84,12 +84,8 @@ public class TenantFilter implements Filter {
 
         // Multi-tenancy is enabled if this filter is installed, we can't continue without credentials
         if (apiKey == null || apiSecret == null) {
-            if (shouldContinueIfTenantInformationIsMissing(request)) {
-                chain.doFilter(request, response);
-            } else {
-                final String errorMessage = String.format("Make sure to set the %s and %s headers", JaxrsResource.HDR_API_KEY, JaxrsResource.HDR_API_SECRET);
-                sendAuthError(response, errorMessage);
-            }
+            final String errorMessage = String.format("Make sure to set the %s and %s headers", JaxrsResource.HDR_API_KEY, JaxrsResource.HDR_API_SECRET);
+            handleAuthenticationError(errorMessage, chain, request, response);
             return;
         }
 
@@ -99,7 +95,7 @@ public class TenantFilter implements Filter {
             modularRealmAuthenticator.authenticate(token);
         } catch (final AuthenticationException e) {
             final String errorMessage = e.getLocalizedMessage();
-            sendAuthError(response, errorMessage);
+            handleAuthenticationError(errorMessage, chain, request, response);
             return;
         }
 
@@ -115,11 +111,19 @@ public class TenantFilter implements Filter {
         }
     }
 
+    private void handleAuthenticationError(final String errorMessage, final FilterChain chain, final ServletRequest request, final ServletResponse response) throws IOException, ServletException {
+        if (shouldContinueIfTenantInformationIsWrongOrMissing(request)) {
+            chain.doFilter(request, response);
+        } else {
+            sendAuthError(response, errorMessage);
+        }
+    }
+
     @Override
     public void destroy() {
     }
 
-    private boolean shouldContinueIfTenantInformationIsMissing(final ServletRequest request) {
+    private boolean shouldContinueIfTenantInformationIsWrongOrMissing(final ServletRequest request) {
         boolean shouldContinue = false;
 
         if (request instanceof HttpServletRequest) {
