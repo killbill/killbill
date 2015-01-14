@@ -23,7 +23,7 @@ CREATE TABLE tenant_kvs (
    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
    id char(36) NOT NULL,
    tenant_record_id int(11) unsigned NOT NULL,
-   tenant_key varchar(256) NOT NULL,
+   tenant_key varchar(255) NOT NULL,
    tenant_value mediumtext NOT NULL,
    is_active bool DEFAULT 1,
    created_date datetime NOT NULL,
