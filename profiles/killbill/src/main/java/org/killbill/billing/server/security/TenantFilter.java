@@ -73,11 +73,6 @@ public class TenantFilter implements Filter {
 
     @Override
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain) throws IOException, ServletException {
-        if (shouldSkipFilter(request)) {
-            chain.doFilter(request, response);
-            return;
-        }
-
         // Lookup tenant information in the headers
         String apiKey = null;
         String apiSecret = null;
@@ -89,8 +84,12 @@ public class TenantFilter implements Filter {
 
         // Multi-tenancy is enabled if this filter is installed, we can't continue without credentials
         if (apiKey == null || apiSecret == null) {
-            final String errorMessage = String.format("Make sure to set the %s and %s headers", JaxrsResource.HDR_API_KEY, JaxrsResource.HDR_API_SECRET);
-            sendAuthError(response, errorMessage);
+            if (shouldContinueIfTenantInformationIsMissing(request)) {
+                chain.doFilter(request, response);
+            } else {
+                final String errorMessage = String.format("Make sure to set the %s and %s headers", JaxrsResource.HDR_API_KEY, JaxrsResource.HDR_API_SECRET);
+                sendAuthError(response, errorMessage);
+            }
             return;
         }
 
@@ -120,8 +119,8 @@ public class TenantFilter implements Filter {
     public void destroy() {
     }
 
-    private boolean shouldSkipFilter(final ServletRequest request) {
-        boolean shouldSkip = false;
+    private boolean shouldContinueIfTenantInformationIsMissing(final ServletRequest request) {
+        boolean shouldContinue = false;
 
         if (request instanceof HttpServletRequest) {
             final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
@@ -136,14 +135,16 @@ public class TenantFilter implements Filter {
                     isMetricsRequest(path, httpMethod) ||
                     // See KillBillShiroWebModule#CorsBasicHttpAuthenticationFilter
                     isOptionsRequest(httpMethod) ||
-                    // Static resources
-                    isStaticResourceRequest(path, httpMethod)
+                    // Shift the responsibility to the plugin
+                    isPluginRequest(path) ||
+                    // Static resources (welcome screen, Swagger, etc.)
+                    isNotKbNorPluginResourceRequest(path, httpMethod)
                     ) {
-                shouldSkip = true;
+                shouldContinue = true;
             }
         }
 
-        return shouldSkip;
+        return shouldContinue;
     }
 
     private boolean isPermissionRequest(final String path, final String httpMethod) {
@@ -162,35 +163,16 @@ public class TenantFilter implements Filter {
         return "OPTIONS".equals(httpMethod);
     }
 
-    private boolean isStaticResourceRequest(final String path, final String httpMethod) {
-        if (isPluginRequest(path)) {
-            // For plugins requests, we want to validate the Tenant except for HTML, JS, etc. files
-            return isStaticFileRequest(path) && "GET".equals(httpMethod);
-        } else {
-            // Welcome screen, Swagger, etc.
-            return !isKbApiRequest(path) && "GET".equals(httpMethod);
-        }
+    private boolean isNotKbNorPluginResourceRequest(final String path, final String httpMethod) {
+        return !isPluginRequest(path) && !isKbApiRequest(path) && "GET".equals(httpMethod);
     }
 
     private boolean isKbApiRequest(final String path) {
-        return path.startsWith(JaxrsResource.PREFIX);
+        return path != null && path.startsWith(JaxrsResource.PREFIX);
     }
 
     private boolean isPluginRequest(final String path) {
-        return path.startsWith(JaxrsResource.PLUGINS_PATH);
-    }
-
-    private boolean isStaticFileRequest(final String path) {
-        return path.endsWith(".htm") ||
-               path.endsWith(".html") ||
-               path.endsWith(".js") ||
-               path.endsWith(".css") ||
-               path.endsWith(".gz") ||
-               path.endsWith(".xml") ||
-               path.endsWith(".txt") ||
-               path.endsWith(".map")||
-               path.endsWith(".woff")||
-               path.endsWith(".ttf");
+        return path != null && path.startsWith(JaxrsResource.PLUGINS_PATH);
     }
 
     private void sendAuthError(final ServletResponse response, final String errorMessage) throws IOException {
