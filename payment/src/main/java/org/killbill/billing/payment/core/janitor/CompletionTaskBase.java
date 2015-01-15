@@ -81,7 +81,8 @@ abstract class CompletionTaskBase<T> implements Runnable {
         this.accountInternalApi = accountInternalApi;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
         this.pluginRegistry = pluginRegistry;
-        this.taskName = this.getClass().getName();
+        // Limit the length of the username in the context (limited to 50 characters)
+        this.taskName = this.getClass().getSimpleName();
         this.completionTaskCallContext = internalCallContextFactory.createInternalCallContext((Long) null, (Long) null, taskName, CallOrigin.INTERNAL, UserType.SYSTEM, UUID.randomUUID());
     }
 
