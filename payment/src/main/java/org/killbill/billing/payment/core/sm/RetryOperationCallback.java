@@ -188,7 +188,10 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
         }
     }
 
-    private final void adjustStateContextValues(final PaymentStateContext inputContext, final PriorPaymentRoutingResult pluginResult) {
+    private void adjustStateContextValues(final PaymentStateContext inputContext, @Nullable final PriorPaymentRoutingResult pluginResult) {
+        if (pluginResult == null) {
+            return;
+        }
 
         final RetryablePaymentStateContext input = (RetryablePaymentStateContext) inputContext;
         if (pluginResult.getAdjustedAmount() != null) {
