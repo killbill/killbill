@@ -14,7 +14,7 @@ You can find more information on [killbill.io](http://killbill.io).
 ## Getting started
 
 * [Tutorials](http://killbill.io/tutorials/)
-* [User guides](http://killbill.io/userguide/) (source on [GitHub](https://github.com/killbill/killbill-docs))
+* [User guides](http://killbill.io/userguide/) (source in the [killbill-docs](https://github.com/killbill/killbill-docs) repo)
 * [Wiki](https://github.com/killbill/killbill/wiki)
 
 ## License
