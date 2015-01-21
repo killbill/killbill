@@ -457,7 +457,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
 
-    public SubscriptionBaseTransitionData getInitialTransitionForCurrentPlan() {
+    public SubscriptionBaseTransitionData getLastTransitionForCurrentPlan() {
         if (transitions == null) {
             throw new SubscriptionBaseError(String.format("No transitions for subscription %s", getId()));
         }

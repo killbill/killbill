@@ -151,7 +151,7 @@ public class PlanAligner extends BaseAligner {
      */
     public TimedPhase getNextTimedPhase(final DefaultSubscriptionBase subscription, final DateTime requestedDate, final DateTime effectiveDate, final InternalTenantContext context) {
         try {
-            final SubscriptionBaseTransitionData lastPlanTransition = subscription.getInitialTransitionForCurrentPlan();
+            final SubscriptionBaseTransitionData lastPlanTransition = subscription.getLastTransitionForCurrentPlan();
             if (effectiveDate.isBefore(lastPlanTransition.getEffectiveTransitionTime())) {
                 throw new SubscriptionBaseError(String.format("Cannot specify an effectiveDate prior to last Plan Change, subscription = %s, effectiveDate = %s",
                                                          subscription.getId(), effectiveDate));
@@ -182,6 +182,7 @@ public class PlanAligner extends BaseAligner {
                                                  lastPlanTransition.getNextPriceList().getName(),
                                                  requestedDate,
                                                  effectiveDate,
+                                                 lastPlanTransition.getEffectiveTransitionTime(),
                                                  WhichPhase.NEXT,
                                                  context);
                 default:
@@ -240,6 +241,8 @@ public class PlanAligner extends BaseAligner {
                                      nextPriceList,
                                      requestedDate,
                                      effectiveDate,
+                                     // This method is only called while doing the change, hence we want to pass the change effective date
+                                     effectiveDate,
                                      which,
                                      context);
     }
@@ -253,6 +256,7 @@ public class PlanAligner extends BaseAligner {
                                              final String priceList,
                                              final DateTime requestedDate,
                                              final DateTime effectiveDate,
+                                             final DateTime lastOrCurrentChangeEffectiveDate,
                                              final WhichPhase which,
                                              final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
         final Catalog catalog = catalogService.getFullCatalog(context);
@@ -278,7 +282,7 @@ public class PlanAligner extends BaseAligner {
                 planStartDate = bundleStartDate;
                 break;
             case CHANGE_OF_PLAN:
-                planStartDate = effectiveDate;
+                planStartDate = lastOrCurrentChangeEffectiveDate;
                 break;
             case CHANGE_OF_PRICELIST:
                 throw new SubscriptionBaseError(String.format("Not implemented yet %s", alignment));
