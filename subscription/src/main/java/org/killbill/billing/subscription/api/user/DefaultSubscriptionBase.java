@@ -530,7 +530,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 "Failed to find CurrentPhaseStart id = %s", getId().toString()));
     }
 
-    public void rebuildTransitions(final List<SubscriptionBaseEvent> inputEvents, final Catalog catalog) {
+    public void rebuildTransitions(final List<SubscriptionBaseEvent> inputEvents, final Catalog catalog) throws CatalogApiException {
 
         if (inputEvents == null) {
             return;
@@ -624,13 +624,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             PlanPhase nextPhase = null;
             PriceList nextPriceList = null;
 
-            try {
-                nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getRequestedDate(), getAlignStartDate()) : null;
-                nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getRequestedDate(), getAlignStartDate()) : null;
-                nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, cur.getRequestedDate()) : null;
-            } catch (CatalogApiException e) {
-                log.error(String.format("Failed to build transition for subscription %s", id), e);
-            }
+            nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getRequestedDate(), getAlignStartDate()) : null;
+            nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getRequestedDate(), getAlignStartDate()) : null;
+            nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, cur.getRequestedDate()) : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, cur.getType(), apiEventType,
