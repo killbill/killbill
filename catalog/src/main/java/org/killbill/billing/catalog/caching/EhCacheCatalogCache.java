@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -63,23 +63,23 @@ public class EhCacheCatalogCache implements CatalogCache {
         if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
             if (defaultCatalog == null) {
                 throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT,
-                                              ": the system property org.killbill.catalog.uri must be specified and point to valid catalog xml");
+                                              "the system property org.killbill.catalog.uri must be specified and point to valid catalog xml");
             }
             return defaultCatalog;
         }
         // The cache loader might choke on some bad xml -- unlikely since we check its validity prior storing it,
         // but to be on the safe side;;
         try {
-            final VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(tenantContext, cacheLoaderArgument);
+            final VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(tenantContext.getTenantRecordId(), cacheLoaderArgument);
             return (tenantCatalog != null) ? tenantCatalog : defaultCatalog;
-        } catch (IllegalStateException e) {
+        } catch (final IllegalStateException e) {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, tenantContext.getTenantRecordId());
         }
     }
 
     @Override
     public void clearCatalog(final InternalTenantContext tenantContext) {
-        cacheController.remove(tenantContext);
+        cacheController.remove(tenantContext.getTenantRecordId());
     }
 
     //

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,7 +25,6 @@ import javax.inject.Singleton;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.tenant.api.TenantInternalApi;
-import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,14 +51,15 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader {
     public Object load(final Object key, final Object argument) {
         checkCacheLoaderStatus();
 
-        if (!(key instanceof InternalTenantContext)) {
+        if (!(key instanceof Long)) {
             throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
         }
         if (!(argument instanceof CacheLoaderArgument)) {
             throw new IllegalArgumentException("Unexpected argument type of " + argument.getClass().getName());
         }
 
-        final InternalTenantContext internalTenantContext = (InternalTenantContext) key;
+        final Long tenantRecordId = (Long) key;
+        final InternalTenantContext internalTenantContext = new InternalTenantContext(tenantRecordId);
         final CacheLoaderArgument cacheLoaderArgument = (CacheLoaderArgument) argument;
 
         if (cacheLoaderArgument.getArgs() == null || !(cacheLoaderArgument.getArgs()[0] instanceof LoaderCallback)) {
@@ -74,13 +74,14 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader {
         try {
             logger.info("Loading catalog cache for tenant " + internalTenantContext.getTenantRecordId());
             return callback.loadCatalog(catalogXMLs);
-        } catch (CatalogApiException e) {
+        } catch (final CatalogApiException e) {
             throw new IllegalStateException(String.format("Failed to de-serialize catalog for tenant %s : %s",
                                                           internalTenantContext.getTenantRecordId(), e.getMessage()), e);
         }
     }
 
     public interface LoaderCallback {
+
         public Object loadCatalog(final List<String> catalogXMLs) throws CatalogApiException;
     }
 }
