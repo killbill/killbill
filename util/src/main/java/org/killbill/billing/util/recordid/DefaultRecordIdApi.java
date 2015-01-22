@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,25 +24,20 @@ import javax.inject.Inject;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.api.RecordIdApi;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.dao.NonEntityDao;
 
-public class DefaultRecordIdApi implements RecordIdApi  {
+public class DefaultRecordIdApi implements RecordIdApi {
 
-    private final NonEntityDao nonEntityDao;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultRecordIdApi(final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
-        this.nonEntityDao = nonEntityDao;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
+    public DefaultRecordIdApi(final InternalCallContextFactory internalCallContextFactory) {
+        this.internalCallContextFactory = internalCallContextFactory;
     }
-
 
     @Override
     public Long getRecordId(final UUID objectId, final ObjectType objectType, final TenantContext tenantContext) {
-        return nonEntityDao.retrieveRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
+        return internalCallContextFactory.getRecordIdFromObject(objectId, objectType, tenantContext);
     }
 }

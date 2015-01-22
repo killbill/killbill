@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -46,10 +46,9 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcher
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -75,10 +74,9 @@ public abstract class ProcessorBase {
     protected final GlobalLocker locker;
     protected final ExecutorService executor;
     protected final PaymentDao paymentDao;
-    protected final NonEntityDao nonEntityDao;
+    protected final InternalCallContextFactory internalCallContextFactory;
     protected final TagInternalApi tagInternalApi;
     protected final Clock clock;
-    protected final CacheControllerDispatcher controllerDispatcher;
 
     protected static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
     protected final InvoiceInternalApi invoiceApi;
@@ -86,23 +84,21 @@ public abstract class ProcessorBase {
     public ProcessorBase(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                          final AccountInternalApi accountInternalApi,
                          final PaymentDao paymentDao,
-                         final NonEntityDao nonEntityDao,
                          final TagInternalApi tagInternalApi,
                          final GlobalLocker locker,
                          final ExecutorService executor,
+                         final InternalCallContextFactory internalCallContextFactory,
                          final InvoiceInternalApi invoiceApi,
-                         final Clock clock,
-                         final CacheControllerDispatcher controllerDispatcher) {
+                         final Clock clock) {
         this.pluginRegistry = pluginRegistry;
         this.accountInternalApi = accountInternalApi;
         this.paymentDao = paymentDao;
-        this.nonEntityDao = nonEntityDao;
         this.locker = locker;
         this.executor = executor;
         this.tagInternalApi = tagInternalApi;
+        this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceApi = invoiceApi;
         this.clock = clock;
-        this.controllerDispatcher = controllerDispatcher;
     }
 
     protected boolean isAccountAutoPayOff(final UUID accountId, final InternalTenantContext context) {
@@ -161,7 +157,11 @@ public abstract class ProcessorBase {
     }
 
     protected TenantContext buildTenantContext(final InternalTenantContext context) {
-        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
+        return internalCallContextFactory.createTenantContext(context);
+    }
+
+    protected CallContext buildCallContext(final InternalCallContext context) {
+        return internalCallContextFactory.createCallContext(context);
     }
 
     protected void validateUniqueTransactionExternalKey(@Nullable final String transactionExternalKey, final InternalTenantContext tenantContext) throws PaymentApiException {

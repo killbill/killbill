@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,10 +27,8 @@ import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -40,14 +38,13 @@ import com.google.common.collect.ImmutableList;
  */
 final class PendingTransactionTask extends CompletionTaskBase<Integer> {
 
-    private Janitor janitor;
     private final List<Integer> itemsForIterations;
 
     public PendingTransactionTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                                 final NonEntityDao nonEntityDao, final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
-                                 final RetryStateMachineHelper retrySMHelper, final CacheControllerDispatcher controllerDispatcher, final AccountInternalApi accountInternalApi,
-                                 final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
-        super(janitor, internalCallContextFactory, paymentConfig, nonEntityDao, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, controllerDispatcher, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
+                                  final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
+                                  final RetryStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
+                                  final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
+        super(janitor, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
         this.itemsForIterations = ImmutableList.of(new Integer(1));
     }
 

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,10 +39,9 @@ import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.tag.TagInternalApi;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
@@ -71,13 +70,12 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                    final InvoiceInternalApi invoiceApi,
                                    final TagInternalApi tagUserApi,
                                    final PaymentDao paymentDao,
-                                   final NonEntityDao nonEntityDao,
                                    final GlobalLocker locker,
                                    final PaymentConfig paymentConfig,
                                    @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
-                                   final Clock clock,
-                                   final CacheControllerDispatcher controllerDispatcher) {
-        super(pluginRegistry, accountUserApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock, controllerDispatcher);
+                                   final InternalCallContextFactory internalCallContextFactory,
+                                   final Clock clock) {
+        super(pluginRegistry, accountUserApi, paymentDao, tagUserApi, locker, executor, internalCallContextFactory, invoiceApi, clock);
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.paymentPluginFormDispatcher = new PluginDispatcher<HostedPaymentPageFormDescriptor>(paymentPluginTimeoutSec, executor);
         this.paymentPluginNotificationDispatcher = new PluginDispatcher<GatewayNotification>(paymentPluginTimeoutSec, executor);

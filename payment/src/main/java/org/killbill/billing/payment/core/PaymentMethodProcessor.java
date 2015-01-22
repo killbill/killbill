@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -52,11 +52,10 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.DefaultPaymentMethodInfoPlugin;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.tag.TagInternalApi;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.EntityPaginationBuilder;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
@@ -87,14 +86,13 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                   final AccountInternalApi accountInternalApi,
                                   final InvoiceInternalApi invoiceApi,
                                   final PaymentDao paymentDao,
-                                  final NonEntityDao nonEntityDao,
                                   final TagInternalApi tagUserApi,
                                   final GlobalLocker locker,
                                   final PaymentConfig paymentConfig,
                                   @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
-                                  final Clock clock,
-                                  final CacheControllerDispatcher controllerDispatcher) {
-        super(pluginRegistry, accountInternalApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock, controllerDispatcher);
+                                  final InternalCallContextFactory internalCallContextFactory,
+                                  final Clock clock) {
+        super(pluginRegistry, accountInternalApi, paymentDao, tagUserApi, locker, executor, internalCallContextFactory, invoiceApi, clock);
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.uuidPluginNotificationDispatcher = new PluginDispatcher<UUID>(paymentPluginTimeoutSec, executor);
     }

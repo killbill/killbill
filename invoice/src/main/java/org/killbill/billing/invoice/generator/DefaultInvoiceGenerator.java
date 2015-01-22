@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -28,7 +30,6 @@ import javax.annotation.Nullable;
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -50,11 +51,10 @@ import org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.usage.api.UsageUserApi;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,16 +73,14 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private final Clock clock;
     private final InvoiceConfig config;
     private final UsageUserApi usageApi;
-    private final NonEntityDao nonEntityDao;
-    private final CacheControllerDispatcher controllerDispatcher;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultInvoiceGenerator(final Clock clock, final UsageUserApi usageApi, final InvoiceConfig config, final NonEntityDao nonEntityDao, final CacheControllerDispatcher controllerDispatcher) {
+    public DefaultInvoiceGenerator(final Clock clock, final UsageUserApi usageApi, final InvoiceConfig config, final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
         this.config = config;
         this.usageApi = usageApi;
-        this.nonEntityDao = nonEntityDao;
-        this.controllerDispatcher = controllerDispatcher;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     /*
@@ -116,8 +114,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private List<InvoiceItem> generateUsageInvoiceItems(final UUID invoiceId, final BillingEventSet eventSet,
                                                         @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
                                                         final InternalCallContext context) throws InvoiceApiException {
-
-        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+        final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
         try {
 
             final List<InvoiceItem> items = Lists.newArrayList();
@@ -128,14 +125,14 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             while (events.hasNext()) {
                 final BillingEvent event = events.next();
                 // Skip events that are posterior to the targetDate
-                final LocalDate eventLocalEffectiveDate =  new LocalDate(event.getEffectiveDate(), event.getAccount().getTimeZone());
+                final LocalDate eventLocalEffectiveDate = new LocalDate(event.getEffectiveDate(), event.getAccount().getTimeZone());
                 if (eventLocalEffectiveDate.isAfter(targetDate)) {
                     continue;
                 }
 
                 final UUID subscriptionId = event.getSubscription().getId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
-                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, config.isInsertZeroUsageItems(), targetDate, context.toTenantContext(tenantId));
+                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, config.isInsertZeroUsageItems(), targetDate, tenantContext);
                     items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(curSubscriptionId, existingInvoices)));
                     curEvents = Lists.newArrayList();
                 }
@@ -143,7 +140,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 curEvents.add(event);
             }
             if (curSubscriptionId != null) {
-                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, config.isInsertZeroUsageItems(), targetDate, context.toTenantContext(tenantId));
+                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, config.isInsertZeroUsageItems(), targetDate, tenantContext);
                 items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(curSubscriptionId, existingInvoices)));
             }
             return items;

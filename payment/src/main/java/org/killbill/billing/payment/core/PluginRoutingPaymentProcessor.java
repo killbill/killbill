@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,7 +28,6 @@ import javax.inject.Inject;
 
 import org.killbill.automaton.MissingEntryException;
 import org.killbill.automaton.State;
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -48,10 +48,8 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
@@ -67,7 +65,6 @@ public class PluginRoutingPaymentProcessor extends ProcessorBase {
 
     private final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
     private final RetryStateMachineHelper retrySMHelper;
-    private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
     public PluginRoutingPaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
@@ -75,17 +72,15 @@ public class PluginRoutingPaymentProcessor extends ProcessorBase {
                                          final InvoiceInternalApi invoiceApi,
                                          final TagInternalApi tagUserApi,
                                          final PaymentDao paymentDao,
-                                         final NonEntityDao nonEntityDao,
                                          final GlobalLocker locker,
                                          @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
+                                         final InternalCallContextFactory internalCallContextFactory,
                                          final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                                          final RetryStateMachineHelper retrySMHelper,
-                                         final Clock clock,
-                                         final CacheControllerDispatcher controllerDispatcher) {
-        super(pluginRegistry, accountInternalApi, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi, clock, controllerDispatcher);
+                                         final Clock clock) {
+        super(pluginRegistry, accountInternalApi, paymentDao, tagUserApi, locker, executor, internalCallContextFactory, invoiceApi, clock);
         this.retrySMHelper = retrySMHelper;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
-        this.controllerDispatcher = controllerDispatcher;
     }
 
     public Payment createAuthorization(final boolean isApiPayment, final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency, final String paymentExternalKey, final String transactionExternalKey,
@@ -212,8 +207,7 @@ public class PluginRoutingPaymentProcessor extends ProcessorBase {
 
             final Iterable<PluginProperty> pluginProperties = PluginPropertySerializer.deserialize(attempt.getPluginProperties());
             final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), internalCallContext);
-            final UUID tenantId = nonEntityDao.retrieveIdFromObject(internalCallContext.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
-            final CallContext callContext = internalCallContext.toCallContext(tenantId);
+            final CallContext callContext = buildCallContext(internalCallContext);
 
             final State state = retrySMHelper.getState(attempt.getStateName());
             pluginControlledPaymentAutomatonRunner.run(state,

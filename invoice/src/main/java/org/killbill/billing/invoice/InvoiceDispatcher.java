@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -33,18 +33,15 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
@@ -73,11 +70,9 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
 import org.killbill.bus.api.PersistentBus;
@@ -106,37 +101,36 @@ public class InvoiceDispatcher {
     private final AccountInternalApi accountApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final InvoiceDao invoiceDao;
-    private final NonEntityDao nonEntityDao;
+    private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
     private final PersistentBus eventBus;
     private final Clock clock;
     private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
-    private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
     public InvoiceDispatcher(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry,
-                             final InvoiceGenerator generator, final AccountInternalApi accountApi,
+                             final InvoiceGenerator generator,
+                             final AccountInternalApi accountApi,
                              final BillingInternalApi billingApi,
                              final SubscriptionBaseInternalApi SubscriptionApi,
                              final InvoiceDao invoiceDao,
-                             final NonEntityDao nonEntityDao,
+                             final InternalCallContextFactory internalCallContextFactory,
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
                              final PersistentBus eventBus,
-                             final Clock clock, final CacheControllerDispatcher controllerDispatcher) {
+                             final Clock clock) {
         this.pluginRegistry = pluginRegistry;
         this.generator = generator;
         this.billingApi = billingApi;
         this.subscriptionApi = SubscriptionApi;
         this.accountApi = accountApi;
         this.invoiceDao = invoiceDao;
-        this.nonEntityDao = nonEntityDao;
+        this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceNotifier = invoiceNotifier;
         this.locker = locker;
         this.eventBus = eventBus;
         this.clock = clock;
-        this.controllerDispatcher = controllerDispatcher;
     }
 
     public void processSubscription(final EffectiveSubscriptionInternalEvent transition,
@@ -337,11 +331,11 @@ public class InvoiceDispatcher {
     }
 
     private TenantContext buildTenantContext(final InternalTenantContext context) {
-        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
+        return internalCallContextFactory.createTenantContext(context);
     }
 
     private CallContext buildCallContext(final InternalCallContext context) {
-        return context.toCallContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
+        return internalCallContextFactory.createCallContext(context);
     }
 
     private List<InvoicePluginApi> getInvoicePlugins() {

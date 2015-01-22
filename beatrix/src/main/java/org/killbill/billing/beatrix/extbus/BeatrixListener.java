@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,7 +24,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.entitlement.EntitlementTransitionType;
 import org.killbill.billing.events.AccountChangeInternalEvent;
@@ -46,12 +47,10 @@ import org.killbill.billing.events.UserTagDeletionInternalEvent;
 import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.callcontext.UserType;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -70,23 +69,14 @@ public class BeatrixListener {
 
     private final PersistentBus externalBus;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final AccountInternalApi accountApi;
-    private final NonEntityDao nonEntityDao;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
 
     protected final ObjectMapper objectMapper;
 
     @Inject
     public BeatrixListener(@Named(BusModule.EXTERNAL_BUS_NAMED) final PersistentBus externalBus,
-                           final InternalCallContextFactory internalCallContextFactory,
-                           final AccountInternalApi accountApi,
-                           final  CacheControllerDispatcher cacheControllerDispatcher,
-                           final NonEntityDao nonEntityDao) {
+                           final InternalCallContextFactory internalCallContextFactory) {
         this.externalBus = externalBus;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.accountApi = accountApi;
-        this.nonEntityDao = nonEntityDao;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JodaModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -243,19 +233,20 @@ public class BeatrixListener {
 
             default:
         }
-        final UUID accountId = getAccountIdFromRecordId(event.getBusEventType(), objectId, context.getAccountRecordId());
-        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+
+        final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
+        final UUID accountId = getAccountId(event.getBusEventType(), objectId, objectType, tenantContext);
 
         return eventBusType != null ?
-               new DefaultBusExternalEvent(objectId, objectType, eventBusType, accountId, tenantId, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
+               new DefaultBusExternalEvent(objectId, objectType, eventBusType, accountId, tenantContext.getTenantId(), context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
                null;
     }
 
-    private UUID getAccountIdFromRecordId(final BusInternalEventType eventType, final UUID objectId, final Long recordId) {
+    private UUID getAccountId(final BusInternalEventType eventType, final UUID objectId, final ObjectType objectType, final TenantContext context) {
         // accountRecord_id is not set for ACCOUNT_CREATE event as we are in the transaction and value is known yet
         if (eventType == BusInternalEventType.ACCOUNT_CREATE) {
             return objectId;
         }
-        return nonEntityDao.retrieveIdFromObject(recordId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+        return internalCallContextFactory.getAccountId(objectId, objectType, context);
     }
 }

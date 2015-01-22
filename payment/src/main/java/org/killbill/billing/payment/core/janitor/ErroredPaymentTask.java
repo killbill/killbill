@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,7 +23,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -42,11 +41,9 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 
 import com.google.common.base.Preconditions;
@@ -62,16 +59,16 @@ public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
     private final int MAX_ITEMS_PER_LOOP = 100; // Limit of items per iteration
 
     public ErroredPaymentTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                                 final NonEntityDao nonEntityDao, final PaymentDao paymentDao, final Clock clock,
-                                 final PaymentStateMachineHelper paymentStateMachineHelper, final RetryStateMachineHelper retrySMHelper, final CacheControllerDispatcher controllerDispatcher, final AccountInternalApi accountInternalApi,
-                                 final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
-        super(janitor, internalCallContextFactory, paymentConfig, nonEntityDao, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, controllerDispatcher, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
+                              final PaymentDao paymentDao, final Clock clock,
+                              final PaymentStateMachineHelper paymentStateMachineHelper, final RetryStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
+                              final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
+        super(janitor, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
     }
 
     @Override
     public List<PaymentModelDao> getItemsForIteration() {
         // In theory this should be the plugin timeout but we add a 3 minutes delay for safety.
-        int delayBeforeNow = (int) paymentConfig.getPaymentPluginTimeout().getMillis() + SAFETY_DELAY_MS;
+        final int delayBeforeNow = (int) paymentConfig.getPaymentPluginTimeout().getMillis() + SAFETY_DELAY_MS;
         final DateTime createdBeforeDate = clock.getUTCNow().minusMillis(delayBeforeNow);
 
         // We want to avoid iterating on the same failed payments -- if for some reasons they can't fix themselves.
@@ -84,13 +81,12 @@ public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
 
     @Override
     public void doIteration(final PaymentModelDao item) {
-
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(item.getAccountId(), item.getId(), ObjectType.PAYMENT);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(item.getTenantRecordId(), item.getAccountRecordId());
         final CallContext callContext = createCallContext("ErroredPaymentTask", internalTenantContext);
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(item.getAccountId(), callContext);
 
         final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(item.getId(), internalTenantContext);
-        Preconditions.checkState(! transactions.isEmpty(), "Janitor ErroredPaymentTask found item " + item.getId() + " with no transactions, skipping");
+        Preconditions.checkState(!transactions.isEmpty(), "Janitor ErroredPaymentTask found item " + item.getId() + " with no transactions, skipping");
 
         // We look for latest transaction in an UNKNOWN state, if not we skip
         final PaymentTransactionModelDao unknownTransaction = transactions.get(transactions.size() - 1);
@@ -100,7 +96,6 @@ public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
 
         final PaymentMethodModelDao paymentMethod = paymentDao.getPaymentMethod(item.getPaymentMethodId(), internalCallContext);
         final PaymentPluginApi paymentPluginApi = getPaymentPluginApi(item, paymentMethod.getPluginName());
-
 
         PaymentTransactionInfoPlugin pluginErroredTransaction = null;
         try {
@@ -112,7 +107,7 @@ public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
                     return input.getKbTransactionPaymentId().equals(unknownTransaction.getId());
                 }
             }).orNull();
-        } catch (PaymentPluginApiException ignored) {
+        } catch (final PaymentPluginApiException ignored) {
 
         }
 
@@ -143,8 +138,7 @@ public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
         }
         final String lastSuccessPaymentState = paymentStateMachineHelper.isSuccessState(newPaymentState) ? newPaymentState : null;
 
-
-        final BigDecimal processedAmount = pluginErroredTransaction != null ?  pluginErroredTransaction.getAmount() : null;
+        final BigDecimal processedAmount = pluginErroredTransaction != null ? pluginErroredTransaction.getAmount() : null;
         final Currency processedCurrency = pluginErroredTransaction != null ? pluginErroredTransaction.getCurrency() : null;
         final String gatewayErrorCode = pluginErroredTransaction != null ? pluginErroredTransaction.getGatewayErrorCode() : null;
         final String gatewayError = pluginErroredTransaction != null ? pluginErroredTransaction.getGatewayError() : null;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -35,14 +34,11 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
 import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,8 +50,6 @@ public class InvoiceHandler {
     private final AccountInternalApi accountApi;
     private final InternalCallContextFactory internalCallContextFactory;
     private final PluginRoutingPaymentProcessor pluginRoutingPaymentProcessor;
-    private final NonEntityDao nonEntityDao;
-    private final CacheControllerDispatcher controllerDispatcher;
     private final PaymentConfig paymentConfig;
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceHandler.class);
@@ -64,20 +58,15 @@ public class InvoiceHandler {
     public InvoiceHandler(final PaymentConfig paymentConfig,
                           final AccountInternalApi accountApi,
                           final PluginRoutingPaymentProcessor pluginRoutingPaymentProcessor,
-                          final NonEntityDao nonEntityDao,
-                          final InternalCallContextFactory internalCallContextFactory,
-                          final CacheControllerDispatcher controllerDispatcher) {
+                          final InternalCallContextFactory internalCallContextFactory) {
         this.paymentConfig = paymentConfig;
         this.accountApi = accountApi;
         this.internalCallContextFactory = internalCallContextFactory;
         this.pluginRoutingPaymentProcessor = pluginRoutingPaymentProcessor;
-        this.nonEntityDao = nonEntityDao;
-        this.controllerDispatcher = controllerDispatcher;
     }
 
     @Subscribe
     public void processInvoiceEvent(final InvoiceCreationInternalEvent event) {
-
         log.info("Received invoice creation notification for account {} and invoice {}",
                  event.getAccountId(), event.getInvoiceId());
 
@@ -90,7 +79,7 @@ public class InvoiceHandler {
             final PluginProperty prop1 = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, event.getInvoiceId().toString(), false);
             properties.add(prop1);
 
-            final CallContext callContext = internalContext.toCallContext(nonEntityDao.retrieveIdFromObject(internalContext.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID)));
+            final CallContext callContext = internalCallContextFactory.createCallContext(internalContext);
 
             final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
             final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames() != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames()) : new LinkedList<String>();

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -57,9 +59,8 @@ import org.killbill.billing.overdue.notification.OverdueCheckNotifier;
 import org.killbill.billing.overdue.notification.OverduePoster;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.email.DefaultEmailSender;
 import org.killbill.billing.util.email.EmailApiException;
 import org.killbill.billing.util.email.EmailConfig;
@@ -90,8 +91,7 @@ public class OverdueStateApplicator {
     private final OverdueEmailGenerator overdueEmailGenerator;
     private final TagInternalApi tagApi;
     private final EmailSender emailSender;
-    private final NonEntityDao nonEntityDao;
-    private final CacheControllerDispatcher controllerDispatcher;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public OverdueStateApplicator(final BlockingInternalApi accessApi,
@@ -102,9 +102,8 @@ public class OverdueStateApplicator {
                                   final OverdueEmailGenerator overdueEmailGenerator,
                                   final EmailConfig config,
                                   final PersistentBus bus,
-                                  final NonEntityDao nonEntityDao,
                                   final TagInternalApi tagApi,
-                                  final CacheControllerDispatcher controllerDispatcher) {
+                                  final InternalCallContextFactory internalCallContextFactory) {
 
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
@@ -113,10 +112,9 @@ public class OverdueStateApplicator {
         this.checkPoster = checkPoster;
         this.overdueEmailGenerator = overdueEmailGenerator;
         this.tagApi = tagApi;
-        this.nonEntityDao = nonEntityDao;
+        this.internalCallContextFactory = internalCallContextFactory;
         this.emailSender = new DefaultEmailSender(config);
         this.bus = bus;
-        this.controllerDispatcher = controllerDispatcher;
     }
 
     public void apply(final OverdueStateSet overdueStateSet, final BillingState billingState,
@@ -165,7 +163,7 @@ public class OverdueStateApplicator {
             // on the bus to which invoice will react. We need the latest state (including AUTO_INVOICE_OFF tag for example)
             // to be present in the database first.
             storeNewState(account, nextOverdueState, context);
-        } catch (OverdueApiException e) {
+        } catch (final OverdueApiException e) {
             if (e.getCode() != ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
                 throw new OverdueException(e);
             }
@@ -173,7 +171,7 @@ public class OverdueStateApplicator {
         try {
             bus.post(createOverdueEvent(account, previousOverdueState.getName(), nextOverdueState.getName(), isBlockBillingTransition(previousOverdueState, nextOverdueState),
                                         isUnblockBillingTransition(previousOverdueState, nextOverdueState), context));
-        } catch (Exception e) {
+        } catch (final Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
     }
@@ -197,14 +195,14 @@ public class OverdueStateApplicator {
 
         try {
             avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(account, previousOverdueState, clearState, context);
-        } catch (OverdueApiException e) {
+        } catch (final OverdueApiException e) {
             throw new OverdueException(e);
         }
 
         try {
             bus.post(createOverdueEvent(account, previousOverdueState.getName(), clearState.getName(), isBlockBillingTransition(previousOverdueState, clearState),
                                         isUnblockBillingTransition(previousOverdueState, clearState), context));
-        } catch (Exception e) {
+        } catch (final Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
     }
@@ -226,7 +224,7 @@ public class OverdueStateApplicator {
                                                                   blockBilling(nextOverdueState),
                                                                   clock.getUTCNow()),
                                          context);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, blockable.getId(), blockable.getClass().getName());
         }
     }
@@ -234,7 +232,7 @@ public class OverdueStateApplicator {
     private void set_AUTO_INVOICE_OFF_on_blockedBilling(final UUID accountId, final InternalCallContext context) throws OverdueApiException {
         try {
             tagApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), context);
-        } catch (TagApiException e) {
+        } catch (final TagApiException e) {
             throw new OverdueApiException(e);
         }
     }
@@ -242,7 +240,7 @@ public class OverdueStateApplicator {
     private void remove_AUTO_INVOICE_OFF_on_clear(final UUID accountId, final InternalCallContext context) throws OverdueApiException {
         try {
             tagApi.removeTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), context);
-        } catch (TagApiException e) {
+        } catch (final TagApiException e) {
             if (e.getCode() != ErrorCode.TAG_DOES_NOT_EXIST.getCode()) {
                 throw new OverdueApiException(e);
             }
@@ -283,6 +281,8 @@ public class OverdueStateApplicator {
         if (nextOverdueState.getOverdueCancellationPolicy() == OverdueCancellationPolicy.NONE) {
             return;
         }
+
+        final CallContext callContext = internalCallContextFactory.createCallContext(context);
         try {
             final BillingActionPolicy actionPolicy;
             switch (nextOverdueState.getOverdueCancellationPolicy()) {
@@ -296,27 +296,25 @@ public class OverdueStateApplicator {
                     throw new IllegalStateException("Unexpected OverdueCancellationPolicy " + nextOverdueState.getOverdueCancellationPolicy());
             }
             final List<Entitlement> toBeCancelled = new LinkedList<Entitlement>();
-            computeEntitlementsToCancel(account, toBeCancelled, context);
+            computeEntitlementsToCancel(account, toBeCancelled, callContext);
 
-            final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
             for (final Entitlement cur : toBeCancelled) {
                 try {
-                    cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, context.toCallContext(tenantId));
-                } catch (EntitlementApiException e) {
+                    cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, callContext);
+                } catch (final EntitlementApiException e) {
                     // If subscription has already been cancelled, there is nothing to do so we can ignore
                     if (e.getCode() != ErrorCode.SUB_CANCEL_BAD_STATE.getCode()) {
                         throw new OverdueException(e);
                     }
                 }
             }
-        } catch (EntitlementApiException e) {
+        } catch (final EntitlementApiException e) {
             throw new OverdueException(e);
         }
     }
 
-    private void computeEntitlementsToCancel(final Account account, final List<Entitlement> result, final InternalTenantContext context) throws EntitlementApiException {
-        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
-        final List<Entitlement> allEntitlementsForAccountId = entitlementApi.getAllEntitlementsForAccountId(account.getId(), context.toTenantContext(tenantId));
+    private void computeEntitlementsToCancel(final Account account, final List<Entitlement> result, final CallContext context) throws EntitlementApiException {
+        final List<Entitlement> allEntitlementsForAccountId = entitlementApi.getAllEntitlementsForAccountId(account.getId(), context);
         // Entitlement is smart enough and will cancel the associated add-ons. See also discussion in https://github.com/killbill/killbill/issues/94
         final Collection<Entitlement> allEntitlementsButAddonsForAccountId = Collections2.<Entitlement>filter(allEntitlementsForAccountId,
                                                                                                               new Predicate<Entitlement>() {
@@ -352,11 +350,11 @@ public class OverdueStateApplicator {
             } else {
                 emailSender.sendPlainTextEmail(to, cc, subject, emailBody);
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             log.warn(String.format("Unable to generate or send overdue notification email for account %s and overdueable %s", account.getId(), account.getId()), e);
-        } catch (EmailApiException e) {
+        } catch (final EmailApiException e) {
             log.warn(String.format("Unable to send overdue notification email for account %s and overdueable %s", account.getId(), account.getId()), e);
-        } catch (MustacheException e) {
+        } catch (final MustacheException e) {
             log.warn(String.format("Unable to generate overdue notification email for account %s and overdueable %s", account.getId(), account.getId()), e);
         }
     }
@@ -370,13 +368,13 @@ public class OverdueStateApplicator {
             final UUID accountId = accountApi.getByRecordId(context.getAccountRecordId(), context);
 
             final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
-            for (Tag cur : accountTags) {
+            for (final Tag cur : accountTags) {
                 if (cur.getTagDefinitionId().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId())) {
                     return true;
                 }
             }
             return false;
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
             throw new OverdueException(e);
         }
     }

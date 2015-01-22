@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,10 +31,8 @@ import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +42,9 @@ import org.slf4j.LoggerFactory;
  */
 public class Janitor {
 
-    private final static Logger log = LoggerFactory.getLogger(Janitor.class);
+    private static final Logger log = LoggerFactory.getLogger(Janitor.class);
 
-    private final static int TERMINATION_TIMEOUT_SEC = 5;
+    private static final int TERMINATION_TIMEOUT_SEC = 5;
 
     private final ScheduledExecutorService janitorExecutor;
     private final PaymentConfig paymentConfig;
@@ -61,22 +59,20 @@ public class Janitor {
                    final PaymentDao paymentDao,
                    final PaymentConfig paymentConfig,
                    final Clock clock,
-                   final NonEntityDao nonEntityDao,
                    final InternalCallContextFactory internalCallContextFactory,
                    final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                    @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
                    final PaymentStateMachineHelper paymentSMHelper,
                    final RetryStateMachineHelper retrySMHelper,
-                   final CacheControllerDispatcher controllerDispatcher,
                    final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         this.janitorExecutor = janitorExecutor;
         this.paymentConfig = paymentConfig;
-        this.pendingTransactionTask = new PendingTransactionTask(this, internalCallContextFactory, paymentConfig, nonEntityDao, paymentDao, clock, paymentSMHelper, retrySMHelper,
-                                                                 controllerDispatcher, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
-        this.attemptCompletionTask = new AttemptCompletionTask(this, internalCallContextFactory, paymentConfig, nonEntityDao, paymentDao, clock, paymentSMHelper, retrySMHelper,
-                                                               controllerDispatcher, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
-        this.erroredPaymentCompletionTask = new ErroredPaymentTask(this, internalCallContextFactory, paymentConfig, nonEntityDao, paymentDao, clock, paymentSMHelper, retrySMHelper,
-                                                               controllerDispatcher, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
+        this.pendingTransactionTask = new PendingTransactionTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
+                                                                 accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
+        this.attemptCompletionTask = new AttemptCompletionTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
+                                                               accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
+        this.erroredPaymentCompletionTask = new ErroredPaymentTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
+                                                                   accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
         this.isStopped = false;
     }
 
@@ -114,11 +110,11 @@ public class Janitor {
              * Then, awaitTermination with a timeout is required to ensure tasks completed.
              */
             janitorExecutor.shutdown();
-            boolean success = janitorExecutor.awaitTermination(TERMINATION_TIMEOUT_SEC, TimeUnit.SECONDS);
+            final boolean success = janitorExecutor.awaitTermination(TERMINATION_TIMEOUT_SEC, TimeUnit.SECONDS);
             if (!success) {
                 log.warn("Janitor failed to complete termination within " + TERMINATION_TIMEOUT_SEC + "sec");
             }
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
             log.warn("Janitor stop sequence got interrupted");
         } finally {

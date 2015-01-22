@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -127,7 +129,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
-
     @Override
     public List<InvoiceModelDao> getAllInvoicesByAccount(final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
@@ -230,7 +231,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                     cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
 
-                    notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context.getUserToken());
+                    notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context);
                 }
                 return null;
             }
@@ -401,7 +402,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // Retrieve invoice after the Refund
                 final InvoiceModelDao invoice = transInvoiceDao.getById(payment.getInvoiceId().toString(), context);
-                Preconditions.checkState(invoice !=  null, "Invoice shouldn't be null for payment " + payment.getId());
+                Preconditions.checkState(invoice != null, "Invoice shouldn't be null for payment " + payment.getId());
                 invoiceDaoHelper.populateChildren(invoice, entitySqlDaoWrapperFactory, context);
 
                 final BigDecimal invoiceBalanceAfterRefund = InvoiceModelDaoHelper.getBalance(invoice);
@@ -506,7 +507,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
         });
     }
-
 
     @Override
     public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId, final InternalTenantContext context) {
@@ -840,11 +840,11 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId,
-                                             final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final UUID userToken) {
+                                             final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final InternalCallContext internalCallContext) {
         for (final UUID subscriptionId : callbackDateTimePerSubscriptions.keySet()) {
             final List<DateTime> callbackDateTimeUTC = callbackDateTimePerSubscriptions.get(subscriptionId);
-            for (DateTime cur : callbackDateTimeUTC) {
-                nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, cur, userToken);
+            for (final DateTime cur : callbackDateTimeUTC) {
+                nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, cur, internalCallContext);
             }
         }
     }
@@ -854,7 +854,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         try {
             eventBus.postFromTransaction(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, context.getAccountRecordId(), context.getTenantRecordId(), userToken),
                                          entitySqlDaoWrapperFactory.getSqlDao());
-        } catch (EventBusException e) {
+        } catch (final EventBusException e) {
             log.warn("Failed to post adjustment event for invoice " + invoiceId, e);
         }
     }

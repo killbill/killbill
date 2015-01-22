@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -74,11 +74,9 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.currency.KillBillMoney;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.mockito.Mockito;
@@ -153,9 +151,7 @@ public class TestInvoiceHelper {
     private final GlobalLocker locker;
     private final Clock clock;
     private final InternalCallContext internalCallContext;
-    private final NonEntityDao nonEntityDao;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
 
     // Low level SqlDao used by the tests to directly insert rows
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
@@ -164,8 +160,8 @@ public class TestInvoiceHelper {
     @Inject
     public TestInvoiceHelper(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry, final InvoiceGenerator generator, final IDBI dbi,
                              final BillingInternalApi billingApi, final AccountInternalApi accountApi, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
-                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final InternalCallContext internalCallContext,
-                             final InternalCallContextFactory internalCallContextFactory, final CacheControllerDispatcher cacheControllerDispatcher) {
+                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final InternalCallContext internalCallContext,
+                             final InternalCallContextFactory internalCallContextFactory) {
         this.pluginRegistry = pluginRegistry;
         this.generator = generator;
         this.billingApi = billingApi;
@@ -176,12 +172,10 @@ public class TestInvoiceHelper {
         this.invoiceDao = invoiceDao;
         this.locker = locker;
         this.clock = clock;
-        this.nonEntityDao = nonEntityDao;
         this.internalCallContext = internalCallContext;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
 
     public UUID generateRegularInvoice(final Account account, final DateTime targetDate, final CallContext callContext) throws Exception {
@@ -202,8 +196,8 @@ public class TestInvoiceHelper {
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi,
-                                                                   invoiceDao, nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock, cacheControllerDispatcher);
+                                                                   invoiceDao, internalCallContextFactory, invoiceNotifier, locker, busService.getBus(),
+                                                                   clock);
 
         Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, new DryRunFutureDateArguments(), internalCallContext);
         Assert.assertNotNull(invoice);
@@ -223,7 +217,7 @@ public class TestInvoiceHelper {
     }
 
     public SubscriptionBase createSubscription() throws SubscriptionBaseApiException {
-        UUID uuid = UUID.randomUUID();
+        final UUID uuid = UUID.randomUUID();
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(uuid);
         Mockito.when(subscriptionApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
@@ -291,7 +285,7 @@ public class TestInvoiceHelper {
     public void createPayment(final InvoicePayment invoicePayment, final InternalCallContext internalCallContext) {
         try {
             invoicePaymentSqlDao.create(new InvoicePaymentModelDao(invoicePayment), internalCallContext);
-        } catch (EntityPersistenceException e) {
+        } catch (final EntityPersistenceException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -424,21 +418,27 @@ public class TestInvoiceHelper {
             }
         };
     }
+
     public static class DryRunFutureDateArguments implements DryRunArguments {
+
         public DryRunFutureDateArguments() {
         }
+
         @Override
         public PlanPhaseSpecifier getPlanPhaseSpecifier() {
             return null;
         }
+
         @Override
         public SubscriptionEventType getAction() {
             return null;
         }
+
         @Override
         public UUID getSubscriptionId() {
             return null;
         }
+
         @Override
         public DateTime getEffectiveDate() {
             return null;

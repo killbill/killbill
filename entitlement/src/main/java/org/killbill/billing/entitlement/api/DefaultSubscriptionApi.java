@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,9 +29,6 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.joda.time.DateTimeZone;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -41,15 +40,14 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.customfield.ShouldntHappenException;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -85,31 +83,26 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     private final EntitlementInternalApi entitlementInternalApi;
     private final SubscriptionBaseInternalApi subscriptionBaseInternalApi;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final NonEntityDao nonEntityDao;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
     private final EntitlementUtils entitlementUtils;
 
     @Inject
     public DefaultSubscriptionApi(final EntitlementInternalApi entitlementInternalApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
-                                  final InternalCallContextFactory internalCallContextFactory, final EntitlementUtils entitlementUtils, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
+                                  final InternalCallContextFactory internalCallContextFactory, final EntitlementUtils entitlementUtils) {
         this.entitlementInternalApi = entitlementInternalApi;
         this.subscriptionBaseInternalApi = subscriptionInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.nonEntityDao = nonEntityDao;
         this.entitlementUtils = entitlementUtils;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
 
     @Override
     public Subscription getSubscriptionForEntitlementId(final UUID entitlementId, final TenantContext context) throws SubscriptionApiException {
-        final Long accountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(entitlementId, ObjectType.SUBSCRIPTION, cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
-        final UUID accountId = nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+        final UUID accountId = internalCallContextFactory.getAccountId(entitlementId, ObjectType.SUBSCRIPTION, context);
 
         // Retrieve entitlements
         final AccountEntitlements accountEntitlements;
         try {
             accountEntitlements = entitlementInternalApi.getAllEntitlementsForAccountId(accountId, context);
-        } catch (EntitlementApiException e) {
+        } catch (final EntitlementApiException e) {
             throw new SubscriptionApiException(e);
         }
 
@@ -127,8 +120,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public SubscriptionBundle getSubscriptionBundle(final UUID bundleId, final TenantContext context) throws SubscriptionApiException {
-        final Long accountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(bundleId, ObjectType.BUNDLE, cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
-        final UUID accountId = nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+        final UUID accountId = internalCallContextFactory.getAccountId(bundleId, ObjectType.BUNDLE, context);
 
         final Optional<SubscriptionBundle> bundleOptional = Iterables.<SubscriptionBundle>tryFind(getSubscriptionBundlesForAccount(accountId, context),
                                                                                                   new Predicate<SubscriptionBundle>() {

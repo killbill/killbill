@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,7 +39,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.TestInvoiceHelper.DryRunFutureDateArguments;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
@@ -55,7 +54,6 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
 import org.killbill.clock.ClockMock;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -90,14 +88,14 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                       fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
                                                       BillingMode.IN_ADVANCE, "", 1L, SubscriptionBaseTransitionType.CREATE));
 
-        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(),  Mockito.<InternalCallContext>any())).thenReturn(events);
+        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
         final DateTime target = new DateTime();
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi, invoiceDao,
-                                                                   nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock, controllerDispatcher);
+                                                                   internalCallContextFactory, invoiceNotifier, locker, busService.getBus(),
+                                                                   clock);
 
         Invoice invoice = dispatcher.processAccount(accountId, target, new DryRunFutureDateArguments(), context);
         Assert.assertNotNull(invoice);
@@ -149,8 +147,8 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi, invoiceDao,
-                                                                   nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock, controllerDispatcher);
+                                                                   internalCallContextFactory, invoiceNotifier, locker, busService.getBus(),
+                                                                   clock);
 
         final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), null, context);
         Assert.assertNotNull(invoice);
@@ -207,8 +205,8 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(pluginRegistry, generator, accountApi, billingApi, subscriptionApi, invoiceDao,
-                                                                   nonEntityDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock, controllerDispatcher);
+                                                                   internalCallContextFactory, invoiceNotifier, locker, busService.getBus(),
+                                                                   clock);
 
         final Map<UUID, List<DateTime>> result = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), null, dateAndTimeZoneContext);
 

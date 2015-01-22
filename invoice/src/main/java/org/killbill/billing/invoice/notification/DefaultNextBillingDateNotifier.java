@@ -19,22 +19,21 @@ package org.killbill.billing.invoice.notification;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
+import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueHandler;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.InvoiceConfig;
-import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 

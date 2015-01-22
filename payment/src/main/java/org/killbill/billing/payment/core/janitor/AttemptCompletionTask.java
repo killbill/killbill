@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,7 +19,6 @@ package org.killbill.billing.payment.core.janitor;
 
 import java.util.List;
 
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -38,11 +37,9 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 
 import com.google.common.base.Predicate;
@@ -57,10 +54,10 @@ import com.google.common.collect.Iterables;
 final class AttemptCompletionTask extends CompletionTaskBase<PaymentAttemptModelDao> {
 
     public AttemptCompletionTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                                 final NonEntityDao nonEntityDao, final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
-                                 final RetryStateMachineHelper retrySMHelper, final CacheControllerDispatcher controllerDispatcher, final AccountInternalApi accountInternalApi,
+                                 final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
+                                 final RetryStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
                                  final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
-        super(janitor, internalCallContextFactory, paymentConfig, nonEntityDao, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, controllerDispatcher, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
+        super(janitor, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
     }
 
     @Override
@@ -72,7 +69,7 @@ final class AttemptCompletionTask extends CompletionTaskBase<PaymentAttemptModel
 
     @Override
     public void doIteration(final PaymentAttemptModelDao attempt) {
-        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(attempt.getAccountId(), attempt.getId(), ObjectType.PAYMENT_ATTEMPT);
+        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(attempt.getTenantRecordId(), attempt.getAccountRecordId());
         final CallContext callContext = createCallContext("AttemptCompletionJanitorTask", tenantContext);
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(attempt.getAccountId(), callContext);
 
@@ -117,11 +114,11 @@ final class AttemptCompletionTask extends CompletionTaskBase<PaymentAttemptModel
             // to the PaymentControlPluginApi plugin and transition the state.
             //
             pluginControlledPaymentAutomatonRunner.completeRun(paymentStateContext);
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
             log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
-        } catch (PluginPropertySerializerException e) {
+        } catch (final PluginPropertySerializerException e) {
             log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
         }
     }

@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -52,6 +53,7 @@ import org.killbill.billing.payment.provider.MockPaymentRoutingProviderPlugin;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.commons.locker.GlobalLock;
@@ -105,6 +107,8 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
     private PaymentStateMachineHelper paymentSMHelper;
     @Inject
     private RetryStateMachineHelper retrySMHelper;
+    @Inject
+    private InternalCallContextFactory internalCallContextFactory;
 
     private Account account;
     private DateTime utcNow;
@@ -195,13 +199,13 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                       null,
                                                       tagApi,
                                                       paymentDao,
-                                                      nonEntityDao,
                                                       locker,
                                                       executor,
+                                                      internalCallContextFactory,
                                                       runner,
                                                       retrySMHelper,
-                                                      clock,
-                                                      cacheControllerDispatcher);
+                                                      clock
+        );
 
     }
 

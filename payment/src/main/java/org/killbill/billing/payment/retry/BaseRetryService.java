@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -105,13 +105,12 @@ public abstract class BaseRetryService implements RetryService {
             this.internalCallContextFactory = internalCallContextFactory;
         }
 
-        public boolean scheduleRetry(final ObjectType objectType, final UUID objectId, final UUID attemptId, final List<String> paymentControlPluginNames, final DateTime timeOfRetry) {
-            return scheduleRetryInternal(objectType, objectId, attemptId, paymentControlPluginNames, timeOfRetry, null);
+        public boolean scheduleRetry(final ObjectType objectType, final UUID objectId, final UUID attemptId, final Long tenantRecordId, final List<String> paymentControlPluginNames, final DateTime timeOfRetry) {
+            return scheduleRetryInternal(objectType, objectId, attemptId, tenantRecordId, paymentControlPluginNames, timeOfRetry, null);
         }
 
-
-        private boolean scheduleRetryInternal(final ObjectType objectType, final UUID objectId, final UUID attemptId, final List<String> paymentControlPluginNames, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
-            final InternalCallContext context = createCallContextFromPaymentId(objectType, objectId);
+        private boolean scheduleRetryInternal(final ObjectType objectType, final UUID objectId, final UUID attemptId, final Long tenantRecordId, final List<String> paymentControlPluginNames, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
+            final InternalCallContext context = createCallContextFromPaymentId(objectType, objectId, tenantRecordId);
 
             try {
                 final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
@@ -123,18 +122,18 @@ public abstract class BaseRetryService implements RetryService {
                         retryQueue.recordFutureNotificationFromTransaction(transactionalDao.getSqlDao(), timeOfRetry, key, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
                     }
                 }
-            } catch (NoSuchNotificationQueue e) {
+            } catch (final NoSuchNotificationQueue e) {
                 log.error(String.format("Failed to retrieve notification queue %s:%s", DefaultPaymentService.SERVICE_NAME, getQueueName()));
                 return false;
-            } catch (IOException e) {
-                log.error(String.format("Failed to serialize notificationQueue event for object %s, objectId %s", objectId));
+            } catch (final IOException e) {
+                log.error(String.format("Failed to serialize notificationQueue event for objectId %s", objectId));
                 return false;
             }
             return true;
         }
 
-        protected InternalCallContext createCallContextFromPaymentId(final ObjectType objectType, final UUID objectId) {
-            return internalCallContextFactory.createInternalCallContext(objectId, objectType, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
+        protected InternalCallContext createCallContextFromPaymentId(final ObjectType objectType, final UUID objectId, final Long tenantRecordId) {
+            return internalCallContextFactory.createInternalCallContext(objectId, objectType, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null, tenantRecordId);
         }
 
         public abstract String getQueueName();

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,7 +21,6 @@ package org.killbill.billing.subscription.engine.core;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Product;
@@ -37,7 +36,6 @@ import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
-import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
@@ -45,13 +43,10 @@ import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
@@ -81,17 +76,13 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
     private final InternalCallContextFactory internalCallContextFactory;
     private NotificationQueue subscriptionEventQueue;
     private final SubscriptionBaseApiService apiService;
-    private final NonEntityDao nonEntityDao;
-    private final CacheControllerDispatcher controllerDispatcher;
 
     @Inject
     public DefaultSubscriptionBaseService(final Clock clock, final SubscriptionDao dao, final PlanAligner planAligner,
                                           final PersistentBus eventBus,
                                           final NotificationQueueService notificationQueueService,
                                           final InternalCallContextFactory internalCallContextFactory,
-                                          final SubscriptionBaseApiService apiService,
-                                          final NonEntityDao nonEntityDao,
-                                          final CacheControllerDispatcher controllerDispatcher) {
+                                          final SubscriptionBaseApiService apiService) {
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
@@ -99,8 +90,6 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
         this.notificationQueueService = notificationQueueService;
         this.internalCallContextFactory = internalCallContextFactory;
         this.apiService = apiService;
-        this.nonEntityDao = nonEntityDao;
-        this.controllerDispatcher = controllerDispatcher;
     }
 
     @Override
@@ -135,7 +124,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
             subscriptionEventQueue = notificationQueueService.createNotificationQueue(SUBSCRIPTION_SERVICE_NAME,
                                                                                       NOTIFICATION_QUEUE_NAME,
                                                                                       queueHandler);
-        } catch (NotificationQueueAlreadyExists e) {
+        } catch (final NotificationQueueAlreadyExists e) {
             throw new RuntimeException(e);
         }
     }
@@ -159,7 +148,6 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
             return;
         }
 
-
         try {
             final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(event.getSubscriptionId(), context);
             if (subscription == null) {
@@ -178,8 +166,8 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
             if (event.getType() == EventType.PHASE) {
                 onPhaseEvent(subscription, context);
             } else if (event.getType() == EventType.API_USER && subscription.getCategory() == ProductCategory.BASE) {
-                final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, controllerDispatcher.getCacheController(CacheType.OBJECT_ID));
-                theRealSeqId = onBasePlanEvent(subscription, (ApiEvent) event, context.toCallContext(tenantId));
+                final CallContext callContext = internalCallContextFactory.createCallContext(context);
+                theRealSeqId = onBasePlanEvent(subscription, (ApiEvent) event, callContext);
             }
 
             final SubscriptionBaseTransitionData transition = (subscription.getTransitionFromEvent(event, theRealSeqId));
@@ -187,9 +175,9 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                                                                                                       context.getUserToken(),
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());
             eventBus.post(busEvent);
-        } catch (EventBusException e) {
+        } catch (final EventBusException e) {
             log.warn("Failed to post subscription event " + event, e);
-        } catch (CatalogApiException e) {
+        } catch (final CatalogApiException e) {
             log.warn("Failed to post subscription event " + event, e);
         }
     }
@@ -205,7 +193,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
             if (nextPhaseEvent != null) {
                 dao.createNextPhaseEvent(subscription, nextPhaseEvent, context);
             }
-        } catch (SubscriptionBaseError e) {
+        } catch (final SubscriptionBaseError e) {
             log.error(String.format("Failed to insert next phase for subscription %s", subscription.getId()), e);
         }
     }

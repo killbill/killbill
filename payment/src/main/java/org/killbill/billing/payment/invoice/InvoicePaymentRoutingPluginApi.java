@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -40,12 +41,12 @@ import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.invoice.dao.InvoicePaymentRoutingDao;
-import org.killbill.billing.payment.invoice.dao.PluginAutoPayOffModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.glue.PaymentModule;
+import org.killbill.billing.payment.invoice.dao.InvoicePaymentRoutingDao;
+import org.killbill.billing.payment.invoice.dao.PluginAutoPayOffModelDao;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentRoutingResult;
@@ -76,10 +77,10 @@ import com.google.common.collect.Iterables;
 
 public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPluginApi {
 
-    public final static String CREATED_BY = "InvoicePaymentRoutingPluginApi";
+    public static final String CREATED_BY = "InvoicePaymentRoutingPluginApi";
 
     /* Don't change value String for properties as they are referenced from jaxrs without the constants which are not accessible */
-    public final static String PLUGIN_NAME = "__INVOICE_PAYMENT_CONTROL_PLUGIN__";
+    public static final String PLUGIN_NAME = "__INVOICE_PAYMENT_CONTROL_PLUGIN__";
     public static final String PROP_IPCD_INVOICE_ID = "IPCD_INVOICE_ID";
     public static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REFUND_IDS_AMOUNTS";
     public static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
@@ -111,7 +112,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
     }
 
     @Override
-    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentRoutingContext, Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentRoutingContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
 
         final TransactionType transactionType = paymentRoutingContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
@@ -132,7 +133,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
     }
 
     @Override
-    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentRoutingContext, Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentRoutingContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
 
         final TransactionType transactionType = paymentRoutingContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
@@ -183,15 +184,15 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
                 default:
                     throw new IllegalStateException("Unexpected transactionType " + transactionType);
             }
-        } catch (InvoiceApiException e) {
+        } catch (final InvoiceApiException e) {
             logger.error("InvoicePaymentRoutingPluginApi onSuccessCall failed for attemptId = " + paymentRoutingContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
         }
         return null;
     }
 
     @Override
-    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentRoutingContext, Iterable<PluginProperty> properties) throws
-                                                                                                                                               PaymentRoutingApiException {
+    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentRoutingContext, final Iterable<PluginProperty> properties) throws
+                                                                                                                                                     PaymentRoutingApiException {
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentRoutingContext.getAccountId(), paymentRoutingContext);
         final TransactionType transactionType = paymentRoutingContext.getTransactionType();
@@ -210,9 +211,9 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
 
     public void process_AUTO_PAY_OFF_removal(final Account account, final InternalCallContext internalCallContext) {
         final List<PluginAutoPayOffModelDao> entries = controlDao.getAutoPayOffEntry(account.getId());
-        for (PluginAutoPayOffModelDao cur : entries) {
+        for (final PluginAutoPayOffModelDao cur : entries) {
             // TODO In theory we should pass not only PLUGIN_NAME, but also all the plugin list associated which the original call
-            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, account.getId(), cur.getAttemptId(), ImmutableList.<String>of(PLUGIN_NAME), clock.getUTCNow());
+            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, account.getId(), cur.getAttemptId(), internalCallContext.getTenantRecordId(), ImmutableList.<String>of(PLUGIN_NAME), clock.getUTCNow());
         }
         controlDao.removeAutoPayOffEntry(account.getId());
     }
@@ -245,9 +246,9 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
             } else {
                 return new DefaultPriorPaymentRoutingResult(isAborted, requestedAmount, null, null);
             }
-        } catch (InvoiceApiException e) {
+        } catch (final InvoiceApiException e) {
             throw new PaymentRoutingApiException(e);
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             throw new PaymentRoutingApiException(e);
         }
     }
@@ -323,7 +324,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
                 amountFromItems = amountFromItems.add(Objects.firstNonNull(specifiedItemAmount, itemAmount));
             }
             return amountFromItems;
-        } catch (InvoiceApiException e) {
+        } catch (final InvoiceApiException e) {
             throw new PaymentRoutingApiException(e);
         }
     }
@@ -369,12 +370,12 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
         final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, TransactionStatus.PAYMENT_FAILURE);
         final int retryCount = (attemptsInState - 1) >= 0 ? (attemptsInState - 1) : 0;
         if (retryCount < retryDays.size()) {
-            int retryInDays;
+            final int retryInDays;
             final DateTime nextRetryDate = clock.getUTCNow();
             try {
                 retryInDays = retryDays.get(retryCount);
                 result = nextRetryDate.plusDays(retryInDays);
-            } catch (NumberFormatException ex) {
+            } catch (final NumberFormatException ex) {
                 logger.error("Could not get retry day for retry count {}", retryCount);
             }
         }
