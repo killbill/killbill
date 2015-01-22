@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
@@ -47,6 +48,24 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestAccount extends TestJaxrsBase {
+
+    @Test(groups = "slow", description = "Verify external key is unique")
+    public void testUniqueExternalKey() throws Exception {
+        // Verify the external key is not mandatory
+        final Account inputWithNoExternalKey = getAccount(UUID.randomUUID().toString(), null, UUID.randomUUID().toString());
+        Assert.assertNull(inputWithNoExternalKey.getExternalKey());
+
+        final Account account = killBillClient.createAccount(inputWithNoExternalKey, createdBy, reason, comment);
+        Assert.assertNotNull(account.getExternalKey());
+
+        final Account inputWithSameExternalKey = getAccount(UUID.randomUUID().toString(), account.getExternalKey(), UUID.randomUUID().toString());
+        try {
+            killBillClient.createAccount(inputWithSameExternalKey, createdBy, reason, comment);
+            Assert.fail();
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getBillingException().getCode(), (Integer) ErrorCode.ACCOUNT_ALREADY_EXISTS.getCode());
+        }
+    }
 
     @Test(groups = "slow", description = "Can create, retrieve, search and update accounts")
     public void testAccountOk() throws Exception {

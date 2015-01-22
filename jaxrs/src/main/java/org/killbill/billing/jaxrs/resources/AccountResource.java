@@ -304,7 +304,6 @@ public class AccountResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
         verifyNonNullOrEmpty(json, "AccountJson body should be specified");
         verifyNonNullOrEmpty(json.getName(), "AccountJson name needs to be set");
-        verifyNonNullOrEmpty(json.getExternalKey(), "AccountJson externalKey needs to be set");
         verifyNonNullOrEmpty(json.getEmail(), "AccountJson email needs to be set");
 
         final AccountData data = json.toAccountData();

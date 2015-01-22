@@ -29,6 +29,7 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.account.api.DefaultAccountEmail;
+import org.killbill.billing.account.api.DefaultMutableAccountData;
 import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -58,6 +59,24 @@ import static org.killbill.billing.account.AccountTestUtils.checkAccountsEqual;
 import static org.killbill.billing.account.AccountTestUtils.createTestAccount;
 
 public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
+
+    @Test(groups = "slow", description = "Test Account: verify minimal set of required fields")
+    public void testMinimalFields() throws Exception {
+        final String email = UUID.randomUUID().toString();
+        final String name = UUID.randomUUID().toString();
+        final AccountData accountData = new DefaultMutableAccountData(null, email, name, 0, null,
+                                                                      0, null, null, null, null,
+                                                                      null, null, null, null, null,
+                                                                      null, null, false, true);
+        final AccountModelDao account = new AccountModelDao(UUID.randomUUID(), accountData);
+        accountDao.create(account, internalCallContext);
+
+        final AccountModelDao retrievedAccount = accountDao.getById(account.getId(), internalCallContext);
+        checkAccountsEqual(retrievedAccount, account);
+
+        // Verify a default external key was set
+        Assert.assertEquals(retrievedAccount.getExternalKey(), retrievedAccount.getId().toString());
+    }
 
     @Test(groups = "slow", description = "Test Account: basic DAO calls")
     public void testBasic() throws AccountApiException {
@@ -133,7 +152,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     // Correct fix is to add a check at the API level instead, but today we are not testing very much the input
     // so seems weird to just add one check for that specific case.
     //
-    @Test(groups = "slow", description = "Test Account DAO: very long numbers", enabled=false)
+    @Test(groups = "slow", description = "Test Account DAO: very long numbers", enabled = false)
     public void testOverlyLongPhoneNumber() throws AccountApiException {
         final AccountModelDao account = createTestAccount("12345678901234567890123456");
         try {

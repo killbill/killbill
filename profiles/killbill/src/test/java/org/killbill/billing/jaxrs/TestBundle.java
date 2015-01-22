@@ -36,6 +36,14 @@ import static org.testng.Assert.assertNotEquals;
 
 public class TestBundle extends TestJaxrsBase {
 
+    @Test(groups = "slow", description = "Can create bundles without an external key")
+    public void testCreateBundleWithNoExternalKey() throws Exception {
+        final Account accountJson = createAccount();
+
+        final Subscription subscription = createEntitlement(accountJson.getAccountId(), null, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        Assert.assertNotNull(subscription.getExternalKey());
+    }
+
     @Test(groups = "slow", description = "Can retrieve bundles by external key")
     public void testBundleOk() throws Exception {
         final Account accountJson = createAccount();

@@ -20,10 +20,6 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -35,12 +31,20 @@ import org.killbill.billing.subscription.DefaultSubscriptionTestInitializer;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
+
+    @Test(groups = "slow")
+    public void testCreateBundleWithNoExternalKey() throws Exception {
+        final SubscriptionBaseBundle newBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), null, internalCallContext);
+        assertNotNull(newBundle.getExternalKey());
+    }
 
     @Test(groups = "slow")
     public void testCreateBundlesWithSameExternalKeys() throws SubscriptionBaseApiException {

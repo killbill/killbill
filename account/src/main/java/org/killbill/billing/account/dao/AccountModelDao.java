@@ -22,14 +22,14 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.util.dao.TableName;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
+
+import com.google.common.base.Objects;
 
 public class AccountModelDao extends EntityModelDaoBase implements EntityModelDao<Account> {
 
@@ -62,7 +62,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
                            final String city, final String stateOrProvince, final String country, final String postalCode,
                            final String phone, final Boolean migrated, final Boolean notifiedForInvoices) {
         super(id, createdDate, updatedDate);
-        this.externalKey = externalKey;
+        this.externalKey = Objects.firstNonNull(externalKey, id.toString());
         this.email = email;
         this.name = name;
         this.firstNameLength = firstNameLength;

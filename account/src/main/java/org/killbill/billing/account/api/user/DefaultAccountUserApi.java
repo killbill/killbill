@@ -61,7 +61,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
     @Override
     public Account createAccount(final AccountData data, final CallContext context) throws AccountApiException {
         // Not transactional, but there is a db constraint on that column
-        if (getIdFromKey(data.getExternalKey(), context) != null) {
+        if (data.getExternalKey() != null && getIdFromKey(data.getExternalKey(), context) != null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, data.getExternalKey());
         }
 
