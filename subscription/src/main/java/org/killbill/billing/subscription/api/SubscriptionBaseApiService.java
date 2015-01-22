@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -78,21 +81,21 @@ public interface SubscriptionBaseApiService {
     public PlanChangeResult getPlanChangeResult(final DefaultSubscriptionBase subscription, final String productName,
                                                 final BillingPeriod term, final String priceList, final DateTime effectiveDate, TenantContext context) throws SubscriptionBaseApiException;
 
-        //
+    //
     // Lower level APIs for dryRun functionality
     //
     public List<SubscriptionBaseEvent> getEventsOnCreation(UUID bundleId, UUID subscriptionId, DateTime alignStartDate, DateTime bundleStartDate, long activeVersion,
                                                            Plan plan, PhaseType initialPhase,
                                                            String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
-                                                           boolean reCreate, TenantContext context)
+                                                           boolean reCreate, InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
 
     public List<SubscriptionBaseEvent> getEventsOnChangePlan(DefaultSubscriptionBase subscription, Plan newPlan,
                                                              String newPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
-                                                             boolean addCancellationAddOnForEventsIfRequired, TenantContext context)
+                                                             boolean addCancellationAddOnForEventsIfRequired, InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
 
     public List<SubscriptionBaseEvent> getEventsOnCancelPlan(final DefaultSubscriptionBase subscription,
                                                              final DateTime requestedDate, final DateTime effectiveDate, final DateTime processedDate,
-                                                             final boolean addCancellationAddOnForEventsIfRequired, final TenantContext context) throws CatalogApiException;
+                                                             final boolean addCancellationAddOnForEventsIfRequired, final InternalTenantContext context) throws CatalogApiException;
 }

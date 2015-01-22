@@ -409,7 +409,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                         final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, startEffectiveDate);
                         final UUID subscriptionId = UUID.randomUUID();
                         dryRunEvents = apiService.getEventsOnCreation(bundleId, subscriptionId, startEffectiveDate, bundleStartDate, 1L, plan, inputSpec.getPhaseType(), realPriceList,
-                                                                      utcNow, startEffectiveDate, utcNow, false, tenantContext);
+                                                                      utcNow, startEffectiveDate, utcNow, false, context);
                         final SubscriptionBuilder builder = new SubscriptionBuilder()
                                 .setId(subscriptionId)
                                 .setBundleId(bundleId)
@@ -435,7 +435,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                             }
                             changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(policy);
                         }
-                        dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, realPriceList, utcNow, changeEffectiveDate, utcNow, true, tenantContext);
+                        dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, realPriceList, utcNow, changeEffectiveDate, utcNow, true, context);
                         break;
 
                     case STOP_BILLING:
@@ -455,7 +455,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                             }
                             cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy);
                         }
-                        dryRunEvents = apiService.getEventsOnCancelPlan(subscriptionForCancellation, utcNow, cancelEffectiveDate, utcNow, true, tenantContext);
+                        dryRunEvents = apiService.getEventsOnCancelPlan(subscriptionForCancellation, utcNow, cancelEffectiveDate, utcNow, true, context);
                         break;
 
                     default:
