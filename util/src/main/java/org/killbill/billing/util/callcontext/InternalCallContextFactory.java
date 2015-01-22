@@ -214,7 +214,7 @@ public class InternalCallContextFactory {
                                                           final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken,
                                                           @Nullable final String reasonCode, @Nullable final String comment, final DateTime createdDate,
                                                           final DateTime updatedDate, final TenantContext tenantContext) {
-        final Long tenantRecordId = getTenantRecordIdSafe(objectId, objectType, tenantContext);
+        final Long tenantRecordId = getTenantRecordIdSafe(tenantContext);
         final Long accountRecordId = getAccountRecordIdSafe(objectId, objectType, tenantContext);
         return createInternalCallContext(tenantRecordId, accountRecordId, userName, callOrigin, userType, userToken,
                                          reasonCode, comment, createdDate, updatedDate);
@@ -262,7 +262,7 @@ public class InternalCallContextFactory {
         if (objectBelongsToTheRightTenant(objectId, objectType, context)) {
             return getAccountRecordIdUnsafe(objectId, objectType);
         } else {
-            return null;
+            throw new IllegalStateException(String.format("Object id=%s type=%s doesn't belong to tenant id=%s", objectId, objectType, context.getTenantId()));
         }
     }
 
@@ -270,29 +270,18 @@ public class InternalCallContextFactory {
         if (objectBelongsToTheRightTenant(objectId, objectType, tenantRecordId)) {
             return getAccountRecordIdUnsafe(objectId, objectType);
         } else {
-            return null;
-        }
-    }
-
-    private Long getTenantRecordIdSafe(final UUID objectId, final ObjectType objectType, final TenantContext context) {
-        if (objectBelongsToTheRightTenant(objectId, objectType, context)) {
-            return getTenantRecordIdUnsafe(objectId, objectType);
-        } else {
-            return null;
+            throw new IllegalStateException(String.format("Object id=%s type=%s doesn't belong to tenant recordId=%s", objectId, objectType, tenantRecordId));
         }
     }
 
     private Long getTenantRecordIdSafe(final TenantContext context) {
-        return getTenantRecordIdSafe(context.getTenantId());
-    }
-
-    private Long getTenantRecordIdSafe(final UUID tenantId) {
         // Default to single default tenant (e.g. single tenant mode)
         // TODO Extract this convention (e.g. BusinessAnalyticsBase needs to know about it)
-        if (tenantId == null) {
+        if (context.getTenantId() == null) {
             return INTERNAL_TENANT_RECORD_ID;
         } else {
-            return getTenantRecordIdUnsafe(tenantId, ObjectType.TENANT);
+            // This is always safe (the tenant context was created from the api key and secret)
+            return getTenantRecordIdUnsafe(context.getTenantId(), ObjectType.TENANT);
         }
     }
 

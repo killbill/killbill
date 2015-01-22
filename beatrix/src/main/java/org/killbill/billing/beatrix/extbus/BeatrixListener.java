@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.extbus;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -242,11 +243,14 @@ public class BeatrixListener {
                null;
     }
 
-    private UUID getAccountId(final BusInternalEventType eventType, final UUID objectId, final ObjectType objectType, final TenantContext context) {
+    private UUID getAccountId(final BusInternalEventType eventType, @Nullable final UUID objectId, final ObjectType objectType, final TenantContext context) {
         // accountRecord_id is not set for ACCOUNT_CREATE event as we are in the transaction and value is known yet
         if (eventType == BusInternalEventType.ACCOUNT_CREATE) {
             return objectId;
+        } else if (objectId == null) {
+            return null;
+        } else {
+            return internalCallContextFactory.getAccountId(objectId, objectType, context);
         }
-        return internalCallContextFactory.getAccountId(objectId, objectType, context);
     }
 }
