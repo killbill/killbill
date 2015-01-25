@@ -79,7 +79,9 @@ public class EhCacheCatalogCache implements CatalogCache {
 
     @Override
     public void clearCatalog(final InternalTenantContext tenantContext) {
-        cacheController.remove(tenantContext.getTenantRecordId());
+        if (tenantContext.getTenantRecordId() != InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+            cacheController.remove(tenantContext.getTenantRecordId());
+        }
     }
 
     //
@@ -95,7 +97,7 @@ public class EhCacheCatalogCache implements CatalogCache {
             }
         };
         final Object[] args = new Object[1];
-        args[0]= loaderCallback;
+        args[0] = loaderCallback;
         final ObjectType irrelevant = null;
         final InternalTenantContext notUsed = null;
         return new CacheLoaderArgument(irrelevant, args, notUsed);
