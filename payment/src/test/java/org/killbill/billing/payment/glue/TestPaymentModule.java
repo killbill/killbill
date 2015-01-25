@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockInvoiceModule;
 import org.killbill.billing.mock.glue.MockSubscriptionModule;
 import org.killbill.billing.mock.glue.MockTenantModule;
@@ -34,6 +33,7 @@ import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.glue.CacheModule;
+import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
@@ -68,11 +68,11 @@ public class TestPaymentModule extends PaymentModule {
     protected void configure() {
         super.configure();
         install(new MockInvoiceModule(configSource));
-        install(new MockAccountModule(configSource));
         install(new MockSubscriptionModule(configSource));
         install(new MemoryGlobalLockerModule(configSource));
         install(new MockTenantModule(configSource));
         install(new CacheModule(configSource));
+        install(new CallContextModule(configSource));
         installExternalApis();
         bind(TestPaymentHelper.class).asEagerSingleton();
     }

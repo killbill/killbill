@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,7 +18,6 @@
 
 package org.killbill.billing.subscription.glue;
 
-import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.mock.glue.MockTenantModule;
@@ -28,7 +27,6 @@ import org.killbill.billing.subscription.SubscriptionTestInitializer;
 import org.killbill.billing.subscription.api.user.TestSubscriptionHelper;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
-import org.mockito.Mockito;
 
 public class TestDefaultSubscriptionModule extends DefaultSubscriptionModule {
 
@@ -43,8 +41,6 @@ public class TestDefaultSubscriptionModule extends DefaultSubscriptionModule {
         install(new CallContextModule(configSource));
         install(new CacheModule(configSource));
         install(new MockTenantModule(configSource));
-
-        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
 
         bind(TestSubscriptionHelper.class).asEagerSingleton();
         bind(TestApiListener.class).asEagerSingleton();

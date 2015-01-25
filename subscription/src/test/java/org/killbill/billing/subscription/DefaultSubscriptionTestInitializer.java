@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -60,10 +60,10 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
     }
 
     public AccountData initAccountData() {
-        final AccountData accountData = new MockAccountBuilder().name(UUID.randomUUID().toString())
+        final AccountData accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
                                                                 .firstNameLength(6)
-                                                                .email(UUID.randomUUID().toString())
-                                                                .phone(UUID.randomUUID().toString())
+                                                                .email(UUID.randomUUID().toString().substring(1, 8))
+                                                                .phone(UUID.randomUUID().toString().substring(1, 8))
                                                                 .migrated(false)
                                                                 .isNotifiedForInvoices(false)
                                                                 .externalKey(UUID.randomUUID().toString())
@@ -77,17 +77,16 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         return accountData;
     }
 
-    public SubscriptionBaseBundle initBundle(final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception {
-        final UUID accountId = UUID.randomUUID();
+    public SubscriptionBaseBundle initBundle(final UUID accountId, final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception {
         final SubscriptionBaseBundle bundle = subscriptionApi.createBundleForAccount(accountId, DEFAULT_BUNDLE_KEY, callContext);
         assertNotNull(bundle);
         return bundle;
     }
 
-    public void startTestFamework(final TestApiListener testListener,
-                                  final ClockMock clock,
-                                  final BusService busService,
-                                  final SubscriptionBaseService subscriptionBaseService) throws Exception {
+    public void startTestFramework(final TestApiListener testListener,
+                                   final ClockMock clock,
+                                   final BusService busService,
+                                   final SubscriptionBaseService subscriptionBaseService) throws Exception {
         log.debug("STARTING TEST FRAMEWORK");
 
         resetTestListener(testListener);

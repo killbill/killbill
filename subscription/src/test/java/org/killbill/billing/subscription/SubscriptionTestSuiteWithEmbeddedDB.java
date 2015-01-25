@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,7 +21,9 @@ package org.killbill.billing.subscription;
 import javax.inject.Inject;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
+import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogService;
@@ -54,6 +56,8 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
 
     public static final Long DELAY = 10000L;
 
+    @Inject
+    protected AccountUserApi accountUserApi;
     @Inject
     protected SubscriptionBaseService subscriptionBaseService;
     @Inject
@@ -103,11 +107,12 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        subscriptionTestInitializer.startTestFamework(testListener, clock, busService, subscriptionBaseService);
+        subscriptionTestInitializer.startTestFramework(testListener, clock, busService, subscriptionBaseService);
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService, internalCallContext);
         this.accountData = subscriptionTestInitializer.initAccountData();
-        this.bundle = subscriptionTestInitializer.initBundle(subscriptionInternalApi, internalCallContext);
+        final Account account = accountUserApi.createAccount(accountData, callContext);
+        this.bundle = subscriptionTestInitializer.initBundle(account.getId(), subscriptionInternalApi, internalCallContext);
 
         // Make sure we start with a clean state
         assertListenerStatus();

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Bundles;
@@ -69,7 +70,12 @@ public class TestBundle extends TestJaxrsBase {
     public void testBundleNonExistent() throws Exception {
         final Account accountJson = createAccount();
 
-        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID()));
+        try {
+            killBillClient.getBundle(UUID.randomUUID());
+            Assert.fail();
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getBillingException().getClassName(), "java.lang.IllegalStateException");
+        }
         Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), "98374982743892").isEmpty());
         Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId()).isEmpty());
     }

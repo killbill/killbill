@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,12 +19,14 @@
 package org.killbill.billing.subscription.glue;
 
 import org.killbill.billing.GuicyKillbillTestNoDBModule;
+import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
 import org.killbill.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
 import org.killbill.billing.subscription.engine.dao.RepairSubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
+import org.mockito.Mockito;
 
 import com.google.inject.name.Names;
 
@@ -45,6 +47,8 @@ public class TestDefaultSubscriptionModuleNoDB extends TestDefaultSubscriptionMo
     @Override
     protected void configure() {
         install(new GuicyKillbillTestNoDBModule(configSource));
+
+        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
 
         super.configure();
 

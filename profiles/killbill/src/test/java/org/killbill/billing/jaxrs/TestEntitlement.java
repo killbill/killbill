@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,6 +27,7 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
@@ -132,12 +133,26 @@ public class TestEntitlement extends TestJaxrsBase {
         subscription.setBillingPeriod(BillingPeriod.ANNUAL);
         subscription.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        Assert.assertNull(killBillClient.updateSubscription(subscription, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment));
+        try {
+            killBillClient.updateSubscription(subscription, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+            Assert.fail();
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getBillingException().getClassName(), "java.lang.IllegalStateException");
+        }
 
-        // No-op (404, doesn't throw an exception)
-        killBillClient.cancelSubscription(subscriptionId, createdBy, reason, comment);
+        try {
+            killBillClient.cancelSubscription(subscriptionId, createdBy, reason, comment);
+            Assert.fail();
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getBillingException().getClassName(), "java.lang.IllegalStateException");
+        }
 
-        Assert.assertNull(killBillClient.getSubscription(subscriptionId));
+        try {
+            killBillClient.getSubscription(subscriptionId);
+            Assert.fail();
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getBillingException().getClassName(), "java.lang.IllegalStateException");
+        }
     }
 
     @Test(groups = "slow", description = "Can override billing policy on change")

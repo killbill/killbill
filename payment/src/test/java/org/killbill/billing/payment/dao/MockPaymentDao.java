@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -25,10 +27,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.entity.Pagination;
@@ -42,6 +47,13 @@ public class MockPaymentDao implements PaymentDao {
     private final Map<UUID, PaymentModelDao> payments = new HashMap<UUID, PaymentModelDao>();
     private final Map<UUID, PaymentTransactionModelDao> transactions = new HashMap<UUID, PaymentTransactionModelDao>();
     private final Map<UUID, PaymentAttemptModelDao> attempts = new HashMap<UUID, PaymentAttemptModelDao>();
+
+    private final MockNonEntityDao mockNonEntityDao;
+
+    @Inject
+    public MockPaymentDao(final MockNonEntityDao mockNonEntityDao) {
+        this.mockNonEntityDao = mockNonEntityDao;
+    }
 
     public void reset() {
         synchronized (this) {
@@ -65,8 +77,11 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public PaymentAttemptModelDao insertPaymentAttemptWithProperties(final PaymentAttemptModelDao attempt, final InternalCallContext context) {
+        attempt.setTenantRecordId(context.getTenantRecordId());
+
         synchronized (this) {
             attempts.put(attempt.getId(), attempt);
+            mockNonEntityDao.addTenantRecordIdMapping(attempt.getId(), context);
             return attempt;
         }
     }
@@ -157,17 +172,26 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public PaymentModelDao insertPaymentWithFirstTransaction(final PaymentModelDao payment, final PaymentTransactionModelDao paymentTransaction, final InternalCallContext context) {
+        payment.setTenantRecordId(context.getTenantRecordId());
+        paymentTransaction.setTenantRecordId(context.getTenantRecordId());
+
         synchronized (this) {
             payments.put(payment.getId(), payment);
+            mockNonEntityDao.addTenantRecordIdMapping(payment.getId(), context);
+
             transactions.put(paymentTransaction.getId(), paymentTransaction);
+            mockNonEntityDao.addTenantRecordIdMapping(paymentTransaction.getId(), context);
         }
         return payment;
     }
 
     @Override
     public PaymentTransactionModelDao updatePaymentWithNewTransaction(final UUID paymentId, final PaymentTransactionModelDao paymentTransaction, final InternalCallContext context) {
+        paymentTransaction.setTenantRecordId(context.getTenantRecordId());
+
         synchronized (this) {
             transactions.put(paymentTransaction.getId(), paymentTransaction);
+            mockNonEntityDao.addTenantRecordIdMapping(paymentId, context);
         }
         return paymentTransaction;
     }

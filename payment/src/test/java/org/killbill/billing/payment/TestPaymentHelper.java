@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,9 +23,11 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -47,24 +49,34 @@ import com.google.inject.Inject;
 
 public class TestPaymentHelper {
 
-    protected final AccountInternalApi AccountApi;
+    protected final AccountUserApi accountApi;
+    protected final AccountInternalApi accountInternalApi;
     protected final InvoiceInternalApi invoiceApi;
     protected PaymentApi paymentApi;
     private final PersistentBus eventBus;
     private final Clock clock;
-
+    private final MockNonEntityDao mockNonEntityDao;
+    private final InternalCallContext internalCallContext;
     private final CallContext context;
 
     @Inject
-    public TestPaymentHelper(final AccountInternalApi AccountApi, final InvoiceInternalApi invoiceApi,
-                             final PaymentApi paymentApi, final PersistentBus eventBus,
+    public TestPaymentHelper(final AccountUserApi accountApi,
+                             final AccountInternalApi accountInternalApi,
+                             final InvoiceInternalApi invoiceApi,
+                             final PaymentApi paymentApi,
+                             final PersistentBus eventBus,
                              final Clock clock,
+                             final MockNonEntityDao mockNonEntityDao,
+                             final InternalCallContext internalCallContext,
                              final CallContext context) {
+        this.accountApi = accountApi;
         this.eventBus = eventBus;
-        this.AccountApi = AccountApi;
+        this.accountInternalApi = accountInternalApi;
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.clock = clock;
+        this.mockNonEntityDao = mockNonEntityDao;
+        this.internalCallContext = internalCallContext;
         this.context = context;
     }
 
@@ -107,30 +119,49 @@ public class TestPaymentHelper {
         final String name = "First" + UUID.randomUUID().toString() + " " + "Last" + UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
 
-        final Account account = Mockito.mock(Account.class);
-        Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(account.getExternalKey()).thenReturn(externalKey);
-        Mockito.when(account.getName()).thenReturn(name);
-        Mockito.when(account.getFirstNameLength()).thenReturn(10);
-        Mockito.when(account.getPhone()).thenReturn("123-456-7890");
-        Mockito.when(account.getEmail()).thenReturn(email);
-        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
-        Mockito.when(account.getBillCycleDayLocal()).thenReturn(1);
-        Mockito.when(account.isMigrated()).thenReturn(false);
-        Mockito.when(account.isNotifiedForInvoices()).thenReturn(false);
+        final Account accountData = Mockito.mock(Account.class);
+        Mockito.when(accountData.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(accountData.getExternalKey()).thenReturn(externalKey);
+        Mockito.when(accountData.getName()).thenReturn(name);
+        Mockito.when(accountData.getFirstNameLength()).thenReturn(10);
+        Mockito.when(accountData.getPhone()).thenReturn("123-456-7890");
+        Mockito.when(accountData.getEmail()).thenReturn(email);
+        Mockito.when(accountData.getCurrency()).thenReturn(Currency.USD);
+        Mockito.when(accountData.getBillCycleDayLocal()).thenReturn(1);
+        Mockito.when(accountData.isMigrated()).thenReturn(false);
+        Mockito.when(accountData.isNotifiedForInvoices()).thenReturn(false);
 
-        Mockito.when(AccountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
-        Mockito.when(AccountApi.getAccountByKey(Mockito.anyString(), Mockito.<InternalTenantContext>any())).thenReturn(account);
+        Account account;
+        if (isFastTest()) {
+            account = accountData;
+            Mockito.when(accountInternalApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
+            Mockito.when(accountInternalApi.getAccountByKey(Mockito.anyString(), Mockito.<InternalTenantContext>any())).thenReturn(account);
+            mockNonEntityDao.addTenantRecordIdMapping(account.getId(), internalCallContext);
+        } else {
+            account = accountApi.createAccount(accountData, context);
+        }
 
         if (addPaymentMethod) {
             final PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
-            addTestPaymentMethod(account, pm);
+            account = addTestPaymentMethod(account, pm);
         }
+
         return account;
     }
 
-    public void addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
+    public Account addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
         final UUID paymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(), MockPaymentProviderPlugin.PLUGIN_NAME, true, paymentMethodInfo, ImmutableList.<PluginProperty>of(), context);
-        Mockito.when(account.getPaymentMethodId()).thenReturn(paymentMethodId);
+        if (isFastTest()) {
+            Mockito.when(account.getPaymentMethodId()).thenReturn(paymentMethodId);
+            return account;
+        } else {
+            // To reflect the payment method id change
+            return accountApi.getAccountById(account.getId(), context);
+        }
+    }
+
+    // Unfortunately, this helper is shared across fast and slow tests
+    private boolean isFastTest() {
+        return Mockito.mockingDetails(accountInternalApi).isMock();
     }
 }

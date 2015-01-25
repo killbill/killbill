@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,6 +22,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -36,6 +40,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -47,10 +52,21 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     protected static final Logger log = LoggerFactory.getLogger(TestTransfer.class);
 
+    protected UUID newAccountId;
+    protected UUID finalNewAccountId;
+
+    @BeforeClass(groups = "slow")
+    public void setUp() throws Exception {
+        final AccountData accountData = subscriptionTestInitializer.initAccountData();
+        final Account account = accountUserApi.createAccount(accountData, callContext);
+        newAccountId = account.getId();
+        final AccountData accountData2 = subscriptionTestInitializer.initAccountData();
+        final Account account2 = accountUserApi.createAccount(accountData2, callContext);
+        finalNewAccountId = account2.getId();
+    }
+
     @Test(groups = "slow")
     public void testTransferMigratedSubscriptionWithCTDInFuture() throws Exception {
-        final UUID newAccountId = UUID.randomUUID();
-
         final DateTime startDate = clock.getUTCNow().minusMonths(2);
         final DateTime beforeMigration = clock.getUTCNow();
         final AccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlan(startDate);
@@ -101,8 +117,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testTransferBPInTrialWithNoCTD() throws Exception {
-        final UUID newAccountId = UUID.randomUUID();
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -152,8 +166,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testTransferBPInTrialWithCTD() throws Exception {
-        final UUID newAccountId = UUID.randomUUID();
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -202,8 +214,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testTransferBPNoTrialWithNoCTD() throws Exception {
-        final UUID newAccountId = UUID.randomUUID();
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -251,8 +261,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testTransferBPNoTrialWithCTD() throws Exception {
-        final UUID newAccountId = UUID.randomUUID();
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -331,8 +339,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testTransferWithAO() throws Exception {
-        final UUID newAccountId = UUID.randomUUID();
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -414,7 +420,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // ISSUE ANOTHER TRANSFER TO CHECK THAT WE CAN TRANSFER AGAIN-- NOTE WILL NOT WORK ON PREVIOUS ACCOUNT (LIMITATION)
-        final UUID finalNewAccountId = UUID.randomUUID();
         final DateTime newTransferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.CANCEL);
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
@@ -426,8 +431,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testTransferWithAOCancelled() throws Exception {
-        final UUID newAccountId = UUID.randomUUID();
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -476,8 +479,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testTransferWithUncancel() throws Exception {
-        final UUID newAccountId = UUID.randomUUID();
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;

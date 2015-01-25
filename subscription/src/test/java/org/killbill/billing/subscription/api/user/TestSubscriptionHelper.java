@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -28,11 +30,10 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -43,8 +44,8 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
-import org.killbill.clock.Clock;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
+import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
@@ -62,6 +63,11 @@ import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
+import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -72,20 +78,20 @@ public class TestSubscriptionHelper {
 
     private final Logger log = LoggerFactory.getLogger(TestSubscriptionHelper.class);
 
+    private final AccountUserApi accountApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
-
     private final Clock clock;
-
-    private final InternalCallContext callContext;
-
+    private final InternalCallContext internalCallContext;
+    private final CallContext callContext;
     private final TestApiListener testListener;
-
     private final SubscriptionDao dao;
 
     @Inject
-    public TestSubscriptionHelper(final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final SubscriptionDao dao) {
+    public TestSubscriptionHelper(final AccountUserApi accountApi, final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext internallCallContext, final CallContext callContext, final TestApiListener testListener, final SubscriptionDao dao) {
+        this.accountApi = accountApi;
         this.subscriptionApi = subscriptionApi;
         this.clock = clock;
+        this.internalCallContext = internallCallContext;
         this.callContext = callContext;
         this.testListener = testListener;
         this.dao = dao;
@@ -106,7 +112,7 @@ public class TestSubscriptionHelper {
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionApi.createSubscription(bundleId,
                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
-                                                                                                                  requestedDate == null ? clock.getUTCNow() : requestedDate, callContext);
+                                                                                                                  requestedDate == null ? clock.getUTCNow() : requestedDate, internalCallContext);
         assertNotNull(subscription);
 
         testListener.assertListenerStatus();
@@ -115,7 +121,7 @@ public class TestSubscriptionHelper {
     }
 
     public void checkNextPhaseChange(final DefaultSubscriptionBase subscription, final int expPendingEvents, final DateTime expPhaseChange) {
-        final List<SubscriptionBaseEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), callContext);
+        final List<SubscriptionBaseEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
         assertNotNull(events);
         printEvents(events);
         assertEquals(events.size(), expPendingEvents);
@@ -245,8 +251,17 @@ public class TestSubscriptionHelper {
      */
 
     public AccountMigration createAccountForMigrationTest(final List<List<SubscriptionMigrationCaseWithCTD>> cases) {
+        final Account account;
+        try {
+            final Account accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
+                                                                .email(UUID.randomUUID().toString().substring(1, 8))
+                                                                .build();
+            account = accountApi.createAccount(accountData, callContext);
+        } catch (final AccountApiException e) {
+            throw new AssertionError(e.getLocalizedMessage());
+        }
+
         return new AccountMigration() {
-            private final UUID accountId = UUID.randomUUID();
 
             @Override
             public BundleMigration[] getBundles() {
@@ -295,7 +310,7 @@ public class TestSubscriptionHelper {
 
             @Override
             public UUID getAccountKey() {
-                return accountId;
+                return account.getId();
             }
         };
     }

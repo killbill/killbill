@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,8 @@
 
 package org.killbill.billing.subscription;
 
+import java.util.UUID;
+
 import javax.inject.Inject;
 
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
@@ -25,6 +27,7 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -94,10 +97,12 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected CacheControllerDispatcher cacheControllerDispatcher;
 
+    @Inject
+    protected MockNonEntityDao mockNonEntityDao;
+
     protected Catalog catalog;
     protected AccountData accountData;
     protected SubscriptionBaseBundle bundle;
-
 
     @Override
     protected KillbillConfigSource getConfigSource() {
@@ -119,11 +124,13 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         // CLEANUP ALL DB TABLES OR IN MEMORY STRUCTURES
         ((MockSubscriptionDaoMemory) dao).reset();
 
-        subscriptionTestInitializer.startTestFamework(testListener, clock, busService, subscriptionBaseService);
+        subscriptionTestInitializer.startTestFramework(testListener, clock, busService, subscriptionBaseService);
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService, internalCallContext);
         this.accountData = subscriptionTestInitializer.initAccountData();
-        this.bundle = subscriptionTestInitializer.initBundle(subscriptionInternalApi, internalCallContext);
+        final UUID accountId = UUID.randomUUID();
+        mockNonEntityDao.addTenantRecordIdMapping(accountId, internalCallContext);
+        this.bundle = subscriptionTestInitializer.initBundle(accountId, subscriptionInternalApi, internalCallContext);
     }
 
     @AfterMethod(groups = "fast")
