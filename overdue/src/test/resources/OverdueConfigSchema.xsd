@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0">
-<xs:element name="overdueConfig" type="overdueConfig"/>
-<xs:complexType name="overdueConfig">
+<xs:element name="overdueConfig" type="defaultOverdueConfig"/>
+<xs:complexType name="defaultOverdueConfig">
 <xs:complexContent>
 <xs:extension base="validatingConfig">
 <xs:sequence>
-<xs:element name="bundleOverdueStates" type="overdueStatesBundle"/>
+<xs:element name="accountOverdueStates" type="defaultOverdueStatesAccount"/>
 </xs:sequence>
 </xs:extension>
 </xs:complexContent>
@@ -13,10 +13,11 @@
 <xs:complexType abstract="true" name="validatingConfig">
 <xs:sequence/>
 </xs:complexType>
-<xs:complexType name="overdueStatesBundle">
+<xs:complexType name="defaultOverdueStatesAccount">
 <xs:complexContent>
 <xs:extension base="defaultOverdueStateSet">
 <xs:sequence>
+<xs:element minOccurs="0" name="initialReevaluationInterval" type="defaultDuration"/>
 <xs:element maxOccurs="unbounded" name="state" type="defaultOverdueState"/>
 </xs:sequence>
 </xs:extension>
@@ -29,23 +30,34 @@
 </xs:extension>
 </xs:complexContent>
 </xs:complexType>
+<xs:complexType name="defaultDuration">
+<xs:complexContent>
+<xs:extension base="validatingConfig">
+<xs:sequence>
+<xs:element name="unit" type="timeUnit"/>
+<xs:element minOccurs="0" name="number" type="xs:int"/>
+</xs:sequence>
+</xs:extension>
+</xs:complexContent>
+</xs:complexType>
 <xs:complexType name="defaultOverdueState">
 <xs:complexContent>
 <xs:extension base="validatingConfig">
 <xs:sequence>
-<xs:element minOccurs="0" name="condition" type="defaultCondition"/>
+<xs:element minOccurs="0" name="condition" type="defaultOverdueCondition"/>
 <xs:element minOccurs="0" name="externalMessage" type="xs:string"/>
 <xs:element minOccurs="0" name="blockChanges" type="xs:boolean"/>
 <xs:element minOccurs="0" name="disableEntitlementAndChangesBlocked" type="xs:boolean"/>
-<xs:element minOccurs="0" name="daysBetweenPaymentRetries" type="xs:int"/>
+<xs:element minOccurs="0" name="subscriptionCancellationPolicy" type="overdueCancellationPolicy"/>
 <xs:element minOccurs="0" name="isClearState" type="xs:boolean"/>
 <xs:element minOccurs="0" name="autoReevaluationInterval" type="defaultDuration"/>
+<xs:element minOccurs="0" name="enterStateEmailNotification" type="defaultEmailNotification"/>
 </xs:sequence>
 <xs:attribute name="name" type="xs:ID" use="required"/>
 </xs:extension>
 </xs:complexContent>
 </xs:complexType>
-<xs:complexType name="defaultCondition">
+<xs:complexType name="defaultOverdueCondition">
 <xs:complexContent>
 <xs:extension base="validatingConfig">
 <xs:sequence>
@@ -64,15 +76,12 @@
 </xs:extension>
 </xs:complexContent>
 </xs:complexType>
-<xs:complexType name="defaultDuration">
-<xs:complexContent>
-<xs:extension base="validatingConfig">
+<xs:complexType name="defaultEmailNotification">
 <xs:sequence>
-<xs:element name="unit" type="timeUnit"/>
-<xs:element minOccurs="0" name="number" type="xs:int"/>
+<xs:element name="subject" type="xs:string"/>
+<xs:element name="templateName" type="xs:string"/>
+<xs:element minOccurs="0" name="isHTML" type="xs:boolean"/>
 </xs:sequence>
-</xs:extension>
-</xs:complexContent>
 </xs:complexType>
 <xs:simpleType name="timeUnit">
 <xs:restriction base="xs:string">
@@ -102,6 +111,16 @@
 <xs:enumeration value="AUTO_INVOICING_OFF"/>
 <xs:enumeration value="OVERDUE_ENFORCEMENT_OFF"/>
 <xs:enumeration value="WRITTEN_OFF"/>
+<xs:enumeration value="MANUAL_PAY"/>
+<xs:enumeration value="TEST"/>
+<xs:enumeration value="PARTNER"/>
+</xs:restriction>
+</xs:simpleType>
+<xs:simpleType name="overdueCancellationPolicy">
+<xs:restriction base="xs:string">
+<xs:enumeration value="END_OF_TERM"/>
+<xs:enumeration value="IMMEDIATE"/>
+<xs:enumeration value="NONE"/>
 </xs:restriction>
 </xs:simpleType>
 </xs:schema>

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -66,7 +66,7 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
                 defaultOverdueConfig = XMLLoader.getObjectFromUri(u, DefaultOverdueConfig.class);
                 missingOrCorruptedDefaultConfig = (defaultOverdueConfig == null);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             missingOrCorruptedDefaultConfig = true;
             log.warn("Exception loading default overdue config from " + configURI, e);
         }
@@ -83,40 +83,40 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
 
     @Override
     public OverdueConfig getOverdueConfig(final InternalTenantContext tenantContext) throws OverdueApiException {
-
         if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+            if (defaultOverdueConfig == null) {
+                throw new OverdueApiException(ErrorCode.OVERDUE_NOT_CONFIGURED);
+            }
             return defaultOverdueConfig;
         }
         // The cache loader might choke on some bad xml -- unlikely since we check its validity prior storing it,
         // but to be on the safe side;;
         try {
-            final OverdueConfig overdueConfig = (OverdueConfig) cacheController.get(tenantContext, cacheLoaderArgument);
+            final OverdueConfig overdueConfig = (OverdueConfig) cacheController.get(tenantContext.getTenantRecordId(), cacheLoaderArgument);
             return (overdueConfig != null) ? overdueConfig : defaultOverdueConfig;
-        } catch (IllegalStateException e) {
+        } catch (final IllegalStateException e) {
             throw new OverdueApiException(ErrorCode.OVERDUE_INVALID_FOR_TENANT, tenantContext.getTenantRecordId());
         }
     }
 
     @Override
     public void clearOverdueConfig(final InternalTenantContext tenantContext) {
-
-        if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
-            return;
+        if (tenantContext.getTenantRecordId() != InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+            cacheController.remove(tenantContext.getTenantRecordId());
         }
-        cacheController.remove(tenantContext);
     }
 
     private CacheLoaderArgument initializeCacheLoaderArgument() {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
-            public Object loadCatalog(final String catalogXMLs) throws OverdueApiException {
-                final InputStream overdueConfigStream = new ByteArrayInputStream(catalogXMLs.getBytes());
+            public Object loadOverdueConfig(final String overdueConfigXML) throws OverdueApiException {
+                final InputStream overdueConfigStream = new ByteArrayInputStream(overdueConfigXML.getBytes());
                 final URI uri;
                 try {
                     uri = new URI("/overdueConfig");
                     final DefaultOverdueConfig overdueConfig = XMLLoader.getObjectFromStream(uri, overdueConfigStream, DefaultOverdueConfig.class);
                     return overdueConfig;
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     throw new OverdueApiException(ErrorCode.OVERDUE_INVALID_FOR_TENANT, "Problem encountered loading overdue config ", e);
                 }
             }

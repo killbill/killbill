@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,6 +27,8 @@ import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.overdue.applicator.OverdueBusListenerTester;
 import org.killbill.billing.overdue.applicator.OverdueStateApplicator;
+import org.killbill.billing.overdue.caching.OverdueCacheInvalidationCallback;
+import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.calculator.BillingStateCalculator;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.overdue.glue.TestOverdueModuleNoDB;
@@ -34,6 +36,8 @@ import org.killbill.billing.overdue.notification.OverdueNotifier;
 import org.killbill.billing.overdue.notification.OverduePoster;
 import org.killbill.billing.overdue.service.DefaultOverdueService;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
+import org.killbill.billing.tenant.api.TenantInternalApi;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -89,6 +93,14 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected OverdueWrapperFactory overdueWrapperFactory;
     @Inject
     protected TestOverdueHelper testOverdueHelper;
+    @Inject
+    protected CacheControllerDispatcher cacheControllerDispatcher;
+    @Inject
+    protected OverdueConfigCache overdueConfigCache;
+    @Inject
+    protected OverdueCacheInvalidationCallback cacheInvalidationCallback;
+    @Inject
+    protected TenantInternalApi tenantInternalApi;
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
