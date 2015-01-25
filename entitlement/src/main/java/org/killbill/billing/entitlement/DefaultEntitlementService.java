@@ -131,12 +131,10 @@ public class DefaultEntitlementService implements EntitlementService {
             if (EntitlementNotificationKeyAction.CHANGE.equals(entitlementNotificationKeyAction) ||
                 EntitlementNotificationKeyAction.CANCEL.equals(entitlementNotificationKeyAction)) {
                 ((DefaultEntitlement) entitlement).blockAddOnsIfRequired(key.getEffectiveDate(), callContext, internalCallContext);
-            } else {
-                if (EntitlementNotificationKeyAction.PAUSE.equals(entitlementNotificationKeyAction)) {
-                    entitlementApi.pause(key.getBundleId(), key.getEffectiveDate().toLocalDate(), callContext);
-                } else if (EntitlementNotificationKeyAction.RESUME.equals(entitlementNotificationKeyAction)) {
-                    entitlementApi.resume(key.getBundleId(), key.getEffectiveDate().toLocalDate(), callContext);
-                }
+            } else if (EntitlementNotificationKeyAction.PAUSE.equals(entitlementNotificationKeyAction)) {
+                entitlementApi.pause(key.getBundleId(), key.getEffectiveDate().toLocalDate(), callContext);
+            } else if (EntitlementNotificationKeyAction.RESUME.equals(entitlementNotificationKeyAction)) {
+                entitlementApi.resume(key.getBundleId(), key.getEffectiveDate().toLocalDate(), callContext);
             }
         } catch (final EntitlementApiException e) {
             log.error("Error processing event for entitlement {}" + entitlement.getId(), e);
