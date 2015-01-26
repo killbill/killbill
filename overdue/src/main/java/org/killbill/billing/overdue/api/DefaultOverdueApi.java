@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,7 +20,6 @@ package org.killbill.billing.overdue.api;
 import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
@@ -54,9 +53,13 @@ public class DefaultOverdueApi implements OverdueApi {
     public void uploadOverdueConfig(final String overdueXML, final CallContext callContext) throws OverdueApiException {
         try {
             final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
+            final String tenantKey = TenantKey.OVERDUE_CONFIG.toString();
+            if (!tenantApi.getTenantValueForKey(tenantKey, callContext).isEmpty()) {
+                tenantApi.deleteTenantKey(tenantKey, callContext);
+            }
+            tenantApi.addTenantKeyValue(tenantKey, overdueXML, callContext);
             overdueConfigCache.clearOverdueConfig(internalTenantContext);
-            tenantApi.addTenantKeyValue(TenantKey.OVERDUE_CONFIG.toString(), overdueXML, callContext);
-        } catch (TenantApiException e) {
+        } catch (final TenantApiException e) {
             throw new OverdueApiException(e);
         }
     }
