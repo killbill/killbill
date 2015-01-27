@@ -207,7 +207,7 @@ public class BeatrixListener {
             case USER_TAG_DELETION:
                 final UserTagDeletionInternalEvent realUserTagEventDel = (UserTagDeletionInternalEvent) event;
                 objectType = ObjectType.TAG;
-                objectId = realUserTagEventDel.getObjectId();
+                objectId = realUserTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
                 break;
 
