@@ -40,10 +40,10 @@ import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
-public class DefaultInvoice extends EntityBase implements Invoice {
+public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
-    private final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
-    private final List<InvoicePayment> payments = new ArrayList<InvoicePayment>();
+    private final List<InvoiceItem> invoiceItems;
+    private final List<InvoicePayment> payments;
     private final UUID accountId;
     private final Integer invoiceNumber;
     private final LocalDate invoiceDate;
@@ -75,6 +75,8 @@ public class DefaultInvoice extends EntityBase implements Invoice {
         this.currency = currency;
         this.processedCurrency = processedCurrency;
         this.migrationInvoice = isMigrationInvoice;
+        this.invoiceItems = new ArrayList<InvoiceItem>();
+        this.payments = new ArrayList<InvoicePayment>();
     }
 
     public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
@@ -93,6 +95,15 @@ public class DefaultInvoice extends EntityBase implements Invoice {
                 return new DefaultInvoicePayment(input);
             }
         }));
+    }
+
+    // Semi deep copy where we copy the lists but not the elements in the lists since they are immutables.
+    @Override
+    public Object clone() {
+        final Invoice clonedInvoice = new DefaultInvoice(getId(),  getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice());
+        clonedInvoice.getInvoiceItems().addAll(getInvoiceItems());
+        clonedInvoice.getPayments().addAll(getPayments());
+        return clonedInvoice;
     }
 
     @Override

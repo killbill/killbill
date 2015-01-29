@@ -63,11 +63,8 @@ import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
-import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -103,24 +100,23 @@ public class InvoiceDispatcher {
     private final InvoiceDao invoiceDao;
     private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceNotifier invoiceNotifier;
+    private final InvoicePluginDispatcher invoicePluginDispatcher;
     private final GlobalLocker locker;
     private final PersistentBus eventBus;
     private final Clock clock;
-    private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
 
     @Inject
-    public InvoiceDispatcher(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry,
-                             final InvoiceGenerator generator,
+    public InvoiceDispatcher(final InvoiceGenerator generator,
                              final AccountInternalApi accountApi,
                              final BillingInternalApi billingApi,
                              final SubscriptionBaseInternalApi SubscriptionApi,
                              final InvoiceDao invoiceDao,
                              final InternalCallContextFactory internalCallContextFactory,
                              final InvoiceNotifier invoiceNotifier,
+                             final InvoicePluginDispatcher invoicePluginDispatcher,
                              final GlobalLocker locker,
                              final PersistentBus eventBus,
                              final Clock clock) {
-        this.pluginRegistry = pluginRegistry;
         this.generator = generator;
         this.billingApi = billingApi;
         this.subscriptionApi = SubscriptionApi;
@@ -128,6 +124,7 @@ public class InvoiceDispatcher {
         this.invoiceDao = invoiceDao;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceNotifier = invoiceNotifier;
+        this.invoicePluginDispatcher = invoicePluginDispatcher;
         this.locker = locker;
         this.eventBus = eventBus;
         this.clock = clock;
@@ -224,20 +221,8 @@ public class InvoiceDispatcher {
             //
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
-            final List<InvoicePluginApi> invoicePlugins = this.getInvoicePlugins();
             final CallContext callContext = buildCallContext(context);
-            for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
-                final List<InvoiceItem> items = invoicePlugin.getAdditionalInvoiceItems(invoice, ImmutableList.<PluginProperty>of(), callContext);
-                if (items != null) {
-                    for (final InvoiceItem item : items) {
-                        if (InvoiceItemType.EXTERNAL_CHARGE.equals(item.getInvoiceItemType()) || InvoiceItemType.TAX.equals(item.getInvoiceItemType())) {
-                            invoice.addInvoiceItem(item);
-                        } else {
-                            log.warn("Ignoring invoice item of type {} from InvoicePluginApi {}: {}", item.getInvoiceItemType(), invoicePlugin, item);
-                        }
-                    }
-                }
-            }
+            invoice.addInvoiceItems(invoicePluginDispatcher.getAdditionalInvoiceItems(invoice, callContext));
 
             boolean isRealInvoiceWithItems = false;
             if (!isDryRun) {
@@ -336,14 +321,6 @@ public class InvoiceDispatcher {
 
     private CallContext buildCallContext(final InternalCallContext context) {
         return internalCallContextFactory.createCallContext(context);
-    }
-
-    private List<InvoicePluginApi> getInvoicePlugins() {
-        final List<InvoicePluginApi> invoicePlugins = new ArrayList<InvoicePluginApi>();
-        for (final String name : this.pluginRegistry.getAllServices()) {
-            invoicePlugins.add(this.pluginRegistry.getServiceForName(name));
-        }
-        return invoicePlugins;
     }
 
     @VisibleForTesting

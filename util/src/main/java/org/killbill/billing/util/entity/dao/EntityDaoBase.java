@@ -120,7 +120,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     public Pagination<M> getAll(final InternalTenantContext context) {
         // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
         // Since we want to stream the results out, we don't want to auto-commit when this method returns.
-        final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemand(realSqlDao);
+        final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemandForStreamingResults(realSqlDao);
 
         // Note: we need to perform the count before streaming the results, as the connection
         // will be busy as we stream the results out. This is also why we cannot use

@@ -80,7 +80,11 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
         }
     }
 
-    public <M extends EntityModelDao<E>, E extends Entity, T extends EntitySqlDao<M, E>> T onDemand(final Class<T> sqlObjectType) {
+    //
+    // This is only used in the pagination APIs when streaming results. We want to keep the connection open, and also there is no need
+    // to send bus events, record notifications where we need to keep the Connection through the jDBI Handle.
+    //
+    public <M extends EntityModelDao<E>, E extends Entity, T extends EntitySqlDao<M, E>> T onDemandForStreamingResults(final Class<T> sqlObjectType) {
         return dbi.onDemand(sqlObjectType);
     }
 

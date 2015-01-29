@@ -779,9 +779,6 @@ public class InvoiceResource extends JaxRsResourceBase {
         return result.isEmpty() ? Response.status(Status.NOT_FOUND).build() : Response.status(Status.OK).entity(result.get(0)).build();
     }
 
-
-
-
     @Timed
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)

@@ -93,7 +93,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(externalChargeInvoiceItem.getBundleId(), bundleId);
         Assert.assertEquals(externalChargeInvoiceItem.getInvoiceItemType(), InvoiceItemType.EXTERNAL_CHARGE);
         Assert.assertEquals(externalChargeInvoiceItem.getAccountId(), accountId);
-        Assert.assertEquals(externalChargeInvoiceItem.getAmount(), externalChargeAmount);
+        Assert.assertEquals(externalChargeInvoiceItem.getAmount().compareTo(externalChargeAmount), 0);
         Assert.assertEquals(externalChargeInvoiceItem.getCurrency(), accountCurrency);
         Assert.assertNull(externalChargeInvoiceItem.getLinkedItemId());
 
@@ -172,7 +172,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(externalChargeInvoiceItem.getBundleId(), bundleId);
         Assert.assertEquals(externalChargeInvoiceItem.getInvoiceItemType(), InvoiceItemType.EXTERNAL_CHARGE);
         Assert.assertEquals(externalChargeInvoiceItem.getAccountId(), accountId);
-        Assert.assertEquals(externalChargeInvoiceItem.getAmount(), externalChargeAmount);
+        Assert.assertEquals(externalChargeInvoiceItem.getAmount().compareTo(externalChargeAmount), 0);
         Assert.assertEquals(externalChargeInvoiceItem.getCurrency(), accountCurrency);
         Assert.assertNull(externalChargeInvoiceItem.getLinkedItemId());
 
@@ -201,7 +201,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(creditInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(creditInvoiceItem.getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
         Assert.assertEquals(creditInvoiceItem.getAccountId(), accountId);
-        Assert.assertEquals(creditInvoiceItem.getAmount(), invoiceBalance.negate());
+        Assert.assertEquals(creditInvoiceItem.getAmount().compareTo(invoiceBalance.negate()), 0);
         Assert.assertEquals(creditInvoiceItem.getCurrency(), accountCurrency);
         Assert.assertNull(creditInvoiceItem.getLinkedItemId());
 
@@ -231,7 +231,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(creditInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(creditInvoiceItem.getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
         Assert.assertEquals(creditInvoiceItem.getAccountId(), accountId);
-        Assert.assertEquals(creditInvoiceItem.getAmount(), creditAmount.negate());
+        Assert.assertEquals(creditInvoiceItem.getAmount().compareTo(creditAmount.negate()), 0);
         Assert.assertEquals(creditInvoiceItem.getCurrency(), accountCurrency);
         Assert.assertNull(creditInvoiceItem.getLinkedItemId());
 

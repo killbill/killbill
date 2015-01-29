@@ -18,6 +18,7 @@ package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,19 +62,41 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
                               final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final InternalCallContext context) {
         synchronized (monitor) {
-            invoices.put(invoice.getId(), invoice);
-            for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
-                items.put(invoiceItemModelDao.getId(), invoiceItemModelDao);
-            }
-            accountRecordIds.put(invoice.getAccountId(), context.getAccountRecordId());
+            storeInvoice(invoice, context);
         }
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                           InvoiceModelDaoHelper.getBalance(invoice), invoice.getCurrency(),
                                                           context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
-        } catch (PersistentBus.EventBusException ex) {
+        } catch (final PersistentBus.EventBusException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoiceModelDaos, final InternalCallContext context) {
+        synchronized (monitor) {
+            final List<InvoiceItemModelDao> createdItems = new LinkedList<InvoiceItemModelDao>();
+            for (final InvoiceModelDao invoice : invoiceModelDaos) {
+                createdItems.addAll(storeInvoice(invoice, context));
+            }
+            return createdItems;
+        }
+    }
+
+    private Collection<InvoiceItemModelDao> storeInvoice(final InvoiceModelDao invoice, final InternalCallContext context) {
+        final Collection<InvoiceItemModelDao> createdItems = new LinkedList<InvoiceItemModelDao>();
+
+        invoices.put(invoice.getId(), invoice);
+        for (final InvoiceItemModelDao invoiceItemModelDao : invoice.getInvoiceItems()) {
+            final InvoiceItemModelDao oldItemOrNull = items.put(invoiceItemModelDao.getId(), invoiceItemModelDao);
+            if (oldItemOrNull == null) {
+                createdItems.add(invoiceItemModelDao);
+            }
+        }
+        accountRecordIds.put(invoice.getAccountId(), context.getAccountRecordId());
+
+        return createdItems;
     }
 
     @Override
@@ -305,19 +328,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceItemModelDao> insertExternalCharges(final UUID accountId, final LocalDate effectiveDate,
-                                                           final Iterable<InvoiceItemModelDao> charges, final InternalCallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public InvoiceItemModelDao getCreditById(final UUID creditId, final InternalTenantContext context) throws InvoiceApiException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public InvoiceItemModelDao insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount, final LocalDate effectiveDate,
-                                            final Currency currency, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }
 

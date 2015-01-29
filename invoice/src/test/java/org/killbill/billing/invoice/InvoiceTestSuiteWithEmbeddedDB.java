@@ -109,7 +109,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected TestInvoiceNotificationQListener testInvoiceNotificationQListener;
     @Inject
-    protected OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
+    protected InvoicePluginDispatcher invoicePluginDispatcher;
 
     @Override
     protected KillbillConfigSource getConfigSource() {

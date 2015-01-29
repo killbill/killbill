@@ -28,7 +28,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -180,12 +179,13 @@ public class InvoiceDaoHelper {
      * @param currency          the currency of the amount. Pass null to default to the original currency used
      * @return the adjustment item
      */
+    // TODO change refund path too to call the plugin
     public InvoiceItemModelDao createAdjustmentItem(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID invoiceId, final UUID invoiceItemId,
                                                     final BigDecimal positiveAdjAmount, final Currency currency,
                                                     final LocalDate effectiveDate, final InternalCallContext context) throws InvoiceApiException {
         // First, retrieve the invoice item in question
-        final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
-        final InvoiceItemModelDao invoiceItemToBeAdjusted = invoiceItemSqlDao.getById(invoiceItemId.toString(), context);
+        final InvoiceItemSqlDao invoiceItemSqlDaoX = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+        final InvoiceItemModelDao invoiceItemToBeAXdjusted = invoiceItemSqlDao.getById(invoiceItemId.toString(), context);
         if (invoiceItemToBeAdjusted == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
         }
@@ -213,11 +213,12 @@ public class InvoiceDaoHelper {
      * @param item                       the invoice item to create
      * @param context                    the call callcontext
      */
-    public void insertItem(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
-                           final InvoiceItemModelDao item,
-                           final InternalCallContext context) throws EntityPersistenceException {
+    public InvoiceItemModelDao insertItem(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
+                                          final InvoiceItemModelDao item,
+                                          final InternalCallContext context) throws EntityPersistenceException {
         final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
         transInvoiceItemDao.create(item, context);
+        return transInvoiceItemDao.getById(item.getId().toString(), context);
     }
 
     public void populateChildren(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) {

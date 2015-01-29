@@ -50,7 +50,7 @@ public class DefaultPaginationSqlDaoHelper {
 
         // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
         // Since we want to stream the results out, we don't want to auto-commit when this method returns.
-        final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemand(sqlDaoClazz);
+        final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemandForStreamingResults(sqlDaoClazz);
         final Long totalCount = sqlDao.getCount(context);
         final Iterator<M> results = paginationIteratorBuilder.build((S) sqlDao, limit, context);
 

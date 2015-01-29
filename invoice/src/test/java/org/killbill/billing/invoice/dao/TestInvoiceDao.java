@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -815,11 +817,13 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
 
-        invoiceDao.insertCredit(accountId, null, new BigDecimal("20.0"), new LocalDate(), Currency.USD, context);
+        createCredit(accountId, clock.getUTCToday(), new BigDecimal("20.0"));
 
         final String description = UUID.randomUUID().toString();
+        final InvoiceModelDao invoiceForExternalCharge = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
         final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(null, accountId, bundleId, description, clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD));
-        final InvoiceItemModelDao charge = invoiceDao.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItemModelDao>of(externalCharge), context).get(0);
+        invoiceForExternalCharge.addInvoiceItem(externalCharge);
+        final InvoiceItemModelDao charge = invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceForExternalCharge), context).get(0);
 
         final InvoiceModelDao newInvoice = invoiceDao.getById(charge.getInvoiceId(), context);
         final List<InvoiceItemModelDao> items = newInvoice.getInvoiceItems();
@@ -930,7 +934,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final BigDecimal creditAmount = new BigDecimal("5.0");
 
-        invoiceDao.insertCredit(accountId, null, creditAmount, effectiveDate, Currency.USD, context);
+        createCredit(accountId, effectiveDate, creditAmount);
 
         final List<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccount(context);
         assertEquals(invoices.size(), 1);
@@ -999,7 +1003,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // Create the credit item
         final LocalDate effectiveDate = new LocalDate(2011, 3, 1);
 
-        invoiceDao.insertCredit(accountId, invoice1.getId(), creditAmount, effectiveDate, Currency.USD, context);
+        createCredit(accountId, invoice1.getId(), effectiveDate, creditAmount);
 
         final List<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccount(context);
         assertEquals(invoices.size(), 1);
@@ -1599,5 +1603,29 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // Verify the result
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 10.00);
         invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 10.00, context);
+    }
+
+    private void createCredit(final UUID accountId, final LocalDate effectiveDate, final BigDecimal creditAmount) {
+        createCredit(accountId, null, effectiveDate, creditAmount);
+    }
+
+    private void createCredit(final UUID accountId, @Nullable final UUID invoiceId, final LocalDate effectiveDate, final BigDecimal creditAmount) {
+        final InvoiceModelDao invoiceModelDao;
+        if (invoiceId == null) {
+            invoiceModelDao = new InvoiceModelDao(accountId, effectiveDate, effectiveDate, Currency.USD);
+
+        } else {
+            invoiceModelDao = invoiceDao.getById(invoiceId, context);
+        }
+        final CreditAdjInvoiceItem invoiceItem = new CreditAdjInvoiceItem(UUID.randomUUID(),
+                                                                          context.getCreatedDate(),
+                                                                          invoiceModelDao.getId(),
+                                                                          accountId,
+                                                                          effectiveDate,
+                                                                          // Note! The amount is negated here!
+                                                                          creditAmount.negate(),
+                                                                          invoiceModelDao.getCurrency());
+        invoiceModelDao.addInvoiceItem(new InvoiceItemModelDao(invoiceItem));
+        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), context);
     }
 }

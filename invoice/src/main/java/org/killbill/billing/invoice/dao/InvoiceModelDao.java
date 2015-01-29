@@ -41,7 +41,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     private Currency currency;
     private boolean migrated;
 
-    // Note in the database, for convenience only
+    // Not in the database, for convenience only
     private List<InvoiceItemModelDao> invoiceItems = new LinkedList<InvoiceItemModelDao>();
     private List<InvoicePaymentModelDao> invoicePayments = new LinkedList<InvoicePaymentModelDao>();
     private Currency processedCurrency;

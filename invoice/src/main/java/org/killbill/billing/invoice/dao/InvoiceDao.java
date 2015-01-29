@@ -28,19 +28,18 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceApiException> {
 
     void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
                        final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions,
                        final InternalCallContext context);
+
+    List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices, final InternalCallContext context);
 
     InvoiceModelDao getByNumber(Integer number, InternalTenantContext context) throws InvoiceApiException;
 
@@ -50,7 +49,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     List<InvoiceModelDao> getInvoicesBySubscription(UUID subscriptionId, InternalTenantContext context);
 
-    public Pagination<InvoiceModelDao> searchInvoices(String searchKey, Long offset, Long limit, InternalTenantContext context);
+    Pagination<InvoiceModelDao> searchInvoices(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
     UUID getInvoiceIdByPaymentId(UUID paymentId, InternalTenantContext context);
 
@@ -60,7 +59,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     BigDecimal getAccountBalance(UUID accountId, InternalTenantContext context);
 
-    public BigDecimal getAccountCBA(UUID accountId, InternalTenantContext context);
+    BigDecimal getAccountCBA(UUID accountId, InternalTenantContext context);
 
     List<InvoiceModelDao> getUnpaidInvoicesByAccountId(UUID accountId, @Nullable LocalDate upToDate, InternalTenantContext context);
 
@@ -71,18 +70,18 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     InvoiceItemModelDao doCBAComplexity(InvoiceModelDao invoice, InternalCallContext context) throws InvoiceApiException;
 
-        /**
-         * Create a refund.
-         *
-         * @param paymentId                 payment associated with that refund
-         * @param amount                    amount to refund
-         * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
-         * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
-         * @param transactionExternalKey    transaction refund externalKey
-         * @param context                   the call callcontext
-         * @return the created invoice payment object associated with this refund
-         * @throws InvoiceApiException
-         */
+    /**
+     * Create a refund.
+     *
+     * @param paymentId                 payment associated with that refund
+     * @param amount                    amount to refund
+     * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
+     * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
+     * @param transactionExternalKey    transaction refund externalKey
+     * @param context                   the call callcontext
+     * @return the created invoice payment object associated with this refund
+     * @throws InvoiceApiException
+     */
     InvoicePaymentModelDao createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
                                         String transactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
@@ -106,17 +105,6 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     InvoiceItemModelDao getExternalChargeById(UUID externalChargeId, InternalTenantContext context) throws InvoiceApiException;
 
     /**
-     * Add one or more external charges to a given account.
-     *
-     * @param accountId     the account id
-     * @param effectiveDate the effective date for newly created invoices (in the account timezone)
-     * @param charges       the external charges
-     * @param context       the call context
-     * @return the newly created external charges invoice items
-     */
-    List<InvoiceItemModelDao> insertExternalCharges(UUID accountId, LocalDate effectiveDate, Iterable<InvoiceItemModelDao> charges, InternalCallContext context) throws InvoiceApiException;
-
-    /**
      * Retrieve a credit by id.
      *
      * @param creditId the credit id
@@ -124,20 +112,6 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @throws InvoiceApiException
      */
     InvoiceItemModelDao getCreditById(UUID creditId, InternalTenantContext context) throws InvoiceApiException;
-
-    /**
-     * Add a credit to a given account and invoice. If invoiceId is null, a new invoice will be created.
-     *
-     * @param accountId     the account id
-     * @param invoiceId     the invoice id
-     * @param amount        the credit amount
-     * @param effectiveDate the day to grant the credit, in the account timezone
-     * @param currency      the credit currency
-     * @param context       the call callcontext
-     * @return the newly created credit invoice item
-     */
-    InvoiceItemModelDao insertCredit(UUID accountId, @Nullable UUID invoiceId, BigDecimal amount,
-                                     LocalDate effectiveDate, Currency currency, InternalCallContext context);
 
     /**
      * Adjust an invoice item.
@@ -151,6 +125,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @param context       the call callcontext
      * @return the newly created adjustment item
      */
+    // TODO Needed?
     InvoiceItemModelDao insertInvoiceItemAdjustment(UUID accountId, UUID invoiceId, UUID invoiceItemId, LocalDate effectiveDate,
                                                     @Nullable BigDecimal amount, @Nullable Currency currency, InternalCallContext context);
 
