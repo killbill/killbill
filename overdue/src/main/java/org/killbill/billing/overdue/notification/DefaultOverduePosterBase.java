@@ -26,7 +26,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.overdue.service.DefaultOverdueService;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
@@ -63,7 +62,7 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
 
             transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
-                public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     // Check if we already have notifications for that key
                     final Class<T> clazz = (Class<T>) notificationKey.getClass();
                     final Collection<NotificationEventWithMetadata<T>> futureNotifications = getFutureNotificationsForAccountInTransaction(entitySqlDaoWrapperFactory, overdueQueue,
@@ -91,7 +90,7 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
                                                                                                       overdueQueueName);
             transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
-                public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     final Collection<NotificationEventWithMetadata<T>> futureNotifications = getFutureNotificationsForAccountInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue,
                                                                                                                                            clazz, context);
                     for (final NotificationEventWithMetadata<T> notification : futureNotifications) {
@@ -107,14 +106,14 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
     }
 
     @VisibleForTesting
-    <T extends OverdueCheckNotificationKey> Collection<NotificationEventWithMetadata<T>> getFutureNotificationsForAccountInTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
+    <T extends OverdueCheckNotificationKey> Collection<NotificationEventWithMetadata<T>> getFutureNotificationsForAccountInTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                                                                                                        final NotificationQueue checkOverdueQueue,
                                                                                                                                        final Class<T> clazz,
                                                                                                                                        final InternalCallContext context) {
         return checkOverdueQueue.getFutureNotificationFromTransactionForSearchKeys(context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getHandle().getConnection());
     }
 
-    protected abstract <T extends OverdueCheckNotificationKey> boolean cleanupFutureNotificationsFormTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
+    protected abstract <T extends OverdueCheckNotificationKey> boolean cleanupFutureNotificationsFormTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                                                                                  final Collection<NotificationEventWithMetadata<T>> futureNotifications,
                                                                                                                  final DateTime futureNotificationTime, final NotificationQueue overdueQueue);
 

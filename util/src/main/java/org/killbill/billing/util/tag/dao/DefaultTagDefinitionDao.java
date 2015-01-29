@@ -39,7 +39,6 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
@@ -71,7 +70,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     public List<TagDefinitionModelDao> getTagDefinitions(final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagDefinitionModelDao>>() {
             @Override
-            public List<TagDefinitionModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public List<TagDefinitionModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 // Get user definitions from the database
                 final TagDefinitionSqlDao tagDefinitionSqlDao = entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class);
                 final Iterator<TagDefinitionModelDao> all = tagDefinitionSqlDao.getAll(context);
@@ -91,7 +90,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     public TagDefinitionModelDao getByName(final String definitionName, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
             @Override
-            public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 for (final ControlTagType controlTag : ControlTagType.values()) {
                     if (controlTag.name().equals(definitionName)) {
                         return new TagDefinitionModelDao(controlTag);
@@ -106,7 +105,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     public TagDefinitionModelDao getById(final UUID definitionId, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
             @Override
-            public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 for (final ControlTagType controlTag : ControlTagType.values()) {
                     if (controlTag.getId().equals(definitionId)) {
                         return new TagDefinitionModelDao(controlTag);
@@ -121,7 +120,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     public List<TagDefinitionModelDao> getByIds(final Collection<UUID> definitionIds, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagDefinitionModelDao>>() {
             @Override
-            public List<TagDefinitionModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public List<TagDefinitionModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final List<TagDefinitionModelDao> result = new LinkedList<TagDefinitionModelDao>();
                 for (final UUID cur : definitionIds) {
                     for (final ControlTagType controlTag : ControlTagType.values()) {
@@ -156,7 +155,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
         try {
             return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
                 @Override
-                public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     final TagDefinitionSqlDao tagDefinitionSqlDao = entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class);
 
                     // Make sure the tag definition doesn't exist already
@@ -202,7 +201,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
         try {
             transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
-                public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     final TagDefinitionSqlDao tagDefinitionSqlDao = entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class);
 
                     // Make sure the tag definition exists
@@ -233,7 +232,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     }
 
     protected void postBusEventFromTransaction(final TagDefinitionModelDao tagDefinition, final TagDefinitionModelDao savedTagDefinition,
-                                               final ChangeType changeType, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context)
+                                               final ChangeType changeType, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context)
             throws BillingExceptionBase {
 
         final TagDefinitionInternalEvent tagDefinitionEvent;

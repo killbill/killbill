@@ -31,20 +31,17 @@ import org.skife.jdbi.v2.sqlobject.SqlObjectBuilder;
  * Factory to create wrapped EntitySqlDao objects. During a transaction, make sure
  * to create other EntitySqlDao objects via the #become call.
  *
- * @param <InitialSqlDao> EntitySqlDao type to create
  * @see EntitySqlDaoWrapperInvocationHandler
  */
-public class EntitySqlDaoWrapperFactory<InitialSqlDao extends EntitySqlDao> {
+public class EntitySqlDaoWrapperFactory {
 
-    private final InitialSqlDao sqlDao;
     private final Handle handle;
     private final Clock clock;
     private final CacheControllerDispatcher cacheControllerDispatcher;
 
     private final NonEntityDao nonEntityDao;
 
-    public EntitySqlDaoWrapperFactory(final InitialSqlDao sqlDao, final Handle handle, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
-        this.sqlDao = sqlDao;
+    public EntitySqlDaoWrapperFactory(final Handle handle, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
         this.handle = handle;
         this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
@@ -64,10 +61,6 @@ public class EntitySqlDaoWrapperFactory<InitialSqlDao extends EntitySqlDao> {
             NewEntity extends Entity> NewSqlDao become(final Class<NewSqlDao> newSqlDaoClass) {
         final NewSqlDao newSqlDao = SqlObjectBuilder.attach(handle, newSqlDaoClass);
         return create(newSqlDaoClass, newSqlDao);
-    }
-
-    public InitialSqlDao getSqlDao() {
-        return sqlDao;
     }
 
     public Handle getHandle() {

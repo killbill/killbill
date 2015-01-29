@@ -42,7 +42,7 @@ public class DefaultPaginationSqlDaoHelper {
         // more pages.
         final Long count = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
             @Override
-            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Long inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> sqlDao = entitySqlDaoWrapperFactory.become(sqlDaoClazz);
                 return paginationIteratorBuilder.getCount((S) sqlDao, context);
             }

@@ -49,7 +49,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     protected EntitySqlDaoTransactionWrapper<Void> getCreateEntitySqlDaoTransactionWrapper(final M entity, final InternalCallContext context) {
         return new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
 
                 if (checkEntityAlreadyExists(transactional, entity, context)) {
@@ -70,7 +70,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     }
 
     protected void postBusEventFromTransaction(final M entity, final M savedEntity, final ChangeType changeType,
-                                               final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
+                                               final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                final InternalCallContext context) throws BillingExceptionBase {
     }
 
@@ -85,7 +85,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
 
             @Override
-            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Long inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 return transactional.getRecordId(id.toString(), context);
             }
@@ -97,7 +97,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<M>() {
 
             @Override
-            public M inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public M inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 return transactional.getByRecordId(recordId, context);
             }
@@ -109,7 +109,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<M>() {
 
             @Override
-            public M inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public M inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 return transactional.getById(id.toString(), context);
             }
@@ -155,7 +155,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
 
             @Override
-            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Long inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 return transactional.getCount(context);
             }
@@ -167,7 +167,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
 
             @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 transactional.test(context);
                 return null;

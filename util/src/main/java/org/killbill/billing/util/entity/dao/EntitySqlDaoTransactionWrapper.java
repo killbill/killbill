@@ -27,5 +27,5 @@ public interface EntitySqlDaoTransactionWrapper<ReturnType> {
      * @param entitySqlDaoWrapperFactory factory to create EntitySqlDao instances
      * @return result from the transaction of type ReturnType
      */
-    ReturnType inTransaction(EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception;
+    ReturnType inTransaction(EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception;
 }

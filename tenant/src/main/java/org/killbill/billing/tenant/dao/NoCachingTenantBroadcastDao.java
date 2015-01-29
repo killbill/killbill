@@ -28,7 +28,6 @@ import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
@@ -91,7 +90,7 @@ public class NoCachingTenantBroadcastDao extends EntityDaoBase<TenantBroadcastMo
     public List<TenantBroadcastModelDao> getLatestEntriesFrom(final Long recordId) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TenantBroadcastModelDao>>() {
             @Override
-            public List<TenantBroadcastModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public List<TenantBroadcastModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class).getLatestEntries(recordId);
             }
         });
@@ -101,7 +100,7 @@ public class NoCachingTenantBroadcastDao extends EntityDaoBase<TenantBroadcastMo
     public TenantBroadcastModelDao getLatestEntry() {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TenantBroadcastModelDao>() {
             @Override
-            public TenantBroadcastModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public TenantBroadcastModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class).getLatestEntry();
             }
         });

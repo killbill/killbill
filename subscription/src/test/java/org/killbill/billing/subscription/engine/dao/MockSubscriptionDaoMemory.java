@@ -56,7 +56,6 @@ import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 import org.killbill.clock.Clock;
@@ -468,7 +467,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         return null;
     }
 
-    private void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao, final DateTime effectiveDate,
+    private void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory transactionalDao, final DateTime effectiveDate,
                                                          final NotificationEvent notificationKey, final InternalCallContext context) {
         try {
             final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultSubscriptionBaseService.SUBSCRIPTION_SERVICE_NAME,

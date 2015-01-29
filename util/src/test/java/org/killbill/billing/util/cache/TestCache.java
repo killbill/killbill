@@ -22,7 +22,6 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.dao.TableName;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
@@ -38,7 +37,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
     private Long getTagRecordId(final UUID tagId) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
             @Override
-            public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Long inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TagSqlDao.class).getRecordId(tagId.toString(), internalCallContext);
             }
         });
@@ -124,7 +123,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
     private void insertTag(final TagModelDao modelDao) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 entitySqlDaoWrapperFactory.become(TagSqlDao.class).create(modelDao, internalCallContext);
                 return null;
             }
@@ -134,7 +133,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
     private TagModelDao getById(final UUID id) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagModelDao>() {
             @Override
-            public TagModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public TagModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TagSqlDao.class).getById(id.toString(), internalCallContext);
             }
         });

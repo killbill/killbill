@@ -23,7 +23,6 @@ import java.util.Collection;
 import org.joda.time.DateTime;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
@@ -43,7 +42,7 @@ public class OverdueCheckPoster extends DefaultOverduePosterBase {
     }
 
     @Override
-    protected <T extends OverdueCheckNotificationKey> boolean cleanupFutureNotificationsFormTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
+    protected <T extends OverdueCheckNotificationKey> boolean cleanupFutureNotificationsFormTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                                                                         final Collection<NotificationEventWithMetadata<T>> futureNotifications,
                                                                                                         final DateTime futureNotificationTime, final NotificationQueue overdueQueue) {
 

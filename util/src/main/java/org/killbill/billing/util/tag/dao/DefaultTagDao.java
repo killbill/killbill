@@ -72,7 +72,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     public List<TagModelDao> getTagsForObject(final UUID objectId, final ObjectType objectType, final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagModelDao>>() {
             @Override
-            public List<TagModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public List<TagModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final TagSqlDao tagSqlDao = entitySqlDaoWrapperFactory.become(TagSqlDao.class);
                 if (includedDeleted) {
                     return tagSqlDao.getTagsForObjectIncludedDeleted(objectId, objectType, internalTenantContext);
@@ -98,7 +98,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     public List<TagModelDao> getTagsForAccount(final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagModelDao>>() {
             @Override
-            public List<TagModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public List<TagModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final TagSqlDao tagSqlDao = entitySqlDaoWrapperFactory.become(TagSqlDao.class);
                 if (includedDeleted) {
                     return tagSqlDao.getByAccountRecordIdIncludedDeleted(internalTenantContext);
@@ -111,7 +111,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
 
     @Override
     protected void postBusEventFromTransaction(final TagModelDao tag, final TagModelDao savedTag, final ChangeType changeType,
-                                               final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context)
+                                               final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context)
             throws BillingExceptionBase {
 
         final TagInternalEvent tagEvent;
@@ -162,7 +162,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
         return new TagApiException(ErrorCode.TAG_ALREADY_EXISTS, entity.toString());
     }
 
-    private TagDefinitionModelDao getTagDefinitionFromTransaction(final UUID tagDefinitionId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) throws TagApiException {
+    private TagDefinitionModelDao getTagDefinitionFromTransaction(final UUID tagDefinitionId, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) throws TagApiException {
         TagDefinitionModelDao tagDefintion = null;
         for (final ControlTagType t : ControlTagType.values()) {
             if (t.getId().equals(tagDefinitionId)) {
@@ -192,7 +192,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
 
             @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
 
                 final TagDefinitionModelDao tagDefinition = getTagDefinitionFromTransaction(tagDefinitionId, entitySqlDaoWrapperFactory, context);
                 final TagSqlDao transactional = entitySqlDaoWrapperFactory.become(TagSqlDao.class);

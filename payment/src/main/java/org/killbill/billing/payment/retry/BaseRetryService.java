@@ -29,7 +29,6 @@ import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -109,7 +108,7 @@ public abstract class BaseRetryService implements RetryService {
             return scheduleRetryInternal(objectType, objectId, attemptId, tenantRecordId, paymentControlPluginNames, timeOfRetry, null);
         }
 
-        private boolean scheduleRetryInternal(final ObjectType objectType, final UUID objectId, final UUID attemptId, final Long tenantRecordId, final List<String> paymentControlPluginNames, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
+        private boolean scheduleRetryInternal(final ObjectType objectType, final UUID objectId, final UUID attemptId, final Long tenantRecordId, final List<String> paymentControlPluginNames, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory transactionalDao) {
             final InternalCallContext context = createCallContextFromPaymentId(objectType, objectId, tenantRecordId);
 
             try {
