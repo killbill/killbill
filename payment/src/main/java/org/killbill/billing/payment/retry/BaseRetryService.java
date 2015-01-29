@@ -119,7 +119,7 @@ public abstract class BaseRetryService implements RetryService {
                     if (transactionalDao == null) {
                         retryQueue.recordFutureNotification(timeOfRetry, key, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
                     } else {
-                        retryQueue.recordFutureNotificationFromTransaction(transactionalDao.getSqlDao(), timeOfRetry, key, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+                        retryQueue.recordFutureNotificationFromTransaction(transactionalDao.getHandle().getConnection(), timeOfRetry, key, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
                     }
                 }
             } catch (final NoSuchNotificationQueue e) {

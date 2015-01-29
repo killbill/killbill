@@ -65,7 +65,7 @@ public class OverdueCheckPoster extends DefaultOverduePosterBase {
             int index = 0;
             for (final NotificationEventWithMetadata<T> cur : futureNotifications) {
                 if (minIndexToDeleteFrom <= index) {
-                    overdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), cur.getRecordId());
+                    overdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), cur.getRecordId());
                 }
                 index++;
             }

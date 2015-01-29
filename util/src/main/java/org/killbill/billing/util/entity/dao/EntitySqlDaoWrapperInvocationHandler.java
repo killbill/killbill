@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -35,7 +37,6 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.util.cache.BaseCacheLoader;
 import org.killbill.billing.util.cache.Cachable;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CachableKey;
@@ -54,10 +55,12 @@ import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.killbill.commons.profiling.ProfilingFeature.ProfilingFeatureType;
 import org.skife.jdbi.v2.Binding;
+import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.exceptions.DBIException;
 import org.skife.jdbi.v2.exceptions.StatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlObjectBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,11 +80,11 @@ import com.google.common.collect.Iterables;
  */
 public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, M extends EntityModelDao<E>, E extends Entity> implements InvocationHandler {
 
-
     private final Logger logger = LoggerFactory.getLogger(EntitySqlDaoWrapperInvocationHandler.class);
 
     private final Class<S> sqlDaoClass;
     private final S sqlDao;
+    private final Handle handle;
 
     private final CacheControllerDispatcher cacheControllerDispatcher;
     private final Clock clock;
@@ -90,12 +93,14 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
     public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass,
                                                 final S sqlDao,
+                                                final Handle handle,
                                                 final Clock clock,
                                                 // Special DAO that don't require caching can invoke EntitySqlDaoWrapperInvocationHandler with no caching (e.g NoCachingTenantDao)
                                                 @Nullable final CacheControllerDispatcher cacheControllerDispatcher,
                                                 @Nullable final NonEntityDao nonEntityDao) {
         this.sqlDaoClass = sqlDaoClass;
         this.sqlDao = sqlDao;
+        this.handle = handle;
         this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.nonEntityDao = nonEntityDao;
@@ -191,7 +196,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         }
     }
 
-    private Object invokeRaw(final Method method, final Object[] args) throws Throwable  {
+    private Object invokeRaw(final Method method, final Object[] args) throws Throwable {
         return prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + " (raw):" + method.getName(), new WithProfilingCallback() {
             @Override
             public Object execute() throws Throwable {
@@ -207,7 +212,6 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             }
         });
     }
-
 
     private Object invokeWithCaching(final Cachable cachableAnnotation, final Method method, final Object[] args)
             throws Throwable {
@@ -448,7 +452,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
         sqlDao.addHistoryFromTransaction(history, context);
 
-        final NonEntitySqlDao transactional = sqlDao.become(NonEntitySqlDao.class);
+        final NonEntitySqlDao transactional = SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
 
         /* return transactional.getLastHistoryRecordId(entityRecordId, entityModelDao.getHistoryTableName().getTableName()); */
         return nonEntityDao.retrieveLastHistoryRecordIdFromTransaction(entityRecordId, entityModelDao.getHistoryTableName(), transactional);

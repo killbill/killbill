@@ -20,10 +20,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -31,11 +27,8 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.user.DefaultAccountChangeEvent;
 import org.killbill.billing.account.api.user.DefaultAccountCreationEvent;
 import org.killbill.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.events.AccountChangeInternalEvent;
 import org.killbill.billing.events.AccountCreationInternalEvent;
@@ -50,6 +43,12 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.IDBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
@@ -90,7 +89,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(new DefaultAccountData(savedAccount), savedAccount.getId(),
                                                                                            context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
         try {
-            eventBus.postFromTransaction(creationEvent, entitySqlDaoWrapperFactory.getSqlDao());
+            eventBus.postFromTransaction(creationEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
             log.warn("Failed to post account creation event for account " + savedAccount.getId(), e);
         }
@@ -162,7 +161,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                                                                              context.getUserToken()
                 );
                 try {
-                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getSqlDao());
+                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
                 } catch (final EventBusException e) {
                     log.warn("Failed to post account change event for account " + accountId, e);
                 }
@@ -201,7 +200,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                 );
 
                 try {
-                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getSqlDao());
+                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
                 } catch (final EventBusException e) {
                     log.warn("Failed to post account change event for account " + accountId, e);
                 }

@@ -180,15 +180,15 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
                                                                                                context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                     }
                     try {
-                        bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory.getSqlDao());
-                    } catch (PersistentBus.EventBusException e) {
+                        bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
+                    } catch (final PersistentBus.EventBusException e) {
                         log.warn("Failed to post tag definition creation event for tag " + tagDefinition.getId(), e);
                     }
 
                     return tagDefinition;
                 }
             });
-        } catch (TransactionFailedException exception) {
+        } catch (final TransactionFailedException exception) {
             if (exception.getCause() instanceof TagDefinitionApiException) {
                 throw (TagDefinitionApiException) exception.getCause();
             } else {
@@ -223,7 +223,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
                     return null;
                 }
             });
-        } catch (TransactionFailedException exception) {
+        } catch (final TransactionFailedException exception) {
             if (exception.getCause() instanceof TagDefinitionApiException) {
                 throw (TagDefinitionApiException) exception.getCause();
             } else {
@@ -259,8 +259,8 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
         }
 
         try {
-            bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory.getSqlDao());
-        } catch (PersistentBus.EventBusException e) {
+            bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
+        } catch (final PersistentBus.EventBusException e) {
             log.warn("Failed to post tag definition event for tag " + tagDefinition.getId().toString(), e);
         }
     }

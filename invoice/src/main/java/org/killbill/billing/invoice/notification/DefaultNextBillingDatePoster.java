@@ -54,7 +54,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
                                                                              DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
             log.info("Queuing next billing date notification at {} for subscriptionId {}", futureNotificationTime.toString(), subscriptionId.toString());
 
-            nextBillingQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), futureNotificationTime,
+            nextBillingQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), futureNotificationTime,
                                                                      new NextBillingDateNotificationKey(subscriptionId), internalCallContext.getUserToken(),
                                                                      internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
         } catch (final NoSuchNotificationQueue e) {

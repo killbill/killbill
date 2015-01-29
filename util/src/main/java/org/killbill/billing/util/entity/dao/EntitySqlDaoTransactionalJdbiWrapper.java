@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,15 +18,15 @@
 
 package org.killbill.billing.util.entity.dao;
 
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.entity.Entity;
+import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.TransactionStatus;
-
-import org.killbill.clock.Clock;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.billing.util.entity.Entity;
 
 /**
  * Transaction manager for EntitySqlDao queries
@@ -45,15 +47,17 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
 
     class JdbiTransaction<ReturnType, M extends EntityModelDao<E>, E extends Entity> implements Transaction<ReturnType, EntitySqlDao<M, E>> {
 
+        private final Handle h;
         private final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper;
 
-        JdbiTransaction(final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) {
+        JdbiTransaction(final Handle h, final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) {
+            this.h = h;
             this.entitySqlDaoTransactionWrapper = entitySqlDaoTransactionWrapper;
         }
 
         @Override
         public ReturnType inTransaction(final EntitySqlDao<M, E> transactionalSqlDao, final TransactionStatus status) throws Exception {
-            final EntitySqlDaoWrapperFactory<EntitySqlDao> factoryEntitySqlDao = new EntitySqlDaoWrapperFactory<EntitySqlDao>(transactionalSqlDao, clock, cacheControllerDispatcher, nonEntityDao);
+            final EntitySqlDaoWrapperFactory<EntitySqlDao> factoryEntitySqlDao = new EntitySqlDaoWrapperFactory<EntitySqlDao>(transactionalSqlDao, h, clock, cacheControllerDispatcher, nonEntityDao);
             return entitySqlDaoTransactionWrapper.inTransaction(factoryEntitySqlDao);
         }
     }
@@ -67,8 +71,13 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
      * @return result from the transaction fo type ReturnType
      */
     public <ReturnType> ReturnType execute(final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) {
-        final EntitySqlDao<EntityModelDao<Entity>, Entity> entitySqlDao = dbi.onDemand(InitialEntitySqlDao.class);
-        return entitySqlDao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(entitySqlDaoTransactionWrapper));
+        final Handle handle = dbi.open();
+        try {
+            final EntitySqlDao<EntityModelDao<Entity>, Entity> entitySqlDao = handle.attach(InitialEntitySqlDao.class);
+            return entitySqlDao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(handle, entitySqlDaoTransactionWrapper));
+        } finally {
+            handle.close();
+        }
     }
 
     public <M extends EntityModelDao<E>, E extends Entity, T extends EntitySqlDao<M, E>> T onDemand(final Class<T> sqlObjectType) {

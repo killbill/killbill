@@ -592,7 +592,7 @@ public class DefaultPaymentDao implements PaymentDao {
                 break;
         }
         try {
-            eventBus.postFromTransaction(event, entitySqlDaoWrapperFactory.getSqlDao());
+            eventBus.postFromTransaction(event, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (EventBusException e) {
             log.error("Failed to post Payment event event for account {} ", accountId, e);
         }

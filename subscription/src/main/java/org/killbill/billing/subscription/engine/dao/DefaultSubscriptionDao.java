@@ -987,7 +987,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     // Note: we don't send a requested change event here, but a repair event
                     final RepairSubscriptionInternalEvent busEvent = new DefaultRepairSubscriptionEvent(accountId, bundleId, clock.getUTCNow(),
                                                                                                         context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
-                    eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getSqlDao());
+                    eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
                 } catch (EventBusException e) {
                     log.warn("Failed to post repair subscription event for bundle " + bundleId, e);
                 }
@@ -1079,7 +1079,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                                                                       context.getUserToken(),
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());
 
-            eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getSqlDao());
+            eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (EventBusException e) {
             log.warn("Failed to post effective event for subscription " + subscription.getId(), e);
         } catch (CatalogApiException e) {
@@ -1090,7 +1090,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     private void notifyBusOfRequestedChange(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final DefaultSubscriptionBase subscription,
                                             final SubscriptionBaseEvent nextEvent, final InternalCallContext context) {
         try {
-            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()), entitySqlDaoWrapperFactory.getSqlDao());
+            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()), entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (EventBusException e) {
             log.warn("Failed to post requested change event for subscription " + subscription.getId(), e);
         }
@@ -1101,7 +1101,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         try {
             final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultSubscriptionBaseService.SUBSCRIPTION_SERVICE_NAME,
                                                                                                            DefaultSubscriptionBaseService.NOTIFICATION_QUEUE_NAME);
-            subscriptionEventQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), effectiveDate, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+            subscriptionEventQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), effectiveDate, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
