@@ -1,3 +1,11 @@
+0.13.2
+   Fixes in payment system
+   Fix caching of catalog and overdue config
+   Fix CHANGE_OF_PLAN alignment
+   Make external key optional for accounts and bundles
+   https://github.com/killbill/killbill/issues/261
+   Update killbill-oss-parent to 0.9.9
+
 0.13.1
    https://github.com/killbill/killbill/issues/226
    https://github.com/killbill/killbill/issues/233
