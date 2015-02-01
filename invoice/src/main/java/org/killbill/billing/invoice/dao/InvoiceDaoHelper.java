@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -178,13 +180,12 @@ public class InvoiceDaoHelper {
      * @param currency          the currency of the amount. Pass null to default to the original currency used
      * @return the adjustment item
      */
-    // TODO change refund path too to call the plugin
-    public InvoiceItemModelDao createAdjustmentItem(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID invoiceId, final UUID invoiceItemId,
+    public InvoiceItemModelDao createAdjustmentItem(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID invoiceId, final UUID invoiceItemId,
                                                     final BigDecimal positiveAdjAmount, final Currency currency,
                                                     final LocalDate effectiveDate, final InternalCallContext context) throws InvoiceApiException {
         // First, retrieve the invoice item in question
-        final InvoiceItemSqlDao invoiceItemSqlDaoX = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
-        final InvoiceItemModelDao invoiceItemToBeAXdjusted = invoiceItemSqlDao.getById(invoiceItemId.toString(), context);
+        final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+        final InvoiceItemModelDao invoiceItemToBeAdjusted = invoiceItemSqlDao.getById(invoiceItemId.toString(), context);
         if (invoiceItemToBeAdjusted == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
         }
@@ -203,21 +204,6 @@ public class InvoiceDaoHelper {
         // Note! The amount is negated here!
         return new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.ITEM_ADJ, invoiceItemToBeAdjusted.getInvoiceId(), invoiceItemToBeAdjusted.getAccountId(),
                                        null, null, null, null, null, null, effectiveDate, effectiveDate, amountToAdjust.negate(), null, currencyForAdjustment, invoiceItemToBeAdjusted.getId());
-    }
-
-    /**
-     * Create an invoice item
-     *
-     * @param entitySqlDaoWrapperFactory the EntitySqlDaoWrapperFactory from the current transaction
-     * @param item                       the invoice item to create
-     * @param context                    the call callcontext
-     */
-    public InvoiceItemModelDao insertItem(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
-                                          final InvoiceItemModelDao item,
-                                          final InternalCallContext context) throws EntityPersistenceException {
-        final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
-        transInvoiceItemDao.create(item, context);
-        return transInvoiceItemDao.getById(item.getId().toString(), context);
     }
 
     public void populateChildren(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {

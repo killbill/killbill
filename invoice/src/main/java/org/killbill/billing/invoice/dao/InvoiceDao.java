@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -112,22 +114,6 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @throws InvoiceApiException
      */
     InvoiceItemModelDao getCreditById(UUID creditId, InternalTenantContext context) throws InvoiceApiException;
-
-    /**
-     * Adjust an invoice item.
-     *
-     * @param accountId     the account id
-     * @param invoiceId     the invoice id
-     * @param invoiceItemId the invoice item id to adjust
-     * @param effectiveDate adjustment effective date, in the account timezone
-     * @param amount        the amount to adjust. Pass null to adjust the full amount of the original item
-     * @param currency      the currency of the amount. Pass null to default to the original currency used
-     * @param context       the call callcontext
-     * @return the newly created adjustment item
-     */
-    // TODO Needed?
-    InvoiceItemModelDao insertInvoiceItemAdjustment(UUID accountId, UUID invoiceId, UUID invoiceItemId, LocalDate effectiveDate,
-                                                    @Nullable BigDecimal amount, @Nullable Currency currency, InternalCallContext context);
 
     /**
      * Delete a CBA item.

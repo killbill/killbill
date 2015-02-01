@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,8 +26,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -329,13 +329,6 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public InvoiceItemModelDao getCreditById(final UUID creditId, final InternalTenantContext context) throws InvoiceApiException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public InvoiceItemModelDao insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
-                                                           final LocalDate effectiveDate, @Nullable final BigDecimal amount,
-                                                           @Nullable final Currency currency, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }
 

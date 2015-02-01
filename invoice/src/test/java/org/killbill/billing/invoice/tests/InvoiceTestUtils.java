@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,12 +24,15 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.mockito.Mockito;
-import org.testng.Assert;
-
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.invoice.TestInvoiceHelper;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
@@ -35,10 +40,9 @@ import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.clock.Clock;
-import org.killbill.billing.entity.EntityPersistenceException;
-import org.killbill.billing.invoice.api.InvoiceInternalApi;
+import org.mockito.Mockito;
+import org.testng.Assert;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,28 +51,41 @@ public class InvoiceTestUtils {
 
     private InvoiceTestUtils() {}
 
-    public static Invoice createAndPersistInvoice(final InvoiceDao invoiceDao,
+    public static Invoice createAndPersistInvoice(final TestInvoiceHelper testInvoiceHelper,
+                                                  final InvoiceDao invoiceDao,
                                                   final Clock clock,
                                                   final BigDecimal amount,
                                                   final Currency currency,
                                                   final InternalCallContext internalCallContext) {
         try {
-            return createAndPersistInvoice(invoiceDao, clock, ImmutableList.<BigDecimal>of(amount),
-                                           currency, internalCallContext);
-        } catch (EntityPersistenceException e) {
+            return createAndPersistInvoice(testInvoiceHelper,
+                                           invoiceDao,
+                                           clock,
+                                           ImmutableList.<BigDecimal>of(amount),
+                                           currency,
+                                           internalCallContext);
+        } catch (final EntityPersistenceException e) {
             Assert.fail(e.getMessage());
             return null;
         }
     }
 
-    public static Invoice createAndPersistInvoice(final InvoiceDao invoiceDao,
+    public static Invoice createAndPersistInvoice(final TestInvoiceHelper testInvoiceHelper,
+                                                  final InvoiceDao invoiceDao,
                                                   final Clock clock,
-                                                  final List<BigDecimal> amounts,
+                                                  final Iterable<BigDecimal> amounts,
                                                   final Currency currency,
                                                   final InternalCallContext internalCallContext) throws EntityPersistenceException {
         final Invoice invoice = Mockito.mock(Invoice.class);
         final UUID invoiceId = UUID.randomUUID();
-        final UUID accountId = UUID.randomUUID();
+        final UUID accountId;
+        try {
+            final Account account = testInvoiceHelper.createAccount(internalCallContext.toCallContext(null));
+            accountId = account.getId();
+        } catch (final AccountApiException e) {
+            Assert.fail(e.getMessage());
+            return null;
+        }
 
         Mockito.when(invoice.getId()).thenReturn(invoiceId);
         Mockito.when(invoice.getAccountId()).thenReturn(accountId);

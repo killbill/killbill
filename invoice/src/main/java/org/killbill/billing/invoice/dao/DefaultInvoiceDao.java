@@ -243,9 +243,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 final List<InvoiceItemModelDao> createdInvoiceItems = new LinkedList<InvoiceItemModelDao>();
                 for (final InvoiceModelDao invoiceModelDao : invoices) {
+                    boolean madeChanges = false;
+
                     // Create the invoice if needed
                     if (invoiceSqlDao.getById(invoiceModelDao.getId().toString(), context) == null) {
                         invoiceSqlDao.create(invoiceModelDao, context);
+                        madeChanges = true;
                     }
 
                     // Create the invoice items if needed
@@ -253,14 +256,17 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         if (transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context) == null) {
                             transInvoiceItemSqlDao.create(invoiceItemModelDao, context);
                             createdInvoiceItems.add(transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context));
+                            madeChanges = true;
                         }
                     }
 
-                    cbaDao.addCBAComplexityFromTransaction(invoiceModelDao.getId(), entitySqlDaoWrapperFactory, context);
+                    if (madeChanges) {
+                        cbaDao.addCBAComplexityFromTransaction(invoiceModelDao.getId(), entitySqlDaoWrapperFactory, context);
 
-                    // Notify the bus since the balance of the invoice changed
-                    // TODO should we post an InvoiceCreationInternalEvent event instead? Note! This will trigger a payment (see InvoiceHandler)
-                    notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceModelDao.getId(), invoiceModelDao.getAccountId(), context.getUserToken(), context);
+                        // Notify the bus since the balance of the invoice changed
+                        // TODO should we post an InvoiceCreationInternalEvent event instead? Note! This will trigger a payment (see InvoiceHandler)
+                        notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceModelDao.getId(), invoiceModelDao.getAccountId(), context.getUserToken(), context);
+                    }
                 }
 
                 return createdInvoiceItems;
@@ -645,26 +651,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, creditId.toString());
                 }
                 return invoiceItemModelDao;
-            }
-        });
-    }
-
-    @Override
-    public InvoiceItemModelDao insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
-                                                           final LocalDate effectiveDate, @Nullable final BigDecimal positiveAdjAmount,
-                                                           @Nullable final Currency currency, final InternalCallContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<InvoiceItemModelDao>() {
-            @Override
-            public InvoiceItemModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final InvoiceItemModelDao invoiceItemAdjustment = invoiceDaoHelper.createAdjustmentItem(entitySqlDaoWrapperFactory, invoiceId, invoiceItemId, positiveAdjAmount,
-                                                                                                        currency, effectiveDate, context);
-                invoiceDaoHelper.insertItem(entitySqlDaoWrapperFactory, invoiceItemAdjustment, context);
-
-                cbaDao.addCBAComplexityFromTransaction(invoiceId, entitySqlDaoWrapperFactory, context);
-
-                notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceId, accountId, context.getUserToken(), context);
-
-                return invoiceItemAdjustment;
             }
         });
     }

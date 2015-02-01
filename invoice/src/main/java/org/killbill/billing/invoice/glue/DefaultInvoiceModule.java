@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +22,7 @@ import org.killbill.billing.glue.InvoiceModule;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.InvoiceTagHandler;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
+import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceMigrationApi;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
@@ -29,6 +30,7 @@ import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
+import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import org.killbill.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
 import org.killbill.billing.invoice.api.svcs.DefaultInvoiceInternalApi;
@@ -45,7 +47,6 @@ import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.template.bundles.DefaultResourceBundleFactory;
-import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.InvoiceConfig;
@@ -149,5 +150,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installInvoicePaymentApi();
         installInvoiceMigrationApi();
         installResourceBundleFactory();
+
+        bind(InvoiceApiHelper.class).asEagerSingleton();
     }
 }

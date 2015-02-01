@@ -821,7 +821,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final String description = UUID.randomUUID().toString();
         final InvoiceModelDao invoiceForExternalCharge = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(null, accountId, bundleId, description, clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD));
+        final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(invoiceForExternalCharge.getId(), accountId, bundleId, description, clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD));
         invoiceForExternalCharge.addInvoiceItem(externalCharge);
         final InvoiceItemModelDao charge = invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceForExternalCharge), context).get(0);
 
