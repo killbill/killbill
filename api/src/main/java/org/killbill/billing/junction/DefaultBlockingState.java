@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,12 +21,10 @@ package org.killbill.billing.junction;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entity.EntityBase;
-
+import org.killbill.clock.Clock;
 
 public class DefaultBlockingState extends EntityBase implements BlockingState {
 
@@ -98,9 +98,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         return blockingId;
     }
 
-    /* (non-Javadoc)
-    * @see org.killbill.billing.junction.api.blocking.BlockingState#getStateName()
-    */
     @Override
     public String getStateName() {
         return stateName;
@@ -111,9 +108,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         return type;
     }
 
-    /* (non-Javadoc)
-    * @see org.killbill.billing.junction.api.blocking.BlockingState#getTimestamp()
-    */
     @Override
     public DateTime getEffectiveDate() {
         return effectiveDate;
@@ -124,25 +118,16 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         return service;
     }
 
-    /* (non-Javadoc)
-     * @see org.killbill.billing.junction.api.blocking.BlockingState#isBlockChange()
-     */
     @Override
     public boolean isBlockChange() {
         return blockChange;
     }
 
-    /* (non-Javadoc)
-     * @see org.killbill.billing.junction.api.blocking.BlockingState#isBlockEntitlement()
-     */
     @Override
     public boolean isBlockEntitlement() {
         return blockEntitlement;
     }
 
-    /* (non-Javadoc)
-     * @see org.killbill.billing.junction.api.blocking.BlockingState#isBlockBilling()
-     */
     @Override
     public boolean isBlockBilling() {
         return blockBilling;
@@ -226,9 +211,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         return true;
     }
 
-    /* (non-Javadoc)
-    * @see org.killbill.billing.junction.api.blocking.BlockingState#getDescription()
-    */
     @Override
     public String getDescription() {
         final String entitlement = onOff(isBlockEntitlement());
@@ -249,7 +231,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     @Override
     public String toString() {
         return "BlockingState [blockingId=" + blockingId + ", stateName=" + stateName + ", service="
-                + service + ", blockChange=" + blockChange + ", blockEntitlement=" + blockEntitlement
-                + ", blockBilling=" + blockBilling + ", effectiveDate=" + effectiveDate + "]";
+               + service + ", blockChange=" + blockChange + ", blockEntitlement=" + blockEntitlement
+               + ", blockBilling=" + blockBilling + ", effectiveDate=" + effectiveDate + "]";
     }
 }

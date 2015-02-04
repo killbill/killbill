@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -34,9 +36,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -49,6 +48,8 @@ import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -93,7 +94,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     //
     private List<SubscriptionEvent> computeEvents(final Collection<Entitlement> entitlements, final List<BlockingState> allBlockingStates, final DateTimeZone accountTimeZone) {
         // Extract ids for all entitlement in the list
-        final Set<UUID> allEntitlementUUIDs = new TreeSet(Collections2.transform(entitlements, new Function<Entitlement, UUID>() {
+        final Set<UUID> allEntitlementUUIDs = new TreeSet<UUID>(Collections2.transform(entitlements, new Function<Entitlement, UUID>() {
             @Override
             public UUID apply(final Entitlement input) {
                 return input.getId();
