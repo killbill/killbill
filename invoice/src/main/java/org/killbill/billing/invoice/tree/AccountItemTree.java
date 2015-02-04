@@ -93,9 +93,12 @@ public class AccountItemTree {
         addExistingItem(existingItem, false);
     }
 
-    private void addExistingItem(final InvoiceItem existingItem, boolean failOnMissingSubscription) {
-
+    private void addExistingItem(final InvoiceItem existingItem, final boolean failOnMissingSubscription) {
         Preconditions.checkState(!isBuilt);
+
+        // Only used to retrieve the original item for linked items
+        allExistingItems.add(existingItem);
+
         switch (existingItem.getInvoiceItemType()) {
             case EXTERNAL_CHARGE:
             case TAX:
@@ -116,7 +119,15 @@ public class AccountItemTree {
 
         }
 
-        allExistingItems.add(existingItem);
+        if (existingItem.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ) {
+            final InvoiceItem linkedInvoiceItem = getLinkedInvoiceItem(existingItem, allExistingItems);
+            if (linkedInvoiceItem != null &&
+                linkedInvoiceItem.getInvoiceItemType() != InvoiceItemType.RECURRING &&
+                linkedInvoiceItem.getInvoiceItemType() != InvoiceItemType.FIXED) {
+                // We only care about adjustments for recurring and fixed items when building the tree
+                return;
+            }
+        }
 
         final UUID subscriptionId = getSubscriptionId(existingItem, allExistingItems);
         Preconditions.checkState(subscriptionId != null || !failOnMissingSubscription, "Missing subscription id");
@@ -183,13 +194,17 @@ public class AccountItemTree {
             item.getInvoiceItemType() == InvoiceItemType.FIXED) {
             return item.getSubscriptionId();
         } else {
-            final InvoiceItem linkedItem = Iterables.tryFind(allItems, new Predicate<InvoiceItem>() {
-                @Override
-                public boolean apply(final InvoiceItem input) {
-                    return item.getLinkedItemId().equals(input.getId());
-                }
-            }).orNull();
+            final InvoiceItem linkedItem = getLinkedInvoiceItem(item, allItems);
             return linkedItem != null ? linkedItem.getSubscriptionId() : null;
         }
+    }
+
+    private InvoiceItem getLinkedInvoiceItem(final InvoiceItem item, final Iterable<InvoiceItem> allItems) {
+        return Iterables.tryFind(allItems, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getId().equals(item.getLinkedItemId());
+            }
+        }).orNull();
     }
 }
