@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -117,7 +119,7 @@ public class AccountItemTree {
         allExistingItems.add(existingItem);
 
         final UUID subscriptionId = getSubscriptionId(existingItem, allExistingItems);
-        Preconditions.checkState(subscriptionId != null || !failOnMissingSubscription);
+        Preconditions.checkState(subscriptionId != null || !failOnMissingSubscription, "Missing subscription id");
 
         if (subscriptionId == null && existingItem.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ) {
             pendingItemAdj.add(existingItem);
