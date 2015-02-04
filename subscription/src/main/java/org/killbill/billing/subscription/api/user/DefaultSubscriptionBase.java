@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -25,9 +27,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
@@ -38,9 +37,9 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -55,7 +54,9 @@ import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.entity.EntityBase;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DefaultSubscriptionBase extends EntityBase implements SubscriptionBase {
 
@@ -88,7 +89,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     // Low level events are ONLY used for Repair APIs
     protected List<SubscriptionBaseEvent> events;
-
 
     public List<SubscriptionBaseEvent> getEvents() {
         return events;
@@ -266,7 +266,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan().getProduct();
         } else {
-            return getCurrentPlan().getProduct();
+            final Plan currentPlan = getCurrentPlan();
+            // currentPlan can be null when playing with the clock
+            return currentPlan == null ? null : currentPlan.getProduct();
         }
     }
 
@@ -286,7 +288,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan().getProduct().getCategory();
         } else {
-            return getCurrentPlan().getProduct().getCategory();
+            final Plan currentPlan = getCurrentPlan();
+            // currentPlan can be null when playing with the clock
+            return currentPlan == null ? null : currentPlan.getProduct().getCategory();
         }
     }
 
@@ -316,7 +320,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan().getRecurringBillingPeriod();
         } else {
-            return getCurrentPlan().getRecurringBillingPeriod();
+            final Plan currentPlan = getCurrentPlan();
+            // currentPlan can be null when playing with the clock
+            return currentPlan.getRecurringBillingPeriod();
         }
     }
 
@@ -389,7 +395,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return true;
     }
 
-
     public SubscriptionBaseTransitionData getTransitionFromEvent(final SubscriptionBaseEvent event, final int seqId) {
         if (transitions == null || event == null) {
             return null;
@@ -455,7 +460,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
         return result;
     }
-
 
     public SubscriptionBaseTransitionData getLastTransitionForCurrentPlan() {
         if (transitions == null) {
@@ -612,7 +616,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         default:
                             throw new SubscriptionBaseError(String.format(
                                     "Unexpected UserEvent type = %s", userEV
-                                    .getEventType().toString()));
+                                            .getEventType().toString()));
                     }
                     break;
                 default:
