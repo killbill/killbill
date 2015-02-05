@@ -1,36 +1,42 @@
+0.13.3
+    https://github.com/killbill/killbill/issues/258
+    https://github.com/killbill/killbill/issues/260
+    https://github.com/killbill/killbill-commons/issues/9
+
 0.13.2
-   Fixes in payment system
-   Fix caching of catalog and overdue config
-   Fix CHANGE_OF_PLAN alignment
-   Make external key optional for accounts and bundles
-   https://github.com/killbill/killbill/issues/261
-   Update killbill-oss-parent to 0.9.9
+    https://github.com/killbill/killbill/issues/214
+    https://github.com/killbill/killbill/issues/251
+    https://github.com/killbill/killbill/issues/261
+    Fixes in payment system
+    Bug fixes in multi-tenant support
+    Fix CHANGE_OF_PLAN plan alignment
+    Update killbill-oss-parent to 0.9.9
 
 0.13.1
-   https://github.com/killbill/killbill/issues/226
-   https://github.com/killbill/killbill/issues/233
-   https://github.com/killbill/killbill/issues/234
-   https://github.com/killbill/killbill/issues/235
-   https://github.com/killbill/killbill/issues/236
-   https://github.com/killbill/killbill/issues/245
-   Add support for invoice plugins
-   Export more fields in TaxInvoiceItem
-   Update killbill-oss-parent to 0.9.7
+    https://github.com/killbill/killbill/issues/226
+    https://github.com/killbill/killbill/issues/233
+    https://github.com/killbill/killbill/issues/234
+    https://github.com/killbill/killbill/issues/235
+    https://github.com/killbill/killbill/issues/236
+    https://github.com/killbill/killbill/issues/245
+    Add support for invoice plugins
+    Export more fields in TaxInvoiceItem
+    Update killbill-oss-parent to 0.9.7
 
 0.12.2
-   Fix state machine flow for PENDING payments
-   Fix Guice wiring in JAX-RS
+    Fix state machine flow for PENDING payments
+    Fix Guice wiring in JAX-RS
 
 0.12.1
-   Fix NPE in case of aborted payments
-   Add missing headers for CORS
-   Update killbill-platform to 0.1.1
-   Reduce size of the war
+    Fix NPE in case of aborted payments
+    Add missing headers for CORS
+    Update killbill-platform to 0.1.1
+    Reduce size of the war
 
 0.12.0
-   Bug fixes #200 #193
-   Renaming
-   Preparation for 0.12.0
+    Bug fixes #200 #193
+    Renaming
+    Preparation for 0.12.0
 
 0.11.13
     Swagger integration
