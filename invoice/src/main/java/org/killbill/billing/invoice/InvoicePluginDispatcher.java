@@ -18,12 +18,15 @@
 package org.killbill.billing.invoice;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.DefaultInvoice;
@@ -40,6 +43,10 @@ public class InvoicePluginDispatcher {
 
     private static final Logger log = LoggerFactory.getLogger(InvoicePluginDispatcher.class);
 
+    private static final Collection<InvoiceItemType> ALLOWED_INVOICE_ITEM_TYPES = ImmutableList.<InvoiceItemType>of(InvoiceItemType.EXTERNAL_CHARGE,
+                                                                                                                    InvoiceItemType.ITEM_ADJ,
+                                                                                                                    InvoiceItemType.TAX);
+
     private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
 
     @Inject
@@ -51,8 +58,7 @@ public class InvoicePluginDispatcher {
     // If we have multiple plugins there is a question of plugin ordering and also a 'product' questions to decide whether
     // subsequent plugins should have access to items added by previous plugins
     //
-    public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice originalInvoice, final CallContext callContext) {
-
+    public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice originalInvoice, final CallContext callContext) throws InvoiceApiException {
         // We clone the original invoice so plugins don't remove/add items
         final Invoice clonedInvoice = (Invoice) ((DefaultInvoice) originalInvoice).clone();
         final List<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
@@ -61,21 +67,19 @@ public class InvoicePluginDispatcher {
             final List<InvoiceItem> items = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, ImmutableList.<PluginProperty>of(), callContext);
             if (items != null) {
                 for (final InvoiceItem item : items) {
-                    if (item.getInvoiceItemType() != InvoiceItemType.FIXED &&
-                        item.getInvoiceItemType() != InvoiceItemType.RECURRING &&
-                        item.getInvoiceItemType() != InvoiceItemType.REPAIR_ADJ &&
-                        item.getInvoiceItemType() != InvoiceItemType.CBA_ADJ &&
-                        item.getInvoiceItemType() != InvoiceItemType.CREDIT_ADJ &&
-                        item.getInvoiceItemType() != InvoiceItemType.REFUND_ADJ &&
-                        item.getInvoiceItemType() != InvoiceItemType.USAGE) {
-                        additionalInvoiceItems.add(item);
-                    } else {
-                        log.warn("Ignoring invoice item of type {} from InvoicePlugin {}: {}", item.getInvoiceItemType(), invoicePlugin, item);
-                    }
+                    validateInvoiceItemFromPlugin(item, invoicePlugin);
+                    additionalInvoiceItems.add(item);
                 }
             }
         }
         return additionalInvoiceItems;
+    }
+
+    private void validateInvoiceItemFromPlugin(final InvoiceItem invoiceItem, final InvoicePluginApi invoicePlugin) throws InvoiceApiException {
+        if (!ALLOWED_INVOICE_ITEM_TYPES.contains(invoiceItem.getInvoiceItemType())) {
+            log.warn("Ignoring invoice item of type {} from InvoicePlugin {}: {}", invoiceItem.getInvoiceItemType(), invoicePlugin, invoiceItem);
+            throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_TYPE_INVALID, invoiceItem.getInvoiceItemType());
+        }
     }
 
     private List<InvoicePluginApi> getInvoicePlugins() {

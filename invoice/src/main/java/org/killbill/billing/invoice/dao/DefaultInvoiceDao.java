@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -75,6 +77,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                                 return invoice.getTargetDate();
                                                                                             }
                                                                                         });
+
+    private static final Collection<InvoiceItemType> INVOICE_ITEM_TYPES_ADJUSTABLE = ImmutableList.<InvoiceItemType>of(InvoiceItemType.EXTERNAL_CHARGE,
+                                                                                                                       InvoiceItemType.FIXED,
+                                                                                                                       InvoiceItemType.RECURRING,
+                                                                                                                       InvoiceItemType.TAX,
+                                                                                                                       InvoiceItemType.USAGE);
 
     private final NextBillingDatePoster nextBillingDatePoster;
     private final PersistentBus eventBus;
@@ -221,7 +229,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     // Create the invoice items
                     final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
-                        transInvoiceItemSqlDao.create(invoiceItemModelDao, context);
+                        createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context);
                     }
 
                     cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
@@ -254,7 +262,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     // Create the invoice items if needed
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
                         if (transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context) == null) {
-                            transInvoiceItemSqlDao.create(invoiceItemModelDao, context);
+                            createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context);
                             createdInvoiceItems.add(transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context));
                             madeChanges = true;
                         }
@@ -455,7 +463,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         final InvoiceItemModelDao adjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.REFUND_ADJ, invoice.getId(), invoice.getAccountId(),
                                                                                     null, null, null, null, null, null, context.getCreatedDate().toLocalDate(), null,
                                                                                     requestedPositiveAmountToAdjust.negate(), null, invoice.getCurrency(), null);
-                        transInvoiceItemDao.create(adjItem, context);
+                        createInvoiceItemFromTransaction(transInvoiceItemDao, adjItem, context);
                         invoice.addInvoiceItem(adjItem);
                     }
                 } else if (isInvoiceAdjusted) {
@@ -465,7 +473,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         final InvoiceItemModelDao item = invoiceDaoHelper.createAdjustmentItem(entitySqlDaoWrapperFactory, invoice.getId(), invoiceItemId, adjAmount,
                                                                                                invoice.getCurrency(), context.getCreatedDate().toLocalDate(),
                                                                                                context);
-                        transInvoiceItemDao.create(item, context);
+
+                        createInvoiceItemFromTransaction(transInvoiceItemDao, item, context);
                         invoice.addInvoiceItem(item);
                     }
                 }
@@ -679,7 +688,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoice.getId(), invoice.getAccountId(),
                                                                                null, null, null, null, null, null, context.getCreatedDate().toLocalDate(),
                                                                                null, cbaItem.getAmount().negate(), null, cbaItem.getCurrency(), cbaItem.getId());
-                invoiceItemSqlDao.create(cbaAdjItem, context);
+                createInvoiceItemFromTransaction(invoiceItemSqlDao, cbaAdjItem, context);
 
                 // Verify the final invoice balance is not negative
                 invoiceDaoHelper.populateChildren(invoice, entitySqlDaoWrapperFactory, context);
@@ -736,7 +745,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                            invoice.getAccountId(), null, null, null, null, null, null,
                                                                                            context.getCreatedDate().toLocalDate(), null,
                                                                                            positiveCBAAdjItemAmount, null, cbaItem.getCurrency(), cbaItem.getId());
-                        invoiceItemSqlDao.create(nextCBAAdjItem, context);
+                        createInvoiceItemFromTransaction(invoiceItemSqlDao, nextCBAAdjItem, context);
                         if (positiveRemainderToAdjust.compareTo(BigDecimal.ZERO) == 0) {
                             break;
                         }
@@ -776,6 +785,27 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                          entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
             log.warn("Failed to post adjustment event for invoice " + invoiceId, e);
+        }
+    }
+
+    private void createInvoiceItemFromTransaction(final InvoiceItemSqlDao invoiceItemSqlDao, final InvoiceItemModelDao invoiceItemModelDao, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+        // There is no efficient way to retrieve an invoice item given an ID today (and invoice plugins can put item adjustments
+        // on a different invoice than the original item), so it's easier to do the check in the DAO rather than in the API layer
+        // See also https://github.com/killbill/killbill/issues/7
+        if (InvoiceItemType.ITEM_ADJ.equals(invoiceItemModelDao.getType())) {
+            validateInvoiceItemToBeAdjusted(invoiceItemSqlDao, invoiceItemModelDao, context);
+        }
+
+        invoiceItemSqlDao.create(invoiceItemModelDao, context);
+    }
+
+    private void validateInvoiceItemToBeAdjusted(final InvoiceItemSqlDao invoiceItemSqlDao, final InvoiceItemModelDao invoiceItemModelDao, final InternalCallContext context) throws InvoiceApiException {
+        Preconditions.checkNotNull(invoiceItemModelDao.getLinkedItemId(), "LinkedItemId cannot be null for ITEM_ADJ item: " + invoiceItemModelDao);
+        // Note: this assumes the linked item has already been created in or prior to the transaction, which should almost always be the case
+        // (unless some whacky plugin creates an out-of-order item adjustment on a subsequent external charge)
+        final InvoiceItemModelDao invoiceItemToBeAdjusted = invoiceItemSqlDao.getById(invoiceItemModelDao.getLinkedItemId().toString(), context);
+        if (!INVOICE_ITEM_TYPES_ADJUSTABLE.contains(invoiceItemToBeAdjusted.getType())) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_ITEM_INVALID, invoiceItemToBeAdjusted.getId());
         }
     }
 }

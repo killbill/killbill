@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -69,6 +71,10 @@ public class InvoiceApiExceptionMapper extends ExceptionMapperBase implements Ex
         } else if (exception.getCode() == ErrorCode.EXTERNAL_CHARGE_AMOUNT_INVALID.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.CURRENCY_INVALID.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_ITEM_ADJUSTMENT_ITEM_INVALID.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_ITEM_TYPE_INVALID.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
         } else {
             return fallback(exception, uriInfo);

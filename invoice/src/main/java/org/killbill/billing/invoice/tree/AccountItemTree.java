@@ -125,6 +125,7 @@ public class AccountItemTree {
                 linkedInvoiceItem.getInvoiceItemType() != InvoiceItemType.RECURRING &&
                 linkedInvoiceItem.getInvoiceItemType() != InvoiceItemType.FIXED) {
                 // We only care about adjustments for recurring and fixed items when building the tree
+                // (we assume that REPAIR_ADJ and ITEM_ADJ items cannot be adjusted)
                 return;
             }
         }
