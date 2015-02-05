@@ -40,6 +40,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     private final boolean blockBilling;
     private final DateTime effectiveDate;
     private final BlockingStateType type;
+    private final Long totalOrdering;
 
     public static BlockingState getClearState(final BlockingStateType type, final String serviceName, final Clock clock) {
         if (clearState == null) {
@@ -48,7 +49,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         return clearState;
     }
 
-
+    // Used by the DAO
     public DefaultBlockingState(final UUID id,
                                 final UUID blockingId,
                                 final BlockingStateType type,
@@ -59,7 +60,8 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
                                 final boolean blockBilling,
                                 final DateTime effectiveDate,
                                 final DateTime createDate,
-                                final DateTime updatedDate) {
+                                final DateTime updatedDate,
+                                final Long totalOrdering) {
         super(id, createDate, updatedDate);
         this.blockingId = blockingId;
         this.type = type;
@@ -69,17 +71,17 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         this.blockEntitlement = blockEntitlement;
         this.blockBilling = blockBilling;
         this.effectiveDate = effectiveDate;
+        this.totalOrdering = totalOrdering;
     }
-
 
     public DefaultBlockingState(final UUID blockingId,
                                 final BlockingStateType type,
-                                 final String stateName,
-                                 final String service,
-                                 final boolean blockChange,
-                                 final boolean blockEntitlement,
-                                 final boolean blockBilling,
-                                 final DateTime effectiveDate) {
+                                final String stateName,
+                                final String service,
+                                final boolean blockChange,
+                                final boolean blockEntitlement,
+                                final boolean blockBilling,
+                                final DateTime effectiveDate) {
         this(UUID.randomUUID(),
              blockingId,
              type,
@@ -90,7 +92,8 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
              blockBilling,
              effectiveDate,
              null,
-             null);
+             null,
+             0L);
     }
 
     @Override
@@ -133,82 +136,96 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         return blockBilling;
     }
 
-    /* (non-Javadoc)
-     * @see org.killbill.billing.junction.api.blocking.BlockingState#compareTo(org.killbill.billing.junction.api.blocking.DefaultBlockingState)
-     */
+    public Long getTotalOrdering() {
+        return totalOrdering;
+    }
+
+    // Notes:
+    //  + we need to keep the same implementation here as DefaultBlockingStateDao.BLOCKING_STATE_MODEL_DAO_ORDERING
+    //  + to sort blocking states in entitlement, check ProxyBlockingStateDao#sortedCopy
     @Override
     public int compareTo(final BlockingState arg0) {
-        if (effectiveDate.compareTo(arg0.getEffectiveDate()) != 0) {
-            return effectiveDate.compareTo(arg0.getEffectiveDate());
+        // effective_date column NOT NULL
+        final int comparison = effectiveDate.compareTo(arg0.getEffectiveDate());
+        if (comparison == 0) {
+            // Keep a stable ordering for ties
+            final int comparison2 = createdDate.compareTo(arg0.getCreatedDate());
+            if (comparison2 == 0 && getClass() != arg0.getClass()) {
+                final DefaultBlockingState other = (DefaultBlockingState) arg0;
+                // New element is last
+                if (totalOrdering == null) {
+                    return 1;
+                } else if (other.getTotalOrdering() == null) {
+                    return -1;
+                } else {
+                    return totalOrdering.compareTo(other.getTotalOrdering());
+                }
+            } else {
+                return comparison2;
+            }
         } else {
-            return hashCode() - arg0.hashCode();
+            return comparison;
         }
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final DefaultBlockingState that = (DefaultBlockingState) o;
+
+        if (blockBilling != that.blockBilling) {
+            return false;
+        }
+        if (blockChange != that.blockChange) {
+            return false;
+        }
+        if (blockEntitlement != that.blockEntitlement) {
+            return false;
+        }
+        if (blockingId != null ? !blockingId.equals(that.blockingId) : that.blockingId != null) {
+            return false;
+        }
+        if (effectiveDate != null ? effectiveDate.compareTo(that.effectiveDate) != 0 : that.effectiveDate != null) {
+            return false;
+        }
+        if (service != null ? !service.equals(that.service) : that.service != null) {
+            return false;
+        }
+        if (stateName != null ? !stateName.equals(that.stateName) : that.stateName != null) {
+            return false;
+        }
+        if (totalOrdering != null ? !totalOrdering.equals(that.totalOrdering) : that.totalOrdering != null) {
+            return false;
+        }
+        if (type != that.type) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (blockBilling ? 1231 : 1237);
-        result = prime * result + (blockChange ? 1231 : 1237);
-        result = prime * result + (blockEntitlement ? 1231 : 1237);
-        result = prime * result + ((blockingId == null) ? 0 : blockingId.hashCode());
-        result = prime * result + ((service == null) ? 0 : service.hashCode());
-        result = prime * result + ((stateName == null) ? 0 : stateName.hashCode());
-        result = prime * result + ((effectiveDate == null) ? 0 : effectiveDate.hashCode());
+        int result = super.hashCode();
+        result = 31 * result + (blockingId != null ? blockingId.hashCode() : 0);
+        result = 31 * result + (stateName != null ? stateName.hashCode() : 0);
+        result = 31 * result + (service != null ? service.hashCode() : 0);
+        result = 31 * result + (blockChange ? 1 : 0);
+        result = 31 * result + (blockEntitlement ? 1 : 0);
+        result = 31 * result + (blockBilling ? 1 : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (totalOrdering != null ? totalOrdering.hashCode() : 0);
         return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final DefaultBlockingState other = (DefaultBlockingState) obj;
-        if (blockBilling != other.blockBilling) {
-            return false;
-        }
-        if (blockChange != other.blockChange) {
-            return false;
-        }
-        if (blockEntitlement != other.blockEntitlement) {
-            return false;
-        }
-        if (blockingId == null) {
-            if (other.blockingId != null) {
-                return false;
-            }
-        } else if (!blockingId.equals(other.blockingId)) {
-            return false;
-        }
-        if (service == null) {
-            if (other.service != null) {
-                return false;
-            }
-        } else if (!service.equals(other.service)) {
-            return false;
-        }
-        if (stateName == null) {
-            if (other.stateName != null) {
-                return false;
-            }
-        } else if (!stateName.equals(other.stateName)) {
-            return false;
-        }
-        if (effectiveDate == null) {
-            if (other.effectiveDate != null) {
-                return false;
-            }
-        } else if (effectiveDate.compareTo(other.effectiveDate) != 0) {
-            return false;
-        }
-        return true;
     }
 
     @Override

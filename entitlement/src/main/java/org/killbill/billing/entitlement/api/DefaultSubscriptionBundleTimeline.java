@@ -21,9 +21,7 @@ package org.killbill.billing.entitlement.api;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -69,17 +67,19 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     private final String externalKey;
 
     public DefaultSubscriptionBundleTimeline(final DateTimeZone accountTimeZone, final UUID accountId, final UUID bundleId, final String externalKey, final Collection<Entitlement> entitlements) {
-        final Collection<BlockingState> blockingStates = new HashSet<BlockingState>();
+        // Trust the incoming ordering here: blocking states were sorted using ProxyBlockingStateDao#sortedCopy
+        final List<BlockingState> blockingStates = new LinkedList<BlockingState>();
         for (final Entitlement entitlement : entitlements) {
             blockingStates.addAll(((DefaultEntitlement) entitlement).getEventsStream().getBlockingStates());
         }
         this.accountId = accountId;
         this.bundleId = bundleId;
         this.externalKey = externalKey;
-        this.events = computeEvents(entitlements, new LinkedList<BlockingState>(blockingStates), accountTimeZone);
+        this.events = computeEvents(entitlements, blockingStates, accountTimeZone);
     }
 
-    public DefaultSubscriptionBundleTimeline(final DateTimeZone accountTimeZone, final UUID accountId, final UUID bundleId, final String externalKey, final List<Entitlement> entitlements, final List<BlockingState> allBlockingStates) {
+    @VisibleForTesting
+    DefaultSubscriptionBundleTimeline(final DateTimeZone accountTimeZone, final UUID accountId, final UUID bundleId, final String externalKey, final Collection<Entitlement> entitlements, final List<BlockingState> allBlockingStates) {
         this.accountId = accountId;
         this.bundleId = bundleId;
         this.externalKey = externalKey;
@@ -103,45 +103,6 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
 
         // Compute base events across all entitlements
         final LinkedList<SubscriptionEvent> result = computeSubscriptionBaseEvents(entitlements, accountTimeZone);
-
-        // Order allBlockingStates  events by effectiveDate, createdDate, uuid, service, serviceState
-        Collections.sort(allBlockingStates, new Comparator<BlockingState>() {
-            @Override
-            public int compare(final BlockingState o1, final BlockingState o2) {
-                final int effectivedComp = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
-                if (effectivedComp != 0) {
-                    return effectivedComp;
-                }
-                // For the same effectiveDate we want to first return events from ENTITLEMENT service first
-                final int serviceNameComp = o1.getService().compareTo(o2.getService());
-                if (serviceNameComp != 0) {
-                    if (o1.getService().equals(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME)) {
-                        return -1;
-                    } else if (o2.getService().equals(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME)) {
-                        return 1;
-                    } else {
-                        return serviceNameComp;
-                    }
-                }
-                // Order by subscription just to get something deterministic
-                final int uuidComp = o1.getBlockedId().compareTo(o2.getBlockedId());
-                if (uuidComp != 0) {
-                    return uuidComp;
-                }
-                // And then finally state
-                final int serviceStateComp = o1.getStateName().compareTo(o2.getStateName());
-                if (serviceStateComp != 0) {
-                    return serviceStateComp;
-                }
-                final int createdDateComp = o1.getCreatedDate().compareTo(o2.getCreatedDate());
-                if (createdDateComp != 0) {
-                    return createdDateComp;
-                }
-
-                // Non deterministic -- not sure that will ever happen. Once we are confident this never happens, we should throw ShouldntHappenException
-                return 0;
-            }
-        });
 
         for (final BlockingState bs : allBlockingStates) {
             final List<SubscriptionEvent> newEvents = new ArrayList<SubscriptionEvent>();
@@ -183,7 +144,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     // to return:
     // - One explanation is that we don't know the events in advance and each time the new events to be inserted are computed from the current state
     //   of the stream, which requires ordering all along
-    // - A careful reader will notice that the algorithm is N^2, -- so that we care so much considering we have very events-- but in addition to that
+    // - A careful reader will notice that the algorithm is N^2, -- so that we care so much considering we have very events -- but in addition to that
     //   the recursive path will be used very infrequently and when it is used, this will be probably just reorder with the prev event and that's it.
     //
     @VisibleForTesting
@@ -216,7 +177,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         }
     }
 
-    private int compareSubscriptionEventsForSameEffectiveDateAndEntitlementId(final SubscriptionEvent first, final SubscriptionEvent second) {
+    private Integer compareSubscriptionEventsForSameEffectiveDateAndEntitlementId(final SubscriptionEvent first, final SubscriptionEvent second) {
         // For consistency, make sure entitlement-service and billing-service events always happen in a
         // deterministic order (e.g. after other services for STOP events and before for START events)
         if ((DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(first.getServiceName()) ||
@@ -261,22 +222,47 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
                 // Default behavior
                 return 1;
             }
+        } else if (first.getSubscriptionEventType().equals(SubscriptionEventType.START_ENTITLEMENT)) {
+            // START_ENTITLEMENT is always first
+            return -1;
+        } else if (second.getSubscriptionEventType().equals(SubscriptionEventType.START_ENTITLEMENT)) {
+            // START_ENTITLEMENT is always first
+            return 1;
+        } else if (first.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)) {
+            // STOP_BILLING is always last
+            return 1;
+        } else if (second.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)) {
+            // STOP_BILLING is always last
+            return -1;
+        } else if (first.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING)) {
+            // START_BILLING is first after START_ENTITLEMENT
+            return -1;
+        } else if (second.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING)) {
+            // START_BILLING is first after START_ENTITLEMENT
+            return 1;
+        } else if (first.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT)) {
+            // STOP_ENTITLEMENT is last after STOP_BILLING
+            return 1;
+        } else if (second.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT)) {
+            // STOP_ENTITLEMENT is last after STOP_BILLING
+            return -1;
         } else {
-            // Respect enum ordering
-            return ((Integer) first.getSubscriptionEventType().ordinal()).compareTo(second.getSubscriptionEventType().ordinal());
+            // Trust the current ordering
+            return null;
         }
     }
 
     private boolean shouldSwap(final SubscriptionEvent cur, final SubscriptionEvent other, final boolean isAscending) {
         // For a given date, order by subscriptionId, and within subscription by event type
         final int idComp = cur.getEntitlementId().compareTo(other.getEntitlementId());
+        final Integer comparison = compareSubscriptionEventsForSameEffectiveDateAndEntitlementId(cur, other);
         return (cur.getEffectiveDate().compareTo(other.getEffectiveDate()) == 0 &&
                 ((isAscending &&
                   ((idComp > 0) ||
-                   (idComp == 0 && compareSubscriptionEventsForSameEffectiveDateAndEntitlementId(cur, other) > 0))) ||
+                   (idComp == 0 && comparison != null && comparison > 0))) ||
                  (!isAscending &&
                   ((idComp < 0) ||
-                   (idComp == 0 && compareSubscriptionEventsForSameEffectiveDateAndEntitlementId(cur, other) < 0)))));
+                   (idComp == 0 && comparison != null && comparison < 0)))));
     }
 
     private void insertAfterIndex(final LinkedList<SubscriptionEvent> original, final List<SubscriptionEvent> newEvents, final int index) {

@@ -26,12 +26,9 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.skife.jdbi.v2.IDBI;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -41,6 +38,8 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -57,7 +56,19 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
             final int comparison = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
             if (comparison == 0) {
                 // Keep a stable ordering for ties
-                return o1.getCreatedDate().compareTo(o2.getCreatedDate());
+                final int comparison2 = o1.getCreatedDate().compareTo(o2.getCreatedDate());
+                if (comparison2 == 0) {
+                    // New element is last
+                    if (o1.getRecordId() == null) {
+                        return 1;
+                    } else if (o2.getRecordId() == null) {
+                        return -1;
+                    } else {
+                        return o1.getRecordId().compareTo(o2.getRecordId());
+                    }
+                } else {
+                    return comparison2;
+                }
             } else {
                 return comparison;
             }

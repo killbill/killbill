@@ -148,7 +148,7 @@ public class BlockingStateModelDao extends EntityModelDaoBase implements EntityM
             return null;
         }
         return new DefaultBlockingState(src.getId(), src.getBlockableId(), src.getType(), src.getState(), src.getService(), src.getBlockChange(), src.getBlockEntitlement(), src.getBlockBilling(),
-                                 src.getEffectiveDate(), src.getCreatedDate(), src.getUpdatedDate());
+                                        src.getEffectiveDate(), src.getCreatedDate(), src.getUpdatedDate(), src.getRecordId());
     }
 
     @Override
