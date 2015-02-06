@@ -862,10 +862,10 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             }
         });
 
-        SubscriptionBaseEvent futureBaseEvent = null;
+        final List<ApiEventChange> baseChangeEvents = new LinkedList<ApiEventChange>();
+        ApiEventCancel baseCancellationEvent = null;
         final List<SubscriptionBase> result = new ArrayList<SubscriptionBase>(input.size());
         for (final SubscriptionBase cur : input) {
-
             final List<SubscriptionBaseEvent> events = eventsForSubscription != null ?
                                                        (List<SubscriptionBaseEvent>) eventsForSubscription.get(cur.getId()) :
                                                        getEventsForSubscription(cur.getId(), context);
@@ -875,37 +875,53 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
             switch (cur.getCategory()) {
                 case BASE:
-                    final Collection<SubscriptionBaseEvent> futureApiEvents = Collections2.filter(events, new Predicate<SubscriptionBaseEvent>() {
-                        @Override
-                        public boolean apply(final SubscriptionBaseEvent input) {
-                            return (input.isActive() && input.getEffectiveDate().isAfter(clock.getUTCNow()) &&
-                                    ((input instanceof ApiEventCancel) || (input instanceof ApiEventChange)));
+                    for (final SubscriptionBaseEvent event : events) {
+                        if (!event.isActive()) {
+                            continue;
+                        } else if (event instanceof ApiEventCancel) {
+                            baseCancellationEvent = (ApiEventCancel) event;
+                            break;
+                        } else if (event instanceof ApiEventChange) {
+                            // Need to track all changes, see https://github.com/killbill/killbill/issues/268
+                            baseChangeEvents.add((ApiEventChange) event);
                         }
-                    });
-                    futureBaseEvent = (futureApiEvents.size() == 0) ? null : futureApiEvents.iterator().next();
+                    }
                     break;
-
                 case ADD_ON:
                     final Plan targetAddOnPlan = reloaded.getCurrentPlan();
-                    final String baseProductName = (futureBaseEvent instanceof ApiEventChange) ?
-                                                   ((ApiEventChange) futureBaseEvent).getEventPlan() : null;
+                    if (targetAddOnPlan == null || reloaded.getFutureEndDate() != null) {
+                        // TODO What if reloaded.getFutureEndDate() is not null but a base plan change
+                        // triggers another cancellation before?
+                        break;
+                    }
 
-                    final boolean createCancelEvent = (futureBaseEvent != null && targetAddOnPlan != null) &&
-                                                      ((futureBaseEvent instanceof ApiEventCancel) ||
-                                                       ((!addonUtils.isAddonAvailableFromPlanName(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan, context)) ||
-                                                        (addonUtils.isAddonIncludedFromPlanName(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan, context))));
+                    SubscriptionBaseEvent baseTriggerEventForAddOnCancellation = baseCancellationEvent;
+                    for (final ApiEventChange baseChangeEvent : baseChangeEvents) {
+                        final String baseProductName = baseChangeEvent.getEventPlan();
 
-                    if (createCancelEvent && reloaded.getFutureEndDate() == null) {
+                        if ((!addonUtils.isAddonAvailableFromPlanName(baseProductName, baseChangeEvent.getEffectiveDate(), targetAddOnPlan, context)) ||
+                            (addonUtils.isAddonIncludedFromPlanName(baseProductName, baseChangeEvent.getEffectiveDate(), targetAddOnPlan, context))) {
+                            if (baseTriggerEventForAddOnCancellation != null) {
+                                if (baseTriggerEventForAddOnCancellation.getEffectiveDate().isAfter(baseChangeEvent.getEffectiveDate())) {
+                                    baseTriggerEventForAddOnCancellation = baseChangeEvent;
+                                }
+                            } else {
+                                baseTriggerEventForAddOnCancellation = baseChangeEvent;
+                            }
+                        }
+                    }
+
+                    if (baseTriggerEventForAddOnCancellation != null) {
                         final DateTime now = clock.getUTCNow();
                         final SubscriptionBaseEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                                   .setSubscriptionId(reloaded.getId())
                                                                                                   .setActiveVersion(((DefaultSubscriptionBase) reloaded).getActiveVersion())
                                                                                                   .setProcessedDate(now)
-                                                                                                  .setEffectiveDate(futureBaseEvent.getEffectiveDate())
+                                                                                                  .setEffectiveDate(baseTriggerEventForAddOnCancellation.getEffectiveDate())
                                                                                                   .setRequestedDate(now)
-                                                                                                  .setCreatedDate(futureBaseEvent.getCreatedDate())
-                                                                                                          // This event is only there to indicate the ADD_ON is future canceled, but it is not there
-                                                                                                          // on disk until the base plan cancellation becomes effective
+                                                                                                  .setCreatedDate(baseTriggerEventForAddOnCancellation.getCreatedDate())
+                                                                                                  // This event is only there to indicate the ADD_ON is future canceled, but it is not there
+                                                                                                  // on disk until the base plan cancellation becomes effective
                                                                                                   .setFromDisk(false));
 
                         events.add(addOnCancelEvent);
