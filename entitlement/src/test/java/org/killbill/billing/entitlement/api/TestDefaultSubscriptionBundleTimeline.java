@@ -43,6 +43,8 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 
+import com.google.common.collect.ImmutableList;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
@@ -973,7 +975,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertNull(events.get(8).getNextPhase());
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast")
     public void testWithOverdueOffline() throws CatalogApiException {
         clock.setDay(new LocalDate(2013, 1, 1));
 
@@ -1003,12 +1005,31 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final SubscriptionBaseTransition tr3 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CANCEL, requestedDate, effectiveDate, clock.getUTCNow(), "phase", null);
         allTransitions.add(tr3);
 
+        // Verify the timeline without the blocking state events
+        final ImmutableList<Entitlement> entitlementsWithoutBlockingStates = ImmutableList.<Entitlement>of(createEntitlement(entitlementId, allTransitions));
+        final List<SubscriptionEvent> eventsWithoutBlockingStates = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlementsWithoutBlockingStates, blockingStates).getSubscriptionEvents();
+        assertEquals(eventsWithoutBlockingStates.size(), 4);
+        assertEquals(eventsWithoutBlockingStates.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(eventsWithoutBlockingStates.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(eventsWithoutBlockingStates.get(2).getSubscriptionEventType(), SubscriptionEventType.PHASE);
+        assertEquals(eventsWithoutBlockingStates.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
+
         final String service = "overdue-service";
         final BlockingState bs1 = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.ACCOUNT,
                                                            "OFFLINE", service,
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
         blockingStates.add(bs1);
+
+        // Verify the timeline with the overdue event blocking the entitlement
+        final ImmutableList<Entitlement> entitlementsWithOverdueEvent = ImmutableList.<Entitlement>of(createEntitlement(entitlementId, allTransitions));
+        final List<SubscriptionEvent> eventsWithOverdueEvent = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlementsWithOverdueEvent, blockingStates).getSubscriptionEvents();
+        assertEquals(eventsWithOverdueEvent.size(), 5);
+        assertEquals(eventsWithOverdueEvent.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(eventsWithOverdueEvent.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(eventsWithOverdueEvent.get(2).getSubscriptionEventType(), SubscriptionEventType.PHASE);
+        assertEquals(eventsWithOverdueEvent.get(3).getSubscriptionEventType(), SubscriptionEventType.PAUSE_ENTITLEMENT);
+        assertEquals(eventsWithOverdueEvent.get(4).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
         final BlockingState bs2 = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
                                                            DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
@@ -1020,6 +1041,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final Entitlement entitlement = createEntitlement(entitlementId, allTransitions);
         entitlements.add(entitlement);
 
+        // Verify the timeline with both the overdue event and the entitlement cancel event
         final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, blockingStates);
 
         assertEquals(timeline.getAccountId(), accountId);
@@ -1039,7 +1061,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
         assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.PHASE);
-        assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
+        assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.PAUSE_ENTITLEMENT);
         assertEquals(events.get(4).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
         assertEquals(events.get(5).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
@@ -1059,7 +1081,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(2).getNextPhase().getName(), "phase");
 
         assertEquals(events.get(3).getPrevPhase().getName(), "phase");
-        assertNull(events.get(3).getNextPhase());
+        assertEquals(events.get(3).getNextPhase().getName(), "phase");
         assertEquals(events.get(4).getPrevPhase().getName(), "phase");
         assertNull(events.get(4).getNextPhase());
 
