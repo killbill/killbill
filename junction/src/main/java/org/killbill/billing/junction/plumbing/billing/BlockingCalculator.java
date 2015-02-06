@@ -297,11 +297,13 @@ public class BlockingCalculator {
             lastOne = null;
         }
 
+        final DateTime startDate = firstBlocking.getEffectiveDate();
         final DateTime endDate = firstNonBlocking == null ? null : firstNonBlocking.getEffectiveDate();
-        if (lastOne != null && lastOne.getEnd().compareTo(firstBlocking.getEffectiveDate()) == 0) {
+        if (lastOne != null && lastOne.getEnd().compareTo(startDate) == 0) {
             lastOne.setEnd(endDate);
-        } else {
-            result.add(new DisabledDuration(firstBlocking.getEffectiveDate(), endDate));
+        } else if (endDate == null || startDate.toLocalDate().compareTo(endDate.toLocalDate()) != 0) {
+            // Don't disable for periods less than a day (see https://github.com/killbill/killbill/issues/267)
+            result.add(new DisabledDuration(startDate, endDate));
         }
     }
 
