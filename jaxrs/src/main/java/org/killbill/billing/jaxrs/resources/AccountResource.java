@@ -303,8 +303,9 @@ public class AccountResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final HttpServletRequest request,
                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
         verifyNonNullOrEmpty(json, "AccountJson body should be specified");
-        verifyNonNullOrEmpty(json.getName(), "AccountJson name needs to be set");
-        verifyNonNullOrEmpty(json.getEmail(), "AccountJson email needs to be set");
+        // Permit blank values, see https://github.com/killbill/killbill/issues/270
+        verifyNonNull(json.getName(), "AccountJson name needs to be set");
+        verifyNonNull(json.getEmail(), "AccountJson email needs to be set");
 
         final AccountData data = json.toAccountData();
         final Account account = accountUserApi.createAccount(data, context.createContext(createdBy, reason, comment, request));
