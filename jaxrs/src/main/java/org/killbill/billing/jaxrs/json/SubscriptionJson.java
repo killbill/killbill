@@ -52,8 +52,14 @@ public class SubscriptionJson extends JsonBase {
     private final String productCategory;
     @ApiModelProperty(dataType = "org.killbill.billing.catalog.api.BillingPeriod", required = true)
     private final String billingPeriod;
+    @ApiModelProperty(dataType = "org.killbill.billing.catalog.api.PhaseType")
+    private final String phaseType;
     @ApiModelProperty(required = true)
     private final String priceList;
+    @ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementState")
+    private final String state;
+    @ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType")
+    private final String sourceType;
     private final LocalDate cancelledDate;
     private final LocalDate chargedThroughDate;
     private final LocalDate billingStartDate;
@@ -270,7 +276,10 @@ public class SubscriptionJson extends JsonBase {
                             @JsonProperty("productName") @Nullable final String productName,
                             @JsonProperty("productCategory") @Nullable final String productCategory,
                             @JsonProperty("billingPeriod") @Nullable final String billingPeriod,
+                            @JsonProperty("phaseType") @Nullable final String phaseType,
                             @JsonProperty("priceList") @Nullable final String priceList,
+                            @JsonProperty("state") @Nullable final String state,
+                            @JsonProperty("sourceType") @Nullable final String sourceType,
                             @JsonProperty("cancelledDate") @Nullable final LocalDate cancelledDate,
                             @JsonProperty("chargedThroughDate") @Nullable final LocalDate chargedThroughDate,
                             @JsonProperty("billingStartDate") @Nullable final LocalDate billingStartDate,
@@ -282,7 +291,10 @@ public class SubscriptionJson extends JsonBase {
         this.productName = productName;
         this.productCategory = productCategory;
         this.billingPeriod = billingPeriod;
+        this.phaseType = phaseType;
         this.priceList = priceList;
+        this.state = state;
+        this.sourceType = sourceType;
         this.cancelledDate = cancelledDate;
         this.chargedThroughDate = chargedThroughDate;
         this.billingStartDate = billingStartDate;
@@ -300,7 +312,10 @@ public class SubscriptionJson extends JsonBase {
         this.productName = subscription.getLastActiveProduct().getName();
         this.productCategory = subscription.getLastActiveProductCategory().name();
         this.billingPeriod = subscription.getLastActivePlan().getRecurringBillingPeriod().toString();
+        this.phaseType = subscription.getLastActivePhase().getPhaseType().toString();
         this.priceList = subscription.getLastActivePriceList().getName();
+        this.state = subscription.getState().name();
+        this.sourceType = subscription.getSourceType().name();
         this.cancelledDate = subscription.getEffectiveEndDate();
         this.chargedThroughDate = subscription.getChargedThroughDate();
         this.billingStartDate = subscription.getBillingStartDate();
@@ -347,8 +362,20 @@ public class SubscriptionJson extends JsonBase {
         return billingPeriod;
     }
 
+    public String getPhaseType() {
+        return phaseType;
+    }
+
     public String getPriceList() {
         return priceList;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public String getSourceType() {
+        return sourceType;
     }
 
     public LocalDate getCancelledDate() {
@@ -382,7 +409,10 @@ public class SubscriptionJson extends JsonBase {
         sb.append(", productName='").append(productName).append('\'');
         sb.append(", productCategory='").append(productCategory).append('\'');
         sb.append(", billingPeriod='").append(billingPeriod).append('\'');
+        sb.append(", phaseType='").append(phaseType).append('\'');
         sb.append(", priceList='").append(priceList).append('\'');
+        sb.append(", state='").append(state).append('\'');
+        sb.append(", sourceType='").append(sourceType).append('\'');
         sb.append(", cancelledDate=").append(cancelledDate);
         sb.append(", chargedThroughDate=").append(chargedThroughDate);
         sb.append(", billingStartDate=").append(billingStartDate);
@@ -430,6 +460,9 @@ public class SubscriptionJson extends JsonBase {
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
             return false;
         }
+        if (phaseType != null ? !phaseType.equals(that.phaseType) : that.phaseType != null) {
+            return false;
+        }
         if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
             return false;
         }
@@ -439,7 +472,13 @@ public class SubscriptionJson extends JsonBase {
         if (productName != null ? !productName.equals(that.productName) : that.productName != null) {
             return false;
         }
+        if (sourceType != null ? !sourceType.equals(that.sourceType) : that.sourceType != null) {
+            return false;
+        }
         if (startDate != null ? startDate.compareTo(that.startDate) != 0 : that.startDate != null) {
+            return false;
+        }
+        if (state != null ? !state.equals(that.state) : that.state != null) {
             return false;
         }
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
@@ -459,7 +498,10 @@ public class SubscriptionJson extends JsonBase {
         result = 31 * result + (productName != null ? productName.hashCode() : 0);
         result = 31 * result + (productCategory != null ? productCategory.hashCode() : 0);
         result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
+        result = 31 * result + (phaseType != null ? phaseType.hashCode() : 0);
         result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
+        result = 31 * result + (state != null ? state.hashCode() : 0);
+        result = 31 * result + (sourceType != null ? sourceType.hashCode() : 0);
         result = 31 * result + (cancelledDate != null ? cancelledDate.hashCode() : 0);
         result = 31 * result + (chargedThroughDate != null ? chargedThroughDate.hashCode() : 0);
         result = 31 * result + (billingStartDate != null ? billingStartDate.hashCode() : 0);
