@@ -105,6 +105,26 @@ public class SubscriptionJson extends JsonBase {
             this.phase = phase;
         }
 
+        public EventSubscriptionJson(final SubscriptionEvent subscriptionEvent, @Nullable final AccountAuditLogs accountAuditLogs) {
+            super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscriptionEvent(subscriptionEvent.getId())));
+            final BillingPeriod billingPeriod = subscriptionEvent.getNextBillingPeriod() != null ? subscriptionEvent.getNextBillingPeriod() : subscriptionEvent.getPrevBillingPeriod();
+            final Product product = subscriptionEvent.getNextProduct() != null ? subscriptionEvent.getNextProduct() : subscriptionEvent.getPrevProduct();
+            final PriceList priceList = subscriptionEvent.getNextPriceList() != null ? subscriptionEvent.getNextPriceList() : subscriptionEvent.getPrevPriceList();
+            final PlanPhase phase = subscriptionEvent.getNextPhase() != null ? subscriptionEvent.getNextPhase() : subscriptionEvent.getPrevPhase();
+            this.eventId = subscriptionEvent.getId().toString();
+            this.billingPeriod = billingPeriod != null ? billingPeriod.toString() : null;
+            this.requestedDate = subscriptionEvent.getRequestedDate();
+            this.effectiveDate = subscriptionEvent.getEffectiveDate();
+            this.product = product != null ? product.getName() : null;
+            this.priceList = priceList != null ? priceList.getName() : null;
+            this.eventType = subscriptionEvent.getSubscriptionEventType().toString();
+            this.isBlockedBilling = subscriptionEvent.isBlockedBilling();
+            this.isBlockedEntitlement = subscriptionEvent.isBlockedEntitlement();
+            this.serviceName = subscriptionEvent.getServiceName();
+            this.serviceStateName = subscriptionEvent.getServiceStateName();
+            this.phase = phase != null ? phase.getName() : null;
+        }
+
         public String getEventId() {
             return eventId;
         }
@@ -274,9 +294,7 @@ public class SubscriptionJson extends JsonBase {
         this.events = events;
     }
 
-    public SubscriptionJson(final Subscription subscription,
-                            final List<SubscriptionEvent> subscriptionEvents,
-                            @Nullable final AccountAuditLogs accountAuditLogs) {
+    public SubscriptionJson(final Subscription subscription, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscription(subscription.getId())));
         this.startDate = subscription.getEffectiveStartDate();
         this.productName = subscription.getLastActiveProduct().getName();
@@ -291,27 +309,9 @@ public class SubscriptionJson extends JsonBase {
         this.bundleId = subscription.getBundleId().toString();
         this.subscriptionId = subscription.getId().toString();
         this.externalKey = subscription.getExternalKey();
-        this.events = subscriptionEvents != null ? new LinkedList<EventSubscriptionJson>() : null;
-        if (events != null) {
-            for (final SubscriptionEvent cur : subscriptionEvents) {
-                final BillingPeriod billingPeriod = cur.getNextBillingPeriod() != null ? cur.getNextBillingPeriod() : cur.getPrevBillingPeriod();
-                final Product product = cur.getNextProduct() != null ? cur.getNextProduct() : cur.getPrevProduct();
-                final PriceList priceList = cur.getNextPriceList() != null ? cur.getNextPriceList() : cur.getPrevPriceList();
-                final PlanPhase phase = cur.getNextPhase() != null ? cur.getNextPhase() : cur.getPrevPhase();
-                this.events.add(new EventSubscriptionJson(cur.getId().toString(),
-                                                          billingPeriod != null ? billingPeriod.toString() : null,
-                                                          cur.getRequestedDate(),
-                                                          cur.getEffectiveDate(),
-                                                          product != null ? product.getName() : null,
-                                                          priceList != null ? priceList.getName() : null,
-                                                          cur.getSubscriptionEventType().toString(),
-                                                          cur.isBlockedBilling(),
-                                                          cur.isBlockedEntitlement(),
-                                                          cur.getServiceName(),
-                                                          cur.getServiceStateName(),
-                                                          phase != null ? phase.getName() : null,
-                                                          toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscriptionEvent(cur.getId()))));
-            }
+        this.events = new LinkedList<EventSubscriptionJson>();
+        for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
+            this.events.add(new EventSubscriptionJson(subscriptionEvent, accountAuditLogs));
         }
     }
 

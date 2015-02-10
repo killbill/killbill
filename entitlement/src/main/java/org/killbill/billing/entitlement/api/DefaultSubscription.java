@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,6 +19,7 @@
 package org.killbill.billing.entitlement.api;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -77,5 +80,10 @@ public class DefaultSubscription extends DefaultEntitlement implements Subscript
                                                                                  }).orNull();
             return blockingState == null ? null : blockingState.getService();
         }
+    }
+
+    @Override
+    public List<SubscriptionEvent> getSubscriptionEvents() {
+        return SubscriptionEventOrdering.sortedCopy(this, getAccountTimeZone());
     }
 }

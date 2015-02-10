@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -23,39 +25,49 @@ import javax.annotation.Nullable;
 
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
-import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class BundleJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID", required = true)
-    protected final String accountId;
+    private final String accountId;
     @ApiModelProperty(dataType = "java.util.UUID")
-    protected final String bundleId;
-    protected final String externalKey;
+    private final String bundleId;
+    private final String externalKey;
     private final List<SubscriptionJson> subscriptions;
+    private final BundleTimelineJson timeline;
 
     @JsonCreator
     public BundleJson(@JsonProperty("accountId") @Nullable final String accountId,
                       @JsonProperty("bundleId") @Nullable final String bundleId,
                       @JsonProperty("externalKey") @Nullable final String externalKey,
                       @JsonProperty("subscriptions") @Nullable final List<SubscriptionJson> subscriptions,
+                      @JsonProperty("timeline") @Nullable final BundleTimelineJson timeline,
                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.accountId = accountId;
         this.bundleId = bundleId;
         this.externalKey = externalKey;
         this.subscriptions = subscriptions;
+        this.timeline = timeline;
     }
 
-    @JsonProperty("subscriptions")
+    public BundleJson(final SubscriptionBundle bundle, @Nullable final AccountAuditLogs accountAuditLogs) {
+        super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForBundle(bundle.getId())));
+        this.accountId = bundle.getAccountId().toString();
+        this.bundleId = bundle.getId().toString();
+        this.externalKey = bundle.getExternalKey();
+        this.subscriptions = new LinkedList<SubscriptionJson>();
+        for (final Subscription subscription : bundle.getSubscriptions()) {
+            this.subscriptions.add(new SubscriptionJson(subscription, accountAuditLogs));
+        }
+        this.timeline = new BundleTimelineJson(bundle.getTimeline(), accountAuditLogs);
+    }
+
     public List<SubscriptionJson> getSubscriptions() {
         return subscriptions;
     }
@@ -72,32 +84,20 @@ public class BundleJson extends JsonBase {
         return externalKey;
     }
 
-    public BundleJson(final SubscriptionBundle bundle, @Nullable final AccountAuditLogs accountAuditLogs) {
-        super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForBundle(bundle.getId())));
-        this.accountId = bundle.getAccountId().toString();
-        this.bundleId = bundle.getId().toString();
-        this.externalKey = bundle.getExternalKey();
-
-        this.subscriptions = new LinkedList<SubscriptionJson>();
-        for (final Subscription cur : bundle.getSubscriptions()) {
-            final ImmutableList<SubscriptionEvent> events = ImmutableList.<SubscriptionEvent>copyOf(Collections2.filter(bundle.getTimeline().getSubscriptionEvents(), new Predicate<SubscriptionEvent>() {
-                @Override
-                public boolean apply(@Nullable final SubscriptionEvent input) {
-                    return input.getEntitlementId().equals(cur.getId());
-                }
-            }));
-            this.subscriptions.add(new SubscriptionJson(cur, events, accountAuditLogs));
-        }
+    public BundleTimelineJson getTimeline() {
+        return timeline;
     }
 
     @Override
     public String toString() {
-        return "BundleJson{" +
-               "accountId='" + accountId + '\'' +
-               ", bundleId='" + bundleId + '\'' +
-               ", externalKey='" + externalKey + '\'' +
-               ", subscriptions=" + subscriptions +
-               '}';
+        final StringBuilder sb = new StringBuilder("BundleJson{");
+        sb.append("accountId='").append(accountId).append('\'');
+        sb.append(", bundleId='").append(bundleId).append('\'');
+        sb.append(", externalKey='").append(externalKey).append('\'');
+        sb.append(", subscriptions=").append(subscriptions);
+        sb.append(", timeline=").append(timeline);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override
@@ -123,6 +123,9 @@ public class BundleJson extends JsonBase {
         if (subscriptions != null ? !subscriptions.equals(that.subscriptions) : that.subscriptions != null) {
             return false;
         }
+        if (timeline != null ? !timeline.equals(that.timeline) : that.timeline != null) {
+            return false;
+        }
 
         return true;
     }
@@ -133,6 +136,7 @@ public class BundleJson extends JsonBase {
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (subscriptions != null ? subscriptions.hashCode() : 0);
+        result = 31 * result + (timeline != null ? timeline.hashCode() : 0);
         return result;
     }
 }

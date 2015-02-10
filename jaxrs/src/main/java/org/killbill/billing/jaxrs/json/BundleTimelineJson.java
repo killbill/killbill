@@ -16,55 +16,79 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.LinkedList;
 import java.util.List;
+
+import javax.annotation.Nullable;
+
+import org.killbill.billing.entitlement.api.SubscriptionBundleTimeline;
+import org.killbill.billing.entitlement.api.SubscriptionEvent;
+import org.killbill.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
+import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
-public class BundleTimelineJson {
+public class BundleTimelineJson extends JsonBase {
 
-    private final String viewId;
-
-    private final BundleJson bundle;
-
-    private final List<InvoicePaymentJson> payments;
-
-    private final List<InvoiceJson> invoices;
-
-
-    private final String reasonForChange;
+    @ApiModelProperty(dataType = "java.util.UUID")
+    private final String accountId;
+    @ApiModelProperty(dataType = "java.util.UUID")
+    private final String bundleId;
+    private final String externalKey;
+    private final List<EventSubscriptionJson> events;
 
     @JsonCreator
-    public BundleTimelineJson(@JsonProperty("viewId") final String viewId,
-                              @JsonProperty("bundle") final BundleJson bundle,
-                              @JsonProperty("payments") final List<InvoicePaymentJson> payments,
-                              @JsonProperty("invoices") final List<InvoiceJson> invoices,
-                              @JsonProperty("reasonForChange") final String reason) {
-        this.viewId = viewId;
-        this.bundle = bundle;
-        this.payments = payments;
-        this.invoices = invoices;
-        this.reasonForChange = reason;
+    public BundleTimelineJson(@JsonProperty("accountId") @Nullable final String accountId,
+                              @JsonProperty("bundleId") @Nullable final String bundleId,
+                              @JsonProperty("externalKey") @Nullable final String externalKey,
+                              @JsonProperty("events") @Nullable final List<EventSubscriptionJson> events,
+                              @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
+        this.accountId = accountId;
+        this.bundleId = bundleId;
+        this.externalKey = externalKey;
+        this.events = events;
     }
 
-    public String getViewId() {
-        return viewId;
+    public BundleTimelineJson(final SubscriptionBundleTimeline bundleTimeline, @Nullable final AccountAuditLogs accountAuditLogs) {
+        super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForBundle(bundleTimeline.getBundleId())));
+        this.accountId = bundleTimeline.getAccountId().toString();
+        this.bundleId = bundleTimeline.getBundleId().toString();
+        this.externalKey = bundleTimeline.getExternalKey();
+
+        this.events = new LinkedList<EventSubscriptionJson>();
+        for (final SubscriptionEvent subscriptionEvent : bundleTimeline.getSubscriptionEvents()) {
+            this.events.add(new EventSubscriptionJson(subscriptionEvent, accountAuditLogs));
+        }
     }
 
-    public BundleJson getBundle() {
-        return bundle;
+    public String getAccountId() {
+        return accountId;
     }
 
-    public List<InvoicePaymentJson> getPayments() {
-        return payments;
+    public String getBundleId() {
+        return bundleId;
     }
 
-    public List<InvoiceJson> getInvoices() {
-        return invoices;
+    public String getExternalKey() {
+        return externalKey;
     }
 
-    public String getReasonForChange() {
-        return reasonForChange;
+    public List<EventSubscriptionJson> getEvents() {
+        return events;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("BundleTimelineJson{");
+        sb.append("accountId='").append(accountId).append('\'');
+        sb.append(", bundleId='").append(bundleId).append('\'');
+        sb.append(", externalKey='").append(externalKey).append('\'');
+        sb.append(", events=").append(events);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override
@@ -78,19 +102,16 @@ public class BundleTimelineJson {
 
         final BundleTimelineJson that = (BundleTimelineJson) o;
 
-        if (bundle != null ? !bundle.equals(that.bundle) : that.bundle != null) {
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-        if (invoices != null ? !invoices.equals(that.invoices) : that.invoices != null) {
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
-        if (payments != null ? !payments.equals(that.payments) : that.payments != null) {
+        if (events != null ? !events.equals(that.events) : that.events != null) {
             return false;
         }
-        if (reasonForChange != null ? !reasonForChange.equals(that.reasonForChange) : that.reasonForChange != null) {
-            return false;
-        }
-        if (viewId != null ? !viewId.equals(that.viewId) : that.viewId != null) {
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
             return false;
         }
 
@@ -99,11 +120,10 @@ public class BundleTimelineJson {
 
     @Override
     public int hashCode() {
-        int result = viewId != null ? viewId.hashCode() : 0;
-        result = 31 * result + (bundle != null ? bundle.hashCode() : 0);
-        result = 31 * result + (payments != null ? payments.hashCode() : 0);
-        result = 31 * result + (invoices != null ? invoices.hashCode() : 0);
-        result = 31 * result + (reasonForChange != null ? reasonForChange.hashCode() : 0);
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        result = 31 * result + (events != null ? events.hashCode() : 0);
         return result;
     }
 }

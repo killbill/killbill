@@ -70,7 +70,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                    ImmutableList.<EventSubscriptionJson>of(event),
                                                                    auditLogs);
 
-        final BundleJson bundleJson = new BundleJson(someUUID, bundleId.toString(), externalKey, ImmutableList.<SubscriptionJson>of(subscription), auditLogs);
+        final BundleJson bundleJson = new BundleJson(someUUID, bundleId.toString(), externalKey, ImmutableList.<SubscriptionJson>of(subscription), null, auditLogs);
         Assert.assertEquals(bundleJson.getBundleId(), bundleId.toString());
         Assert.assertEquals(bundleJson.getExternalKey(), externalKey);
         Assert.assertEquals(bundleJson.getSubscriptions().size(), 1);

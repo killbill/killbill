@@ -18,16 +18,14 @@
 
 package org.killbill.billing.jaxrs.json;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
+import org.killbill.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableList;
 
@@ -35,68 +33,27 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String viewId = UUID.randomUUID().toString();
-        final String reason = UUID.randomUUID().toString();
-
-        final BundleJson bundleJson = createBundleWithSubscriptions();
-        final InvoiceJson invoiceJson = createInvoice();
-        final InvoicePaymentJson paymentJson = createPayment(UUID.fromString(invoiceJson.getAccountId()),
-                                                                  UUID.fromString(invoiceJson.getInvoiceId()));
-
-        final BundleTimelineJson bundleTimelineJson = new BundleTimelineJson(viewId,
-                                                                             bundleJson,
-                                                                             ImmutableList.<InvoicePaymentJson>of(paymentJson),
-                                                                             ImmutableList.<InvoiceJson>of(invoiceJson),
-                                                                             reason);
+        final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID().toString(),
+                                                                      BillingPeriod.NO_BILLING_PERIOD.toString(),
+                                                                      new LocalDate(),
+                                                                      new LocalDate(),
+                                                                      UUID.randomUUID().toString(),
+                                                                      UUID.randomUUID().toString(),
+                                                                      UUID.randomUUID().toString(),
+                                                                      true,
+                                                                      false,
+                                                                      UUID.randomUUID().toString(),
+                                                                      UUID.randomUUID().toString(),
+                                                                      UUID.randomUUID().toString(),
+                                                                      null);
+        final BundleTimelineJson bundleTimelineJson = new BundleTimelineJson(UUID.randomUUID().toString(),
+                                                                             UUID.randomUUID().toString(),
+                                                                             UUID.randomUUID().toString(),
+                                                                             ImmutableList.<EventSubscriptionJson>of(event),
+                                                                             null);
 
         final String asJson = mapper.writeValueAsString(bundleTimelineJson);
         final BundleTimelineJson fromJson = mapper.readValue(asJson, BundleTimelineJson.class);
         Assert.assertEquals(fromJson, bundleTimelineJson);
-    }
-
-    private BundleJson createBundleWithSubscriptions() {
-        final String someUUID = UUID.randomUUID().toString();
-        final UUID accountId = UUID.randomUUID();
-        final UUID bundleId = UUID.randomUUID();
-        final UUID subscriptionId = UUID.randomUUID();
-        final String externalKey = UUID.randomUUID().toString();
-
-        final SubscriptionJson entitlementJsonWithEvents = new SubscriptionJson(accountId.toString(), bundleId.toString(), subscriptionId.toString(), externalKey,
-                                                                                new LocalDate(), someUUID, someUUID, someUUID, someUUID,
-                                                                                new LocalDate(), new LocalDate(), new LocalDate(), new LocalDate(),
-                                                                                null, null);
-        return new BundleJson(accountId.toString(), bundleId.toString(), externalKey, ImmutableList.<SubscriptionJson>of(entitlementJsonWithEvents), null);
-    }
-
-    private InvoiceJson createInvoice() {
-        final UUID accountId = UUID.randomUUID();
-        final UUID invoiceId = UUID.randomUUID();
-        final BigDecimal invoiceAmount = BigDecimal.TEN;
-        final BigDecimal creditAdj = BigDecimal.ONE;
-        final BigDecimal refundAdj = BigDecimal.ONE;
-        final LocalDate invoiceDate = clock.getUTCToday();
-        final LocalDate targetDate = clock.getUTCToday();
-        final String invoiceNumber = UUID.randomUUID().toString();
-        final BigDecimal balance = BigDecimal.ZERO;
-
-        return new InvoiceJson(invoiceAmount, Currency.USD.toString(), creditAdj, refundAdj, invoiceId.toString(), invoiceDate,
-                                     targetDate, invoiceNumber, balance, accountId.toString(), null, null, null, null);
-    }
-
-    private InvoicePaymentJson createPayment(final UUID accountId, final UUID invoiceId) {
-        final UUID paymentId = UUID.randomUUID();
-        final Integer paymentNumber = 17;
-        final String paymentExternalKey = UUID.randomUUID().toString();
-        final BigDecimal authAmount = BigDecimal.TEN;
-        final BigDecimal captureAmount = BigDecimal.ZERO;
-        final BigDecimal purchasedAMount = BigDecimal.ZERO;
-        final BigDecimal creditAmount = BigDecimal.ZERO;
-        final BigDecimal refundAmount = BigDecimal.ZERO;
-        final String currency = "USD";
-
-        return new InvoicePaymentJson(invoiceId.toString(), accountId.toString(), paymentId.toString(), paymentNumber.toString(),
-                                      paymentExternalKey, authAmount, captureAmount, purchasedAMount, refundAmount, creditAmount, currency,
-                                      UUID.randomUUID().toString(),
-                                      null, null);
     }
 }
