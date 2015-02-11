@@ -505,6 +505,11 @@ public class TestSubscriptionHelper {
             }
 
             @Override
+            public String getPlanName() {
+                return null;
+            }
+
+            @Override
             public String getPlanPhaseName() {
                 return null;
             }

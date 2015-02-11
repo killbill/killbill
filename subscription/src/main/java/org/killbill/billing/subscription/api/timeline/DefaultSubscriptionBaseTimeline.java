@@ -94,6 +94,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
         final List<ExistingEvent> result = new LinkedList<SubscriptionBaseTimeline.ExistingEvent>();
 
+        String prevPlanName = null;
         String prevProductName = null;
         BillingPeriod prevBillingPeriod = null;
         String prevPriceListName = null;
@@ -112,11 +113,11 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
             }
             startDate = (startDate == null) ? cur.getEffectiveDate() : startDate;
 
-
             String productName = null;
             BillingPeriod billingPeriod = null;
             String priceListName = null;
             PhaseType phaseType = null;
+            String planName = null;
             String planPhaseName = null;
 
             ApiEventType apiType = null;
@@ -125,6 +126,8 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                     final PhaseEvent phaseEV = (PhaseEvent) cur;
                     planPhaseName = phaseEV.getPhase();
                     phaseType = catalog.findPhase(phaseEV.getPhase(), cur.getEffectiveDate(), startDate).getPhaseType();
+                    // A PHASE event always occurs within the same plan (and is never the first event)
+                    planName = prevPlanName;
                     productName = prevProductName;
                     billingPeriod = getBillingPeriod(catalog, phaseEV.getPhase(), cur.getEffectiveDate(), startDate);
                     priceListName = prevPriceListName;
@@ -133,6 +136,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                 case API_USER:
                     final ApiEvent userEV = (ApiEvent) cur;
                     apiType = userEV.getEventType();
+                    planName = userEV.getEventPlan();
                     planPhaseName = userEV.getEventPlanPhase();
                     final Plan plan = (userEV.getEventPlan() != null) ? catalog.findPlan(userEV.getEventPlan(), cur.getRequestedDate(), startDate) : null;
                     phaseType = (userEV.getEventPlanPhase() != null) ? catalog.findPhase(userEV.getEventPlanPhase(), cur.getEffectiveDate(), startDate).getPhaseType() : prevPhaseType;
@@ -144,6 +148,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
             final SubscriptionBaseTransitionType transitionType = SubscriptionBaseTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
 
+            final String planNameWithClosure = planName;
             final String planPhaseNameWithClosure = planPhaseName;
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
             result.add(new ExistingEvent() {
@@ -173,11 +178,17 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                 }
 
                 @Override
+                public String getPlanName() {
+                    return planNameWithClosure;
+                }
+
+                @Override
                 public String getPlanPhaseName() {
                     return planPhaseNameWithClosure;
                 }
             });
 
+            prevPlanName = planName;
             prevProductName = productName;
             prevBillingPeriod = billingPeriod;
             prevPriceListName = priceListName;

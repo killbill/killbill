@@ -30,14 +30,18 @@ public class TestPlanPhase extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testValidation() {
-        DefaultPlanPhase pp = MockPlanPhase.createUSDMonthlyEvergreen(null, "1.00").setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());
+        final MockCatalog catalog = new MockCatalog();
 
-        ValidationErrors errors = pp.validate(new MockCatalog(), new ValidationErrors());
+        DefaultPlanPhase pp = MockPlanPhase.createUSDMonthlyEvergreen(null, "1.00").setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());
+        pp.initialize(catalog, null);
+
+        ValidationErrors errors = pp.validate(catalog, new ValidationErrors());
         errors.log(log);
         Assert.assertEquals(errors.size(), 1);
 
         pp = MockPlanPhase.createUSDMonthlyEvergreen("1.00", null).setRecurring(new MockRecurring(BillingPeriod.NO_BILLING_PERIOD, MockInternationalPrice.createUSD("1.00")).setPhase(pp)).setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());
-        errors = pp.validate(new MockCatalog(), new ValidationErrors());
+        pp.initialize(catalog, null);
+        errors = pp.validate(catalog, new ValidationErrors());
         errors.log(log);
         Assert.assertEquals(errors.size(), 1);
     }

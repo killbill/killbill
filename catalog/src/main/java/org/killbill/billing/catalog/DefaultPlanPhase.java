@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -72,9 +74,6 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         throw new CatalogApiException(ErrorCode.CAT_BAD_PHASE_NAME, phaseName);
     }
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPlanPhase#getCohort()
-      */
     @Override
     public PhaseType getPhaseType() {
         return type;
@@ -107,27 +106,11 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         return usages;
     }
 
-    /* (non-Javadoc)
-          * @see org.killbill.billing.catalog.IPlanPhase#getName()
-          */
     @Override
     public String getName() {
         return phaseName(plan.getName(), this.getPhaseType());
     }
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPlanPhase#getPlan()
-      */
-    @Override
-    public Plan getPlan() {
-        return plan;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.killbill.billing.catalog.IPlanPhase#getDuration()
-     */
     @Override
     public Duration getDuration() {
         return duration;
@@ -159,6 +142,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         }
         if (recurring != null) {
             recurring.initialize(root, uri);
+            recurring.setPlan(plan);
             recurring.setPhase(this);
         }
         if (usages != null) {

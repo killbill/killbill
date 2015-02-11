@@ -259,7 +259,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Verify the change is immediate
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-        assertEquals(entitlement2.getLastActivePhase().getPlan().getProduct().getName(), "Assault-Rifle");
+        assertEquals(entitlement2.getLastActivePlan().getProduct().getName(), "Assault-Rifle");
 
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         final Entitlement cancelledEntitlement = entitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, callContext);
