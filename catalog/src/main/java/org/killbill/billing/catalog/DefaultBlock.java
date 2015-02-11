@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,6 +28,7 @@ import org.killbill.billing.catalog.api.Block;
 import org.killbill.billing.catalog.api.BlockType;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.InternationalPrice;
+import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Unit;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
@@ -52,7 +54,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     private Double minTopUpCredit;
 
     // Not defined in catalog
-    private DefaultUsage usage;
+    private PlanPhase phase;
 
     @Override
     public BlockType getType() {
@@ -77,7 +79,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     @Override
     public Double getMinTopUpCredit() throws CatalogApiException {
         if (minTopUpCredit != null && type != BlockType.TOP_UP) {
-            throw new CatalogApiException(ErrorCode.CAT_NOT_TOP_UP_BLOCK, usage.getPhase().getName());
+            throw new CatalogApiException(ErrorCode.CAT_NOT_TOP_UP_BLOCK, phase.getName());
         }
         return minTopUpCredit;
     }
@@ -86,7 +88,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         if (type == BlockType.TOP_UP && minTopUpCredit == null) {
             errors.add(new ValidationError(String.format("TOP_UP block needs to define minTopUpCredit for phase %s",
-                                                         usage.getPhase().toString()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));
         }
         return errors;
     }
@@ -116,8 +118,8 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
         return this;
     }
 
-    public DefaultBlock setUsage(final DefaultUsage usage) {
-        this.usage = usage;
+    public DefaultBlock setPhase(final PlanPhase phase) {
+        this.phase = phase;
         return this;
     }
 }

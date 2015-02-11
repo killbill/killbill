@@ -163,7 +163,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         return this;
     }
 
-    protected DefaultPlanPhase setUsages(final DefaultUsage []  usages) {
+    protected DefaultPlanPhase setUsages(final DefaultUsage[] usages) {
         this.usages = usages;
         return this;
     }

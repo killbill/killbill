@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,10 +23,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.catalog.api.Block;
 import org.killbill.billing.catalog.api.InternationalPrice;
+import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Tier;
-import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
@@ -50,9 +50,10 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
     @XmlElement(required = false)
     private DefaultInternationalPrice recurringPrice;
 
-
     // Not defined in catalog
-    private DefaultUsage usage;
+    private BillingMode billingMode;
+    private UsageType usageType;
+    private PlanPhase phase;
 
     @Override
     public DefaultLimit[] getLimits() {
@@ -84,8 +85,16 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
         return this;
     }
 
-    public DefaultTier setUsage(final DefaultUsage usage) {
-        this.usage = usage;
+    public void setBillingMode(final BillingMode billingMode) {
+        this.billingMode = billingMode;
+    }
+
+    public void setUsageType(final UsageType usageType) {
+        this.usageType = usageType;
+    }
+
+    public DefaultTier setPhase(final PlanPhase phase) {
+        this.phase = phase;
         return this;
     }
 
@@ -101,14 +110,13 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-
-        if (usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CAPACITY && limits.length == 0) {
+        if (billingMode == BillingMode.IN_ARREAR && usageType == UsageType.CAPACITY && limits.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ARREAR CAPACITY] section of phase %s needs to define some limits",
-                                                         usage.getPhase().toString()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));
         }
-        if (usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE && blocks.length == 0) {
+        if (billingMode == BillingMode.IN_ARREAR && usageType == UsageType.CONSUMABLE && blocks.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ARREAR CONSUMABLE] section of phase %s needs to define some blocks",
-                                                         usage.getPhase().toString()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));
         }
         validateCollection(catalog, errors, limits);
         return errors;

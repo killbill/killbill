@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -76,7 +77,6 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     // Used to define a recurring price for the whole usage section -- bundle several limits/blocks of units.
     @XmlElement(required = false)
     private DefaultInternationalPrice recurringPrice;
-
 
     // Not exposed in xml.
     private PlanPhase phase;
@@ -159,21 +159,16 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     public void initialize(final StandaloneCatalog root, final URI uri) {
         for (DefaultLimit limit : limits) {
             limit.initialize(root, uri);
-            limit.setUsage(this);
         }
         for (DefaultBlock block : blocks) {
             block.initialize(root, uri);
-            block.setUsage(this);
+            block.setPhase(phase);
         }
 
         for (DefaultTier tier : tiers) {
             tier.initialize(root, uri);
-            tier.setUsage(this);
+            tier.setPhase(phase);
         }
-    }
-
-    public PlanPhase getPhase() {
-        return phase;
     }
 
     public DefaultUsage setBillingPeriod(final BillingPeriod billingPeriod) {
@@ -205,7 +200,6 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         this.tiers = tiers;
         return this;
     }
-
 
     public DefaultUsage setBlocks(final DefaultBlock[] blocks) {
         this.blocks = blocks;
