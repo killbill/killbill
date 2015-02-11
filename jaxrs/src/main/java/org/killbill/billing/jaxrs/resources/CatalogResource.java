@@ -104,7 +104,6 @@ public class CatalogResource extends JaxRsResourceBase {
 
     @Timed
     @POST
-    @Produces(APPLICATION_XML)
     @Consumes(APPLICATION_XML)
     @ApiOperation(value = "Upload the full catalog as XML")
     @ApiResponses(value = {})

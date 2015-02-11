@@ -94,9 +94,8 @@ public class OverdueResource extends JaxRsResourceBase {
 
     @Timed
     @POST
-    @Produces(APPLICATION_XML)
     @Consumes(APPLICATION_XML)
-    @ApiOperation(value = "Upload the full catalog as XML")
+    @ApiOperation(value = "Upload the full overdue config as XML")
     @ApiResponses(value = {})
     public Response uploadOverdueConfigXml(final String overdueXML,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
