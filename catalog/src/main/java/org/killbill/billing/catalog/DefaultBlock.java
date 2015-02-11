@@ -76,7 +76,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public Double getMinTopUpCredit() throws CatalogApiException {
-        if (type != BlockType.TOP_UP) {
+        if (minTopUpCredit != null && type != BlockType.TOP_UP) {
             throw new CatalogApiException(ErrorCode.CAT_NOT_TOP_UP_BLOCK, usage.getPhase().getName());
         }
         return minTopUpCredit;
