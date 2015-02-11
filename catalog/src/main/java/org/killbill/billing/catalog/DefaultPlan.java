@@ -207,11 +207,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return this;
     }
 
-    protected DefaultPlan setPlansAllowedInBundle(final int plansAllowedInBundle) {
-        this.plansAllowedInBundle = plansAllowedInBundle;
-        return this;
-    }
-
     protected DefaultPlan setFinalPhase(final DefaultPlanPhase finalPhase) {
         this.finalPhase = finalPhase;
         return this;
