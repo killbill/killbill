@@ -165,7 +165,7 @@ public class ItemsInterval {
         // - Nothing at all; this valid, this just means its original items got removed during mergeCancellingPairs logic,
         //   but its NodeInterval has children so it could not be deleted.
         //
-        Preconditions.checkState(items.size() <= 2);
+        Preconditions.checkState(items.size() <= 2, "Double billing detected: %s", items);
 
         final Item item = items.size() > 0 && items.get(0).getAction() == ItemAction.ADD ? items.get(0) : null;
         return item;

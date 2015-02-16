@@ -150,22 +150,40 @@ public class NodeInterval {
     }
 
     public void removeChild(final NodeInterval toBeRemoved) {
-
         NodeInterval prevChild = null;
         NodeInterval curChild = leftChild;
         while (curChild != null) {
             if (curChild.isSame(toBeRemoved)) {
                 if (prevChild == null) {
-                    leftChild = curChild.getRightSibling();
+                    if (curChild.getLeftChild() == null) {
+                        leftChild = curChild.getRightSibling();
+                    } else {
+                        leftChild = curChild.getLeftChild();
+                        adjustRightMostSibling(curChild);
+                    }
                 } else {
-                    prevChild.rightSibling = curChild.getRightSibling();
+                    if (curChild.getLeftChild() == null) {
+                        prevChild.rightSibling = curChild.getRightSibling();
+                    } else {
+                        prevChild.rightSibling = curChild.getLeftChild();
+                        adjustRightMostSibling(curChild);
+                    }
                 }
                 break;
             }
             prevChild = curChild;
             curChild = curChild.getRightSibling();
         }
+    }
 
+    private void adjustRightMostSibling(final NodeInterval curChild) {
+        NodeInterval tmpChild = curChild.getLeftChild();
+        NodeInterval preTmpChild = null;
+        while (tmpChild != null) {
+            preTmpChild = tmpChild;
+            tmpChild = tmpChild.getRightSibling();
+        }
+        preTmpChild.rightSibling = curChild.getRightSibling();
     }
 
     @JsonIgnore
