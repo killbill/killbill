@@ -159,14 +159,14 @@ public class NodeInterval {
                         leftChild = curChild.getRightSibling();
                     } else {
                         leftChild = curChild.getLeftChild();
-                        adjustRightMostSibling(curChild);
+                        adjustRightMostChildSibling(curChild);
                     }
                 } else {
                     if (curChild.getLeftChild() == null) {
                         prevChild.rightSibling = curChild.getRightSibling();
                     } else {
                         prevChild.rightSibling = curChild.getLeftChild();
-                        adjustRightMostSibling(curChild);
+                        adjustRightMostChildSibling(curChild);
                     }
                 }
                 break;
@@ -176,14 +176,14 @@ public class NodeInterval {
         }
     }
 
-    private void adjustRightMostSibling(final NodeInterval curChild) {
-        NodeInterval tmpChild = curChild.getLeftChild();
+    private void adjustRightMostChildSibling(final NodeInterval curNode) {
+        NodeInterval tmpChild = curNode.getLeftChild();
         NodeInterval preTmpChild = null;
         while (tmpChild != null) {
             preTmpChild = tmpChild;
             tmpChild = tmpChild.getRightSibling();
         }
-        preTmpChild.rightSibling = curChild.getRightSibling();
+        preTmpChild.rightSibling = curNode.getRightSibling();
     }
 
     @JsonIgnore
