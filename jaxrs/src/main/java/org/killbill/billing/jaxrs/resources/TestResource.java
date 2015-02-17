@@ -239,7 +239,7 @@ public class TestResource extends JaxRsResourceBase {
                                                                                               new Predicate<NotificationQueue>() {
                                                                                                   @Override
                                                                                                   public boolean apply(final NotificationQueue notificationQueue) {
-                                                                                                      for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueue.getFutureNotificationForSearchKey2(tenantRecordId)) {
+                                                                                                      for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(tenantRecordId)) {
                                                                                                           if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
                                                                                                               return true;
                                                                                                           }
@@ -250,15 +250,15 @@ public class TestResource extends JaxRsResourceBase {
         if (!filtered.isEmpty()) {
             log.info("TestResource: {} more notification(s) to process", filtered.size());
         }
-        return filtered.isEmpty() && notificationQueueService.inProcessingNotificationsCount() == 0;
+        return filtered.isEmpty();
     }
 
     private boolean areAllBusEventsProcessed(final Long tenantRecordId) {
-        final List<BusEventWithMetadata<BusEvent>> availableBusEventForSearchKey2 = persistentBus.getAvailableBusEventsForSearchKey2(tenantRecordId);
+        final List<BusEventWithMetadata<BusEvent>> availableBusEventForSearchKey2 = persistentBus.getAvailableOrInProcessingBusEventsForSearchKey2(tenantRecordId);
         if (!availableBusEventForSearchKey2.isEmpty()) {
             log.info("TestResource: at least {} more bus event(s) to process", availableBusEventForSearchKey2.size());
         }
-        return availableBusEventForSearchKey2.isEmpty() && persistentBus.inProcessingBusEventsCount() == 0;
+        return availableBusEventForSearchKey2.isEmpty();
     }
 
     private ClockMock getClockMock() {
