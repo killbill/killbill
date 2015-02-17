@@ -1,3 +1,12 @@
+0.13.4
+    https://github.com/killbill/killbill/issues/137
+    https://github.com/killbill/killbill/issues/244
+    https://github.com/killbill/killbill/issues/257
+    https://github.com/killbill/killbill/issues/272
+    invoice: fix bug when handling full repairs
+    jaxrs: improve waiting for notifications in TestResource
+    Update killbill-oss-parent to 0.9.11
+
 0.13.3
     https://github.com/killbill/killbill/issues/258
     https://github.com/killbill/killbill/issues/260
