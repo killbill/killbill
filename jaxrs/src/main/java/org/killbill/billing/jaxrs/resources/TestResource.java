@@ -219,6 +219,7 @@ public class TestResource extends JaxRsResourceBase {
                 areAllNotificationsProcessed = areAllNotificationsProcessed && areAllBusEventsProcessed(tenantRecordId);
                 // We do a re-check of the notification queues in case of race conditions.
                 areAllNotificationsProcessed = areAllNotificationsProcessed && areAllNotificationsProcessed(tenantRecordId);
+                areAllNotificationsProcessed = areAllNotificationsProcessed && areAllBusEventsProcessed(tenantRecordId);
                 if (!areAllNotificationsProcessed) {
                     Thread.sleep(MILLIS_IN_SEC);
                     nbTryLeft--;
