@@ -174,7 +174,7 @@ CREATE INDEX notifications_tenant_account_record_id ON notifications(search_key2
 
 DROP TABLE IF EXISTS notifications_history;
 CREATE TABLE notifications_history (
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     class_name varchar(256) NOT NULL,
     event_json varchar(2048) NOT NULL,
     user_token char(36),
@@ -213,7 +213,7 @@ CREATE INDEX bus_events_tenant_account_record_id ON bus_events(search_key2, sear
 
 DROP TABLE IF EXISTS bus_events_history;
 CREATE TABLE bus_events_history (
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     class_name varchar(128) NOT NULL,
     event_json varchar(2048) NOT NULL,
     user_token char(36),

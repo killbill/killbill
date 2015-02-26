@@ -21,7 +21,7 @@ CREATE INDEX bus_ext_events_tenant_account_record_id ON bus_ext_events(search_ke
 
 DROP TABLE IF EXISTS bus_ext_events_history;
 CREATE TABLE bus_ext_events_history (
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     class_name varchar(128) NOT NULL,
     event_json varchar(2048) NOT NULL,
     user_token char(36),

@@ -35,6 +35,8 @@ MAVEN_OPTS=${MAVEN_OPTS-"-Duser.timezone=GMT -Xms512m -Xmx1024m -XX:MaxPermSize=
 LOG="$SERVER/src/main/resources/logback.xml"
 LOG_DIR="$SERVER/logs"
 
+HOSTNAME=`hostname`
+
 # From Argument Options
 PORT=8080
 JMX_PORT=8989
@@ -68,7 +70,7 @@ function start() {
             debug_opts_eclipse=$DEBUG_OPTS_ECLIPSE
         fi
     fi
-    export MAVEN_OPTS="$MAVEN_OPTS $debug_opts_eclipse -Dorg.killbill.hostname.postfix=$PORT -Djetty.port=$PORT -Dcom.sun.management.jmxremote.port=$JMX_PORT -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+    export MAVEN_OPTS="$MAVEN_OPTS $debug_opts_eclipse -Dorg.killbill.queue.creator.name="$HOSTNAME-"$PORT -Djetty.port=$PORT -Dcom.sun.management.jmxremote.port=$JMX_PORT -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 
     echo "Starting IRS MAVEN_OPTS = $MAVEN_OPTS"
     echo "$start_cmd"
