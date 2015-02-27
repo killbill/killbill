@@ -267,7 +267,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             return data.getPreviousPlan().getProduct();
         } else {
             final Plan currentPlan = getCurrentPlan();
-            // currentPlan can be null when playing with the clock
+            // currentPlan can be null when playing with the clock (subscription created in the future)
             return currentPlan == null ? null : currentPlan.getProduct();
         }
     }
@@ -289,7 +289,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             return data.getPreviousPlan().getProduct().getCategory();
         } else {
             final Plan currentPlan = getCurrentPlan();
-            // currentPlan can be null when playing with the clock
+            // currentPlan can be null when playing with the clock (subscription created in the future)
             return currentPlan == null ? null : currentPlan.getProduct().getCategory();
         }
     }
@@ -321,7 +321,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             return data.getPreviousPlan().getRecurringBillingPeriod();
         } else {
             final Plan currentPlan = getCurrentPlan();
-            // currentPlan can be null when playing with the clock
+            // currentPlan can be null when playing with the clock (subscription created in the future)
             return currentPlan.getRecurringBillingPeriod();
         }
     }

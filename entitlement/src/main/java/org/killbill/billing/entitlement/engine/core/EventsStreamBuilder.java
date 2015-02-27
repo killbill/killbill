@@ -28,15 +28,12 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.skife.jdbi.v2.IDBI;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -51,10 +48,13 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
@@ -172,13 +172,7 @@ public class EventsStreamBuilder {
         for (final UUID bundleId : subscriptions.keySet()) {
             final SubscriptionBaseBundle bundle = bundlesPerId.get(bundleId);
             final List<SubscriptionBase> allSubscriptionsForBundle = subscriptions.get(bundleId);
-            final SubscriptionBase baseSubscription = Iterables.<SubscriptionBase>tryFind(allSubscriptionsForBundle,
-                                                                                          new Predicate<SubscriptionBase>() {
-                                                                                              @Override
-                                                                                              public boolean apply(final SubscriptionBase input) {
-                                                                                                  return ProductCategory.BASE.equals(input.getLastActiveProduct().getCategory());
-                                                                                              }
-                                                                                          }).orNull();
+            final SubscriptionBase baseSubscription = findBaseSubscription(allSubscriptionsForBundle);
             final List<BlockingState> bundleBlockingStates = Objects.firstNonNull(blockingStatesPerBundle.get(bundleId), ImmutableList.<BlockingState>of());
 
             if (entitlementsPerBundle.get(bundleId) == null) {
@@ -230,13 +224,7 @@ public class EventsStreamBuilder {
             subscription = subscriptionInternalApi.getSubscriptionFromId(entitlementId, internalTenantContext);
             bundle = subscriptionInternalApi.getBundleFromId(subscription.getBundleId(), internalTenantContext);
             allSubscriptionsForBundle = subscriptionInternalApi.getSubscriptionsForBundle(subscription.getBundleId(), null, internalTenantContext);
-            baseSubscription = Iterables.<SubscriptionBase>tryFind(allSubscriptionsForBundle,
-                                                                   new Predicate<SubscriptionBase>() {
-                                                                       @Override
-                                                                       public boolean apply(final SubscriptionBase input) {
-                                                                           return ProductCategory.BASE.equals(input.getLastActiveProduct().getCategory());
-                                                                       }
-                                                                   }).orNull(); // null for standalone subscriptions
+            baseSubscription = findBaseSubscription(allSubscriptionsForBundle);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -340,5 +328,19 @@ public class EventsStreamBuilder {
                                        allSubscriptionsForBundle,
                                        internalTenantContext,
                                        clock.getUTCNow());
+    }
+
+    private SubscriptionBase findBaseSubscription(final Iterable<SubscriptionBase> subscriptions) {
+        return Iterables.<SubscriptionBase>tryFind(subscriptions,
+                                                   new Predicate<SubscriptionBase>() {
+                                                       @Override
+                                                       public boolean apply(final SubscriptionBase input) {
+                                                           final List<SubscriptionBaseTransition> allTransitions = input.getAllTransitions();
+                                                           return !allTransitions.isEmpty() &&
+                                                                  allTransitions.get(0).getNextPlan() != null &&
+                                                                  allTransitions.get(0).getNextPlan().getProduct() != null &&
+                                                                  ProductCategory.BASE.equals(allTransitions.get(0).getNextPlan().getProduct().getCategory());
+                                                       }
+                                                   }).orNull(); // null for standalone subscriptions
     }
 }

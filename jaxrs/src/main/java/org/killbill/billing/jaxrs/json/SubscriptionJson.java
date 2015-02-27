@@ -309,11 +309,12 @@ public class SubscriptionJson extends JsonBase {
     public SubscriptionJson(final Subscription subscription, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscription(subscription.getId())));
         this.startDate = subscription.getEffectiveStartDate();
-        this.productName = subscription.getLastActiveProduct().getName();
-        this.productCategory = subscription.getLastActiveProductCategory().name();
-        this.billingPeriod = subscription.getLastActivePlan().getRecurringBillingPeriod().toString();
-        this.phaseType = subscription.getLastActivePhase().getPhaseType().toString();
-        this.priceList = subscription.getLastActivePriceList().getName();
+        // last* fields can be null if the subscription starts in the future
+        this.productName = subscription.getLastActiveProduct() == null ? null : subscription.getLastActiveProduct().getName();
+        this.productCategory = subscription.getLastActiveProductCategory() == null ? null : subscription.getLastActiveProductCategory().name();
+        this.billingPeriod = subscription.getLastActivePlan() == null ? null : subscription.getLastActivePlan().getRecurringBillingPeriod().toString();
+        this.phaseType = subscription.getLastActivePhase() == null ? null : subscription.getLastActivePhase().getPhaseType().toString();
+        this.priceList = subscription.getLastActivePriceList() == null ? null : subscription.getLastActivePriceList().getName();
         this.state = subscription.getState().name();
         this.sourceType = subscription.getSourceType().name();
         this.cancelledDate = subscription.getEffectiveEndDate();
