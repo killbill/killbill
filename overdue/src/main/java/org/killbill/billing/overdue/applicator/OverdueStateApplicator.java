@@ -320,6 +320,7 @@ public class OverdueStateApplicator {
                                                                                                               new Predicate<Entitlement>() {
                                                                                                                   @Override
                                                                                                                   public boolean apply(final Entitlement entitlement) {
+                                                                                                                      // Note: this would miss add-ons created in the future. We should expose a new API to do something similar to EventsStreamBuilder#findBaseSubscription
                                                                                                                       return !ProductCategory.ADD_ON.equals(entitlement.getLastActiveProductCategory());
                                                                                                                   }
                                                                                                               });
