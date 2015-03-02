@@ -94,7 +94,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
     private final InternalCallContextFactory internalCallContextFactory;
     private final Clock clock;
 
-    private final Logger logger = LoggerFactory.getLogger(InvoicePaymentRoutingPluginApi.class);
+    private final Logger log = LoggerFactory.getLogger(InvoicePaymentRoutingPluginApi.class);
 
     @Inject
     public InvoicePaymentRoutingPluginApi(final PaymentConfig paymentConfig, final InvoiceInternalApi invoiceApi, final TagUserApi tagApi, final PaymentDao paymentDao,
@@ -148,7 +148,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
                     final UUID invoiceId = getInvoiceId(paymentRoutingContext);
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentRoutingContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null) {
-                        logger.info("onSuccessCall was already completed for payment purchase :" + paymentRoutingContext.getPaymentId());
+                        log.info("onSuccessCall was already completed for payment purchase :" + paymentRoutingContext.getPaymentId());
                     } else {
                         invoiceApi.notifyOfPayment(invoiceId,
                                                    paymentRoutingContext.getAmount(),
@@ -163,7 +163,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
                 case REFUND:
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForRefund(paymentRoutingContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null) {
-                        logger.info("onSuccessCall was already completed for payment refund :" + paymentRoutingContext.getPaymentId());
+                        log.info("onSuccessCall was already completed for payment refund :" + paymentRoutingContext.getPaymentId());
                     } else {
                         final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentRoutingContext.getPluginProperties());
                         final PluginProperty prop = getPluginProperty(paymentRoutingContext.getPluginProperties(), PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
@@ -175,7 +175,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
                 case CHARGEBACK:
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForChargeback(paymentRoutingContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null) {
-                        logger.info("onSuccessCall was already completed for payment chargeback :" + paymentRoutingContext.getPaymentId());
+                        log.info("onSuccessCall was already completed for payment chargeback :" + paymentRoutingContext.getPaymentId());
                     } else {
                         invoiceApi.createChargeback(paymentRoutingContext.getPaymentId(), paymentRoutingContext.getProcessedAmount(), paymentRoutingContext.getProcessedCurrency(), internalContext);
                     }
@@ -185,7 +185,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
                     throw new IllegalStateException("Unexpected transactionType " + transactionType);
             }
         } catch (final InvoiceApiException e) {
-            logger.error("InvoicePaymentRoutingPluginApi onSuccessCall failed for attemptId = " + paymentRoutingContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
+            log.error("InvoicePaymentRoutingPluginApi onSuccessCall failed for attemptId = " + paymentRoutingContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
         }
         return null;
     }
@@ -376,7 +376,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
                 retryInDays = retryDays.get(retryCount);
                 result = nextRetryDate.plusDays(retryInDays);
             } catch (final NumberFormatException ex) {
-                logger.error("Could not get retry day for retry count {}", retryCount);
+                log.error("Could not get retry day for retry count {}", retryCount);
             }
         }
         return result;
@@ -443,13 +443,13 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
     private BigDecimal validateAndComputePaymentAmount(final Invoice invoice, @Nullable final BigDecimal inputAmount, final boolean isApiPayment) {
 
         if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
-            logger.info("Invoice " + invoice.getId() + " has already been paid");
+            log.info("Invoice " + invoice.getId() + " has already been paid");
             return BigDecimal.ZERO;
         }
         if (isApiPayment &&
             inputAmount != null &&
             invoice.getBalance().compareTo(inputAmount) < 0) {
-            logger.info("Invoice " + invoice.getId() +
+            log.info("Invoice " + invoice.getId() +
                         " has a balance of " + invoice.getBalance().floatValue() +
                         " less than retry payment amount of " + inputAmount.floatValue());
             return BigDecimal.ZERO;

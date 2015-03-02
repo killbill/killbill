@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class TenantCatalogCacheLoader extends BaseCacheLoader {
 
-    private final Logger logger = LoggerFactory.getLogger(TenantCatalogCacheLoader.class);
+    private final Logger log = LoggerFactory.getLogger(TenantCatalogCacheLoader.class);
 
     private final TenantInternalApi tenantApi;
 
@@ -72,7 +72,7 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader {
             return null;
         }
         try {
-            logger.info("Loading catalog cache for tenant " + internalTenantContext.getTenantRecordId());
+            log.info("Loading catalog cache for tenant " + internalTenantContext.getTenantRecordId());
             return callback.loadCatalog(catalogXMLs);
         } catch (final CatalogApiException e) {
             throw new IllegalStateException(String.format("Failed to de-serialize catalog for tenant %s : %s",

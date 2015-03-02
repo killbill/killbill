@@ -27,7 +27,13 @@ import org.killbill.billing.util.callcontext.TenantContext;
 public interface TenantInternalApi {
 
     public interface CacheInvalidationCallback {
-        public void invalidateCache(InternalTenantContext tenantContext);
+
+        /**
+         * @param key           the TenantKey
+         * @param cookie        the cookie that should be interpreted by the specific implementation of the CacheInvalidationCallback.
+         * @param tenantContext the context containing the tenant info
+         */
+        public void invalidateCache(TenantKey key, Object cookie, InternalTenantContext tenantContext);
     }
 
     public void initializeCacheInvalidationCallback(final TenantKey key, final CacheInvalidationCallback cacheInvalidationCallback);

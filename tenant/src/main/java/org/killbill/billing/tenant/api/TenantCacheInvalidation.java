@@ -37,6 +37,10 @@ import org.killbill.billing.util.config.TenantConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 /**
  * This class manages the callbacks that have been registered when per tenant objects have been inserted into the
  * tenant_kvs store; the flow is the following (for e.g catalog):
@@ -145,21 +149,65 @@ public class TenantCacheInvalidation {
             if (parent.isStopped) {
                 return;
             }
+
             final List<TenantBroadcastModelDao> entries = broadcastDao.getLatestEntriesFrom(parent.getLatestRecordIdProcessed().get());
             for (TenantBroadcastModelDao cur : entries) {
                 if (parent.isStopped()) {
                     return;
                 }
 
-                final CacheInvalidationCallback callback = parent.getCacheInvalidation(TenantKey.valueOf(cur.getType()));
-                if (callback != null) {
-                    final InternalTenantContext tenantContext = new InternalTenantContext(cur.getTenantRecordId(), null);
-                    callback.invalidateCache(tenantContext);
-                } else {
-                    logger.warn("Failed to find CacheInvalidationCallback for " + cur.getType());
+                try {
+                    final TenantKeyAndCookie tenantKeyAndCookie = extractTenantKeyAndCookie(cur.getType());
+                    if (tenantKeyAndCookie != null) {
+                        final CacheInvalidationCallback callback = parent.getCacheInvalidation(tenantKeyAndCookie.getTenantKey());
+                        if (callback != null) {
+                            final InternalTenantContext tenantContext = new InternalTenantContext(cur.getTenantRecordId(), null);
+                            callback.invalidateCache(tenantKeyAndCookie. getTenantKey(), tenantKeyAndCookie.getCookie(), tenantContext);
+                        } else {
+                            logger.warn("Failed to find CacheInvalidationCallback for " + cur.getType());
+                        }
+                    }
+                } finally {
+                    parent.setLatestRecordIdProcessed(cur.getRecordId());
                 }
-                parent.setLatestRecordIdProcessed(cur.getRecordId());
             }
+        }
+
+        private TenantKeyAndCookie extractTenantKeyAndCookie(final String key) {
+            final TenantKey tenantKey = Iterables.tryFind(ImmutableList.copyOf(TenantKey.values()), new Predicate<TenantKey>() {
+                @Override
+                public boolean apply(final TenantKey input) {
+                    return key.startsWith(input.toString());
+                }
+            }).orNull();
+            if (tenantKey == null) {
+                return null;
+            }
+
+            final String cookie = !key.equals(tenantKey.toString()) ?
+                                  key.substring(tenantKey.toString().length()) :
+                                  null;
+            return new TenantKeyAndCookie(tenantKey, cookie);
+        }
+
+    }
+
+    private static final class TenantKeyAndCookie {
+
+        private final TenantKey tenantKey;
+        private final Object cookie;
+
+        public TenantKeyAndCookie(final TenantKey tenantKey, final Object cookie) {
+            this.tenantKey = tenantKey;
+            this.cookie = cookie;
+        }
+
+        public TenantKey getTenantKey() {
+            return tenantKey;
+        }
+
+        public Object getCookie() {
+            return cookie;
         }
     }
 }

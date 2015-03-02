@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class TenantOverdueConfigCacheLoader extends BaseCacheLoader {
 
-    private static final Logger logger = LoggerFactory.getLogger(TenantOverdueConfigCacheLoader.class);
+    private static final Logger log = LoggerFactory.getLogger(TenantOverdueConfigCacheLoader.class);
 
     private final TenantInternalApi tenantApi;
 
@@ -70,7 +70,7 @@ public class TenantOverdueConfigCacheLoader extends BaseCacheLoader {
             return null;
         }
         try {
-            logger.info("Loading overdue cache for tenant " + internalTenantContext.getTenantRecordId());
+            log.info("Loading overdue cache for tenant " + internalTenantContext.getTenantRecordId());
 
             return callback.loadOverdueConfig(overdueXML);
         } catch (final OverdueApiException e) {

@@ -19,6 +19,7 @@ package org.killbill.billing.overdue.caching;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +27,7 @@ import com.google.inject.Inject;
 
 public class OverdueCacheInvalidationCallback implements CacheInvalidationCallback {
 
-    private static final Logger logger = LoggerFactory.getLogger(OverdueCacheInvalidationCallback.class);
+    private static final Logger log = LoggerFactory.getLogger(OverdueCacheInvalidationCallback.class);
 
     private final OverdueConfigCache overdueConfigCache;
 
@@ -36,8 +37,8 @@ public class OverdueCacheInvalidationCallback implements CacheInvalidationCallba
     }
 
     @Override
-    public void invalidateCache(final InternalTenantContext tenantContext) {
-        logger.info("Invalidate overdue cache for tenant " + tenantContext.getTenantRecordId());
+    public void invalidateCache(TenantKey key, final Object cookie, final InternalTenantContext tenantContext) {
+        log.info("Invalidate overdue cache for tenant {} ", tenantContext.getTenantRecordId());
         overdueConfigCache.clearOverdueConfig(tenantContext);
     }
 }

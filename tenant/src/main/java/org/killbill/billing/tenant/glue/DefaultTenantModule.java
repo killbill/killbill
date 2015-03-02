@@ -25,6 +25,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.DefaultTenantInternalApi;
 import org.killbill.billing.tenant.api.DefaultTenantService;
 import org.killbill.billing.tenant.api.TenantCacheInvalidation;
+import org.killbill.billing.tenant.api.TenantCacheInvalidationCallback;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.tenant.api.TenantService;
 import org.killbill.billing.tenant.api.TenantUserApi;
@@ -71,6 +72,7 @@ public class DefaultTenantModule extends KillBillModule implements TenantModule 
 
     public void installTenantService() {
         bind(TenantService.class).to(DefaultTenantService.class).asEagerSingleton();
+        bind(TenantCacheInvalidationCallback.class).asEagerSingleton();;
     }
 
     public void installTenantCacheInvalidation() {

@@ -21,12 +21,13 @@ import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CatalogCacheInvalidationCallback implements CacheInvalidationCallback {
 
-    private final Logger logger = LoggerFactory.getLogger(CatalogCacheInvalidationCallback.class);
+    private final Logger log = LoggerFactory.getLogger(CatalogCacheInvalidationCallback.class);
 
     private final CatalogCache catalogCache;
 
@@ -36,8 +37,8 @@ public class CatalogCacheInvalidationCallback implements CacheInvalidationCallba
     }
 
     @Override
-    public void invalidateCache(final InternalTenantContext tenantContext) {
-        logger.info("Invalidate catalog cache for tenant " + tenantContext.getTenantRecordId());
+    public void invalidateCache(TenantKey key, final Object cookie, final InternalTenantContext tenantContext) {
+        log.info("Invalidate catalog cache for tenant {} ", tenantContext.getTenantRecordId());
         catalogCache.clearCatalog(tenantContext);
     }
 }

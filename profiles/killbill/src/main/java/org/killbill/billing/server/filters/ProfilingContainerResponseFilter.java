@@ -38,7 +38,7 @@ import com.sun.jersey.spi.container.ContainerResponseFilter;
 @Singleton
 public class ProfilingContainerResponseFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProfilingContainerResponseFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(ProfilingContainerResponseFilter.class);
 
     private static final String PROFILING_HEADER_REQ = "X-Killbill-Profiling-Req";
     private static final String PROFILING_HEADER_RESP = "X-Killbill-Profiling-Resp";
@@ -63,7 +63,7 @@ public class ProfilingContainerResponseFilter implements ContainerRequestFilter,
                     profilingData.addStart(ProfilingFeatureType.JAXRS, request.getPath());
                 }
             } catch (IllegalArgumentException e) {
-                logger.info("Profiling data output " + profilingHeaderRequest + " is not supported, profiling NOT enabled");
+                log.info("Profiling data output " + profilingHeaderRequest + " is not supported, profiling NOT enabled");
             }
         }
         return request;
