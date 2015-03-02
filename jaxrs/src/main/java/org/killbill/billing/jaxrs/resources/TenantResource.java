@@ -156,8 +156,7 @@ public class TenantResource extends JaxRsResourceBase {
 
     @Timed
     @DELETE
-    @Path("/REGISTER_NOTIFICATION_CALLBACK")
-    //@Path("/" + REGISTER_NOTIFICATION_CALLBACK) @see #238
+    @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @ApiOperation(value = "Delete a push notification")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response deletePushNotificationCallbacks(@HeaderParam(HDR_CREATED_BY) final String createdBy,
