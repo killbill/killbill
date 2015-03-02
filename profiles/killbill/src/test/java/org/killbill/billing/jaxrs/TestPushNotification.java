@@ -31,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.killbill.billing.client.JaxrsResource;
 import org.killbill.billing.client.model.TenantKey;
 import org.killbill.billing.jaxrs.json.NotificationJson;
 import org.slf4j.Logger;
@@ -94,7 +93,11 @@ public class TestPushNotification extends TestJaxrsBase {
     public void testPushNotification() throws Exception {
         // Register tenant for callback
         final String callback = "http://127.0.0.1:" + SERVER_PORT + CALLBACK_ENDPPOINT;
-        killBillClient.registerCallbackNotificationForTenant(callback, createdBy, reason, comment);
+        final TenantKey result0 = killBillClient.registerCallbackNotificationForTenant(callback, createdBy, reason, comment);
+        Assert.assertEquals(result0.getKey(), org.killbill.billing.tenant.api.TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
+        Assert.assertEquals(result0.getValues().size(), 1);
+        Assert.assertEquals(result0.getValues().get(0), callback);
+
         // Create account to trigger a push notification
         createAccount();
 
@@ -107,13 +110,13 @@ public class TestPushNotification extends TestJaxrsBase {
             Assert.fail("Assertion during callback failed...");
         }
 
-        final TenantKey result = killBillClient.getCallbackNotificationForTenant(createdBy, reason, comment);
+        final TenantKey result = killBillClient.getCallbackNotificationForTenant();
         Assert.assertEquals(result.getKey(), org.killbill.billing.tenant.api.TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
         Assert.assertEquals(result.getValues().size(), 1);
         Assert.assertEquals(result.getValues().get(0), callback);
 
         killBillClient.unregisterCallbackNotificationForTenant(createdBy, reason, comment);
-        final TenantKey result2 = killBillClient.getCallbackNotificationForTenant(createdBy, reason, comment);
+        final TenantKey result2 = killBillClient.getCallbackNotificationForTenant();
         Assert.assertEquals(result2.getKey(), org.killbill.billing.tenant.api.TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
         Assert.assertEquals(result2.getValues().size(), 0);
     }

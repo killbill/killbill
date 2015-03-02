@@ -64,6 +64,7 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Singleton
 @Path(JaxrsResource.TENANTS_PATH)
@@ -140,8 +141,9 @@ public class TenantResource extends JaxRsResourceBase {
                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                      @HeaderParam(HDR_REASON) final String reason,
                                                      @HeaderParam(HDR_COMMENT) final String comment,
-                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
-        return insertTenantKey(TenantKey.PUSH_NOTIFICATION_CB, null, notificationCallback, "getPushNotificationCallbacks", createdBy, reason, comment, request);
+                                                     @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+        return insertTenantKey(TenantKey.PUSH_NOTIFICATION_CB,  null,  notificationCallback, uriInfo,"getPushNotificationCallbacks", createdBy, reason, comment, request);
     }
 
     @Timed
@@ -169,7 +171,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Timed
     @POST
     @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
-    @Consumes(APPLICATION_JSON)
+    @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add a per tenant configuration for a plugin")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
@@ -178,8 +180,9 @@ public class TenantResource extends JaxRsResourceBase {
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
-                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
-        return insertTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, pluginConfig, "getPluginConfiguration", createdBy, reason, comment, request);
+                                              @javax.ws.rs.core.Context final HttpServletRequest request,
+                                              @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+        return insertTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, pluginConfig, uriInfo, "getPluginConfiguration", createdBy, reason, comment, request);
     }
 
     @Timed
@@ -209,6 +212,7 @@ public class TenantResource extends JaxRsResourceBase {
     private Response insertTenantKey(final TenantKey key,
                                      @Nullable final String keyPostfix,
                                      final String value,
+                                     final UriInfo uriInfo,
                                      final String getMethodStr,
                                      final String createdBy,
                                      final String reason,
@@ -217,8 +221,10 @@ public class TenantResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final String tenantKey = keyPostfix != null ? key.toString() + keyPostfix : key.toString();
         tenantApi.addTenantKeyValue(tenantKey, value, callContext);
-        final URI uri = UriBuilder.fromResource(TenantResource.class).path(TenantResource.class, getMethodStr).build();
-        return Response.created(uri).build();
+
+        return uriBuilder.buildResponse(uriInfo, TenantResource.class, getMethodStr, keyPostfix);
+//        final URI uri = UriBuilder.fromResource(TenantResource.class).path(TenantResource.class, getMethodStr).build();
+//        return Response.created(uri).build();
     }
 
     private Response getTenantKey(final TenantKey key,

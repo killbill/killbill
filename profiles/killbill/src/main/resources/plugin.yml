@@ -1,0 +1,12 @@
+:my_plugin:
+  :test: True
+  :log_file: /var/tmp/myplugin.log
+  :username: xx
+  :password: yoyoyo
+  :merchant_id:
+    :USD: '0689870'
+
+:database:
+  :adapter: sqlite3
+  :database: test.db
+
