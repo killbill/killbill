@@ -93,6 +93,20 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
         return getUniqueValue(values, "catalog translation", tenantContext);
     }
 
+    @Override
+    public String getPluginConfig(final String pluginName, final InternalTenantContext tenantContext) {
+        final String pluginConfigKey = TenantKey.PLUGIN_CONFIG_ + pluginName;
+        final List<String> values = tenantDao.getTenantValueForKey(pluginConfigKey, tenantContext);
+        return getUniqueValue(values, "config for plugin " + pluginConfigKey, tenantContext);
+    }
+
+    @Override
+    public List<String> getTenantValueForKey(final String key, final InternalTenantContext tenantContext) {
+        return tenantDao.getTenantValueForKey(key, tenantContext);
+    }
+
+
+
     private String getUniqueValue(final List<String> values, final String msg, final InternalTenantContext tenantContext) {
         if (values.isEmpty()) {
             return null;

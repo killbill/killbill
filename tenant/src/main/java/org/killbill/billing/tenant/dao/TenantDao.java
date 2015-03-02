@@ -30,7 +30,7 @@ public interface TenantDao extends EntityDao<TenantModelDao, Tenant, TenantApiEx
 
     public List<String> getTenantValueForKey(final String key, final InternalTenantContext context);
 
-    public void addTenantKeyValue(final String key, final String value, final InternalCallContext context);
+    public void addTenantKeyValue(final String key, final String value, final boolean uniqueKey, final InternalCallContext context);
 
     public void deleteTenantKey(final String key, final InternalCallContext context);
 }

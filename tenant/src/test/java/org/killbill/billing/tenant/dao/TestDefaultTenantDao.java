@@ -59,18 +59,21 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
                                                        UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(new TenantModelDao(tenant), internalCallContext);
 
-        tenantDao.addTenantKeyValue("TheKey", "TheValue", internalCallContext);
+        tenantDao .addTenantKeyValue("THE_KEY", "TheValue", false, internalCallContext);
 
-        List<String> value = tenantDao.getTenantValueForKey("TheKey", internalCallContext);
+        List<String> value = tenantDao.getTenantValueForKey("THE_KEY", internalCallContext);
         Assert.assertEquals(value.size(), 1);
         Assert.assertEquals(value.get(0), "TheValue");
 
-        tenantDao.addTenantKeyValue("TheKey", "TheSecondValue", internalCallContext);
-        value = tenantDao.getTenantValueForKey("TheKey", internalCallContext);
+        tenantDao.addTenantKeyValue("THE_KEY", "TheSecondValue", false, internalCallContext);
+        value = tenantDao.getTenantValueForKey("THE_KEY", internalCallContext);
         Assert.assertEquals(value.size(), 2);
 
-        tenantDao.deleteTenantKey("TheKey", internalCallContext);
-        value = tenantDao.getTenantValueForKey("TheKey", internalCallContext);
+        value = tenantDao.getTenantValueForKey("THE_KEY", internalCallContext);
+        Assert.assertEquals(value.size(), 2);
+
+        tenantDao.deleteTenantKey("THE_KEY", internalCallContext);
+        value = tenantDao.getTenantValueForKey("THE_KEY", internalCallContext);
         Assert.assertEquals(value.size(), 0);
     }
 }

@@ -18,6 +18,7 @@ package org.killbill.billing.tenant;
 
 import javax.inject.Named;
 
+import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.tenant.dao.NoCachingTenantBroadcastDao;
 import org.killbill.billing.tenant.dao.TenantBroadcastDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
@@ -41,6 +42,9 @@ public class TenantTestSuiteWithEmbeddedDb extends GuicyKillbillTestSuiteWithEmb
     @Named(DefaultTenantModule.NO_CACHING_TENANT)
     @Inject
     protected TenantBroadcastDao noCachingTenantBroadcastDao;
+
+    @Inject
+    protected TenantUserApi tenantUserApi;
 
     @Inject
     protected TenantBroadcastDao tenantBroadcastDao;

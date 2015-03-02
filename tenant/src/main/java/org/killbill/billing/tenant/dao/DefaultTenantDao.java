@@ -46,8 +46,10 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, TenantApiException> implements TenantDao {
@@ -126,12 +128,16 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
     }
 
     @Override
-    public void addTenantKeyValue(final String key, final String value, final InternalCallContext context) {
+    public void addTenantKeyValue(final String key, final String value, final boolean uniqueKey, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final TenantKVModelDao tenantKVModelDao = new TenantKVModelDao(UUID.randomUUID(), context.getCreatedDate(), context.getUpdatedDate(), key, value);
-                entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).create(tenantKVModelDao, context);
+                final TenantKVSqlDao tenantKVSqlDao = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class);
+                if (uniqueKey) {
+                    deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
+                }
+                tenantKVSqlDao.create(tenantKVModelDao, context);
                 broadcastConfigurationChangeFromTransaction(entitySqlDaoWrapperFactory, key, context);
                 return null;
             }
@@ -144,23 +150,41 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final List<TenantKVModelDao> tenantKVs = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context);
-                for (TenantKVModelDao cur : tenantKVs) {
-                    if (cur.getTenantKey().equals(key)) {
-                        entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).markTenantKeyAsDeleted(cur.getId().toString(), context);
-                    }
-                }
-                return null;
+                broadcastConfigurationChangeFromTransaction(entitySqlDaoWrapperFactory, key, context);
+                return deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
             }
+
         });
+    }
+
+    private Void deleteFromTransaction(final String key, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) {
+        final List<TenantKVModelDao> tenantKVs = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context);
+        for (TenantKVModelDao cur : tenantKVs) {
+            if (cur.getTenantKey().equals(key)) {
+                entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).markTenantKeyAsDeleted(cur.getId().toString(), context);
+            }
+        }
+        return null;
     }
 
     private void broadcastConfigurationChangeFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                              final String key, final InternalCallContext context) throws EntityPersistenceException {
-        if (key.equals(TenantKey.CATALOG.toString()) ||
-            key.equals(TenantKey.OVERDUE_CONFIG.toString())) {
+        if (isSystemKey(key)) {
             final TenantBroadcastModelDao broadcast = new TenantBroadcastModelDao(key);
             entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class).create(broadcast, context);
         }
     }
+
+    //
+    // For now we restrict the caching to the (system) TenantKey keys
+    //
+    private boolean isSystemKey(final String key) {
+        return Iterables.tryFind(ImmutableList.copyOf(TenantKey.values()), new Predicate<TenantKey>() {
+            @Override
+            public boolean apply(final TenantKey input) {
+                return key.startsWith(input.toString());
+            }
+        }).orNull() != null;
+    }
+
 }

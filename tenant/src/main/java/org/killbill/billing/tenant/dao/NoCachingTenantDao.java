@@ -17,6 +17,7 @@
 
 package org.killbill.billing.tenant.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -65,7 +66,7 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
             @Override
             public List<String> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final List<TenantKVModelDao> tenantKV = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context);
-                return ImmutableList.copyOf(Collections2.transform(tenantKV, new Function<TenantKVModelDao, String>() {
+                return new ArrayList(Collections2.transform(tenantKV, new Function<TenantKVModelDao, String>() {
                     @Override
                     public String apply(final TenantKVModelDao in) {
                         return in.getTenantValue();
@@ -76,7 +77,7 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
     }
 
     @Override
-    public void addTenantKeyValue(final String key, final String value, final InternalCallContext context) {
+    public void addTenantKeyValue(final String key, final String value, final boolean uniqueKey, final InternalCallContext context) {
         throw new IllegalStateException("Not implemented by NoCachingTenantDao");
     }
 

@@ -33,6 +33,7 @@ public @interface Cachable {
     public final String AUDIT_LOG_VIA_HISTORY_CACHE_NAME = "audit-log-via-history";
     public final String TENANT_CATALOG_CACHE_NAME = "tenant-catalog";
     public final String TENANT_OVERDUE_CONFIG_CACHE_NAME = "tenant-overdue-config";
+    public final String TENANT_KV_CACHE_NAME = "tenant-kv";
 
     public CacheType value();
 
@@ -59,7 +60,10 @@ public @interface Cachable {
         TENANT_CATALOG(TENANT_CATALOG_CACHE_NAME, false),
 
         /* Tenant overdue config cache */
-        TENANT_OVERDUE_CONFIG(TENANT_OVERDUE_CONFIG_CACHE_NAME, false);
+        TENANT_OVERDUE_CONFIG(TENANT_OVERDUE_CONFIG_CACHE_NAME, false),
+
+        /* Tenant overdue config cache */
+        TENANT_KV(TENANT_KV_CACHE_NAME, false);
 
         private final String cacheName;
         private final boolean isKeyPrefixedWithTableName;

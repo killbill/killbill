@@ -1,0 +1,73 @@
+/*
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
+ *
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at:
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.killbill.billing.util.cache;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.tenant.api.TenantInternalApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@Singleton
+public class TenantKVCacheLoader extends BaseCacheLoader {
+
+    private static final Logger logger = LoggerFactory.getLogger(TenantKVCacheLoader.class);
+    private final TenantInternalApi tenantApi;
+
+    @Inject
+    public TenantKVCacheLoader(final TenantInternalApi tenantApi) {
+        super();
+        this.tenantApi = tenantApi;
+    }
+
+    @Override
+    public CacheType getCacheType() {
+        return CacheType.TENANT_KV;
+    }
+
+    @Override
+    public Object load(final Object key, final Object argument) {
+
+        checkCacheLoaderStatus();
+
+        if (!(key instanceof String)) {
+            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
+        }
+        if (!(argument instanceof CacheLoaderArgument)) {
+            throw new IllegalArgumentException("Unexpected key type of " + argument.getClass().getName());
+        }
+        final String[] parts = ((String) key).split(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
+        final String rawKey = parts[0];
+        final String tenantRecordId = parts[1];
+
+        final InternalTenantContext internalTenantContext = new InternalTenantContext(Long.valueOf(tenantRecordId));
+        final List<String> valuesForKey = tenantApi.getTenantValueForKey(rawKey, internalTenantContext);
+        if (valuesForKey == null || valuesForKey.size() == 0) {
+            return null;
+        }
+        if (valuesForKey.size() > 1) {
+            throw new IllegalStateException("TenantKVCacheLoader expecting no more than one value for key " + key);
+        }
+        return valuesForKey.get(0);
+    }
+}

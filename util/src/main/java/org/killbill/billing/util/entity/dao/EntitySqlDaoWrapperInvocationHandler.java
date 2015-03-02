@@ -189,7 +189,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         // This can't be AUDIT'ed and CACHABLE'd at the same time as we only cache 'get'
         if (auditedAnnotation != null) {
             return invokeWithAuditAndHistory(auditedAnnotation, method, args);
-        } else if (cachableAnnotation != null) {
+        } else if (cachableAnnotation != null && cacheControllerDispatcher != null) {
             return invokeWithCaching(cachableAnnotation, method, args);
         } else {
             return invokeRaw(method, args);

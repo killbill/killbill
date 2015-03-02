@@ -28,6 +28,7 @@ public interface JaxrsResource {
 
     public static final String TIMELINE = "timeline";
     public static final String REGISTER_NOTIFICATION_CALLBACK = "registerNotificationCallback";
+    public static final String UPLOAD_PLUGIN_CONFIG = "uploadPluginConfig";
     public static final String SEARCH = "search";
 
     /*

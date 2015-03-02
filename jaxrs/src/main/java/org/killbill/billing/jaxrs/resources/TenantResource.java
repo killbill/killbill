@@ -20,6 +20,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -37,12 +38,11 @@ import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.payment.api.PaymentApi;
-import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.json.TenantJson;
 import org.killbill.billing.jaxrs.json.TenantKeyJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantData;
@@ -53,6 +53,7 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.clock.Clock;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
@@ -135,16 +136,12 @@ public class TenantResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Create a push notification")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
-    public Response registerPushNotificationCallback(@PathParam("tenantId") final String tenantId,
-                                                     @QueryParam(QUERY_NOTIFICATION_CALLBACK) final String notificationCallback,
+    public Response registerPushNotificationCallback(@QueryParam(QUERY_NOTIFICATION_CALLBACK) final String notificationCallback,
                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                      @HeaderParam(HDR_REASON) final String reason,
                                                      @HeaderParam(HDR_COMMENT) final String comment,
                                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        tenantApi.addTenantKeyValue(TenantKey.PUSH_NOTIFICATION_CB.toString(), notificationCallback, callContext);
-        final URI uri = UriBuilder.fromResource(TenantResource.class).path(TenantResource.class, "getPushNotificationCallbacks").build();
-        return Response.created(uri).build();
+        return insertTenantKey(TenantKey.PUSH_NOTIFICATION_CB, null, notificationCallback, "getPushNotificationCallbacks", createdBy, reason, comment, request);
     }
 
     @Timed
@@ -154,25 +151,96 @@ public class TenantResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a push notification", response = TenantKeyJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response getPushNotificationCallbacks(@javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
-
-        final TenantContext tenatContext = context.createContext(request);
-        final List<String> values = tenantApi.getTenantValueForKey(TenantKey.PUSH_NOTIFICATION_CB.toString(), tenatContext);
-        final TenantKeyJson result = new TenantKeyJson(TenantKey.PUSH_NOTIFICATION_CB.toString(), values);
-        return Response.status(Status.OK).entity(result).build();
+        return getTenantKey(TenantKey.PUSH_NOTIFICATION_CB, null, request);
     }
 
     @Timed
     @DELETE
     @Path("/REGISTER_NOTIFICATION_CALLBACK")
+    //@Path("/" + REGISTER_NOTIFICATION_CALLBACK) @see #238
     @ApiOperation(value = "Delete a push notification")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
-    public Response deletePushNotificationCallbacks(@PathParam("tenantId") final String tenantId,
-                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
+    public Response deletePushNotificationCallbacks(@HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                     @HeaderParam(HDR_REASON) final String reason,
                                                     @HeaderParam(HDR_COMMENT) final String comment,
                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        return deleteTenantKey(TenantKey.PUSH_NOTIFICATION_CB, null, createdBy, reason, comment, request);
+    }
+
+    @Timed
+    @POST
+    @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add a per tenant configuration for a plugin")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response uploadPluginConfiguration(final String pluginConfig,
+                                              @PathParam("pluginName") final String pluginName,
+                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                              @HeaderParam(HDR_REASON) final String reason,
+                                              @HeaderParam(HDR_COMMENT) final String comment,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        return insertTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, pluginConfig, "getPluginConfiguration", createdBy, reason, comment, request);
+    }
+
+    @Timed
+    @GET
+    @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a per tenant configuration for a plugin", response = TenantKeyJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response getPluginConfiguration(@PathParam("pluginName") final String pluginName,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        return getTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, request);
+    }
+
+    @Timed
+    @DELETE
+    @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
+    @ApiOperation(value = "Delete a per tenant configuration for a plugin")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response deletePluginConfiguration(@PathParam("pluginName") final String pluginName,
+                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                              @HeaderParam(HDR_REASON) final String reason,
+                                              @HeaderParam(HDR_COMMENT) final String comment,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        return deleteTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, createdBy, reason, comment, request);
+    }
+
+    private Response insertTenantKey(final TenantKey key,
+                                     @Nullable final String keyPostfix,
+                                     final String value,
+                                     final String getMethodStr,
+                                     final String createdBy,
+                                     final String reason,
+                                     final String comment,
+                                     final HttpServletRequest request) throws TenantApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        tenantApi.deleteTenantKey(TenantKey.PUSH_NOTIFICATION_CB.toString(), callContext);
+        final String tenantKey = keyPostfix != null ? key.toString() + keyPostfix : key.toString();
+        tenantApi.addTenantKeyValue(tenantKey, value, callContext);
+        final URI uri = UriBuilder.fromResource(TenantResource.class).path(TenantResource.class, getMethodStr).build();
+        return Response.created(uri).build();
+    }
+
+    private Response getTenantKey(final TenantKey key,
+                                  @Nullable final String keyPostfix,
+                                  final HttpServletRequest request) throws TenantApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final String tenantKey = keyPostfix != null ? key.toString() + keyPostfix : key.toString();
+        final List<String> values = tenantApi.getTenantValueForKey(tenantKey, tenantContext);
+        final TenantKeyJson result = new TenantKeyJson(tenantKey, values);
+        return Response.status(Status.OK).entity(result).build();
+    }
+
+    private Response deleteTenantKey(final TenantKey key,
+                                     @Nullable final String keyPostfix,
+                                     final String createdBy,
+                                     final String reason,
+                                     final String comment,
+                                     final HttpServletRequest request) throws TenantApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final String tenantKey = keyPostfix != null ? key.toString() + keyPostfix : key.toString();
+        tenantApi.deleteTenantKey(tenantKey, callContext);
         return Response.status(Status.OK).build();
     }
 
