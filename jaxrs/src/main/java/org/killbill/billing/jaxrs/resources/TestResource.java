@@ -63,6 +63,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
@@ -236,20 +237,20 @@ public class TestResource extends JaxRsResourceBase {
     }
 
     private boolean areAllNotificationsProcessed(final Long tenantRecordId) {
-        final Collection<NotificationQueue> filtered = Collections2.<NotificationQueue>filter(notificationQueueService.getNotificationQueues(),
-                                                                                              new Predicate<NotificationQueue>() {
-                                                                                                  @Override
-                                                                                                  public boolean apply(final NotificationQueue notificationQueue) {
-                                                                                                      for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(tenantRecordId)) {
-                                                                                                          if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
-                                                                                                              return true;
-                                                                                                          }
-                                                                                                      }
-                                                                                                      return false;
-                                                                                                  }
-                                                                                              });
+        final Collection<NotificationQueue> filtered = ImmutableList.<NotificationQueue>copyOf(Collections2.<NotificationQueue>filter(notificationQueueService.getNotificationQueues(),
+                                                                                                                                      new Predicate<NotificationQueue>() {
+                                                                                                                                          @Override
+                                                                                                                                          public boolean apply(final NotificationQueue notificationQueue) {
+                                                                                                                                              for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(tenantRecordId)) {
+                                                                                                                                                  if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                                                                                                                                                      return true;
+                                                                                                                                                  }
+                                                                                                                                              }
+                                                                                                                                              return false;
+                                                                                                                                          }
+                                                                                                                                      }));
         if (!filtered.isEmpty()) {
-            log.info("TestResource: {} more notification(s) to process", filtered.size());
+            log.info("TestResource: {} queue(s) with more notification(s) to process", filtered.size());
         }
         return filtered.isEmpty();
     }
