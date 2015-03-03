@@ -666,8 +666,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(TEXT_HTML)
     @ApiOperation(value = "Retrieves the invoice template for the tenant", response = String.class, hidden = true)
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Template not found")})
-    public Response getInvoiceTemplate(@PathParam("locale") final String localeStr,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
+    public Response getInvoiceTemplate(@javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
         return getTemplateResource(null, TenantKey.INVOICE_TEMPLATE, request);
     }
 
