@@ -102,6 +102,7 @@ public class BeatrixListener {
         UUID objectId = null;
         ExtBusEventType eventBusType = null;
 
+        UUID accountId = null;
         switch (event.getBusEventType()) {
             case ACCOUNT_CREATE:
                 final AccountCreationInternalEvent realEventACR = (AccountCreationInternalEvent) event;
@@ -174,6 +175,7 @@ public class BeatrixListener {
                 objectType = ObjectType.PAYMENT;
                 objectId = realEventPayErr.getPaymentId();
                 eventBusType = ExtBusEventType.PAYMENT_FAILED;
+                accountId = realEventPayErr.getAccountId();
                 break;
 
             case PAYMENT_PLUGIN_ERROR:
@@ -236,7 +238,10 @@ public class BeatrixListener {
         }
 
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
-        final UUID accountId = getAccountId(event.getBusEventType(), objectId, objectType, tenantContext);
+        // See #275
+        accountId = (accountId == null) ?
+                    getAccountId(event.getBusEventType(), objectId, objectType, tenantContext) :
+                    accountId;
 
         return eventBusType != null ?
                new DefaultBusExternalEvent(objectId, objectType, eventBusType, accountId, tenantContext.getTenantId(), context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
