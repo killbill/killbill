@@ -855,6 +855,32 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         }
     }
 
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/286")
+    public void testMaxedOutProRation() {
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate cancelDate = new LocalDate(2014, 1, 25);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final BigDecimal monthlyRate1 = new BigDecimal("12.00");
+        final BigDecimal monthlyAmount1 = monthlyRate1;
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+
+        final InvoiceItem existing1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
+        tree.addItem(existing1);
+        // Fully item adjust the recurring item
+        final InvoiceItem existingItemAdj1 = new ItemAdjInvoiceItem(existing1, startDate, monthlyRate1.negate(), currency);
+        tree.addItem(existingItemAdj1);
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, cancelDate, monthlyAmount1, monthlyRate1, currency);
+        tree.mergeProposedItem(proposed1);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        verifyResult(tree.getView(), expectedResult);
+    }
+
     private void verifyResult(final List<InvoiceItem> result, final List<InvoiceItem> expectedResult) {
         assertEquals(result.size(), expectedResult.size());
         for (int i = 0; i < expectedResult.size(); i++) {

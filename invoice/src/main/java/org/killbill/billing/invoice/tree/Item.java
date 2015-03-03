@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -184,7 +186,9 @@ public class Item {
 
         final InvoiceItem otherItem = other.toInvoiceItem();
 
-        return !id.equals(otherItem.getId()) &&
+        // See https://github.com/killbill/killbill/issues/286
+        return otherItem != null &&
+               !id.equals(otherItem.getId()) &&
                // Finally, for the tricky part... In case of complete repairs, the new invoiceItem will always meet all of the
                // following conditions: same type, subscription, start date. Depending on the catalog configuration, the end
                // date check could also match (e.g. repair from annual to monthly). For that scenario, we need to default
