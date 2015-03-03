@@ -97,7 +97,8 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid accountId supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response buildFormDescriptor(final HostedPaymentPageFieldsJson json,
-                                        @PathParam(QUERY_ACCOUNT_ID) final String accountIdString,
+                                        @PathParam("accountId") final String accountIdString,
+                                        @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -108,6 +109,7 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID accountId = UUID.fromString(accountIdString);
         final Account account = accountUserApi.getAccountById(accountId, callContext);
+        final UUID paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
 
         final Iterable<PluginProperty> customFields;
         if (json == null) {
@@ -122,7 +124,7 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
                                                                                    }
                                                                                   );
         }
-        final HostedPaymentPageFormDescriptor descriptor = paymentGatewayApi.buildFormDescriptor(account, customFields, pluginProperties, callContext);
+        final HostedPaymentPageFormDescriptor descriptor = paymentGatewayApi.buildFormDescriptor(account, paymentMethodId, customFields, pluginProperties, callContext);
         final HostedPaymentPageFormDescriptorJson result = new HostedPaymentPageFormDescriptorJson(descriptor);
 
         return Response.status(Response.Status.OK).entity(result).build();

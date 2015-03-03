@@ -17,6 +17,9 @@
 
 package org.killbill.billing.payment.api;
 
+import java.util.UUID;
+
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.killbill.billing.account.api.Account;
@@ -41,8 +44,9 @@ public class DefaultPaymentGatewayApi implements PaymentGatewayApi {
     }
 
     @Override
-    public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        return paymentGatewayProcessor.buildFormDescriptor(account, customFields, properties, callContext, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
+    public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, @Nullable final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        final UUID paymentMethodIdToUse = paymentMethodId != null ? paymentMethodId : account.getPaymentMethodId();
+        return paymentGatewayProcessor.buildFormDescriptor(account, paymentMethodIdToUse, customFields, properties, callContext, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     @Override

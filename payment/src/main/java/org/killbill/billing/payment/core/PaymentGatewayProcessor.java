@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core;
 
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -97,12 +98,12 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                              }, paymentPluginNotificationDispatcher);
     }
 
-    public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+    public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return dispatchWithExceptionHandling(account,
                                              new Callable<PluginDispatcherReturnType<HostedPaymentPageFormDescriptor>>() {
                                                  @Override
                                                  public PluginDispatcherReturnType<HostedPaymentPageFormDescriptor> call() throws PaymentApiException {
-                                                     final PaymentPluginApi plugin = getPaymentProviderPlugin(account, internalCallContext);
+                                                     final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentMethodId, internalCallContext);
 
                                                      try {
                                                          final HostedPaymentPageFormDescriptor result = plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);

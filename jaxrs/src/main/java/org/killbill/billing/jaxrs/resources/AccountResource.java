@@ -716,8 +716,8 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response processPayment(final PaymentTransactionJson json,
-                                   @PathParam("accountId") final String accountIdStr,
-                                   @QueryParam("paymentMethodId") final String paymentMethodIdStr,
+                                   @PathParam(QUERY_ACCOUNT_ID) final String accountIdStr,
+                                   @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
                                    @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
