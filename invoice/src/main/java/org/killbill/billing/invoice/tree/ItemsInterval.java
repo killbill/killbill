@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,6 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
 
 import com.google.common.base.Preconditions;
@@ -227,15 +230,20 @@ public class ItemsInterval {
      * @param mergeMode mode to consider.
      * @return
      */
-    private Item createNewItem(LocalDate startDate, LocalDate endDate, final boolean mergeMode) {
+    private Item createNewItem(final LocalDate startDate, final LocalDate endDate, final boolean mergeMode) {
 
         final Item item = getResultingItem(mergeMode);
         if (item == null) {
             return null;
         }
 
-        final Item result = new Item(item.toProratedInvoiceItem(startDate, endDate), targetInvoiceId, item.getAction());
-        if (item.getAction() == ItemAction.CANCEL && result != null) {
+        final InvoiceItem proratedInvoiceItem = item.toProratedInvoiceItem(startDate, endDate);
+        if (proratedInvoiceItem == null) {
+            return null;
+        }
+
+        final Item result = new Item(proratedInvoiceItem, targetInvoiceId, item.getAction());
+        if (item.getAction() == ItemAction.CANCEL) {
             item.incrementCurrentRepairedAmount(result.getAmount());
         }
         return result;

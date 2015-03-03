@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,23 +26,23 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.util.jackson.ObjectMapper;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.Lists;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
+public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
     private final UUID invoiceId = UUID.randomUUID();
     private final UUID accountId = UUID.randomUUID();
@@ -187,7 +189,7 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         expectedResult.add(expected3);
 
         // First test with items in order
-        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(initial);
         tree.addItem(block1);
         tree.addItem(block2);
@@ -218,7 +220,7 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         expectedResult.add(expected1);
         expectedResult.add(expected2);
 
-        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(first);
         tree.addItem(second);
         tree.addItem(block1);
@@ -304,7 +306,7 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         expectedResult.add(annual);
 
         // First test with items in order
-        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(monthly1);
         tree.addItem(monthly2);
         tree.addItem(repair);
@@ -341,7 +343,7 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         expectedResult.add(annual);
 
         // First test with items in order
-        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(monthly1);
         tree.addItem(monthly2);
         tree.addItem(repair);
@@ -377,7 +379,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, changeDate, monthlyAlignmentDate, amount2.negate(), currency, newItem1.getId());
         final InvoiceItem newItem2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, changeDate, endDate, amount1, rate1, currency);
 
-
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(initial);
         tree.addItem(newItem1);
@@ -393,7 +394,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         tree.build();
         verifyResult(tree.getView(), expectedResult);
     }
-
 
     @Test(groups = "fast")
     public void testMergeWithNoExisting() {
@@ -548,7 +548,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         verifyResult(tree.getView(), expectedResult);
     }
 
-
     @Test(groups = "fast")
     public void testMergeCancellationWithTwoMiddleRepair() {
 
@@ -583,7 +582,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         expectedResult.add(repair2);
         verifyResult(tree.getView(), expectedResult);
 
-
         // Dot it again but with proposed items out of order
         final SubscriptionItemTree treeAgain = new SubscriptionItemTree(subscriptionId, invoiceId);
         final InvoiceItem monthlyAgain = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
@@ -600,8 +598,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         treeAgain.buildForMerge();
 
         verifyResult(treeAgain.getView(), expectedResult);
-
-
     }
 
     @Test(groups = "fast")
@@ -675,7 +671,6 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         expectedResult.add(proposed3);
         expectedResult.add(repair2);
         verifyResult(tree.getView(), expectedResult);
-
     }
 
     @Test(groups = "fast")
@@ -809,7 +804,7 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
         final InvoiceItem monthly2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endMonthly1, endMonthly2, monthlyAmount, monthlyRate, currency);
 
         // First test with items in order
-        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(monthly1);
         tree.addItem(monthly2);
         tree.flatten(true);
@@ -833,7 +828,7 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
     @Test(groups = "fast")
     public void verifyJson() {
 
-        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         final UUID id1 = UUID.fromString("e8ba6ce7-9bd4-417d-af53-70951ecaa99f");
         final InvoiceItem yearly1 = new RecurringInvoiceItem(id1, new DateTime(), invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, new LocalDate("2014-01-01"), new LocalDate("2015-01-01"), BigDecimal.TEN, BigDecimal.TEN, currency);
         tree.addItem(yearly1);
@@ -855,11 +850,35 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
 
             assertEquals(json, expectedJson);
 
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (final IOException e) {
             Assert.fail(e.getMessage());
         }
+    }
 
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/286")
+    public void testMaxedOutProRation() {
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate cancelDate = new LocalDate(2014, 1, 25);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final BigDecimal monthlyRate1 = new BigDecimal("12.00");
+        final BigDecimal monthlyAmount1 = monthlyRate1;
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+
+        final InvoiceItem existing1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
+        tree.addItem(existing1);
+        // Fully item adjust the recurring item
+        final InvoiceItem existingItemAdj1 = new ItemAdjInvoiceItem(existing1, startDate, monthlyRate1.negate(), currency);
+        tree.addItem(existingItemAdj1);
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, cancelDate, monthlyAmount1, monthlyRate1, currency);
+        tree.mergeProposedItem(proposed1);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        verifyResult(tree.getView(), expectedResult);
     }
 
     private void verifyResult(final List<InvoiceItem> result, final List<InvoiceItem> expectedResult) {
@@ -868,5 +887,4 @@ public class TestSubscriptionItemTree /* extends InvoiceTestSuiteNoDB  */ {
             assertTrue(result.get(i).matches(expectedResult.get(i)));
         }
     }
-
 }
