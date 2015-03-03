@@ -32,6 +32,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
@@ -44,6 +45,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
+import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
@@ -111,6 +113,8 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(accountId, callContext);
         final UUID paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
 
+        validatePaymentMethodForAccount(accountId, paymentMethodId, callContext);
+
         final Iterable<PluginProperty> customFields;
         if (json == null) {
             customFields = ImmutableList.<PluginProperty>of();
@@ -129,6 +133,7 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
 
         return Response.status(Response.Status.OK).entity(result).build();
     }
+
 
     @Timed
     @POST

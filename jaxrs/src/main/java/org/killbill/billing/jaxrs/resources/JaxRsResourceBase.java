@@ -45,6 +45,7 @@ import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -59,6 +60,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -280,6 +282,14 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                        .header(HDR_PAGINATION_NEXT_PAGE_URI, nextPageUri)
                        .build();
     }
+
+    protected void validatePaymentMethodForAccount(final UUID accountId, final UUID paymentMethodId, final CallContext callContext) throws PaymentApiException {
+        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(paymentMethodId, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        if (! paymentMethod.getAccountId().equals(accountId)) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
+        }
+    }
+
 
     protected LocalDate toLocalDate(final UUID accountId, final String inputDate, final TenantContext context) {
 

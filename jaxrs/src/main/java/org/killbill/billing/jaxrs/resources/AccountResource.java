@@ -737,6 +737,8 @@ public class AccountResource extends JaxRsResourceBase {
         final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
         final UUID paymentId = json.getPaymentId() == null ? null : UUID.fromString(json.getPaymentId());
 
+        validatePaymentMethodForAccount(accountId, paymentMethodId, callContext);
+
         final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final Payment result;
