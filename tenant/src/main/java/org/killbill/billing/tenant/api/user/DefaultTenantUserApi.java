@@ -124,9 +124,9 @@ public class DefaultTenantUserApi implements TenantUserApi {
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
         final String tenantKey = getCacheKeyName(key, internalContext);
+        tenantDao.addTenantKeyValue(key, value, isSingleValueKey(key), internalContext);
         // Invalidate tenantKVCache before we store. Multi-node invalidation will follow the TenantBroadcast pattern
         tenantKVCache.remove(tenantKey);
-        tenantDao.addTenantKeyValue(key, value, isSingleValueKey(key), internalContext);
     }
 
     @Override
@@ -136,8 +136,8 @@ public class DefaultTenantUserApi implements TenantUserApi {
         // Invalidate tenantKVCache before we store. Multi-node invalidation will follow the TenantBroadcast pattern
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
         final String tenantKey = getCacheKeyName(key, internalContext);
-        tenantKVCache.remove(tenantKey);
         tenantDao.deleteTenantKey(key, internalContext);
+        tenantKVCache.remove(tenantKey);
     }
 
     private String getCachedTenantValueForKey(final String key, final InternalTenantContext internalContext) {
