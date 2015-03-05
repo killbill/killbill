@@ -107,7 +107,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
     }
 
     @Override
-    public List<String> getTenantValueForKey(final String key, final TenantContext context)
+    public List<String> getTenantValuesForKey(final String key, final TenantContext context)
             throws TenantApiException {
 
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
@@ -121,12 +121,6 @@ public class DefaultTenantUserApi implements TenantUserApi {
     @Override
     public void addTenantKeyValue(final String key, final String value, final CallContext context)
             throws TenantApiException {
-        /*
-        final Tenant tenant = tenantDao.getById(tenantId, new InternalTenantContext(null, null));
-        if (tenant == null) {
-            throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_ID, tenantId);
-        }
-        */
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
         final String tenantKey = getCacheKeyName(key, internalContext);
@@ -138,12 +132,6 @@ public class DefaultTenantUserApi implements TenantUserApi {
     @Override
     public void deleteTenantKey(final String key, final CallContext context)
             throws TenantApiException {
-        /*
-        final Tenant tenant = tenantDao.getById(tenantId, new InternalTenantContext(null, null));
-        if (tenant == null) {
-            throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_ID, tenantId);
-        }
-        */
 
         // Invalidate tenantKVCache before we store. Multi-node invalidation will follow the TenantBroadcast pattern
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);

@@ -101,7 +101,7 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
     }
 
     @Override
-    public List<String> getTenantValueForKey(final String key, final InternalTenantContext tenantContext) {
+    public List<String> getTenantValuesForKey(final String key, final InternalTenantContext tenantContext) {
         return tenantDao.getTenantValueForKey(key, tenantContext);
     }
 

@@ -138,7 +138,7 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
                     deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
                 }
                 tenantKVSqlDao.create(tenantKVModelDao, context);
-                broadcastConfigurationChangeFromTransaction(entitySqlDaoWrapperFactory, key, context);
+                broadcastConfigurationChangeFromTransaction(key, entitySqlDaoWrapperFactory, context);
                 return null;
             }
         });
@@ -150,10 +150,10 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                broadcastConfigurationChangeFromTransaction(entitySqlDaoWrapperFactory, key, context);
-                return deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
+                deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
+                broadcastConfigurationChangeFromTransaction(key, entitySqlDaoWrapperFactory, context);
+                return null;
             }
-
         });
     }
 
@@ -167,8 +167,8 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         return null;
     }
 
-    private void broadcastConfigurationChangeFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
-                                                             final String key, final InternalCallContext context) throws EntityPersistenceException {
+    private void broadcastConfigurationChangeFromTransaction(final String key, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
+                                                             final InternalCallContext context) throws EntityPersistenceException {
         if (isSystemKey(key)) {
             final TenantBroadcastModelDao broadcast = new TenantBroadcastModelDao(key);
             entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class).create(broadcast, context);

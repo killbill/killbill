@@ -109,6 +109,6 @@ public class PushNotificationListener {
     }
 
     private List<String> getCallbacksForTenant(final TenantContext context) throws TenantApiException {
-        return tenantApi.getTenantValueForKey(TenantKey.PUSH_NOTIFICATION_CB.toString(), context);
+        return tenantApi.getTenantValuesForKey(TenantKey.PUSH_NOTIFICATION_CB.toString(), context);
     }
 }

@@ -232,7 +232,7 @@ public class TenantResource extends JaxRsResourceBase {
                                   final HttpServletRequest request) throws TenantApiException {
         final TenantContext tenantContext = context.createContext(request);
         final String tenantKey = keyPostfix != null ? key.toString() + keyPostfix : key.toString();
-        final List<String> values = tenantApi.getTenantValueForKey(tenantKey, tenantContext);
+        final List<String> values = tenantApi.getTenantValuesForKey(tenantKey, tenantContext);
         final TenantKeyJson result = new TenantKeyJson(tenantKey, values);
         return Response.status(Status.OK).entity(result).build();
     }

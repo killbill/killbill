@@ -54,7 +54,7 @@ public class DefaultOverdueApi implements OverdueApi {
         try {
             final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
             final String tenantKey = TenantKey.OVERDUE_CONFIG.toString();
-            if (!tenantApi.getTenantValueForKey(tenantKey, callContext).isEmpty()) {
+            if (!tenantApi.getTenantValuesForKey(tenantKey, callContext).isEmpty()) {
                 tenantApi.deleteTenantKey(tenantKey, callContext);
             }
             tenantApi.addTenantKeyValue(tenantKey, overdueXML, callContext);

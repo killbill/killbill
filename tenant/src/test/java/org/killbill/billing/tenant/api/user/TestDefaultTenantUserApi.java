@@ -30,19 +30,19 @@ public class TestDefaultTenantUserApi extends TenantTestSuiteWithEmbeddedDb {
     public void testUserKey() throws Exception {
         tenantUserApi.addTenantKeyValue("THE_KEY", "TheValue", callContext);
 
-        List<String> value = tenantUserApi.getTenantValueForKey("THE_KEY", callContext);
+        List<String> value = tenantUserApi.getTenantValuesForKey("THE_KEY", callContext);
         Assert.assertEquals(value.size(), 1);
         Assert.assertEquals(value.get(0), "TheValue");
 
         tenantUserApi.addTenantKeyValue("THE_KEY", "TheSecondValue", callContext);
-        value = tenantUserApi.getTenantValueForKey("THE_KEY", callContext);
+        value = tenantUserApi.getTenantValuesForKey("THE_KEY", callContext);
         Assert.assertEquals(value.size(), 2);
 
-        value = tenantUserApi.getTenantValueForKey("THE_KEY", callContext);
+        value = tenantUserApi.getTenantValuesForKey("THE_KEY", callContext);
         Assert.assertEquals(value.size(), 2);
 
         tenantUserApi.deleteTenantKey("THE_KEY", callContext);
-        value = tenantUserApi.getTenantValueForKey("THE_KEY", callContext);
+        value = tenantUserApi.getTenantValuesForKey("THE_KEY", callContext);
         Assert.assertEquals(value.size(), 0);
     }
 
@@ -53,27 +53,27 @@ public class TestDefaultTenantUserApi extends TenantTestSuiteWithEmbeddedDb {
 
         tenantUserApi.addTenantKeyValue(tenantKey, "TheValue", callContext);
 
-        List<String> value = tenantUserApi.getTenantValueForKey(tenantKey, callContext);
+        List<String> value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
         Assert.assertEquals(value.size(), 1);
         Assert.assertEquals(value.get(0), "TheValue");
 
         // Warm cache
-        value = tenantUserApi.getTenantValueForKey(tenantKey, callContext);
+        value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
         Assert.assertEquals(value.size(), 1);
         Assert.assertEquals(value.get(0), "TheValue");
 
         tenantUserApi.addTenantKeyValue(tenantKey, "TheSecondValue", callContext);
-        value = tenantUserApi.getTenantValueForKey(tenantKey, callContext);
+        value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
         Assert.assertEquals(value.size(), 1);
         Assert.assertEquals(value.get(0), "TheSecondValue");
 
         // Warm cache
-        value = tenantUserApi.getTenantValueForKey(tenantKey, callContext);
+        value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
         Assert.assertEquals(value.size(), 1);
         Assert.assertEquals(value.get(0), "TheSecondValue");
 
         tenantUserApi.deleteTenantKey(tenantKey, callContext);
-        value = tenantUserApi.getTenantValueForKey(tenantKey, callContext);
+        value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
         Assert.assertEquals(value.size(), 0);
     }
 
@@ -84,16 +84,16 @@ public class TestDefaultTenantUserApi extends TenantTestSuiteWithEmbeddedDb {
 
         tenantUserApi.addTenantKeyValue(tenantKey, "TheValue", callContext);
 
-        List<String> value = tenantUserApi.getTenantValueForKey(tenantKey, callContext);
+        List<String> value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
         Assert.assertEquals(value.size(), 1);
         Assert.assertEquals(value.get(0), "TheValue");
 
         tenantUserApi.addTenantKeyValue(tenantKey, "TheSecondValue", callContext);
-        value = tenantUserApi.getTenantValueForKey(tenantKey, callContext);
+        value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
         Assert.assertEquals(value.size(), 2);
 
         tenantUserApi.deleteTenantKey(tenantKey, callContext);
-        value = tenantUserApi.getTenantValueForKey(tenantKey, callContext);
+        value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
         Assert.assertEquals(value.size(), 0);
     }
 

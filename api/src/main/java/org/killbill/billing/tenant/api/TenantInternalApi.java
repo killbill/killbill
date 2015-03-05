@@ -52,5 +52,5 @@ public interface TenantInternalApi {
 
     public String getPluginConfig(String pluginName, InternalTenantContext tenantContext);
 
-    public List<String> getTenantValueForKey(final String key, final InternalTenantContext tenantContext);
+    public List<String> getTenantValuesForKey(final String key, final InternalTenantContext tenantContext);
 }

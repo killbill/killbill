@@ -756,7 +756,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        if (!tenantApi.getTenantValueForKey(tenantKeyStr, callContext).isEmpty()) {
+        if (!tenantApi.getTenantValuesForKey(tenantKeyStr, callContext).isEmpty()) {
             if (deleteIfExists) {
                 tenantApi.deleteTenantKey(tenantKeyStr, callContext);
             } else {
@@ -774,7 +774,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final String tenantKeyStr = localeStr != null ?
                                     LocaleUtils.localeString(LocaleUtils.toLocale(localeStr), tenantKey.toString()) :
                                     tenantKey.toString();
-        final List<String> result = tenantApi.getTenantValueForKey(tenantKeyStr, tenantContext);
+        final List<String> result = tenantApi.getTenantValuesForKey(tenantKeyStr, tenantContext);
         return result.isEmpty() ? Response.status(Status.NOT_FOUND).build() : Response.status(Status.OK).entity(result.get(0)).build();
     }
 

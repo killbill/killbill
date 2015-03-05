@@ -61,7 +61,7 @@ public class TenantKVCacheLoader extends BaseCacheLoader {
         final String tenantRecordId = parts[1];
 
         final InternalTenantContext internalTenantContext = new InternalTenantContext(Long.valueOf(tenantRecordId));
-        final List<String> valuesForKey = tenantApi.getTenantValueForKey(rawKey, internalTenantContext);
+        final List<String> valuesForKey = tenantApi.getTenantValuesForKey(rawKey, internalTenantContext);
         if (valuesForKey == null || valuesForKey.size() == 0) {
             return null;
         }
