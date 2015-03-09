@@ -28,17 +28,23 @@ import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 public class TenantBroadcastModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
 
     private String type;
+    private Long targetRecordId;
+    private TableName targetTableName;
+    private UUID userToken;
 
     public TenantBroadcastModelDao() { /* For the DAO mapper */ }
 
-    public TenantBroadcastModelDao(final String type) {
-        this(UUID.randomUUID(), null, null, type);
+    public TenantBroadcastModelDao(final Long targetRecordId, final String type, final UUID userToken) {
+        this(UUID.randomUUID(), null, null, type, userToken);
+        this.targetRecordId = targetRecordId;
     }
 
     public TenantBroadcastModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate,
-                                   final String type) {
+                                   final String type, final UUID userToken) {
         super(id, createdDate, updatedDate);
         this.type = type;
+        this.userToken = userToken;
+        this.targetTableName = TableName.TENANT_KVS; // Only one supported now
     }
 
     public String getType() {
@@ -47,6 +53,30 @@ public class TenantBroadcastModelDao extends EntityModelDaoBase implements Entit
 
     public void setType(final String type) {
         this.type = type;
+    }
+
+    public Long getTargetRecordId() {
+        return targetRecordId;
+    }
+
+    public void setTargetRecordId(final Long targetRecordId) {
+        this.targetRecordId = targetRecordId;
+    }
+
+    public UUID getUserToken() {
+        return userToken;
+    }
+
+    public void setUserToken(final UUID userToken) {
+        this.userToken = userToken;
+    }
+
+    public TableName getTargetTableName() {
+        return targetTableName;
+    }
+
+    public void setTargetTableName(final TableName targetTableName) {
+        this.targetTableName = targetTableName;
     }
 
     @Override
@@ -63,7 +93,16 @@ public class TenantBroadcastModelDao extends EntityModelDaoBase implements Entit
 
         final TenantBroadcastModelDao that = (TenantBroadcastModelDao) o;
 
+        if (targetTableName != that.targetTableName) {
+            return false;
+        }
+        if (targetRecordId != null ? !targetRecordId.equals(that.targetRecordId) : that.targetRecordId != null) {
+            return false;
+        }
         if (type != null ? !type.equals(that.type) : that.type != null) {
+            return false;
+        }
+        if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
             return false;
         }
 
@@ -74,6 +113,9 @@ public class TenantBroadcastModelDao extends EntityModelDaoBase implements Entit
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (targetRecordId != null ? targetRecordId.hashCode() : 0);
+        result = 31 * result + (targetTableName != null ? targetTableName.hashCode() : 0);
+        result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
         return result;
     }
 

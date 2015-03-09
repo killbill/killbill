@@ -44,7 +44,9 @@ public interface BusInternalEvent extends BusEvent {
         USER_TAGDEFINITION_CREATION,
         USER_TAGDEFINITION_DELETION,
         USER_TAG_CREATION,
-        USER_TAG_DELETION
+        USER_TAG_DELETION,
+        TENANT_CONFIG_CHANGE,
+        TENANT_CONFIG_DELETION;
     }
 
     public BusInternalEventType getBusEventType();

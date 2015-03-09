@@ -43,6 +43,8 @@ import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.events.SubscriptionInternalEvent;
+import org.killbill.billing.events.TenantConfigChangeInternalEvent;
+import org.killbill.billing.events.TenantConfigDeletionInternalEvent;
 import org.killbill.billing.events.UserTagCreationInternalEvent;
 import org.killbill.billing.events.UserTagDeletionInternalEvent;
 import org.killbill.billing.lifecycle.glue.BusModule;
@@ -101,6 +103,7 @@ public class BeatrixListener {
         ObjectType objectType = null;
         UUID objectId = null;
         ExtBusEventType eventBusType = null;
+        String metaData = null;
 
         UUID accountId = null;
         switch (event.getBusEventType()) {
@@ -221,17 +224,33 @@ public class BeatrixListener {
                 break;
 
             case CUSTOM_FIELD_CREATION:
-                final CustomFieldCreationEvent realCustomEveventCr = (CustomFieldCreationEvent) event;
+                final CustomFieldCreationEvent realCustomFieldEventCr = (CustomFieldCreationEvent) event;
                 objectType = ObjectType.CUSTOM_FIELD;
-                objectId = realCustomEveventCr.getCustomFieldId();
+                objectId = realCustomFieldEventCr.getCustomFieldId();
                 eventBusType = ExtBusEventType.CUSTOM_FIELD_CREATION;
                 break;
 
             case CUSTOM_FIELD_DELETION:
-                final CustomFieldDeletionEvent realCustomEveventDel = (CustomFieldDeletionEvent) event;
+                final CustomFieldDeletionEvent realCustomFieldEventDel = (CustomFieldDeletionEvent) event;
                 objectType = ObjectType.CUSTOM_FIELD;
-                objectId = realCustomEveventDel.getCustomFieldId();
+                objectId = realCustomFieldEventDel.getCustomFieldId();
                 eventBusType = ExtBusEventType.CUSTOM_FIELD_DELETION;
+                break;
+
+            case TENANT_CONFIG_CHANGE:
+                final TenantConfigChangeInternalEvent realTenantConfigEventChg = (TenantConfigChangeInternalEvent) event;
+                objectType = ObjectType.TENANT_KVS;
+                objectId = realTenantConfigEventChg.getId();
+                eventBusType = ExtBusEventType.TENANT_CONFIG_CHANGE;
+                metaData = realTenantConfigEventChg.getKey();
+                break;
+
+            case TENANT_CONFIG_DELETION:
+                final TenantConfigDeletionInternalEvent realTenantConfigEventDel = (TenantConfigDeletionInternalEvent) event;
+                objectType = ObjectType.TENANT_KVS;
+                objectId = null;
+                eventBusType = ExtBusEventType.TENANT_CONFIG_DELETION;
+                metaData = realTenantConfigEventDel.getKey();
                 break;
 
             default:
@@ -244,7 +263,7 @@ public class BeatrixListener {
                     accountId;
 
         return eventBusType != null ?
-               new DefaultBusExternalEvent(objectId, objectType, eventBusType, accountId, tenantContext.getTenantId(), context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
+               new DefaultBusExternalEvent(objectId, objectType, eventBusType, accountId, tenantContext.getTenantId(), metaData, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
                null;
     }
 
@@ -252,6 +271,8 @@ public class BeatrixListener {
         // accountRecord_id is not set for ACCOUNT_CREATE event as we are in the transaction and value is known yet
         if (eventType == BusInternalEventType.ACCOUNT_CREATE) {
             return objectId;
+        } else if (eventType == BusInternalEventType.TENANT_CONFIG_CHANGE || eventType == BusInternalEventType.TENANT_CONFIG_DELETION) {
+            return null;
         } else if (objectId == null) {
             return null;
         } else {

@@ -3,7 +3,10 @@ group TenantBroadcastSqlDao: EntitySqlDao;
 tableName() ::= "tenant_broadcasts"
 
 tableFields(prefix) ::= <<
-  <prefix>type
+  <prefix>target_record_id
+, <prefix>target_table_name
+, <prefix>type
+, <prefix>user_token
 , <prefix>created_date
 , <prefix>created_by
 , <prefix>updated_date
@@ -11,7 +14,10 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
- :type
+  :targetRecordId
+, :targetTableName
+, :type
+, :userToken
 , :createdDate
 , :createdBy
 , :updatedDate

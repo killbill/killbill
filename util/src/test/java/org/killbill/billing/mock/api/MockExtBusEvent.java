@@ -63,6 +63,11 @@ public class MockExtBusEvent implements ExtBusEvent {
     }
 
     @Override
+    public String getMetaData() {
+        return null;
+    }
+
+    @Override
     public UUID getAccountId() {
         return accountId;
     }

@@ -77,6 +77,26 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
     }
 
     @Override
+    public TenantKVModelDao getKeyByRecordId(final Long recordId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TenantKVModelDao>() {
+            @Override
+            public TenantKVModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getByRecordId(recordId, context);
+            }
+        });
+    }
+
+    @Override
+    public TenantModelDao getByRecordId(final Long recordId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TenantModelDao>() {
+            @Override
+            public TenantModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(TenantSqlDao.class).getByRecordId(recordId, context);
+            }
+        });
+    }
+
+    @Override
     public void addTenantKeyValue(final String key, final String value, final boolean uniqueKey, final InternalCallContext context) {
         throw new IllegalStateException("Not implemented by NoCachingTenantDao");
     }
@@ -98,11 +118,6 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
 
     @Override
     public Long getRecordId(final UUID id, final InternalTenantContext context) {
-        throw new IllegalStateException("Not implemented by NoCachingTenantDao");
-    }
-
-    @Override
-    public TenantModelDao getByRecordId(final Long recordId, final InternalTenantContext context) {
         throw new IllegalStateException("Not implemented by NoCachingTenantDao");
     }
 

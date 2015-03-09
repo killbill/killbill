@@ -138,7 +138,8 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
                     deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
                 }
                 tenantKVSqlDao.create(tenantKVModelDao, context);
-                broadcastConfigurationChangeFromTransaction(key, entitySqlDaoWrapperFactory, context);
+                final TenantKVModelDao rehydrated = tenantKVSqlDao.getById(tenantKVModelDao.getId().toString(), context);
+                broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);
                 return null;
             }
         });
@@ -151,8 +152,18 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
-                broadcastConfigurationChangeFromTransaction(key, entitySqlDaoWrapperFactory, context);
+                broadcastConfigurationChangeFromTransaction(null, key, entitySqlDaoWrapperFactory, context);
                 return null;
+            }
+        });
+    }
+
+    @Override
+    public TenantKVModelDao getKeyByRecordId(final Long recordId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TenantKVModelDao>() {
+            @Override
+            public TenantKVModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getByRecordId(recordId, context);
             }
         });
     }
@@ -167,10 +178,10 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         return null;
     }
 
-    private void broadcastConfigurationChangeFromTransaction(final String key, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
+    private void broadcastConfigurationChangeFromTransaction(final Long kvRecordId, final String key, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                              final InternalCallContext context) throws EntityPersistenceException {
         if (isSystemKey(key)) {
-            final TenantBroadcastModelDao broadcast = new TenantBroadcastModelDao(key);
+            final TenantBroadcastModelDao broadcast = new TenantBroadcastModelDao(kvRecordId, key, context.getUserToken());
             entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class).create(broadcast, context);
         }
     }

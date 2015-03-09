@@ -28,12 +28,20 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
+import org.killbill.billing.tenant.api.user.DefaultTenantConfigChangeInternalEvent;
+import org.killbill.billing.tenant.api.user.DefaultTenantConfigDeletionInternalEvent;
 import org.killbill.billing.tenant.dao.TenantBroadcastDao;
 import org.killbill.billing.tenant.dao.TenantBroadcastModelDao;
+import org.killbill.billing.tenant.dao.TenantDao;
+import org.killbill.billing.tenant.dao.TenantKVModelDao;
+import org.killbill.billing.tenant.dao.TenantModelDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.util.config.TenantConfig;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,17 +69,23 @@ public class TenantCacheInvalidation {
     private final TenantBroadcastDao broadcastDao;
     private final ScheduledExecutorService tenantExecutor;
     private final TenantConfig tenantConfig;
+    private final PersistentBus eventBus;
+    private final TenantDao tenantDao;
     private AtomicLong latestRecordIdProcessed;
     private volatile boolean isStopped;
 
     @Inject
     public TenantCacheInvalidation(@Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantBroadcastDao broadcastDao,
                                    @Named(DefaultTenantModule.TENANT_EXECUTOR_NAMED) final ScheduledExecutorService tenantExecutor,
+                                   @Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantDao tenantDao,
+                                   final PersistentBus eventBus,
                                    final TenantConfig tenantConfig) {
         this.cache = new HashMap<TenantKey, CacheInvalidationCallback>();
         this.broadcastDao = broadcastDao;
         this.tenantExecutor = tenantExecutor;
         this.tenantConfig = tenantConfig;
+        this.tenantDao = tenantDao;
+        this.eventBus = eventBus;
         this.isStopped = false;
     }
 
@@ -88,7 +102,7 @@ public class TenantCacheInvalidation {
         }
         final TimeUnit pendingRateUnit = tenantConfig.getTenantBroadcastServiceRunningRate().getUnit();
         final long pendingPeriod = tenantConfig.getTenantBroadcastServiceRunningRate().getPeriod();
-        tenantExecutor.scheduleAtFixedRate(new TenantCacheInvalidationRunnable(this, broadcastDao), pendingPeriod, pendingPeriod, pendingRateUnit);
+        tenantExecutor.scheduleAtFixedRate(new TenantCacheInvalidationRunnable(this, broadcastDao, tenantDao), pendingPeriod, pendingPeriod, pendingRateUnit);
 
     }
 
@@ -133,15 +147,22 @@ public class TenantCacheInvalidation {
         this.latestRecordIdProcessed.set(newProcessedRecordId);
     }
 
+    public PersistentBus getEventBus() {
+        return eventBus;
+    }
+
     public static class TenantCacheInvalidationRunnable implements Runnable {
 
         private final TenantCacheInvalidation parent;
         private final TenantBroadcastDao broadcastDao;
+        private final TenantDao tenantDao;
 
         public TenantCacheInvalidationRunnable(final TenantCacheInvalidation parent,
-                                               final TenantBroadcastDao broadcastDao) {
+                                               final TenantBroadcastDao broadcastDao,
+                                               final TenantDao tenantDao) {
             this.parent = parent;
             this.broadcastDao = broadcastDao;
+            this.tenantDao = tenantDao;
         }
 
         @Override
@@ -162,10 +183,26 @@ public class TenantCacheInvalidation {
                         final CacheInvalidationCallback callback = parent.getCacheInvalidation(tenantKeyAndCookie.getTenantKey());
                         if (callback != null) {
                             final InternalTenantContext tenantContext = new InternalTenantContext(cur.getTenantRecordId(), null);
-                            callback.invalidateCache(tenantKeyAndCookie. getTenantKey(), tenantKeyAndCookie.getCookie(), tenantContext);
-                        } else {
-                            logger.warn("Failed to find CacheInvalidationCallback for " + cur.getType());
+                            callback.invalidateCache(tenantKeyAndCookie.getTenantKey(), tenantKeyAndCookie.getCookie(), tenantContext);
+
+                            final Long tenantKvsTargetRecordId = cur.getTargetRecordId();
+                            final BusInternalEvent event;
+                            if (tenantKvsTargetRecordId != null) {
+                                final TenantKVModelDao tenantModelDao = tenantDao.getKeyByRecordId(tenantKvsTargetRecordId, tenantContext);
+                                event = new DefaultTenantConfigChangeInternalEvent(tenantModelDao.getId(), cur.getType(),
+                                                                                   null, tenantContext.getTenantRecordId(), cur.getUserToken());
+                            } else {
+                                event = new DefaultTenantConfigDeletionInternalEvent(cur.getType(),
+                                                                                     null, tenantContext.getTenantRecordId(), cur.getUserToken());
+                            }
+                            try {
+                                parent.getEventBus().post(event);
+                            } catch (final EventBusException e) {
+                                logger.warn("Failed post bus event " + event, e);
+                            }
                         }
+                    } else {
+                        logger.warn("Failed to find CacheInvalidationCallback for " + cur.getType());
                     }
                 } finally {
                     parent.setLatestRecordIdProcessed(cur.getRecordId());

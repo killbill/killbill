@@ -39,8 +39,11 @@ DROP TABLE IF EXISTS tenant_broadcasts;
 CREATE TABLE tenant_broadcasts (
    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
    id char(36) NOT NULL,
+   target_record_id int(11) unsigned,
+   target_table_name varchar(50) NOT NULL,
    tenant_record_id int(11) unsigned NOT NULL,
    type varchar(64) NOT NULL,
+   user_token char(36),
    created_date datetime NOT NULL,
    created_by varchar(50) NOT NULL,
    updated_date datetime DEFAULT NULL,

@@ -23,13 +23,23 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.DBTestingHelper;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.notification.plugin.api.ExtBusEvent;
+import org.killbill.billing.overdue.api.OverdueConfig;
+import org.killbill.billing.tenant.api.DefaultTenant;
+import org.killbill.billing.tenant.api.Tenant;
+import org.killbill.billing.tenant.api.TenantData;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
+import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.CallOrigin;
+import org.killbill.billing.util.callcontext.UserType;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -58,22 +68,46 @@ public class TestPublicBus extends TestIntegrationBase {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+
+        /*
+        We copy the initialization instead of invoking the super method so we can add the registration
+        of the publicBus event;
+        TODO modify sequence to allow optional registration of publicListener
+         */
+        //super.beforeMethod();
+
+        try {
+            DBTestingHelper.get().getInstance().cleanupAllTables();
+        } catch (final Exception ignored) {
+        }
+
         super.beforeMethod();
 
-        publicListener = new PublicListener();
-
         log.debug("RESET TEST FRAMEWORK");
+
+        controlCacheDispatcher.clearAll();
+
+        overdueConfigCache.loadDefaultOverdueConfig((OverdueConfig) null);
 
         clock.resetDeltaFromReality();
         busHandler.reset();
 
         // Start services
+        publicListener = new PublicListener();
+
         lifecycle.fireStartupSequencePriorEventRegistration();
         busService.getBus().register(busHandler);
         externalBus.register(publicListener);
+
         lifecycle.fireStartupSequencePostEventRegistration();
 
+        paymentPlugin.clear();
+
         this.externalBusCount = new AtomicInteger(0);
+
+        // Make sure we start with a clean state
+        assertListenerStatus();
+
     }
 
     @Test(groups = "{slow}")
@@ -103,9 +137,30 @@ public class TestPublicBus extends TestIntegrationBase {
         await().atMost(10, SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                // expecting ACCOUNT_CREATION, ACCOUNT_CHANGE, SUBSCRIPTION_CREATION, INVOICE_CREATION
+                // expecting ACCOUNT_CREATE, ACCOUNT_CHANGE, SUBSCRIPTION_CREATION, INVOICE_CREATION
                 return externalBusCount.get() == 4;
             }
         });
     }
+
+    @Test(groups = "{slow}")
+    public void testTenantKVChange() throws Exception {
+
+        final TenantData tenantData = new DefaultTenant(null, clock.getUTCNow(), clock.getUTCNow(), "MY_TENANT", "key", "s3Cr3T");
+        final CallContext contextWithNoTenant = new DefaultCallContext(null, "loulou", CallOrigin.EXTERNAL, UserType.ADMIN, "no reason", "hum", UUID.randomUUID(), clock);
+        final Tenant tenant = tenantUserApi.createTenant(tenantData, contextWithNoTenant);
+
+        final CallContext contextWithTenant = new DefaultCallContext(tenant.getId(), "loulou", CallOrigin.EXTERNAL, UserType.ADMIN, "no reason", "hum", UUID.randomUUID(), clock);
+        final String tenantKey = TenantKey.PLUGIN_CONFIG_ + "FOO";
+        tenantUserApi.addTenantKeyValue(tenantKey, "FOO", contextWithTenant);
+
+        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                // expecting  TENANT_CONFIG_CHANGE
+                return externalBusCount.get() == 1;
+            }
+        });
+    }
+
 }

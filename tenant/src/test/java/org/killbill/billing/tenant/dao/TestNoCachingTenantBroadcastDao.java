@@ -31,7 +31,7 @@ public class TestNoCachingTenantBroadcastDao extends TenantTestSuiteWithEmbedded
 
     @Test(groups = "slow")
     public void testBasic() throws Exception {
-        final TenantBroadcastModelDao model = new TenantBroadcastModelDao("foo");
+        final TenantBroadcastModelDao model = new TenantBroadcastModelDao(0L, "foo", UUID.randomUUID());
 
         final InternalCallContext context79 = createContext(79L);
         tenantBroadcastDao.create(model, context79);
@@ -54,7 +54,7 @@ public class TestNoCachingTenantBroadcastDao extends TenantTestSuiteWithEmbedded
         final InternalCallContext context79 = createContext(81L);
         TenantBroadcastModelDao latestInsert = null;
         for (int i = 0; i < 100; i++) {
-            final TenantBroadcastModelDao model = new TenantBroadcastModelDao("foo-" + i);
+            final TenantBroadcastModelDao model = new TenantBroadcastModelDao(0L, "foo-" + i, UUID.randomUUID());
             tenantBroadcastDao.create(model, context79);
             latestInsert = model;
         }

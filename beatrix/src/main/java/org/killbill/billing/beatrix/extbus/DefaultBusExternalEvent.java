@@ -25,6 +25,8 @@ import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DefaultBusExternalEvent implements ExtBusEvent, BusEvent {
@@ -34,6 +36,7 @@ public class DefaultBusExternalEvent implements ExtBusEvent, BusEvent {
     private final UUID tenantId;
     private final ObjectType objectType;
     private final ExtBusEventType eventType;
+    private final String metaData;
     private final Long searchKey1;
     private final Long searchKey2;
     private final UUID userToken;
@@ -44,6 +47,7 @@ public class DefaultBusExternalEvent implements ExtBusEvent, BusEvent {
                                    @JsonProperty("eventType") final ExtBusEventType eventType,
                                    @JsonProperty("accountId") final UUID accountId,
                                    @JsonProperty("tenantId") final UUID tenantId,
+                                   @JsonProperty("metaData") final String metaData,
                                    @JsonProperty("searchKey1") final Long searchKey1,
                                    @JsonProperty("searchKey2") final Long searchKey2,
                                    @JsonProperty("userToken") final UUID userToken) {
@@ -52,6 +56,7 @@ public class DefaultBusExternalEvent implements ExtBusEvent, BusEvent {
         this.objectId = objectId;
         this.accountId = accountId;
         this.tenantId = tenantId;
+        this.metaData = metaData;
         this.searchKey1 = searchKey1;
         this.searchKey2 = searchKey2;
         this.userToken = userToken;
@@ -60,6 +65,11 @@ public class DefaultBusExternalEvent implements ExtBusEvent, BusEvent {
     @Override
     public UUID getObjectId() {
         return objectId;
+    }
+
+    @Override
+    public String getMetaData() {
+        return metaData;
     }
 
     @Override
@@ -117,13 +127,25 @@ public class DefaultBusExternalEvent implements ExtBusEvent, BusEvent {
         if (eventType != that.eventType) {
             return false;
         }
+        if (metaData != null ? !metaData.equals(that.metaData) : that.metaData != null) {
+            return false;
+        }
         if (objectId != null ? !objectId.equals(that.objectId) : that.objectId != null) {
             return false;
         }
         if (objectType != that.objectType) {
             return false;
         }
+        if (searchKey1 != null ? !searchKey1.equals(that.searchKey1) : that.searchKey1 != null) {
+            return false;
+        }
+        if (searchKey2 != null ? !searchKey2.equals(that.searchKey2) : that.searchKey2 != null) {
+            return false;
+        }
         if (tenantId != null ? !tenantId.equals(that.tenantId) : that.tenantId != null) {
+            return false;
+        }
+        if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
             return false;
         }
 
@@ -135,8 +157,12 @@ public class DefaultBusExternalEvent implements ExtBusEvent, BusEvent {
         int result = objectId != null ? objectId.hashCode() : 0;
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (tenantId != null ? tenantId.hashCode() : 0);
-        result = 31 * result + objectType.hashCode();
-        result = 31 * result + eventType.hashCode();
+        result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
+        result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
+        result = 31 * result + (metaData != null ? metaData.hashCode() : 0);
+        result = 31 * result + (searchKey1 != null ? searchKey1.hashCode() : 0);
+        result = 31 * result + (searchKey2 != null ? searchKey2.hashCode() : 0);
+        result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
         return result;
     }
 
