@@ -22,10 +22,8 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentGatewayApi;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
@@ -46,6 +44,11 @@ public class DefaultPaymentGatewayApi implements PaymentGatewayApi {
     @Override
     public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, @Nullable final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
         final UUID paymentMethodIdToUse = paymentMethodId != null ? paymentMethodId : account.getPaymentMethodId();
+
+        if (paymentMethodId == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, paymentMethodId, "should not be null");
+        }
+
         return paymentGatewayProcessor.buildFormDescriptor(account, paymentMethodIdToUse, customFields, properties, callContext, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 

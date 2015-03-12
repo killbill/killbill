@@ -284,12 +284,13 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected void validatePaymentMethodForAccount(final UUID accountId, final UUID paymentMethodId, final CallContext callContext) throws PaymentApiException {
+        verifyNonNull(paymentMethodId, "paymentMethodId should be specified");
+
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(paymentMethodId, false, false, ImmutableList.<PluginProperty>of(), callContext);
-        if (! paymentMethod.getAccountId().equals(accountId)) {
+        if (!paymentMethod.getAccountId().equals(accountId)) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
     }
-
 
     protected LocalDate toLocalDate(final UUID accountId, final String inputDate, final TenantContext context) {
 
