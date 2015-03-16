@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -35,8 +35,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.jolbox.bonecp.BoneCPConfig;
-import com.jolbox.bonecp.BoneCPDataSource;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class TestKillbillJdbcRealm extends TestJaxrsBase {
 
@@ -55,14 +55,14 @@ public class TestKillbillJdbcRealm extends TestJaxrsBase {
         tenantDao.create(new TenantModelDao(tenant), internalCallContext);
 
         // Setup the security manager
-        final BoneCPConfig dbConfig = new BoneCPConfig();
+        final HikariConfig dbConfig = new HikariConfig();
         dbConfig.setJdbcUrl(helper.getJdbcConnectionString());
         dbConfig.setUsername(helper.getUsername());
         dbConfig.setPassword(helper.getPassword());
 
         final KillbillJdbcRealm jdbcRealm;
         jdbcRealm = new KillbillJdbcRealm(daoConfig);
-        jdbcRealm.setDataSource(new BoneCPDataSource(dbConfig));
+        jdbcRealm.setDataSource(new HikariDataSource(dbConfig));
 
         securityManager = new DefaultSecurityManager(jdbcRealm);
     }
