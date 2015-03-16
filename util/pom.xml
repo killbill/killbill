@@ -88,8 +88,7 @@
         </dependency>
         <dependency>
             <groupId>net.sf.ehcache</groupId>
-            <artifactId>ehcache-core</artifactId>
-            <type>jar</type>
+            <artifactId>ehcache</artifactId>
         </dependency>
         <dependency>
             <groupId>org.antlr</groupId>
