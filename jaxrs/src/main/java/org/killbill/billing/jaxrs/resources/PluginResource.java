@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,7 +26,9 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.servlet.ReadListener;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -45,17 +49,16 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.killbill.billing.payment.api.PaymentApi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.clock.Clock;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.io.ByteStreams;
@@ -260,6 +263,7 @@ public class PluginResource extends JaxRsResourceBase {
     private static final class ServletInputStreamWrapper extends ServletInputStream {
 
         private final InputStream inputStream;
+        private final AtomicBoolean eof = new AtomicBoolean(false);
 
         public ServletInputStreamWrapper(final InputStream inputStream) {
             this.inputStream = inputStream;
@@ -267,7 +271,26 @@ public class PluginResource extends JaxRsResourceBase {
 
         @Override
         public int read() throws IOException {
-            return inputStream.read();
+            final int next = inputStream.read();
+            if (next == -1) {
+                eof.set(true);
+            }
+            return next;
+        }
+
+        @Override
+        public boolean isFinished() {
+            return eof.get();
+        }
+
+        @Override
+        public boolean isReady() {
+            return true;
+        }
+
+        @Override
+        public void setReadListener(final ReadListener readListener) {
+            throw new UnsupportedOperationException("setReadListener");
         }
     }
 
