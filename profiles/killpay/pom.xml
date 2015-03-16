@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2014 Groupon, Inc
-  ~ Copyright 2014 The Billing Project, LLC
+  ~ Copyright 2014-2015 Groupon, Inc
+  ~ Copyright 2014-2015 The Billing Project, LLC
   ~
   ~ The Billing Project licenses this file to you under the Apache License, version 2.0
   ~ (the "License"); you may not use this file except in compliance with the
@@ -47,6 +47,21 @@
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-servlet</artifactId>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.palominolabs.metrics</groupId>
+            <artifactId>metrics-guice</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Will be required when we upgrade metrics-guice to 3.1.3 -->
+        <!--<dependency>-->
+        <!--<groupId>com.palominolabs.metrics</groupId>-->
+        <!--<artifactId>metrics-guice-servlet</artifactId>-->
+        <!--<scope>runtime</scope>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-servlet</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

@@ -43,6 +43,14 @@
         <filter-name>guiceFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
+    <filter>
+        <filter-name>instrumentedFilter</filter-name>
+        <filter-class>com.codahale.metrics.servlet.InstrumentedFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>instrumentedFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
     <listener>
         <!-- Jersey insists on using java.util.logging (JUL) -->
         <listener-class>org.killbill.commons.skeleton.listeners.JULServletContextListener</listener-class>
