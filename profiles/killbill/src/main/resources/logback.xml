@@ -145,7 +145,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %msg%n</pattern>
+                    <pattern>%date [%thread] %msg%n%ex</pattern>
                 </encoder>
             </appender>
         </sift>
