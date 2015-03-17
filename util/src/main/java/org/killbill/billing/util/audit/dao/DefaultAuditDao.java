@@ -24,11 +24,8 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.skife.jdbi.v2.IDBI;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.ChangeType;
@@ -44,6 +41,8 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
