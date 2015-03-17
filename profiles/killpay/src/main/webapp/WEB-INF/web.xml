@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2014 Groupon, Inc
-  ~ Copyright 2014 The Billing Project, LLC
+  ~ Copyright 2014-2015 Groupon, Inc
+  ~ Copyright 2014-2015 The Billing Project, LLC
   ~
   ~ The Billing Project licenses this file to you under the Apache License, version 2.0
   ~ (the "License"); you may not use this file except in compliance with the
@@ -21,6 +21,14 @@
         xmlns="http://java.sun.com/xml/ns/javaee"
         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
         version="2.5">
+    <filter>
+        <filter-name>instrumentedFilter</filter-name>
+        <filter-class>com.codahale.metrics.servlet.InstrumentedFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>instrumentedFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
     <filter>
         <!-- Filter all requests through Shiro -->
         <filter-name>ShiroFilter</filter-name>
@@ -42,14 +50,6 @@
     </filter>
     <filter-mapping>
         <filter-name>guiceFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
-    <filter>
-        <filter-name>instrumentedFilter</filter-name>
-        <filter-class>com.codahale.metrics.servlet.InstrumentedFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>instrumentedFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
     <listener>
