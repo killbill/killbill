@@ -41,10 +41,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.jolbox</groupId>
-            <artifactId>bonecp</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP-java6</artifactId>
             <scope>test</scope>
