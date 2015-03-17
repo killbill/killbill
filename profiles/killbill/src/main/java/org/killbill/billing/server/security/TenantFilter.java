@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,6 +21,7 @@ package org.killbill.billing.server.security;
 import java.io.IOException;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -30,6 +31,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -38,10 +40,10 @@ import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.realm.Realm;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.server.listeners.KillbillGuiceListener;
+import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantUserApi;
-import org.killbill.commons.jdbi.guice.DaoConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,13 +61,14 @@ public class TenantFilter implements Filter {
     protected TenantUserApi tenantUserApi;
 
     @Inject
-    protected DaoConfig daoConfig;
+    @Named(KillbillServerModule.SHIRO_DATA_SOURCE_ID)
+    protected DataSource dataSource;
 
     private ModularRealmAuthenticator modularRealmAuthenticator;
 
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
-        final Realm killbillJdbcRealm = new KillbillJdbcRealm(daoConfig);
+        final Realm killbillJdbcRealm = new KillbillJdbcRealm(dataSource);
         // We use Shiro to verify the api credentials - but the Shiro Subject is only used for RBAC
         modularRealmAuthenticator = new ModularRealmAuthenticator();
         modularRealmAuthenticator.setRealms(ImmutableList.<Realm>of(killbillJdbcRealm));

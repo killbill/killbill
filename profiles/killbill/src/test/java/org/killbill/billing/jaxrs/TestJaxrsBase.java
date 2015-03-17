@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,8 +24,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
+import javax.sql.DataSource;
 
 import org.apache.shiro.web.servlet.ShiroFilter;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -89,6 +91,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     @Inject
     protected TestApiListener busHandler;
+
+    @Inject
+    @Named(KillbillServerModule.SHIRO_DATA_SOURCE_ID)
+    protected DataSource shiroDataSource;
 
     protected DaoConfig daoConfig;
     protected KillbillServerConfig serverConfig;

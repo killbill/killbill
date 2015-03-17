@@ -61,7 +61,7 @@ public class TestKillbillJdbcRealm extends TestJaxrsBase {
         dbConfig.setPassword(helper.getPassword());
 
         final KillbillJdbcRealm jdbcRealm;
-        jdbcRealm = new KillbillJdbcRealm(daoConfig);
+        jdbcRealm = new KillbillJdbcRealm(shiroDataSource);
         jdbcRealm.setDataSource(new HikariDataSource(dbConfig));
 
         securityManager = new DefaultSecurityManager(jdbcRealm);

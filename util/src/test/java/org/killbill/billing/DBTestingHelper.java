@@ -24,6 +24,8 @@ import org.killbill.billing.platform.test.PlatformDBTestingHelper;
 import org.killbill.billing.util.dao.AuditLogModelDaoMapper;
 import org.killbill.billing.util.dao.RecordIdIdMappingsMapper;
 import org.killbill.billing.util.io.IOUtils;
+import org.killbill.billing.util.security.shiro.dao.SessionModelDao;
+import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
@@ -49,6 +51,7 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         final DBI dbi = (DBI) super.getDBI();
         dbi.registerMapper(new AuditLogModelDaoMapper());
         dbi.registerMapper(new RecordIdIdMappingsMapper());
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(SessionModelDao.class));
         return dbi;
     }
 
