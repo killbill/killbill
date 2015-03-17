@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,27 +22,20 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.InvoicePayment;
-import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
-import org.killbill.commons.jdbi.mapper.UUIDMapper;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
 @EntitySqlDaoStringTemplate
 public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDao, InvoicePayment> {
 
     @SqlQuery
     public List<InvoicePaymentModelDao> getByPaymentId(@Bind("paymentId") final String paymentId,
-                                                 @BindBean final InternalTenantContext context);
-
+                                                       @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<InvoicePaymentModelDao> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId,
