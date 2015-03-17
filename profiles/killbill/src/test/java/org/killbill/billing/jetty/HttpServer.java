@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -28,15 +28,22 @@ import javax.annotation.PreDestroy;
 import javax.management.MBeanServer;
 import javax.servlet.DispatcherType;
 
+import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.jmx.MBeanContainer;
+import org.eclipse.jetty.server.ConnectionFactory;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.ConnectorStatistics;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.NCSARequestLog;
 import org.eclipse.jetty.server.RequestLog;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.RequestLogHandler;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -60,7 +67,13 @@ public class HttpServer {
 
     public HttpServer() {
         this.server = new Server();
-        server.setSendServerVersion(false);
+        for (final Connector connector : server.getConnectors()) {
+            for (final ConnectionFactory connectionFactory : connector.getConnectionFactories()) {
+                if (connectionFactory instanceof HttpConnectionFactory) {
+                    ((HttpConnectionFactory) connectionFactory).getHttpConfiguration().setSendServerVersion(false);
+                }
+            }
+        }
     }
 
     public HttpServer(final String jettyXml) throws Exception {
@@ -79,12 +92,20 @@ public class HttpServer {
         // Setup JMX
         configureJMX(ManagementFactory.getPlatformMBeanServer());
 
+        // HTTP Configuration
+        final HttpConfiguration httpConfiguration = new HttpConfiguration();
+        httpConfiguration.setSecurePort(config.getServerSslPort());
+
         // Configure main connector
-        configureMainConnector(config.isJettyStatsOn(), config.getServerHost(), config.getServerPort());
+        final ServerConnector http = configureMainConnector(httpConfiguration, config.isJettyStatsOn(), config.getServerHost(), config.getServerPort());
 
         // Configure SSL, if enabled
+        final ServerConnector https;
         if (config.isSSLEnabled()) {
-            configureSslConnector(config.isJettyStatsOn(), config.getServerSslPort(), config.getSSLkeystoreLocation(), config.getSSLkeystorePassword());
+            https = configureSslConnector(httpConfiguration, config.isJettyStatsOn(), config.getServerSslPort(), config.getSSLkeystoreLocation(), config.getSSLkeystorePassword());
+            server.setConnectors(new Connector[]{http, https});
+        } else {
+            server.setConnectors(new Connector[]{http});
         }
 
         // Configure the thread pool
@@ -113,36 +134,57 @@ public class HttpServer {
     }
 
     private void configureJMX(final MBeanServer mbeanServer) {
+        // Setup JMX
         final MBeanContainer mbContainer = new MBeanContainer(mbeanServer);
-        mbContainer.addBean(Log.getLogger(HttpServer.class));
         server.addBean(mbContainer);
+        // Add loggers MBean to server (will be picked up by MBeanContainer above)
+        server.addBean(Log.getLogger(HttpServer.class));
     }
 
-    private void configureMainConnector(final boolean isStatsOn, final String localIp, final int localPort) {
-        final SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setName("http");
-        connector.setStatsOn(isStatsOn);
-        connector.setHost(localIp);
-        connector.setPort(localPort);
-        server.addConnector(connector);
+    private ServerConnector configureMainConnector(final HttpConfiguration httpConfiguration, final boolean isStatsOn, final String localIp, final int localPort) {
+        final ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(httpConfiguration));
+        http.setHost(localIp);
+        http.setPort(localPort);
+
+        if (isStatsOn) {
+            final ConnectorStatistics stats = new ConnectorStatistics();
+            http.addBean(stats);
+        }
+
+        return http;
     }
 
-    private void configureSslConnector(final boolean isStatsOn, final int localSslPort, final String sslKeyStorePath, final String sslKeyStorePassword) {
-        final SslSelectChannelConnector sslConnector = new SslSelectChannelConnector();
-        sslConnector.setName("https");
-        sslConnector.setStatsOn(isStatsOn);
-        sslConnector.setPort(localSslPort);
-        final SslContextFactory sslContextFactory = sslConnector.getSslContextFactory();
+    private ServerConnector configureSslConnector(final HttpConfiguration httpConfiguration, final boolean isStatsOn, final int localSslPort, final String sslKeyStorePath, final String sslKeyStorePassword) {
+        // SSL Context Factory for HTTPS
+        final SslContextFactory sslContextFactory = new SslContextFactory();
         sslContextFactory.setKeyStorePath(sslKeyStorePath);
         sslContextFactory.setKeyStorePassword(sslKeyStorePassword);
-        server.addConnector(sslConnector);
+
+        // HTTPS Configuration
+        final HttpConfiguration httpsConfig = new HttpConfiguration(httpConfiguration);
+        httpsConfig.addCustomizer(new SecureRequestCustomizer());
+
+        // HTTPS connector
+        final ServerConnector https = new ServerConnector(server,
+                                                          new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()),
+                                                          new HttpConnectionFactory(httpsConfig));
+        https.setPort(localSslPort);
+
+        if (isStatsOn) {
+            final ConnectorStatistics stats = new ConnectorStatistics();
+            https.addBean(stats);
+        }
+
+        return https;
     }
 
     private void configureThreadPool(final HttpServerConfig config) {
-        final QueuedThreadPool threadPool = new QueuedThreadPool(config.getMaxThreads());
-        threadPool.setMinThreads(config.getMinThreads());
-        threadPool.setName("http-worker");
-        server.setThreadPool(threadPool);
+        if (server.getThreadPool() instanceof QueuedThreadPool) {
+            final QueuedThreadPool threadPool = (QueuedThreadPool) server.getThreadPool();
+            threadPool.setMaxThreads(config.getMaxThreads());
+            threadPool.setMinThreads(config.getMinThreads());
+            threadPool.setName("http-worker");
+        }
     }
 
     private ServletContextHandler createServletContextHandler(final String resourceBase, final Iterable<EventListener> eventListeners, final Map<FilterHolder, String> filterHolders) {
