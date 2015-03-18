@@ -48,7 +48,6 @@ public class TestDefaultTenantUserApi extends TenantTestSuiteWithEmbeddedDb {
 
     @Test(groups = "slow")
     public void testSystemKeySingleValue() throws Exception {
-
         final String tenantKey = TenantKey.PLUGIN_CONFIG_.toString() + "MyPluginName";
 
         tenantUserApi.addTenantKeyValue(tenantKey, "TheValue", callContext);
@@ -79,7 +78,6 @@ public class TestDefaultTenantUserApi extends TenantTestSuiteWithEmbeddedDb {
 
     @Test(groups = "slow")
     public void testSystemKeyMultipleValue() throws Exception {
-
         final String tenantKey = TenantKey.CATALOG.toString();
 
         tenantUserApi.addTenantKeyValue(tenantKey, "TheValue", callContext);
@@ -96,5 +94,4 @@ public class TestDefaultTenantUserApi extends TenantTestSuiteWithEmbeddedDb {
         value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
         Assert.assertEquals(value.size(), 0);
     }
-
 }

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -49,18 +51,18 @@ public class DefaultTenantUserApi implements TenantUserApi {
     //
     // Most System TenantKey are cached in the 'tenant-kv' cache owned by the Tenant module; however
     // - xml value keys such as OVERDUE_CONFIG, CATALOG are cached at a higher level to avoid reconstruct the objects from xml
-    // - any keys that require multiple values would not be cached (today we only have CATALOG and this is not cached in 'tenant-kv' cache,
-    //   so that means all other TenantKey could be cached at this level.
+    // - any keys that require multiple values would not be cached (today we only have CATALOG and this is not cached in 'tenant-kv' cache),
+    //   so that means all other TenantKey could be cached at this level
     //
     // CACHED_TENANT_KEY is not exposed in the API and is hardcoded here since this is really a implementation choice.
     //
     public static final Iterable<TenantKey> CACHED_TENANT_KEY = ImmutableList.<TenantKey>builder()
-                                                                              .add(TenantKey.CATALOG_TRANSLATION_)
-                                                                              .add(TenantKey.INVOICE_MP_TEMPLATE)
-                                                                              .add(TenantKey.INVOICE_TEMPLATE)
-                                                                              .add(TenantKey.INVOICE_TRANSLATION_)
-                                                                              .add(TenantKey.PLUGIN_CONFIG_)
-                                                                              .add(TenantKey.PUSH_NOTIFICATION_CB).build();
+                                                                             .add(TenantKey.CATALOG_TRANSLATION_)
+                                                                             .add(TenantKey.INVOICE_MP_TEMPLATE)
+                                                                             .add(TenantKey.INVOICE_TEMPLATE)
+                                                                             .add(TenantKey.INVOICE_TRANSLATION_)
+                                                                             .add(TenantKey.PLUGIN_CONFIG_)
+                                                                             .add(TenantKey.PUSH_NOTIFICATION_CB).build();
 
     private final TenantDao tenantDao;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -71,7 +73,6 @@ public class DefaultTenantUserApi implements TenantUserApi {
         this.tenantDao = tenantDao;
         this.internalCallContextFactory = internalCallContextFactory;
         this.tenantKVCache = cacheControllerDispatcher.getCacheController(CacheType.TENANT_KV);
-
     }
 
     @Override
@@ -107,9 +108,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
     }
 
     @Override
-    public List<String> getTenantValuesForKey(final String key, final TenantContext context)
-            throws TenantApiException {
-
+    public List<String> getTenantValuesForKey(final String key, final TenantContext context) throws TenantApiException {
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
         final String value = getCachedTenantValueForKey(key, internalContext);
         if (value != null) {
@@ -119,21 +118,17 @@ public class DefaultTenantUserApi implements TenantUserApi {
     }
 
     @Override
-    public void addTenantKeyValue(final String key, final String value, final CallContext context)
-            throws TenantApiException {
-
+    public void addTenantKeyValue(final String key, final String value, final CallContext context) throws TenantApiException {
+        // Invalidate tenantKVCache after we store (to avoid race conditions). Multi-node invalidation will follow the TenantBroadcast pattern
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
         final String tenantKey = getCacheKeyName(key, internalContext);
         tenantDao.addTenantKeyValue(key, value, isSingleValueKey(key), internalContext);
-        // Invalidate tenantKVCache before we store. Multi-node invalidation will follow the TenantBroadcast pattern
         tenantKVCache.remove(tenantKey);
     }
 
     @Override
-    public void deleteTenantKey(final String key, final CallContext context)
-            throws TenantApiException {
-
-        // Invalidate tenantKVCache before we store. Multi-node invalidation will follow the TenantBroadcast pattern
+    public void deleteTenantKey(final String key, final CallContext context) throws TenantApiException {
+        // Invalidate tenantKVCache after we delete (to avoid race conditions). Multi-node invalidation will follow the TenantBroadcast pattern
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
         final String tenantKey = getCacheKeyName(key, internalContext);
         tenantDao.deleteTenantKey(key, internalContext);
@@ -141,7 +136,6 @@ public class DefaultTenantUserApi implements TenantUserApi {
     }
 
     private String getCachedTenantValueForKey(final String key, final InternalTenantContext internalContext) {
-
         if (!isCachedInTenantKVCache(key)) {
             return null;
         }
@@ -164,7 +158,6 @@ public class DefaultTenantUserApi implements TenantUserApi {
             }
         }).orNull() != null;
     }
-
 
     private boolean isCachedInTenantKVCache(final String key) {
         return Iterables.tryFind(CACHED_TENANT_KEY, new Predicate<TenantKey>() {

@@ -25,13 +25,10 @@ import javax.inject.Singleton;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Singleton
 public class TenantKVCacheLoader extends BaseCacheLoader {
 
-    private static final Logger logger = LoggerFactory.getLogger(TenantKVCacheLoader.class);
     private final TenantInternalApi tenantApi;
 
     @Inject
@@ -47,7 +44,6 @@ public class TenantKVCacheLoader extends BaseCacheLoader {
 
     @Override
     public Object load(final Object key, final Object argument) {
-
         checkCacheLoaderStatus();
 
         if (!(key instanceof String)) {
@@ -62,7 +58,7 @@ public class TenantKVCacheLoader extends BaseCacheLoader {
 
         final InternalTenantContext internalTenantContext = new InternalTenantContext(Long.valueOf(tenantRecordId));
         final List<String> valuesForKey = tenantApi.getTenantValuesForKey(rawKey, internalTenantContext);
-        if (valuesForKey == null || valuesForKey.size() == 0) {
+        if (valuesForKey == null || valuesForKey.isEmpty()) {
             return null;
         }
         if (valuesForKey.size() > 1) {
