@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -33,6 +33,8 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.killbill.billing.client.model.TenantKey;
 import org.killbill.billing.jaxrs.json.NotificationJson;
+import org.killbill.billing.server.notifications.PushNotificationListener;
+import org.killbill.billing.tenant.api.TenantKV;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -48,7 +50,7 @@ public class TestPushNotification extends TestJaxrsBase {
     private CallbackServer callbackServer;
 
     private static final int SERVER_PORT = 8087;
-    private static final String CALLBACK_ENDPPOINT = "/callmeback";
+    private static final String CALLBACK_ENDPOINT = "/callmeback";
 
     private volatile boolean callbackCompleted;
     private volatile boolean callbackCompletedWithError;
@@ -57,7 +59,7 @@ public class TestPushNotification extends TestJaxrsBase {
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        callbackServer = new CallbackServer(this, SERVER_PORT, CALLBACK_ENDPPOINT);
+        callbackServer = new CallbackServer(this, SERVER_PORT, CALLBACK_ENDPOINT);
         callbackCompleted = false;
         callbackCompletedWithError = false;
         callbackServer.startServer();
@@ -92,9 +94,9 @@ public class TestPushNotification extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testPushNotification() throws Exception {
         // Register tenant for callback
-        final String callback = "http://127.0.0.1:" + SERVER_PORT + CALLBACK_ENDPPOINT;
+        final String callback = "http://127.0.0.1:" + SERVER_PORT + CALLBACK_ENDPOINT;
         final TenantKey result0 = killBillClient.registerCallbackNotificationForTenant(callback, createdBy, reason, comment);
-        Assert.assertEquals(result0.getKey(), org.killbill.billing.tenant.api.TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
+        Assert.assertEquals(result0.getKey(), TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
         Assert.assertEquals(result0.getValues().size(), 1);
         Assert.assertEquals(result0.getValues().get(0), callback);
 
@@ -111,13 +113,13 @@ public class TestPushNotification extends TestJaxrsBase {
         }
 
         final TenantKey result = killBillClient.getCallbackNotificationForTenant();
-        Assert.assertEquals(result.getKey(), org.killbill.billing.tenant.api.TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
+        Assert.assertEquals(result.getKey(), TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
         Assert.assertEquals(result.getValues().size(), 1);
         Assert.assertEquals(result.getValues().get(0), callback);
 
         killBillClient.unregisterCallbackNotificationForTenant(createdBy, reason, comment);
         final TenantKey result2 = killBillClient.getCallbackNotificationForTenant();
-        Assert.assertEquals(result2.getKey(), org.killbill.billing.tenant.api.TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
+        Assert.assertEquals(result2.getKey(), TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
         Assert.assertEquals(result2.getValues().size(), 0);
     }
 
@@ -176,8 +178,6 @@ public class TestPushNotification extends TestJaxrsBase {
             final int current = receivedCalls.incrementAndGet();
 
             final String body = CharStreams.toString(new InputStreamReader(request.getInputStream(), "UTF-8"));
-
-            response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_OK);
 
             log.info("Got body {}", body);
@@ -191,6 +191,8 @@ public class TestPushNotification extends TestJaxrsBase {
                 Assert.assertEquals(notification.getObjectId(), notification.getAccountId());
 
                 test.retrieveAccountWithAsserts(notification.getObjectId());
+
+                Assert.assertEquals(request.getHeader(PushNotificationListener.HTTP_HEADER_CONTENT_TYPE), PushNotificationListener.CONTENT_TYPE_JSON);
             } catch (final AssertionError e) {
                 withError = true;
             }

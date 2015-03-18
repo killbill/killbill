@@ -43,11 +43,17 @@ import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
 
 public class PushNotificationListener {
 
     private static final Logger log = LoggerFactory.getLogger(PushNotificationListener.class);
+
+    @VisibleForTesting
+    public static final String HTTP_HEADER_CONTENT_TYPE = "Content-Type";
+    @VisibleForTesting
+    public static final String CONTENT_TYPE_JSON = "application/json; charset=UTF-8";
 
     private static final int TIMEOUT_NOTIFICATION = 15; // 15 seconds
 
@@ -88,6 +94,7 @@ public class PushNotificationListener {
     private boolean doPost(final UUID tenantId, final String url, final String body, final int timeoutSec) {
         final BoundRequestBuilder builder = httpClient.preparePost(url);
         builder.setBody(body == null ? "{}" : body);
+        builder.addHeader(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON);
 
         final Response response;
         try {
