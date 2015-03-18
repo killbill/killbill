@@ -46,6 +46,30 @@ public class TestDefaultTenantUserApi extends TenantTestSuiteWithEmbeddedDb {
         Assert.assertEquals(value.size(), 0);
     }
 
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/297")
+    public void testVerifyCacheOnAbsentValues() throws Exception {
+        final String tenantKey = TenantKey.PLUGIN_CONFIG_.toString() + "MyPluginName";
+
+        // Warm the cache with the empty value
+        List<String> value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
+        Assert.assertEquals(value.size(), 0);
+
+        // Update the DAO directly (caching is done at the API layer)
+        tenantDao.addTenantKeyValue(tenantKey, "TheValue-hidden!", true, internalCallContext);
+
+        // Verify we still hit the cache
+        value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
+        Assert.assertEquals(value.size(), 0);
+
+        // Update the cache
+        tenantUserApi.addTenantKeyValue(tenantKey, "TheValue", callContext);
+
+        // Verify the cache now has the right value
+        value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
+        Assert.assertEquals(value.size(), 1);
+        Assert.assertEquals(value.get(0), "TheValue");
+    }
+
     @Test(groups = "slow")
     public void testSystemKeySingleValue() throws Exception {
         final String tenantKey = TenantKey.PLUGIN_CONFIG_.toString() + "MyPluginName";

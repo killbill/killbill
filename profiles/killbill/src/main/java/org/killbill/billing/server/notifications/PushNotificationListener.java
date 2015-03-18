@@ -75,6 +75,10 @@ public class PushNotificationListener {
         final TenantContext context = contextFactory.createTenantContext(event.getTenantId());
         try {
             final List<String> callbacks = getCallbacksForTenant(context);
+            if (callbacks.isEmpty()) {
+                // Optimization - see https://github.com/killbill/killbill/issues/297
+                return;
+            }
             dispatchCallback(event.getTenantId(), event, callbacks);
         } catch (final TenantApiException e) {
             log.warn("Failed to retrieve push notification callback for tenant {}", event.getTenantId());

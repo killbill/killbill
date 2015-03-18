@@ -59,7 +59,7 @@ public class TenantKVCacheLoader extends BaseCacheLoader {
         final InternalTenantContext internalTenantContext = new InternalTenantContext(Long.valueOf(tenantRecordId));
         final List<String> valuesForKey = tenantApi.getTenantValuesForKey(rawKey, internalTenantContext);
         if (valuesForKey == null || valuesForKey.isEmpty()) {
-            return null;
+            return EMPTY_VALUE_PLACEHOLDER;
         }
         if (valuesForKey.size() > 1) {
             throw new IllegalStateException("TenantKVCacheLoader expecting no more than one value for key " + key);

@@ -41,7 +41,7 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
     @Override
     public V get(final K key, final CacheLoaderArgument cacheLoaderArgument) {
         final Element element = cache.getWithLoader(key, null, cacheLoaderArgument);
-        if (element == null) {
+        if (element == null || element.getObjectValue() == null || element.getObjectValue().equals(BaseCacheLoader.EMPTY_VALUE_PLACEHOLDER)) {
             return null;
         }
         return (V) element.getObjectValue();

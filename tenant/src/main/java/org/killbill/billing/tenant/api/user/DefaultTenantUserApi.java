@@ -110,11 +110,11 @@ public class DefaultTenantUserApi implements TenantUserApi {
     @Override
     public List<String> getTenantValuesForKey(final String key, final TenantContext context) throws TenantApiException {
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
-        final String value = getCachedTenantValueForKey(key, internalContext);
-        if (value != null) {
-            return ImmutableList.<String>of(value);
+        if (!isCachedInTenantKVCache(key)) {
+            return tenantDao.getTenantValueForKey(key, internalContext);
+        } else {
+            return getCachedTenantValuesForKey(key, internalContext);
         }
-        return tenantDao.getTenantValueForKey(key, internalContext);
     }
 
     @Override
@@ -135,12 +135,15 @@ public class DefaultTenantUserApi implements TenantUserApi {
         tenantKVCache.remove(tenantKey);
     }
 
-    private String getCachedTenantValueForKey(final String key, final InternalTenantContext internalContext) {
-        if (!isCachedInTenantKVCache(key)) {
-            return null;
-        }
+    private List<String> getCachedTenantValuesForKey(final String key, final InternalTenantContext internalContext) {
         final String tenantKey = getCacheKeyName(key, internalContext);
-        return (String) tenantKVCache.get(tenantKey, new CacheLoaderArgument(ObjectType.TENANT_KVS));
+        final Object cachedTenantValues = tenantKVCache.get(tenantKey, new CacheLoaderArgument(ObjectType.TENANT_KVS));
+        if (cachedTenantValues == null) {
+            return ImmutableList.<String>of();
+        } else {
+            // Current, we only cache single-value keys
+            return ImmutableList.<String>of((String) cachedTenantValues);
+        }
     }
 
     private String getCacheKeyName(final String key, final InternalTenantContext internalContext) {
