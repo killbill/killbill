@@ -68,7 +68,8 @@ public class TestEhCacheOverdueConfigCache extends OverdueTestSuiteNoDB {
         overdueConfigCache.loadDefaultOverdueConfig((String) null);
         final OverdueConfig result = overdueConfigCache.getOverdueConfig(internalCallContext);
         Assert.assertNotNull(result);
-        Assert.assertEquals(result.getOverdueStatesAccount().getStates().length, 0);
+        Assert.assertEquals(result.getOverdueStatesAccount().getStates().length, 1);
+        Assert.assertTrue(result.getOverdueStatesAccount().getStates()[0].isClearState());
     }
 
     //
@@ -98,9 +99,12 @@ public class TestEhCacheOverdueConfigCache extends OverdueTestSuiteNoDB {
     //
     @Test(groups = "fast")
     public void testExistingTenantOverdue() throws OverdueApiException, URISyntaxException, IOException {
+        final InternalCallContext differentMultiTenantContext = Mockito.mock(InternalCallContext.class);
+        Mockito.when(differentMultiTenantContext.getTenantRecordId()).thenReturn(55667788L);
+
         final AtomicBoolean shouldThrow = new AtomicBoolean(false);
         final Long multiTenantRecordId = multiTenantContext.getTenantRecordId();
-        overdueConfigCache.loadDefaultOverdueConfig(Resources.getResource("OverdueConfig.xml").toExternalForm());
+        final Long otherMultiTenantRecordId = otherMultiTenantContext.getTenantRecordId();
 
         final InputStream tenantInputOverdueConfig = UriAccessor.accessUri(new URI(Resources.getResource("OverdueConfig2.xml").toExternalForm()));
         final String tenantOverdueConfigXML = CharStreams.toString(new InputStreamReader(tenantInputOverdueConfig, "UTF-8"));
@@ -115,11 +119,32 @@ public class TestEhCacheOverdueConfigCache extends OverdueTestSuiteNoDB {
                 final InternalTenantContext internalContext = (InternalTenantContext) invocation.getArguments()[0];
                 if (multiTenantRecordId.equals(internalContext.getTenantRecordId())) {
                     return tenantOverdueConfigXML;
-                } else {
+                } else if (otherMultiTenantRecordId.equals(internalContext.getTenantRecordId())) {
                     return otherTenantOverdueConfigXML;
+                } else {
+                    return null;
                 }
             }
         });
+
+        // Verify the lookup for a non-cached tenant. No system config is set yet but EhCacheOverdueConfigCache returns a default no-op one
+        OverdueConfig differentResult = overdueConfigCache.getOverdueConfig(differentMultiTenantContext);
+        Assert.assertNotNull(differentResult);
+        Assert.assertEquals(differentResult.getOverdueStatesAccount().getStates().length, 1);
+        Assert.assertTrue(differentResult.getOverdueStatesAccount().getStates()[0].isClearState());
+
+        // Make sure the cache loader isn't invoked, see https://github.com/killbill/killbill/issues/298
+        shouldThrow.set(true);
+
+        differentResult = overdueConfigCache.getOverdueConfig(differentMultiTenantContext);
+        Assert.assertNotNull(differentResult);
+        Assert.assertEquals(differentResult.getOverdueStatesAccount().getStates().length, 1);
+        Assert.assertTrue(differentResult.getOverdueStatesAccount().getStates()[0].isClearState());
+
+        shouldThrow.set(false);
+
+        // Set a default config
+        overdueConfigCache.loadDefaultOverdueConfig(Resources.getResource("OverdueConfig.xml").toExternalForm());
 
         // Verify the lookup for this tenant
         final OverdueConfig result = overdueConfigCache.getOverdueConfig(multiTenantContext);

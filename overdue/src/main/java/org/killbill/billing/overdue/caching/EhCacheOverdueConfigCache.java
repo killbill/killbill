@@ -53,6 +53,15 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
     public EhCacheOverdueConfigCache(final CacheControllerDispatcher cacheControllerDispatcher) {
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_OVERDUE_CONFIG);
         this.cacheLoaderArgument = initializeCacheLoaderArgument();
+
+        try {
+            // Provided in the classpath
+            final URI noOverdueConfigURI = new URI("NoOverdueConfig.xml");
+            defaultOverdueConfig = XMLLoader.getObjectFromUri(noOverdueConfigURI, DefaultOverdueConfig.class);
+        } catch (final Exception e) {
+            defaultOverdueConfig = new DefaultOverdueConfig();
+            log.warn("Exception loading NoOverdueConfig - should never happen!", e);
+        }
     }
 
     @Override
@@ -71,7 +80,6 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
             log.warn("Exception loading default overdue config from " + configURI, e);
         }
         if (missingOrCorruptedDefaultConfig) {
-            defaultOverdueConfig = new DefaultOverdueConfig();
             log.warn("Overdue system disabled: unable to load the overdue config from " + configURI);
         }
     }
@@ -84,9 +92,6 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
     @Override
     public OverdueConfig getOverdueConfig(final InternalTenantContext tenantContext) throws OverdueApiException {
         if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
-            if (defaultOverdueConfig == null) {
-                throw new OverdueApiException(ErrorCode.OVERDUE_NOT_CONFIGURED);
-            }
             return defaultOverdueConfig;
         }
         // The cache loader might choke on some bad xml -- unlikely since we check its validity prior storing it,

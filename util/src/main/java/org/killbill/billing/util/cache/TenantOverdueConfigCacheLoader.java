@@ -67,7 +67,7 @@ public class TenantOverdueConfigCacheLoader extends BaseCacheLoader {
         final LoaderCallback callback = (LoaderCallback) cacheLoaderArgument.getArgs()[0];
         final String overdueXML = tenantApi.getTenantOverdueConfig(internalTenantContext);
         if (overdueXML == null) {
-            return null;
+            return EMPTY_VALUE_PLACEHOLDER;
         }
         try {
             log.info("Loading overdue cache for tenant " + internalTenantContext.getTenantRecordId());
