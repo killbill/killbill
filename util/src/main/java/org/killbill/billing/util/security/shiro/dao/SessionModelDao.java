@@ -42,21 +42,26 @@ public class SessionModelDao {
     public SessionModelDao() { /* For the DAO mapper */ }
 
     public SessionModelDao(final Session session) {
-        this.recordId = (Long) session.getId();
+        this.recordId = session.getId() == null ? null : Long.valueOf(session.getId().toString());
         this.startTimestamp = new DateTime(session.getStartTimestamp(), DateTimeZone.UTC);
         this.lastAccessTime = new DateTime(session.getLastAccessTime(), DateTimeZone.UTC);
         this.timeout = session.getTimeout();
         this.host = session.getHost();
         try {
             this.sessionData = serializeSessionData(session);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             this.sessionData = new byte[]{};
         }
     }
 
     public Session toSimpleSession() throws IOException {
         final SimpleSession simpleSession = new SimpleSession();
-        simpleSession.setId(recordId);
+        if (recordId != null) {
+            // Make sure to use a String here! It will be used as-is as the key in Ehcache.
+            // When retrieving the session, the sessionId will be a String: if a Long is used,
+            // the lookup will trigger a miss. See https://github.com/killbill/killbill/issues/299
+            simpleSession.setId(recordId.toString());
+        }
         simpleSession.setStartTimestamp(startTimestamp.toDate());
         simpleSession.setLastAccessTime(lastAccessTime.toDate());
         simpleSession.setTimeout(timeout);

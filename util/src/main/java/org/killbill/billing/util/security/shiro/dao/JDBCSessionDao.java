@@ -61,7 +61,8 @@ public class JDBCSessionDao extends CachingSessionDAO {
                 return transactional.getLastInsertId();
             }
         });
-        assignSessionId(session, sessionId);
+        // See SessionModelDao#toSimpleSession for why we use toString()
+        assignSessionId(session, sessionId.toString());
         return sessionId;
     }
 
