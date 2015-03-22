@@ -151,7 +151,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
                 if (e.getCode() != ErrorCode.CAT_NO_SUCH_PLAN.getCode()) {
                     throw e;
                 } else {
-                    break;
+                    // If we can't find an entry it probably means the plan has been retired so we keep looking...
+                    continue;
                 }
             }
 
