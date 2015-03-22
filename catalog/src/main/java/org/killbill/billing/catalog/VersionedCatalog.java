@@ -97,7 +97,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     private int indexOfVersionForDate(final Date date) throws CatalogApiException {
         for (int i = versions.size() - 1; i >= 0; i--) {
             final StandaloneCatalog c = versions.get(i);
-            if (c.getEffectiveDate().getTime() < date.getTime()) {
+            if (c.getEffectiveDate().getTime() <= date.getTime()) {
                 return i;
             }
         }
@@ -155,8 +155,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
                 }
             }
 
-            final DateTime catalogEffectiveDate = new DateTime(c.getEffectiveDate());
-            if (subscriptionStartDate.isAfter(catalogEffectiveDate)) { // Its a new subscription this plan always applies
+            DateTime catalogEffectiveDate = new DateTime(c.getEffectiveDate());
+            if (!subscriptionStartDate.isBefore(catalogEffectiveDate)) { // Its a new subscription this plan always applies
                 return plan;
             } else { //Its an existing subscription
                 if (plan.getEffectiveDateForExistingSubscriptons() != null) { //if it is null any change to this does not apply to existing subscriptions
