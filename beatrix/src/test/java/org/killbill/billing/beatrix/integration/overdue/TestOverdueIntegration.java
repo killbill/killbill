@@ -985,7 +985,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
     private void checkChangePlanWithOverdueState(final Entitlement entitlement, final boolean shouldFail, final boolean expectedPayment) {
         if (shouldFail) {
             try {
-                entitlement.changePlan("Pistol", term, PriceListSet.DEFAULT_PRICELIST_NAME, callContext);
+                entitlement.changePlan("Pistol", term, PriceListSet.DEFAULT_PRICELIST_NAME, null, callContext);
             } catch (EntitlementApiException e) {
                 assertTrue(e.getCause() instanceof BlockingApiException || e.getCode() == ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode(),
                            String.format("Cause is %s, message is %s", e.getCause(), e.getMessage()));

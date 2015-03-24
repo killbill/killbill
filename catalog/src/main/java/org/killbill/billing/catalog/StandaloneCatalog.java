@@ -41,6 +41,7 @@ import org.killbill.billing.catalog.api.PlanAlignmentChange;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
@@ -50,6 +51,8 @@ import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.rules.PlanRules;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
+
+import com.google.common.collect.ImmutableList;
 
 @XmlRootElement(name = "catalog")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -158,7 +161,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
       * @see org.killbill.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
       */
     @Override
-    public DefaultPlan findCurrentPlan(final String productName, final BillingPeriod period, final String priceListName) throws CatalogApiException {
+    public DefaultPlan findCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, List<PlanPhasePriceOverride> overrides) throws CatalogApiException {
         if (productName == null) {
             throw new CatalogApiException(ErrorCode.CAT_NULL_PRODUCT_NAME);
         }
@@ -344,7 +347,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @Override
     public boolean canCreatePlan(final PlanSpecifier specifier) throws CatalogApiException {
         final Product product = findCurrentProduct(specifier.getProductName());
-        final Plan plan = findCurrentPlan(specifier.getProductName(), specifier.getBillingPeriod(), specifier.getPriceListName());
+        final Plan plan = findCurrentPlan(specifier.getProductName(), specifier.getBillingPeriod(), specifier.getPriceListName(), ImmutableList.<PlanPhasePriceOverride>of());
         final DefaultPriceList priceList = findCurrentPriceList(specifier.getPriceListName());
 
         return (!product.isRetired()) &&

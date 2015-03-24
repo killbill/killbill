@@ -24,6 +24,7 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,7 +115,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
     }
 
     @Override
-    public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final LocalDate effectiveDate, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final List<PlanPhasePriceOverride> overrides, final LocalDate effectiveDate, final CallContext callContext) throws EntitlementApiException {
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         try {
 
@@ -126,7 +127,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
             final DateTime referenceTime = clock.getUTCNow();
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, referenceTime, contextWithValidAccountRecordId);
-            final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(bundle.getId(), planPhaseSpecifier, requestedDate, contextWithValidAccountRecordId);
+            final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(bundle.getId(), planPhaseSpecifier, overrides, requestedDate, contextWithValidAccountRecordId);
 
             return new DefaultEntitlement(subscription.getId(), eventsStreamBuilder, this,
                                           blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
@@ -137,7 +138,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
     }
 
     @Override
-    public Entitlement addEntitlement(final UUID bundleId, final PlanPhaseSpecifier planPhaseSpecifier, final LocalDate effectiveDate, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement addEntitlement(final UUID bundleId, final PlanPhaseSpecifier planPhaseSpecifier, final List<PlanPhasePriceOverride> overrides, final LocalDate effectiveDate, final CallContext callContext) throws EntitlementApiException {
         final EventsStream eventsStreamForBaseSubscription = eventsStreamBuilder.buildForBaseSubscription(bundleId, callContext);
 
         // Check the base entitlement state is active
@@ -154,7 +155,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(callContext);
-            final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(bundleId, planPhaseSpecifier, requestedDate, context);
+            final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(bundleId, planPhaseSpecifier, overrides, requestedDate, context);
 
             return new DefaultEntitlement(subscription.getId(), eventsStreamBuilder, this,
                                           blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,

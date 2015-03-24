@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
@@ -36,7 +37,7 @@ import org.killbill.billing.util.entity.Pagination;
 
 public interface SubscriptionBaseInternalApi {
 
-    public SubscriptionBase createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDateWithMs,
+    public SubscriptionBase createSubscription(UUID bundleId, PlanPhaseSpecifier spec, List<PlanPhasePriceOverride> overrides, DateTime requestedDateWithMs,
                                                InternalCallContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBaseBundle createBundleForAccount(UUID accountId, String bundleName, InternalCallContext context)

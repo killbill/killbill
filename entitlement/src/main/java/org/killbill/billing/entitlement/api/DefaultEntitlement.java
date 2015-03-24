@@ -18,6 +18,7 @@ package org.killbill.billing.entitlement.api;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -30,6 +31,7 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -372,7 +374,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final CallContext callContext) throws EntitlementApiException {
         // Get the latest state from disk
         refresh(callContext);
 
@@ -389,7 +391,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final DateTime effectiveChangeDate;
         try {
-            effectiveChangeDate = getSubscriptionBase().changePlan(productName, billingPeriod, priceList, callContext);
+            effectiveChangeDate = getSubscriptionBase().changePlan(productName, billingPeriod, priceList, overrides, callContext);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -400,7 +402,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement changePlanWithDate(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlanWithDate(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
         // Get the latest state from disk
         refresh(callContext);
 
@@ -417,7 +419,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(localDate, getSubscriptionBase().getStartDate(), context);
         try {
-            getSubscriptionBase().changePlanWithDate(productName, billingPeriod, priceList, effectiveChangeDate, callContext);
+            getSubscriptionBase().changePlanWithDate(productName, billingPeriod, priceList, overrides, effectiveChangeDate, callContext);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -428,7 +430,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement changePlanOverrideBillingPolicy(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDateX, final BillingActionPolicy actionPolicy, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlanOverrideBillingPolicy(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final LocalDate localDate, final BillingActionPolicy actionPolicy, final CallContext callContext) throws EntitlementApiException {
         // Get the latest state from disk
         refresh(callContext);
 
@@ -445,7 +447,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final DateTime effectiveChangeDate;
         try {
-            effectiveChangeDate = getSubscriptionBase().changePlanWithPolicy(productName, billingPeriod, priceList, actionPolicy, callContext);
+            effectiveChangeDate = getSubscriptionBase().changePlanWithPolicy(productName, billingPeriod, priceList, overrides, actionPolicy, callContext);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }

@@ -50,6 +50,7 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -567,7 +568,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
                     final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
-                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, effectiveDate, callContext);
+                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, null, effectiveDate, callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (final EntitlementApiException e) {
@@ -593,7 +594,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
                     final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
-                    final Entitlement entitlement = entitlementApi.addEntitlement(bundleId, spec, effectiveDate, callContext);
+                    final Entitlement entitlement = entitlementApi.addEntitlement(bundleId, spec, null, effectiveDate, callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (final EntitlementApiException e) {
@@ -617,9 +618,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     if (billingPolicy == null) {
-                        refreshedEntitlement = refreshedEntitlement.changePlan(productName, billingPeriod, priceList, callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlan(productName, billingPeriod, priceList, null, callContext);
                     } else {
-                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, priceList, clock.getUTCNow().toLocalDate(), billingPolicy, callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, priceList, null, clock.getUTCNow().toLocalDate(), billingPolicy, callContext);
                     }
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
@@ -780,6 +781,11 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         @Override
         public BillingActionPolicy getBillingActionPolicy() {
             return billingPolicy;
+        }
+
+        @Override
+        public List<PlanPhasePriceOverride> getPlanPhasePriceoverrides() {
+            return null;
         }
     }
 }

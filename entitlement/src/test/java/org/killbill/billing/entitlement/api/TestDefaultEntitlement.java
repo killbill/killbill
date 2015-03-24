@@ -47,7 +47,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, callContext);
         assertListenerStatus();
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
@@ -74,7 +74,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, callContext);
         assertListenerStatus();
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
@@ -108,7 +108,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, callContext);
         assertListenerStatus();
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
@@ -141,7 +141,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, callContext);
         assertListenerStatus();
 
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
@@ -166,7 +166,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, callContext);
         assertListenerStatus();
 
         final DateTime ctd = clock.getUTCNow().plusDays(30).plusMonths(1);
@@ -209,7 +209,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, callContext);
         assertListenerStatus();
 
         final DateTime ctd = clock.getUTCNow().plusDays(30).plusMonths(1);
@@ -249,12 +249,12 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, callContext);
         assertListenerStatus();
 
         // Immediate change during trial
         testListener.pushExpectedEvent(NextEvent.CHANGE);
-        entitlement.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, callContext);
+        entitlement.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, callContext);
         assertListenerStatus();
 
         // Verify the change is immediate

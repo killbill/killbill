@@ -47,6 +47,7 @@ import org.killbill.billing.catalog.api.PlanAlignmentChange;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
@@ -56,6 +57,8 @@ import org.killbill.billing.catalog.api.Unit;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
+
+import com.google.common.collect.ImmutableList;
 
 @XmlRootElement(name = "catalog")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -110,29 +113,35 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
         String productName;
         BillingPeriod bp;
         String priceListName;
+        List<PlanPhasePriceOverride> overrides;
 
         public PlanRequestWrapper(final String name) {
-            super();
             this.name = name;
         }
 
         public PlanRequestWrapper(final String productName, final BillingPeriod bp,
                                   final String priceListName) {
-            super();
+            this(productName, bp, priceListName, ImmutableList.<PlanPhasePriceOverride>of());
+        }
+
+        public PlanRequestWrapper(final String productName, final BillingPeriod bp,
+                                  final String priceListName, List<PlanPhasePriceOverride> overrides) {
             this.productName = productName;
             this.bp = bp;
             this.priceListName = priceListName;
+            this.overrides = overrides;
         }
 
         public Plan findPlan(final StandaloneCatalog catalog) throws CatalogApiException {
             if (name != null) {
                 return catalog.findCurrentPlan(name);
             } else {
-                return catalog.findCurrentPlan(productName, bp, priceListName);
+                return catalog.findCurrentPlan(productName, bp, priceListName, overrides);
             }
         }
     }
 
+    // STEPH_PO implement catalog logic...
     private Plan findPlan(final PlanRequestWrapper wrapper,
                           final DateTime requestedDate,
                           final DateTime subscriptionStartDate)
@@ -244,9 +253,10 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     public Plan findPlan(final String productName,
                          final BillingPeriod term,
                          final String priceListName,
+                         final List<PlanPhasePriceOverride> overrides,
                          final DateTime requestedDate)
             throws CatalogApiException {
-        return versionForDate(requestedDate).findCurrentPlan(productName, term, priceListName);
+        return versionForDate(requestedDate).findCurrentPlan(productName, term, priceListName, overrides);
     }
 
     @Override
@@ -261,6 +271,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     public Plan findPlan(final String productName,
                          final BillingPeriod term,
                          final String priceListName,
+                         final List<PlanPhasePriceOverride> overrides,
                          final DateTime requestedDate,
                          final DateTime subscriptionStartDate)
             throws CatalogApiException {
@@ -398,8 +409,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 
     @Override
     public Plan findCurrentPlan(final String productName, final BillingPeriod term,
-                                final String priceList) throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).findCurrentPlan(productName, term, priceList);
+                                final String priceList, List<PlanPhasePriceOverride> overrides) throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).findCurrentPlan(productName, term, priceList, overrides);
     }
 
     @Override

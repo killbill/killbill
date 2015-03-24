@@ -49,10 +49,10 @@ public class MigrationPlanAligner extends BaseAligner {
         try {
             TimedMigration[] events;
             final Plan plan0 = catalogService.getFullCatalog(context).findPlan(input[0].getPlanPhaseSpecifier().getProductName(),
-                                                                        input[0].getPlanPhaseSpecifier().getBillingPeriod(), input[0].getPlanPhaseSpecifier().getPriceListName(), now);
+                                                                        input[0].getPlanPhaseSpecifier().getBillingPeriod(), input[0].getPlanPhaseSpecifier().getPriceListName(), null, now);
 
             final Plan plan1 = (input.length > 1) ? catalogService.getFullCatalog(context).findPlan(input[1].getPlanPhaseSpecifier().getProductName(),
-                                                                                             input[1].getPlanPhaseSpecifier().getBillingPeriod(), input[1].getPlanPhaseSpecifier().getPriceListName(), now) :
+                                                                                             input[1].getPlanPhaseSpecifier().getBillingPeriod(), input[1].getPlanPhaseSpecifier().getPriceListName(), null, now) :
                                null;
 
             DateTime migrationStartDate = input[0].getEffectiveDate();

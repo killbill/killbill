@@ -111,7 +111,7 @@ public class TestSubscriptionHelper {
             throws SubscriptionBaseApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionApi.createSubscription(bundleId,
-                                                                                                                  new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
+                                                                                                                  new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null), null,
                                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, internalCallContext);
         assertNotNull(subscription);
 

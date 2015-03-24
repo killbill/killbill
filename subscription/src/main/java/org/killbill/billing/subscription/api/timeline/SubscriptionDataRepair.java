@@ -20,6 +20,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.concurrent.Immutable;
+
 import org.joda.time.DateTime;
 
 import org.killbill.billing.ErrorCode;
@@ -30,6 +32,7 @@ import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -52,6 +55,7 @@ import org.killbill.clock.Clock;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 public class SubscriptionDataRepair extends DefaultSubscriptionBase {
 
@@ -114,11 +118,11 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
             switch (input.getSubscriptionTransitionType()) {
                 case CREATE:
                 case RE_CREATE:
-                    recreate(spec, input.getRequestedDate(), context);
+                    recreate(spec, ImmutableList.<PlanPhasePriceOverride>of(), input.getRequestedDate(), context);
                     checkAddonRights(baseSubscription, internalTenantContext);
                     break;
                 case CHANGE:
-                    changePlanWithDate(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), input.getRequestedDate(), context);
+                    changePlanWithDate(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), ImmutableList.<PlanPhasePriceOverride>of(), input.getRequestedDate(), context);
                     checkAddonRights(baseSubscription, internalTenantContext);
                     trickleDownBPEffectForAddon(addonSubscriptions, getLastUserEventEffectiveDate(), context);
                     break;

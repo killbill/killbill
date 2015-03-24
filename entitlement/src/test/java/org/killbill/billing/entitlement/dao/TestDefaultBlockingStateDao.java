@@ -56,7 +56,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         // See TestEntitlementUtils for a more comprehensive test
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), clock.getUTCToday(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, clock.getUTCToday(), callContext);
         assertListenerStatus();
 
         final BlockingStateType type = BlockingStateType.SUBSCRIPTION;

@@ -281,7 +281,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Now make an IMMEDIATE change of plan
         testListener.pushExpectedEvent(NextEvent.CHANGE);
-        subscription.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
+        subscription.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, clock.getUTCNow(), callContext);
         assertListenerStatus();
 
         final List<SubscriptionBaseTransition> newTransitions = subscription.getAllTransitions();

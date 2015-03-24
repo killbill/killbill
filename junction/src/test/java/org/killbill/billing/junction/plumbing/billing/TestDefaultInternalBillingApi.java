@@ -58,7 +58,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
 
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, callContext);
         final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlement.getId(), internalCallContext);
         assertListenerStatus();
 
@@ -195,7 +195,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
 
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), initialDate, callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, callContext);
         final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlement.getId(), internalCallContext);
         assertListenerStatus();
 

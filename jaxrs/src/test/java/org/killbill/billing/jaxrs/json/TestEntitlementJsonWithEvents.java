@@ -18,6 +18,7 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -62,6 +63,9 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                          UUID.randomUUID().toString(),
                                                                          PhaseType.DISCOUNT.toString(),
                                                                          auditLogs);
+
+        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson("bar", null, BigDecimal.TEN, BigDecimal.ONE);
+
         final SubscriptionJson entitlementJsonWithEvents = new SubscriptionJson(accountId,
                                                                                 bundleId,
                                                                                 subscriptionId,
@@ -79,6 +83,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                 new LocalDate(),
                                                                                 new LocalDate(),
                                                                                 ImmutableList.<EventSubscriptionJson>of(newEvent),
+                                                                                ImmutableList.of(priceOverride),
                                                                                 null);
 
         final String asJson = mapper.writeValueAsString(entitlementJsonWithEvents);

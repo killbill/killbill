@@ -112,7 +112,7 @@ public class TestInvoice extends TestJaxrsBase {
         // "Assault-Rifle", BillingPeriod.ANNUAL, "rescue", BillingActionPolicy.IMMEDIATE,
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         final InvoiceDryRun dryRunArg = new InvoiceDryRun(SubscriptionEventType.START_BILLING,
-                                                          null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, null, null);
+                                                          null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, null, null, null);
         final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), initialDate, dryRunArg, createdBy, reason, comment);
         assertEquals(dryRunInvoice.getItems().size(), 1);
 

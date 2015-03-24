@@ -581,7 +581,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
         baseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
 
-        baseSubscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, callContext);
+        baseSubscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, callContext);
 
         // CHECK CHANGE DID NOT OCCUR YET
         Plan currentPlan = baseSubscription.getCurrentPlan();
@@ -654,7 +654,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
 
                 testListener.pushExpectedEvent(NextEvent.CHANGE);
                 final DateTime changeTime = clock.getUTCNow();
-                baseSubscription.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, callContext);
+                baseSubscription.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, changeTime, callContext);
                 assertListenerStatus();
 
                 repairApi.repairBundle(bRepair, true, callContext);

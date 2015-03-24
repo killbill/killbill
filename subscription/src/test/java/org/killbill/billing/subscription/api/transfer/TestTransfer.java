@@ -311,7 +311,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String newBaseProduct1 = "Assault-Rifle";
         final BillingPeriod newBaseTerm1 = BillingPeriod.ANNUAL;
         testListener.pushExpectedEvent(NextEvent.CHANGE);
-        newBaseSubscription.changePlan(newBaseProduct1, newBaseTerm1, basePriceList, callContext);
+        newBaseSubscription.changePlan(newBaseProduct1, newBaseTerm1, basePriceList, null, callContext);
         assertListenerStatus();
 
         newPlan = newBaseSubscription.getCurrentPlan();
@@ -327,7 +327,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final String newBaseProduct2 = "Pistol";
         final BillingPeriod newBaseTerm2 = BillingPeriod.ANNUAL;
-        newBaseSubscriptionWithCtd.changePlan(newBaseProduct2, newBaseTerm2, basePriceList, callContext);
+        newBaseSubscriptionWithCtd.changePlan(newBaseProduct2, newBaseTerm2, basePriceList, null, callContext);
 
         newPlan = newBaseSubscriptionWithCtd.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);

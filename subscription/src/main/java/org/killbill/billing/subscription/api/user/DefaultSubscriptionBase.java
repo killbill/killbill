@@ -33,6 +33,7 @@ import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
@@ -205,9 +206,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return null;
     }
 
-    public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate,
+    public boolean recreate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDate,
                             final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.recreatePlan(this, spec, requestedDate, context);
+        return apiService.recreatePlan(this, spec, overrides, requestedDate, context);
     }
 
     @Override
@@ -233,20 +234,20 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public DateTime changePlan(final String productName, final BillingPeriod term, final String priceList,
-                               final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlan(this, productName, term, priceList, context);
+                               final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.changePlan(this, productName, term, priceList, overrides, context);
     }
 
     @Override
-    public DateTime changePlanWithDate(final String productName, final BillingPeriod term, final String priceList,
+    public DateTime changePlanWithDate(final String productName, final BillingPeriod term, final String priceList, final List<PlanPhasePriceOverride> overrides,
                                        final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlanWithRequestedDate(this, productName, term, priceList, requestedDate, context);
+        return apiService.changePlanWithRequestedDate(this, productName, term, priceList, overrides, requestedDate, context);
     }
 
     @Override
     public DateTime changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-                                         final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlanWithPolicy(this, productName, term, priceList, policy, context);
+                                         final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy,  final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.changePlanWithPolicy(this, productName, term, priceList, overrides, policy, context);
     }
 
     @Override

@@ -98,7 +98,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
 
                 testListener.pushExpectedEvent(NextEvent.CHANGE);
                 final DateTime changeTime = clock.getUTCNow();
-                baseSubscription.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, callContext);
+                baseSubscription.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, changeTime, callContext);
                 assertListenerStatus();
 
                 // MOVE AFTER TRIAL
