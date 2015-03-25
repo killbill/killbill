@@ -19,11 +19,14 @@ package org.killbill.billing.catalog.override;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.DefaultPlan;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 
 public interface PriceOverride {
-    DefaultPlan getOverriddenPlan(Plan parentPlan, List<PlanPhasePriceOverride> overrides) throws CatalogApiException;
+
+    DefaultPlan getOrCreateOverriddenPlan(final Plan parentPlan, final DateTime catalogEffectiveDate, final List<PlanPhasePriceOverride> overrides, final InternalCallContext context) throws CatalogApiException;
 }

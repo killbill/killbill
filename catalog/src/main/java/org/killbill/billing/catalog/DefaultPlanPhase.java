@@ -20,6 +20,7 @@ package org.killbill.billing.catalog;
 
 import java.net.URI;
 
+import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -33,6 +34,7 @@ import org.killbill.billing.catalog.api.Fixed;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.Recurring;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.xmlloader.ValidatingConfig;
@@ -60,6 +62,20 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 
     //Not exposed in XML
     private Plan plan;
+
+    public DefaultPlanPhase() {}
+
+    public DefaultPlanPhase(final DefaultPlanPhase in, @Nullable final PlanPhasePriceOverride override) {
+        this.type = in.getPhaseType();
+        this.duration = (DefaultDuration) in.getDuration();
+        this.fixed = override != null && override.getFixedPrice() != null ? new DefaultFixed((DefaultFixed) in.getFixed(), override) : (DefaultFixed) in.getFixed();
+        this.recurring = override != null && override.getRecurringPrice() != null ? new DefaultRecurring((DefaultRecurring) in.getRecurring(), override) : (DefaultRecurring) in.getRecurring();
+        this.usages = new DefaultUsage[in.getUsages().length];
+        for (int i = 0; i < in.getUsages().length; i++) {
+            usages[i] = (DefaultUsage) in.getUsages()[i];
+        }
+        this.plan = in.plan;
+    }
 
     public static String phaseName(final String planName, final PhaseType phasetype) {
         return planName + "-" + phasetype.toString().toLowerCase();

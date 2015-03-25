@@ -32,6 +32,7 @@ import javax.xml.transform.TransformerException;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.InvalidConfigException;
@@ -119,7 +120,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
     public void testLoad() throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, CatalogApiException {
         final VersionedCatalog c = loader.load(Resources.getResource("versionedCatalog").toString());
         Assert.assertEquals(c.size(), 3);
-        final Iterator<StandaloneCatalog> it = c.iterator();
+        final Iterator<StandaloneCatalogWithPriceOverride> it = c.iterator();
         DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
         Assert.assertEquals(it.next().getEffectiveDate(), dt.toDate());
         dt = new DateTime("2011-02-02T00:00:00+00:00");

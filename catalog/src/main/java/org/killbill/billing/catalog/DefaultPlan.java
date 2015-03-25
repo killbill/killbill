@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -38,6 +39,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.Recurring;
 import org.killbill.xmlloader.ValidatingConfig;
@@ -76,6 +78,22 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @XmlElement(required = false)
     private Integer plansAllowedInBundle = 1;
 
+
+    public DefaultPlan() {}
+
+    public DefaultPlan(final String planName, final DefaultPlan in, final PlanPhasePriceOverride[] overrides) {
+        this.name = planName;
+        this.retired = in.isRetired();
+        this.effectiveDateForExistingSubscriptons = in.getEffectiveDateForExistingSubscriptons();
+        this.product = (DefaultProduct) in.getProduct();
+        this.initialPhases = new DefaultPlanPhase[in.getInitialPhases().length];
+        for (int i = 0; i< overrides.length; i++) {
+            final DefaultPlanPhase newPhase = new DefaultPlanPhase(in.getFinalPhase(), overrides[i]);
+            initialPhases[i] = newPhase;
+        }
+        this.finalPhase = new DefaultPlanPhase(in.getFinalPhase(), overrides[overrides.length - 1]);
+
+    }
     /* (non-Javadoc)
       * @see org.killbill.billing.catalog.IPlan#getEffectiveDateForExistingSubscriptons()
       */

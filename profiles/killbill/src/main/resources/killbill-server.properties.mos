@@ -1,0 +1,88 @@
+#
+# Copyright 2010-2013 Ning, Inc.
+# Copyright 2014 Groupon, Inc
+# Copyright 2014 The Billing Project, LLC
+#
+# The Billing Project licenses this file to you under the Apache License, version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License.  You may obtain a copy of the License at:
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+
+#
+# KILLBILL GENERIC PROPERTIES
+#
+# Database config
+#org.killbill.dao.url=jdbc:mysql://127.0.0.1:3306/killbill
+org.killbill.dao.url=jdbc:mysql://127.0.0.1:3306/killbil_analytics_mos
+org.killbill.dao.user=root
+org.killbill.dao.password=root
+org.killbill.dao.logLevel=DEBUG
+
+# Use the SpyCarAdvanced.xml catalog
+#org.killbill.catalog.uri=SpyCarAdvanced.xml
+org.killbill.catalog.uri=CatalogMos.xml
+
+# NotificationQ, Bus, ExtBus config
+org.killbill.notificationq.main.sleep=1000
+org.killbill.notificationq.main.claimed=10
+org.killbill.notificationq.main.sticky=true
+
+org.killbill.persistent.bus.external.sticky=true
+org.killbill.persistent.bus.external.inMemory=true
+
+org.killbill.persistent.bus.main.sticky=true
+org.killbill.persistent.bus.main.claimed=1
+org.killbill.persistent.bus.main.inflight.claimed=1
+org.killbill.persistent.bus.main.nbThreads=1
+org.killbill.persistent.bus.main.sleep=0
+org.killbill.persistent.bus.main.useInflightQ=true
+org.killbill.persistent.bus.main.queue.capacity=100
+
+# Start KB in multi-tenant
+org.killbill.server.multitenant=true
+
+# Override polling from Tenant Broadcast Task
+org.killbill.tenant.broadcast.rate=1s
+
+#
+# PLUGIN SPECIFIC PROPERTIES
+#
+# Database config (OSGI plugins)
+#org.killbill.billing.osgi.dao.url=jdbc:mysql://127.0.0.1:3306/killbill
+org.killbill.billing.osgi.dao.url=jdbc:mysql://127.0.0.1:3306/killbil_analytics_mos
+org.killbill.billing.osgi.dao.user=root
+org.killbill.billing.osgi.dao.password=root
+
+# Allow jruby concurrency
+org.killbill.jruby.context.scope=THREADSAFE
+
+# Path for plugin config
+#org.killbill.billing.osgi.bundles.jruby.conf.dir=/var/tmp/bundles/plugins/config
+org.killbill.osgi.bundle.install.dir=/var/tmp/bundles_analytics_mos
+
+# Config property files for plugin to access
+org.killbill.server.properties=/Users/sbrossier/Src/killbill/killbill/profiles/killbill/src/main/resources/killbill-server.properties
+
+#
+# INTEGRATION TESTS ONLY
+#
+# To enable test endpoint and have Kill Bill run with a ClockMock (should not be used for production server)
+org.killbill.server.test.mode=true
+
+# Set payment calls to timeout after 5 sec -- mostly for integration tests
+org.killbill.payment.plugin.timeout=5s
+
+org.killbill.payment.retry.days=
+
+org.killbill.catalog.bundlePath=CatalogTranslation
+org.killbill.template.bundlePath=InvoiceTranslation
+org.killbill.template.name=HtmlInvoiceTemplate.mustache
+

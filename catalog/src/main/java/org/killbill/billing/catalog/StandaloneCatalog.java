@@ -92,8 +92,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     private URI catalogURI;
 
-    private PriceOverride priceOverride;
-
     public StandaloneCatalog() {
     }
 
@@ -165,7 +163,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
       * @see org.killbill.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
       */
     @Override
-    public DefaultPlan findCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final List<PlanPhasePriceOverride> overrides) throws CatalogApiException {
+    public DefaultPlan findCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final List<PlanPhasePriceOverride> nullOverrides) throws CatalogApiException {
         if (productName == null) {
             throw new CatalogApiException(ErrorCode.CAT_NULL_PRODUCT_NAME);
         }
@@ -178,11 +176,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
             final String periodString = (period == null) ? "NULL" : period.toString();
             throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND, productName, periodString, priceListName);
         }
-        if (overrides != null && !overrides.isEmpty()) {
-            return priceOverride.getOverriddenPlan(result, overrides);
-        } else {
-            return  result;
-        }
+        return result;
     }
 
     @Override
@@ -350,10 +344,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     protected StandaloneCatalog setPriceLists(final DefaultPriceListSet priceLists) {
         this.priceLists = priceLists;
         return this;
-    }
-
-    public void setPriceOverride(final PriceOverride priceOverride) {
-        this.priceOverride = priceOverride;
     }
 
     @Override

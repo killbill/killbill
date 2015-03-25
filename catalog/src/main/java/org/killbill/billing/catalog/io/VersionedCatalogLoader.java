@@ -24,18 +24,18 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.override.PriceOverride;
-import org.killbill.billing.platform.api.KillbillService.ServiceException;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.UriAccessor;
 import org.killbill.xmlloader.XMLLoader;
+
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
 
 public class VersionedCatalogLoader implements CatalogLoader {
 
@@ -82,7 +82,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
             final VersionedCatalog result = new VersionedCatalog(clock);
             for (final URI u : xmlURIs) {
                 final StandaloneCatalog catalog = XMLLoader.getObjectFromUri(u, StandaloneCatalog.class);
-                result.add(catalog);
+                result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride));
             }
             return result;
         } catch (Exception e) {
@@ -98,8 +98,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
             for (final String cur : catalogXMLs) {
                 final InputStream curCatalogStream = new ByteArrayInputStream(cur.getBytes());
                 final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(uri, curCatalogStream, StandaloneCatalog.class);
-                catalog.setPriceOverride(priceOverride);
-                result.add(catalog);
+                result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride));
             }
             return result;
         } catch (Exception e) {

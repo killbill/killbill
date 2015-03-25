@@ -27,6 +27,7 @@ import org.killbill.billing.catalog.api.Fixed;
 import org.killbill.billing.catalog.api.FixedType;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 
@@ -53,6 +54,13 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
         return fixedPrice;
     }
 
+
+    public DefaultFixed() {}
+
+    public DefaultFixed(final DefaultFixed in, final PlanPhasePriceOverride override) {
+        this.type = in.getType();
+        this.fixedPrice = new DefaultInternationalPrice(fixedPrice, override, true);
+    }
 
     @Override
     public void initialize(final StandaloneCatalog root, final URI uri) {

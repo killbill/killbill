@@ -34,6 +34,7 @@ public class MockInternationalPrice extends DefaultInternationalPrice {
         return new MockInternationalPrice(new DefaultPrice().setCurrency(Currency.USD).setValue(new BigDecimal(value)));
     }
 
+
     public MockInternationalPrice(final DefaultPrice... price) {
         setPrices(price);
     }

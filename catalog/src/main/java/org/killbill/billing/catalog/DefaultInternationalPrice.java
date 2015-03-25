@@ -27,6 +27,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.catalog.api.InternationalPrice;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.Price;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
@@ -48,8 +49,20 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
         return prices;
     }
 
+    public DefaultInternationalPrice() {}
 
-
+    public DefaultInternationalPrice(final DefaultInternationalPrice in, final PlanPhasePriceOverride override, final boolean fixed) {
+        this.prices = new DefaultPrice[in.getPrices().length];
+        // There is a question on whether we keep the other prices that were not overridden or only have one entry for the overridden price on that currency.
+        for (int i = 0; i < in.getPrices().length; i++) {
+            final DefaultPrice curPrice = (DefaultPrice)  in.getPrices()[i];
+            if (curPrice.getCurrency().equals(override.getCurrency())) {
+                prices[i] = new DefaultPrice(fixed ? override.getFixedPrice() : override.getRecurringPrice(), override.getCurrency());
+            } else {
+                prices[i] = curPrice;
+            }
+        }
+    }
 
     /* (non-Javadoc)
       * @see org.killbill.billing.catalog.IInternationalPrice#getPrice(org.killbill.billing.catalog.api.Currency)

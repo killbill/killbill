@@ -249,7 +249,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
-        final Account account = accountUserApi.getAccountById(accountId, callContext);
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
@@ -263,6 +262,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
                 final Entitlement newEntitlement;
 
+                final Account account = accountUserApi.getAccountById(accountId, callContext);
                 final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
                                                                  ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                  BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
