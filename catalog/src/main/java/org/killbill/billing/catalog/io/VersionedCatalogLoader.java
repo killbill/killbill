@@ -31,19 +31,24 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.platform.api.KillbillService.ServiceException;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.UriAccessor;
 import org.killbill.xmlloader.XMLLoader;
 
 public class VersionedCatalogLoader implements CatalogLoader {
+
     private static final Object PROTOCOL_FOR_FILE = "file";
-    private final String XML_EXTENSION = ".xml";
+    private static final String XML_EXTENSION = ".xml";
+
     private final Clock clock;
+    private final PriceOverride priceOverride;
 
     @Inject
-    public VersionedCatalogLoader(final Clock clock) {
+    public VersionedCatalogLoader(final Clock clock, final PriceOverride priceOverride) {
         this.clock = clock;
+        this.priceOverride = priceOverride;
     }
 
     /* (non-Javadoc)
@@ -52,8 +57,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
     @Override
     public VersionedCatalog load(final String uriString) throws CatalogApiException {
         try {
-            List<URI> xmlURIs = null;
-
+            List<URI> xmlURIs;
             if (uriString.endsWith(XML_EXTENSION)) { // Assume its an xml file
                 xmlURIs = new ArrayList<URI>();
                 URI uri = new URI(uriString);
@@ -94,6 +98,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
             for (final String cur : catalogXMLs) {
                 final InputStream curCatalogStream = new ByteArrayInputStream(cur.getBytes());
                 final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(uri, curCatalogStream, StandaloneCatalog.class);
+                catalog.setPriceOverride(priceOverride);
                 result.add(catalog);
             }
             return result;
@@ -179,6 +184,4 @@ public class VersionedCatalogLoader implements CatalogLoader {
         }
         return new URI(url.toString() + f);
     }
-
-
 }

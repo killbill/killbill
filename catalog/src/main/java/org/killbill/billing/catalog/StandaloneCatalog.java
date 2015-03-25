@@ -48,6 +48,7 @@ import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.rules.PlanRules;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
@@ -65,8 +66,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     @XmlElement(required = true)
     private BillingMode recurringBillingMode;
-
-    private URI catalogURI;
 
     @XmlElementWrapper(name = "currencies", required = true)
     @XmlElement(name = "currency", required = true)
@@ -89,6 +88,11 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     @XmlElement(name = "priceLists", required = true)
     private DefaultPriceListSet priceLists;
+
+
+    private URI catalogURI;
+
+    private PriceOverride priceOverride;
 
     public StandaloneCatalog() {
     }
@@ -161,7 +165,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
       * @see org.killbill.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
       */
     @Override
-    public DefaultPlan findCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, List<PlanPhasePriceOverride> overrides) throws CatalogApiException {
+    public DefaultPlan findCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final List<PlanPhasePriceOverride> overrides) throws CatalogApiException {
         if (productName == null) {
             throw new CatalogApiException(ErrorCode.CAT_NULL_PRODUCT_NAME);
         }
@@ -174,7 +178,11 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
             final String periodString = (period == null) ? "NULL" : period.toString();
             throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND, productName, periodString, priceListName);
         }
-        return result;
+        if (overrides != null && !overrides.isEmpty()) {
+            return priceOverride.getOverriddenPlan(result, overrides);
+        } else {
+            return  result;
+        }
     }
 
     @Override
@@ -344,6 +352,10 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
+    public void setPriceOverride(final PriceOverride priceOverride) {
+        this.priceOverride = priceOverride;
+    }
+
     @Override
     public boolean canCreatePlan(final PlanSpecifier specifier) throws CatalogApiException {
         final Product product = findCurrentProduct(specifier.getProductName());
@@ -398,7 +410,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
                 }
             }
         }
-
         return availBasePlans;
     }
 }

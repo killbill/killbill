@@ -33,7 +33,6 @@ public class TestCatalogModule extends CatalogModule {
     @Override
     public void configure() {
         super.configure();
-        install(new GuicyKillbillTestNoDBModule(configSource));
         install(new MockNonEntityDaoModule(configSource));
         install(new CacheModule(configSource));
         install(new MockTenantModule(configSource));

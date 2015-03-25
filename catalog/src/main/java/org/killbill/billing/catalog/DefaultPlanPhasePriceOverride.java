@@ -31,9 +31,17 @@ public class DefaultPlanPhasePriceOverride implements PlanPhasePriceOverride {
     private final BigDecimal fixedPrice;
     private final BigDecimal recurringPrice;
 
-    public DefaultPlanPhasePriceOverride(final String phaseName, final PlanPhaseSpecifier planPhaseSpecifier, final Currency currency, final BigDecimal fixedPrice, final BigDecimal recurringPrice) {
-        this.phaseName = phaseName;
+    public DefaultPlanPhasePriceOverride(final PlanPhaseSpecifier planPhaseSpecifier, final Currency currency, final BigDecimal fixedPrice, final BigDecimal recurringPrice) {
+        this.phaseName = null;
         this.planPhaseSpecifier = planPhaseSpecifier;
+        this.currency = currency;
+        this.fixedPrice = fixedPrice;
+        this.recurringPrice = recurringPrice;
+    }
+
+    public DefaultPlanPhasePriceOverride(final String phaseName, final Currency currency, final BigDecimal fixedPrice, final BigDecimal recurringPrice) {
+        this.phaseName = phaseName;
+        this.planPhaseSpecifier = null;
         this.currency = currency;
         this.fixedPrice = fixedPrice;
         this.recurringPrice = recurringPrice;

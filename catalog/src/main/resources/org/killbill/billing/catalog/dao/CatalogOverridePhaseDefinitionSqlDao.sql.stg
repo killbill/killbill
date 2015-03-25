@@ -1,0 +1,73 @@
+group CatalogOverridePhaseDefinitionSqlDao;
+
+tableName() ::= "catalog_override_phase_definition"
+
+
+tableFields(prefix) ::= <<
+  <prefix>parent_phase_name
+, <prefix>currency
+, <prefix>fixed_price
+, <prefix>recurring_price
+, <prefix>effective_date
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>tenant_record_id
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+
+tableValues() ::= <<
+  :parentPhaseName
+, :currency
+, :fixedPrice
+, :recurringPrice
+, :effectiveDate
+, :createdDate
+, :createdBy
+, :tenantRecordId
+>>
+
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+create() ::= <<
+insert into <tableName()> (
+<tableFields()>
+)
+values (
+<tableValues()>
+)
+;
+>>
+
+getByRecordId() ::= <<
+select <allTableFields()>
+from <tableName()>
+where record_id = :recordId
+and tenant_record_id = :tenantRecordId
+;
+>>
+
+getByAttributes() ::= <<
+select <allTableFields()>
+from <tableName()>
+where parent_phase_name = :parentPhaseName
+and currency = :currency
+and (fixed_price = :fixedPrice or (fixed_price is null and :fixedPrice is null))
+and (recurring_price = :recurringPrice or (recurring_price is null and :recurringPrice is null))
+and tenant_record_id = :tenantRecordId
+;
+>>
+
+
+getLastInsertId() ::= <<
+select LAST_INSERT_ID();
+>>
+

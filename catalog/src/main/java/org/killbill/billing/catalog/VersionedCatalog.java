@@ -58,8 +58,6 @@ import org.killbill.clock.Clock;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 
-import com.google.common.collect.ImmutableList;
-
 @XmlRootElement(name = "catalog")
 @XmlAccessorType(XmlAccessType.NONE)
 public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implements Catalog, StaticCatalog {
@@ -120,11 +118,6 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
         }
 
         public PlanRequestWrapper(final String productName, final BillingPeriod bp,
-                                  final String priceListName) {
-            this(productName, bp, priceListName, ImmutableList.<PlanPhasePriceOverride>of());
-        }
-
-        public PlanRequestWrapper(final String productName, final BillingPeriod bp,
                                   final String priceListName, List<PlanPhasePriceOverride> overrides) {
             this.productName = productName;
             this.bp = bp;
@@ -141,7 +134,6 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
         }
     }
 
-    // STEPH_PO implement catalog logic...
     private Plan findPlan(final PlanRequestWrapper wrapper,
                           final DateTime requestedDate,
                           final DateTime subscriptionStartDate)
@@ -153,7 +145,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 
         for (int i = catalogs.size() - 1; i >= 0; i--) { // Working backwards to find the latest applicable plan
             final StandaloneCatalog c = catalogs.get(i);
-            Plan plan = null;
+            Plan plan;
             try {
                 plan = wrapper.findPlan(c);
             } catch (CatalogApiException e) {
@@ -275,7 +267,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
                          final DateTime requestedDate,
                          final DateTime subscriptionStartDate)
             throws CatalogApiException {
-        return findPlan(new PlanRequestWrapper(productName, term, priceListName), requestedDate, subscriptionStartDate);
+        return findPlan(new PlanRequestWrapper(productName, term, priceListName, overrides), requestedDate, subscriptionStartDate);
     }
 
     //

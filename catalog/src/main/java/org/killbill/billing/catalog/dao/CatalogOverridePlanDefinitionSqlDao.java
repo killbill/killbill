@@ -17,9 +17,15 @@
 
 package org.killbill.billing.catalog.dao;
 
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.customizers.Define;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
@@ -27,7 +33,14 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLoc
 @UseStringTemplate3StatementLocator
 public interface CatalogOverridePlanDefinitionSqlDao extends Transactional<CatalogOverridePlanDefinitionSqlDao>, CloseMe {
 
-    @SqlQuery
-    public Long getRecordIdFromObject(@Bind("id") String id, @Define("tableName") final String tableName);
+    @SqlUpdate
+    public void create(@SmartBindBean final CatalogOverridePlanDefinitionModelDao entity,
+                       @SmartBindBean final InternalCallContext context);
 
+    @SqlQuery
+    public CatalogOverridePlanDefinitionModelDao getByRecordId(@Bind("recordId") final Long recordId,
+                                                               @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Long getLastInsertId();
 }

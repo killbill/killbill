@@ -17,8 +17,14 @@
 
 package org.killbill.billing.catalog.dao;
 
+import java.math.BigDecimal;
+
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
@@ -26,8 +32,23 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLoc
 
 @UseStringTemplate3StatementLocator
 public interface CatalogOverridePhaseDefinitionSqlDao extends Transactional<CatalogOverridePhaseDefinitionSqlDao>, CloseMe {
+    @SqlUpdate
+    public void create(@SmartBindBean final CatalogOverridePhaseDefinitionModelDao entity,
+                       @SmartBindBean final InternalCallContext context);
+
 
     @SqlQuery
-    public Long getRecordIdFromObject(@Bind("id") String id, @Define("tableName") final String tableName);
+    public CatalogOverridePhaseDefinitionModelDao getByRecordId(@Bind("recordId") final Long recordId,
+                                                               @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public CatalogOverridePhaseDefinitionModelDao getByAttributes(@Bind("parentPhaseName") String parentPhaseName,
+                                                                 @Bind("currency") String currency,
+                                                                 @Bind("fixedPrice") BigDecimal fixedPrice,
+                                                                 @Bind("recurringPrice") BigDecimal recurringPrice,
+                                                                 @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Long getLastInsertId();
 
 }

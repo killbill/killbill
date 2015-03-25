@@ -17,25 +17,30 @@
 
 package org.killbill.billing.catalog.dao;
 
+import java.math.BigDecimal;
+
 import org.joda.time.DateTime;
 
-public class CatalogOverridePlanDefinitionModelDao {
+public class CatalogOverridePhaseDefinitionModelDao {
 
     private Long recordId;
-    private String parentPlanName;
-    private Boolean isActive;
+    private String parentPhaseName;
+    private String currency;
+    private BigDecimal fixedPrice;
+    private BigDecimal recurringPrice;
     private DateTime effectiveDate;
     private DateTime createdDate;
     private String createdBy;
     private Long tenantRecordId;
 
-    public CatalogOverridePlanDefinitionModelDao() {
+    public CatalogOverridePhaseDefinitionModelDao() {
     }
 
-    public CatalogOverridePlanDefinitionModelDao(final String parentPlanName, final Boolean isActive, final DateTime effectiveDate) {
-        this.recordId = 0L;
-        this.parentPlanName = parentPlanName;
-        this.isActive = isActive;
+    public CatalogOverridePhaseDefinitionModelDao(final String parentPhaseName, final String currency, final BigDecimal fixedPrice, final BigDecimal recurringPrice, final DateTime effectiveDate) {
+        this.parentPhaseName = parentPhaseName;
+        this.currency = currency;
+        this.fixedPrice = fixedPrice;
+        this.recurringPrice = recurringPrice;
         this.effectiveDate = effectiveDate;
     }
 
@@ -47,20 +52,36 @@ public class CatalogOverridePlanDefinitionModelDao {
         this.recordId = recordId;
     }
 
-    public String getParentPlanName() {
-        return parentPlanName;
+    public String getParentPhaseName() {
+        return parentPhaseName;
     }
 
-    public void setParentPlanName(final String parentPlanName) {
-        this.parentPlanName = parentPlanName;
+    public void setParentPhaseName(final String parentPhaseName) {
+        this.parentPhaseName = parentPhaseName;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
+    public String getCurrency() {
+        return currency;
     }
 
-    public void setIsActive(final Boolean isActive) {
-        this.isActive = isActive;
+    public void setCurrency(final String currency) {
+        this.currency = currency;
+    }
+
+    public BigDecimal getFixedPrice() {
+        return fixedPrice;
+    }
+
+    public void setFixedPrice(final BigDecimal fixedPrice) {
+        this.fixedPrice = fixedPrice;
+    }
+
+    public BigDecimal getRecurringPrice() {
+        return recurringPrice;
+    }
+
+    public void setRecurringPrice(final BigDecimal recurringPrice) {
+        this.recurringPrice = recurringPrice;
     }
 
     public DateTime getEffectiveDate() {
@@ -79,14 +100,6 @@ public class CatalogOverridePlanDefinitionModelDao {
         this.createdDate = createdDate;
     }
 
-    public Long getTenantRecordId() {
-        return tenantRecordId;
-    }
-
-    public void setTenantRecordId(final Long tenantRecordId) {
-        this.tenantRecordId = tenantRecordId;
-    }
-
     public String getCreatedBy() {
         return createdBy;
     }
@@ -95,17 +108,11 @@ public class CatalogOverridePlanDefinitionModelDao {
         this.createdBy = createdBy;
     }
 
-    @Override
-    public String toString() {
-        return "CatalogOverridePlanDefinitionModelDao{" +
-               "recordId=" + recordId +
-               ", parentPlanName='" + parentPlanName + '\'' +
-               ", isActive=" + isActive +
-               ", effectiveDate=" + effectiveDate +
-               ", createdDate=" + createdDate +
-               ", createdBy='" + createdBy + '\'' +
-               ", tenantRecordId=" + tenantRecordId +
-               '}';
+    public Long getTenantRecordId() {
+        return tenantRecordId;
+    }
+
+    public void setTenantRecordId(final Long tenantRecordId) {
+        this.tenantRecordId = tenantRecordId;
     }
 }
-
