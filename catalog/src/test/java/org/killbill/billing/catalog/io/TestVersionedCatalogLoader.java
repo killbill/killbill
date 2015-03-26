@@ -31,12 +31,10 @@ import javax.xml.transform.TransformerException;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
-import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.InvalidConfigException;
-import org.killbill.billing.platform.api.KillbillService.ServiceException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
@@ -118,7 +116,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoad() throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, CatalogApiException {
-        final VersionedCatalog c = loader.load(Resources.getResource("versionedCatalog").toString());
+        final VersionedCatalog c = loader.loadDefaultCatalog(Resources.getResource("versionedCatalog").toString());
         Assert.assertEquals(c.size(), 3);
         final Iterator<StandaloneCatalogWithPriceOverride> it = c.iterator();
         DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");

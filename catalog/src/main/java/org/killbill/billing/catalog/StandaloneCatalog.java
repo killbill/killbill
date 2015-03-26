@@ -42,13 +42,13 @@ import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.rules.PlanRules;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
@@ -58,6 +58,7 @@ import com.google.common.collect.ImmutableList;
 @XmlRootElement(name = "catalog")
 @XmlAccessorType(XmlAccessType.NONE)
 public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> implements StaticCatalog {
+
     @XmlElement(required = true)
     private Date effectiveDate;
 
@@ -89,7 +90,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @XmlElement(name = "priceLists", required = true)
     private DefaultPriceListSet priceLists;
 
-
     private URI catalogURI;
 
     public StandaloneCatalog() {
@@ -120,14 +120,14 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     /* (non-Javadoc)
      * @see org.killbill.billing.catalog.ICatalog#getProducts()
      */
-   @Override
-   public DefaultProduct[] getCurrentProducts() {
-       return products;
-   }
+    @Override
+    public DefaultProduct[] getCurrentProducts() {
+        return products;
+    }
 
-   /* (non-Javadoc)
-    * @see org.killbill.billing.catalog.ICatalog#getProducts()
-    */
+    /* (non-Javadoc)
+     * @see org.killbill.billing.catalog.ICatalog#getProducts()
+     */
     @Override
     public DefaultUnit[] getCurrentUnits() {
         return units;
@@ -163,7 +163,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
       * @see org.killbill.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
       */
     @Override
-    public DefaultPlan findCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final List<PlanPhasePriceOverride> nullOverrides) throws CatalogApiException {
+    public DefaultPlan findCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final PlanPhasePriceOverridesWithCallContext unused) throws CatalogApiException {
         if (productName == null) {
             throw new CatalogApiException(ErrorCode.CAT_NULL_PRODUCT_NAME);
         }
@@ -226,7 +226,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return priceLists.findPriceListFrom(name);
     }
 
-
     //////////////////////////////////////////////////////////////////////////////
     //
     // RULES
@@ -272,7 +271,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return errors;
     }
 
-
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         catalogURI = sourceURI;
@@ -288,13 +286,12 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     }
 
-
     //////////////////////////////////////////////////////////////////////////////
     //
     // UNIT LIMIT
     //
     //////////////////////////////////////////////////////////////////////////////
-    
+
     @Override
     public boolean compliesWithLimits(final String phaseName, final String unit, final double value) throws CatalogApiException {
         PlanPhase phase = findCurrentPhase(phaseName);
@@ -349,12 +346,12 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @Override
     public boolean canCreatePlan(final PlanSpecifier specifier) throws CatalogApiException {
         final Product product = findCurrentProduct(specifier.getProductName());
-        final Plan plan = findCurrentPlan(specifier.getProductName(), specifier.getBillingPeriod(), specifier.getPriceListName(), ImmutableList.<PlanPhasePriceOverride>of());
+        final Plan plan = findCurrentPlan(specifier.getProductName(), specifier.getBillingPeriod(), specifier.getPriceListName(), null);
         final DefaultPriceList priceList = findCurrentPriceList(specifier.getPriceListName());
 
         return (!product.isRetired()) &&
-                (!plan.isRetired()) &&
-                (!priceList.isRetired());
+               (!plan.isRetired()) &&
+               (!priceList.isRetired());
     }
 
     @Override
@@ -363,13 +360,13 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
         try {
             Product product = findCurrentProduct(baseProductName);
-            if ( product != null ) {
-                for ( Product availAddon : product.getAvailable() ) {
-                    for ( BillingPeriod billingPeriod : BillingPeriod.values()) {
-                        for( PriceList priceList : getPriceLists().getAllPriceLists()) {
+            if (product != null) {
+                for (Product availAddon : product.getAvailable()) {
+                    for (BillingPeriod billingPeriod : BillingPeriod.values()) {
+                        for (PriceList priceList : getPriceLists().getAllPriceLists()) {
                             if (priceListName == null || priceListName.equals(priceList.getName())) {
                                 Plan addonInList = priceList.findPlan(availAddon, billingPeriod);
-                                if ( (addonInList != null) ) {
+                                if ((addonInList != null)) {
                                     availAddons.add(new DefaultListing(addonInList, priceList));
                                 }
                             }

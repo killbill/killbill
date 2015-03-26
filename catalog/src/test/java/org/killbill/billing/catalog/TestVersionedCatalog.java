@@ -47,12 +47,12 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
-        vc = loader.load(Resources.getResource("versionedCatalog").toString());
+        vc = loader.loadDefaultCatalog(Resources.getResource("versionedCatalog").toString());
     }
 
     @Test(groups = "fast")
     public void testAddCatalog() throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException, CatalogApiException {
-        vc.add(new StandaloneCatalogWithPriceOverride(new StandaloneCatalog(new Date()).setCatalogName(vc.getCatalogName()).setRecurringBillingMode(vc.getRecurringBillingMode()), null));
+        vc.add(new StandaloneCatalogWithPriceOverride(new StandaloneCatalog(new Date()).setCatalogName(vc.getCatalogName()).setRecurringBillingMode(vc.getRecurringBillingMode()), null, 0L, null));
         Assert.assertEquals(vc.size(), 4);
     }
 

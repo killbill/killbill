@@ -67,6 +67,19 @@ and tenant_record_id = :tenantRecordId
 >>
 
 
+getOverriddenPlanPhases() ::= <<
+select <allTableFields("pdef.")>
+from <tableName()> pdef
+join catalog_override_plan_phase pp
+on pdef.record_id = pp.phase_def_record_id
+where
+pp.target_plan_def_record_id = :targetPlanDefRecordId
+and pp.tenant_record_id = :tenantRecordId
+order by pp.phase_number asc
+;
+>>
+
+
 getLastInsertId() ::= <<
 select LAST_INSERT_ID();
 >>

@@ -23,6 +23,6 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 
 public interface CatalogLoader {
 
-    public abstract VersionedCatalog load(String urlString)
+    public abstract VersionedCatalog loadDefaultCatalog(String urlString)
             throws CatalogApiException;
 }

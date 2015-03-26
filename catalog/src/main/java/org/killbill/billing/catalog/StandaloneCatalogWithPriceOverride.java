@@ -38,6 +38,7 @@ import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
@@ -45,6 +46,7 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.override.PriceOverride;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 
@@ -52,10 +54,15 @@ public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<Standal
 
     private final StandaloneCatalog standaloneCatalog;
     private final PriceOverride priceOverride;
+    private final Long tenantRecordId;
 
-    public StandaloneCatalogWithPriceOverride(final StandaloneCatalog staticCatalog, final PriceOverride priceOverride) {
+    private final InternalCallContextFactory internalCallContextFactory;
+
+    public StandaloneCatalogWithPriceOverride(final StandaloneCatalog staticCatalog, final PriceOverride priceOverride, final Long tenantRecordId, final InternalCallContextFactory internalCallContextFactory) {
+        this.tenantRecordId = tenantRecordId;
         this.standaloneCatalog = staticCatalog;
         this.priceOverride = priceOverride;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -94,19 +101,27 @@ public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<Standal
     }
 
     @Override
-    public Plan findCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final List<PlanPhasePriceOverride> overrides) throws CatalogApiException {
+    public Plan findCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
         final Plan defaultPlan = standaloneCatalog.findCurrentPlan(productName, period, priceListName, null);
-        if (overrides == null || overrides.isEmpty()) {
+
+        if (overrides == null ||
+            overrides.getOverrides() == null ||
+            overrides.getOverrides().isEmpty()) {
             return defaultPlan;
         }
-        // STEPH_PO Hum, how am i supposed to create a context here???
-        final InternalCallContext context = null;
-        return priceOverride.getOrCreateOverriddenPlan(defaultPlan, new DateTime(getEffectiveDate()), overrides, context);
+
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(overrides.getCallContext());
+        return priceOverride.getOrCreateOverriddenPlan(defaultPlan, new DateTime(getEffectiveDate()), overrides.getOverrides(), internalCallContext);
     }
 
     @Override
     public Plan findCurrentPlan(final String planName) throws CatalogApiException {
-        return standaloneCatalog.findCurrentPlan(planName);
+        final Plan defaultPlan =  standaloneCatalog.findCurrentPlan(planName);
+        if (defaultPlan != null) {
+            return defaultPlan;
+        }
+        return null; // STEPH_PO
+     //   priceOverride.
     }
 
     @Override

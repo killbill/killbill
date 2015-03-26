@@ -33,6 +33,7 @@ import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
@@ -111,7 +112,7 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public Plan findPlan(final String productName, final BillingPeriod term, final String priceListName, List<PlanPhasePriceOverride> overrides, final DateTime requestedDate)
+    public Plan findPlan(final String productName, final BillingPeriod term, final String priceListName, PlanPhasePriceOverridesWithCallContext overrides, final DateTime requestedDate)
             throws CatalogApiException {
         return findCurrentPlan(productName, term, priceListName, overrides);
     }
@@ -123,7 +124,7 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public Plan findPlan(final String productName, final BillingPeriod term, final String priceListName, List<PlanPhasePriceOverride> overrides, final DateTime requestedDate,
+    public Plan findPlan(final String productName, final BillingPeriod term, final String priceListName, PlanPhasePriceOverridesWithCallContext overrides, final DateTime requestedDate,
                          final DateTime subscriptionStartDate) throws CatalogApiException {
         return findCurrentPlan(productName, term, priceListName, overrides);
     }

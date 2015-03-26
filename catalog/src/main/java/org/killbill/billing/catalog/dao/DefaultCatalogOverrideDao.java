@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.clock.Clock;
 import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
@@ -85,7 +86,16 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         });
     }
 
-
+    @Override
+    public List<CatalogOverridePhaseDefinitionModelDao> getOverriddenPlanPhases(final Long planDefRecordId, final InternalTenantContext context) {
+        return dbi.inTransaction(new TransactionCallback<List<CatalogOverridePhaseDefinitionModelDao>>() {
+            @Override
+            public List<CatalogOverridePhaseDefinitionModelDao> inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
+                final CatalogOverridePhaseDefinitionSqlDao sqlDao = handle.attach(CatalogOverridePhaseDefinitionSqlDao.class);
+                return sqlDao.getOverriddenPlanPhases(planDefRecordId, context);
+            }
+        });
+    }
 
     private Long getOverridePlanDefinitionFromTransaction(final CatalogOverridePhaseDefinitionModelDao[] overridePhaseDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverridePlanPhaseSqlDao sqlDao = inTransactionHandle.attach(CatalogOverridePlanPhaseSqlDao.class);

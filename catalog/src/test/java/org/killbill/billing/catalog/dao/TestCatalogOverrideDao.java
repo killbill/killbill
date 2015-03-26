@@ -18,6 +18,7 @@
 package org.killbill.billing.catalog.dao;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteWithEmbeddedDB;
@@ -27,7 +28,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.xmlloader.XMLLoader;
-import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.annotations.Test;
 
@@ -66,6 +66,34 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         assertEquals(newPlan.getParentPlanName(), "discount-standard-monthly");
         assertTrue(newPlan.getIsActive());
 
+        final List<CatalogOverridePhaseDefinitionModelDao> phases = catalogOverrideDao.getOverriddenPlanPhases(1L, internalCallContext);
+        assertEquals(phases.size(), 2);
     }
+
+
+    @Test(groups = "slow")
+    public void testGetOverriddenPlanPhases() throws Exception {
+
+        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
+
+        final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
+        resolvedOverrides[0] = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.TEN, BigDecimal.ONE);
+        resolvedOverrides[1] = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[1].getName(), Currency.USD, BigDecimal.ONE, BigDecimal.TEN);
+        resolvedOverrides[2] = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, BigDecimal.ZERO, new BigDecimal("348.64"));
+
+        final CatalogOverridePlanDefinitionModelDao newPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan.getName(), new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
+
+        final List<CatalogOverridePhaseDefinitionModelDao> phases = catalogOverrideDao.getOverriddenPlanPhases(newPlan.getRecordId(), internalCallContext);
+        assertEquals(phases.size(), 3);
+        for (int i = 0; i < 3; i++) {
+            final CatalogOverridePhaseDefinitionModelDao curPhase = phases.get(i);
+            assertEquals(curPhase.getCurrency(), resolvedOverrides[i].getCurrency().name());
+            assertEquals(curPhase.getFixedPrice().compareTo(resolvedOverrides[i].getFixedPrice()), 0);
+            assertEquals(curPhase.getRecurringPrice().compareTo(resolvedOverrides[i].getRecurringPrice()), 0);
+            assertEquals(curPhase.getParentPhaseName(), resolvedOverrides[i].getPhaseName());
+        }
+    }
+
 }
 

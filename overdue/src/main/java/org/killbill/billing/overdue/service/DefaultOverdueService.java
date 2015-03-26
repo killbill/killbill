@@ -91,7 +91,7 @@ public class DefaultOverdueService implements OverdueService {
                 overdueConfigCache.loadDefaultOverdueConfig(properties.getConfigURI());
                 isConfigLoaded = true;
             } catch (OverdueApiException e) {
-                log.warn("Overdue system disabled: unable to load the overdue config from " + properties.getConfigURI(), e);
+                log.warn("Overdue system disabled: unable to loadDefaultCatalog the overdue config from " + properties.getConfigURI(), e);
                 e.printStackTrace();
             }
         }

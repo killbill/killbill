@@ -72,7 +72,7 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
         }
         if (missingOrCorruptedDefaultConfig) {
             defaultOverdueConfig = new DefaultOverdueConfig();
-            log.warn("Overdue system disabled: unable to load the overdue config from " + configURI);
+            log.warn("Overdue system disabled: unable to loadDefaultCatalog the overdue config from " + configURI);
         }
     }
 

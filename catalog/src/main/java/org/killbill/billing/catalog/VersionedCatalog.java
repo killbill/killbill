@@ -48,6 +48,7 @@ import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
@@ -65,17 +66,20 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     private final Clock clock;
     private String catalogName;
     private BillingMode recurringBillingMode;
+    private final Long tenantRecordId;
 
     @XmlElement(name = "catalogVersion", required = true)
     private final List<StandaloneCatalogWithPriceOverride> versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
 
-    // Default CTOR for XMLWriter.writeXML
+    // Required for JAXB deserialization
     public VersionedCatalog() {
         this.clock = null;
+        this.tenantRecordId = null;
     }
 
-    public VersionedCatalog(final Clock clock) {
+    public VersionedCatalog(final Clock clock, final Long tenantRecordId) {
         this.clock = clock;
+        this.tenantRecordId = tenantRecordId;
     }
 
 
@@ -111,14 +115,14 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
         String productName;
         BillingPeriod bp;
         String priceListName;
-        List<PlanPhasePriceOverride> overrides;
+        PlanPhasePriceOverridesWithCallContext overrides;
 
         public PlanRequestWrapper(final String name) {
             this.name = name;
         }
 
         public PlanRequestWrapper(final String productName, final BillingPeriod bp,
-                                  final String priceListName, List<PlanPhasePriceOverride> overrides) {
+                                  final String priceListName, final PlanPhasePriceOverridesWithCallContext overrides) {
             this.productName = productName;
             this.bp = bp;
             this.priceListName = priceListName;
@@ -245,7 +249,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     public Plan findPlan(final String productName,
                          final BillingPeriod term,
                          final String priceListName,
-                         final List<PlanPhasePriceOverride> overrides,
+                         final PlanPhasePriceOverridesWithCallContext overrides,
                          final DateTime requestedDate)
             throws CatalogApiException {
         return versionForDate(requestedDate).findCurrentPlan(productName, term, priceListName, overrides);
@@ -263,7 +267,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     public Plan findPlan(final String productName,
                          final BillingPeriod term,
                          final String priceListName,
-                         final List<PlanPhasePriceOverride> overrides,
+                         final PlanPhasePriceOverridesWithCallContext overrides,
                          final DateTime requestedDate,
                          final DateTime subscriptionStartDate)
             throws CatalogApiException {
@@ -401,7 +405,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
 
     @Override
     public Plan findCurrentPlan(final String productName, final BillingPeriod term,
-                                final String priceList, List<PlanPhasePriceOverride> overrides) throws CatalogApiException {
+                                final String priceList, PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).findCurrentPlan(productName, term, priceList, overrides);
     }
 

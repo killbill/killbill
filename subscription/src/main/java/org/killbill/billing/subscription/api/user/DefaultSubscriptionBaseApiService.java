@@ -38,6 +38,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
@@ -49,6 +50,7 @@ import org.killbill.billing.subscription.alignment.PlanAligner;
 import org.killbill.billing.subscription.alignment.TimedPhase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
+import org.killbill.billing.subscription.api.svcs.DefaultPlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
@@ -118,7 +120,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         try {
             final String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             final InternalTenantContext internalCallContext = createTenantContextFromBundleId(subscription.getBundleId(), context);
-            final Plan plan = catalogService.getFullCatalog(internalCallContext).findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overrides, effectiveDate);
+            final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
+            final Plan plan = catalogService.getFullCatalog(internalCallContext).findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, effectiveDate);
             final PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
@@ -349,7 +352,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                   final DateTime effectiveDate,
                                   final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
-        final Plan newPlan = catalogService.getFullCatalog(internalCallContext).findPlan(newProductName, newBillingPeriod, newPriceList, overrides, effectiveDate, subscription.getStartDate());
+        final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
+        final Plan newPlan = catalogService.getFullCatalog(internalCallContext).findPlan(newProductName, newBillingPeriod, newPriceList, overridesWithContext, effectiveDate, subscription.getStartDate());
 
         final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPriceList, now, effectiveDate, now, false, internalCallContext);
         dao.changePlan(subscription, changeEvents, internalCallContext);

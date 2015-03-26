@@ -17,11 +17,17 @@
 
 package org.killbill.billing.catalog.dao;
 
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 
 public interface CatalogOverrideDao {
 
     public CatalogOverridePlanDefinitionModelDao getOrCreateOverridePlanDefinition(String parentPlanName, DateTime catalogEffectiveDate, PlanPhasePriceOverride[] resolvedOverride, InternalCallContext context);
+
+    public List<CatalogOverridePhaseDefinitionModelDao> getOverriddenPlanPhases(final Long planDefRecordId, final InternalTenantContext context);
+
 }

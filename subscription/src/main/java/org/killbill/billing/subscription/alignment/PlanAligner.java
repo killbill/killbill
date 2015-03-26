@@ -70,7 +70,7 @@ public class PlanAligner extends BaseAligner {
      * @param plan            the current Plan
      * @param initialPhase    the initialPhase on which we should create that subscription. can be null
      * @param priceList       the priceList
-     * @param requestedDate   the requested date (only used to load the catalog)
+     * @param requestedDate   the requested date (only used to loadDefaultCatalog the catalog)
      * @param effectiveDate   the effective creation date (driven by the catalog policy, i.e. when the creation occurs)
      * @return the current and next phases
      * @throws CatalogApiException         for catalog errors
