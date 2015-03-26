@@ -49,7 +49,7 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
 
     public DefaultRecurring(final DefaultRecurring in, final PlanPhasePriceOverride override) {
         this.billingPeriod = in.getBillingPeriod();
-        this.recurringPrice = new DefaultInternationalPrice(recurringPrice, override, false);
+        this.recurringPrice = in.getRecurringPrice() != null ? new DefaultInternationalPrice(in.getRecurringPrice(), override, false) : null;
     }
 
     @Override

@@ -28,7 +28,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.xmlloader.XMLLoader;
-import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.annotations.Test;
 
 import com.google.common.io.Resources;
@@ -69,7 +68,6 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final List<CatalogOverridePhaseDefinitionModelDao> phases = catalogOverrideDao.getOverriddenPlanPhases(1L, internalCallContext);
         assertEquals(phases.size(), 2);
     }
-
 
     @Test(groups = "slow")
     public void testGetOverriddenPlanPhases() throws Exception {

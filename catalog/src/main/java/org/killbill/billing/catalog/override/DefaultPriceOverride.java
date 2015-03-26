@@ -22,11 +22,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultPlan;
+import org.killbill.billing.catalog.DefaultPlanPhase;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -40,10 +43,11 @@ import org.killbill.billing.catalog.dao.CatalogOverridePlanDefinitionModelDao;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
+import sun.org.mozilla.javascript.internal.ast.ErrorCollector;
 
 public class DefaultPriceOverride implements PriceOverride {
 
-    final Pattern CUSTOM_PLAN_NAME_PATTERN = Pattern.compile("(.*)-(\\d+)$");
+    public static final Pattern CUSTOM_PLAN_NAME_PATTERN = Pattern.compile("(.*)-(\\d+)$");
 
     private final CatalogOverrideDao overrideDao;
 
@@ -61,8 +65,8 @@ public class DefaultPriceOverride implements PriceOverride {
             final PlanPhasePriceOverride curOverride = Iterables.tryFind(overrides, new Predicate<PlanPhasePriceOverride>() {
                 @Override
                 public boolean apply(final PlanPhasePriceOverride input) {
-                    if (input.getPhaseName() != null && input.getPhaseName().equals(curPhase.getName())) {
-                        return true;
+                    if (input.getPhaseName() != null) {
+                        return input.getPhaseName().equals(curPhase.getName());
                     }
                     // If the phaseName was not passed, we infer by matching the phaseType. This obvously would not work in a case where
                     // a plan is defined with multiple phases of the same type.
@@ -78,6 +82,23 @@ public class DefaultPriceOverride implements PriceOverride {
                                         null;
         }
 
+        for (int i = 0; i < resolvedOverride.length; i++) {
+            final PlanPhasePriceOverride curOverride = resolvedOverride[i];
+            if (curOverride != null) {
+                final DefaultPlanPhase curPhase = (DefaultPlanPhase) parentPlan.getAllPhases()[i];
+
+                if (curPhase.getFixed() == null && curOverride.getFixedPrice() != null) {
+                    final String error = String.format("There is no existing fixed price for the phase %s", curPhase.getName());
+                    throw new CatalogApiException(ErrorCode.CAT_INVALID_INVALID_PRICE_OVERRIDE, parentPlan.getName(), error);
+                }
+
+                if (curPhase.getRecurring() == null && curOverride.getRecurringPrice() != null) {
+                    final String error = String.format("There is no existing recurring price for the phase %s", curPhase.getName());
+                    throw new CatalogApiException(ErrorCode.CAT_INVALID_INVALID_PRICE_OVERRIDE, parentPlan.getName(), error);
+                }
+            }
+        }
+
         final CatalogOverridePlanDefinitionModelDao overriddenPlan = overrideDao.getOrCreateOverridePlanDefinition(parentPlan.getName(), catalogEffectiveDate, resolvedOverride, context);
         final String planName = new StringBuffer(parentPlan.getName()).append("-").append(overriddenPlan.getRecordId()).toString();
         final DefaultPlan result = new DefaultPlan(planName, (DefaultPlan) parentPlan, resolvedOverride);
@@ -88,6 +109,9 @@ public class DefaultPriceOverride implements PriceOverride {
     public DefaultPlan getOverriddenPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
 
         final Matcher m = CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
+        if (!m.matches()) {
+            throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PLAN, planName);
+        }
         final String parentPlanName = m.group(1);
         final Long planDefRecordId = Long.parseLong(m.group(2));
 

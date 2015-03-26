@@ -20,6 +20,7 @@ package org.killbill.billing.catalog;
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.glue.TestCatalogModuleWithEmbeddedDB;
+import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.BeforeClass;
@@ -35,6 +36,9 @@ public class CatalogTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEm
 
     @Inject
     protected IDBI dbi;
+
+    @Inject
+    protected PriceOverride priceOverride;
 
     @Override
     protected KillbillConfigSource getConfigSource() {

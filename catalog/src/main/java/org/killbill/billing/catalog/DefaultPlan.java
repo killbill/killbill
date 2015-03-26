@@ -87,8 +87,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         this.effectiveDateForExistingSubscriptons = in.getEffectiveDateForExistingSubscriptons();
         this.product = (DefaultProduct) in.getProduct();
         this.initialPhases = new DefaultPlanPhase[in.getInitialPhases().length];
-        for (int i = 0; i< overrides.length; i++) {
-            final DefaultPlanPhase newPhase = new DefaultPlanPhase(in.getFinalPhase(), overrides[i]);
+        for (int i = 0; i< overrides.length - 1; i++) {
+            final DefaultPlanPhase newPhase = new DefaultPlanPhase(in.getInitialPhases()[i], overrides[i]);
             initialPhases[i] = newPhase;
         }
         this.finalPhase = new DefaultPlanPhase(in.getFinalPhase(), overrides[overrides.length - 1]);
