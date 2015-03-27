@@ -18,7 +18,6 @@
 
 package org.killbill.billing.util.glue;
 
-import org.killbill.billing.DBTestingHelper;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -38,7 +37,7 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
         install(new TagStoreModule(configSource));
         install(new CustomFieldModule(configSource));
         install(new NonEntityDaoModule(configSource));
-        install(new GlobalLockerModule(DBTestingHelper.get().getInstance().getDBEngine(), configSource));
+        install(new GlobalLockerModule(configSource));
 
         bind(TestApiListener.class).asEagerSingleton();
     }

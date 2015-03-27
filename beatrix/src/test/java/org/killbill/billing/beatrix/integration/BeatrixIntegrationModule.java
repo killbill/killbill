@@ -18,7 +18,6 @@
 
 package org.killbill.billing.beatrix.integration;
 
-import org.killbill.billing.DBTestingHelper;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.account.glue.DefaultAccountModule;
 import org.killbill.billing.api.TestApiListener;
@@ -73,7 +72,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
     @Override
     protected void configure() {
         install(new GuicyKillbillTestWithEmbeddedDBModule(true, configSource));
-        install(new GlobalLockerModule(DBTestingHelper.get().getInstance().getDBEngine(), configSource));
+        install(new GlobalLockerModule(configSource));
         install(new CacheModule(configSource));
         install(new EmailModule(configSource));
         install(new CallContextModule(configSource));

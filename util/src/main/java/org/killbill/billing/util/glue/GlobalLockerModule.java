@@ -18,25 +18,34 @@
 
 package org.killbill.billing.util.glue;
 
+import java.io.IOException;
+
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
-import org.killbill.commons.embeddeddb.EmbeddedDB.DBEngine;
+import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.memory.MemoryGlobalLocker;
+import org.killbill.commons.locker.mysql.MySqlGlobalLocker;
+
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 public class GlobalLockerModule extends KillBillModule {
 
-    private final DBEngine engine;
-
-    public GlobalLockerModule(final DBEngine engine, final KillbillConfigSource configSource) {
+    public GlobalLockerModule(final KillbillConfigSource configSource) {
         super(configSource);
-        this.engine = engine;
+    }
+
+    @Provides
+    @Singleton
+    protected GlobalLocker provideGlobalLocker(final EmbeddedDB embeddedDB) throws IOException {
+        if (EmbeddedDB.DBEngine.MYSQL.equals(embeddedDB)) {
+            return new MySqlGlobalLocker(embeddedDB.getDataSource());
+        } else {
+            return new MemoryGlobalLocker();
+        }
     }
 
     @Override
     protected void configure() {
-        if (EmbeddedDB.DBEngine.MYSQL.equals(engine)) {
-            install(new MySqlGlobalLockerModule(configSource));
-        } else {
-            install(new MemoryGlobalLockerModule(configSource));
-        }
     }
 }

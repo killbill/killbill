@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -127,9 +127,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
 
     @Override
     protected void configureEmbeddedDB() {
-        final EmbeddedDBProvider embeddedDBProvider = new KillBillEmbeddedDBProvider(daoConfig);
-        embeddedDB = embeddedDBProvider.get();
-        bind(EmbeddedDB.class).toInstance(embeddedDB);
+        bind(EmbeddedDB.class).toProvider(KillBillEmbeddedDBProvider.class).asEagerSingleton();
     }
 
     @Override
@@ -158,7 +156,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         install(new DefaultSubscriptionModule(configSource));
         install(new EmailModule(configSource));
         install(new ExportModule(configSource));
-        install(new GlobalLockerModule(embeddedDB.getDBEngine(), configSource));
+        install(new GlobalLockerModule(configSource));
         install(new KillBillShiroAopModule());
         install(new KillbillApiAopModule());
         install(new KillBillShiroWebModule(servletContext, skifeConfigSource));

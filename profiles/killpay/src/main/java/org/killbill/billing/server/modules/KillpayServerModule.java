@@ -79,7 +79,7 @@ public class KillpayServerModule extends KillbillServerModule {
         install(new CustomFieldModule(configSource));
         install(new DefaultAccountModule(configSource));
         install(new ExportModule(configSource));
-        install(new GlobalLockerModule(embeddedDB.getDBEngine(), configSource));
+        install(new GlobalLockerModule(configSource));
         install(new KillBillShiroAopModule());
         install(new KillbillApiAopModule());
         install(new KillBillShiroWebModule(servletContext, skifeConfigSource));
