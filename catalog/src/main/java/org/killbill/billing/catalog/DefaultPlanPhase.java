@@ -65,7 +65,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 
     public DefaultPlanPhase() {}
 
-    public DefaultPlanPhase(final DefaultPlanPhase in, @Nullable final PlanPhasePriceOverride override) {
+    public DefaultPlanPhase(final DefaultPlan parentPlan, final DefaultPlanPhase in, @Nullable final PlanPhasePriceOverride override) {
         this.type = in.getPhaseType();
         this.duration = (DefaultDuration) in.getDuration();
         this.fixed = override != null && override.getFixedPrice() != null ? new DefaultFixed((DefaultFixed) in.getFixed(), override) : (DefaultFixed) in.getFixed();
@@ -74,7 +74,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         for (int i = 0; i < in.getUsages().length; i++) {
             usages[i] = (DefaultUsage) in.getUsages()[i];
         }
-        this.plan = in.plan;
+        this.plan = parentPlan;
     }
 
     public static String phaseName(final String planName, final PhaseType phasetype) {

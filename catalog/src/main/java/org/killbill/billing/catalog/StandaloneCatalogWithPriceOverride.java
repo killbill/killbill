@@ -20,11 +20,13 @@ package org.killbill.billing.catalog;
 import java.net.URI;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingMode;
@@ -37,7 +39,6 @@ import org.killbill.billing.catalog.api.PlanAlignmentChange;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
@@ -45,6 +46,7 @@ import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Unit;
+import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.xmlloader.ValidatingConfig;
@@ -116,12 +118,13 @@ public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<Standal
 
     @Override
     public Plan findCurrentPlan(final String planName) throws CatalogApiException {
-        final Plan defaultPlan =  standaloneCatalog.findCurrentPlan(planName);
-        if (defaultPlan != null) {
-            return defaultPlan;
+
+        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
+        if (m.matches()) {
+            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, null);
+            return priceOverride.getOverriddenPlan(planName, standaloneCatalog, internalTenantContext);
         }
-        return null; // STEPH_PO
-     //   priceOverride.
+        return standaloneCatalog.findCurrentPlan(planName);
     }
 
     @Override
@@ -131,6 +134,13 @@ public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<Standal
 
     @Override
     public PlanPhase findCurrentPhase(final String phaseName) throws CatalogApiException {
+        final String planName = DefaultPlanPhase.planName(phaseName);
+        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
+        if (m.matches()) {
+            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, null);
+            Plan plan = priceOverride.getOverriddenPlan(planName, standaloneCatalog, internalTenantContext);
+            return plan.findPhase(phaseName);
+        }
         return standaloneCatalog.findCurrentPhase(phaseName);
     }
 
@@ -202,6 +212,5 @@ public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<Standal
     public DefaultPriceList findCurrentPriceList(final String priceListName) throws CatalogApiException {
         return standaloneCatalog.findCurrentPriceList(priceListName);
     }
-
 
 }

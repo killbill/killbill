@@ -552,11 +552,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected DefaultEntitlement createBaseEntitlementAndCheckForCompletion(final UUID accountId,
+    protected DefaultEntitlement createBaseEntitlementWithPriceOverrideAndCheckForCompletion(final UUID accountId,
                                                                             final String bundleExternalKey,
                                                                             final String productName,
                                                                             final ProductCategory productCategory,
                                                                             final BillingPeriod billingPeriod,
+                                                                            final List<PlanPhasePriceOverride> overrides,
                                                                             final NextEvent... events) {
         if (productCategory == ProductCategory.ADD_ON) {
             throw new RuntimeException("Unxepected Call for creating ADD_ON");
@@ -568,7 +569,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
                     final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
-                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, null, effectiveDate, callContext);
+                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, effectiveDate, callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (final EntitlementApiException e) {
@@ -577,6 +578,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 }
             }
         }, events);
+    }
+
+
+    protected DefaultEntitlement createBaseEntitlementAndCheckForCompletion(final UUID accountId,
+                                                                            final String bundleExternalKey,
+                                                                            final String productName,
+                                                                            final ProductCategory productCategory,
+                                                                            final BillingPeriod billingPeriod,
+                                                                            final NextEvent... events) {
+        return createBaseEntitlementWithPriceOverrideAndCheckForCompletion(accountId, bundleExternalKey, productName, productCategory, billingPeriod, null, events);
     }
 
     protected DefaultEntitlement addAOEntitlementAndCheckForCompletion(final UUID bundleId,

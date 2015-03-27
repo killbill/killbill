@@ -88,10 +88,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         this.product = (DefaultProduct) in.getProduct();
         this.initialPhases = new DefaultPlanPhase[in.getInitialPhases().length];
         for (int i = 0; i< overrides.length - 1; i++) {
-            final DefaultPlanPhase newPhase = new DefaultPlanPhase(in.getInitialPhases()[i], overrides[i]);
+            final DefaultPlanPhase newPhase = new DefaultPlanPhase(this, in.getInitialPhases()[i], overrides[i]);
             initialPhases[i] = newPhase;
         }
-        this.finalPhase = new DefaultPlanPhase(in.getFinalPhase(), overrides[overrides.length - 1]);
+        this.finalPhase = new DefaultPlanPhase(this, in.getFinalPhase(), overrides[overrides.length - 1]);
 
     }
     /* (non-Javadoc)

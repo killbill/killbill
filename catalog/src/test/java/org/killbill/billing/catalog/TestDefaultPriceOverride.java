@@ -39,6 +39,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
 public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
@@ -67,7 +68,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         if (plan.getEffectiveDateForExistingSubscriptons() != null) {
             assertEquals(overriddenPlan.getEffectiveDateForExistingSubscriptons().compareTo(plan.getEffectiveDateForExistingSubscriptons()), 0);
         }
-        assertEquals(overriddenPlan.getFinalPhase().getName(), plan.getFinalPhase().getName());
+        assertNotEquals(overriddenPlan.getFinalPhase().getName(), plan.getFinalPhase().getName());
         assertEquals(overriddenPlan.getPlansAllowedInBundle(), plan.getPlansAllowedInBundle());
 
         assertEquals(overriddenPlan.getAllPhases().length, overriddenPlan.getAllPhases().length);
@@ -83,7 +84,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
                 }
             }).orNull();
 
-            assertEquals(newPhase.getName(), initialPhase.getName());
+            assertNotEquals(newPhase.getName(), initialPhase.getName());
             assertEquals(newPhase.getDuration(), initialPhase.getDuration());
             assertEquals(newPhase.getPhaseType(), initialPhase.getPhaseType());
             assertEquals(newPhase.getUsages().length, initialPhase.getUsages().length);
@@ -134,7 +135,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         if (plan.getEffectiveDateForExistingSubscriptons() != null) {
             assertEquals(overriddenPlan.getEffectiveDateForExistingSubscriptons().compareTo(plan.getEffectiveDateForExistingSubscriptons()), 0);
         }
-        assertEquals(overriddenPlan.getFinalPhase().getName(), plan.getFinalPhase().getName());
+        assertNotEquals(overriddenPlan.getFinalPhase().getName(), plan.getFinalPhase().getName());
         assertEquals(overriddenPlan.getPlansAllowedInBundle(), plan.getPlansAllowedInBundle());
 
         assertEquals(overriddenPlan.getAllPhases().length, overriddenPlan.getAllPhases().length);
@@ -150,7 +151,8 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
                 }
             }).orNull();
 
-            assertEquals(newPhase.getName(), initialPhase.getName());
+            assertNotEquals(newPhase.getName(), initialPhase.getName());
+            assertEquals(newPhase.getName(), overriddenPlan.getName() + "-" +  initialPhase.getName().split("-")[initialPhase.getName().split("-").length -1]);
             assertEquals(newPhase.getDuration(), initialPhase.getDuration());
             assertEquals(newPhase.getPhaseType(), initialPhase.getPhaseType());
             assertEquals(newPhase.getUsages().length, initialPhase.getUsages().length);

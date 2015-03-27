@@ -29,7 +29,6 @@ import org.killbill.billing.catalog.DefaultPlan;
 import org.killbill.billing.catalog.DefaultPlanPhase;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -43,7 +42,6 @@ import org.killbill.billing.catalog.dao.CatalogOverridePlanDefinitionModelDao;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
-import sun.org.mozilla.javascript.internal.ast.ErrorCollector;
 
 public class DefaultPriceOverride implements PriceOverride {
 
