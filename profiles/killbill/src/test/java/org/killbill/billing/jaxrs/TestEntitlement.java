@@ -64,8 +64,10 @@ public class TestEntitlement extends TestJaxrsBase {
         final String newProductName = "Assault-Rifle";
 
         final Subscription newInput = new Subscription();
+        newInput.setAccountId(entitlementJson.getAccountId());
         newInput.setSubscriptionId(entitlementJson.getSubscriptionId());
         newInput.setProductName(newProductName);
+        newInput.setProductCategory(ProductCategory.BASE);
         newInput.setBillingPeriod(entitlementJson.getBillingPeriod());
         newInput.setPriceList(entitlementJson.getPriceList());
         objFromJson = killBillClient.updateSubscription(newInput, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
@@ -128,8 +130,10 @@ public class TestEntitlement extends TestJaxrsBase {
     public void testWithNonExistentEntitlement() throws Exception {
         final UUID subscriptionId = UUID.randomUUID();
         final Subscription subscription = new Subscription();
+        subscription.setAccountId(UUID.randomUUID());
         subscription.setSubscriptionId(subscriptionId);
         subscription.setProductName("Pistol");
+        subscription.setProductCategory(ProductCategory.BASE);
         subscription.setBillingPeriod(BillingPeriod.ANNUAL);
         subscription.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
@@ -175,8 +179,10 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // Change billing period immediately
         final Subscription newInput = new Subscription();
+        newInput.setAccountId(accountJson.getAccountId());
         newInput.setSubscriptionId(subscriptionJson.getSubscriptionId());
         newInput.setProductName(subscriptionJson.getProductName());
+        newInput.setProductCategory(ProductCategory.BASE);
         newInput.setBillingPeriod(BillingPeriod.MONTHLY);
         newInput.setPriceList(subscriptionJson.getPriceList());
         objFromJson = killBillClient.updateSubscription(newInput, BillingActionPolicy.IMMEDIATE, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);

@@ -25,8 +25,12 @@ import org.killbill.billing.catalog.api.user.DefaultCatalogUserApi;
 import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.catalog.caching.CatalogCacheInvalidationCallback;
 import org.killbill.billing.catalog.caching.EhCacheCatalogCache;
+import org.killbill.billing.catalog.dao.CatalogOverrideDao;
+import org.killbill.billing.catalog.dao.DefaultCatalogOverrideDao;
 import org.killbill.billing.catalog.io.CatalogLoader;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
+import org.killbill.billing.catalog.override.DefaultPriceOverride;
+import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.config.CatalogConfig;
@@ -51,6 +55,11 @@ public class CatalogModule extends KillBillModule {
     protected void installCatalog() {
         bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
         bind(CatalogLoader.class).to(VersionedCatalogLoader.class).asEagerSingleton();
+        bind(PriceOverride.class).to(DefaultPriceOverride.class).asEagerSingleton();
+    }
+
+    protected void installCatalogDao() {
+        bind(CatalogOverrideDao.class).to(DefaultCatalogOverrideDao.class).asEagerSingleton();
     }
 
     protected void installCatalogUserApi() {
@@ -62,9 +71,12 @@ public class CatalogModule extends KillBillModule {
         bind(CacheInvalidationCallback.class).annotatedWith(Names.named(CATALOG_INVALIDATION_CALLBACK)).to(CatalogCacheInvalidationCallback.class).asEagerSingleton();
     }
 
+
+
     @Override
     protected void configure() {
         installConfig();
+        installCatalogDao();
         installCatalog();
         installCatalogUserApi();
         installCatalogConfigCache();

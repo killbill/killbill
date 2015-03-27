@@ -160,7 +160,7 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "    PRIMARY KEY (record_id)\n" +
                                ");");
 
-        for (final String pack : new String[]{"account", "analytics", "beatrix", "subscription", "util", "payment", "invoice", "entitlement", "usage", "meter", "tenant"}) {
+        for (final String pack : new String[]{"catalog", "account", "analytics", "beatrix", "subscription", "util", "payment", "invoice", "entitlement", "usage", "meter", "tenant"}) {
             for (final String ddlFile : new String[]{"ddl.sql", "ddl_test.sql"}) {
                 final String ddl;
                 try {

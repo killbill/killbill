@@ -1,0 +1,56 @@
+group CatalogOverridePlanDefinitionSqlDao;
+
+tableName() ::= "catalog_override_plan_definition"
+
+tableFields(prefix) ::= <<
+  <prefix>parent_plan_name
+, <prefix>effective_date
+, <prefix>is_active
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>tenant_record_id
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+
+tableValues() ::= <<
+  :parentPlanName
+, :effectiveDate
+, :isActive
+, :createdDate
+, :createdBy
+, :tenantRecordId
+>>
+
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+create() ::= <<
+insert into <tableName()> (
+<tableFields()>
+)
+values (
+<tableValues()>
+)
+;
+>>
+
+getByRecordId() ::= <<
+select <allTableFields()>
+from <tableName()>
+where record_id = :recordId
+and tenant_record_id = :tenantRecordId
+;
+>>
+
+getLastInsertId() ::= <<
+    select LAST_INSERT_ID();
+>>
+

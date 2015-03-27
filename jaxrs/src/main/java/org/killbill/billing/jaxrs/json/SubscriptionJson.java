@@ -65,6 +65,8 @@ public class SubscriptionJson extends JsonBase {
     private final LocalDate billingStartDate;
     private final LocalDate billingEndDate;
     private final List<EventSubscriptionJson> events;
+    private final List<PhasePriceOverrideJson> priceOverrides;
+
 
     public static class EventSubscriptionJson extends JsonBase {
 
@@ -285,6 +287,7 @@ public class SubscriptionJson extends JsonBase {
                             @JsonProperty("billingStartDate") @Nullable final LocalDate billingStartDate,
                             @JsonProperty("billingEndDate") @Nullable final LocalDate billingEndDate,
                             @JsonProperty("events") @Nullable final List<EventSubscriptionJson> events,
+                            @JsonProperty("priceOverrides") final List<PhasePriceOverrideJson> priceOverrides,
                             @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.startDate = startDate;
@@ -304,6 +307,7 @@ public class SubscriptionJson extends JsonBase {
         this.subscriptionId = subscriptionId;
         this.externalKey = externalKey;
         this.events = events;
+        this.priceOverrides = priceOverrides;
     }
 
     public SubscriptionJson(final Subscription subscription, @Nullable final AccountAuditLogs accountAuditLogs) {
@@ -329,6 +333,8 @@ public class SubscriptionJson extends JsonBase {
         for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
             this.events.add(new EventSubscriptionJson(subscriptionEvent, accountAuditLogs));
         }
+        this.priceOverrides = new LinkedList<PhasePriceOverrideJson>();
+        // STEPH_PO
     }
 
     public String getAccountId() {
@@ -399,6 +405,10 @@ public class SubscriptionJson extends JsonBase {
         return events;
     }
 
+    public List<PhasePriceOverrideJson> getPriceOverrides() {
+        return priceOverrides;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("SubscriptionJson{");
@@ -419,6 +429,7 @@ public class SubscriptionJson extends JsonBase {
         sb.append(", billingStartDate=").append(billingStartDate);
         sb.append(", billingEndDate=").append(billingEndDate);
         sb.append(", events=").append(events);
+        sb.append(", priceOverrides=").append(priceOverrides);
         sb.append('}');
         return sb.toString();
     }
@@ -485,7 +496,9 @@ public class SubscriptionJson extends JsonBase {
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
             return false;
         }
-
+        if (priceOverrides != null ? !priceOverrides.equals(that.priceOverrides) : that.priceOverrides != null) {
+            return false;
+        }
         return true;
     }
 
@@ -508,6 +521,8 @@ public class SubscriptionJson extends JsonBase {
         result = 31 * result + (billingStartDate != null ? billingStartDate.hashCode() : 0);
         result = 31 * result + (billingEndDate != null ? billingEndDate.hashCode() : 0);
         result = 31 * result + (events != null ? events.hashCode() : 0);
+        result = 31 * result + (priceOverrides != null ? priceOverrides.hashCode() : 0);
         return result;
     }
+
 }

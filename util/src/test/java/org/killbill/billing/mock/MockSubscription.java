@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.mockito.Mockito;
 
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -94,20 +95,20 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public DateTime changePlan(final String productName, final BillingPeriod term, final String priceList, final CallContext context) throws SubscriptionBaseApiException {
-        return sub.changePlan(productName, term, priceList, context);
+    public DateTime changePlan(final String productName, final BillingPeriod term, final String priceList, final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
+        return sub.changePlan(productName, term, priceList, overrides, context);
     }
 
     @Override
-    public DateTime changePlanWithDate(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
+    public DateTime changePlanWithDate(final String productName, final BillingPeriod term, final String priceList, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDate,
                                        final CallContext context) throws SubscriptionBaseApiException {
-        return sub.changePlanWithDate(productName, term, priceList, requestedDate, context);
+        return sub.changePlanWithDate(productName, term, priceList, overrides, requestedDate, context);
     }
 
     @Override
     public DateTime changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-                                         final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        return sub.changePlanWithPolicy(productName, term, priceList, policy, context);
+                                         final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+        return sub.changePlanWithPolicy(productName, term, priceList, overrides, policy, context);
     }
 
     @Override

@@ -24,36 +24,43 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.platform.api.KillbillService.ServiceException;
+import org.killbill.billing.catalog.override.PriceOverride;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.UriAccessor;
 import org.killbill.xmlloader.XMLLoader;
 
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+
 public class VersionedCatalogLoader implements CatalogLoader {
+
     private static final Object PROTOCOL_FOR_FILE = "file";
-    private final String XML_EXTENSION = ".xml";
+    private static final String XML_EXTENSION = ".xml";
+
     private final Clock clock;
+    private final PriceOverride priceOverride;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public VersionedCatalogLoader(final Clock clock) {
+    public VersionedCatalogLoader(final Clock clock, final PriceOverride priceOverride, final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
+        this.priceOverride = priceOverride;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.io.ICatalogLoader#load(java.lang.String)
+      * @see org.killbill.billing.catalog.io.ICatalogLoader#loadDefaultCatalog(java.lang.String)
       */
     @Override
-    public VersionedCatalog load(final String uriString) throws CatalogApiException {
+    public VersionedCatalog loadDefaultCatalog(final String uriString) throws CatalogApiException {
         try {
-            List<URI> xmlURIs = null;
-
+            List<URI> xmlURIs;
             if (uriString.endsWith(XML_EXTENSION)) { // Assume its an xml file
                 xmlURIs = new ArrayList<URI>();
                 URI uri = new URI(uriString);
@@ -75,10 +82,10 @@ public class VersionedCatalogLoader implements CatalogLoader {
                 xmlURIs = findXmlReferences(directoryContents, new URL(uriString));
             }
 
-            final VersionedCatalog result = new VersionedCatalog(clock);
+            final VersionedCatalog result = new VersionedCatalog(clock, InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID);
             for (final URI u : xmlURIs) {
                 final StandaloneCatalog catalog = XMLLoader.getObjectFromUri(u, StandaloneCatalog.class);
-                result.add(catalog);
+                result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, internalCallContextFactory));
             }
             return result;
         } catch (Exception e) {
@@ -86,15 +93,15 @@ public class VersionedCatalogLoader implements CatalogLoader {
         }
     }
 
-    public VersionedCatalog load(final List<String> catalogXMLs) throws CatalogApiException {
-        final VersionedCatalog result = new VersionedCatalog(clock);
+    public VersionedCatalog load(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
+        final VersionedCatalog result = new VersionedCatalog(clock, tenantRecordId);
         final URI uri;
         try {
             uri = new URI("/tenantCatalog");
             for (final String cur : catalogXMLs) {
                 final InputStream curCatalogStream = new ByteArrayInputStream(cur.getBytes());
                 final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(uri, curCatalogStream, StandaloneCatalog.class);
-                result.add(catalog);
+                result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory));
             }
             return result;
         } catch (Exception e) {
@@ -179,6 +186,4 @@ public class VersionedCatalogLoader implements CatalogLoader {
         }
         return new URI(url.toString() + f);
     }
-
-
 }

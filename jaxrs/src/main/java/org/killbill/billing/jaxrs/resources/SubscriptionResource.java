@@ -41,11 +41,14 @@ import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
@@ -61,6 +64,7 @@ import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
+import org.killbill.billing.jaxrs.json.PhasePriceOverrideJson;
 import org.killbill.billing.jaxrs.json.SubscriptionJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -161,6 +165,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
+        final Account account = accountUserApi.getAccountById(accountId, callContext);
+
         final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
             public Entitlement doOperation(final CallContext ctx) throws InterruptedException, TimeoutException, EntitlementApiException {
@@ -169,12 +176,18 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                                        ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
 
-                final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
                 final LocalDate inputLocalDate = toLocalDate(accountId, requestedDate, callContext);
+
+
                 final UUID bundleId = entitlement.getBundleId() != null ? UUID.fromString(entitlement.getBundleId()) : null;
+
+                final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
+                                                                 ProductCategory.valueOf(entitlement.getProductCategory()),
+                                                                 BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
+                final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
                 return createAddOnEntitlement ?
-                       entitlementApi.addEntitlement(bundleId, spec, inputLocalDate, callContext) :
-                       entitlementApi.createBaseEntitlement(accountId, spec, entitlement.getExternalKey(), inputLocalDate, callContext);
+                       entitlementApi.addEntitlement(bundleId, spec, overrides, inputLocalDate, callContext) :
+                       entitlementApi.createBaseEntitlement(accountId, spec, entitlement.getExternalKey(), overrides, inputLocalDate, callContext);
             }
 
             @Override
@@ -235,6 +248,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
+        final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
@@ -247,13 +261,20 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final Entitlement current = entitlementApi.getEntitlementForId(uuid, callContext);
                 final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
                 final Entitlement newEntitlement;
+
+                final Account account = accountUserApi.getAccountById(accountId, callContext);
+                final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
+                                                                 ProductCategory.valueOf(entitlement.getProductCategory()),
+                                                                 BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
+                final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
+
                 if (requestedDate == null && policyString == null) {
-                    newEntitlement = current.changePlan(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), ctx);
+                    newEntitlement = current.changePlan(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), overrides, ctx);
                 } else if (policyString == null) {
-                    newEntitlement = current.changePlanWithDate(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, ctx);
+                    newEntitlement = current.changePlanWithDate(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), overrides, inputLocalDate, ctx);
                 } else {
                     final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
-                    newEntitlement = current.changePlanOverrideBillingPolicy(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, policy, ctx);
+                    newEntitlement = current.changePlanOverrideBillingPolicy(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), overrides, inputLocalDate, policy, ctx);
                 }
                 isImmediateOp = newEntitlement.getLastActiveProduct().getName().equals(entitlement.getProductName()) &&
                                 newEntitlement.getLastActivePlan().getRecurringBillingPeriod() == BillingPeriod.valueOf(entitlement.getBillingPeriod()) &&

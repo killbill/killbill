@@ -57,7 +57,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.PHASE);
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                                                          testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
+                                                                                                                          testUtil.getProductSpecifier(productName, planSetName, term, null), null, requestedDate, internalCallContext);
         assertListenerStatus();
         assertNotNull(subscription);
 
@@ -71,7 +71,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.PHASE);
         final DefaultSubscriptionBase newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(newBundle.getId(),
-                                                                                                                             testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
+                                                                                                                             testUtil.getProductSpecifier(productName, planSetName, term, null), null, requestedDate, internalCallContext);
 
         subscriptionInternalApi.updateExternalKey(newBundle.getId(), "myNewSuperKey", internalCallContext);
 
@@ -95,7 +95,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.CREATE);
 
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                                                          testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
+                                                                                                                          testUtil.getProductSpecifier(productName, planSetName, term, null), null, requestedDate, internalCallContext);
         assertNotNull(subscription);
 
         //
@@ -135,7 +135,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.CREATE);
 
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                                                          testUtil.getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), internalCallContext);
+                                                                                                                          testUtil.getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), null, clock.getUTCNow(), internalCallContext);
         assertNotNull(subscription);
 
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -169,7 +169,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
                                                                                                                           testUtil.getProductSpecifier(productName, planSetName, term, null),
-                                                                                                                          clock.getUTCNow(), internalCallContext);
+                                                                                                                          null, clock.getUTCNow(), internalCallContext);
         assertNotNull(subscription);
 
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -218,7 +218,8 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // CREATE SUBSCRIPTION
         DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                                                    testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), internalCallContext);
+                                                                                                                    testUtil.getProductSpecifier(productName, planSetName, term, null),
+                                                                                                                    null, clock.getUTCNow(), internalCallContext);
         assertNotNull(subscription);
 
         PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -258,7 +259,8 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.CREATE);
 
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                                                          testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), internalCallContext);
+                                                                                                                          testUtil.getProductSpecifier(productName, planSetName, term, null),
+                                                                                                                          null, clock.getUTCNow(), internalCallContext);
         assertNotNull(subscription);
 
         assertListenerStatus();

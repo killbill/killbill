@@ -17,6 +17,7 @@
 package org.killbill.billing.catalog;
 
 import java.util.Date;
+import java.util.List;
 
 import org.joda.time.DateTime;
 
@@ -31,6 +32,8 @@ import org.killbill.billing.catalog.api.PlanAlignmentChange;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
@@ -40,6 +43,8 @@ import org.killbill.billing.catalog.rules.CaseChangePlanAlignment;
 import org.killbill.billing.catalog.rules.CaseChangePlanPolicy;
 import org.killbill.billing.catalog.rules.CaseCreateAlignment;
 import org.killbill.billing.catalog.rules.PlanRules;
+
+import com.google.common.collect.ImmutableList;
 
 public class MockCatalog extends StandaloneCatalog implements Catalog {
 
@@ -107,9 +112,9 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public Plan findPlan(final String productName, final BillingPeriod term, final String priceListName, final DateTime requestedDate)
+    public Plan createOrFindPlan(final String productName, final BillingPeriod term, final String priceListName, PlanPhasePriceOverridesWithCallContext overrides, final DateTime requestedDate)
             throws CatalogApiException {
-        return findCurrentPlan(productName, term, priceListName);
+        return createOrFindCurrentPlan(productName, term, priceListName, overrides);
     }
 
     @Override
@@ -119,9 +124,9 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public Plan findPlan(final String productName, final BillingPeriod term, final String priceListName, final DateTime requestedDate,
+    public Plan createOrFindPlan(final String productName, final BillingPeriod term, final String priceListName, PlanPhasePriceOverridesWithCallContext overrides, final DateTime requestedDate,
                          final DateTime subscriptionStartDate) throws CatalogApiException {
-        return findCurrentPlan(productName, term, priceListName);
+        return createOrFindCurrentPlan(productName, term, priceListName, overrides);
     }
 
     @Override

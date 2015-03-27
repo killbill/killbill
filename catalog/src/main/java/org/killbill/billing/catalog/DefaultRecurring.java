@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlElement;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.Recurring;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
@@ -43,6 +44,13 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
     // Not exposed in xml.
     private Plan plan;
     private PlanPhase phase;
+
+    public DefaultRecurring() {};
+
+    public DefaultRecurring(final DefaultRecurring in, final PlanPhasePriceOverride override) {
+        this.billingPeriod = in.getBillingPeriod();
+        this.recurringPrice = in.getRecurringPrice() != null ? new DefaultInternationalPrice(in.getRecurringPrice(), override, false) : null;
+    }
 
     @Override
     public BillingPeriod getBillingPeriod() {

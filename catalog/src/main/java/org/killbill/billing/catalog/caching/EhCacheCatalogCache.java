@@ -55,7 +55,7 @@ public class EhCacheCatalogCache implements CatalogCache {
 
     @Override
     public void loadDefaultCatalog(final String url) throws CatalogApiException {
-        defaultCatalog = (url != null) ? loader.load(url) : null;
+        defaultCatalog = (url != null) ? loader.loadDefaultCatalog(url) : null;
     }
 
     @Override
@@ -92,8 +92,8 @@ public class EhCacheCatalogCache implements CatalogCache {
     private CacheLoaderArgument initializeCacheLoaderArgument(final EhCacheCatalogCache parentCache) {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
-            public Object loadCatalog(final List<String> catalogXMLs) throws CatalogApiException {
-                return loader.load(catalogXMLs);
+            public Object loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
+                return loader.load(catalogXMLs, tenantRecordId);
             }
         };
         final Object[] args = new Object[1];

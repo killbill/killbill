@@ -18,11 +18,25 @@
 
 package org.killbill.billing.catalog.glue;
 
+import org.killbill.billing.GuicyKillbillTestNoDBModule;
+import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.mockito.Mockito;
 
 public class TestCatalogModuleNoDB extends TestCatalogModule {
 
+    protected void installCatalogDao() {
+        final CatalogOverrideDao mockCatalogOverrideDao = Mockito.mock(CatalogOverrideDao.class);
+        bind(CatalogOverrideDao.class).toInstance(mockCatalogOverrideDao);
+    }
+
     public TestCatalogModuleNoDB(final KillbillConfigSource configSource) {
         super(configSource);
+    }
+
+    @Override
+    public void configure() {
+        super.configure();
+        install(new GuicyKillbillTestNoDBModule(configSource));
     }
 }

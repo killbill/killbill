@@ -311,7 +311,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.CHANGE);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, callContext);
+        baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, null, callContext);
         assertListenerStatus();
 
         // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
@@ -367,7 +367,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(aoStatus.get(0).getPriceList(), aoSubscription.getCurrentPriceList().getName());
         assertEquals(aoStatus.get(0).getReason(), DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN);
 
-        baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, callContext);
+        baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, null, callContext);
 
         // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);

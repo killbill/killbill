@@ -47,6 +47,8 @@ import org.killbill.billing.catalog.api.PlanAlignmentChange;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
@@ -59,34 +61,37 @@ import org.killbill.xmlloader.ValidationErrors;
 
 @XmlRootElement(name = "catalog")
 @XmlAccessorType(XmlAccessType.NONE)
-public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implements Catalog, StaticCatalog {
+public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPriceOverride> implements Catalog, StaticCatalog {
 
     private final Clock clock;
     private String catalogName;
     private BillingMode recurringBillingMode;
+    private final Long tenantRecordId;
 
     @XmlElement(name = "catalogVersion", required = true)
-    private final List<StandaloneCatalog> versions = new ArrayList<StandaloneCatalog>();
+    private final List<StandaloneCatalogWithPriceOverride> versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
 
-    // Default CTOR for XMLWriter.writeXML
+    // Required for JAXB deserialization
     public VersionedCatalog() {
         this.clock = null;
+        this.tenantRecordId = null;
     }
 
-    public VersionedCatalog(final Clock clock) {
+    public VersionedCatalog(final Clock clock, final Long tenantRecordId) {
         this.clock = clock;
+        this.tenantRecordId = tenantRecordId;
     }
 
 
     //
     // Private methods
     //
-    private StandaloneCatalog versionForDate(final DateTime date) throws CatalogApiException {
+    private StandaloneCatalogWithPriceOverride versionForDate(final DateTime date) throws CatalogApiException {
         return versions.get(indexOfVersionForDate(date.toDate()));
     }
 
-    private List<StandaloneCatalog> versionsBeforeDate(final Date date) throws CatalogApiException {
-        final List<StandaloneCatalog> result = new ArrayList<StandaloneCatalog>();
+    private List<StandaloneCatalogWithPriceOverride> versionsBeforeDate(final Date date) throws CatalogApiException {
+        final List<StandaloneCatalogWithPriceOverride> result = new ArrayList<StandaloneCatalogWithPriceOverride>();
         final int index = indexOfVersionForDate(date);
         for (int i = 0; i <= index; i++) {
             result.add(versions.get(i));
@@ -96,7 +101,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 
     private int indexOfVersionForDate(final Date date) throws CatalogApiException {
         for (int i = versions.size() - 1; i >= 0; i--) {
-            final StandaloneCatalog c = versions.get(i);
+            final StandaloneCatalogWithPriceOverride c = versions.get(i);
             if (c.getEffectiveDate().getTime() <= date.getTime()) {
                 return i;
             }
@@ -110,25 +115,25 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
         String productName;
         BillingPeriod bp;
         String priceListName;
+        PlanPhasePriceOverridesWithCallContext overrides;
 
         public PlanRequestWrapper(final String name) {
-            super();
             this.name = name;
         }
 
         public PlanRequestWrapper(final String productName, final BillingPeriod bp,
-                                  final String priceListName) {
-            super();
+                                  final String priceListName, final PlanPhasePriceOverridesWithCallContext overrides) {
             this.productName = productName;
             this.bp = bp;
             this.priceListName = priceListName;
+            this.overrides = overrides;
         }
 
-        public Plan findPlan(final StandaloneCatalog catalog) throws CatalogApiException {
+        public Plan findPlan(final StandaloneCatalogWithPriceOverride catalog) throws CatalogApiException {
             if (name != null) {
                 return catalog.findCurrentPlan(name);
             } else {
-                return catalog.findCurrentPlan(productName, bp, priceListName);
+                return catalog.createOrFindCurrentPlan(productName, bp, priceListName, overrides);
             }
         }
     }
@@ -137,14 +142,14 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
                           final DateTime requestedDate,
                           final DateTime subscriptionStartDate)
             throws CatalogApiException {
-        final List<StandaloneCatalog> catalogs = versionsBeforeDate(requestedDate.toDate());
+        final List<StandaloneCatalogWithPriceOverride> catalogs = versionsBeforeDate(requestedDate.toDate());
         if (catalogs.size() == 0) {
             throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
         }
 
         for (int i = catalogs.size() - 1; i >= 0; i--) { // Working backwards to find the latest applicable plan
-            final StandaloneCatalog c = catalogs.get(i);
-            Plan plan = null;
+            final StandaloneCatalogWithPriceOverride c = catalogs.get(i);
+            Plan plan;
             try {
                 plan = wrapper.findPlan(c);
             } catch (CatalogApiException e) {
@@ -175,7 +180,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     //
     // Public methods not exposed in interface
     //
-    public void add(final StandaloneCatalog e) throws CatalogApiException {
+    public void add(final StandaloneCatalogWithPriceOverride e) throws CatalogApiException {
         if (catalogName == null) {
             catalogName = e.getCatalogName();
         } else {
@@ -191,15 +196,15 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
             }
         }
         versions.add(e);
-        Collections.sort(versions, new Comparator<StandaloneCatalog>() {
+        Collections.sort(versions, new Comparator<StandaloneCatalogWithPriceOverride>() {
             @Override
-            public int compare(final StandaloneCatalog c1, final StandaloneCatalog c2) {
+            public int compare(final StandaloneCatalogWithPriceOverride c1, final StandaloneCatalogWithPriceOverride c2) {
                 return c1.getEffectiveDate().compareTo(c2.getEffectiveDate());
             }
         });
     }
 
-    public Iterator<StandaloneCatalog> iterator() {
+    public Iterator<StandaloneCatalogWithPriceOverride> iterator() {
         return versions.iterator();
     }
 
@@ -241,12 +246,13 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
-    public Plan findPlan(final String productName,
+    public Plan createOrFindPlan(final String productName,
                          final BillingPeriod term,
                          final String priceListName,
+                         final PlanPhasePriceOverridesWithCallContext overrides,
                          final DateTime requestedDate)
             throws CatalogApiException {
-        return versionForDate(requestedDate).findCurrentPlan(productName, term, priceListName);
+        return versionForDate(requestedDate).createOrFindCurrentPlan(productName, term, priceListName, overrides);
     }
 
     @Override
@@ -258,13 +264,14 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
-    public Plan findPlan(final String productName,
+    public Plan createOrFindPlan(final String productName,
                          final BillingPeriod term,
                          final String priceListName,
+                         final PlanPhasePriceOverridesWithCallContext overrides,
                          final DateTime requestedDate,
                          final DateTime subscriptionStartDate)
             throws CatalogApiException {
-        return findPlan(new PlanRequestWrapper(productName, term, priceListName), requestedDate, subscriptionStartDate);
+        return findPlan(new PlanRequestWrapper(productName, term, priceListName, overrides), requestedDate, subscriptionStartDate);
     }
 
     //
@@ -343,15 +350,15 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     // VerifiableConfig API
     //
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        for (final StandaloneCatalog c : versions) {
+    public void initialize(final StandaloneCatalogWithPriceOverride catalog, final URI sourceURI) {
+        for (final StandaloneCatalogWithPriceOverride c : versions) {
             c.initialize(catalog, sourceURI);
         }
     }
 
     @Override
-    public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        for (final StandaloneCatalog c : versions) {
+    public ValidationErrors validate(final StandaloneCatalogWithPriceOverride catalog, final ValidationErrors errors) {
+        for (final StandaloneCatalogWithPriceOverride c : versions) {
             errors.addAll(c.validate(c, errors));
         }
         //TODO MDW validation - ensure all catalog versions have a single name
@@ -397,9 +404,9 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
-    public Plan findCurrentPlan(final String productName, final BillingPeriod term,
-                                final String priceList) throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).findCurrentPlan(productName, term, priceList);
+    public Plan createOrFindCurrentPlan(final String productName, final BillingPeriod term,
+                                final String priceList, PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).createOrFindCurrentPlan(productName, term, priceList, overrides);
     }
 
     @Override

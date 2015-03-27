@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="catalog.xsd ">
+
+    <effectiveDate>2011-01-01T00:00:00+00:00</effectiveDate>
+    <catalogName>MOSCatalog</catalogName>
+
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
+    <currencies>
+        <currency>USD</currency>
+    </currencies>
+
+    <products>
+        <product name="cafe">
+            <category>BASE</category>
+        </product>
+        <product name="custom">
+            <category>BASE</category>
+        </product>
+        <product name="flagship">
+            <category>BASE</category>
+        </product>
+        <product name="free">
+            <category>BASE</category>
+        </product>
+        <product name="mx60mr12_2_license">
+            <category>BASE</category>
+        </product>
+        <product name="mx60mr12_3_license">
+            <category>BASE</category>
+        </product>
+        <product name="mx60mr12_4_license">
+            <category>BASE</category>
+        </product>
+        <product name="mx60mr12_5_license">
+            <category>BASE</category>
+        </product>
+        <product name="mx60_license">
+            <category>BASE</category>
+        </product>
+        <product name="mx60mr12_license">
+            <category>BASE</category>
+        </product>
+        <product name="mx80mr12_6_license">
+            <category>BASE</category>
+        </product>
+        <product name="z1_mr12">
+            <category>BASE</category>
+        </product>
+        <product name="z1_license">
+            <category>BASE</category>
+        </product>
+        <product name="midsize">
+            <category>BASE</category>
+        </product>
+        <product name="mr12_license">
+            <category>BASE</category>
+        </product>
+        <product name="solo">
+            <category>BASE</category>
+        </product>
+    </products>
+
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <changeAlignment>
+            <changeAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </changeAlignmentCase>
+        </changeAlignment>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+        <createAlignment>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+        </createAlignment>
+        <billingAlignment>
+            <billingAlignmentCase>
+                <alignment>SUBSCRIPTION</alignment>
+            </billingAlignmentCase>
+        </billingAlignment>
+        <priceList>
+            <priceListCase>
+                <toPriceList>DEFAULT</toPriceList>
+            </priceListCase>
+        </priceList>
+    </rules>
+
+    <plans>
+        <plan name="cafe-monthly">
+            <product>cafe</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>199.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="custom-monthly">
+            <product>custom</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>450.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="flagship-monthly">
+            <product>flagship</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>399.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="free-monthly"> <!-- May be alternative ways to model this - not sure if it matters though -->
+            <product>free</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>0.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="mx60mr12_2_license-annual">
+            <product>mx60mr12_2_license</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>YEARS</unit>
+                        <number>1</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>206.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="mx60mr12_3_license-annual">
+            <product>mx60mr12_3_license</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>YEARS</unit>
+                        <number>1</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>262.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="mx60mr12_4_license-annual">
+            <product>mx60mr12_4_license</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>YEARS</unit>
+                        <number>1</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>318.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="mx60mr12_5_license-annual">
+            <product>mx60mr12_5_license</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>YEARS</unit>
+                        <number>1</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>374.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="mx60_license-annual">
+            <product>mx60_license</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>YEARS</unit>
+                        <number>1</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>94.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="mx60mr12_license-annual">
+            <product>mx60mr12_license</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>YEARS</unit>
+                        <number>1</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>150.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="mx80mr12_6_license-annual">
+            <product>mx80mr12_6_license</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>YEARS</unit>
+                        <number>1</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>696.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="z1_mr12-annual">
+            <product>z1_mr12</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>YEARS</unit>
+                        <number>1</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>71.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="z1_license-annual">
+            <product>z1_license</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>YEARS</unit>
+                        <number>1</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>15.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="midsize-monthly">
+            <product>midsize</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>299.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="mr12_license-annual">
+            <product>mr12_license</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>YEARS</unit>
+                        <number>1</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>56.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="solo-monthly">
+            <product>solo</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>99.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>cafe-monthly</plan>
+                <plan>custom-monthly</plan>
+                <plan>flagship-monthly</plan>
+                <plan>free-monthly</plan>
+                <plan>mx60mr12_2_license-annual</plan>
+                <plan>mx60mr12_3_license-annual</plan>
+                <plan>mx60mr12_4_license-annual</plan>
+                <plan>mx60mr12_5_license-annual</plan>
+                <plan>mx60_license-annual</plan>
+                <plan>mx60mr12_license-annual</plan>
+                <plan>mx80mr12_6_license-annual</plan>
+                <plan>z1_mr12-annual</plan>
+                <plan>z1_license-annual</plan>
+                <plan>midsize-monthly</plan>
+                <plan>mr12_license-annual</plan>
+                <plan>solo-monthly</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+</catalog>

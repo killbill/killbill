@@ -30,7 +30,7 @@ public class TestLimits extends CatalogTestSuiteNoDB {
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
-        catalog = loader.load(Resources.getResource("WeaponsHireSmall.xml").toString());
+        catalog = loader.loadDefaultCatalog(Resources.getResource("WeaponsHireSmall.xml").toString());
     }
 
     @Test(groups = "fast")

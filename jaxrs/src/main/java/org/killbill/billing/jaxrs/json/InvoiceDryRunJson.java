@@ -17,6 +17,8 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
@@ -36,6 +38,7 @@ public class InvoiceDryRunJson {
     private final String subscriptionId;
     private final String bundleId;
     private final String billingPolicy;
+    private final List<PhasePriceOverrideJson> priceOverrides;
 
     @JsonCreator
     public InvoiceDryRunJson(@JsonProperty("dryRunAction") @Nullable final String dryRunAction,
@@ -47,7 +50,8 @@ public class InvoiceDryRunJson {
                              @JsonProperty("subscriptionId") @Nullable final String subscriptionId,
                              @JsonProperty("bundleId") @Nullable final String bundleId,
                              @JsonProperty("effectiveDate") @Nullable final LocalDate effectiveDate,
-                             @JsonProperty("billingPolicy") @Nullable final String billingPolicy) {
+                             @JsonProperty("billingPolicy") @Nullable final String billingPolicy,
+                             @JsonProperty("priceOverrides") @Nullable final List<PhasePriceOverrideJson> priceOverrides) {
         this.dryRunAction = dryRunAction;
         this.phaseType = phaseType;
         this.productName = productName;
@@ -58,6 +62,7 @@ public class InvoiceDryRunJson {
         this.bundleId = bundleId;
         this.effectiveDate = effectiveDate;
         this.billingPolicy = billingPolicy;
+        this.priceOverrides = priceOverrides;
     }
 
     public String getDryRunAction() {
@@ -98,6 +103,10 @@ public class InvoiceDryRunJson {
 
     public String getBillingPolicy() {
         return billingPolicy;
+    }
+
+    public List<PhasePriceOverrideJson> getPriceOverrides() {
+        return priceOverrides;
     }
 
     @Override
@@ -141,6 +150,9 @@ public class InvoiceDryRunJson {
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
             return false;
         }
+        if (priceOverrides != null ? !priceOverrides.equals(that.priceOverrides) : that.priceOverrides != null) {
+            return false;
+        }
 
         return true;
     }
@@ -157,6 +169,7 @@ public class InvoiceDryRunJson {
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (billingPolicy != null ? billingPolicy.hashCode() : 0);
+        result = 31 * result + (priceOverrides != null ? priceOverrides.hashCode() : 0);
         return result;
     }
 }

@@ -82,11 +82,11 @@ public class DefaultResourceBundleFactory implements ResourceBundleFactory {
 
     private ResourceBundle getGlobalBundle(final Locale locale, final String bundlePath) {
         try {
-            // Try to load the bundle from the classpath first
+            // Try to loadDefaultCatalog the bundle from the classpath first
             return ResourceBundle.getBundle(bundlePath, locale);
         } catch (MissingResourceException ignored) {
         }
-        // Try to load it from a properties file
+        // Try to loadDefaultCatalog it from a properties file
         final String propertiesFileNameWithCountry = bundlePath + "_" + locale.getLanguage() + "_" + locale.getCountry() + ".properties";
         ResourceBundle bundle = getBundleFromPropertiesFile(propertiesFileNameWithCountry);
         if (bundle != null) {

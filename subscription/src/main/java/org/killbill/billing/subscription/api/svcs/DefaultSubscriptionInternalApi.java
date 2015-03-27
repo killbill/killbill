@@ -38,6 +38,8 @@ import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -101,7 +103,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
             final String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             final DateTime now = clock.getUTCNow();
@@ -111,8 +113,11 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             }
             final DateTime effectiveDate = requestedDate;
 
+            final CallContext callContext = internalCallContextFactory.createCallContext(context);
             final Catalog catalog = catalogService.getFullCatalog(context);
-            final Plan plan = catalog.findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, requestedDate);
+            final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, callContext);
+
+            final Plan plan = catalog.createOrFindPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, requestedDate);
             final PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
@@ -126,7 +131,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
             final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundleId, context);
             final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, requestedDate, effectiveDate, context);
-            final CallContext callContext = internalCallContextFactory.createCallContext(context);
             return apiService.createPlan(new SubscriptionBuilder()
                                                  .setId(UUID.randomUUID())
                                                  .setBundleId(bundleId)
@@ -396,8 +400,10 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             final PlanPhaseSpecifier inputSpec = dryRunArguments.getPlanPhaseSpecifier();
             final String realPriceList = (inputSpec != null && inputSpec.getPriceListName() != null) ? inputSpec.getPriceListName() : PriceListSet.DEFAULT_PRICELIST_NAME;
             final Catalog catalog = catalogService.getFullCatalog(context);
+
+            final PlanPhasePriceOverridesWithCallContext overridesWithContext = null; // TODO not supported to dryRun with custom price
             final Plan plan = (inputSpec != null && inputSpec.getProductName() != null && inputSpec.getBillingPeriod() != null) ?
-                              catalog.findPlan(inputSpec.getProductName(), inputSpec.getBillingPeriod(), realPriceList, utcNow) : null;
+                              catalog.createOrFindPlan(inputSpec.getProductName(), inputSpec.getBillingPeriod(), realPriceList, overridesWithContext, utcNow) : null;
             final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
 
             if (dryRunArguments != null) {

@@ -58,10 +58,12 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
@@ -78,6 +80,7 @@ import org.killbill.billing.jaxrs.json.InvoiceDryRunJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.InvoiceJson;
 import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
+import org.killbill.billing.jaxrs.json.PhasePriceOverrideJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -340,7 +343,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
 
-        final DryRunArguments dryRunArguments = new DefaultDryRunArguments(dryRunSubscriptionSpec, account.getTimeZone(), clock);
+        final DryRunArguments dryRunArguments = new DefaultDryRunArguments(dryRunSubscriptionSpec, account.getTimeZone(), account.getCurrency(), clock);
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRunArguments,
                                                                                  callContext);
@@ -890,18 +893,9 @@ public class InvoiceResource extends JaxRsResourceBase {
         private final PlanPhaseSpecifier specifier;
         private final UUID bundleId;
         private final BillingActionPolicy billingPolicy;
+        private final List<PlanPhasePriceOverride> overrides;
 
-        public DefaultDryRunArguments(final SubscriptionEventType action, final UUID subscriptionId, final UUID bundleId,
-                                      final PlanPhaseSpecifier specifier, final DateTime effectiveDate, final BillingActionPolicy billingPolicy) {
-            this.action = action;
-            this.subscriptionId = subscriptionId;
-            this.bundleId = bundleId;
-            this.effectiveDate = effectiveDate;
-            this.billingPolicy = billingPolicy;
-            this.specifier = specifier;
-        }
-
-        public DefaultDryRunArguments(final InvoiceDryRunJson input, final DateTimeZone accountTimeZone, final Clock clock) {
+        public DefaultDryRunArguments(final InvoiceDryRunJson input, final DateTimeZone accountTimeZone, final Currency currency, final Clock clock) {
             if (input == null) {
                 this.action = null;
                 this.subscriptionId = null;
@@ -909,21 +903,35 @@ public class InvoiceResource extends JaxRsResourceBase {
                 this.specifier = null;
                 this.bundleId = null;
                 this.billingPolicy = null;
+                this.overrides = null;
             } else {
                 this.action = input.getDryRunAction() != null ? SubscriptionEventType.valueOf(input.getDryRunAction()) : null;
                 this.subscriptionId = input.getSubscriptionId() != null ? UUID.fromString(input.getSubscriptionId()) : null;
                 this.bundleId = input.getBundleId() != null ? UUID.fromString(input.getBundleId()) : null;
                 this.effectiveDate = input.getEffectiveDate() != null ? ClockUtil.computeDateTimeWithUTCReferenceTime(input.getEffectiveDate(), clock.getUTCNow().toLocalTime(), accountTimeZone, clock) : null;
                 this.billingPolicy = input.getBillingPolicy() != null ? BillingActionPolicy.valueOf(input.getBillingPolicy()) : null;
-                this.specifier = (input.getProductName() != null &&
-                                  input.getProductCategory() != null &&
-                                  input.getBillingPeriod() != null) ?
-                                 new PlanPhaseSpecifier(input.getProductName(),
-                                                        ProductCategory.valueOf(input.getProductCategory()),
-                                                        BillingPeriod.valueOf(input.getBillingPeriod()),
-                                                        input.getPriceListName(),
-                                                        input.getPhaseType() != null ? PhaseType.valueOf(input.getPhaseType()) : null) :
-                                 null;
+                final PlanPhaseSpecifier planPhaseSpecifier  = (input.getProductName() != null &&
+                                     input.getProductCategory() != null &&
+                                     input.getBillingPeriod() != null) ?
+                                    new PlanPhaseSpecifier(input.getProductName(),
+                                                           ProductCategory.valueOf(input.getProductCategory()),
+                                                           BillingPeriod.valueOf(input.getBillingPeriod()),
+                                                           input.getPriceListName(),
+                                                           input.getPhaseType() != null ? PhaseType.valueOf(input.getPhaseType()) : null) :
+                                    null;
+                this.specifier = planPhaseSpecifier;
+                this.overrides = input.getPriceOverrides() != null ?
+                                 ImmutableList.copyOf(Iterables.transform(input.getPriceOverrides(), new Function<PhasePriceOverrideJson, PlanPhasePriceOverride>() {
+                    @Nullable
+                    @Override
+                    public PlanPhasePriceOverride apply(@Nullable final PhasePriceOverrideJson input) {
+                        if (input.getPhaseName() != null) {
+                            return new DefaultPlanPhasePriceOverride(input.getPhaseName(), currency, input.getFixedPrice(), input.getRecurringPrice());
+                        } else {
+                            return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, currency, input.getFixedPrice(), input.getRecurringPrice());
+                        }
+                    }
+                })) : ImmutableList.<PlanPhasePriceOverride>of();
             }
         }
 
@@ -955,6 +963,11 @@ public class InvoiceResource extends JaxRsResourceBase {
         @Override
         public BillingActionPolicy getBillingActionPolicy() {
             return billingPolicy;
+        }
+
+        @Override
+        public List<PlanPhasePriceOverride> getPlanPhasePriceoverrides() {
+            return overrides;
         }
     }
 

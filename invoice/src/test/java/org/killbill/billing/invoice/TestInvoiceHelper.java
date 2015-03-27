@@ -44,6 +44,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
@@ -449,6 +450,11 @@ public class TestInvoiceHelper {
 
         @Override
         public BillingActionPolicy getBillingActionPolicy() {
+            return null;
+        }
+
+        @Override
+        public List<PlanPhasePriceOverride> getPlanPhasePriceoverrides() {
             return null;
         }
     }
