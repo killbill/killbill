@@ -125,7 +125,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             }
 
             final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundleId, context);
-            final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, requestedDate, effectiveDate);
+            final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, requestedDate, effectiveDate, context);
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
             return apiService.createPlan(new SubscriptionBuilder()
                                                  .setId(UUID.randomUUID())
@@ -355,9 +355,9 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 final DryRunChangeReason reason;
                 // If baseProductName is null, it's a cancellation dry-run. In this case, return all addons, so they are cancelled
-                if (baseProductName != null && addonUtils.isAddonIncludedFromProdName(baseProductName, requestedDate, cur.getCurrentPlan(), context)) {
+                if (baseProductName != null && addonUtils.isAddonIncludedFromProdName(baseProductName, cur.getCurrentPlan(), requestedDate, context)) {
                     reason = DryRunChangeReason.AO_INCLUDED_IN_NEW_PLAN;
-                } else if (baseProductName != null && addonUtils.isAddonAvailableFromProdName(baseProductName, requestedDate, cur.getCurrentPlan(), context)) {
+                } else if (baseProductName != null && addonUtils.isAddonAvailableFromProdName(baseProductName, cur.getCurrentPlan(), requestedDate, context)) {
                     reason = DryRunChangeReason.AO_AVAILABLE_IN_NEW_PLAN;
                 } else {
                     reason = DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN;
@@ -406,7 +406,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                         final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundleId, context);
                         final DateTime startEffectiveDate = dryRunArguments.getEffectiveDate() != null ? dryRunArguments.getEffectiveDate() : utcNow;
-                        final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, startEffectiveDate);
+                        final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, startEffectiveDate, context);
                         final UUID subscriptionId = UUID.randomUUID();
                         dryRunEvents = apiService.getEventsOnCreation(bundleId, subscriptionId, startEffectiveDate, bundleStartDate, 1L, plan, inputSpec.getPhaseType(), realPriceList,
                                                                       utcNow, startEffectiveDate, utcNow, false, context);
@@ -471,7 +471,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     private DateTime getBundleStartDateWithSanity(final UUID bundleId, @Nullable final DefaultSubscriptionBase baseSubscription, final Plan plan,
-                                                  final DateTime requestedDate, final DateTime effectiveDate) throws SubscriptionBaseApiException, CatalogApiException {
+                                                  final DateTime requestedDate, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
         switch (plan.getProduct().getCategory()) {
             case BASE:
                 if (baseSubscription != null &&
@@ -487,7 +487,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 if (effectiveDate.isBefore(baseSubscription.getStartDate())) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, effectiveDate.toString(), baseSubscription.getStartDate().toString());
                 }
-                addonUtils.checkAddonCreationRights(baseSubscription, plan);
+                addonUtils.checkAddonCreationRights(baseSubscription, plan, requestedDate, context);
                 return baseSubscription.getStartDate();
 
             case STANDALONE:

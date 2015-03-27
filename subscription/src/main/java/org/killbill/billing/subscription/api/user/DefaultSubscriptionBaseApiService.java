@@ -480,8 +480,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
             final Plan addonCurrentPlan = cur.getCurrentPlan();
             if (baseProduct == null ||
-                addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
-                !addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
+                addonUtils.isAddonIncludedFromProdName(baseProduct.getName(), addonCurrentPlan, requestedDate, internalTenantContext) ||
+                !addonUtils.isAddonAvailableFromProdName(baseProduct.getName(), addonCurrentPlan, requestedDate, internalTenantContext)) {
                 //
                 // Perform AO cancellation using the effectiveDate of the BP
                 //

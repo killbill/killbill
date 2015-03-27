@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
@@ -106,16 +107,19 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
             throws SubscriptionBaseRepairException {
 
         try {
+
+            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(baseSubscription.getId(), ObjectType.SUBSCRIPTION, context);
+
             final PlanPhaseSpecifier spec = input.getPlanPhaseSpecifier();
             switch (input.getSubscriptionTransitionType()) {
                 case CREATE:
                 case RE_CREATE:
                     recreate(spec, input.getRequestedDate(), context);
-                    checkAddonRights(baseSubscription);
+                    checkAddonRights(baseSubscription, internalTenantContext);
                     break;
                 case CHANGE:
                     changePlanWithDate(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), input.getRequestedDate(), context);
-                    checkAddonRights(baseSubscription);
+                    checkAddonRights(baseSubscription, internalTenantContext);
                     trickleDownBPEffectForAddon(addonSubscriptions, getLastUserEventEffectiveDate(), context);
                     break;
                 case CANCEL:
@@ -174,9 +178,11 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
                 continue;
             }
             final Plan addonCurrentPlan = cur.getCurrentPlan();
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(cur.getId(), ObjectType.SUBSCRIPTION, context);
+
             if (baseProduct == null ||
-                addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
-                !addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
+                addonUtils.isAddonIncludedFromProdName(baseProduct.getName(), addonCurrentPlan, effectiveDate, internalCallContext) ||
+                !addonUtils.isAddonAvailableFromProdName(baseProduct.getName(), addonCurrentPlan, effectiveDate, internalCallContext)) {
 
                 final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                 .setSubscriptionId(cur.getId())
@@ -185,7 +191,6 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
                                                                                 .setEffectiveDate(effectiveDate)
                                                                                 .setRequestedDate(now)
                                                                                 .setFromDisk(true));
-                final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(cur.getId(), ObjectType.SUBSCRIPTION, context);
                 repairDao.cancelSubscription(cur, cancelEvent, internalCallContext, 0);
                 final Catalog fullCatalog = catalogService.getFullCatalog(internalCallContext);
                 cur.rebuildTransitions(repairDao.getEventsForSubscription(cur.getId(), internalCallContextFactory.createInternalTenantContext(context)), fullCatalog);
@@ -193,10 +198,10 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
         }
     }
 
-    private void checkAddonRights(final SubscriptionDataRepair baseSubscription)
+    private void checkAddonRights(final SubscriptionDataRepair baseSubscription, final InternalTenantContext internalTenantContext)
             throws SubscriptionBaseApiException, CatalogApiException {
         if (getCategory() == ProductCategory.ADD_ON) {
-            addonUtils.checkAddonCreationRights(baseSubscription, getCurrentPlan());
+            addonUtils.checkAddonCreationRights(baseSubscription, getCurrentPlan(), clock.getUTCNow(), internalTenantContext);
         }
     }
 

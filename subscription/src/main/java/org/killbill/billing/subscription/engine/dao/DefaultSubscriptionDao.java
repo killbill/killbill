@@ -899,8 +899,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     for (final ApiEventChange baseChangeEvent : baseChangeEvents) {
                         final String baseProductName = baseChangeEvent.getEventPlan();
 
-                        if ((!addonUtils.isAddonAvailableFromPlanName(baseProductName, baseChangeEvent.getEffectiveDate(), targetAddOnPlan, context)) ||
-                            (addonUtils.isAddonIncludedFromPlanName(baseProductName, baseChangeEvent.getEffectiveDate(), targetAddOnPlan, context))) {
+                        if ((!addonUtils.isAddonAvailableFromPlanName(baseProductName, targetAddOnPlan, baseChangeEvent.getEffectiveDate(), context)) ||
+                            (addonUtils.isAddonIncludedFromPlanName(baseProductName, targetAddOnPlan, baseChangeEvent.getEffectiveDate(), context))) {
                             if (baseTriggerEventForAddOnCancellation != null) {
                                 if (baseTriggerEventForAddOnCancellation.getEffectiveDate().isAfter(baseChangeEvent.getEffectiveDate())) {
                                     baseTriggerEventForAddOnCancellation = baseChangeEvent;
