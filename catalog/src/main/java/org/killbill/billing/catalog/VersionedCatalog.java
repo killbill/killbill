@@ -133,7 +133,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
             if (name != null) {
                 return catalog.findCurrentPlan(name);
             } else {
-                return catalog.findCurrentPlan(productName, bp, priceListName, overrides);
+                return catalog.createOrFindCurrentPlan(productName, bp, priceListName, overrides);
             }
         }
     }
@@ -246,13 +246,13 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     }
 
     @Override
-    public Plan findPlan(final String productName,
+    public Plan createOrFindPlan(final String productName,
                          final BillingPeriod term,
                          final String priceListName,
                          final PlanPhasePriceOverridesWithCallContext overrides,
                          final DateTime requestedDate)
             throws CatalogApiException {
-        return versionForDate(requestedDate).findCurrentPlan(productName, term, priceListName, overrides);
+        return versionForDate(requestedDate).createOrFindCurrentPlan(productName, term, priceListName, overrides);
     }
 
     @Override
@@ -264,7 +264,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     }
 
     @Override
-    public Plan findPlan(final String productName,
+    public Plan createOrFindPlan(final String productName,
                          final BillingPeriod term,
                          final String priceListName,
                          final PlanPhasePriceOverridesWithCallContext overrides,
@@ -404,9 +404,9 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     }
 
     @Override
-    public Plan findCurrentPlan(final String productName, final BillingPeriod term,
+    public Plan createOrFindCurrentPlan(final String productName, final BillingPeriod term,
                                 final String priceList, PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).findCurrentPlan(productName, term, priceList, overrides);
+        return versionForDate(clock.getUTCNow()).createOrFindCurrentPlan(productName, term, priceList, overrides);
     }
 
     @Override

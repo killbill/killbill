@@ -121,7 +121,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             final String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             final InternalTenantContext internalCallContext = createTenantContextFromBundleId(subscription.getBundleId(), context);
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
-            final Plan plan = catalogService.getFullCatalog(internalCallContext).findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, effectiveDate);
+            final Plan plan = catalogService.getFullCatalog(internalCallContext).createOrFindPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, effectiveDate);
             final PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
@@ -353,7 +353,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                   final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
-        final Plan newPlan = catalogService.getFullCatalog(internalCallContext).findPlan(newProductName, newBillingPeriod, newPriceList, overridesWithContext, effectiveDate, subscription.getStartDate());
+        final Plan newPlan = catalogService.getFullCatalog(internalCallContext).createOrFindPlan(newProductName, newBillingPeriod, newPriceList, overridesWithContext, effectiveDate, subscription.getStartDate());
 
         final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPriceList, now, effectiveDate, now, false, internalCallContext);
         dao.changePlan(subscription, changeEvents, internalCallContext);

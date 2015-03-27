@@ -117,7 +117,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             final Catalog catalog = catalogService.getFullCatalog(context);
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, callContext);
 
-            final Plan plan = catalog.findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, requestedDate);
+            final Plan plan = catalog.createOrFindPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, requestedDate);
             final PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
@@ -403,7 +403,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = null; // TODO not supported to dryRun with custom price
             final Plan plan = (inputSpec != null && inputSpec.getProductName() != null && inputSpec.getBillingPeriod() != null) ?
-                              catalog.findPlan(inputSpec.getProductName(), inputSpec.getBillingPeriod(), realPriceList, overridesWithContext, utcNow) : null;
+                              catalog.createOrFindPlan(inputSpec.getProductName(), inputSpec.getBillingPeriod(), realPriceList, overridesWithContext, utcNow) : null;
             final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
 
             if (dryRunArguments != null) {

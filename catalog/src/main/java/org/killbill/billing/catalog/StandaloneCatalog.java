@@ -163,7 +163,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
       * @see org.killbill.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
       */
     @Override
-    public DefaultPlan findCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final PlanPhasePriceOverridesWithCallContext unused) throws CatalogApiException {
+    public DefaultPlan createOrFindCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final PlanPhasePriceOverridesWithCallContext unused) throws CatalogApiException {
         if (productName == null) {
             throw new CatalogApiException(ErrorCode.CAT_NULL_PRODUCT_NAME);
         }
@@ -346,7 +346,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @Override
     public boolean canCreatePlan(final PlanSpecifier specifier) throws CatalogApiException {
         final Product product = findCurrentProduct(specifier.getProductName());
-        final Plan plan = findCurrentPlan(specifier.getProductName(), specifier.getBillingPeriod(), specifier.getPriceListName(), null);
+        final Plan plan = createOrFindCurrentPlan(specifier.getProductName(), specifier.getBillingPeriod(), specifier.getPriceListName(), null);
         final DefaultPriceList priceList = findCurrentPriceList(specifier.getPriceListName());
 
         return (!product.isRetired()) &&

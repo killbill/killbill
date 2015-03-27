@@ -112,9 +112,9 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public Plan findPlan(final String productName, final BillingPeriod term, final String priceListName, PlanPhasePriceOverridesWithCallContext overrides, final DateTime requestedDate)
+    public Plan createOrFindPlan(final String productName, final BillingPeriod term, final String priceListName, PlanPhasePriceOverridesWithCallContext overrides, final DateTime requestedDate)
             throws CatalogApiException {
-        return findCurrentPlan(productName, term, priceListName, overrides);
+        return createOrFindCurrentPlan(productName, term, priceListName, overrides);
     }
 
     @Override
@@ -124,9 +124,9 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public Plan findPlan(final String productName, final BillingPeriod term, final String priceListName, PlanPhasePriceOverridesWithCallContext overrides, final DateTime requestedDate,
+    public Plan createOrFindPlan(final String productName, final BillingPeriod term, final String priceListName, PlanPhasePriceOverridesWithCallContext overrides, final DateTime requestedDate,
                          final DateTime subscriptionStartDate) throws CatalogApiException {
-        return findCurrentPlan(productName, term, priceListName, overrides);
+        return createOrFindCurrentPlan(productName, term, priceListName, overrides);
     }
 
     @Override
