@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -33,9 +33,11 @@ import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.security.TenantFilter;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.skeleton.modules.BaseServerModuleBuilder;
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.qos.logback.classic.LoggerContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
@@ -93,6 +95,18 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         final ImmutableMap<String, String> defaultProperties = ImmutableMap.<String, String>of("org.killbill.server.updateCheck.url",
                                                                                                "https://raw.github.com/killbill/killbill/master/profiles/killbill/src/main/resources/update-checker/killbill-server-update-list.properties");
         return new DefaultKillbillConfigSource(defaultProperties);
+    }
+
+    @Override
+    protected void startLifecycleStage1() {
+        super.startLifecycleStage1();
+
+        // Work-around for http://jira.qos.ch/browse/LOGBACK-730
+        final ILoggerFactory iLoggerFactory = LoggerFactory.getILoggerFactory();
+        if (iLoggerFactory instanceof LoggerContext) {
+            final LoggerContext lc = (LoggerContext) iLoggerFactory;
+            lc.setPackagingDataEnabled(false);
+        }
     }
 
     @Override
