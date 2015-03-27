@@ -64,7 +64,7 @@ from (select
       where
       concat_ws(',', phase_number, phase_def_record_id) in (<keys: {key | :key_<i0>}; separator="," >)
       and tenant_record_id = :tenantRecordId
-      group by 1) tmp
+      group by target_plan_def_record_id) tmp
 where
 1=1
 and tmp.count = :targetCount
