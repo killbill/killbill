@@ -152,11 +152,11 @@
     </appender>
 
     <!-- Logs only SQL. SQL executed within a prepared statement is automatically shown with it's bind arguments replaced with the data bound at that position, for greatly increased readability. -->
-    <logger name="jdbc.sqlonly" level="ERROR" additivity="false">
+    <logger name="jdbc.sqlonly" level="OFF" additivity="false">
         <appender-ref ref="SIFT-jdbc-sqlonly"/>
     </logger>
     <!-- Logs the SQL, post-execution, including timing statistics on how long the SQL took to execute. -->
-    <logger name="jdbc.sqltiming" level="INFO" additivity="false">
+    <logger name="jdbc.sqltiming" level="OFF" additivity="false">
         <appender-ref ref="SIFT-jdbc-sqltiming"/>
     </logger>
     <!-- Logs ALL JDBC calls except for ResultSets. This is a very voluminous output, and is not normally needed unless tracking down a specific JDBC problem. -->
